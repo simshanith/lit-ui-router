@@ -1,12 +1,12 @@
 import type { Transition } from '@uirouter/core';
 
 import type { SeedOptions } from '../src/ssr-client.ts';
-import { dehydrate, jsonCodec } from '../src/ssr.ts';
+import { dehydrate } from '../src/ssr.ts';
 import type {
   DehydrateCandidate,
   DehydrateOptions,
   DehydrateResult,
-  ResolveCodec,
+  Transporter,
 } from '../src/ssr.ts';
 
 // Pure type-level: the `.types.ts` name keeps it out of the node --test glob; the compile is the assertion.
@@ -43,13 +43,33 @@ export const sameKey: Equal<
 // @ts-expect-error the predicate answers with a boolean, not a truthy value
 export const truthy: DehydrateOptions = { shouldDehydrate: () => 'yes' };
 
-// One codec object fits both sides.
-export const codec: ResolveCodec = jsonCodec;
+const DateTransporter: Transporter<Date> = {
+  encode: (value) => value instanceof Date && value.toISOString(),
+  // SAFETY: encode writes an ISO string.
+  decode: (encoded) => new Date(encoded as string),
+};
 
-export const withCodec: [DehydrateOptions, SeedOptions] = [
-  { codec },
-  { codec },
+// One transport record fits both sides, a typed transporter among untyped ones.
+export const transport = { Date: DateTransporter };
+
+export const withTransport: [DehydrateOptions, SeedOptions] = [
+  { transport },
+  { transport },
 ];
 
-// @ts-expect-error encode answers with JSON data, not undefined
-export const loose: ResolveCodec = { ...jsonCodec, encode: () => undefined };
+export const decoded: Equal<
+  ReturnType<typeof DateTransporter.decode>,
+  Date
+> = true;
+
+export const loose: Transporter = {
+  ...DateTransporter,
+  // @ts-expect-error encode answers with JSON data or a falsy value, not a Date
+  encode: () => new Date(),
+};
+
+export const mistyped: Transporter<Date> = {
+  ...DateTransporter,
+  // @ts-expect-error decode answers with the transporter's own type
+  decode: String,
+};

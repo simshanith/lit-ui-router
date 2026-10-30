@@ -78,24 +78,22 @@ import {
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
-  jsonCodec,
   settle,
   type DehydrateCandidate,
   type DehydrateOptions,
   type DehydrateResult,
   type JsonValue,
-  type ResolveCodec,
   type ResponseContext,
   type ResponseHandler,
   type ResponseHandlers,
   type SettleOptions,
+  type Transporter,
 } from 'ui-router-server/ssr';
 import {
-  jsonCodec as clientJsonCodec,
   seed,
-  type ResolveCodec as ClientResolveCodec,
   type ResolvePayload,
   type SeedOptions,
+  type Transporter as ClientTransporter,
 } from 'ui-router-server/ssr/client';
 import {
   applyUrlConfig,
@@ -381,45 +379,48 @@ export async function adoptedSummary(
   return transition.injector().get<SheetSummary>('summary');
 }
 
-// Ssr codec: one codec object fits both entries' options, and encode answers in JSON.
-const dateCodec: ResolveCodec = {
-  name: 'date',
-  encode: (value) =>
-    value instanceof Date
-      ? { $date: value.toISOString() }
-      : jsonCodec.encode(value),
-  decode: (value) => value,
+// Ssr transport: one record of transporters fits both entries' options; a
+// transporter's type parameter reaches decode, and encode answers in JSON.
+const DateTransporter: Transporter<Date> = {
+  encode: (value) => value instanceof Date && value.toISOString(),
+  // SAFETY: encode writes an ISO string.
+  decode: (encoded) => new Date(encoded as string),
 };
 
-export const codecOptions: [DehydrateOptions, SeedOptions] = [
-  { codec: dateCodec },
-  { codec: clientJsonCodec },
+const transport = { Date: DateTransporter };
+
+export const transportOptions: [DehydrateOptions, SeedOptions] = [
+  { transport },
+  { transport },
 ];
 
-export const sameCodecType: [
-  AssignableTo<ResolveCodec, ClientResolveCodec>,
-  AssignableTo<ClientResolveCodec, ResolveCodec>,
-  AssignableTo<ReturnType<ResolveCodec['encode']>, JsonValue>,
-  AssignableTo<Parameters<ResolveCodec['decode']>[0], JsonValue>,
-] = [true, true, true, true];
+export const sameTransporterType: [
+  AssignableTo<Transporter, ClientTransporter>,
+  AssignableTo<ClientTransporter, Transporter>,
+  AssignableTo<
+    ReturnType<Transporter['encode']>,
+    JsonValue | false | null | undefined
+  >,
+  AssignableTo<Parameters<Transporter['decode']>[0], JsonValue>,
+  AssignableTo<ReturnType<Transporter<Date>['decode']>, Date>,
+] = [true, true, true, true, true];
 
-export const recordedCodec = (payload: ResolvePayload): string | undefined =>
-  payload.codec;
+export const transportedTypes = (payload: ResolvePayload): string[] =>
+  Object.values(payload.transported ?? {}).flatMap((tokens) =>
+    Object.values(tokens).flatMap((marks) => marks.map(({ type }) => type)),
+  );
 
-// @ts-expect-error encode answers with JSON data, not a Date
-export const dateOut: ResolveCodec = { ...dateCodec, encode: () => new Date() };
-
-// @ts-expect-error a codec carries its name
-export const unnamed: ResolveCodec = {
-  encode: jsonCodec.encode,
-  decode: jsonCodec.decode,
+export const dateOut: Transporter = {
+  ...DateTransporter,
+  // @ts-expect-error encode answers with JSON data or a falsy value, not a Date
+  encode: () => new Date(),
 };
 
-export async function adoptedWithCodec(
+export async function adoptedWithTransport(
   client: UIRouter,
   payload: ResolvePayload,
 ): Promise<void> {
-  const disarm: () => void = seed(client, payload, { codec: dateCodec });
+  const disarm: () => void = seed(client, payload, { transport });
   await settle(client, '/sheet/7B');
   disarm();
 }

@@ -94,26 +94,27 @@ response state to its `respond` hook and writes a 2xx body at the path its url s
 ## Values beyond plain JSON
 
 `dehydrate` from `ui-router-server/ssr` and `seed` from `ui-router-server/ssr/client` take a
-`codec`: `encode` turns each drawn resolve value into plain JSON data, throwing for one it can't
-carry, and `decode` turns it back on the client. The payload stays plain JSON, so its `state` and
-`params` read the same with any codec. The default, `jsonCodec`, carries plain JSON data as it is.
-A library such as devalue fits as it ships:
+`transport`: a record of transporters, each carrying one type of value plain JSON can't, keyed by a
+name both sides share. `encode` answers with plain JSON data for a value it carries and a falsy
+value for any other; `decode` rebuilds the value on the client. A value nested in an array or plain
+object is carried too.
 
 ```ts
-import { parse, stringify } from 'devalue';
-import type { ResolveCodec } from 'ui-router-server/ssr';
+import type { Transporter } from 'ui-router-server/ssr';
 
-export const codec: ResolveCodec = {
-  name: 'devalue',
-  encode: (value) => stringify(value),
-  decode: (value) => parse(value as string),
+export const transport = {
+  Date: {
+    encode: (value) => value instanceof Date && value.toISOString(),
+    decode: (encoded) => new Date(encoded as string),
+  } satisfies Transporter<Date>,
 };
 
-// server: dehydrate(transition, { codec }); client: seed(router, payload, { codec })
+// server: dehydrate(transition, { transport }); client: seed(router, payload, { transport })
 ```
 
-The payload records the codec's name, and `seed` adopts nothing from a payload drawn with another,
-warning in development. See
+The payload lists where each carried value sits, apart from the values, so a value of the app's
+own never passes for one. A resolve whose value the client can't rebuild, for want of a transporter
+or because `decode` throws, runs its function, and `seed` warns in development. See
 [values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json)
 and [`dehydrate`](https://lit-ui-router.dev/api/ui-router-server/ssr/functions/dehydrate).
 

@@ -1,12 +1,16 @@
 import { isString } from '@uirouter/core';
-import type { Transition } from '@uirouter/core';
+import type { PathNode, Transition } from '@uirouter/core';
 
-import { isNowait, jsonCodec, urlParams } from './resolve-payload.ts';
+import { isJsonValue, isNowait, urlParams } from './resolve-payload.ts';
 import type {
   JsonValue,
-  ResolveCodec,
   ResolvePayload,
+  Transporter,
 } from './resolve-payload.ts';
+
+type Mark = NonNullable<ResolvePayload['transported']>[string][string][number];
+
+type Transport = NonNullable<DehydrateOptions['transport']>;
 
 /**
  * A resolve {@link dehydrate | `dehydrate`} would draw, as
@@ -32,11 +36,13 @@ export interface DehydrateOptions {
    */
   readonly shouldDehydrate?: (candidate: DehydrateCandidate) => boolean;
   /**
-   * Encodes each value the payload carries. A resolve whose value it throws
-   * for is listed in {@link DehydrateResult.unserializable | `unserializable`}.
-   * Defaults to {@link jsonCodec | `jsonCodec`}; `seed` takes the same codec.
+   * Carries values plain JSON data can't, keyed by a name `seed` is given the
+   * same transporter under. A value that is neither plain JSON data nor
+   * claimed by one, at the top or nested in an array or plain object, lists
+   * its resolve in {@link DehydrateResult.unserializable | `unserializable`},
+   * and so does an `encode` that throws.
    */
-  readonly codec?: ResolveCodec;
+  readonly transport?: Readonly<Record<string, Transporter>>;
 }
 
 /** What {@link dehydrate | `dehydrate`} returns. */
@@ -44,8 +50,8 @@ export interface DehydrateResult {
   /** The payload to write into the document. */
   readonly payload: ResolvePayload;
   /**
-   * The resolves left out of the payload because the codec can't encode
-   * their value. Each one re-runs on the client.
+   * The resolves left out of the payload because their value is not plain
+   * JSON data and no transporter carries it. Each one re-runs on the client.
    */
   readonly unserializable: readonly {
     /** The name of the state that declares the resolve. */
@@ -61,27 +67,32 @@ export interface DehydrateResult {
  * on its path, keyed by state name and token, and the state and url
  * parameters it was drawn for.
  *
- * Only the resolves a state declares with a string token are drawn. Each
- * value goes in as {@link DehydrateOptions.codec | `codec`} encodes it. The
- * default, {@link jsonCodec | `jsonCodec`}, carries a value when it is
- * {@link JsonValue | plain JSON data}: `null`, a boolean, a string, a finite
- * number, or an array or plain object of those, with no cycle. Anything else
- * (a `Date`, a `Map`, a class instance, `undefined`, `NaN`) is listed in
+ * Only the resolves a state declares with a string token are drawn. A value
+ * goes in when it is {@link JsonValue | plain JSON data}: `null`, a boolean, a
+ * string, a finite number, or an array or plain object of those, with no
+ * cycle. Anything else (a `Date`, a `Map`, a class instance, `undefined`,
+ * `NaN`) is listed in
  * {@link DehydrateResult.unserializable | `unserializable`} instead and
  * re-runs on the client, so an adopted value never differs from the one the
- * server resolved. A codec of the app's own carries more, such as a `Date`;
- * the payload records its name, and `seed` decodes with the same codec.
+ * server resolved.
+ *
+ * {@link DehydrateOptions.transport | `transport`} carries more. Each value
+ * that is not plain JSON data, at the top of a resolve or nested in its
+ * arrays and plain objects, is offered to each transporter in key order, and
+ * the first non-falsy encoding goes in. The payload lists where each one sits
+ * in {@link ResolvePayload.transported | `transported`}, apart from the
+ * values, so no value of the app's own can pass for one.
  *
  * A `NOWAIT` resolve stays with the client: it is neither awaited nor drawn,
  * nor listed, and the client runs it as it would without a payload.
  *
  * {@link DehydrateOptions.shouldDehydrate | `shouldDehydrate`} keeps a resolve
  * out by choice, such as data every page shares that the client loads once
- * from a cacheable file. It runs before the codec, so a resolve it keeps
+ * from a cacheable file. It runs before any transporter, so a resolve it keeps
  * out is not listed in `unserializable`; the client re-runs it on boot.
  *
  * @param transition - a transition that has landed
- * @param options - which resolves the payload carries, and how it encodes them
+ * @param options - which resolves the payload carries, and how it carries values beyond plain JSON
  * @returns the payload, and the resolves left out of it
  *
  * @example
@@ -106,56 +117,38 @@ export interface DehydrateResult {
  * ```
  *
  * @example
- * Carry the values devalue can, such as a `Date` or a `Map`, and pass the same
- * codec to `seed` on the client:
+ * Carry a `Date`, and pass the same transport to `seed` on the client:
  * ```ts
- * import { parse, stringify } from 'devalue';
- * import { dehydrate, settle, type ResolveCodec } from 'ui-router-server/ssr';
+ * import { dehydrate, settle, type Transporter } from 'ui-router-server/ssr';
  *
- * export const codec: ResolveCodec = {
- *   name: 'devalue',
- *   encode: (value) => stringify(value),
- *   decode: (value) => parse(value as string),
+ * export const transport = {
+ *   Date: {
+ *     encode: (value) => value instanceof Date && value.toISOString(),
+ *     decode: (encoded) => new Date(encoded as string),
+ *   } satisfies Transporter<Date>,
  * };
  *
- * const { payload } = dehydrate(await settle(router, path), { codec });
+ * const { payload } = dehydrate(await settle(router, path), { transport });
  * ```
  */
 export const dehydrate = (
   transition: Transition,
-  { shouldDehydrate, codec = jsonCodec }: DehydrateOptions = {},
+  { shouldDehydrate, transport = {} }: DehydrateOptions = {},
 ): DehydrateResult => {
   const resolves: Record<string, Record<string, JsonValue>> = {};
+  const transported: Record<string, Record<string, Mark[]>> = {};
   const unserializable: { state: string; token: string }[] = [];
 
-  for (const { state, resolvables } of transition.treeChanges().to) {
-    const declared = new Set<unknown>();
-    const values: Record<string, JsonValue> = {};
+  for (const node of transition.treeChanges().to) {
+    const name = node.state.name;
+    const drawn = drawState(node, shouldDehydrate, transport);
 
-    for (const own of state.resolvables) declared.add(own.token);
+    if (Object.keys(drawn.values).length > 0) resolves[name] = drawn.values;
 
-    for (const resolvable of resolvables) {
-      const token: unknown = resolvable.token;
-      const data: unknown = resolvable.data;
+    if (Object.keys(drawn.marked).length > 0) transported[name] = drawn.marked;
 
-      if (!isString(token) || !declared.has(token) || !resolvable.resolved)
-        continue;
-
-      if (isNowait(resolvable, state)) continue;
-
-      if (
-        shouldDehydrate?.({ state: state.name, token, value: data }) === false
-      )
-        continue;
-
-      try {
-        values[token] = codec.encode(data);
-      } catch {
-        unserializable.push({ state: state.name, token });
-      }
-    }
-
-    if (Object.keys(values).length > 0) resolves[state.name] = values;
+    for (const token of drawn.unserializable)
+      unserializable.push({ state: name, token });
   }
 
   const to = transition.$to();
@@ -168,7 +161,116 @@ export const dehydrate = (
 
   return {
     payload:
-      codec.name === jsonCodec.name ? drawn : { ...drawn, codec: codec.name },
+      Object.keys(transported).length > 0 ? { ...drawn, transported } : drawn,
     unserializable,
   };
+};
+
+const drawState = (
+  { state, resolvables }: PathNode,
+  shouldDehydrate: DehydrateOptions['shouldDehydrate'],
+  transport: Transport,
+) => {
+  const declared = new Set<unknown>();
+  const values: Record<string, JsonValue> = {};
+  const marked: Record<string, Mark[]> = {};
+  const unserializable: string[] = [];
+
+  for (const own of state.resolvables) declared.add(own.token);
+
+  for (const resolvable of resolvables) {
+    const token: unknown = resolvable.token;
+    const data: unknown = resolvable.data;
+
+    if (!isString(token) || !declared.has(token) || !resolvable.resolved)
+      continue;
+
+    if (isNowait(resolvable, state)) continue;
+
+    if (shouldDehydrate?.({ state: state.name, token, value: data }) === false)
+      continue;
+
+    const marks: Mark[] = [];
+
+    try {
+      values[token] = encode(data, transport, [], marks, new Set());
+    } catch {
+      unserializable.push(token);
+      continue;
+    }
+
+    if (marks.length > 0) marked[token] = marks;
+  }
+
+  return { values, marked, unserializable };
+};
+
+const isJsonPrimitive = (value: unknown): value is JsonValue =>
+  value === null ||
+  typeof value === 'string' ||
+  typeof value === 'boolean' ||
+  (typeof value === 'number' &&
+    Number.isFinite(value) &&
+    !Object.is(value, -0));
+
+// Throws for a value neither plain JSON data nor carried, so its resolve is listed.
+const encode = (
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolved value, which core types any
+  value: unknown,
+  transport: Transport,
+  path: readonly (string | number)[],
+  marks: Mark[],
+  ancestors: ReadonlySet<unknown>,
+): JsonValue => {
+  if (isJsonPrimitive(value)) return value;
+
+  if (ancestors.has(value)) throw new TypeError('the value has a cycle');
+
+  const within = new Set(ancestors).add(value);
+
+  if (Array.isArray(value))
+    return Array.from(value, (item, index) =>
+      encode(item, transport, [...path, index], marks, within),
+    );
+
+  const prototype: unknown =
+    value === undefined ? undefined : Object.getPrototypeOf(value);
+
+  if (prototype === Object.prototype || prototype === null)
+    return Object.fromEntries(
+      // SAFETY: a value whose prototype is Object.prototype or null is an object.
+      Object.entries(value as object).map(([key, member]) => [
+        key,
+        encode(member, transport, [...path, key], marks, within),
+      ]),
+    );
+
+  return claim(value, transport, path, marks);
+};
+
+const claim = (
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolved value, which core types any
+  value: unknown,
+  transport: Transport,
+  path: readonly (string | number)[],
+  marks: Mark[],
+): JsonValue => {
+  for (const [type, transporter] of Object.entries(transport)) {
+    const encoded = transporter.encode(value);
+
+    if (!encoded) continue;
+
+    if (!isJsonValue(encoded))
+      throw new TypeError(
+        `the ${type} transporter's encoding is not plain JSON data`,
+      );
+
+    marks.push({ type, path });
+
+    return encoded;
+  }
+
+  throw new TypeError(
+    'the value is not plain JSON data, and no transporter carries it',
+  );
 };

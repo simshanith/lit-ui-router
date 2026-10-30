@@ -27,12 +27,10 @@ export type {
   DehydrateResult,
 } from './dehydrate.ts';
 
-export { jsonCodec } from './resolve-payload.ts';
-
 export type {
   JsonValue,
-  ResolveCodec,
   ResolvePayload,
+  Transporter,
 } from './resolve-payload.ts';
 
 /** Resolved values by token, as a transition hands them over: any value a resolve returns. */

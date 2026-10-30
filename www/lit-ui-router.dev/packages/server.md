@@ -679,7 +679,7 @@ the payload does not cover runs as usual:
   [plain JSON data](/api/ui-router-server/ssr/type-aliases/JsonValue).** A
   `Date`, a `Map`, a class instance or `undefined` would come back changed, so
   `dehydrate` lists it in `unserializable` instead, and the client runs its
-  resolve. A [codec](#values-beyond-plain-json) can carry more.
+  resolve. A [transporter](#values-beyond-plain-json) can carry more.
 - **A `NOWAIT` resolve.** `dehydrate` neither awaits nor draws it; it stays
   with the client.
 - **A resolve the call keeps out.**
@@ -688,8 +688,7 @@ the payload does not cover runs as usual:
   client loads once from a cacheable file. A resolve it declines is not
   listed in `unserializable`.
 - **Another target.** A boot to a state, or url parameters, the payload was
-  not drawn for adopts nothing, and neither does a missing payload or one
-  drawn with another codec.
+  not drawn for adopts nothing, and neither does a missing payload.
 - **Later transitions.** The seed disarms once a transition succeeds.
 
 The client entry imports `@uirouter/core` and nothing from the server entry,
@@ -698,29 +697,39 @@ Where the payload goes in the document is the renderer's choice.
 
 #### Values beyond plain JSON
 
-`dehydrate` and `seed` take a
-[`codec`](/api/ui-router-server/ssr/interfaces/ResolveCodec): `encode` turns
-each drawn value into plain JSON data, throwing for one it can't carry, and
-`decode` turns it back on the client. The payload stays plain JSON, so its
-`state` and `params` read the same with any codec. The default, `jsonCodec`,
-carries plain JSON data as it is. A library such as devalue fits as it ships:
+`dehydrate` and `seed` take a `transport`: a record of
+[transporters](/api/ui-router-server/ssr/interfaces/Transporter), each
+carrying one type of value plain JSON can't, keyed by a name both sides share.
 
 ```ts
-import { parse, stringify } from 'devalue';
-import type { ResolveCodec } from 'ui-router-server/ssr';
+import type { Transporter } from 'ui-router-server/ssr';
 
-export const codec: ResolveCodec = {
-  name: 'devalue',
-  encode: (value) => stringify(value),
-  decode: (value) => parse(value as string),
+export const transport = {
+  Date: {
+    encode: (value) => value instanceof Date && value.toISOString(),
+    decode: (encoded) => new Date(encoded as string),
+  } satisfies Transporter<Date>,
 };
 
-// server: dehydrate(transition, { codec }); client: seed(router, payload, { codec })
+// server: dehydrate(transition, { transport }); client: seed(router, payload, { transport })
 ```
 
-The payload records the codec's name, and `seed` adopts nothing from a payload
-drawn with another, warning in development. See
-[`dehydrate`](/api/ui-router-server/ssr/functions/dehydrate).
+- **Encoding.** Each value that is not plain JSON data, at the top of a
+  resolve or nested in its arrays and plain objects, is offered to each
+  transporter in key order. The first `encode` that answers with a non-falsy
+  value carries it, so an encoding is never falsy itself. A value none
+  carries, or one whose `encode` throws, lists its resolve in
+  `unserializable`. `shouldDehydrate` runs first, so a resolve it declines is
+  offered to no transporter.
+- **The payload.** Values stay where they are in `resolves`, as their
+  transporters encoded them. A `transported` member lists each one's
+  transporter name and path, apart from the values, so a value of the app's
+  own never passes for a carried one. Without a carried value, the payload
+  has no `transported` member.
+- **Decoding.** `seed` rebuilds each carried value with the transporter of the
+  same name. A resolve whose value it can't rebuild, for want of that
+  transporter or because `decode` throws, runs its function, and `seed` warns
+  in development; the other resolves are still adopted.
 
 ## Emitting a static site
 

@@ -67,18 +67,25 @@ export async function warnStrictSlash(
 }
 
 /**
- * Warns that `seed` adopted nothing because the payload was drawn with
- * another codec.
+ * Warns that `seed` left a resolve to its function because it couldn't
+ * rebuild a value a transporter carried.
  *
- * @param drawnWith - the codec name the payload records
- * @param seededWith - the codec name `seed` was given
+ * @param state - the name of the state that declares the resolve
+ * @param token - the resolve's token
+ * @param type - the transporter name the payload records
+ * @param reason - why the value wasn't rebuilt
  *
  * @internal
  */
-export function warnCodecMismatch(drawnWith: string, seededWith: string): void {
+export function warnUntransported(
+  state: string,
+  token: string,
+  type: string,
+  reason: string,
+): void {
   // DEV folds the whole body out of dist/*.js (`?.`: node --test runs src unbundled); #dev-gate also closes it under node when NODE_ENV is production.
   if (!import.meta.env?.DEV || !devGate()) return;
   console.warn(
-    `ui-router-server: seed: the payload was drawn with the ${JSON.stringify(drawnWith)} codec and seed was given ${JSON.stringify(seededWith)}, so it adopts nothing and every resolve runs its function`,
+    `ui-router-server: seed: ${state}'s ${token} resolve carries a ${JSON.stringify(type)} value and ${reason}, so it runs its function`,
   );
 }

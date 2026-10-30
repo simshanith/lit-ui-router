@@ -28,53 +28,61 @@ export interface ResolvePayload {
    * they stay out, and so does a parameter without a value.
    */
   readonly params: Readonly<Record<string, JsonValue>>;
-  /** Resolved values keyed by state name, then by resolve token, each as its codec encoded it. */
+  /**
+   * Resolved values keyed by state name, then by resolve token. A value a
+   * transporter carried, or one nested in it, is its transporter's encoding.
+   */
   readonly resolves: Readonly<
     Record<string, Readonly<Record<string, JsonValue>>>
   >;
   /**
-   * The name of the codec that encoded the values. Absent when it is
-   * `jsonCodec`.
+   * Where the values transporters encoded sit in
+   * {@link ResolvePayload.resolves | `resolves`}, keyed by state name, then by
+   * resolve token: each one's transporter name and its path of keys from the
+   * resolve's value (`[]` for the value itself). Absent when no transporter
+   * encoded anything.
    */
-  readonly codec?: string;
+  readonly transported?: Readonly<
+    Record<
+      string,
+      Readonly<
+        Record<
+          string,
+          readonly {
+            /** The name of the transporter that encoded the value. */
+            readonly type: string;
+            /** The keys from the resolve's value to the encoded value; `[]` for the value itself. */
+            readonly path: readonly (string | number)[];
+          }[]
+        >
+      >
+    >
+  >;
 }
 
 /**
- * Turns a resolved value into plain JSON data for the payload, and back.
- * `dehydrate` from `ui-router-server/ssr` encodes each value it draws with
- * it, and `seed` from `ui-router-server/ssr/client` decodes each value it
- * adopts, so the payload itself stays plain JSON data.
+ * Carries one type of value that plain JSON data can't, such as a `Date`,
+ * through the payload. `dehydrate` from `ui-router-server/ssr` and `seed`
+ * from `ui-router-server/ssr/client` take a record of them, keyed by a name
+ * both sides share.
+ *
+ * @typeParam T - the type of value it carries
  */
-export interface ResolveCodec {
+export interface Transporter<T = unknown> {
   /**
-   * Written into the payload. `seed` adopts nothing from a payload whose
-   * codec name differs from its own.
+   * Encodes `value` as plain JSON data when it is a value this transporter
+   * carries. For any other value it answers with a falsy value, and the next
+   * transporter is asked, so an encoding is never falsy itself. When it
+   * throws, `dehydrate` lists that resolve in `unserializable`.
    */
-  readonly name: string;
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- asked about any value a resolve returns that isn't plain JSON data
+  encode(value: unknown): JsonValue | false | null | undefined;
   /**
-   * Encodes a resolved value. It throws for a value it can't carry, and
-   * `dehydrate` lists that resolve in `unserializable`.
+   * Rebuilds the value from what `encode` returned, after a JSON round trip.
+   * When it throws, `seed` adopts nothing for that resolve.
    */
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value a resolve function returns, as core types it
-  encode(value: unknown): JsonValue;
-  /** Decodes a value `encode` returned, after a JSON round trip. */
-  // oxlint-disable-next-line anti-slop/no-unknown-returns -- the value a resolve adopts, which core's injector reads untyped
-  decode(value: JsonValue): unknown;
+  decode(encoded: JsonValue): T;
 }
-
-/**
- * The default codec, named `json`: it carries plain JSON data as it is and
- * throws for anything else, such as a `Date`, a `Map` or a class instance.
- */
-export const jsonCodec: ResolveCodec = {
-  name: 'json',
-  encode: (value) => {
-    if (isJsonValue(value)) return value;
-
-    throw new TypeError('jsonCodec: the value is not plain JSON data');
-  },
-  decode: (value) => value,
-};
 
 /**
  * Plain data only: a value JSON would convert (a Date, a Map, NaN, -0) comes back changed.

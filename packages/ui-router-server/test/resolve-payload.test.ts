@@ -9,11 +9,9 @@ import {
 
 import { installServerLocation } from '../src/location.ts';
 import {
-  jsonCodec,
   seed,
-  type JsonValue,
-  type ResolveCodec,
   type ResolvePayload,
+  type Transporter,
 } from '../src/ssr-client.ts';
 import {
   dehydrate,
@@ -480,143 +478,317 @@ describe('seed', () => {
   });
 });
 
-// Carries a top-level Date as { $date: iso }; everything else as jsonCodec does.
-const dateCodec: ResolveCodec = {
-  name: 'date',
-  encode: (value) =>
-    value instanceof Date
-      ? { $date: value.toISOString() }
-      : jsonCodec.encode(value),
-  decode: (value) =>
-    value instanceof Object && !Array.isArray(value) && '$date' in value
-      ? // SAFETY: only encode writes a $date member, and it writes an ISO string.
-        new Date(value.$date as string)
-      : value,
+const DateTransporter: Transporter<Date> = {
+  encode: (value) => value instanceof Date && value.toISOString(),
+  // SAFETY: encode writes an ISO string.
+  decode: (encoded) => new Date(encoded as string),
 };
+
+const SheetTransporter: Transporter<Sheet> = {
+  encode: (value) => value instanceof Sheet && { num: value.num },
+  // SAFETY: encode writes { num }.
+  decode: (encoded) => new Sheet((encoded as { num: string }).num),
+};
+
+const transport = { Date: DateTransporter, Sheet: SheetTransporter };
 
 const silenceWarn = (t: TestContext) =>
   t.mock.method(console, 'warn', () => {});
 
-describe('resolve codec', () => {
-  it('draws the same payload with jsonCodec as without a codec', async () => {
+const oddRouter = (resolve: Record<string, () => object | null>) => {
+  const { calls, count } = counter();
+  const router = new UIRouter();
+  router.plugin(servicesPlugin);
+  installServerLocation(router);
+  router.stateRegistry.register({
+    name: 'odd',
+    url: '/odd',
+    resolve: Object.entries(resolve).map(([token, value]) => ({
+      token,
+      resolveFn: count(token, value),
+    })),
+  });
+
+  return { router, calls };
+};
+
+describe('transport', () => {
+  it('draws the same bytes without transporters as before them', async () => {
     const bare = await drawn('/app/sheet/7B');
-    const explicit = await drawn('/app/sheet/7B', { codec: jsonCodec });
 
-    assert.equal(JSON.stringify(explicit), JSON.stringify(bare));
-    assert.equal('codec' in bare.payload, false);
-    assert.deepEqual(bare.unserializable, [
-      { state: 'app.sheet', token: 'drawnAt' },
-      { state: 'app.sheet', token: 'sheet' },
-    ]);
-  });
-
-  it('round-trips a Date through a codec of its own, its resolve never run', async () => {
-    const { payload, unserializable } = await drawn('/app/sheet/7B', {
-      codec: dateCodec,
-    });
-
-    assert.equal(payload.codec, 'date');
-    assert.deepEqual(payload.resolves['app.sheet']?.drawnAt, {
-      $date: '1970-01-01T00:00:00.000Z',
-    });
-    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
-
-    const { router, calls } = makeRouter();
-    seed(router, roundTrip(payload), { codec: dateCodec });
-
-    const transition = await settle(router, '/app/sheet/7B');
-    const drawnAt: unknown = transition.injector().get('drawnAt');
-
-    assert.equal(calls.get('app.sheet.drawnAt'), undefined);
-    assert.ok(drawnAt instanceof Date);
-    assert.equal(drawnAt.getTime(), 0);
-    assert.equal(calls.get('app.sheet.title'), undefined);
-    assert.equal(calls.get('app.sheet.sheet'), 1);
-  });
-
-  it('lists a resolve whose value the codec throws for', async () => {
-    const strict: ResolveCodec = {
-      ...jsonCodec,
-      name: 'strict',
-      encode: (value) => {
-        if (Number.isFinite(value)) throw new RangeError('no numbers');
-
-        return jsonCodec.encode(value);
-      },
-    };
-
-    const { payload, unserializable } = await drawn('/app/sheet/7B', {
-      codec: strict,
-    });
-
-    assert.equal('count' in (payload.resolves['app.sheet'] ?? {}), false);
-    assert.deepEqual(unserializable, [
-      { state: 'app.sheet', token: 'count' },
-      { state: 'app.sheet', token: 'drawnAt' },
-      { state: 'app.sheet', token: 'sheet' },
-    ]);
-  });
-
-  it('never encodes a resolve shouldDehydrate keeps out', async () => {
-    const encoded: unknown[] = [];
-
-    const { unserializable } = await drawn('/app/sheet/7B', {
-      shouldDehydrate: ({ token }) => token !== 'drawnAt',
-      codec: {
-        ...dateCodec,
-        encode: (value) => {
-          encoded.push(value);
-
-          return dateCodec.encode(value);
-        },
-      },
+    const unclaimed = await drawn('/app/sheet/7B', {
+      transport: { Never: { encode: () => false, decode: (value) => value } },
     });
 
     assert.equal(
-      encoded.some((value) => value instanceof Date),
-      false,
+      JSON.stringify(bare.payload),
+      '{"state":"app.sheet","params":{"num":"7B"},"resolves":{"app":{"user":{"name":"Ada","roles":["admin"]}},"app.sheet":{"title":"Ada: sheet 7B","count":7,"empty":null}}}',
     );
-    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
+    assert.equal(JSON.stringify(unclaimed), JSON.stringify(bare));
   });
 
-  it('adopts nothing from a payload drawn with another codec, and warns', async (t) => {
-    const custom = await drawn('/app/sheet/7B', { codec: dateCodec });
-    const plain = await drawn('/app/sheet/7B');
+  it('round-trips a Date and a class instance, their resolves never run', async () => {
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      transport,
+    });
 
-    for (const [payload, codec] of [
-      [custom.payload, undefined],
-      [plain.payload, dateCodec],
-    ] as const) {
-      const warn = silenceWarn(t);
-      const { router, calls } = makeRouter();
-      const decoded: JsonValue[] = [];
+    assert.deepEqual(unserializable, []);
+    assert.deepEqual(
+      payload.resolves['app.sheet']?.drawnAt,
+      '1970-01-01T00:00:00.000Z',
+    );
+    assert.deepEqual(payload.transported, {
+      'app.sheet': {
+        drawnAt: [{ type: 'Date', path: [] }],
+        sheet: [{ type: 'Sheet', path: [] }],
+      },
+    });
 
-      seed(router, roundTrip(payload), {
-        codec: codec && {
-          ...codec,
-          decode: (value) => {
-            decoded.push(value);
+    const { router, calls } = makeRouter();
+    seed(router, roundTrip(payload), { transport });
 
-            return codec.decode(value);
+    const transition = await settle(router, '/app/sheet/7B');
+    const drawnAt: unknown = transition.injector().get('drawnAt');
+    const sheet: unknown = transition.injector().get('sheet');
+
+    // NOWAIT stays with the client.
+    assert.deepEqual([...calls.keys()], ['app.sheet.comments']);
+    assert.ok(drawnAt instanceof Date);
+    assert.equal(drawnAt.getTime(), 0);
+    assert.ok(sheet instanceof Sheet);
+    assert.equal(sheet.num, '7B');
+  });
+
+  it('round-trips a Date nested in arrays and plain objects', async () => {
+    const server = oddRouter({
+      log: () => ({
+        entries: [{ at: new Date(0), note: 'made' }, { at: new Date(1) }],
+      }),
+    });
+
+    const { payload } = dehydrate(await settle(server.router, '/odd'), {
+      transport,
+    });
+
+    assert.deepEqual(payload.transported, {
+      odd: {
+        log: [
+          { type: 'Date', path: ['entries', 0, 'at'] },
+          { type: 'Date', path: ['entries', 1, 'at'] },
+        ],
+      },
+    });
+
+    const parsed = roundTrip(payload);
+    const client = oddRouter({ log: () => null });
+    seed(client.router, parsed, { transport });
+
+    const transition = await settle(client.router, '/odd');
+
+    assert.equal(total(client.calls), 0);
+    assert.deepEqual(transition.injector().get('log'), {
+      entries: [{ at: new Date(0), note: 'made' }, { at: new Date(1) }],
+    });
+    assert.deepEqual(
+      parsed,
+      roundTrip(payload),
+      'seed leaves the payload as parsed',
+    );
+  });
+
+  it('lists a value no transporter claims, and one whose encode throws', async () => {
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      transport: {
+        Date: DateTransporter,
+        Sheet: {
+          ...SheetTransporter,
+          encode: () => {
+            throw new RangeError('no sheets');
           },
         },
-      });
+      },
+    });
 
-      await settle(router, '/app/sheet/7B');
+    const unclaimed = await drawn('/app/sheet/7B', {
+      transport: { Sheet: SheetTransporter },
+    });
 
-      assert.equal(total(calls), 7);
-      assert.deepEqual(decoded, []);
-      assert.equal(warn.mock.callCount(), 1);
-      assert.match(
-        String(warn.mock.calls[0]?.arguments[0]),
-        /^ui-router-server: seed: /,
-      );
-      warn.mock.restore();
-    }
+    assert.deepEqual(unserializable, [{ state: 'app.sheet', token: 'sheet' }]);
+    assert.equal('sheet' in (payload.resolves['app.sheet'] ?? {}), false);
+    assert.deepEqual(payload.transported, {
+      'app.sheet': { drawnAt: [{ type: 'Date', path: [] }] },
+    });
+    assert.deepEqual(unclaimed.unserializable, [
+      { state: 'app.sheet', token: 'drawnAt' },
+    ]);
   });
 
-  it('adopts nothing from a mismatched payload without warning outside development', async (t) => {
-    const { payload } = await drawn('/app/sheet/7B', { codec: dateCodec });
+  it('lists a value whose encoding is not plain JSON data', async () => {
+    const { unserializable } = await drawn('/app/sheet/7B', {
+      transport: {
+        // SAFETY: the encoding breaks the contract on purpose.
+        Date: {
+          ...DateTransporter,
+          encode: (value) =>
+            value instanceof Date // SAFETY: the encoding breaks the contract on purpose.
+              ? (value as never)
+              : false,
+        },
+      },
+    });
+
+    assert.deepEqual(unserializable, [
+      { state: 'app.sheet', token: 'drawnAt' },
+      { state: 'app.sheet', token: 'sheet' },
+    ]);
+  });
+
+  it('asks the transporters in key order, the first non-falsy encoding winning', async () => {
+    const asked: string[] = [];
+
+    const { payload } = await drawn('/app/sheet/7B', {
+      transport: {
+        First: {
+          encode: () => (asked.push('First'), 0),
+          decode: (value) => value,
+        },
+        Date: {
+          ...DateTransporter,
+          encode: (value) => (
+            asked.push('Date'),
+            DateTransporter.encode(value)
+          ),
+        },
+        Last: {
+          encode: () => (asked.push('Last'), 'last'),
+          decode: (value) => value,
+        },
+      },
+      shouldDehydrate: ({ token }) => token === 'drawnAt',
+    });
+
+    assert.deepEqual(asked, ['First', 'Date']);
+    assert.deepEqual(payload.transported, {
+      'app.sheet': { drawnAt: [{ type: 'Date', path: [] }] },
+    });
+  });
+
+  it('never offers plain JSON data or a declined resolve to a transporter', async () => {
+    const offered: unknown[] = [];
+
+    await drawn('/app/sheet/7B', {
+      shouldDehydrate: ({ token }) => token !== 'drawnAt',
+      transport: {
+        Spy: {
+          encode: (value) => {
+            offered.push(value);
+
+            return false;
+          },
+          decode: (value) => value,
+        },
+      },
+    });
+
+    assert.equal(offered.length, 1);
+    assert.ok(offered[0] instanceof Sheet);
+  });
+
+  it('adopts a user object shaped like a mark as the data it is', async () => {
+    const lookalike = { type: 'Date', path: [] };
+
+    const server = oddRouter({
+      mark: () => lookalike,
+      transported: () => ({ odd: { mark: [lookalike] } }),
+    });
+
+    const { payload } = dehydrate(await settle(server.router, '/odd'), {
+      transport,
+    });
+
+    assert.equal('transported' in payload, false);
+
+    const client = oddRouter({ mark: () => null, transported: () => null });
+    seed(client.router, roundTrip(payload), { transport });
+
+    const transition = await settle(client.router, '/odd');
+
+    assert.equal(total(client.calls), 0);
+    assert.deepEqual(transition.injector().get('mark'), lookalike);
+    assert.deepEqual(transition.injector().get('transported'), {
+      odd: { mark: [lookalike] },
+    });
+  });
+
+  it('runs only the resolve whose transporter the client lacks, and warns', async (t) => {
+    const { payload } = await drawn('/app/sheet/7B', { transport });
+    const warn = silenceWarn(t);
+    const { router, calls } = makeRouter();
+
+    seed(router, roundTrip(payload), { transport: { Date: DateTransporter } });
+
+    const transition = await settle(router, '/app/sheet/7B');
+
+    assert.deepEqual(
+      [...calls.keys()],
+      ['app.sheet.comments', 'app.sheet.sheet'],
+    );
+    assert.ok(transition.injector().get('drawnAt') instanceof Date);
+    assert.equal(warn.mock.callCount(), 1);
+    assert.match(
+      String(warn.mock.calls[0]?.arguments[0]),
+      /^ui-router-server: seed: app\.sheet's sheet resolve carries a "Sheet" value/,
+    );
+  });
+
+  it('runs only the resolve whose decode throws, and warns', async (t) => {
+    const { payload } = await drawn('/app/sheet/7B', { transport });
+    const warn = silenceWarn(t);
+    const { router, calls } = makeRouter();
+
+    seed(router, roundTrip(payload), {
+      transport: {
+        ...transport,
+        Date: {
+          ...DateTransporter,
+          decode: () => {
+            throw new RangeError('no dates');
+          },
+        },
+      },
+    });
+
+    const transition = await settle(router, '/app/sheet/7B');
+
+    assert.deepEqual(
+      [...calls.keys()],
+      ['app.sheet.comments', 'app.sheet.drawnAt'],
+    );
+    assert.ok(transition.injector().get('sheet') instanceof Sheet);
+    assert.equal(warn.mock.callCount(), 1);
+    assert.match(
+      String(warn.mock.calls[0]?.arguments[0]),
+      /^ui-router-server: seed: app\.sheet's drawnAt resolve carries a "Date" value and its decode threw/,
+    );
+  });
+
+  it('never takes an inherited member for a transporter', async (t) => {
+    const { payload } = dehydrate(
+      await settle(oddRouter({ at: () => new Date(0) }).router, '/odd'),
+      { transport: { toString: DateTransporter } },
+    );
+
+    silenceWarn(t);
+    const client = oddRouter({ at: () => null });
+
+    seed(client.router, roundTrip(payload));
+    await settle(client.router, '/odd');
+
+    assert.equal(client.calls.get('at'), 1);
+  });
+
+  it('falls back without warning outside development', async (t) => {
+    const { payload } = await drawn('/app/sheet/7B', { transport });
     const warn = silenceWarn(t);
     t.after(stubDev(false));
     const { router, calls } = makeRouter();
@@ -624,7 +796,9 @@ describe('resolve codec', () => {
     seed(router, roundTrip(payload));
     await settle(router, '/app/sheet/7B');
 
-    assert.equal(total(calls), 7);
+    assert.equal(calls.get('app.sheet.drawnAt'), 1);
+    assert.equal(calls.get('app.sheet.sheet'), 1);
+    assert.equal(calls.get('app.sheet.title'), undefined);
     assert.equal(warn.mock.callCount(), 0);
   });
 });
