@@ -75,6 +75,7 @@ import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
   settle,
+  type DehydrateCandidate,
   type DehydrateResult,
   type JsonValue,
   type SettleOptions,
@@ -329,6 +330,13 @@ export async function adoptedSummary(
 
   const drawn: DehydrateResult = dehydrate(await settle(server, '/sheet/7B'));
   void drawn.unserializable.map(({ state, token }) => `${state}.${token}`);
+
+  const shared = ({ token }: DehydrateCandidate): boolean =>
+    token !== 'manifest';
+
+  void dehydrate(await settle(server, '/sheet/7B'), {
+    shouldDehydrate: shared,
+  });
 
   // SAFETY: the document holds what dehydrate drew, after a JSON round trip.
   const payload = JSON.parse(JSON.stringify(drawn.payload)) as ResolvePayload;
