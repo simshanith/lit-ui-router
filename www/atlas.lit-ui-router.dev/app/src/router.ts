@@ -296,7 +296,8 @@ export function createRouter(): UIRouterLit {
   // the url, the rail's uiSrefActive and the prerendered directory agree.
   // An aliased id ('14i') redirects the same way, to the plate it names.
   router.transitionService.onBefore({ to: 'atlas.sheet' }, async (transition) => {
-    const manifest = await loadManifest();
+    // The shell's resolve, so a boot seeded with the manifest fetches none.
+    const manifest = (await transition.injector().getAsync('manifest')) as Manifest;
     const num = String(transition.params().num);
     const row = findSheet(manifest, SHEET_ALIASES[num] ?? num);
     if (!row) {

@@ -128,6 +128,71 @@ One thing that cutover measured:
   falls back for the other reason in the contract: one document answers the
   whole family.
 
+**Update, 2026-10-29.** The atlas is on `lit-ui-router@1.19.0`,
+`ui-router-server@0.6.0` and `lit-ui-router-ssr@0.6.0` (#1640). `src/main.ts`
+boots with one `bootstrap(router, root, page(router), { payload, onAdopt })`
+in place of the `onSuccess` hook, `router.start()`, `hydrateRoot()` and the
+cold `render()` it wrote by hand, and stamps the result on `<html
+data-boot>`. `prerender.ts` takes `dehydrate()` off the transition `settle()`
+lands and embeds the payload as `#atlas-payload` on every shell page, the
+404 included. Three tokens stay out: `fragment`, the page's own HTML, which
+would serve it twice; `specimen`, a stand-in `true` on the server for a
+dynamic `import()` on the client; and `manifest`, the 146 KB index every page
+shares. `dehydrate()` has no per-token opt-out, so the build deletes them from
+the payload it drew, which leaves 47 to 1,932 bytes of `sheet` and `extra`.
+The shell (`index.html`) preloads `manifest.json` with `<link rel="preload"
+as="fetch" crossorigin>`, which pairs with `loadManifest()`'s plain
+same-origin `fetch()`: one request per page, initiated by the preload, and no
+unused-preload warning. `viewer` resolves `undefined` and lands in
+`unserializable` on its own, on the four model plates; the build fails on any
+other token there. `<atlas-themer>`, `<atlas-copy-link>` and `<atlas-prefs>`
+extend `LightDomHydrating(LitElement)` and take `lightSlot()` at their use
+sites, so the default `LightElementRenderer` draws them and they adopt in
+place. `routedViewTemplate` from `lit-ui-router/pure` is not adopted: the app
+renders every view through `<ui-view>` and has no hand-rolled equivalent.
+
+Two payloads were measured: A carried `manifest`, B, the one that shipped,
+leaves it to the preload. Built app over loopback, Playwright chromium,
+off-origin requests aborted, five cold loads, median ms; "before" is the
+comment on #1640.
+
+| page | | `manifest.json` | same-origin requests | DCL | load | booted |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/sheet/7/` | before | 1 | 9 | 104.0 | 112.2 | 144.2 |
+| | A | 0 | 8 | 99.9 | 108.2 | 129.3 |
+| | B | 1 | 9 | 92.2 | 100.0 | 127.2 |
+| `/` | before | 1 | 26 | 111.5 | 115.0 | 163.6 |
+| | A | 0 | 25 | 148.9 | 149.1 | 148.6 |
+| | B | 1 | 26 | 98.4 | 101.7 | 143.8 |
+| `/city/` | before | 1 | 11 | 91.5 | 97.2 | 163.3 |
+| | A | 0 | 10 | 85.1 | 89.7 | 145.5 |
+| | B | 1 | 11 | 81.2 | 85.2 | 148.7 |
+
+A doubled every shell: `/sheet/7/` went to 322 KB raw and 63 KB gzip, and
+`/` to 407 KB, from 172 KB and 32 KB. B keeps them at 175 KB / 33 KB and
+260 KB / 36 KB. Served with the deployed site's `public, max-age=0,
+must-revalidate` and an etag, a reader moving from `/` to `/sheet/7/` and
+then `/city/` in one browser pays B one conditional `manifest.json` request
+per page, 222 bytes on the wire, and A none. A still moves more bytes on
+those two pages, 82 KB and 641 KB against B's 53 KB and 611 KB, because its
+documents carry the index. Under both, every one of the 38 shell pages and
+`404.html` boots `adopted:matched`, and every served view and light-DOM
+element reports `adopted` (78 views, 39 themers, 39 prefs panels, 8 copy
+links). What rubbed:
+
+- Seeding the resolve was not enough to settle the fetch count. The
+  `atlas.sheet` guard and the experimental slideshow called `loadManifest()`
+  outside the resolve, the slideshow at module load. Both, and the arrow
+  keys, read the shell's resolved `manifest` off the transition instead, so
+  a page makes one request under B and none under A.
+- A light-DOM element's served attribute values stay through hydration,
+  which commits no attribute. The themer and the prefs panel draw their
+  defaults on both halves and read `localStorage` in their first client
+  `willUpdate`, after the wake has adopted, so the update that follows
+  writes the stored values over the served ones.
+- A token opt-out in `dehydrate()` would replace the post-filter on the
+  payload, which also has to rebuild the read-only `resolves` map.
+
 Everything below this line is the original measurement, taken
 against `ui-router-server@0.1.1` / `lit-ui-router@1.11.2`; where a finding has
 since shipped or changed, a dated note says so inline.

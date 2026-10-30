@@ -300,10 +300,36 @@ from `lit-ui-router`, which checks a component without inferring its template, a
 them as `LitStateDeclaration[]`. `src/registry.test-d.ts` holds the assertions and
 `npm run typecheck` runs them. The package emits no JavaScript, so the site build is unchanged.
 
-**The boot (`src/main.ts`).** Register a one-shot `onSuccess` hook, `router.start()`, await the
-first successful transition, then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
-wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
-artifact build — returns `false` and the same template is rendered instead.
+**The resolve payload (`prerender.ts`).** Each shell page carries the resolves it was drawn with:
+`dehydrate()` from `ui-router-server/ssr` reads them off the transition `settle()` lands, and the
+page embeds them as `<script type="application/json" id="atlas-payload">` after `#root`. The
+payload carries the per-page `sheet` and `extra`, 47 to 1,932 bytes. It leaves out `fragment`, the
+page's own HTML, which the body already holds; `specimen`, a stand-in on the server for the bench
+the client imports; and `manifest`, the 146 KB index every page shares, which the shell's
+`<link rel="preload" as="fetch" crossorigin>` in `index.html` starts beside the document and the
+browser keeps in its cache between pages. `viewer` resolves `undefined` and `dehydrate()` lists it
+as unserializable. The build
+prints each page's payload size and the resolves that re-run on the client, and exits 1 on an
+unserializable resolve other than `viewer`. The bare plate pages carry none.
+
+**The boot (`src/main.ts`).** One `bootstrap(router, root, page(router), { payload, onAdopt })` from
+`lit-ui-router-ssr/client` seeds the boot transition with the parsed `#atlas-payload`, starts the
+router, awaits the transition that lands, then adopts: the walk wakes every served `<ui-view>`,
+which adopts the nodes it already holds, and the call returns when every awake view has updated.
+A seeded boot runs two resolves: the shell's `manifest`, which picks up the preloaded
+`manifest.json`, and the fragment. The `atlas.sheet` guard and the experimental slideshow and
+arrow keys read the shell's resolved `manifest` off the transition rather than calling
+`loadManifest()`, so a page makes one `manifest.json` request. A cold container —
+the dev server, the artifact build — is emptied and the same template rendered into it.
+`<html data-boot>` records the result as `outcome:signature`, `adopted:matched` on every
+prerendered page.
+
+**The light-DOM elements.** `<atlas-themer>`, `<atlas-copy-link>` and `<atlas-prefs>` extend
+`LightDomHydrating(LitElement)` and sit at their use sites with `lightSlot()` as their child, so
+`prerender()`'s default `LightElementRenderer` draws them into the page and each one adopts its
+served markup in place. The server draws the defaults (`auto`, both switches off); the stored
+theme and switches land in the first client `willUpdate`, after the wake has adopted, since a
+hydrate keeps the served attribute values.
 
 **Enlarge (`src/lightbox.ts`).** Every figure — a plate, a lane's stage, the frame of the city,
 the plant or the bricks — is a `.fillable` box with one `.fill` button reading ENLARGE, and the

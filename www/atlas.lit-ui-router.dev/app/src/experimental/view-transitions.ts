@@ -29,7 +29,7 @@
  */
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
-import { loadManifest } from '../runtime.ts';
+import type { Manifest } from '../manifest.ts';
 import { isInPlaceChange, scrollToTop } from '../router.ts';
 import { viewRendered } from './view-rendered.ts';
 
@@ -72,18 +72,15 @@ const reducedMotion = (): boolean =>
 const supportsViewTransitions = (): boolean =>
   typeof doc.startViewTransition === 'function';
 
-/** Ascent order, so a move from sheet 7 to 8 reads as "forward". */
-let order: string[] = [];
-void loadManifest().then((manifest) => {
-  order = manifest.sheets.map((sheet) => sheet.id);
-});
-
 type Direction = 'fwd' | 'back' | 'none';
 
 function directionOf(transition: Transition): Direction {
   const from = transition.from();
   const to = transition.to();
   if (from.name !== 'atlas.sheet' || to.name !== 'atlas.sheet') return 'none';
+  // Ascent order, so 7 to 8 reads as "forward"; a sheet-to-sheet move keeps the shell's resolved manifest.
+  const { sheets } = transition.injector().get('manifest') as Manifest;
+  const order = sheets.map((sheet) => sheet.id);
   const before = order.indexOf(String(transition.params('from').num).toLowerCase());
   const after = order.indexOf(String(transition.params('to').num).toLowerCase());
   if (before === -1 || after === -1 || before === after) return 'none';

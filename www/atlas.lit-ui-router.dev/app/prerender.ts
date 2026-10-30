@@ -38,6 +38,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { LitStateDeclaration, UIRouterLit as LitRouter } from 'lit-ui-router';
 import type { Transition } from '@uirouter/core';
 import type { RedirectLine } from 'lit-ui-router-ssr';
+import type { JsonValue, ResolvePayload } from 'ui-router-server/ssr';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
 import { BASE, MOUNT, SHEET_ALIASES, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
@@ -77,6 +78,7 @@ const { UIRouterLit } = await import('lit-ui-router/pure');
 const { createServerRouter, diagnoseMounts } = await import('ui-router-server');
 const { installServerLocation } = await import('ui-router-server/location');
 const { prerender, settle } = await import('lit-ui-router-ssr');
+const { dehydrate } = await import('ui-router-server/ssr');
 const { RouterRefController } = await import('lit-ui-router-effect');
 const { withRouterSync } = await import('lit-ui-router/context');
 const views = await import('./src/views.ts');
@@ -219,6 +221,41 @@ ${FILL_SCRIPT}</script>
 </body>
 </html>
 `;
+/**
+ * The resolve payload each shell page carries for `bootstrap()` to seed.
+ * `fragment` is the body's own HTML, `specimen` a server stand-in for the
+ * bench the client imports, and `manifest` the 146 KB index the shell
+ * preloads (index.html) and the browser caches, so none of them seeds;
+ * `viewer` resolves `undefined` and `dehydrate` lists it as unserializable.
+ */
+const LEFT_OUT = new Set(['fragment', 'specimen', 'manifest']);
+const EXPECTED_UNSERIALIZABLE = new Set(['viewer']);
+const payloads = new Map<string, ResolvePayload>();
+const payloadReport: { path: string; bytes: number; unserializable: string[] }[] = [];
+
+const drawPayload = (path: string, transition: Transition): void => {
+  const { payload, unserializable } = dehydrate(transition);
+  const resolves = Object.fromEntries(
+    Object.entries(payload.resolves)
+      .map(([state, tokens]): [string, Record<string, JsonValue>] => [
+        state,
+        Object.fromEntries(Object.entries(tokens).filter(([token]) => !LEFT_OUT.has(token))),
+      ])
+      .filter(([, tokens]) => Object.keys(tokens).length > 0),
+  );
+  const kept: ResolvePayload = { ...payload, resolves };
+  payloads.set(path, kept);
+  payloadReport.push({
+    path,
+    bytes: Buffer.byteLength(JSON.stringify(kept)),
+    unserializable: unserializable.map(({ state, token }) => `${state}.${token}`),
+  });
+};
+
+/** The payload as a data block; `<\/` keeps a `</script>` inside a string from closing it. */
+const payloadScript = (payload: ResolvePayload): string =>
+  `<script type="application/json" id="atlas-payload">${JSON.stringify(payload).replaceAll('</', '<\\/')}</script>`;
+
 const routeRefFailures: string[] = [];
 let routeRefReads = 0;
 let routeRefMisses = 0;
@@ -304,24 +341,28 @@ const result = await prerender({
   outDir: DIST,
   paths: [...titles.keys(), ...verdictOnly],
   extraRules: megacanvas,
-  // The default `[UiViewRenderer]` answers for `<ui-view>` alone; the atlas's
-  // own light-DOM elements each fall back to a plain tag around their children.
+  // The default `[UiViewRenderer, LightElementRenderer]` draws each
+  // `<ui-view>` and the atlas's own `LightDomHydrating` elements in place.
   // `settle()` drives the url directly and never calls `router.start()`; a
   // page that fails to land rejects, which fails the build.
   renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
+    const transition = await settle(router, path);
     checkRouteRef(path);
     // A string is written as-is, with no hydration signature: the bare plate.
     const plate = plateOf.get(path);
-    return plate ? fragmentOf(plate) : views.page(router);
+    if (plate) return fragmentOf(plate);
+    drawPayload(path, transition);
+    return views.page(router);
   },
   document: (body, { path }) => {
     const plate = plateOf.get(path);
     if (plate) return plateDocument(plate, body);
     const title = titles.get(path) ?? TITLES.notFound;
+    const payload = payloads.get(path);
+    const block = payload ? `\n${payloadScript(payload)}` : '';
     return shellHtml
       .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-      .replace(ROOT_RE, `$1${body}$3`);
+      .replace(ROOT_RE, () => `<div id="root">${body}</div>${block}`);
   },
 });
 
@@ -349,3 +390,21 @@ console.log(
     `${String(routeRefReads)} renders match router.globals (${String(routeRefSheets)} sheets by num)`,
 );
 if (routeRefFailures.length > 0) process.exitCode = 1;
+
+const sizes = payloadReport.map(({ bytes }) => bytes).sort((a, b) => a - b);
+const median = sizes[Math.floor(sizes.length / 2)] ?? 0;
+console.log(
+  `resolve payload: ${String(payloadReport.length)} shell pages · ` +
+    `${String(sizes[0] ?? 0)}–${String(sizes.at(-1) ?? 0)} bytes, median ${String(median)}`,
+);
+for (const { path, bytes, unserializable } of payloadReport) {
+  const reruns = unserializable.length > 0 ? ` · re-runs ${unserializable.join(', ')}` : '';
+  console.log(`  ${path}: ${String(bytes)} bytes${reruns}`);
+}
+const unexpected = payloadReport.flatMap(({ path, unserializable }) =>
+  unserializable
+    .filter((token) => !EXPECTED_UNSERIALIZABLE.has(token.slice(token.lastIndexOf('.') + 1)))
+    .map((token) => `${path}: ${token}`),
+);
+for (const miss of unexpected) console.error(`prerender: unserializable resolve ${miss}`);
+if (unexpected.length > 0) process.exitCode = 1;

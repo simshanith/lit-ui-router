@@ -5,14 +5,14 @@
  */
 import type { UIRouter } from '@uirouter/core';
 import type { SubscriptionRef } from 'effect';
-import { LitElement, ReactiveElement, html, noChange, nothing, svg } from 'lit';
+import { LitElement, ReactiveElement, html, isServer, noChange, nothing, svg } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { live } from 'lit/directives/live.js';
 import { ref } from 'lit/directives/ref.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
-import { uiViewSlot } from 'lit-ui-router-ssr/client';
+import { LightDomHydrating, lightSlot, uiViewSlot } from 'lit-ui-router-ssr/client';
 import { RefController } from 'lit-ui-router-effect';
 import { routeRef } from 'ui-router-effect';
 import type { TypedRouteSnapshot } from 'ui-router-effect';
@@ -386,18 +386,20 @@ customElements.define('atlas-builds', AtlasBuilds);
 
 // --- <atlas-themer> — the sheets' three-state theme control ----------------
 
-export class AtlasThemer extends LitElement {
+export class AtlasThemer extends LightDomHydrating(LitElement) {
   static override properties = { choice: { state: true } };
 
   declare choice: ThemeChoice;
 
   constructor() {
     super();
-    this.choice = readTheme();
+    this.choice = 'auto';
   }
 
-  override createRenderRoot(): HTMLElement {
-    return this;
+  // The stored choice lands after the wake adopts the served 'auto', so hydrate meets the markup it was served.
+  override willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    if (!isServer && !this.hasUpdated) this.choice = readTheme();
   }
 
   #pick(choice: ThemeChoice): void {
@@ -427,7 +429,7 @@ customElements.define('atlas-themer', AtlasThemer);
 // --- <atlas-copy-link> — the page's own url, pin and all, onto the clipboard -
 
 // The router writes the href, so the artifact build copies its `#/…` url.
-export class AtlasCopyLink extends LitElement {
+export class AtlasCopyLink extends LightDomHydrating(LitElement) {
   static override properties = { router: { attribute: false }, copied: { state: true } };
 
   declare router: UIRouter | undefined;
@@ -438,10 +440,6 @@ export class AtlasCopyLink extends LitElement {
     super();
     this.router = undefined;
     this.copied = false;
-  }
-
-  override createRenderRoot(): HTMLElement {
-    return this;
   }
 
   override disconnectedCallback(): void {
@@ -488,7 +486,7 @@ customElements.define('atlas-copy-link', AtlasCopyLink);
 
 // --- <atlas-prefs> — the two live switches, in a panel off the utility bar --
 
-export class AtlasPrefs extends LitElement {
+export class AtlasPrefs extends LightDomHydrating(LitElement) {
   static override properties = {
     open: { state: true },
     visualizer: { state: true },
@@ -502,12 +500,16 @@ export class AtlasPrefs extends LitElement {
   constructor() {
     super();
     this.open = false;
-    this.visualizer = readPref('visualizer');
-    this.trace = readPref('trace');
+    this.visualizer = { on: false, forced: false };
+    this.trace = { on: false, forced: false };
   }
 
-  override createRenderRoot(): HTMLElement {
-    return this;
+  // The stored switches land after the wake adopts the served defaults, so hydrate meets the markup it was served.
+  override willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    if (isServer || this.hasUpdated) return;
+    this.visualizer = readPref('visualizer');
+    this.trace = readPref('trace');
   }
 
   #onPointerDown = (event: Event): void => {
@@ -600,7 +602,7 @@ export class AtlasPrefs extends LitElement {
 customElements.define('atlas-prefs', AtlasPrefs);
 
 const copyLink = (router: UIRouter | undefined): TemplateResult =>
-  html`<atlas-copy-link .router=${router}></atlas-copy-link>`;
+  html`<atlas-copy-link .router=${router}>${lightSlot()}</atlas-copy-link>`;
 
 // --- the utility bar: crumb left, utilities right, on every page ------------
 
@@ -617,8 +619,8 @@ function utilBar(
         <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         ${copy}
-        <atlas-themer></atlas-themer>
-        <atlas-prefs></atlas-prefs>
+        <atlas-themer>${lightSlot()}</atlas-themer>
+        <atlas-prefs>${lightSlot()}</atlas-prefs>
       </nav>
     </div>
   `;

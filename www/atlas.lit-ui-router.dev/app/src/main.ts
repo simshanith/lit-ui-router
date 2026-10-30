@@ -1,6 +1,6 @@
-import { render } from 'lit';
 import 'lit-ui-router-ssr/register';
-import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
+import type { ResolvePayload } from 'ui-router-server/ssr/client';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLightbox } from './lightbox.ts';
@@ -46,42 +46,24 @@ installExperimental(router);
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
 
-// THE BOOT: start, await the first successful transition, then adopt. The hook
-// is registered before start(), so the first transition cannot land unseen,
-// and the walk wakes every served <ui-view> with the settled router in hand.
-const booted = new Promise<void>((resolve) => {
-  const off = router.transitionService.onSuccess({}, () => {
-    off();
-    resolve();
-  });
+// THE BOOT: seed from the served payload, start, adopt or render cold; resolves when every awake <ui-view> has updated.
+const payloadBlock = document.getElementById('atlas-payload');
+const payload = payloadBlock?.textContent
+  ? (JSON.parse(payloadBlock.textContent) as ResolvePayload)
+  : undefined;
+const { outcome, signature, error } = await bootstrap(router, root, page(router), {
+  payload,
+  // Every served view reports its wake; anything but an adoption is a finding.
+  onAdopt: (view, viewOutcome, viewError) => {
+    if (import.meta.env.DEV && viewOutcome !== 'adopted')
+      console.warn(`atlas: a served <ui-view> ${viewOutcome}`, view, viewError);
+  },
 });
-router.start();
-await booted;
+document.documentElement.dataset.boot = `${outcome}:${signature}`;
+if (import.meta.env.DEV && (outcome !== 'adopted' || signature !== 'matched' || error !== undefined))
+  console.warn(`atlas: the boot came to ${outcome}:${signature}`, error);
 // the visualizer and trace switches, applied once the first transition has settled
 installPrefs(router);
 
-/** Resolves once the root view's own update — and the microtask after it — is done. */
-const pageSettled = async (): Promise<void> => {
-  const view = root.querySelector('ui-view');
-  await view?.updateComplete;
-  await Promise.resolve();
-};
-
-let release: false | (() => void) = false;
-try {
-  release = hydrateRoot(root, page(router), {
-    // Every served view reports its wake; anything but an adoption is a finding.
-    onAdopt: (view, outcome, error) => {
-      if (import.meta.env.DEV && outcome !== 'adopted')
-        console.warn(`atlas: a served <ui-view> ${outcome}`, view, error);
-    },
-  });
-} catch (error) {
-  // A mutated document: the container comes back cold-renderable.
-  if (import.meta.env.DEV) console.warn('atlas: the served page was not adopted', error);
-}
-if (release) void pageSettled().then(release);
-else render(page(router), root);
-
 // every figure's ENLARGE button and the url's `?enlarge=`, answered by the document's one lightbox
-void pageSettled().then(() => installLightbox(router));
+installLightbox(router);

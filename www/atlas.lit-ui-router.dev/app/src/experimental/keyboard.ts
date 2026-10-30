@@ -4,8 +4,8 @@
  * Reads the router's settled globals once per key press rather than tracking
  * state itself: the settled route is the single source of truth for "which
  * sheet am I on", so this stays correct through back/forward, a deep link, and
- * the `/office` redirect alike. The sheet number is taken before the manifest
- * loads, so a transition that lands meanwhile cannot move the step's origin.
+ * the `/office` redirect alike. The sheet list is the shell's `manifest`
+ * resolve, read off the transition that landed, so a press fetches nothing.
  *
  * Focus follows the walk: once the arriving sheet has rendered, its title
  * takes focus (without scrolling — the router already scrolled to the top),
@@ -14,7 +14,7 @@
  */
 import type { UIRouterLit } from 'lit-ui-router';
 import type { TypedStateService } from 'ui-router-registry';
-import { loadManifest } from '../runtime.ts';
+import type { Manifest } from '../manifest.ts';
 import { viewRendered } from './view-rendered.ts';
 
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
@@ -41,15 +41,16 @@ export function installKeyboardWalk(router: UIRouterLit): void {
     if (!stateService.includes('atlas.sheet')) return;
     const here = String(router.globals.params.num).toLowerCase();
 
-    void loadManifest().then((manifest) => {
-      const index = manifest.sheets.findIndex((sheet) => sheet.id === here);
-      const next = manifest.sheets[index + step];
-      if (!next) return;
-      event.preventDefault();
-      stateService.go('atlas.sheet', { num: next.num }).then(
-        () => focusArrivedSheet(),
-        () => {}, // a superseded or rejected walk is not an error here
-      );
-    });
+    const landed = router.globals.successfulTransitions.peekTail();
+    if (!landed) return;
+    const { sheets } = landed.injector().get('manifest') as Manifest;
+    const index = sheets.findIndex((sheet) => sheet.id === here);
+    const next = sheets[index + step];
+    if (!next) return;
+    event.preventDefault();
+    stateService.go('atlas.sheet', { num: next.num }).then(
+      () => focusArrivedSheet(),
+      () => {}, // a superseded or rejected walk is not an error here
+    );
   });
 }

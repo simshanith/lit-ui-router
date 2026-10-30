@@ -64,6 +64,7 @@ const artifactHtmlPlugin: Plugin = {
       html
         .replace(/[ \t]*<base href="%BASE_URL%" \/>\n/, '')
         .replace(/[ \t]*<link rel="stylesheet" href="%BASE_URL%sheets\/atlas\.css" \/>\n/, '')
+        .replace(/[ \t]*<link rel="preload" as="fetch" href="%BASE_URL%manifest\.json" crossorigin \/>\n/, '')
         // the host sets the artifact's own icon; the icon files are public/, which artifact mode does not ship
         .replace(/[ \t]*<!-- the client's mark is the tab's icon[^\n]*\n(?:[ \t]*<link rel="(?:icon|apple-touch-icon)"[^\n]*\n)+/, ''),
   },
