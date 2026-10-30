@@ -1,4 +1,6 @@
 // The hydration signature both halves of the seam read, in a module neither entry reaches through the other.
+import { DefType } from '@uirouter/core';
+import type { UIRouterGlobals } from '@uirouter/core';
 
 /**
  * What a document's signature block carries, as
@@ -39,3 +41,27 @@ export const signatureSelector: string = `script[type="application/json"][${sign
  * @internal
  */
 export const packageVersion: string = import.meta.env.PACKAGE_VERSION;
+
+/**
+ * The state the router stands on and its url parameters, each encoded as the
+ * url spells it: what `prerender()` writes into the signature and what the
+ * client compares it against. Config params never reach the url, so they stay
+ * out.
+ *
+ * @internal
+ */
+export const routeOf = ({
+  $current,
+  params,
+}: UIRouterGlobals): [
+  state: string,
+  params: Readonly<Record<string, string | string[]>>,
+] => [
+  $current.name,
+  Object.fromEntries(
+    $current
+      .parameters()
+      .filter((param) => param.location !== DefType.CONFIG)
+      .map((param) => [param.id, param.type.encode(params[param.id])]),
+  ),
+];

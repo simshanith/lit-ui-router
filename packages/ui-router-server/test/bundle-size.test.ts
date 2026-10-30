@@ -60,6 +60,21 @@ for (const bundler of bundlers) {
       );
     });
 
+    it('bundles the ssr entry without the prerender loop or the resolver', async () => {
+      const ssr = entries.find((entry) => entry.label === 'ssr');
+      assert.ok(ssr, 'expected an ssr export');
+
+      const { inputs } = await bundleEntry(ssr.file, bundler, {
+        external: declared,
+      });
+
+      const loop = inputs.filter((input) =>
+        /[/\\](prerender|index)\.js$/.test(input),
+      );
+
+      assert.deepEqual(loop, [], 'ssr pulled in the prerender loop');
+    });
+
     it('reports the remaining entry sizes (visibility, not a gate)', async (t) => {
       for (const { label, file } of reported) {
         const { entry } = await bundleEntry(file, bundler, {

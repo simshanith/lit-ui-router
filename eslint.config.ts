@@ -1,13 +1,12 @@
 // The lane split. ESLint owns manifests (package.json via
 // eslint-plugin-package-json and eslint-plugin-pnpm, pnpm-workspace.yaml via
-// eslint-plugin-pnpm) and the custom-element lane over src (eslint-plugin-lit /
-// -wc / -lit-a11y). oxlint (.oxlintrc.json) owns general-purpose JS/TS *and*
-// lit-ui-router/anchor-is-valid, which it runs as a jsPlugin.
+// eslint-plugin-pnpm). oxlint (.oxlintrc.json) owns JS/TS, including the
+// lit-ui-router rules and, extended from @tools/lint-elements, the
+// eslint-plugin-lit / -wc / -lit-a11y rules, all run as jsPlugins.
 //
 // This file stays at the root because ESLint resolves the nearest
 // eslint.config.* per file, and the tutorials under examples/ ride it
 // deliberately. It composes; the pieces live in @tools/eslint.
-import elementLane from '@tools/eslint/elements.ts';
 import repoRules from '@tools/eslint/rules/index.ts';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import oxlint from 'eslint-plugin-oxlint';
@@ -185,7 +184,6 @@ export default defineConfig(
       ],
     },
   },
-  elementLane,
   // Keep last: disables any rules oxlint already enforces.
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 );

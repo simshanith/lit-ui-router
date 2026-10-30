@@ -2,13 +2,18 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { Hono } from 'hono';
+import type { ExecutionContext } from 'hono';
 
 import type { ServerRouter, Verdict } from '../src/index.ts';
-import { serverRouterHono } from '../src/hono.ts';
+import { delegateContext, serverRouterHono } from '../src/hono.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
+
+const noShell = () => {
+  throw new Error('serveShell must not be called');
+};
 
 // SAFETY: node's real Response, which the fetch globals shim shadows, has text().
 const bodyText = (res: Response): Promise<string> =>
@@ -80,5 +85,65 @@ describe('serverRouterHono', () => {
     const res = await app.request('/app/about', { headers: { accept: '*/*' } });
     assert.equal(res.status, 200);
     assert.equal(await bodyText(res), 'downstream');
+  });
+
+  it('puts the router in front of a bare Hono app.fetch, forwarding env and executionCtx', async () => {
+    interface Bindings {
+      queue: string[];
+    }
+
+    const ledger = new Hono<{ Bindings: Bindings }>();
+
+    ledger.post('/app/claims/:id', async (c) => {
+      const { state, params } = delegateContext(c.req.raw, 'ledger');
+      c.env.queue.push(`${state}:${String(params.id)}:${await c.req.text()}`);
+
+      return c.body(null, 202);
+    });
+
+    ledger.get('/app/ctx', (c) => c.text(String(c.executionCtx.props)));
+
+    const app = new Hono<{ Bindings: Bindings }>();
+
+    app.use(
+      '*',
+      serverRouterHono(
+        routerOf({
+          kind: 'delegate',
+          mount: '/app',
+          subpath: '/claims/7',
+          delegate: 'ledger',
+          state: 'claims',
+          params: { id: '7' },
+        }),
+        { serveShell: noShell, delegates: { ledger: ledger.fetch } },
+      ),
+    );
+
+    const queue: string[] = [];
+
+    // SAFETY: Hono builds a real node Request, which the fetch globals shim shadows, and it takes a body.
+    const res = await app.request(
+      '/app/claims/7',
+      {
+        method: 'POST',
+        headers: { accept: 'application/json' },
+        body: 'claim',
+      } as RequestInit,
+      { queue },
+    );
+
+    assert.equal(res.status, 202);
+    assert.deepEqual(queue, ['claims:7:claim']);
+
+    // SAFETY: a structural ExecutionContext; the delegate only reads it back.
+    const executionCtx = {
+      waitUntil: () => {},
+      passThroughOnException: () => {},
+      props: 'ctx-props',
+    } as ExecutionContext;
+
+    const withCtx = await app.request('/app/ctx', {}, { queue }, executionCtx);
+    assert.equal(await bodyText(withCtx), 'ctx-props');
   });
 });

@@ -21,10 +21,10 @@ npm install ui-router-effect effect
 ## Usage
 
 ```typescript
-import { Effect, Stream } from 'effect';
+import { Effect, Stream, SubscriptionRef } from 'effect';
 import { routeRef } from 'ui-router-effect';
 
-const names = routeRef(router).changes.pipe(
+const names = SubscriptionRef.changes(routeRef(router)).pipe(
   Stream.map((route) => route.current?.name),
   Stream.changes,
 );

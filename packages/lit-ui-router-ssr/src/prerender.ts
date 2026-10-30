@@ -1,196 +1,36 @@
-// provideRouter() on a render root, withRouterSync() around a synchronous render, verdicts turned into files and host rules.
+// provideRouter() on a render root, withRouterSync() around a synchronous render, the lit render inside ui-router-server's prerender loop.
 import { render } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
-import { DefType, isFunction, isString } from '@uirouter/core';
-import { createServerRouter } from 'ui-router-server';
-import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
+import { isString } from '@uirouter/core';
+import type { Verdict } from 'ui-router-server';
+import { prerender as prerenderSite } from 'ui-router-server/prerender';
+import type {
+  FileWriter,
+  PrerenderOptions as SitePrerenderOptions,
+  PrerenderResult as SitePrerenderResult,
+  RenderContext as SiteRenderContext,
+} from 'ui-router-server/prerender';
 import { devGate } from '#dev-gate';
 
-import { packageVersion, signatureAttribute } from './signature.js';
+import { LightElementRenderer } from './light-element-renderer.js';
+import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
-/** One emitted artefact, as {@link prerender} planned it. */
-export interface EmittedPage {
-  /** The requested path, exactly as the caller listed it. */
-  path: string;
-  /** Path relative to `outDir` — `sheet/7B/index.html`. */
-  file: string;
-  /** The verdict that produced it; `status` carries the otherwise projection's 404. */
-  verdict: Verdict;
-  /** Bytes written, or planned under `dryRun`. */
-  bytes: number;
-}
+export type {
+  EmittedPage,
+  FileWriter,
+  PrerenderTally,
+  RedirectLine,
+} from 'ui-router-server/prerender';
 
-/** One host rules line: `from to status`, in `_redirects` order. */
-export interface RedirectLine {
-  /** Source path, host-absolute. */
-  from: string;
-  /** Target path, or an absolute url. */
-  to: string;
-  /** Status the host answers with. */
-  status: number;
-}
-
-/** What a render hook is handed besides the verdict. */
-export interface RenderContext {
-  /** The requested path. */
-  path: string;
-  /** Path relative to the mount that owned it, `''` at the mount root. */
-  subpath: string;
-  /** Path of the file this render becomes, relative to `outDir`. */
-  file: string;
-  /** The render's root event target — the one the router was provided on. */
-  root: EventTarget;
-}
-
-/**
- * Where {@link prerender} writes. Supply one to emit into memory or a virtual
- * fs. `file` arrives with `outDir` already joined on, so a hook writes it
- * verbatim.
- */
-export type FileWriter = (file: string, body: string) => void | Promise<void>;
-
-/** Options for {@link prerender}. */
-export interface PrerenderOptions {
-  /** The mount table, compiled here — or pass an already-compiled {@link PrerenderOptions.resolver | resolver}. */
-  mounts?: Record<string, MountConfig>;
-  /** A resolver from `createServerRouter`, instead of {@link PrerenderOptions.mounts | mounts}. */
-  resolver?: ServerRouter;
-  /**
-   * The router the render reads: provided on {@link PrerenderOptions.root | root}
-   * for `context-request` and scoped with `withRouterSync` around every render,
-   * so `<ui-router>` descendants and the sref attribute directives both find it.
-   */
-  router: UIRouterLit;
-  /** Every path to ask for a verdict. Redirect and notFound paths belong here too. */
-  paths: Iterable<string> | AsyncIterable<string>;
-  /** Directory the files are written under. */
-  outDir: string;
-  /**
-   * Renders one shell verdict. Return a template and this package renders it,
-   * behind the hydration signature; return a string and it is written as-is.
-   * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
-   * path before it returns.
-   */
-  renderShell: (
-    verdict: Extract<Verdict, { kind: 'shell' }>,
-    context: RenderContext,
-  ) => TemplateResult | string | Promise<TemplateResult | string>;
-  /**
-   * Wraps a rendered body in the page document — the shell html, its `<title>`,
-   * its head. Defaults to the body unchanged. This package never parses or
-   * rewrites html.
-   */
-  document?: (body: string, context: RenderContext) => string | Promise<string>;
-  /**
-   * The 404 document, emitted once from the `otherwise` projection. `false`
-   * emits none, and nothing is emitted when the probed mount declares no
-   * projection.
-   */
-  notFound?:
-    | false
-    | {
-        /** File to write, relative to `outDir`. Defaults to `404.html`. */
-        file?: string;
-        /**
-         * A path no route claims. Defaults to a guaranteed-miss path under the
-         * first mount, which only a {@link PrerenderOptions.mounts | mounts}
-         * table can supply — pass one alongside a bare
-         * {@link PrerenderOptions.resolver | resolver}.
-         */
-        probe?: string;
-      };
-  /**
-   * `'_redirects'` (default) writes the Cloudflare Pages / Netlify file;
-   * `'none'` writes nothing and leaves {@link PrerenderResult.rules} to the
-   * caller; a function receives the lines and writes whatever the host reads.
-   * No SPA catch-all is ever written — one turns every 404 into a 200.
-   */
-  rules?:
-    | '_redirects'
-    | 'none'
-    | ((lines: RedirectLine[]) => void | Promise<void>);
-  /** Lines prepended to the generated ones, verbatim — a site's own legacy redirects. */
-  extraRules?: RedirectLine[];
-  /**
-   * `'both'` (default) emits every generated redirect line twice, with and
-   * without the trailing slash: a static host that appends one would otherwise
-   * miss the rule. Shell verdicts need no rules line — they are written as
-   * `<subpath>/index.html`, which both spellings reach — but a host that
-   * reaches it by redirecting `<subpath>` to `<subpath>/` boots the client at
-   * the slashed url, so the client's `strictMode(false)` and the mount's
-   * `config: { strict: false }` must both admit it.
-   */
-  trailingSlash?: 'both' | 'exact';
-  /**
-   * The render's root event target. A bare `new EventTarget()` is created when
-   * none is passed; either way {@link PrerenderOptions.router | router} is
-   * provided on it, it reaches every render on `eventTargetStack`, and it is
-   * returned on the result so the caller can attach providers of its own
-   * before the call.
-   */
-  root?: EventTarget;
-  /**
-   * Element renderers passed through to `@lit-labs/ssr`, verbatim. Defaults to
-   * `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`, which
-   * wraps every custom element in a declarative shadow root it never asked for.
-   * Pass `[]` for a render with no `<ui-view>` to fill.
-   */
-  elementRenderers?: RenderInfo['elementRenderers'];
-  /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
-  write?: FileWriter;
-  /** Plans everything and writes nothing — neither pages nor the rules file. */
-  dryRun?: boolean;
-}
-
-/** Counts of what {@link prerender} emitted. */
-export interface PrerenderTally {
-  /** Shell verdicts written as `<subpath>/index.html`. */
-  shell: number;
-  /** Redirect verdicts, counted once each however many rules lines they produced. */
-  redirect: number;
-  /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
-  notFound: number;
-  /** The 404 document: 1 when the projection produced one, 0 otherwise. */
-  document: number;
-}
-
-/** What {@link prerender} did. */
-export interface PrerenderResult {
-  /** Counts by verdict kind, plus the 404 document. */
-  tally: PrerenderTally;
-  /** Every page written, in enumeration order. */
-  pages: EmittedPage[];
-  /** Every rules line, in written order, `extraRules` first. */
-  rules: RedirectLine[];
-  /** Paths that verdicted `notFound` with no projection — nothing was emitted for them. */
-  warnings: string[];
-  /** The root event target, created or passed through. */
-  root: EventTarget;
-}
+type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
 // Built at runtime so no node: specifier enters the static module graph; a supplied `write` needs none.
 const NODE_FS = 'node:fs/promises';
-
-const DEFAULT_NOT_FOUND_FILE = '404.html';
-
-// A path no route claims, appended to a mount base for the otherwise probe.
-const PROBE_SEGMENT = '__lit-ui-router-ssr-probe__';
-
-const encoder = new TextEncoder();
-
-const joinPath = (dir: string, file: string): string =>
-  dir === '' ? file : `${dir.replace(/\/+$/, '')}/${file}`;
-
-const dirOf = (file: string): string => {
-  const cut = file.lastIndexOf('/');
-
-  return cut === -1 ? '' : file.slice(0, cut);
-};
 
 // Typed structurally so src never pulls in @types/node.
 interface NodeFsPromises {
@@ -201,6 +41,12 @@ interface NodeFsPromises {
   writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
+const dirOf = (file: string): string => {
+  const cut = file.lastIndexOf('/');
+
+  return cut === -1 ? '' : file.slice(0, cut);
+};
+
 const nodeWrite: FileWriter = async (file, body) => {
   // SAFETY: `NODE_FS` names `node:fs/promises`, whose `mkdir` and `writeFile` take these shapes.
   const { mkdir, writeFile } = (await import(NODE_FS)) as NodeFsPromises;
@@ -210,42 +56,70 @@ const nodeWrite: FileWriter = async (file, body) => {
   await writeFile(file, body, 'utf8');
 };
 
-// The mount-relative path: '' at the mount root, '/sheet/7B' below it.
-const subpathIn = (mount: string, path: string): string => {
-  const base = mount === '/' ? '' : mount.replace(/\/+$/, '');
+/** What a render hook is handed besides the verdict. */
+export interface RenderContext extends SiteRenderContext {
+  /** The render's root event target — the one the router was provided on. */
+  root: EventTarget;
+}
 
-  return path.startsWith(base)
-    ? path.slice(base.length).replace(/\/+$/, '')
-    : path;
-};
+/**
+ * Options for {@link prerender}: those of `ui-router-server/prerender`'s loop, with
+ * a lit render in place of its `render`.
+ */
+export interface PrerenderOptions extends Omit<
+  SitePrerenderOptions,
+  'render' | 'write'
+> {
+  /**
+   * The router the render reads: provided on {@link PrerenderOptions.root | root}
+   * for `context-request` and scoped with `withRouterSync` around every render,
+   * so `<ui-router>` descendants and the sref attribute directives both find it.
+   */
+  router: UIRouterLit;
+  /**
+   * Renders one shell verdict. Return a template and this package renders it,
+   * behind the hydration signature; return a string and it is written as-is.
+   * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
+   * path before it returns.
+   */
+  renderShell: (
+    verdict: ShellVerdict,
+    context: RenderContext,
+  ) => TemplateResult | string | Promise<TemplateResult | string>;
+  /**
+   * Wraps a rendered body in the page document — the shell html, its `<title>`,
+   * its head. Defaults to the body unchanged. This package never parses or
+   * rewrites html.
+   */
+  document?: (body: string, context: RenderContext) => string | Promise<string>;
+  /**
+   * The render's root event target. A bare `new EventTarget()` is created when
+   * none is passed; either way {@link PrerenderOptions.router | router} is
+   * provided on it, it reaches every render on `eventTargetStack`, and it is
+   * returned on the result so the caller can attach providers of its own
+   * before the call.
+   */
+  root?: EventTarget;
+  /**
+   * Element renderers passed through to `@lit-labs/ssr`, verbatim. Defaults to
+   * `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
+   * `[LitElementRenderer]`, which wraps every custom element in a declarative
+   * shadow root it never asked for. `LightElementRenderer` answers only for a
+   * class `LightDomHydrating` branded. A list passed here replaces the default,
+   * so keep `LightElementRenderer` in it, ahead of any renderer that writes a
+   * shadow root, to draw those elements. Pass `[]` for a render with no
+   * `<ui-view>` to fill.
+   */
+  elementRenderers?: RenderInfo['elementRenderers'];
+  /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
+  write?: FileWriter;
+}
 
-// '<subpath>/index.html', or 'index.html' at the mount root.
-const fileFor = (subpath: string): string => {
-  const trimmed = subpath.replace(/^\/+/, '').replace(/\/+$/, '');
-
-  return trimmed === '' ? 'index.html' : `${trimmed}/index.html`;
-};
-
-// The same path spelled the other way round, or undefined at the host root.
-const otherSpelling = (from: string): string | undefined => {
-  const paired = from.endsWith('/') ? from.replace(/\/+$/, '') : `${from}/`;
-
-  return paired === '' || paired === from ? undefined : paired;
-};
-
-const defaultProbe = (
-  mounts: Record<string, MountConfig> | undefined,
-): string => {
-  const base = mounts && Object.keys(mounts)[0];
-
-  if (base === undefined) {
-    throw new Error(
-      'prerender() cannot derive a notFound probe from a bare `resolver`: pass `notFound.probe`, or `notFound: false`.',
-    );
-  }
-
-  return `${base === '/' ? '' : base.replace(/\/+$/, '')}/${PROBE_SEGMENT}`;
-};
+/** What {@link prerender} did. */
+export interface PrerenderResult extends SitePrerenderResult {
+  /** The root event target, created or passed through. */
+  root: EventTarget;
+}
 
 // litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
 const rootedStack = (root: EventTarget): EventTarget[] => {
@@ -265,20 +139,11 @@ interface WrittenSignature {
   readonly params: Readonly<Record<string, string | string[]>>;
 }
 
-/** The signature of the page `router` currently stands on; config params never reach the url, so they stay out. */
+/** The signature of the page `router` currently stands on, encoded as the client compares it. */
 export const signatureOf = (router: UIRouterLit): WrittenSignature => {
-  const { $current, params } = router.globals;
+  const [state, params] = routeOf(router.globals);
 
-  return {
-    version: packageVersion,
-    state: $current.name,
-    params: Object.fromEntries(
-      $current
-        .parameters()
-        .filter((param) => param.location !== DefType.CONFIG)
-        .map((param) => [param.id, param.type.encode(params[param.id])]),
-    ),
-  };
+  return { version: packageVersion, state, params };
 };
 
 /**
@@ -319,103 +184,6 @@ export const renderPage = (
     ),
   );
 
-const warnUnclaimed = (path: string): void => {
-  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
-  if (!import.meta.env.DEV || !devGate()) return;
-  console.warn(
-    'lit-ui-router-ssr: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:',
-    path,
-  );
-};
-
-const warnStrictSlash = async (
-  resolver: ServerRouter,
-  path: string,
-): Promise<void> => {
-  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
-  if (!import.meta.env.DEV || !devGate()) return;
-  const slashed = await resolver.resolve(`${path}/`);
-
-  if (slashed.kind === 'shell' && slashed.status === undefined) return;
-  console.warn(
-    'lit-ui-router-ssr: this page is written as <subpath>/index.html, which static hosts serve by redirecting <subpath> to <subpath>/, and its mount rejects the trailing slash. Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client:',
-    path,
-  );
-};
-
-const wantsSlashProbe = (
-  verdict: Extract<Verdict, { kind: 'shell' }>,
-  path: string,
-  subpath: string,
-): boolean =>
-  subpath !== '' && verdict.status === undefined && !path.endsWith('/');
-
-const redirectLines = (
-  path: string,
-  verdict: Extract<Verdict, { kind: 'redirect' }>,
-  trailingSlash: PrerenderOptions['trailingSlash'],
-): RedirectLine[] => {
-  const line: RedirectLine = {
-    from: path,
-    to: verdict.location,
-    status: verdict.status,
-  };
-
-  const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
-
-  return paired === undefined ? [line] : [line, { ...line, from: paired }];
-};
-
-// The otherwise projection's 404 shell, or undefined when there is none to emit.
-const notFoundPage = async (
-  notFound: PrerenderOptions['notFound'],
-  mounts: PrerenderOptions['mounts'],
-  resolver: ServerRouter,
-) => {
-  if (notFound === false) return undefined;
-  const probe = notFound?.probe ?? defaultProbe(mounts);
-  const verdict = await resolver.resolve(probe);
-
-  if (verdict.kind !== 'shell' || verdict.status !== 404) return undefined;
-
-  return { verdict, probe, file: notFound?.file ?? DEFAULT_NOT_FOUND_FILE };
-};
-
-const writeRules = async (
-  lines: RedirectLine[],
-  rules: NonNullable<PrerenderOptions['rules']>,
-  write: FileWriter,
-  outDir: string,
-): Promise<void> => {
-  if (rules === 'none') return;
-
-  if (isFunction(rules)) {
-    await rules(lines);
-
-    return;
-  }
-
-  if (lines.length === 0) return;
-
-  const body = lines
-    .map((line) => `${line.from} ${line.to} ${line.status}`)
-    .join('\n');
-
-  await write(joinPath(outDir, '_redirects'), `${body}\n`);
-};
-
-const resolverOf = (options: PrerenderOptions): ServerRouter => {
-  if (options.resolver) return options.resolver;
-
-  if (!options.mounts) {
-    throw new Error(
-      'prerender() needs a mount table: pass `mounts`, or a `resolver` from createServerRouter().',
-    );
-  }
-
-  return createServerRouter({ mounts: options.mounts });
-};
-
 const warnUnregistered = (): void => {
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
   if (!import.meta.env.DEV || !devGate()) return;
@@ -430,7 +198,8 @@ const warnUnregistered = (): void => {
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
- * `otherwise` projection becomes the 404 document.
+ * `otherwise` projection becomes the 404 document. The loop is
+ * `ui-router-server/prerender`'s `prerender`; this supplies its lit render.
  *
  * The router is provided on the render root for `context-request` and scoped
  * with `withRouterSync` around each render, so a template's `<ui-router>`
@@ -454,6 +223,7 @@ const warnUnregistered = (): void => {
  * @param options - the mount table, the router, the paths, and the hooks
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
+ * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  *
  * @example
  * ```ts
@@ -474,112 +244,38 @@ export async function prerender(
   options: PrerenderOptions,
 ): Promise<PrerenderResult> {
   const {
-    mounts,
     router,
-    paths,
-    outDir,
     renderShell,
     document,
-    notFound,
-    rules = '_redirects',
-    extraRules = [],
-    trailingSlash = 'both',
-    elementRenderers = [UiViewRenderer],
+    elementRenderers = [UiViewRenderer, LightElementRenderer],
+    root = new EventTarget(),
     write = nodeWrite,
-    dryRun = false,
+    ...site
   } = options;
 
-  const resolver = resolverOf(options);
   warnUnregistered();
 
-  const root = options.root ?? new EventTarget();
-
-  const tally: PrerenderTally = {
-    shell: 0,
-    redirect: 0,
-    notFound: 0,
-    document: 0,
-  };
-
-  const pages: EmittedPage[] = [];
-  const generated: RedirectLine[] = [];
-  const warnings: string[] = [];
-
-  const emit = async (
-    verdict: Extract<Verdict, { kind: 'shell' }>,
-    path: string,
-    subpath: string,
-    file: string,
-  ): Promise<void> => {
-    const context: RenderContext = { path, subpath, file, root };
-
+  const renderLit = async (
+    verdict: ShellVerdict,
+    siteContext: SiteRenderContext,
+  ): Promise<string> => {
+    const context: RenderContext = { ...siteContext, root };
     const body = await renderShell(verdict, context);
 
     const markup = isString(body)
       ? body
       : renderPage(body, router, root, elementRenderers);
 
-    const html = document ? await document(markup, context) : markup;
-
-    if (!dryRun) await write(joinPath(outDir, file), html);
-    pages.push({ path, file, verdict, bytes: encoder.encode(html).length });
-  };
-
-  let slashProbed = false;
-
-  const visit = async (path: string): Promise<void> => {
-    const verdict = await resolver.resolve(path);
-
-    if (verdict.kind === 'shell') {
-      const subpath = subpathIn(verdict.mount, path);
-      tally.shell += 1;
-
-      if (
-        import.meta.env.DEV &&
-        devGate() &&
-        !slashProbed &&
-        wantsSlashProbe(verdict, path, subpath)
-      ) {
-        slashProbed = true;
-        await warnStrictSlash(resolver, path);
-      }
-
-      await emit(verdict, path, subpath, fileFor(subpath));
-
-      return;
-    }
-
-    if (verdict.kind === 'redirect') {
-      tally.redirect += 1;
-      generated.push(...redirectLines(path, verdict, trailingSlash));
-
-      return;
-    }
-
-    tally.notFound += 1;
-    warnings.push(path);
-    warnUnclaimed(path);
+    return document ? document(markup, context) : markup;
   };
 
   const uninstall = provideRouter(root, router);
 
   try {
-    for await (const path of paths) await visit(path);
+    const result = await prerenderSite({ ...site, render: renderLit, write });
 
-    const page = await notFoundPage(notFound, mounts, resolver);
-
-    if (page) {
-      tally.document += 1;
-      const { verdict, probe, file } = page;
-      await emit(verdict, probe, subpathIn(verdict.mount, probe), file);
-    }
+    return { ...result, root };
   } finally {
     uninstall();
   }
-
-  const lines = [...extraRules, ...generated];
-
-  if (!dryRun) await writeRules(lines, rules, write, outDir);
-
-  return { tally, pages, rules: lines, warnings, root };
 }

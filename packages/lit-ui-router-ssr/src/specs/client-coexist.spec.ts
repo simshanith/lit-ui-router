@@ -99,7 +99,7 @@ describe('alongside lit’s own hydrate support', () => {
 
     // The view's reveal reached the shadow root, so the element's own hydrate read plain markers.
     expect(
-      shadowComments(container).filter((data) => data.startsWith('ui-view:')),
+      shadowComments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
     expect(badgeSpan(container)).toBe(server);
     expect(warn).not.toHaveBeenCalled();

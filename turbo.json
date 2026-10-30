@@ -154,10 +154,10 @@
         "//#lint:root",
         "//#lint:complexity",
         "//#lint:package-json",
-        "//#lint:elements",
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
+        "//#lint:css",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:shared-source",
         "@tools/repo-checks#check:dedupe",
@@ -170,8 +170,9 @@
       ]
     },
     "lint:oxlint": {
-      // type-aware oxlint resolves cross-package imports to dist d.ts only
-      "dependsOn": ["^build:types"],
+      // type-aware oxlint resolves cross-package imports to dist d.ts only;
+      // the @tools/lint-elements edge folds its jsPlugin versions into the key
+      "dependsOn": ["^build:types", "@tools/lint-elements#test"],
       // explicit globs hash gitignored files too, and oxlint reads none of
       // these: dist/, .cache/ and .probe-scratch/ mutate mid-graph (build:js,
       // pack:all tarballs, dts-backtest#test writing and deleting a probe under
@@ -190,13 +191,18 @@
         "!.cache/**",
         "!**/.vitepress/cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_ROOT$/tools/lint-elements/elements.oxlintrc.json",
         "$TURBO_DEFAULT$"
       ],
       // selects github output, which the turbo_summary step re-emits
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     "//#lint:root": {
-      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"],
+      "inputs": [
+        ".oxlintrc.json",
+        "tools/lint-elements/elements.oxlintrc.json",
+        "$TURBO_DEFAULT$"
+      ],
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
     // Hard complexity ceiling over JS/TS outside gitignored paths (.vue files
@@ -250,27 +256,22 @@
         "pnpm-workspace.yaml"
       ]
     },
-    // eslint-plugin-lit / -wc / -lit-a11y over the same src the //#lint:templates
-    // gate sees. Syntax-only (no project service, no ^build:types), so it stays
-    // off the build path — the class AST is all these rules read.
-    "//#lint:elements": {
+    // stylelint over .css, .vue <style> and lit `css` blocks;
+    // stylelint.config.mjs maps each to its syntax and owns the ignores.
+    "//#lint:css": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        // over-approximate, as //#lint:templates does: `**/*.ts` would skip
-        // files sitting directly in `src/`
-        "packages/*/src/**",
-        "apps/*/src/**",
-        "examples/*/src/**",
-        "eslint.config.ts",
-        "tools/eslint/**",
-        // the glob above is explicit, so it is not gitignore-pruned and would
-        // otherwise hash that package's own run logs and .bin shims
-        "!**/.turbo/**",
+        // not gitignore-pruned, so the generated trees come off by hand
+        "{apps,examples,packages,tools,www}/**/*.{css,vue,ts,mts,cts,js,mjs,cjs}",
         "!**/node_modules/**",
-        "tools/lint-elements/src/**",
-        // feeds both the oxlint-disable layer and the disable-directive stubs
-        ".oxlintrc.json",
-        "tools/eslint-ts-parser/src/**"
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/coverage-effect3/**",
+        "!**/.turbo/**",
+        "!**/.probe-scratch/**",
+        "!**/.vitepress/cache/**",
+        "!**/.cloudflare/**",
+        "!**/worker-configuration.d.ts"
       ]
     },
     "//#lint:package-json": {

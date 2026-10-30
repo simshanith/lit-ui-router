@@ -191,6 +191,58 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.ended, false);
   });
 
+  const claims: Verdict = {
+    kind: 'delegate',
+    mount: '/app',
+    subpath: '/claims',
+    delegate: 'ledger',
+    state: 'claims',
+    params: {},
+  };
+
+  it('throws at construction for a router that names delegate keys, unless delegates is next', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [{ name: 'claims', url: '/claims', delegate: 'ledger' }],
+        },
+      },
+    });
+
+    assert.throws(
+      () => createConnectMiddleware(router),
+      /names delegate keys \(ledger\); Connect cannot call them, so pass delegates: 'next'/,
+    );
+    assert.doesNotThrow(() =>
+      createConnectMiddleware(router, { delegates: 'next' }),
+    );
+  });
+
+  it('fails a structural delegate verdict through next(error) without the opt-in', async () => {
+    const mw = createConnectMiddleware(routerOf(claims));
+    const h = harness({ url: '/app/claims' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.nextArgs.length, 1);
+    assert.match(
+      String(h.nextArgs[0][0]),
+      /a delegate verdict for 'ledger' needs delegates: 'next'/,
+    );
+    assert.equal(h.ended, false);
+  });
+
+  it('passes a delegate verdict through to the downstream stack with delegates next', async () => {
+    const mw = createConnectMiddleware(routerOf(claims), { delegates: 'next' });
+
+    const h = harness({ url: '/app/claims' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.equal(h.req.url, '/app/claims');
+    assert.equal(h.headers.Link, undefined);
+    assert.equal(h.ended, false);
+  });
+
   it('never judges non-navigation requests (module and asset fetches pass)', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),

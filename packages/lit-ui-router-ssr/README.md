@@ -26,10 +26,12 @@ imports the pre-1.0 renderer or re-derives the incantation.
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
   state the router stood on, and that state's url parameter values. A page `renderShell` returns
   as a string is written as-is, without one.
-- **The emit loop.** Verdict to file name, redirect to rules line, tally, warnings for paths that
-  matched nothing.
-- **The host rules file.** `_redirects` by default, every generated line paired with and without a
-  trailing slash. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
+  rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
+  matched nothing — is
+  `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
+  supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
+  `root` and `elementRenderers`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
   `lit-ui-router-ssr/client` adopts what it drew.
 
@@ -66,8 +68,12 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
+
+`result.delegated` lists the paths that matched a delegating state. They get no page and no rules
+line, so route them to your server; on Cloudflare, list them in the Worker's
+`assets.run_worker_first` so the asset layer doesn't answer them first.
 
 `result.pages` lists every artefact in enumeration order, `result.rules` every line the host file
 carries, and `result.warnings` the paths that matched no route and had no projection to fall back
@@ -121,8 +127,10 @@ directly, so a page loop calls it once per path on the same router, started or n
 
 ## The routed view, drawn on the server
 
-`elementRenderers` defaults to `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`,
-which wraps every custom element in a declarative shadow root it never asked for. `UiViewRenderer`
+`elementRenderers` defaults to `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
+`[LitElementRenderer]`, which wraps every custom element in a declarative shadow root it never asked
+for. `LightElementRenderer` answers only for an element that opted in (see
+[Light-DOM elements](#light-dom-elements)). `UiViewRenderer`
 answers for `ui-view`: it registers the view at the address its `name` attribute and enclosing
 `<ui-view>`s spell, takes the `ViewConfig` the registration syncs back, and writes the routed
 component into the element's light DOM between the part markers the element's own `render()`
@@ -172,8 +180,8 @@ card empty:
 ```
 
 `@lit-labs/ssr` writes a `.prop=${…}` binding as its part marker and nothing else — no attribute, no
-child, no value. Setting the property is an element renderer's job, and `elementRenderers` defaults
-to `[UiViewRenderer]`, which answers for `ui-view` alone. The card has no renderer, so nothing on
+child, no value. Setting the property is an element renderer's job, and the default `elementRenderers`
+answer for `ui-view` and for opted-in light-DOM elements alone. The card has no renderer, so nothing on
 the server sets `post` or runs its `render()`: the card first draws on the client, once hydration
 sets the property, and the served page shows an empty tag where it stands.
 
@@ -233,11 +241,16 @@ shadow root:
 
 ```typescript
 import { LitElementRenderer } from '@lit-labs/ssr';
-import { prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+import {
+  LightElementRenderer,
+  prerender,
+  UiViewRenderer,
+} from 'lit-ui-router-ssr';
 
 await prerender({
   // …
-  elementRenderers: [UiViewRenderer, LitElementRenderer],
+  // The list replaces the default; LightElementRenderer stays ahead of the shadow-root renderer.
+  elementRenderers: [UiViewRenderer, LightElementRenderer, LitElementRenderer],
 });
 ```
 
@@ -270,16 +283,14 @@ registers `<ui-view>`. That entry defines `<ui-router>` from core and `<ui-view>
 `withServedRender(UiView)`. Every value the app takes from the router — `UIRouterLit`, `srefHref`,
 `srefActiveClass`, `srefAriaCurrent` — comes from `lit-ui-router/pure`, which registers nothing;
 the root entry registers the plain `<ui-view>` as a side effect, and imported after this one it
-warns that the tag is already defined. Then the router boots and one call adopts the page:
+warns that the tag is already defined. Then one call boots the router and adopts the page:
 
 ```typescript
 import 'lit-ui-router-ssr/register';
 import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
-import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-router.start();
-await booted; // the first successful transition
-const release = hydrateRoot(root, page(router));
+await bootstrap(router, root, page(router));
 ```
 
 A `<ui-view>` another class already defined throws, naming both ways out.
@@ -325,29 +336,41 @@ The result still extends core's `UiView`, so an enclosing view adopts it as a pa
 
 ## The client half
 
-`lit-ui-router-ssr/client` is the adopt side — no import side effects. The router boots
-first, and one call adopts the page:
+`lit-ui-router-ssr/client` is the adopt side — no import side effects. One call boots the router
+and adopts the page, or renders it cold, and resolves once the page is live:
 
 ```typescript
-import { hydrateRoot, uiViewSlot } from 'lit-ui-router-ssr/client';
+import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const booted = new Promise<void>((resolve) => {
-  const off = router.transitionService.onSuccess({}, () => {
-    off();
-    resolve();
-  });
-});
-router.start();
-await booted;
-
-const release = hydrateRoot(root, page(router));
-if (!release) render(page(router), root);
+const { outcome } = await bootstrap(router, root, page(router));
 ```
 
-- **The sequence is the contract.** `router.start()`, await its first successful transition, then
-  `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
-  router before its own first render, so every view finds the settled router rather than the
-  placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+- **`bootstrap(router, container, value, options?)` owns the boot.** It reads the container's
+  signature, starts the router, waits for the boot transition to land — following redirects to the
+  one that succeeds — then runs `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and
+  each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
+  router rather than the placeholder it registered against. The call waits for every awake
+  `<ui-view>`, nested ones included, to finish updating, then releases the adopter. It resolves with
+  `outcome` — `adopted` or `cold` — and `signature` (`BootstrapSignature`): `matched` when the boot
+  landed on the state and url parameters the signature names, `elsewhere` when the document carried
+  a signature and the boot landed somewhere else or landed no transition, and `absent` when it
+  carried none. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+- **The cold path is the same call.** A container with nothing to adopt is emptied and `value`
+  rendered into it before the router starts. A boot transition that fails, a url that starts none,
+  and a root `hydrate()` that throws over a mutated document all empty the container and render
+  `value` cold too, and the call resolves with the cause in `error` rather than rejecting.
+- **The boot decides mismatches once.** A boot that lands where the document was drawn adopts every
+  view, and a view that still mismatches warns in development: the two halves render that template
+  differently. A boot that lands elsewhere — one static document served for a family of urls, or a
+  redirect — adopts the views that match and renders the rest cold without a warning each; once the
+  page is live, the development build warns once, naming both states and how many views rendered
+  cold.
+- **The boot transition takes a seed.** `options.payload` is handed to `seed()` from
+  `ui-router-server/ssr/client` before the router starts, so the boot transition adopts the
+  resolved values a server render drew in place of running their resolve functions.
+- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls `router.start()`,
+  awaits the first successful transition, then `hydrateRoot(root, page(router))`, and renders
+  `page(router)` itself when that returns `false`.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
   it touches the document, and returns `false` over an emptied container when there is none — a
   cold client render, a dev server, a page from an earlier `prerender()`, a string `renderShell` —
@@ -368,7 +391,9 @@ if (!release) render(page(router), root);
   before that update stays asleep, holding its nodes, until it is attached again. The walk pins the
   adopter to every served view it passes, so that view is adopted on its return even once the root
   provider is released. A view the walk never reached drops those nodes, renders cold, and warns in
-  development.
+  development. A deferred element no walk reaches — one the render wrote no marker for — wakes
+  with the adoption of the view that holds it, after that view's hydrate, or with the root walk when
+  no view holds it.
 - **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
   part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
   reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
@@ -392,10 +417,66 @@ if (!release) render(page(router), root);
   (`uiViewAdoptEventName`), bubbling and composed, with `detail.outcome` one of `adopted` — its
   served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
   carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
-  production as in development. `hydrateRoot()`'s `onAdopt(view, outcome, error)` option receives
+  production as in development. The `onAdopt(view, outcome, error)` option of `bootstrap()` and `hydrateRoot()` receives
   the same reports for every view its walk reaches, a view the pin adopts after the release included.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
+
+### Light-DOM elements
+
+A consumer's own `LitElement` that renders into its light DOM opts in to the same sleep-then-adopt
+cycle with `LightDomHydrating(Base)` from `lit-ui-router-ssr/client`. `LightElementRenderer` from
+`lit-ui-router-ssr`, one of `prerender()`'s default renderers, draws it on the server, and
+`lightSlot()` marks the hole at the use site:
+
+```typescript
+import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
+import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';
+
+export class AppCard extends LightDomHydrating(LitElement) {
+  @property() label = '';
+
+  render() {
+    return html`<p>${this.label}</p>`;
+  }
+}
+
+export const card = (label: string) =>
+  html`<app-card .label=${label}>${lightSlot()}</app-card>`;
+```
+
+- **Each class opts in.** The mixin stamps a `Symbol.for` brand on the class it returns, and the
+  renderer matches that brand, so a subclass stays opted in, the base class does not, and a second
+  copy of this package recognises it. An element that did not opt in is served empty and renders
+  cold.
+- **The server writes `render()` into the light DOM.** `LightElementRenderer` extends
+  `@lit-labs/ssr`'s `LitElementRenderer`: it builds the element, sets its attributes and properties,
+  runs `willUpdate`, and writes the render where a shadow root would go, prefixing its markers as
+  `UiViewRenderer` prefixes a view's. Custom elements inside it, `<ui-view>` included, render too.
+  An explicit `elementRenderers` replaces the default, so keep it in that list, ahead of any
+  `LitElementRenderer`: the first renderer that matches a class wins. A render that awaits is not
+  served.
+- **`lightSlot()` is the hole.** It is `uiViewSlot()` under a name that does not read as a view: the
+  server reaches the renderer through it, and on the client it wakes the element when the
+  enclosing walk reaches it, parent first, and pins the adopter to it.
+- **The element wakes through the adopter.** It sleeps under `defer-hydration`, which `prerender()`
+  writes on every custom element, and its first update requests `adoptUiViewContext`. The adopter
+  hydrates `render()` against the served nodes in place, then wakes the elements inside it. A view's
+  reveal stops at a light-DOM element and the element's stops at a view or another light-DOM
+  element, so each interior waits for its own wake. With no adopter, the element drops the served
+  nodes and renders cold, warning in development.
+- **It reports through its own event.** Each opted-in element dispatches `light-dom:adopt`
+  (`lightDomAdoptEventName`) with the same `detail` as `ui-view:adopt`. `onAdopt`, and the count of
+  views `bootstrap()` rendered cold, report views only.
+- **A mismatch falls back.** A hydrate that throws drops the element's served nodes, and it renders
+  cold, warning in development; its surroundings keep theirs.
+- **An author child with bindings of its own falls back every time.** A child the use site writes
+  beside `lightSlot()` keeps its markers ahead of the element's pair, and the element's hydrate
+  meets them first. Static author children are kept, ahead of the render, as they are in a
+  `<ui-view>`.
+- **`static styles` do not apply.** A light-DOM element has no shadow root to adopt them into; it
+  takes the document's styles.
 
 ### How this compares
 

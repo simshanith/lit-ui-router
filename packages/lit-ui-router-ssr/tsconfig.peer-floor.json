@@ -19,8 +19,14 @@
       "ui-router-server": [
         "./node_modules/ui-router-server-floor/dist/index.d.ts"
       ],
+      "ui-router-server/prerender": [
+        "./node_modules/ui-router-server-floor/dist/prerender.d.ts"
+      ],
       "ui-router-server/ssr": [
         "./node_modules/ui-router-server-floor/dist/ssr.d.ts"
+      ],
+      "ui-router-server/ssr/client": [
+        "./node_modules/ui-router-server-floor/dist/ssr-client.d.ts"
       ],
       "ui-router-server/*": ["./node_modules/ui-router-server-floor/*"],
       "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"],

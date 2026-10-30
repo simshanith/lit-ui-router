@@ -20,9 +20,12 @@ possible router. Walkthrough: [Hello World tutorial](./helloworld).
 
 ## Hello World (No Build)
 
-The same app in plain JavaScript. It runs with an import map and no build
-step: the browser loads `main.js` as written and fetches `lit`,
-`@uirouter/core` and `lit-ui-router` from a CDN.
+The same app in plain JavaScript, served as static files. It runs with an
+import map and no bundler: a static server hosts `index.html` and `main.js`
+as written, and the browser fetches `lit`, `@uirouter/core` and
+`lit-ui-router` from a CDN. It is still typechecked: `checkJs` reads the
+published types, so the editor shows completions, hover types and type errors
+in plain JavaScript with no annotations.
 
 <LiveExample name="helloworld-buildless" />
 

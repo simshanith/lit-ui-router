@@ -156,10 +156,13 @@ the rendering to you:
 
 ```ts
 import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { srefHref, SrefStatusController } from 'lit-ui-router';
 
 class NavLink extends LitElement {
+  @property({ type: Boolean }) locked = false;
+
   private users = new SrefStatusController(this, { state: 'users' });
 
   render() {

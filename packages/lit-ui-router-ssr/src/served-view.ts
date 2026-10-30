@@ -31,6 +31,74 @@ const isRenderMarker = (node: ChildNode | null): boolean => {
 };
 
 /**
+ * An element that sleeps under `defer-hydration` while it holds a server
+ * render: a served `<ui-view>`, or a light-DOM hydrating element.
+ *
+ * @internal
+ */
+export interface ServedSleeper extends HTMLElement {
+  /** Mirrors the `defer-hydration` attribute. */
+  deferHydration: boolean;
+  /** Lit's update request, which a re-attach still asleep makes for itself. */
+  requestUpdate(): void;
+}
+
+/**
+ * The connect half of the sleep: whether the element is deferred from this
+ * connect on. A re-attach still owed its wake asks for that update itself,
+ * since nothing else will.
+ *
+ * @param element - the element connecting
+ * @param deferredAtConnect - whether an earlier connect found it deferred and it has not woken since
+ * @returns the element's new `deferredAtConnect`
+ *
+ * @internal
+ */
+export const connectServed = (
+  element: ServedSleeper,
+  deferredAtConnect: boolean,
+): boolean => {
+  if (element.deferHydration) return true;
+
+  if (deferredAtConnect) element.requestUpdate();
+
+  return deferredAtConnect;
+};
+
+/**
+ * Whether the element declines this update: asleep, or detached before its
+ * wake ran, which keeps the held nodes and the wake until a re-attach.
+ *
+ * @param element - the element updating
+ * @param deferredAtConnect - whether it is still owed its wake
+ *
+ * @internal
+ */
+export const sleepsThrough = (
+  element: ServedSleeper,
+  deferredAtConnect: boolean,
+): boolean =>
+  element.deferHydration || (deferredAtConnect && !element.isConnected);
+
+/**
+ * Drops the held render: every child from the first render marker down,
+ * leaving what the author wrote ahead of it.
+ *
+ * @param element - the element holding the render
+ *
+ * @internal
+ */
+export const dropHeldRender = (element: Element): void => {
+  const children = [...element.childNodes];
+  const from = children.findIndex((child) => isRenderMarker(child));
+
+  if (from < 0) return;
+
+  // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
+  for (const child of children.slice(from)) child.remove?.();
+};
+
+/**
  * Brands the served class, so a second copy of this package recognises the one
  * already registered. `customElements` identity cannot: two copies build two
  * classes.
@@ -129,21 +197,16 @@ export const withServedRender = (
     override connectedCallback(): void {
       super.connectedCallback();
 
-      // A deferred view holds a render's nodes behind whatever the author wrote ahead of them.
-      if (this.deferHydration) {
-        this.deferredAtConnect = true;
+      this.deferredAtConnect = connectServed(this, this.deferredAtConnect);
 
-        if (import.meta.env.DEV && devGate()) {
-          // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
-          setTimeout(() => {
-            if (this.isConnected && this.deferHydration && !this.hasUpdated) {
-              warnDeferredNeverWoken(this);
-            }
-          }, 0);
-        }
-      } else if (this.deferredAtConnect) {
-        // Re-attached still asleep: the wake update is this element's to ask for, since a router-less view registers nothing that would.
-        this.requestUpdate();
+      // A deferred view holds a render's nodes behind whatever the author wrote ahead of them.
+      if (this.deferHydration && import.meta.env.DEV && devGate()) {
+        // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
+        setTimeout(() => {
+          if (this.isConnected && this.deferHydration && !this.hasUpdated) {
+            warnDeferredNeverWoken(this);
+          }
+        }, 0);
       }
     }
 
@@ -172,11 +235,8 @@ export const withServedRender = (
      * @internal
      */
     protected override shouldUpdate(changed: PropertyValues<this>): boolean {
-      // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
-      if (this.deferHydration) return false;
-
-      // Detached before the wake ran: `willUpdate` is skipped too, so the held nodes and the wake survive until a re-attach.
-      if (this.deferredAtConnect && !this.isConnected) return false;
+      // Asleep, or detached before the wake ran: `hasUpdated` stays false and `willUpdate` is skipped, so the held nodes and the wake survive.
+      if (sleepsThrough(this, this.deferredAtConnect)) return false;
 
       return super.shouldUpdate(changed);
     }
@@ -200,19 +260,8 @@ export const withServedRender = (
 
       if (adopt) return adopt(this);
       // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
-      this.dropHeldRender();
+      dropHeldRender(this);
       warnDeferredWithoutClient(this);
-    }
-
-    /** Drops the held render: every child from the first render marker down, leaving what the author wrote ahead of it. */
-    private dropHeldRender(): void {
-      const children = [...this.childNodes];
-      const from = children.findIndex((child) => isRenderMarker(child));
-
-      if (from < 0) return;
-
-      // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
-      for (const child of children.slice(from)) child.remove?.();
     }
 
     /** @internal */

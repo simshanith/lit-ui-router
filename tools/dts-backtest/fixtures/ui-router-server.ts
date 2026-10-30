@@ -1,4 +1,5 @@
-import type { StateDeclaration, UIRouter } from '@uirouter/core';
+import type { RawParams, StateDeclaration, UIRouter } from '@uirouter/core';
+import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import {
   createServerRouter,
@@ -10,6 +11,7 @@ import {
   type RedirectRule,
   type RouteDeclaration,
   type ServerRouter,
+  type ServerRouterDeclarations,
   type Verdict,
 } from 'ui-router-server';
 import {
@@ -19,10 +21,22 @@ import {
 } from 'ui-router-server/connect';
 import {
   createFetchHandler,
+  delegateContext,
+  type DelegateContext,
+  type DelegateHandler,
+  type DelegateHandlers,
+  type DelegateKey,
+  type DelegateParams,
+  type DelegateState,
   type FetchAdapterOptions,
   type FetchHandler,
+  type RequiredDelegates,
 } from 'ui-router-server/fetch';
-import { serverRouterHono } from 'ui-router-server/hono';
+import {
+  delegateContext as honoDelegateContext,
+  serverRouterHono,
+  type HonoDelegateArgs,
+} from 'ui-router-server/hono';
 import {
   installServerLocation,
   ServerLocationConfig,
@@ -38,6 +52,16 @@ import {
   type CompiledMatcher,
   type UrlMatcherCompilerConfig,
 } from 'ui-router-server/matcher';
+import {
+  prerender,
+  type EmittedPage,
+  type FileWriter,
+  type PrerenderOptions,
+  type PrerenderResult,
+  type PrerenderTally,
+  type RedirectLine,
+  type RenderContext,
+} from 'ui-router-server/prerender';
 import {
   compileRedirects,
   compileRoutes,
@@ -75,6 +99,7 @@ const routes: RouteDeclaration[] = [
   },
   { name: 'app.legacy', url: '/people', redirectTo: 'app.contacts' },
   { name: 'contactHelp', parent: 'app.contacts', url: '/help' },
+  { name: 'app.claims', url: '/claims/{id}', delegate: 'ledger' },
   { name: 'app.notFound' },
 ];
 
@@ -134,6 +159,14 @@ export async function statusFor(pathname: string): Promise<number> {
     void verdict.mount;
 
     return verdict.status ?? 200;
+  }
+
+  if (verdict.kind === 'delegate') {
+    void verdict.delegate.length;
+    void verdict.state.length;
+    void verdict.params;
+
+    return verdict.mount.length;
   }
 
   // `notFound` is the only arm whose `mount` is optional.
@@ -223,6 +256,38 @@ export async function settledState(
   const transition = await settle(router, path, settleOptions);
 
   return transition.to().name ?? '';
+}
+
+// Ssr static tier: the loop with a string render, no renderer behind it.
+const emitted = new Map<string, string>();
+
+const writeEmitted: FileWriter = (file, body) => void emitted.set(file, body);
+
+const legacyRules: RedirectLine[] = [
+  { from: '/megacanvas', to: '/megacanvas.html', status: 301 },
+];
+
+const staticSite: PrerenderOptions = {
+  mounts: { '/app': mount },
+  outDir: 'dist',
+  paths: ['/app/contacts', '/app/people'],
+  render: (verdict, context: RenderContext) =>
+    `<main data-file=${context.file}>${verdict.status ?? 200}</main>`,
+  notFound: { file: '404.html' },
+  rules: '_redirects',
+  extraRules: legacyRules,
+  trailingSlash: 'exact',
+  write: writeEmitted,
+  dryRun: true,
+};
+
+export async function staticTally(): Promise<{
+  tally: PrerenderTally;
+  first: EmittedPage | undefined;
+}> {
+  const result: PrerenderResult = await prerender(staticSite);
+
+  return { tally: result.tally, first: result.pages[0] };
 }
 
 // Ssr payload: a typed resolve read back after adoption.
@@ -321,6 +386,264 @@ export const middleware: ConnectMiddleware = createConnectMiddleware(
   connectOptions,
 );
 
+declare module 'ui-router-server/fetch' {
+  interface DelegateSeam {
+    params: { 'app.claims': { id: string }; feed: { page: number } };
+  }
+}
+
+// Untyped routes collapse to string keys and states, and the seam's names never reach them.
+export function claimOf(request: Request): string {
+  const context: DelegateContext<'ledger'> = delegateContext(request, 'ledger');
+  const key: 'ledger' = context.delegate;
+  const state: string = context.state;
+  const subpath: string = context.subpath;
+  const params: Readonly<RawParams> = context.params;
+  const loose: DelegateContext = context;
+  const states: DelegateState<'ledger'> = state;
+  const raw: DelegateParams<'claims'> = { ...params };
+  const keyed: DelegateKey = loose.delegate;
+
+  const fromRouter: DelegateContext<'ledger'> = honoDelegateContext(
+    request,
+    'ledger',
+    router,
+  );
+
+  return `${key} ${context.mount} ${subpath} ${states} ${String(raw.id)} ${keyed} ${fromRouter.state}`;
+}
+
+// The core augmentation admits the key on a shared client tree.
+export const sharedState: StateDeclaration = {
+  name: 'app.claims',
+  url: '/claims/{id}',
+  delegate: 'ledger',
+};
+
+// A delegate is fetch-shaped: the request, then whatever the adapter was called with.
+const ledger: DelegateHandler = (request) =>
+  new Response(claimOf(request), { status: 202 });
+
+interface WorkerEnv {
+  QUEUE: string;
+}
+
+const workerLedger: DelegateHandler<[env: WorkerEnv, ctx: unknown]> = (
+  request,
+  env,
+) => new Response(`${request.method} ${env.QUEUE}`, { status: 202 });
+
+export const workerHandler: FetchHandler<[env: WorkerEnv, ctx: unknown]> =
+  createFetchHandler(router, {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger: workerLedger },
+  });
+
+// An untyped router leaves delegates optional.
+export const undelegated: FetchHandler = createFetchHandler(router, {
+  serveShell: (_mountBase, request) => new Response(request.url),
+});
+
+// Hono's app.fetch fits bare; the middleware forwards c.env and executionCtx.
+const ledgerApp = new Hono<{ Bindings: WorkerEnv }>();
+
+export const honoDelegating: MiddlewareHandler<{ Bindings: WorkerEnv }> =
+  serverRouterHono(router, {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger: ledgerApp.fetch },
+  });
+
+export const honoArgs: HonoDelegateArgs<{ Bindings: WorkerEnv }> = [
+  { QUEUE: 'q' },
+  undefined,
+];
+
+// Typed routers: `as const` routes type the keys, states and params per instance.
+const claimRoutes = [
+  { name: 'app', url: '' },
+  { name: 'app.claims', url: '/claims/{id}', delegate: 'ledger' },
+  { name: 'app.receipts', url: '/receipts', delegate: 'ledger' },
+] as const;
+
+const feedRoutes = [{ name: 'feed', url: '/feed', delegate: 'feed' }] as const;
+
+const claimsRouter = createServerRouter({
+  mounts: { '/app': { routes: claimRoutes }, '/feeds': { routes: feedRoutes } },
+});
+
+const receiptsRouter = createServerRouter({
+  mounts: { '/': { routes: claimRoutes, strategy: 'simulate' } },
+});
+
+export const typedKey: DelegateKey<
+  (typeof claimRoutes)[number] | (typeof feedRoutes)[number]
+> = 'feed';
+
+export const typedHandlers: DelegateHandlers<[], (typeof feedRoutes)[number]> =
+  { feed: ledger, extra: ledger };
+
+export const required: RequiredDelegates<[], (typeof feedRoutes)[number]> = {
+  delegates: { feed: ledger },
+};
+
+export const typedHandler: FetchHandler = createFetchHandler(claimsRouter, {
+  serveShell: (_mountBase, request) => new Response(request.url),
+  delegates: { ledger, feed: ledger },
+});
+
+export const otherTypedHandler: FetchHandler = createFetchHandler(
+  receiptsRouter,
+  {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger },
+  },
+);
+
+export const missingKey: FetchHandler = createFetchHandler(claimsRouter, {
+  serveShell: (_mountBase, request) => new Response(request.url),
+  // @ts-expect-error a typed router requires every key it names
+  delegates: { ledger },
+});
+
+// @ts-expect-error a typed router that names keys requires delegates
+export const missingDelegates: FetchHandler = createFetchHandler(claimsRouter, {
+  serveShell: (_mountBase, request) => new Response(request.url),
+});
+
+export const honoMissingKey: MiddlewareHandler = serverRouterHono(
+  claimsRouter,
+  {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    // @ts-expect-error the Hono adapter requires the same keys
+    delegates: { ledger: ledgerApp.fetch },
+  },
+);
+
+// The state narrows params through the seam.
+export function typedClaimOf(request: Request): string {
+  const context = delegateContext(request, 'ledger', claimsRouter);
+
+  if (context.state === 'app.claims') {
+    const id: string = context.params.id;
+
+    return id;
+  }
+
+  const receipts: 'app.receipts' = context.state;
+  const params: Readonly<RawParams> = context.params;
+
+  // @ts-expect-error 'badge' is not a key the router names
+  delegateContext(request, 'badge', claimsRouter);
+
+  return `${receipts} ${String(params.id)}`;
+}
+
+export function feedPageOf(request: Request): number {
+  return delegateContext(request, 'feed', claimsRouter).params.page;
+}
+
+const commandRoutes = [
+  { name: 'api' },
+  { name: 'api.claims', url: '/claims', delegate: 'claims' },
+] as const;
+
+const commandRouter = createServerRouter({
+  mounts: { '/': { routes: commandRoutes } },
+});
+
+export const commandDecls: ServerRouterDeclarations<typeof commandRouter> =
+  commandRoutes[1];
+
+const claimsHandler = (request: Request, env: WorkerEnv): Response =>
+  new Response(`${request.method} ${env.QUEUE}`, { status: 202 });
+
+const serveShell = (_mountBase: string, request: Request): Response =>
+  new Response(request.url);
+
+export const commandHandler = createFetchHandler(commandRouter, {
+  serveShell,
+  delegates: { claims: claimsHandler },
+});
+
+export const commandCalled: Promise<Response | null> = commandHandler(
+  new Request('https://ledger.test/claims'),
+  { QUEUE: 'q' },
+);
+
+export const commandAnnotated: FetchHandler<[env: WorkerEnv]> =
+  createFetchHandler(commandRouter, {
+    serveShell,
+    delegates: { claims: (request, env) => claimsHandler(request, env) },
+  });
+
+export const commandExplicit = createFetchHandler<
+  typeof commandRouter,
+  [env: WorkerEnv]
+>(commandRouter, {
+  serveShell,
+  delegates: { claims: (request, env) => claimsHandler(request, env) },
+});
+
+// The key check holds whether `Args` is inferred, annotated or written out.
+export const misspelledInferred = createFetchHandler(commandRouter, {
+  serveShell,
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: claimsHandler },
+});
+
+export const misspelledAnnotated: FetchHandler<[env: WorkerEnv]> =
+  createFetchHandler(commandRouter, {
+    serveShell,
+    // @ts-expect-error 'claim' is not the key the router names
+    delegates: { claim: (request, env) => claimsHandler(request, env) },
+  });
+
+export const misspelledExplicit = createFetchHandler<
+  typeof commandRouter,
+  [env: WorkerEnv]
+>(commandRouter, {
+  serveShell,
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: (request, env) => claimsHandler(request, env) },
+});
+
+// @ts-expect-error the router's type comes first; `Args` alone no longer drops the key check
+export const argsOnly = createFetchHandler<[env: WorkerEnv]>(commandRouter, {
+  serveShell,
+  delegates: { claims: claimsHandler },
+});
+
+// @ts-expect-error serveShell is required
+export const missingShell: FetchHandler = createFetchHandler(claimsRouter, {
+  delegates: { ledger, feed: ledger },
+});
+
+export const honoCommands: MiddlewareHandler<{ Bindings: WorkerEnv }> =
+  serverRouterHono(commandRouter, {
+    serveShell,
+    delegates: { claims: ledgerApp.fetch },
+  });
+
+export const honoExplicit = serverRouterHono<
+  typeof commandRouter,
+  { Bindings: WorkerEnv }
+>(commandRouter, {
+  serveShell,
+  // @ts-expect-error 'claim' is not the key the router names
+  delegates: { claim: ledgerApp.fetch },
+});
+
+// A typed router still fits the untyped surface.
+export const looseRouter: ServerRouter = claimsRouter;
+
+export const typedDiagnostics: MountDiagnostic[] =
+  diagnoseMounts(receiptsRouter);
+
+export const typedMiddleware: ConnectMiddleware = createConnectMiddleware(
+  claimsRouter,
+  { delegates: 'next' },
+);
+
 const fetchOptions: FetchAdapterOptions = {
   shellPath: (mountBase) => mountBase,
   serveShell: (_mountBase, request) => new Response(request.url),
@@ -328,6 +651,7 @@ const fetchOptions: FetchAdapterOptions = {
   serveNotFound: (_mountBase, _request) =>
     Promise.resolve(new Response('not found', { status: 404 })),
   shouldHandle: (request) => request.method === 'GET',
+  delegates: { ledger },
 };
 
 export const handler: FetchHandler = createFetchHandler(router, fetchOptions);

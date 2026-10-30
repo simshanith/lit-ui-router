@@ -68,6 +68,8 @@ const workspaces = {
       'wrangler',
       // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
       'eslint-formatter-tap',
+      // .oxlintrc.json extends its config by path, which knip does not follow
+      '@tools/lint-elements',
     ],
     // a promoted example: its own npm lockfile, not a pnpm workspace member
     ignore: ['www/atlas.lit-ui-router.dev/**'],

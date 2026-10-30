@@ -39,6 +39,15 @@ export interface RouteDeclaration {
    * cycles are rejected at compile.
    */
   redirectTo?: string | RedirectTarget;
+  /**
+   * Names the host handler that answers this state's url, for any method and
+   * any Accept: the verdict is `delegate` instead of `shell`. The state tree
+   * stays isomorphic because it carries only the key; the adapter's
+   * `delegates` option maps the key to a handler. A delegating state needs a
+   * url and no `redirectTo`, and no redirect may target it. Child states
+   * don't inherit it.
+   */
+  delegate?: string;
 }
 
 /** A redirect target in state terms; the matcher tier formats it back into a path. */
@@ -70,7 +79,7 @@ export interface RedirectRule {
 /** The input to {@link compileRedirects}: the route set plus the rules evaluated over it. */
 export interface RedirectTable {
   /** The states whose urls the table redirects between (see {@link RouteDeclaration}). */
-  routes: RouteDeclaration[];
+  routes: readonly RouteDeclaration[];
   /** when()-style rules, evaluated in declaration order before per-state redirectTo entries. */
   rules?: RedirectRule[];
   /** Matcher compiler options (defaults: strict, case-sensitive). */
@@ -110,7 +119,7 @@ const parentName = (route: RouteDeclaration): string => {
  * contribute nothing and match nothing, as in ui-router.
  */
 export function compileRoutes(
-  routes: RouteDeclaration[],
+  routes: readonly RouteDeclaration[],
   config: UrlMatcherCompilerConfig = {},
 ): CompiledRoute[] {
   const { compile } = urlMatcherFactory(config);
@@ -165,7 +174,7 @@ export function compileRoutes(
     if (route.url === undefined) continue;
     const chain = chainOf(route);
     let pattern = '';
-    let params: NonNullable<RouteDeclaration['params']> = {};
+    const params: NonNullable<RouteDeclaration['params']> = {};
 
     for (let depth = chain.length - 1; depth >= 0; depth--) {
       const ancestor = chain[depth];
@@ -180,7 +189,7 @@ export function compileRoutes(
         pattern += ancestor.url;
       }
 
-      if (ancestor.params) params = { ...params, ...ancestor.params };
+      if (ancestor.params) Object.assign(params, ancestor.params);
     }
 
     compiled.push({

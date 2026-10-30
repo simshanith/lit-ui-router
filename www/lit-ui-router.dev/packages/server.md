@@ -30,6 +30,58 @@ Vite plugin — but it is still `0.x`. The APIs below are live and covered by te
 can still move in a minor release before `1.0`, so pin what you install.
 :::
 
+## When to use it
+
+Use it when a server has to honour a ui-router state tree that already exists
+for another reason, usually the client app's own route tables. Reusing that
+tree is what makes the setup worthwhile: the server answers the same urls the
+client routes, from one declaration. Each use below adds one concept and
+leaves the ones before it unchanged:
+
+1. **An honest SPA host.**
+   [Real 404s](/guides/server-route-matching#real-404s-per-mount),
+   redirects, and the shell for the client's routes:
+   [`createServerRouter`](#quick-start), an [adapter](#adapters), and a
+   `serveShell`.
+2. **Server-rendered pages.** The same states' resolves and views, rendered
+   with [`lit-ui-router-ssr`](/packages/ssr) on
+   [`settle`](#settling-a-server-router) and
+   [`prerender`](#emitting-a-static-site).
+3. **Representations of a state.** A state whose answer is its own `Response`
+   (a redirect, JSON, a badge) built from its resolves once `settle` lands it.
+4. **Commands whose url the tree defines.**
+   [Delegating states](#delegating-states) hand a url to a host handler.
+   Delegate when the tree is the authority for the url: a command that shares
+   params with a page, or a path `prerender` must skip.
+5. **Outside HTTP.** The [verdict](#the-verdict) core has no HTTP dependency:
+   a pathname goes in and a plain object comes out.
+
+It is not for urls no state tree defines. Route those at the host, ahead of
+the router: a platform route, an earlier middleware, or in Hono a route
+registered before the router's catch-all.
+
+```ts
+const app = new Hono<{ Bindings: Env }>();
+
+// No state defines /healthz, so the host answers it first.
+app.get('/healthz', (c) => c.text('ok'));
+
+app.use('*', (c, next) =>
+  serverRouterHono(router, {
+    serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
+  })(c, next),
+);
+```
+
+Paths outside every mount already pass through: the fetch adapter returns
+`null`, and the Hono and Connect middleware call `next()`, so the host keeps
+its own fallthrough and 404 handling. A path a mount owns but no state matches
+is that mount's 404, which `serveNotFound` can answer with the app's own
+404 page ([real 404s, per mount](/guides/server-route-matching#real-404s-per-mount)).
+[One request at a time](/guides/server-route-matching#one-request-at-a-time)
+traces each case, and the client's side of the same miss is the
+[404 state](/guides/unmatched-urls).
+
 ## What problem it solves
 
 With [pushState URLs](/guides/location-plugins#html5-pushstate), every deep
@@ -65,6 +117,7 @@ package's own esbuild probe:
 | `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/prerender`  | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
 | `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
 | `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
 
@@ -103,6 +156,10 @@ Picking one:
   values handed to the client's boot through `/ssr/client`.
   [`settle(router, path)`](#settling-a-server-router), then
   [`dehydrate` and `seed`](#handing-resolves-to-the-client).
+- **`/prerender`** — you want the mount table written out as a static site:
+  a page per shell verdict from your render, a `_redirects` line per
+  redirect, and the 404 document.
+  [`prerender(options)`](#emitting-a-static-site).
 
 ## Installation
 
@@ -178,6 +235,14 @@ the warning prints.
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
+  | {
+      kind: 'delegate';
+      mount: string;
+      subpath: string;
+      delegate: string;
+      state: string;
+      params: RawParams;
+    }
   | { kind: 'notFound'; mount?: string };
 ```
 
@@ -190,6 +255,8 @@ type Verdict =
   `mergeSearch(location, incoming)` rather than concatenating. Verdicts fix
   `status: 302`: a redirect table is configuration that changes with the next
   deploy, and browsers cache 301s past it.
+- **`delegate`** — the path matched a state that names a host handler by key
+  ([delegating states](#delegating-states)); the handler answers the request.
 - **`notFound`** — `mount` set means a mount owned the path but nothing
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
@@ -319,6 +386,11 @@ The request/response types are structural subsets of `http.IncomingMessage`
 and `http.ServerResponse`, so Node, Express, and Connect objects all fit
 without the package depending on Node types.
 
+Connect can't call [delegate handlers](#delegating-states), so
+`createConnectMiddleware` throws at construction for a router whose states
+name delegate keys. Pass `delegates: 'next'` to pass navigations that match a
+delegating state to the downstream stack, and serve those states there.
+
 ### hono
 
 `serverRouterHono` wraps the fetch handler in Hono's continuation: a verdict
@@ -340,6 +412,121 @@ app.use('*', (c, next) =>
   })(c, next),
 );
 ```
+
+### Delegating states
+
+A state with a `delegate` key hands its url to a host handler: a command
+endpoint, a form POST, a JSON feed. The tree carries only the key, so the
+client and the server can share it. The fetch and Hono adapters map keys to
+fetch-shaped handlers in their `delegates` option. A delegate receives
+exactly the host's handler arguments: `(request, env, ctx)` on Workers,
+`(request, c.env, c.executionCtx)` behind `serverRouterHono`, and Connect's
+own `(req, res, next)` downstream, so a Hono app's `fetch` or a Worker handler
+fits bare. Wrap or bind a handler whose extra parameters are optional, so a
+host argument such as `ctx` never lands in one:
+
+```ts
+import { env } from 'cloudflare:workers';
+import { Hono } from 'hono';
+import { createServerRouter } from 'ui-router-server';
+import { createFetchHandler, delegateContext } from 'ui-router-server/fetch';
+
+const routes = [
+  { name: 'home', url: '' },
+  { name: 'claims', url: '/claims/{id}', delegate: 'ledger' },
+] as const;
+
+const router = createServerRouter({ mounts: { '/app': { routes } } });
+
+// The delegate gets the original request, '/app' prefix included.
+const ledger = new Hono<{ Bindings: Env }>().basePath('/app');
+
+ledger.post('/claims/:id', async (c) => {
+  const { params } = delegateContext(c.req.raw, 'ledger', router);
+  await c.env.CLAIMS.send({ id: params.id, claim: await c.req.json() });
+  return c.body(null, 202);
+});
+
+const handler = createFetchHandler(router, {
+  serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+  delegates: { ledger: ledger.fetch },
+});
+
+export default {
+  async fetch(request, env, ctx) {
+    // env and ctx reach ledger.fetch untouched.
+    return (await handler(request, env, ctx)) ?? env.ASSETS.fetch(request);
+  },
+} satisfies ExportedHandler<Env>;
+```
+
+`serverRouterHono` forwards `c.env` and `c.executionCtx` after the request,
+so `delegates: { ledger: ledger.fetch }` works behind the middleware too, and
+`ui-router-server/hono` re-exports `delegateContext`.
+
+A request of any method and any `Accept` that matches a delegating state goes
+to its handler. The handler gets the original Request object, body unread and
+url unchanged, which is what keeps `delegateContext` working; its `Response`
+goes out untouched. Unlike Hono's `app.mount()`, nothing strips the mount
+base, so route on the context's `subpath`, give the delegate the mount base
+(`basePath('/app')` above), or put delegating states on the `/` mount.
+Requests that match no delegating state keep the navigation contract above.
+
+`delegateContext(request, key, router?)` returns
+`{ mount, subpath, delegate, state, params }` for the match. `subpath` is the
+pathname within the mount (`''` at the bare base). `params` holds what the
+pathname alone resolves: search params keep their declared defaults, so read
+the query from the request. It throws when the request wasn't delegated, was
+delegated to a different key, or came through a router other than the one
+passed. The context is keyed by the Request object, so a `request.clone()` or
+a `new Request(request)` has none: read it from the request the handler
+received (`c.req.raw` in Hono).
+
+- A delegating state needs a url and no `redirectTo`, and its children don't
+  inherit the key. A `redirectTo` or redirect rule that targets a delegating
+  state is rejected too, since redirects answer navigations only and a POST
+  would never reach the handler. `createServerRouter` throws for each.
+- A redirect rule whose pattern also matches a delegating url is ordered as
+  the tier orders any rule against a state: `matcher` mounts evaluate rules
+  first and redirect, while `simulate` mounts follow core's rule sort, where
+  an equally specific state url wins. Keep rule patterns off delegating urls.
+- `createFetchHandler` throws at construction when the router names a key
+  that `delegates` doesn't map. Extra keys in `delegates` are allowed.
+- A handler that throws rejects the adapter's promise, so the host's own error
+  handling answers it.
+- Requests outside `shouldHandle` only match urls: they never run a
+  transition, even on a `simulate` mount. When the router names no delegate
+  keys they pass as `null` without matching.
+- A delegating state never runs a transition, so its resolves don't run
+  either.
+- The Connect adapter throws for delegate keys unless `delegates: 'next'`,
+  as its section above describes.
+
+#### Typing delegates
+
+Declare `routes` `as const` and the router's type carries its state names
+and delegate keys: `delegates` must then map every key the routes name, a
+missing key is a compile error, and `delegateContext(request, key, router)`
+narrows `state` to the states that name `key`. Each router is typed on its
+own, so two routers in one program can name different keys. Untyped routes
+keep `string` keys and states and core's `RawParams`.
+
+The router's type is `createFetchHandler`'s first type parameter and the
+host's arguments its second, so the key check holds however the arguments
+are given: inferred from the handlers, written out as
+`createFetchHandler<typeof router, [env: Env]>`, or annotated on the result
+as `const handler: FetchHandler<[env: Env]> = createFetchHandler(…)`.
+`serverRouterHono<typeof router, AppEnv>` takes them in the same order.
+
+`params` reads the `DelegateSeam` interface that `ui-router-server/fetch`
+exports empty. A typed state registry augments it with a `params` member
+indexed by state name, and `DelegateParams<N>` returns that entry, or
+`RawParams` for a state it doesn't name.
+
+`ui-router-server` augments `@uirouter/core`'s `StateDeclaration` with an
+optional `delegate?: string`, so a client tree typed with core's declarations
+can carry the key. The augmentation applies in programs that import
+`ui-router-server`; a client-only program adds `import type {} from 'ui-router-server';`.
 
 ## Server-side hrefs
 
@@ -442,6 +629,51 @@ the payload does not cover runs as usual:
 The client entry imports `@uirouter/core` and nothing from the server entry,
 so a browser bundle takes it alone; it exports the payload types too.
 Where the payload goes in the document is the renderer's choice.
+
+## Emitting a static site
+
+[`prerender(options)`](/api/ui-router-server/prerender/functions/prerender) asks
+the mount table for a verdict per path and writes the site. A shell verdict
+becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
+redirect becomes a `_redirects` line, paired with and without the trailing
+slash, and no page. The `otherwise` projection becomes `404.html`. A path that
+matches nothing is counted, listed in `result.warnings`, and warned about in
+development. A path that matches a [delegating state](#delegating-states)
+gets no page and no rules line: it is counted in `result.tally.delegate` and
+listed in `result.delegated`, in enumeration order. A verdict kind the loop
+doesn't know throws instead of being counted.
+
+```ts
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { prerender } from 'ui-router-server/prerender';
+import { settle } from 'ui-router-server/ssr';
+
+const result = await prerender({
+  mounts,
+  outDir: 'dist',
+  paths: ['/', '/sheet/7B', '/legacy'],
+  render: async (verdict, { path }) => {
+    await settle(router, path);
+    return page(router);
+  },
+  write: async (file, body) => {
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, body);
+  },
+});
+```
+
+The loop never touches a filesystem itself: `write` receives each file with
+`outDir` joined on, so the same call emits through `node:fs`, a virtual fs, or
+a `Map`, under any runtime.
+[`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
+render, and writes through `node:fs` by default.
+
+A delegated path has no static file, so the host must send it to the server.
+On Cloudflare Workers, list `result.delegated` in
+[`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
+so the Worker sees those paths before static assets do.
 
 ## What the server can't see
 

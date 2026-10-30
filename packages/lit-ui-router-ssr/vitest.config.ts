@@ -13,12 +13,16 @@ const source = (path: string): string =>
 // Specs that need a browser-shaped document rather than the SSR DOM shim.
 const clientSpecs = [
   'src/specs/client.spec.ts',
+  'src/specs/light-dom.spec.ts',
   'src/specs/register.spec.ts',
   'src/specs/served-view.spec.ts',
 ];
 
 // One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports.
-const coexistSpecs = ['src/specs/client-coexist.spec.ts'];
+const coexistSpecs = [
+  'src/specs/client-coexist.spec.ts',
+  'src/specs/light-dom-coexist.spec.ts',
+];
 
 // Specs that must also hold against the published build of `@lit-labs/ssr-client`.
 const prodSpecs = ['src/specs/render-light-flag.spec.ts'];
@@ -54,8 +58,16 @@ const peerAliases = [
     replacement: source('../ui-router-server/src/location.ts'),
   },
   {
+    find: /^ui-router-server\/prerender$/,
+    replacement: source('../ui-router-server/src/prerender.ts'),
+  },
+  {
     find: /^ui-router-server\/ssr$/,
     replacement: source('../ui-router-server/src/ssr.ts'),
+  },
+  {
+    find: /^ui-router-server\/ssr\/client$/,
+    replacement: source('../ui-router-server/src/ssr-client.ts'),
   },
 ];
 

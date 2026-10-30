@@ -11,12 +11,10 @@ import {
   ResolveContext,
   Transition,
   ViewConfig,
-  applyPairs,
   StateDeclaration,
   PathNode,
   trace,
   isFunction,
-  isString,
   unnestR,
   Param,
   type RawParams,
@@ -27,13 +25,13 @@ import {
 
 import {
   RoutedLitTemplate,
-  UIViewInjectedProps,
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
+import { routedViewTemplate } from './routed-view.js';
 import { warnForeignClass, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
@@ -97,6 +95,38 @@ interface PendingSwap {
   element: Element;
   cancel: () => void;
 }
+
+/**
+ * Holds, on a view, the element a server rendered for it until its first
+ * render. A `Symbol.for` key, so a view built by one copy of `lit-ui-router`
+ * takes an element handed over by another.
+ */
+const servedElement: unique symbol = Symbol.for('lit-ui-router#served-element');
+
+/** A view as {@link adoptServedElement} writes it; `UiView` declares no such member. */
+interface ServedSlot {
+  [servedElement]?: Element;
+}
+
+/**
+ * Hands `view` the element a server rendered for its routed class, ahead of
+ * the view's first render.
+ *
+ * That render assigns the element its props and places it, instead of
+ * constructing one, when it is an instance of the routed class; any other
+ * element is ignored. A view that has already rendered ignores it.
+ *
+ * Plumbing for `lit-ui-router-ssr`'s served view, not a supported import.
+ *
+ * @param view - the served `<ui-view>`, before its first render
+ * @param element - the element the server wrote in the view's class slot
+ *
+ * @internal
+ */
+export const adoptServedElement = (view: UiView, element: Element): void => {
+  // SAFETY: the slot is a symbol-keyed expando no `UiView` member declares
+  (view as UiView & ServedSlot)[servedElement] = element;
+};
 
 /** @internal */
 interface ViewAddress {
@@ -886,29 +916,18 @@ export class UiView extends LitElement {
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const { uiRouter: router, component, resolveContext: context } = this;
-    const injector = context.injector();
+    // SAFETY: the slot is a symbol-keyed expando no `UiView` member declares
+    const slot = this as UiView & ServedSlot;
+    const served = this.hasUpdated ? undefined : slot[servedElement];
+    delete slot[servedElement];
 
-    // The injector hands a NOWAIT token's promise, which renders before it settles.
-    const resolves = context
-      .getTokens()
-      .filter(isString)
-      .filter((token) => {
-        const resolvable = context.getResolvable(token);
+    const result = routedViewTemplate(
+      this.component!,
+      this.uiRouter,
+      this.resolveContext,
+      served,
+    );
 
-        return (
-          resolvable.resolved ||
-          context.getPolicy(resolvable).async === 'NOWAIT'
-        );
-      })
-      .map((token): [string, unknown] => [token, injector.get<unknown>(token)])
-      .reduce(applyPairs, {});
-
-    const transition = injector.get<Transition>(Transition);
-
-    const props: UIViewInjectedProps = { router, resolves, transition };
-
-    const result = component!(props);
     const element = routedElementOf(result);
 
     if (!element) {

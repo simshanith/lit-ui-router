@@ -48,9 +48,9 @@ ci:pull_request
 │   ├── //#lint:root
 │   ├── //#lint:complexity
 │   ├── //#lint:package-json
-│   ├── //#lint:elements
 │   ├── //#lint:markdown
 │   ├── //#lint:templates
+│   ├── //#lint:css
 │   ├── //#lint:workflows                 (umbrella)
 │   │   ├── //#lint:actionlint
 │   │   ├── //#lint:zizmor
@@ -439,7 +439,7 @@ fans out via `dependsOn`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
-- `//#lint:elements` - eslint (lit, wc, lit-a11y) over `{packages,apps,examples}/*/src/**/*.ts`, failing on any finding
+- `//#lint:css` - stylelint over `.css` files, `.vue` `<style>` blocks and lit `css` templates; [`stylelint.config.mjs`](../stylelint.config.mjs) maps each to its syntax
 - `//#lint:workflows` - umbrella (no script) over the four per-tool tasks below
 - `//#lint:actionlint` - actionlint over GitHub Actions workflows
 - `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
@@ -453,29 +453,19 @@ These are leaves of the `lint`, `typecheck`, `format` and `format:check` umbrell
 
 ### Choosing an ESLint Formatter
 
-Both eslint-backed root tasks print findings only:
+`lint:package-json` prints findings only. Which manifests it covers is
+`check:package-coverage`'s job
+([`check-package-coverage.ts`](../tools/repo-checks/check-package-coverage.ts)):
+it fails when a tracked manifest drops out of the lint outside its named
+exclusions, and prints one row per manifest showing what lints it, workspace
+membership, `catalogs.workspace` entry, and the turbo umbrellas its scripts
+join. For a per-file list, append a formatter; any flag appended to the
+script reaches eslint:
 
-- `lint:package-json` uses eslint's default formatter. Which manifests it
-  covers is `check:package-coverage`'s job
-  ([`check-package-coverage.ts`](../tools/repo-checks/check-package-coverage.ts)):
-  it fails when a tracked manifest drops out of the lint outside its named
-  exclusions, and prints one row per manifest showing what lints it, workspace
-  membership, `catalogs.workspace` entry, and the turbo umbrellas its scripts
-  join. For a per-file list, append a formatter; any flag appended to the
-  script reaches eslint:
+```bash
+pnpm lint:package-json --format tap
+```
 
-  ```bash
-  pnpm lint:package-json --format tap
-  ```
-
-  Append it directly — **not** `pnpm lint:package-json -- --format tap`.
-  pnpm forwards the `--` itself, and eslint reads everything after it as a file
-  pattern (`No files matching the pattern "--format"`).
-
-- `lint:elements` runs eslint under `@tools/lint-elements` with
-  `--max-warnings 0`, so a warning fails the lane as an error does. Appended
-  flags reach eslint the same way:
-
-  ```bash
-  pnpm lint:elements --format tap
-  ```
+Append it directly — **not** `pnpm lint:package-json -- --format tap`.
+pnpm forwards the `--` itself, and eslint reads everything after it as a file
+pattern (`No files matching the pattern "--format"`).

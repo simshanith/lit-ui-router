@@ -1,15 +1,25 @@
 import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import type { LitStateDeclaration } from 'lit-ui-router/pure';
+import type {
+  LitStateDeclaration,
+  NormalizedLitViewDeclaration,
+  RoutedLitTemplate,
+} from 'lit-ui-router/pure';
+import * as pure from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { settle } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
-import { UiViewRenderer } from '../ui-view-renderer.js';
+import {
+  carriesElement,
+  isStickyRenderer,
+  UiViewRenderer,
+} from '../ui-view-renderer.js';
+import type { ClassRendererProbe } from '../ui-view-renderer.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
@@ -42,6 +52,45 @@ const boxedRouter = (): UIRouterLit => {
   ];
 
   for (const state of states) router.stateRegistry.register(state);
+
+  return router;
+};
+
+/** A `sticky` class, which core binds to a renderer in its declaration. */
+class StickyView extends LitElement {
+  static sticky = true;
+}
+
+customElements.define('x-sticky', StickyView);
+
+/** One state whose view is a `sticky` class. */
+/** A `sticky` class that counts its instances. */
+class CountedStickyView extends LitElement {
+  static sticky = true;
+  static built = 0;
+
+  constructor() {
+    super();
+    CountedStickyView.built++;
+  }
+}
+
+customElements.define('x-counted-sticky', CountedStickyView);
+
+const stickyRouter = (
+  component: typeof StickyView = StickyView,
+): UIRouterLit => {
+  const router = installServerLocation(new UIRouterLit(), {
+    urlConfig: { strict: false },
+  });
+
+  const state: LitStateDeclaration = {
+    name: 'sticky',
+    url: '/sticky',
+    component,
+  };
+
+  router.stateRegistry.register(state);
 
   return router;
 };
@@ -81,7 +130,7 @@ describe('UiViewRenderer', () => {
     expect(markup).not.toContain('<template');
     // the resolve arrives as its own child part inside the component's markup, prefixed with the rest of the interior
     expect(markup).toContain(
-      '<h1>shell <!--ui-view:lit-part-->hello<!--ui-view:/lit-part--></h1>',
+      '<h1>shell <!--served:lit-part-->hello<!--served:/lit-part--></h1>',
     );
   });
 
@@ -124,10 +173,10 @@ describe('UiViewRenderer', () => {
     expect(markup.match(/<ui-view/g)).toHaveLength(2);
     // the nested view's own pair and node marker belong to the parent's run, so they carry the prefix until the parent wakes
     expect(markup).toContain(
-      '<!--ui-view:lit-node 0--><ui-view defer-hydration>' +
-        '<!--ui-view:lit-part DJeWKgE7tTI=-->' +
-        '<p class="detail"><!--ui-view:lit-part-->leaf<!--ui-view:/lit-part--></p>' +
-        '<!--ui-view:/lit-part--></ui-view>',
+      '<!--served:lit-node 0--><ui-view defer-hydration>' +
+        '<!--served:lit-part DJeWKgE7tTI=-->' +
+        '<p class="detail"><!--served:lit-part-->leaf<!--served:/lit-part--></p>' +
+        '<!--served:/lit-part--></ui-view>',
     );
   });
 
@@ -136,7 +185,7 @@ describe('UiViewRenderer', () => {
 
     expect(markup).not.toContain('class="detail"');
     expect(markup).toContain(
-      '<ui-view defer-hydration><!--ui-view:lit-part--><!--ui-view:/lit-part--></ui-view>',
+      '<ui-view defer-hydration><!--served:lit-part--><!--served:/lit-part--></ui-view>',
     );
   });
 
@@ -193,6 +242,40 @@ describe('UiViewRenderer', () => {
     warn.mockRestore();
   });
 
+  it('leaves a sticky RoutedLitElement view empty and warns once', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = stickyRouter();
+    await settle(router, '/sticky');
+
+    const markup = draw(router);
+
+    expect(markup).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'lit-ui-router-ssr: this view is a RoutedLitElement class',
+      ),
+      '$default',
+    );
+    warn.mockRestore();
+  });
+
+  it('recognises a sticky class by the core brand, without building its element', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = stickyRouter(CountedStickyView);
+    await settle(router, '/sticky');
+    const built = CountedStickyView.built;
+
+    expect(draw(router)).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(CountedStickyView.built).toBe(built);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
   it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -215,5 +298,79 @@ describe('UiViewRenderer', () => {
 
     expect(markup).toContain('promise');
     expect(markup).not.toContain('missing');
+  });
+});
+
+describe('sticky class detection', () => {
+  /** The `$default` view component core normalized a sticky class to. */
+  const stickyComponent = (router: UIRouterLit): RoutedLitTemplate => {
+    // SAFETY: a lit state's views are normalized lit view declarations
+    const view = router.stateRegistry.get('sticky')?.$$state?.().views
+      ?.$default as NormalizedLitViewDeclaration;
+
+    if (pure.isRoutedLitElement(view.component)) {
+      throw new Error('core binds a sticky class to a renderer');
+    }
+
+    return view.component;
+  };
+
+  // The key a core with the class brand stamps on a sticky class's renderer.
+  const routedClass: unique symbol = Symbol.for('lit-ui-router#routed-class');
+
+  // A `lit-ui-router` with the brand, as its `pure` namespace reads to this renderer.
+  const brandedCore: ClassRendererProbe = {
+    isRoutedLitElement: pure.isRoutedLitElement,
+    isRoutedClassRenderer: (component) => routedClass in component,
+  };
+
+  it('reads the brand without calling the renderer', () => {
+    let calls = 0;
+
+    const renderer = Object.assign(
+      () => {
+        calls++;
+
+        return html`${new StickyView()}`;
+      },
+      { [routedClass]: StickyView },
+    );
+
+    expect(isStickyRenderer(renderer, brandedCore)).toBe(true);
+    expect(calls).toBe(0);
+  });
+
+  // A `lit-ui-router` older than the class-renderer brand has no guard to read.
+  const olderCore: ClassRendererProbe = {
+    isRoutedLitElement: pure.isRoutedLitElement,
+  };
+
+  it('reads the brand on the sticky renderer the workspace core binds', () => {
+    const component = stickyComponent(stickyRouter());
+
+    expect(isStickyRenderer(component)).toBe(true);
+  });
+
+  it('falls back to the result shape against a core without the brand', () => {
+    const router = stickyRouter();
+    const component = stickyComponent(router);
+
+    expect(isStickyRenderer(component, olderCore)).toBe(false);
+    expect(carriesElement(component({ router, resolves: {} }))).toBe(true);
+  });
+
+  it('takes a lone element as a class result, as an older core renders it', () => {
+    expect(carriesElement(html`${new StickyView()}`)).toBe(true);
+  });
+
+  it('takes the element followed by nothing as a class result', () => {
+    expect(carriesElement(html`${new StickyView()}${nothing}`)).toBe(true);
+  });
+
+  it('reads a template component as neither', () => {
+    const component = () => html`<p>template</p>`;
+
+    expect(isStickyRenderer(component)).toBe(false);
+    expect(carriesElement(component())).toBe(false);
   });
 });

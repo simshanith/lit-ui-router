@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
 import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
 import { srefHref } from 'lit-ui-router';
@@ -15,7 +16,10 @@ import { settle } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
+import { lightSlot } from '../client.js';
+import { LightDomHydrating } from '../light-dom.js';
 import { prerender } from '../prerender.js';
+import { UiViewRenderer } from '../ui-view-renderer.js';
 import type { HydrationSignature } from '../client.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
 import { signatureText, withoutSignature } from './markup.js';
@@ -184,6 +188,36 @@ describe('unclaimed paths', () => {
       expect.stringContaining('no otherwise projection'),
       '/app/missing',
     );
+    warn.mockRestore();
+  });
+});
+
+describe('delegating states', () => {
+  it("passes the loop's delegate count and list through, emitting nothing for them", async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const delegating = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        routes: [
+          ...appMount.routes,
+          { name: 'claims', url: '/claims', delegate: 'ledger' },
+        ],
+      },
+    };
+
+    const { files, result } = await run({
+      mounts: delegating,
+      paths: ['/app/claims', '/app/welcome'],
+      notFound: false,
+    });
+
+    expect(result.tally).toMatchObject({ shell: 1, delegate: 1, notFound: 0 });
+    expect(result.delegated).toEqual(['/app/claims']);
+    expect(result.pages.map((page) => page.path)).toEqual(['/app/welcome']);
+    expect([...files.keys()]).toEqual(['dist/welcome/index.html']);
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 });
@@ -387,6 +421,7 @@ describe('dryRun', () => {
       shell: 1,
       redirect: 1,
       notFound: 1,
+      delegate: 0,
       document: 1,
     });
     expect(result.rules).toHaveLength(2);
@@ -532,7 +567,7 @@ describe('the render composition', () => {
     expect(written).not.toContain('no-router');
   });
 
-  it('defaults to UiViewRenderer, so no element gets a shadow root it never asked for', async () => {
+  it('defaults to the light-DOM renderers, so no element gets a shadow root it never asked for', async () => {
     const { files } = await run({
       paths: ['/'],
       notFound: false,
@@ -552,6 +587,71 @@ describe('the render composition', () => {
     });
 
     expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+  });
+});
+
+/** A branded light-DOM element, drawn by the default renderers. */
+class DefaultCard extends LightDomHydrating(LitElement) {
+  @property()
+  label = '';
+
+  override render(): TemplateResult {
+    return html`<p class="default-card">${this.label}</p>`;
+  }
+}
+
+customElements.define('default-card', DefaultCard);
+
+/** The same render, unbranded. */
+class PlainCard extends LitElement {
+  @property()
+  label = '';
+
+  override createRenderRoot(): this {
+    return this;
+  }
+
+  override render(): TemplateResult {
+    return html`<p class="plain-card">${this.label}</p>`;
+  }
+}
+
+customElements.define('plain-card', PlainCard);
+
+describe('the default element renderers', () => {
+  const cards = (): TemplateResult =>
+    html`<default-card .label=${'drawn'}>${lightSlot()}</default-card
+      ><plain-card .label=${'plain'}>${lightSlot()}</plain-card>`;
+
+  it('draws a branded light-DOM element into its light DOM', async () => {
+    const { files } = await run({ notFound: false, renderShell: cards });
+    const written = files.get('dist/index.html')!;
+
+    expect(written).toMatch(
+      /<default-card[^>]*>(<!--[^>]*-->)*<p class="default-card">(<!--[^>]*-->)*drawn/,
+    );
+    expect(written).not.toContain('shadowroot');
+  });
+
+  it('serves an unbranded element empty', async () => {
+    const { files } = await run({ notFound: false, renderShell: cards });
+
+    expect(files.get('dist/index.html')).toMatch(
+      /<plain-card\s+defer-hydration><!--lit-part--><!--\/lit-part--><\/plain-card>/,
+    );
+  });
+
+  it('gives way to an explicit elementRenderers list', async () => {
+    const { files } = await run({
+      notFound: false,
+      renderShell: cards,
+      elementRenderers: [UiViewRenderer],
+    });
+
+    const written = files.get('dist/index.html')!;
+
+    expect(written).not.toContain('default-card"');
+    expect(written).not.toContain('drawn');
   });
 });
 

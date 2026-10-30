@@ -34,14 +34,21 @@ describe('embeds manifest', () => {
   });
 });
 
+/** An example's index.html: at its root for vite, or in the `public/` it serves as-is. */
+function indexPage(example: string): string | undefined {
+  return ['index.html', 'public/index.html'].find((page) =>
+    existsSync(join(root, example, page)),
+  );
+}
+
 /** The `<script type="importmap">` JSON in an example's index.html, if it has one. */
 function importMap(example: string): Record<string, string> | undefined {
-  const page = join(root, example, 'index.html');
+  const page = indexPage(example);
 
-  if (!existsSync(page)) return undefined;
+  if (!page) return undefined;
 
   const script = /<script type="importmap">([\s\S]*?)<\/script>/.exec(
-    readFileSync(page, 'utf8'),
+    readFileSync(join(root, example, page), 'utf8'),
   );
 
   // SAFETY: an import map is `{ imports: { specifier: url } }`; esmShPin fails on a non-URL
@@ -88,7 +95,7 @@ describe('import maps', () => {
         return locked === version
           ? []
           : [
-              `examples/${example}/index.html: update ${url} to ${fixed} (package-lock.json installs ${name}@${locked})`,
+              `examples/${example}/${indexPage(example)}: update ${url} to ${fixed} (package-lock.json installs ${name}@${locked})`,
             ];
       });
     });

@@ -9,7 +9,6 @@
         "lint:examples",
         "//#lint:root",
         "//#lint:package-json",
-        "//#lint:elements",
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
@@ -34,6 +33,7 @@
         "*/index.html",
         "*/package.json",
         "*/package-lock.json",
+        "*/public/**",
         "*/src/**",
         "*/tsconfig.json",
         "*/vite.config.ts"

@@ -1,19 +1,31 @@
 import { nothing, render } from 'lit';
 import type { TemplateResult } from 'lit';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vitest';
 import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
 import { adoptUiViewContext } from '../adopt-context.js';
 import '../register.js';
 
+import { RejectType } from '@uirouter/core';
 import {
+  bootstrap,
   hydrateRoot,
   readHydrationSignature,
   uiViewAdoptEventName,
 } from '../client.js';
 import type {
   AdoptOutcome,
+  BootstrapResult,
+  BootstrapSignature,
   HydrateRootOptions,
   UiViewAdoptEvent,
 } from '../client.js';
@@ -32,6 +44,7 @@ import {
 import type { Page } from './round-trip.js';
 import {
   boot,
+  bootAt,
   comments,
   draw,
   dropViewNodeMarkers,
@@ -105,7 +118,7 @@ describe('the round trip', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
   });
 
@@ -142,7 +155,7 @@ describe('the round trip', () => {
     ).toHaveLength(served.length);
     expect(warn).not.toHaveBeenCalled();
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
   });
 
@@ -164,51 +177,368 @@ describe('the round trip', () => {
   });
 });
 
-describe('a document drawn for another state', () => {
-  it('warns once, renders that view cold, and keeps its ancestors', async () => {
+describe('bootstrap', () => {
+  it('adopts a document drawn for the state it boots into', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // Drawn with the nested view routed; the client boots into the parent state.
     const { container, served } = serve(await drawShell('/shell/detail'));
-    const shell = container.querySelector('h1');
 
-    await boot(container, rootTemplate, '/shell');
+    const result = await bootAt(container, rootTemplate, '/shell/detail');
 
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain(
-      'could not adopt the server render',
-    );
-    // the view the document was not drawn for dropped the server's nodes
-    expect(container.querySelector('.detail')).toBeNull();
-    // the shell's own nodes were hydrated, not thrown away with the mismatch
-    expect(container.querySelector('h1')).toBe(shell);
-    expect(served.filter((element) => container.contains(element))).toContain(
-      shell,
-    );
-  });
-
-  it('says nothing when the document drew that view empty', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // The empty pair carries no render to adopt, so the view renders cold in silence.
-    const { container } = serve(await drawShell('/shell'));
-
-    await boot(container, rootTemplate, '/shell/detail');
-
+    expect(result).toEqual({
+      outcome: 'adopted',
+      signature: 'matched',
+      router: result.router,
+    });
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     expect(warn).not.toHaveBeenCalled();
-    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
   });
 
-  it('renders once over a served view that opens on a nested part', async () => {
+  it('resolves once the nested view is live, and releases the adopter', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    await bootAt(container, rootTemplate, '/shell/detail');
+
+    for (const view of views(container)) {
+      expect(view.hasUpdated).toBe(true);
+      expect(view.isUpdatePending).toBe(false);
+    }
+
+    expect(requestContext(container, adoptUiViewContext)).toBeUndefined();
+  });
+
+  it('renders cold into a container with nothing to adopt', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container } = serve(await drawShell('/shell/lead'));
-    expect(container.querySelectorAll('#plate')).toHaveLength(1);
+    const container = document.createElement('div');
+    document.body.append(container);
 
-    await boot(container, rootTemplate, '/shell/detail');
+    const { outcome, signature } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+    );
 
-    expect(warn).toHaveBeenCalledTimes(1);
-    // Every served sibling after the nested pair went with it, not only that pair.
-    expect(container.querySelector('#plate')).toBeNull();
-    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect({ outcome, signature }).toEqual({
+      outcome: 'cold',
+      signature: 'absent',
+    });
+    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('renders the page once over a document with no signature', async () => {
+    const { container, served } = serve(
+      withoutSignature(await drawShell('/shell/detail')),
+    );
+
+    const { outcome, signature } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+    );
+
+    expect({ outcome, signature }).toEqual({
+      outcome: 'cold',
+      signature: 'absent',
+    });
+    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+  });
+
+  it('types the signature as exactly the three comparisons', () => {
+    type Compared = 'matched' | 'elsewhere' | 'absent';
+
+    expectTypeOf<BootstrapResult['signature']>().toEqualTypeOf<Compared>();
+    expectTypeOf<BootstrapSignature>().toEqualTypeOf<Compared>();
+  });
+
+  it('still compares a signature from another release line, over the cold render', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const version = import.meta.env.PACKAGE_VERSION;
+
+    const markup = (await drawShell('/shell/detail')).replace(
+      `"version":"${version}"`,
+      '"version":"99.0.0"',
+    );
+
+    const { container, served } = serve(markup);
+
+    const matched = await bootAt(container, rootTemplate, '/shell/detail');
+
+    expect(matched).toMatchObject({ outcome: 'cold', signature: 'matched' });
+    expect(served.some((element) => container.contains(element))).toBe(false);
+
+    const elsewhere = await bootAt(
+      serve(markup).container,
+      rootTemplate,
+      '/shell',
+    );
+
+    expect(elsewhere).toMatchObject({
+      outcome: 'cold',
+      signature: 'elsewhere',
+    });
+  });
+
+  it('seeds the boot transition with the payload it is handed', async () => {
+    const detail = vi.fn(() => 'leaf');
+    const { container, served } = serve(await drawShell('/shell/detail'));
+
+    const { outcome } = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {
+        payload: {
+          state: 'shell.detail',
+          params: {},
+          resolves: { 'shell.detail': { detail: 'leaf' } },
+        },
+      },
+      makeRouter(detail),
+    );
+
+    expect(outcome).toBe('adopted');
+    expect(detail).not.toHaveBeenCalled();
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+  });
+
+  describe('comparing the url parameters the document was drawn with', () => {
+    it('leaves a config parameter out, so a document drawn for the url adopts', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // `shell.item` declares a `mode` config parameter the signature never carries.
+      const { container, served } = serve(await drawShell('/shell/item/7'));
+      expect(readHydrationSignature(container)?.params).toEqual({ id: '7' });
+
+      const { outcome, signature, router } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/item/7',
+      );
+
+      expect(router.globals.params.mode).toBe('list');
+      expect({ outcome, signature }).toEqual({
+        outcome: 'adopted',
+        signature: 'matched',
+      });
+      expect(
+        served.filter((element) => container.contains(element)),
+      ).toHaveLength(served.length);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('tells a boot into other url parameter values from the drawn ones', async () => {
+      const { container } = serve(await drawShell('/shell/item/7'));
+
+      const { outcome, signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/item/8',
+      );
+
+      expect({ outcome, signature }).toEqual({
+        outcome: 'adopted',
+        signature: 'elsewhere',
+      });
+    });
+  });
+
+  describe('over a document drawn for another state', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('says nothing of the boot in production, where the warning is folded away', async () => {
+      vi.stubEnv('DEV', false);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/detail'));
+      const onAdopt = vi.fn();
+
+      const { signature } = await bootAt(container, rootTemplate, '/shell', {
+        onAdopt,
+      });
+
+      expect(signature).toBe('elsewhere');
+      expect(onAdopt.mock.calls.map(([, outcome]) => outcome)).toContain(
+        'fell-back',
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('warns once for the boot, renders that view cold, and keeps its ancestors', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // Drawn with the nested view routed; the client boots into the parent state.
+      const { container, served } = serve(await drawShell('/shell/detail'));
+      const shell = container.querySelector('h1');
+
+      const { outcome, signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell',
+      );
+
+      expect({ outcome, signature }).toEqual({
+        outcome: 'adopted',
+        signature: 'elsewhere',
+      });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]).toEqual([
+        expect.stringContaining('drawn for another state'),
+        'shell.detail',
+        'shell',
+        1,
+      ]);
+      // the view the document was not drawn for dropped the server's nodes
+      expect(container.querySelector('.detail')).toBeNull();
+      // the shell's own nodes were hydrated, not thrown away with the mismatch
+      expect(container.querySelector('h1')).toBe(shell);
+      expect(served.filter((element) => container.contains(element))).toContain(
+        shell,
+      );
+    });
+
+    it('says nothing when the document drew that view empty', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // The empty pair carries no render to adopt, so the view renders cold in silence.
+      const { container } = serve(await drawShell('/shell'));
+
+      const { signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/detail',
+      );
+
+      expect(signature).toBe('elsewhere');
+      expect(warn).not.toHaveBeenCalled();
+      expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    });
+
+    it('renders once over a served view that opens on a nested part', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/lead'));
+      expect(container.querySelectorAll('#plate')).toHaveLength(1);
+
+      await bootAt(container, rootTemplate, '/shell/detail');
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      // Every served sibling after the nested pair went with it, not only that pair.
+      expect(container.querySelector('#plate')).toBeNull();
+      expect(container.querySelectorAll('.detail')).toHaveLength(1);
+      expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    });
+
+    it('still reports each view’s own outcome', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container } = serve(await drawShell('/shell/detail'));
+      const onAdopt = vi.fn();
+
+      await bootAt(container, rootTemplate, '/shell/other', { onAdopt });
+
+      expect(onAdopt.mock.calls.map(([, outcome]) => outcome)).toEqual([
+        'adopted',
+        'fell-back',
+      ]);
+      expect(container.querySelector('.other')?.textContent).toBe('other');
+    });
+  });
+
+  it('decides a boot that redirects once, against the state it lands on', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const shell = container.querySelector('h1');
+    const router = makeRouter();
+    router.transitionService.onBefore({ to: 'shell.detail' }, (transition) =>
+      transition.router.stateService.target('shell.other'),
+    );
+
+    const result = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {},
+      router,
+    );
+
+    expect(router.globals.current.name).toBe('shell.other');
+    expect(result).toMatchObject({
+      outcome: 'adopted',
+      signature: 'elsewhere',
+    });
+    expect(result).not.toHaveProperty('error');
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0].slice(1)).toEqual([
+      'shell.detail',
+      'shell.other',
+      1,
+    ]);
+    expect(container.querySelector('h1')).toBe(shell);
+    expect(container.querySelector('.detail')).toBeNull();
+    expect(container.querySelector('.other')?.textContent).toBe('other');
+  });
+
+  it('renders cold, and resolves with the rejection, when the boot transition fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    router.transitionService.onBefore({ to: 'shell.detail' }, () => false);
+
+    const result = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {},
+      router,
+    );
+
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
+    expect(result.error).toMatchObject({ type: RejectType.ABORTED });
+    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(container.querySelector('ui-router')).not.toBeNull();
+    expect(container.querySelector('.detail')).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('renders cold when the url starts no transition', async () => {
+    const { container, served } = serve(await drawShell('/shell/detail'));
+
+    const result = await bootAt(container, rootTemplate, '/nowhere');
+
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
+    expect(result).not.toHaveProperty('error');
+    expect(served.some((element) => container.contains(element))).toBe(false);
+  });
+
+  it('renders cold, and resolves with what the root walk threw, over a template the document was not drawn from', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    const result = await bootAt(
+      container,
+      (router) => tailRootTemplate(router, 'first'),
+      '/shell/detail',
+    );
+
+    expect(result).toMatchObject({ outcome: 'cold', signature: 'matched' });
+    expect(result.error).toBeInstanceOf(Error);
+    expect(container.querySelectorAll('ui-router')).toHaveLength(1);
+    expect(container.querySelector('.tail')?.textContent).toBe('first');
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+  });
+
+  it('throws what router.start() throws on a router already started', async () => {
+    const container = document.createElement('div');
+    const router = makeRouter();
+    router.start();
+
+    await expect(
+      bootstrap(router, container, rootTemplate(router)),
+    ).rejects.toThrow('start() called multiple times');
   });
 });
 
@@ -219,13 +549,13 @@ describe('a document drawn for another state', () => {
  */
 const SERVED_SHELL = [
   '<!--lit-part SHELL-->',
-  '<h1>shell <!--ui-view:lit-part-->hello<!--ui-view:/lit-part--></h1>',
+  '<h1>shell <!--served:lit-part-->hello<!--served:/lit-part--></h1>',
   '<ui-view defer-hydration>',
-  '<!--ui-view:lit-part DETAIL-->',
-  '<!--ui-view:lit-part-->',
+  '<!--served:lit-part DETAIL-->',
+  '<!--served:lit-part-->',
   '<p class="detail">leaf</p>',
-  '<!--ui-view:/lit-part-->',
-  '<!--ui-view:/lit-part-->',
+  '<!--served:/lit-part-->',
+  '<!--served:/lit-part-->',
   '</ui-view>',
   '<!--/lit-part-->',
 ].join('');
@@ -289,8 +619,8 @@ describe('the adopter hydrateRoot provides', () => {
       'lit-part',
       '/lit-part',
       'lit-part DETAIL',
-      'ui-view:lit-part',
-      'ui-view:/lit-part',
+      'served:lit-part',
+      'served:/lit-part',
       '/lit-part',
       '/lit-part',
     ]);
@@ -311,13 +641,13 @@ describe('the adopter hydrateRoot provides', () => {
     // The pair's interior as the renderer writes it: the view's template pair plain, everything inside prefixed.
     const interiors = {
       'opens on a nested part':
-        '<!--ui-view:lit-part--><div class="util" id="util">util</div><!--ui-view:/lit-part-->' +
+        '<!--served:lit-part--><div class="util" id="util">util</div><!--served:/lit-part-->' +
         '<p class="plate" id="plate">plate</p><p class="caption">caption</p>',
       'holds a nested part in the middle':
-        '<p class="lead">lead</p><!--ui-view:lit-part--><span>mid</span><!--ui-view:/lit-part-->' +
+        '<p class="lead">lead</p><!--served:lit-part--><span>mid</span><!--served:/lit-part-->' +
         '<p class="plate" id="plate">plate</p>',
       'holds a node marker beside a nested part':
-        '<!--ui-view:lit-part-->lead<!--ui-view:/lit-part--><!--ui-view:lit-node 0-->' +
+        '<!--served:lit-part-->lead<!--served:/lit-part--><!--served:lit-node 0-->' +
         '<p class="plate" id="plate">plate</p>',
       'holds no nested part': '<p class="plate" id="plate">plate</p>',
     };
@@ -373,7 +703,7 @@ describe('the adopter hydrateRoot provides', () => {
 
     // Prefixed markers under no plain pair: a render's nodes with nothing left to hydrate against.
     const view = servedView(
-      '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      '<!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
       container,
     );
 
@@ -388,7 +718,7 @@ describe('the adopter hydrateRoot provides', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const view = servedView(
-      '<p class="hold">hold</p><!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      '<p class="hold">hold</p><!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
       container,
     );
 
@@ -576,7 +906,7 @@ describe('a view this cannot adopt', () => {
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(container.querySelectorAll('.detail')).toHaveLength(1);
     expect(
-      comments(container).filter((data) => data.startsWith('ui-view:')),
+      comments(container).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
 
     for (const view of views(container)) {
@@ -598,7 +928,7 @@ const servedDetail = async (): Promise<string> => {
   );
 
   for (const marker of [markers[0], markers.at(-1)!]) {
-    marker.data = marker.data.slice('ui-view:'.length);
+    marker.data = marker.data.slice('served:'.length);
   }
 
   const markup = nested.innerHTML;
@@ -671,7 +1001,7 @@ describe('the pin the walk leaves on a served view', () => {
     expect(guest.querySelector('.detail')).toBe(detail);
     expect(guest.querySelector('.detail')?.textContent).toBe('leaf');
     expect(
-      comments(guest).filter((data) => data.startsWith('ui-view:')),
+      comments(guest).filter((data) => data.startsWith('served:')),
     ).toEqual([]);
 
     guest.remove();
@@ -712,6 +1042,34 @@ describe('the guard on what there is to adopt', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+
+  it('leaves an element inside a sleeping view deferred until that view wakes', async () => {
+    const { container } = serve(await drawShell('/shell/mark'));
+    const mark = container.querySelector('plain-mark.routed')!;
+    const wrapped = container.querySelector('plain-mark.wrapped')!;
+    const nested = views(container).at(-1)!;
+    expect(mark.hasAttribute('defer-hydration')).toBe(true);
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(true);
+    const router = makeRouter();
+    await settle(router, '/shell/mark');
+
+    const release = hydrated(container, rootTemplate(router));
+
+    // The walk has returned and the nested view has not woken: its interior is still its own.
+    expect(nested.hasAttribute('defer-hydration')).toBe(true);
+    expect(mark.hasAttribute('defer-hydration')).toBe(true);
+    // Markup between the element and its view does not hand it to the root sweep.
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(true);
+
+    await drain(container);
+    release();
+
+    expect(nested.hasAttribute('defer-hydration')).toBe(false);
+    expect(container.querySelector('plain-mark.routed')).toBe(mark);
+    expect(mark.hasAttribute('defer-hydration')).toBe(false);
+    expect(container.querySelector('plain-mark.wrapped')).toBe(wrapped);
+    expect(wrapped.hasAttribute('defer-hydration')).toBe(false);
   });
 
   it('wakes a custom element the render wrote no marker for', async () => {
@@ -992,7 +1350,7 @@ describe('the hydration outcome', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const view = servedView(
-        '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+        '<!--served:lit-part--><p class="detail">leaf</p><!--served:/lit-part-->',
         container,
       );
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import type { TestContext } from 'node:test';
 
-import { StateRegistry } from '@uirouter/core';
+import { StateRegistry, UrlService } from '@uirouter/core';
 
 import {
   createServerRouter,
@@ -11,6 +11,7 @@ import {
   routeTrie,
 } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
+import { registeredDelegates } from '../src/delegate-registry.ts';
 import { warnMountDiagnostics } from '../src/dev-warn.ts';
 import { stubDev } from './import-meta-env.ts';
 
@@ -354,6 +355,216 @@ for (const strategy of TIERS) {
     });
   });
 }
+
+const delegateMount = (strategy: Tier): MountConfig => ({
+  ...tierConfig(strategy),
+  routes: [
+    { name: 'home', url: '' },
+    { name: 'claims', url: '/claims', delegate: 'ledger' },
+    // Not inherited: a child of a delegating state serves the shell.
+    { name: 'claims.detail', url: '/:claimId' },
+    { name: 'receipt', url: '/receipts/{receiptId:int}', delegate: 'ledger' },
+    { name: 'search', url: '/search?q', delegate: 'ledger' },
+    { name: 'old', url: '/old-claims', redirectTo: 'home' },
+  ],
+  redirects: [{ pattern: '/submit', to: 'home' }],
+});
+
+for (const strategy of TIERS) {
+  describe(`delegate verdicts (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: { '/app': delegateMount(strategy) },
+    });
+
+    it('delegates a delegating state with its key, state and params', async () => {
+      assert.deepEqual(await router.resolve('/app/claims'), {
+        kind: 'delegate',
+        mount: '/app',
+        subpath: '/claims',
+        delegate: 'ledger',
+        state: 'claims',
+        params: {},
+      });
+      assert.deepEqual(await router.resolve('/app/receipts/7?x=1'), {
+        kind: 'delegate',
+        mount: '/app',
+        subpath: '/receipts/7',
+        delegate: 'ledger',
+        state: 'receipt',
+        params: { receiptId: 7 },
+      });
+    });
+
+    it('resolves path params only: search params keep their defaults', async () => {
+      const verdict = await router.resolve('/app/search?q=claims');
+      assert.equal(verdict.kind, 'delegate');
+      assert.equal(verdict.kind === 'delegate' && verdict.params.q, undefined);
+    });
+
+    it('matches delegates without a transition, agreeing with resolve', async () => {
+      const registration = registeredDelegates(router);
+      assert.ok(registration);
+
+      for (const path of ['/app/claims', '/app/receipts/7', '/app/claims/3'])
+        assert.deepEqual(
+          await registration.delegateFor(path),
+          ((verdict) => (verdict.kind === 'delegate' ? verdict : null))(
+            await router.resolve(path),
+          ),
+        );
+
+      for (const path of ['/app/old-claims', '/app/submit', '/app', '/x'])
+        assert.equal(await registration.delegateFor(path), null);
+    });
+
+    it('serves the shell for a child of a delegating state', async () => {
+      assert.deepEqual(await router.resolve('/app/claims/3'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+    });
+
+    // The matcher tier evaluates rules before routes; core's rule sort ranks an equally specific state url first.
+    it('orders a redirect rule over a delegating url as the tier orders any rule', async () => {
+      const shadowed = createServerRouter({
+        mounts: {
+          '/app': {
+            ...delegateMount(strategy),
+            redirects: [{ pattern: '/claims', to: 'home' }],
+          },
+        },
+      });
+
+      const verdict = await shadowed.resolve('/app/claims');
+      assert.equal(
+        verdict.kind,
+        strategy === 'simulate' ? 'delegate' : 'redirect',
+      );
+      assert.deepEqual(
+        await registeredDelegates(shadowed)?.delegateFor('/app/claims'),
+        verdict.kind === 'delegate' ? verdict : null,
+      );
+    });
+
+    it('counts a delegating bare base as served', () => {
+      const bare = createServerRouter({
+        mounts: {
+          '/api': {
+            ...tierConfig(strategy),
+            routes: [{ name: 'api', url: '', delegate: 'api' }],
+          },
+        },
+      });
+
+      assert.deepEqual(diagnoseMounts(bare), []);
+    });
+  });
+}
+
+describe('delegate configuration', () => {
+  const mountOf = (routes: MountConfig['routes']) => ({
+    mounts: { '/app': { routes } },
+  });
+
+  it('rejects a url-less, redirecting or empty delegate at construction', () => {
+    assert.throws(
+      () => createServerRouter(mountOf([{ name: 'cmd', delegate: 'ledger' }])),
+      /delegating state 'cmd' must declare a url/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([
+            { name: 'home', url: '/' },
+            { name: 'cmd', url: '/cmd', delegate: 'x', redirectTo: 'home' },
+          ]),
+        ),
+      /delegating state 'cmd' cannot also declare redirectTo/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([{ name: 'cmd', url: '/cmd', delegate: '' }]),
+        ),
+      /state 'cmd' delegate must not be empty/,
+    );
+  });
+
+  it('rejects a redirect onto a delegating state at construction', () => {
+    const routes = [
+      { name: 'home', url: '' },
+      { name: 'claims', url: '/claims', delegate: 'ledger' },
+    ];
+
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([
+            ...routes,
+            { name: 'old', url: '/old', redirectTo: 'claims' },
+          ]),
+        ),
+      /Mount '\/app': state 'old' redirects to delegating state 'claims'/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/app': {
+              routes,
+              redirects: [{ pattern: '/submit', to: { state: 'claims' } }],
+            },
+          },
+        }),
+      /rule '\/submit' redirects to delegating state 'claims'/,
+    );
+  });
+
+  it('reports the keys a router names, and nothing for a foreign router', () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': delegateMount('matcher'),
+        '/api': { routes: [{ name: 'api', url: '', delegate: 'api' }] },
+      },
+    });
+
+    assert.deepEqual([...(registeredDelegates(router)?.keys ?? [])].sort(), [
+      'api',
+      'ledger',
+    ]);
+    assert.equal(
+      registeredDelegates({ resolve: () => Promise.reject(new Error()) }),
+      undefined,
+    );
+  });
+
+  it('matches no delegate on a mount that names no keys', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': delegateMount('simulate'),
+        '/static': appMount('simulate'),
+      },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    assert.equal(await registration.delegateFor('/static/welcome'), null);
+  });
+
+  it('matches no delegate when the simulate router throws', async (t) => {
+    const router = createServerRouter({
+      mounts: { '/app': delegateMount('simulate') },
+    });
+
+    const registration = registeredDelegates(router);
+    assert.ok(registration);
+    t.mock.method(UrlService.prototype, 'match', () => {
+      throw new Error('tripped');
+    });
+
+    assert.equal(await registration.delegateFor('/app/claims'), null);
+  });
+});
 
 describe('otherwise configuration', () => {
   it('is per-mount: an undeclared mount keeps its notFound verdict', async () => {

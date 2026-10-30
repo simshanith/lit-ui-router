@@ -11,6 +11,10 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
+import { LitElement, nothing } from 'lit';
+import type { TemplateResult } from 'lit';
+import { isTemplateResult, TemplateResultType } from 'lit/directive-helpers.js';
+import * as pure from 'lit-ui-router/pure';
 import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
@@ -40,13 +44,15 @@ type Registration = Omit<ActiveUIView, 'config'> & { config?: ViewConfig };
 /**
  * Hides the markers this render wrote inside the view from the walk hydrating
  * its surroundings, leaving the outer pair plain for that walk to read.
+ *
+ * @internal
  */
-const prefixInterior = (markup: string): string => {
+export const prefixInterior = (markup: string): string => {
   // renderValue always wraps a hydratable value in the pair, so the ends are the pair by construction.
   const open = markup.indexOf('-->') + 3;
   const close = markup.length - PART_CLOSE.length;
 
-  // A plain `<!--lit-part` never matches an already-prefixed `<!--ui-view:lit-part`, so a nested run's interior is prefixed once.
+  // A plain `<!--lit-part` never matches an already-prefixed `<!--served:lit-part`, so a nested run's interior is prefixed once.
   const interior = markup
     .slice(open, close)
     .replaceAll('<!--lit-part', `<!--${servedMarkerPrefix}lit-part`)
@@ -68,6 +74,33 @@ const warnElementComponent = (fqn: string): void => {
   );
 };
 
+/** The `lit-ui-router/pure` namespace as this renderer probes it: the class-renderer brand guard arrived in 1.19. */
+export type ClassRendererProbe = Pick<typeof pure, 'isRoutedLitElement'> & {
+  isRoutedClassRenderer?(
+    component: NormalizedLitViewDeclaration['component'],
+  ): boolean;
+};
+
+/**
+ * Whether a view's `component` is a sticky class's renderer, by the class
+ * brand core 1.19 stamps on it, so it is recognised without being called.
+ */
+export const isStickyRenderer = (
+  component: NormalizedLitViewDeclaration['component'],
+  probe: ClassRendererProbe = pure,
+): boolean => probe.isRoutedClassRenderer?.(component) === true;
+
+/**
+ * Whether `value` is a sticky class's renderer result, for a `lit-ui-router`
+ * without the brand: the element first, then nothing but `nothing`, between
+ * empty strings.
+ */
+export const carriesElement = (value: TemplateResult): boolean =>
+  isTemplateResult(value, TemplateResultType.HTML) &&
+  value.strings.every((text) => text === '') &&
+  value.values[0] instanceof LitElement &&
+  value.values.slice(1).every((part) => part === nothing);
+
 /**
  * Renders the routed component of a `<ui-view>` into the element's light DOM,
  * between the part markers its client-side `render()` hydrates against.
@@ -86,7 +119,8 @@ const warnElementComponent = (fqn: string): void => {
  * `elementRenderers` as a class.
  *
  * An address no state routes renders nothing between its markers, which is what
- * the client's own first render of that view produces.
+ * the client's own first render of that view produces. A `RoutedLitElement`
+ * class, `sticky` or not, is left empty the same way for the client to render.
  *
  * The pair around the component is written plain, so the walk hydrating the
  * view's surroundings reads it as the `uiViewSlot()` child part and stops
@@ -217,7 +251,7 @@ export class UiViewRenderer extends ElementRenderer {
       return undefined;
     }
 
-    if (isRoutedLitElement(component)) {
+    if (isRoutedLitElement(component) || isStickyRenderer(component)) {
       warnElementComponent(this.data!.fqn);
       deregister();
 
@@ -225,6 +259,13 @@ export class UiViewRenderer extends ElementRenderer {
     }
 
     const value = component(this.props(router, config));
+
+    if (carriesElement(value)) {
+      warnElementComponent(this.data!.fqn);
+      deregister();
+
+      return undefined;
+    }
 
     return [
       () => {

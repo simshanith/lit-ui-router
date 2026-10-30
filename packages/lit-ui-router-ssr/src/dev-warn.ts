@@ -1,4 +1,4 @@
-// The development-only warnings the served view raises; folded out of dist/*.js by check:dev-split.
+// The development-only warnings served elements raise; folded out of dist/*.js by check:dev-split.
 
 import { devGate } from '#dev-gate';
 
@@ -18,6 +18,24 @@ export function warnDeferredWithoutClient(element: Element): void {
   if (!import.meta.env.DEV || !devGate()) return;
   console.warn(
     'lit-ui-router-ssr: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.',
+    element,
+  );
+}
+
+/**
+ * Warns that a light-DOM hydrating element woke from `defer-hydration` with
+ * nothing answering its adopter request, so it dropped the nodes it held and
+ * rendered cold.
+ *
+ * @param element - the element whose held nodes were dropped
+ *
+ * @internal
+ */
+export function warnLightWithoutClient(element: Element): void {
+  // DEV folds the whole body out of dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
+  console.warn(
+    'lit-ui-router-ssr: this light-DOM element woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Hydrate the page with hydrateRoot() or bootstrap() from lit-ui-router-ssr/client.',
     element,
   );
 }
