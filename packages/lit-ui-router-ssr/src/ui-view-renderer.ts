@@ -1,5 +1,6 @@
 // The server half of `<ui-view>`: the element's own registration and resolve reads, run against the scoped router and written into the light DOM.
 import { ElementRenderer, LitElementRenderer } from '@lit-labs/ssr';
+import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { ThunkedRenderResult } from '@lit-labs/ssr/lib/render-result.js';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
@@ -17,6 +18,8 @@ import {
 } from 'lit-ui-router/pure';
 import type { NormalizedLitViewDeclaration } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
+import { isLightDomClass } from './light-dom-brand.js';
+import { LightElementRenderer } from './light-element-renderer.js';
 import { servedMarkerPrefix } from './served-markers.js';
 
 /** The tag this renderer answers for. */
@@ -68,7 +71,8 @@ const NODE_MARKER = /<!--lit-node \d+-->/g;
 /**
  * Writes `element` itself through `LitElementRenderer`: the renderer's own
  * instance is replaced by the one core built, so its render reads the props
- * core assigned.
+ * core assigned. A `LightDomHydrating` class goes through
+ * `LightElementRenderer`, which writes its render into its light DOM.
  */
 const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
   const tag = element.localName;
@@ -79,11 +83,18 @@ const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
     );
   }
 
+  // SAFETY: a LitElement's constructor is its custom element class.
+  const hydratesLight = isLightDomClass(
+    element.constructor as typeof HTMLElement,
+  );
+
   // Element access reaches the protected `createRenderRoot()`, which `LitElementRenderer` patches to attach a shadow root.
   // oxlint-disable-next-line typescript/dot-notation -- dot access to a protected member does not typecheck
   const lightRoot = element['createRenderRoot']() === element;
 
-  class Seated extends LitElementRenderer {
+  class Seated extends (hydratesLight
+    ? LightElementRenderer
+    : LitElementRenderer) {
     static override matchesClass(ctor: typeof HTMLElement): boolean {
       return ctor === element.constructor;
     }
@@ -93,7 +104,7 @@ const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
       this.element = element;
     }
 
-    // A declarative shadow root would hide a light-DOM render, so that element is served empty and renders cold.
+    // A declarative shadow root would hide a light-DOM render, so an unbranded one is served empty and renders cold.
     override renderShadow(info: RenderInfo): ThunkedRenderResult | undefined {
       return lightRoot ? undefined : super.renderShadow(info);
     }
@@ -101,8 +112,13 @@ const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
 
   const name = unsafeStatic(tag);
 
+  // `@lit-labs/ssr` reaches a renderer's `renderLight()` only through this directive in the element's child part.
+  const template = hydratesLight
+    ? staticHtml`<${name}>${renderLight()}</${name}>`
+    : staticHtml`<${name}></${name}>`;
+
   const markup = collectResultSync(
-    renderValue(staticHtml`<${name}></${name}>`, {
+    renderValue(template, {
       ...renderInfo,
       elementRenderers: [Seated, ...renderInfo.elementRenderers],
     }),
@@ -160,8 +176,10 @@ const renderClassView = (
  * and written through `LitElementRenderer` into the first of the two element
  * slots `<ui-view>` places a class in, with its props assigned before it
  * renders; the served view hands that element back to core at its wake. A
- * class that renders into its own light DOM is written without a shadow root,
- * so it renders cold into the element the client adopts.
+ * `LightDomHydrating` class is written through `LightElementRenderer`, its
+ * render in its light DOM, and hydrates there in place. Any other class that
+ * renders into its own light DOM is written bare, with no shadow root, and
+ * renders cold into the element the client adopts.
  *
  * The pair around the component is written plain, so the walk hydrating the
  * view's surroundings reads it as the `uiViewSlot()` child part and stops

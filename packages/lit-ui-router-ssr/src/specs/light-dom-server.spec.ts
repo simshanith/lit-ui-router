@@ -75,8 +75,13 @@ describe('the server render of a light-DOM element', () => {
     expect(markup).not.toContain('shadowroot');
   });
 
-  // Needs #904. #1527's finding 5: every sample-app class view renders into light DOM, and `LitElementRenderer` always writes a declarative shadow root.
-  it.todo(
-    'prerenders a light-DOM routed class view (createRenderRoot() { return this }) into its light DOM, not a shadow root',
-  );
+  it('prerenders a LightDomHydrating routed class into its light DOM, not a shadow root', async () => {
+    const markup = await drawLight(rootTemplate, '/routed-class');
+
+    expect(markup).toMatch(
+      /<routed-light-card\s+defer-hydration><!--served:lit-part [^>]*--><p class="routed-light">/,
+    );
+    expect(markup).toContain('routed class');
+    expect(markup).not.toContain('shadowroot');
+  });
 });

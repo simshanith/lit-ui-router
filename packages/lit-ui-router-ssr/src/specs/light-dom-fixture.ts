@@ -7,6 +7,7 @@ import type {
   LitStateDeclaration,
   RoutedLitTemplate,
   UIRouterLit,
+  UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
 import { renderPage } from '../prerender.js';
@@ -140,7 +141,30 @@ export const CardView: RoutedLitTemplate = (props) =>
     >${lightSlot()}</light-card
   >`;
 
-/** The fixture's router, plus `card`, which routes {@link CardView} into the root view. */
+/** A routed class in the sample apps' light-DOM shape, opted in, taking its props through the constructor. */
+export class RoutedLightCard extends LightDomHydrating(LitElement) {
+  _uiViewProps?: UIViewInjectedProps;
+
+  constructor(props?: UIViewInjectedProps) {
+    super();
+    this._uiViewProps = props;
+  }
+
+  protected override willUpdate(changed: PropertyValues<this>): void {
+    if (!this.hasUpdated) wakes.push(wakeName(this));
+    super.willUpdate(changed);
+  }
+
+  override render(): TemplateResult {
+    return html`<p class="routed-light">
+      ${String(this._uiViewProps?.resolves.label)}
+    </p>`;
+  }
+}
+
+customElements.define('routed-light-card', RoutedLightCard);
+
+/** The fixture's router, plus `card`, which routes {@link CardView} into the root view, and `routed-class`, which routes {@link RoutedLightCard}. */
 export const makeLightRouter = (): UIRouterLit => {
   const router = makeRouter();
 
@@ -151,7 +175,15 @@ export const makeLightRouter = (): UIRouterLit => {
     resolve: { label: () => 'routed' },
   };
 
+  const routedClass: LitStateDeclaration = {
+    name: 'routed-class',
+    url: '/routed-class',
+    component: RoutedLightCard,
+    resolve: { label: () => 'routed class' },
+  };
+
   router.stateRegistry.register(card);
+  router.stateRegistry.register(routedClass);
 
   return router;
 };
