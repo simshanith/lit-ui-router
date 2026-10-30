@@ -12,5 +12,5 @@
     "noEmit": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["public/**/*.js", "vite.config.js"]
+  "include": ["public/**/*.js"]
 }

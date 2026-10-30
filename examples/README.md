@@ -44,9 +44,9 @@ The smallest possible lit-ui-router app.
 
 **helloworld** in plain JavaScript, with no build step. The browser loads `public/main.js` as written.
 
-- **An import map** in `index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the exact versions its `package-lock.json` installs; `embeds.test.ts` fails when they drift apart. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
+- **An import map** in `public/index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the exact versions its `package-lock.json` installs; `embeds.test.ts` fails when they drift apart. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
 - **No decorators or type annotations:** `customElements.define` registers the shell, and the state declarations are plain objects
-- **Vite only serves and copies.** `main.js` sits in `public/`, which Vite serves untransformed and copies verbatim into the build. The npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, and nothing at runtime reads `node_modules`
+- **No bundler.** `public/` is the whole site, served as written by [`serve`](https://github.com/vercel/serve); `npm run build` copies it to `dist/`. The other npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, and nothing at runtime reads `node_modules`
 
 ### hellosolarsystem
 
@@ -197,7 +197,7 @@ It drives every state each built example's own links reach, in headless Chromium
 
 ## Project Structure
 
-Every example follows the same structure (the lint example adds `eslint.config.js`; **helloworld-buildless** has `public/main.js` and `vite.config.js` in place of `src/main.ts` and `vite.config.ts`):
+Every example follows the same structure (the lint example adds `eslint.config.js`; **helloworld-buildless** has `public/index.html` and `public/main.js` in place of `index.html`, `src/main.ts` and `vite.config.ts`):
 
 ```text
 <example-name>/

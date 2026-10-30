@@ -33,6 +33,7 @@
         "*/index.html",
         "*/package.json",
         "*/package-lock.json",
+        "*/public/**",
         "*/src/**",
         "*/tsconfig.json",
         "*/vite.config.ts"
