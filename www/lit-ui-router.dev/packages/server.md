@@ -38,9 +38,11 @@ tree is what makes the setup worthwhile: the server answers the same urls the
 client routes, from one declaration. Each use below adds one concept and
 leaves the ones before it unchanged:
 
-1. **An honest SPA host.** Real 404s, redirects, and the shell for the
-   client's routes: [`createServerRouter`](#quick-start), an
-   [adapter](#adapters), and a `serveShell`.
+1. **An honest SPA host.**
+   [Real 404s](/guides/server-route-matching#real-404s-per-mount),
+   redirects, and the shell for the client's routes:
+   [`createServerRouter`](#quick-start), an [adapter](#adapters), and a
+   `serveShell`.
 2. **Server-rendered pages.** The same states' resolves and views, rendered
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
@@ -72,8 +74,13 @@ app.use('*', (c, next) =>
 ```
 
 Paths outside every mount already pass through: the fetch adapter returns
-`null`, and the Hono and Connect middleware call `next()`. The host keeps its own fallthrough and 404
-handling.
+`null`, and the Hono and Connect middleware call `next()`, so the host keeps
+its own fallthrough and 404 handling. A path a mount owns but no state matches
+is that mount's 404, which `serveNotFound` can answer with the app's own
+404 page ([real 404s, per mount](/guides/server-route-matching#real-404s-per-mount)).
+[One request at a time](/guides/server-route-matching#one-request-at-a-time)
+traces each case, and the client's side of the same miss is the
+[404 state](/guides/unmatched-urls).
 
 ## What problem it solves
 

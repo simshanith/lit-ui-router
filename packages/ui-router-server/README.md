@@ -30,8 +30,10 @@ Use it when a server has to honour a ui-router state tree that already exists fo
 usually the client app's own route tables. Reusing that tree is what makes the setup worthwhile.
 Each use adds one concept and leaves the ones before it unchanged:
 
-1. **An honest SPA host:** real 404s, redirects, and the shell for the client's routes, with
-   `createServerRouter`, an adapter, and a `serveShell`.
+1. **An honest SPA host:**
+   [real 404s](https://lit-ui-router.dev/guides/server-route-matching#real-404s-per-mount),
+   redirects, and the shell for the client's routes, with `createServerRouter`, an adapter, and a
+   `serveShell`.
 2. **Server-rendered pages:** the same states' resolves and views, rendered with
    `lit-ui-router-ssr` on `settle` and `prerender`.
 3. **Representations of a state:** a state whose answer is its own `Response` (a redirect, JSON,
@@ -45,7 +47,9 @@ Each use adds one concept and leaves the ones before it unchanged:
 It is not for urls no state tree defines. Route those at the host, ahead of the router: a platform
 route, an earlier middleware, or in Hono a route registered before the router's catch-all. Paths
 outside every mount already pass through (the fetch adapter returns `null`, and the Hono and Connect
-middleware call `next()`), so the host keeps its own fallthrough and 404 handling. See
+middleware call `next()`), so the host keeps its own fallthrough and 404 handling. A path a mount
+owns but no state matches is that mount's 404, which `serveNotFound` can answer with the app's own
+404 page. See
 [when to use it](https://lit-ui-router.dev/packages/server#when-to-use-it).
 
 ## Delegating states
