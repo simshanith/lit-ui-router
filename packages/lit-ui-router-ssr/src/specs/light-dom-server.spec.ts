@@ -75,7 +75,7 @@ describe('the server render of a light-DOM element', () => {
     expect(markup).not.toContain('shadowroot');
   });
 
-  // Needs #1528 (ssr serves `<ui-view>` through core's helper and prerenders a routed class) and #1653 (core adopts the served class element) as well as #904. #1527's finding 5: every sample-app class view renders into light DOM, and `LitElementRenderer` always writes a declarative shadow root.
+  // Needs #904. #1527's finding 5: every sample-app class view renders into light DOM, and `LitElementRenderer` always writes a declarative shadow root.
   it.todo(
     'prerenders a light-DOM routed class view (createRenderRoot() { return this }) into its light DOM, not a shadow root',
   );

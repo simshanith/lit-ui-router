@@ -3,7 +3,7 @@ import { noChange } from 'lit';
 import type { PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import { requestContext } from 'lit-ui-router/context';
-import { UiView } from 'lit-ui-router/pure';
+import { adoptServedElement, UiView } from 'lit-ui-router/pure';
 import { devGate } from '#dev-gate';
 
 import { adoptUiViewContext } from './adopt-context.js';
@@ -17,6 +17,8 @@ const DEFER = 'defer-hydration';
 
 /** Spelled out because the @lit-labs/ssr DOM shim has no `Node`. */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
+
+const ELEMENT_NODE = 1 satisfies Node['ELEMENT_NODE'];
 
 /**
  * Whether `node` opens a render's output: lit's own empty child-part comment,
@@ -99,6 +101,30 @@ export const dropHeldRender = (element: Element): void => {
 };
 
 /**
+ * The first element of the held render: where the server wrote a routed
+ * class's element, in the first of `<ui-view>`'s two element slots.
+ *
+ * @param element - the element holding the render
+ *
+ * @internal
+ */
+export const heldElement = (element: Element): Element | undefined => {
+  const children = [...element.childNodes];
+  const from = children.findIndex((child) => isRenderMarker(child));
+
+  if (from < 0) return undefined;
+
+  for (const child of children.slice(from)) {
+    if (child.nodeType === ELEMENT_NODE) {
+      // SAFETY: `nodeType` is `ELEMENT_NODE`, checked above.
+      return child as Element;
+    }
+  }
+
+  return undefined;
+};
+
+/**
  * Brands the served class, so a second copy of this package recognises the one
  * already registered. `customElements` identity cannot: two copies build two
  * classes.
@@ -158,7 +184,9 @@ export const isServedViewClass = (
  * while `defer-hydration` is on it, rendering nothing and holding the nodes the
  * server drew. Removing the attribute wakes it: it re-seeks its router, so the
  * render it is about to make reads the settled registration, then requests
- * {@link adoptUiViewContext} once and calls the adopter it gets. With none, it
+ * {@link adoptUiViewContext} once and calls the adopter it gets, first
+ * handing core the element a routed class rendered on the server, so the
+ * view adopts that element rather than building its own. With none, it
  * drops the held render and renders cold, warning in development. A view
  * detached before that wake update runs stays asleep, holding its nodes, until
  * it is attached again. Whatever the author wrote ahead of the held render is
@@ -174,7 +202,7 @@ export const isServedViewClass = (
  *
  * @example
  * ```ts
- * import { UiView } from 'lit-ui-router/pure';
+ * import { adoptServedElement, UiView } from 'lit-ui-router/pure';
  * import { withServedRender } from 'lit-ui-router-ssr/client';
  *
  * customElements.define('app-view', withServedRender(UiView));
@@ -258,7 +286,13 @@ export const withServedRender = (
       this.adoptProvidedRouter();
       const adopt = requestContext(this, adoptUiViewContext);
 
-      if (adopt) return adopt(this);
+      if (adopt) {
+        // Core places the element only when it is an instance of the routed class, so a template view's first element is ignored.
+        const served = heldElement(this);
+        if (served) adoptServedElement(this, served);
+
+        return adopt(this);
+      }
       // Rendering over a render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
       dropHeldRender(this);
       warnDeferredWithoutClient(this);

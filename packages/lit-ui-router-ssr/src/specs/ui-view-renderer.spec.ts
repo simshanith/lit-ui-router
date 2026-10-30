@@ -1,25 +1,16 @@
 import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
-import { html, LitElement, nothing } from 'lit';
+import { html, LitElement } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import type {
-  LitStateDeclaration,
-  NormalizedLitViewDeclaration,
-  RoutedLitTemplate,
-} from 'lit-ui-router/pure';
-import * as pure from 'lit-ui-router/pure';
+import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { settle } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  carriesElement,
-  isStickyRenderer,
-  UiViewRenderer,
-} from '../ui-view-renderer.js';
-import type { ClassRendererProbe } from '../ui-view-renderer.js';
+import { UiViewRenderer } from '../ui-view-renderer.js';
+import { constructed, makeClassRouter } from './class-fixture.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 
 const draw = (router: UIRouterLit): string =>
@@ -38,59 +29,20 @@ const at = async (path: string): Promise<string> => {
   return draw(router);
 };
 
-/** A view declared as a `RoutedLitElement` class rather than a template function. */
-class BoxedView extends LitElement {}
+/** A `RoutedLitElement` class with no tag, so there is no element to write. */
+class UntaggedView extends LitElement {}
 
-/** One state whose view is a `RoutedLitElement` class, which the renderer has no server render for. */
-const boxedRouter = (): UIRouterLit => {
+/** One state whose view is a class missing from the registry. */
+const untaggedRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
   });
 
   const states: LitStateDeclaration[] = [
-    { name: 'boxed', url: '/boxed', component: BoxedView },
+    { name: 'untagged', url: '/untagged', component: UntaggedView },
   ];
 
   for (const state of states) router.stateRegistry.register(state);
-
-  return router;
-};
-
-/** A `sticky` class, which core binds to a renderer in its declaration. */
-class StickyView extends LitElement {
-  static sticky = true;
-}
-
-customElements.define('x-sticky', StickyView);
-
-/** One state whose view is a `sticky` class. */
-/** A `sticky` class that counts its instances. */
-class CountedStickyView extends LitElement {
-  static sticky = true;
-  static built = 0;
-
-  constructor() {
-    super();
-    CountedStickyView.built++;
-  }
-}
-
-customElements.define('x-counted-sticky', CountedStickyView);
-
-const stickyRouter = (
-  component: typeof StickyView = StickyView,
-): UIRouterLit => {
-  const router = installServerLocation(new UIRouterLit(), {
-    urlConfig: { strict: false },
-  });
-
-  const state: LitStateDeclaration = {
-    name: 'sticky',
-    url: '/sticky',
-    component,
-  };
-
-  router.stateRegistry.register(state);
 
   return router;
 };
@@ -222,72 +174,13 @@ describe('UiViewRenderer', () => {
     expect(markup).not.toContain('data-note="Tom & "Jerry""');
   });
 
-  it('leaves a RoutedLitElement view empty and warns once', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const router = boxedRouter();
-    await settle(router, '/boxed');
+  it('throws for a RoutedLitElement class missing from the registry', async () => {
+    const router = untaggedRouter();
+    await settle(router, '/untagged');
 
-    const markup = draw(router);
-
-    expect(markup).toContain(
-      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    expect(() => draw(router)).toThrow(
+      'a routed LitElement class must be on the customElements registry to prerender: UntaggedView',
     );
-    expect(warn).toHaveBeenCalledOnce();
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'lit-ui-router-ssr: this view is a RoutedLitElement class',
-      ),
-      '$default',
-    );
-    warn.mockRestore();
-  });
-
-  it('leaves a sticky RoutedLitElement view empty and warns once', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const router = stickyRouter();
-    await settle(router, '/sticky');
-
-    const markup = draw(router);
-
-    expect(markup).toContain(
-      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
-    );
-    expect(warn).toHaveBeenCalledOnce();
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'lit-ui-router-ssr: this view is a RoutedLitElement class',
-      ),
-      '$default',
-    );
-    warn.mockRestore();
-  });
-
-  it('recognises a sticky class by the core brand, without building its element', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const router = stickyRouter(CountedStickyView);
-    await settle(router, '/sticky');
-    const built = CountedStickyView.built;
-
-    expect(draw(router)).toContain(
-      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
-    );
-    expect(CountedStickyView.built).toBe(built);
-    expect(warn).toHaveBeenCalledOnce();
-    warn.mockRestore();
-  });
-
-  it('leaves a RoutedLitElement view empty without a word under node when NODE_ENV is production', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const router = boxedRouter();
-    await settle(router, '/boxed');
-
-    expect(draw(router)).toContain(
-      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
-    );
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
-    vi.unstubAllEnvs();
   });
 
   it('hands a NOWAIT resolve to the component as its promise, as the client does', async () => {
@@ -301,76 +194,79 @@ describe('UiViewRenderer', () => {
   });
 });
 
-describe('sticky class detection', () => {
-  /** The `$default` view component core normalized a sticky class to. */
-  const stickyComponent = (router: UIRouterLit): RoutedLitTemplate => {
-    // SAFETY: a lit state's views are normalized lit view declarations
-    const view = router.stateRegistry.get('sticky')?.$$state?.().views
-      ?.$default as NormalizedLitViewDeclaration;
+describe('UiViewRenderer, for a routed LitElement class', () => {
+  const classAt = async (path: string): Promise<string> => {
+    const router = makeClassRouter();
+    await settle(router, path);
 
-    if (pure.isRoutedLitElement(view.component)) {
-      throw new Error('core binds a sticky class to a renderer');
-    }
-
-    return view.component;
+    return draw(router);
   };
 
-  // The key a core with the class brand stamps on a sticky class's renderer.
-  const routedClass: unique symbol = Symbol.for('lit-ui-router#routed-class');
+  it('writes the element into the first of the two slots core renders a class into', async () => {
+    const markup = await classAt('/card');
 
-  // A `lit-ui-router` with the brand, as its `pure` namespace reads to this renderer.
-  const brandedCore: ClassRendererProbe = {
-    isRoutedLitElement: pure.isRoutedLitElement,
-    isRoutedClassRenderer: (component) => routedClass in component,
-  };
-
-  it('reads the brand without calling the renderer', () => {
-    let calls = 0;
-
-    const renderer = Object.assign(
-      () => {
-        calls++;
-
-        return html`${new StickyView()}`;
-      },
-      { [routedClass]: StickyView },
+    // `BRUAAAUVAAA=` digests any all-empty strings, so the part count is what matches core's `${slots[0]}${slots[1]}`
+    expect(markup).toContain(
+      '<ui-view defer-hydration><!--lit-part BRUAAAUVAAA=-->' +
+        '<!--served:lit-part--><routed-card defer-hydration>',
     );
-
-    expect(isStickyRenderer(renderer, brandedCore)).toBe(true);
-    expect(calls).toBe(0);
+    expect(markup).toContain(
+      '</routed-card><!--served:/lit-part-->' +
+        '<!--served:lit-part--><!--served:/lit-part--><?><!--/lit-part--></ui-view>',
+    );
   });
 
-  // A `lit-ui-router` older than the class-renderer brand has no guard to read.
-  const olderCore: ClassRendererProbe = {
-    isRoutedLitElement: pure.isRoutedLitElement,
-  };
+  it('renders the element’s shadow root from the props core assigned', async () => {
+    const markup = await classAt('/card');
 
-  it('reads the brand on the sticky renderer the workspace core binds', () => {
-    const component = stickyComponent(stickyRouter());
-
-    expect(isStickyRenderer(component)).toBe(true);
+    expect(markup).toContain(
+      '<template shadowroot="open" shadowrootmode="open">',
+    );
+    expect(markup).toContain(
+      '<p class="card"><!--served:lit-part-->card leaf<!--served:/lit-part--></p>',
+    );
+    expect(markup).not.toContain('unrouted');
   });
 
-  it('falls back to the result shape against a core without the brand', () => {
-    const router = stickyRouter();
-    const component = stickyComponent(router);
+  it('writes no node marker inside the slot, since the client reads the element as a leaf value', async () => {
+    const markup = await classAt('/card');
+    const slot = markup.slice(markup.indexOf('BRUAAAUVAAA='));
 
-    expect(isStickyRenderer(component, olderCore)).toBe(false);
-    expect(carriesElement(component({ router, resolves: {} }))).toBe(true);
+    expect(slot).not.toMatch(/lit-node/);
   });
 
-  it('takes a lone element as a class result, as an older core renders it', () => {
-    expect(carriesElement(html`${new StickyView()}`)).toBe(true);
+  it('builds the element through core, props in the constructor', async () => {
+    constructed.length = 0;
+    await classAt('/card');
+
+    expect(constructed[0]?.resolves).toMatchObject({ detail: 'card leaf' });
+    // `LitElementRenderer` constructs its own instance with no arguments before the renderer seats core's
+    expect(constructed[1]).toBeUndefined();
   });
 
-  it('takes the element followed by nothing as a class result', () => {
-    expect(carriesElement(html`${new StickyView()}${nothing}`)).toBe(true);
+  it('writes a sticky class as its element rather than as text', async () => {
+    const markup = await classAt('/sticky');
+
+    expect(markup).toContain('<sticky-card defer-hydration>');
+    expect(markup).toContain('sticky leaf');
+    expect(markup).not.toContain('&lt;');
+    expect(markup).not.toContain('[object');
   });
 
-  it('reads a template component as neither', () => {
-    const component = () => html`<p>template</p>`;
+  it('writes a light-DOM class as its bare element, with no shadow root to hide its render', async () => {
+    const markup = await classAt('/light');
 
-    expect(isStickyRenderer(component)).toBe(false);
-    expect(carriesElement(component())).toBe(false);
+    expect(markup).toContain(
+      '<!--served:lit-part--><light-card defer-hydration></light-card><!--served:/lit-part-->',
+    );
+    expect(markup).not.toContain('shadowroot');
+  });
+
+  it('leaves the view service as it found it', async () => {
+    const router = makeClassRouter();
+    await settle(router, '/card');
+    draw(router);
+
+    expect(router.viewService.available()).toEqual([]);
   });
 });
