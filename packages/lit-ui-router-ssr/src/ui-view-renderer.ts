@@ -66,7 +66,8 @@ const escapeAttribute = (value: string): string =>
 /** Stands in for the element's markup while lit writes the slot markers around it. */
 const SLOT_SENTINEL = 'ui-view-routed-element-slot';
 
-const NODE_MARKER = /<!--lit-node \d+-->/g;
+// Anchored: only the wrapper template's own marker leads; the element's render keeps the ones it binds against.
+const NODE_MARKER = /^<!--lit-node \d+-->/;
 
 /**
  * Writes `element` itself through `LitElementRenderer`: the renderer's own

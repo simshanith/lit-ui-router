@@ -9,8 +9,13 @@ import { hydrateRoot } from '../client.js';
 import type { AdoptOutcome } from '../client.js';
 import { renderPage } from '../prerender.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { makeClassRouter } from './class-fixture.js';
-import type { LightCard, RoutedCard, StickyCard } from './class-fixture.js';
+import { boundClicks, makeClassRouter } from './class-fixture.js';
+import type {
+  BoundCard,
+  LightCard,
+  RoutedCard,
+  StickyCard,
+} from './class-fixture.js';
 import { rootTemplate } from './fixture.js';
 import { drain, serve } from './round-trip.js';
 
@@ -107,6 +112,23 @@ describe('a prerendered routed LitElement class', () => {
     expect(container.querySelector('sticky-card')).toBe(served);
     expect(servedLeaf(served)).toBe(leaf);
     expect(leaf?.textContent).toBe('sticky leaf');
+  });
+
+  it('keeps the node markers its own render binds against, so inner bindings hydrate', async () => {
+    const markup = await drawClass('/bound');
+    const { container } = serve(markup);
+    const served = container.querySelector<BoundCard>('bound-card')!;
+    const button = served.shadowRoot?.querySelector('button');
+    expect(button?.title).toBe('bound leaf');
+
+    const { outcomes, view } = await bootClass(container, '/bound');
+    await served.updateComplete;
+
+    expect(outcomes).toEqual(['adopted']);
+    expect(view.routedElement).toBe(served);
+    expect(served.shadowRoot?.querySelector('button')).toBe(button);
+    button?.click();
+    expect(boundClicks).toEqual(['bound leaf']);
   });
 
   it('swaps the adopted element out on a later transition', async () => {

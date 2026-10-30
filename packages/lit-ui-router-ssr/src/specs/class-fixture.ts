@@ -47,6 +47,26 @@ export class StickyCard extends RoutedCard {
 
 customElements.define('sticky-card', StickyCard);
 
+/** Clicks on any {@link BoundCard}'s button, so a spec can see its listener survived the hydrate. */
+export const boundClicks: string[] = [];
+
+/** A shadow-DOM routed class whose render binds an attribute and a listener on an inner element. */
+export class BoundCard extends RoutedCard {
+  override render(): TemplateResult {
+    const detail = String(this._uiViewProps?.resolves.detail);
+
+    return html`<button
+      class="bound"
+      title=${detail}
+      @click=${() => boundClicks.push(detail)}
+    >
+      ${detail}
+    </button>`;
+  }
+}
+
+customElements.define('bound-card', BoundCard);
+
 /** The sample apps' shape: light DOM, props through the constructor. */
 export class LightCard extends LitElement {
   _uiViewProps?: UIViewInjectedProps;
@@ -87,6 +107,12 @@ export const makeClassRouter = (): UIRouterLit => {
       url: '/sticky',
       component: StickyCard,
       resolve: { detail: () => 'sticky leaf' },
+    },
+    {
+      name: 'bound',
+      url: '/bound',
+      component: BoundCard,
+      resolve: { detail: () => 'bound leaf' },
     },
     {
       name: 'light',

@@ -156,9 +156,9 @@ export class RoutedLightCard extends LightDomHydrating(LitElement) {
   }
 
   override render(): TemplateResult {
-    return html`<p class="routed-light">
-      ${String(this._uiViewProps?.resolves.label)}
-    </p>`;
+    const label = String(this._uiViewProps?.resolves.label);
+
+    return html`<p class="routed-light" data-label=${label}>${label}</p>`;
   }
 }
 

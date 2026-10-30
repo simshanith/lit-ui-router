@@ -79,7 +79,8 @@ describe('the server render of a light-DOM element', () => {
     const markup = await drawLight(rootTemplate, '/routed-class');
 
     expect(markup).toMatch(
-      /<routed-light-card\s+defer-hydration><!--served:lit-part [^>]*--><p class="routed-light">/,
+      // The node marker before `<p>` is what the element's hydrate binds `data-label` against.
+      /<routed-light-card\s+defer-hydration><!--served:lit-part [^>]*--><!--served:lit-node 0--><p class="routed-light" data-label="routed class">/,
     );
     expect(markup).toContain('routed class');
     expect(markup).not.toContain('shadowroot');
