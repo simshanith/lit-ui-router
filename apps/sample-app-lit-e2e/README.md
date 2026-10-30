@@ -21,7 +21,7 @@ parallel. `a11y` and `domain-search` run only when named. On CI, both run in the
 | `effect`        | `/app-effect/`   | Effect app, default routing — the Navigation API plugin                                                                                     |
 | `signals`       | `/app-signals/`  | Signals app, default routing — the Navigation API plugin                                                                                    |
 | `docs`          | site + mounts    | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                         |
-| `domain-search` | `/domain-search` | the frame-0, boot-path and Lighthouse harness from [`domain-search`](../domain-search/README.md) in throttled Chrome; uncached, like `a11y` |
+| `domain-search` | `/domain-search` | the frame-0, boot-path and web-vitals harness from [`domain-search`](../domain-search/README.md) in throttled Chrome; uncached, like `a11y` |
 | `hash`          | `/app/`          | vanilla app under the `hash` location plugin                                                                                                |
 | `a11y`          | site + mounts    | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount  |
 | `pushState`     | `/app/`          | vanilla app under the `pushState` fallback                                                                                                  |

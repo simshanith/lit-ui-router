@@ -73,7 +73,6 @@ catalog:
   jose: ^6.2.13
   jsonc-parser: ^3.3.1
   knip: ^6.43.0
-  lighthouse: ^13.6.0
   lit: ^3.3.3
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
@@ -89,7 +88,6 @@ catalog:
   postcss-html: ^2.0.0
   postcss-lit: ^1.4.1
   publint: ^0.3.25
-  puppeteer-core: ^25.16.0
   release-it: ^21.1.1
   rimraf: ^6.1.3
   rolldown: ^1.2.15
@@ -117,6 +115,7 @@ catalog:
   vitest: ^5.0.5
   vue: ^3.5.44
   vue-tsc: ^3.3.13
+  web-vitals: ^6.2.3
   wrangler: ^4.154.0
   yaml: ^2.9.0
 
@@ -311,9 +310,6 @@ minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeStrict: true
 
 trustPolicy: no-downgrade
-
-trustPolicyExclude:
-  - chromium-bidi@157.0.8090-0
 
 trustPolicyExcludePrune: true
 

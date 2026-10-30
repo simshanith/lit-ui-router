@@ -9,13 +9,12 @@ const FRAME_ZERO = fileURLToPath(
   new URL('./frame-zero.e2e.ts', import.meta.url),
 );
 
-// Vercel's page gets the frame-0 checks only; the boot paths and Lighthouse measure this repo's page.
+// Vercel's page gets the frame-0 checks only; the boot paths measure this repo's page.
 const SPECS = {
   vercel: [FRAME_ZERO],
   ours: [
     FRAME_ZERO,
     fileURLToPath(new URL('./boot-paths.e2e.ts', import.meta.url)),
-    fileURLToPath(new URL('./lighthouse.e2e.ts', import.meta.url)),
   ],
 };
 
