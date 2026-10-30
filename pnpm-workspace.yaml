@@ -298,6 +298,11 @@ patchedDependencies:
 
 minimumReleaseAge: 1440
 
+minimumReleaseAgeExclude:
+  - eslint-plugin-lit-ui-router*
+  - lit-ui-router*
+  - ui-router-*
+
 minimumReleaseAgeExcludePrune: true
 
 minimumReleaseAgeStrict: true
