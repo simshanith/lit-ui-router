@@ -53,6 +53,9 @@ const load = (): Load => ({
 // Web Vitals and LoAF blocking from the typing load, per path.
 const loads: Record<BootPath, Load> = { prerendered: load(), cold: load() };
 
+// The same, from a load nobody touches.
+const untouched: Record<BootPath, Load> = { prerendered: load(), cold: load() };
+
 const cls = (value: number): string => value.toFixed(3);
 
 // Runs without a value (LCP, when typing beat the largest paint) are counted, not dropped.
@@ -77,6 +80,20 @@ const LOAD_ROWS: [string, keyof Load, (value: number) => string][] = [
     name === 'CLS' ? cls : ms,
   ]),
   ['LoAF blocking, navigation start → typed query in results', 'total', ms],
+  ['Longest animation frame, same window', 'longest', ms],
+];
+
+const UNTOUCHED_VITALS: Vital[] = ['LCP', 'FCP', 'CLS'];
+
+const UNTOUCHED_ROWS: [string, keyof Load, (value: number) => string][] = [
+  ...UNTOUCHED_VITALS.map(
+    (name): [string, Vital, (value: number) => string] => [
+      name,
+      name,
+      name === 'CLS' ? cls : ms,
+    ],
+  ),
+  ['LoAF blocking, navigation start → settled', 'total', ms],
   ['Longest animation frame, same window', 'longest', ms],
 ];
 
@@ -123,6 +140,20 @@ after(async () => {
     rows: LOAD_ROWS.map(([label, key, format]) => [
       label,
       ...BOOT_PATHS.map((path) => present(loads[path][key], format)),
+    ]),
+  });
+  await writeSection({
+    title: 'domain-search: Web Vitals and Long Animation Frames, untouched',
+    lead: [
+      `${target.idle}, loaded with no input; median [runs].`,
+      '',
+      '- Settled: booted, then the network idle. The page is hidden then, which ends LCP as web-vitals documents, so LCP always reports.',
+      '- LoAF blocking sums `blockingDuration` over the long animation frames that start before the page settled.',
+    ],
+    header: ['Metric', 'prerendered', 'cold'],
+    rows: UNTOUCHED_ROWS.map(([label, key, format]) => [
+      label,
+      ...BOOT_PATHS.map((path) => present(untouched[path][key], format)),
     ]),
   });
 });
@@ -205,11 +236,37 @@ const firstKeystroke = async (path: BootPath): Promise<void> => {
     );
 
     const blocking = await readBlocking(page, reflected);
-    const vitals = await flushVitals(page);
+    const vitals = await flushVitals(page, ['LCP']);
 
     for (const name of VITALS) loads[path][name].push(vitals[name]);
     loads[path].total.push(blocking.total);
     loads[path].longest.push(blocking.longest);
+  } finally {
+    await close();
+  }
+};
+
+const untouchedLoad = async (path: BootPath): Promise<void> => {
+  const { page, close } = await open(path);
+
+  try {
+    await installVitals(page);
+    await page.goto(target.idle, { waitUntil: 'commit' });
+    await page.waitForFunction(target.booted, undefined, { timeout: 60_000 });
+    assert.equal(
+      await page.getAttribute('html', 'data-domain-search-booted'),
+      OUTCOME[path],
+      `booted ${path}`,
+    );
+    await page.waitForLoadState('networkidle', { timeout: 60_000 });
+
+    const settled = await page.evaluate(() => performance.now());
+    const blocking = await readBlocking(page, settled);
+    const vitals = await flushVitals(page, ['INP']);
+
+    for (const name of VITALS) untouched[path][name].push(vitals[name]);
+    untouched[path].total.push(blocking.total);
+    untouched[path].longest.push(blocking.longest);
   } finally {
     await close();
   }
@@ -225,6 +282,12 @@ describe(`prerendered vs cold, ${CONDITIONS}`, () => {
   test('time to the first useful keystroke, with Web Vitals and LoAF, booted as each path', async () => {
     for (let run = 0; run < RUNS; run += 1) {
       for (const path of BOOT_PATHS) await firstKeystroke(path);
+    }
+  });
+
+  test('Web Vitals and LoAF on an untouched load, booted as each path', async () => {
+    for (let run = 0; run < RUNS; run += 1) {
+      for (const path of BOOT_PATHS) await untouchedLoad(path);
     }
   });
 });

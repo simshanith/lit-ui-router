@@ -9,12 +9,10 @@ export const VITALS = ['LCP', 'CLS', 'INP', 'FCP', 'TTFB'] as const;
 
 export type Vital = (typeof VITALS)[number];
 
-/** LCP is absent when the first keystroke lands before the largest paint: Chrome stops LCP at the first input. */
-export type Vitals = Record<Exclude<Vital, 'LCP'>, number> & {
-  LCP: number | undefined;
-};
+/** A metric web-vitals never reported: LCP when typing beat the largest paint, INP on a load with no input. */
+export type Vitals = Record<Vital, number | undefined>;
 
-/** Main-thread blocking from navigation start to the typed query in results; replaces Lighthouse's TBT. */
+/** Main-thread blocking from navigation start to the end of the measured window; replaces Lighthouse's TBT. */
 export interface Blocking {
   /** Sum of `blockingDuration` over the long animation frames that started in the window. */
   total: number;
@@ -86,8 +84,11 @@ export const readBlocking = (page: Page, end: number): Promise<Blocking> =>
     };
   }, end);
 
-/** Hides the page, as web-vitals' own tests do, so every metric, INP included, reports its final value. */
-export const flushVitals = async (page: Page): Promise<Vitals> => {
+/** Hides the page, as web-vitals' own tests do, so every metric reports its final value; only `absent` may go unreported. */
+export const flushVitals = async (
+  page: Page,
+  absent: readonly Vital[],
+): Promise<Vitals> => {
   const reported = await page.evaluate(async () => {
     // let the last keystroke's event-timing entries queue before the flush takes them
     await new Promise((resolve) =>
@@ -103,12 +104,12 @@ export const flushVitals = async (page: Page): Promise<Vitals> => {
     return window.__vitals!;
   });
 
-  // SAFETY: one entry per name in VITALS, each but LCP checked present.
+  // SAFETY: one entry per name in VITALS, each outside `absent` checked present.
   return Object.fromEntries(
     VITALS.map((name) => {
       const value = reported[name];
 
-      if (value === undefined && name !== 'LCP') {
+      if (value === undefined && !absent.includes(name)) {
         throw new Error(`web-vitals reported no ${name}`);
       }
 
