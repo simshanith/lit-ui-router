@@ -18,6 +18,11 @@ export interface HydrationSignature {
   readonly state?: unknown;
   /** That state's url parameter values, keyed by parameter id. */
   readonly params?: unknown;
+  /**
+   * The resolved values the document was drawn with, keyed by state name, then
+   * by resolve token, when `prerender()`'s `payload` hook supplied them.
+   */
+  readonly resolves?: unknown;
 }
 
 /**

@@ -24,14 +24,14 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, and that state's url parameter values. A page `renderShell` returns
-  as a string is written as-is, without one.
+  state the router stood on, that state's url parameter values, and the resolved values the
+  `payload` hook supplies. A page `renderShell` returns as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root` and `elementRenderers`. No SPA catch-all is ever written: one turns every 404 into a 200.
+  `root`, `elementRenderers` and `payload`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
   `lit-ui-router-ssr/client` adopts what it drew.
 
@@ -124,6 +124,37 @@ A page fails to land in four ways, and each rejects rather than hangs:
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
+
+## Adopting the resolves on boot
+
+The `payload` option hands each rendered page's landed transition to a hook, which returns the
+resolve payload to write. `dehydrate` from `ui-router-server/ssr` draws one, and the hook decides what to do with the resolves it leaves out:
+
+```typescript
+import { prerender } from 'lit-ui-router-ssr';
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) => {
+    const { payload, unserializable } = dehydrate(transition);
+
+    for (const { state, token } of unserializable)
+      console.warn(`${path}: ${state}.${token} re-runs on the client`);
+
+    return payload;
+  },
+});
+```
+
+The payload's `resolves` go into the page's hydration signature, beside `version`, `state` and
+`params`, so the one block is the payload. `bootstrap()` seeds the boot transition from it before
+the router starts: each resolve the page was drawn with adopts its value in place of running its
+function. Every other resolve runs as it would without one: a value `dehydrate` left out, a
+`NOWAIT` resolve, every resolve of a boot that lands on another state or other parameters, and
+every resolve of a page whose block carries no `resolves`. Without the hook no page carries
+resolves. What `dehydrate` draws, and which values it leaves out, is in
+[its documentation](https://lit-ui-router.dev/packages/server#handing-resolves-to-the-client).
 
 ## The routed view, drawn on the server
 
@@ -365,12 +396,14 @@ const { outcome } = await bootstrap(router, root, page(router));
   redirect — adopts the views that match and renders the rest cold without a warning each; once the
   page is live, the development build warns once, naming both states and how many views rendered
   cold.
-- **The boot transition takes a seed.** `options.payload` is handed to `seed()` from
+- **The boot transition is seeded.** The payload the signature carries is handed to `seed()` from
   `ui-router-server/ssr/client` before the router starts, so the boot transition adopts the
-  resolved values a server render drew in place of running their resolve functions.
-- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls `router.start()`,
-  awaits the first successful transition, then `hydrateRoot(root, page(router))`, and renders
-  `page(router)` itself when that returns `false`.
+  resolved values the prerender drew in place of running their resolve functions.
+  `options.payload` takes its place when given.
+- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls
+  `seed(router, readResolvePayload(root))` and `router.start()`, awaits the first successful
+  transition, then `hydrateRoot(root, page(router))`, and renders `page(router)` itself when that
+  returns `false`.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
   it touches the document, and returns `false` over an emptied container when there is none — a
   cold client render, a dev server, a page from an earlier `prerender()`, a string `renderShell` —
