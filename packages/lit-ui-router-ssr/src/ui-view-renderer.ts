@@ -7,7 +7,8 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { renderValue } from '@lit-labs/ssr/lib/render-value.js';
 import { ResolveContext } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
-import type { LitElement, TemplateResult } from 'lit';
+import { LitElement } from 'lit';
+import type { TemplateResult } from 'lit';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import {
   LitViewConfig,
@@ -20,7 +21,7 @@ import type { NormalizedLitViewDeclaration } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
 import { isLightDomClass } from './light-dom-brand.js';
 import { LightElementRenderer } from './light-element-renderer.js';
-import { servedMarkerPrefix } from './served-markers.js';
+import { PART_CLOSE, prefixInterior } from './served-interior.js';
 
 /** The tag this renderer answers for. */
 const TAG = 'ui-view';
@@ -34,31 +35,8 @@ let viewIdCounter = 0;
 // Every `<ui-view>` between the render root and the one now rendering. A render is synchronous and depth-first, so the last entry is the parent view.
 const openViews: UiViewRenderer[] = [];
 
-const PART_CLOSE = '<!--/lit-part-->';
-
 /** The registration a server `<ui-view>` hands core, before any config arrives. */
 type Registration = Omit<ActiveUIView, 'config'> & { config?: ViewConfig };
-
-/**
- * Hides the markers this render wrote inside the view from the walk hydrating
- * its surroundings, leaving the outer pair plain for that walk to read.
- *
- * @internal
- */
-export const prefixInterior = (markup: string): string => {
-  // renderValue always wraps a hydratable value in the pair, so the ends are the pair by construction.
-  const open = markup.indexOf('-->') + 3;
-  const close = markup.length - PART_CLOSE.length;
-
-  // A plain `<!--lit-part` never matches an already-prefixed `<!--served:lit-part`, so a nested run's interior is prefixed once.
-  const interior = markup
-    .slice(open, close)
-    .replaceAll('<!--lit-part', `<!--${servedMarkerPrefix}lit-part`)
-    .replaceAll('<!--/lit-part', `<!--${servedMarkerPrefix}/lit-part`)
-    .replaceAll('<!--lit-node', `<!--${servedMarkerPrefix}lit-node`);
-
-  return markup.slice(0, open) + interior + markup.slice(close);
-};
 
 const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
@@ -89,9 +67,12 @@ const renderElement = (element: LitElement, renderInfo: RenderInfo): string => {
     element.constructor as typeof HTMLElement,
   );
 
-  // Element access reaches the protected `createRenderRoot()`, which `LitElementRenderer` patches to attach a shadow root.
-  // oxlint-disable-next-line typescript/dot-notation -- dot access to a protected member does not typecheck
-  const lightRoot = element['createRenderRoot']() === element;
+  // Only an override can render into the element itself, so lit's own `createRenderRoot()`, which attaches a shadow root, is never called here.
+  const lightRoot =
+    // oxlint-disable-next-line typescript/dot-notation -- dot access to a protected member does not typecheck
+    element['createRenderRoot'] !== LitElement.prototype['createRenderRoot'] &&
+    // oxlint-disable-next-line typescript/dot-notation -- dot access to a protected member does not typecheck
+    element['createRenderRoot']() === element;
 
   class Seated extends (hydratesLight
     ? LightElementRenderer

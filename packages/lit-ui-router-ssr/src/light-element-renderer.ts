@@ -6,7 +6,7 @@ import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { renderValue } from '@lit-labs/ssr/lib/render-value.js';
 
 import { isLightDomClass } from './light-dom-brand.js';
-import { prefixInterior } from './ui-view-renderer.js';
+import { prefixInterior } from './served-interior.js';
 
 /**
  * Renders a `LightDomHydrating` element's `render()` into its light DOM,
