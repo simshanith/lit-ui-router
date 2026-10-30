@@ -516,63 +516,6 @@ describe('createFetchHandler delegates', () => {
   });
 });
 
-describe('createFetchHandler serveShell', () => {
-  it('serves a router made only of delegating states without serveShell', async () => {
-    const router = createServerRouter({
-      mounts: {
-        '/': {
-          routes: [{ name: 'claims', url: '/claims/:id', delegate: 'ledger' }],
-        },
-      },
-    });
-
-    const handler = createFetchHandler(router, {
-      delegates: { ledger: () => new Response(null, { status: 202 }) },
-    });
-
-    assert.equal((await handler(navigation('/claims/9')))?.status, 202);
-    assert.equal((await handler(post('/claims/9', '')))?.status, 202);
-    assert.equal(await handler(navigation('/missing')), null);
-    assert.equal(await handler(navigation('/')), null);
-    assert.equal(await handler(post('/missing', '')), null);
-  });
-
-  it('throws at construction without serveShell when the router can answer with the shell', () => {
-    const delegates = { ledger: noShell };
-    const delegating = { name: 'claims', url: '/claims', delegate: 'ledger' };
-
-    const shelled = [
-      [delegating, { name: 'home', url: '' }],
-      [delegating, { name: 'notFound' }],
-    ];
-
-    for (const [index, routes] of shelled.entries()) {
-      const router = createServerRouter({
-        mounts: {
-          '/app': {
-            routes,
-            otherwise: index === 1 ? { state: 'notFound' } : undefined,
-          },
-        },
-      });
-
-      assert.throws(
-        () => createFetchHandler(router, { delegates }),
-        /can answer with the shell .* so pass serveShell/,
-      );
-    }
-  });
-
-  it('throws on a structural router shell verdict without serveShell', async () => {
-    const handler = createFetchHandler(
-      routerOf({ kind: 'shell', mount: '/app' }),
-      {},
-    );
-
-    await assert.rejects(handler(navigation('/app')), /so pass serveShell/);
-  });
-});
-
 describe('createFetchHandler delegate work', () => {
   const routes = [
     { name: 'about', url: '/about' },
@@ -658,25 +601,6 @@ describe('createFetchHandler delegate work', () => {
     const request = post('/app/claims/9?draft=1', '');
     await handler(request);
     assert.deepEqual(seen, [[request, '/claims/9']]);
-  });
-
-  it('answers navigations on a simulate mount without pages without a transition', async () => {
-    const router = createServerRouter({
-      mounts: {
-        '/app': { routes: [routes[1]], strategy: 'simulate' },
-      },
-    });
-
-    const handler = createFetchHandler(router, {
-      delegates: { ledger: () => new Response(null, { status: 202 }) },
-    });
-
-    const transitions = await transitionsDuring(async () => {
-      assert.equal((await handler(navigation('/app/claims/9')))?.status, 202);
-      assert.equal(await handler(navigation('/app/about')), null);
-    });
-
-    assert.equal(transitions, 0);
   });
 });
 

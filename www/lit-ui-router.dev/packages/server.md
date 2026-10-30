@@ -418,33 +418,7 @@ url unchanged, which is what keeps `delegateContext` working; its `Response`
 goes out untouched. Unlike Hono's `app.mount()`, nothing strips the mount
 base, so route on the context's `subpath`, give the delegate the mount base
 (`basePath('/app')` above), or put delegating states on the `/` mount.
-Requests that match no delegating state keep the navigation contract above,
-unless their mount has no pages.
-
-A mount without pages, where every state with a url delegates and there is
-no `otherwise`, claims only its delegating urls. Any other pathname under it
-resolves as `notFound` without a mount, so the fetch and Hono adapters pass
-it through as `null` and Connect calls `next()`, navigations included. A
-router made only of such mounts never answers with the shell, so
-`serveShell` is optional:
-
-```ts
-const routes = [
-  { name: 'claims', url: '/claims', delegate: 'claims' },
-] as const;
-
-const router = createServerRouter({ mounts: { '/': { routes } } });
-
-const handler = createFetchHandler(router, {
-  delegates: { claims: (request: Request, env: Env) => ingest(request, env) },
-});
-
-export default {
-  async fetch(request, env) {
-    return (await handler(request, env)) ?? new Response(null, { status: 404 });
-  },
-} satisfies ExportedHandler<Env>;
-```
+Requests that match no delegating state keep the navigation contract above.
 
 `delegateContext(request, key, router?)` returns
 `{ mount, subpath, delegate, state, params }` for the match. `subpath` is the
@@ -466,10 +440,6 @@ received (`c.req.raw` in Hono).
   an equally specific state url wins. Keep rule patterns off delegating urls.
 - `createFetchHandler` throws at construction when the router names a key
   that `delegates` doesn't map. Extra keys in `delegates` are allowed.
-- It also throws at construction when a mount has pages (a state with a url
-  and no delegate, or an `otherwise`) and `serveShell` is absent. A
-  structural router, which the adapter can't inspect, throws on its first
-  shell verdict instead.
 - A handler that throws rejects the adapter's promise, so the host's own error
   handling answers it.
 - Requests outside `shouldHandle` only match urls: they never run a
@@ -485,11 +455,9 @@ received (`c.req.raw` in Hono).
 Declare `routes` `as const` and the router's type carries its state names
 and delegate keys: `delegates` must then map every key the routes name, a
 missing key is a compile error, and `delegateContext(request, key, router)`
-narrows `state` to the states that name `key`. `serveShell` is required
-exactly when a route has a url and no `delegate`. Each router is typed on its
+narrows `state` to the states that name `key`. Each router is typed on its
 own, so two routers in one program can name different keys. Untyped routes
-keep `string` keys and states and core's `RawParams`, and leave the
-`serveShell` check to construction.
+keep `string` keys and states and core's `RawParams`.
 
 The router's type is `createFetchHandler`'s first type parameter and the
 host's arguments its second, so the key check holds however the arguments
