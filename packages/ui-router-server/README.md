@@ -24,6 +24,30 @@ npm install ui-router-server
 dependencies. Full docs:
 [lit-ui-router.dev/packages/server](https://lit-ui-router.dev/packages/server).
 
+## When to use it
+
+Use it when a server has to honour a ui-router state tree that already exists for another reason,
+usually the client app's own route tables. Reusing that tree is what makes the setup worthwhile.
+Each use adds one concept and leaves the ones before it unchanged:
+
+1. **An honest SPA host:** real 404s, redirects, and the shell for the client's routes, with
+   `createServerRouter`, an adapter, and a `serveShell`.
+2. **Server-rendered pages:** the same states' resolves and views, rendered with
+   `lit-ui-router-ssr` on `settle` and `prerender`.
+3. **Representations of a state:** a state whose answer is its own `Response` (a redirect, JSON,
+   a badge) built from its resolves once `settle` lands it.
+4. **Commands whose url the tree defines:** delegating states hand a url to a host handler.
+   Delegate when the tree is the authority for the url: a command that shares params with a page,
+   or a path `prerender` must skip.
+5. **Outside HTTP:** the verdict core has no HTTP dependency; a pathname goes in and a plain
+   object comes out.
+
+It is not for urls no state tree defines. Route those at the host, ahead of the router: a platform
+route, an earlier middleware, or in Hono a route registered before the router's catch-all. Paths
+outside every mount already pass through (the fetch adapter returns `null`, and the Hono and Connect
+middleware call `next()`), so the host keeps its own fallthrough and 404 handling. See
+[when to use it](https://lit-ui-router.dev/packages/server#when-to-use-it).
+
 ## Delegating states
 
 A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,

@@ -30,6 +30,51 @@ Vite plugin — but it is still `0.x`. The APIs below are live and covered by te
 can still move in a minor release before `1.0`, so pin what you install.
 :::
 
+## When to use it
+
+Use it when a server has to honour a ui-router state tree that already exists
+for another reason, usually the client app's own route tables. Reusing that
+tree is what makes the setup worthwhile: the server answers the same urls the
+client routes, from one declaration. Each use below adds one concept and
+leaves the ones before it unchanged:
+
+1. **An honest SPA host.** Real 404s, redirects, and the shell for the
+   client's routes: [`createServerRouter`](#quick-start), an
+   [adapter](#adapters), and a `serveShell`.
+2. **Server-rendered pages.** The same states' resolves and views, rendered
+   with [`lit-ui-router-ssr`](/packages/ssr) on
+   [`settle`](#settling-a-server-router) and
+   [`prerender`](#emitting-a-static-site).
+3. **Representations of a state.** A state whose answer is its own `Response`
+   (a redirect, JSON, a badge) built from its resolves once `settle` lands it.
+4. **Commands whose url the tree defines.**
+   [Delegating states](#delegating-states) hand a url to a host handler.
+   Delegate when the tree is the authority for the url: a command that shares
+   params with a page, or a path `prerender` must skip.
+5. **Outside HTTP.** The [verdict](#the-verdict) core has no HTTP dependency:
+   a pathname goes in and a plain object comes out.
+
+It is not for urls no state tree defines. Route those at the host, ahead of
+the router: a platform route, an earlier middleware, or in Hono a route
+registered before the router's catch-all.
+
+```ts
+const app = new Hono<{ Bindings: Env }>();
+
+// No state defines /healthz, so the host answers it first.
+app.get('/healthz', (c) => c.text('ok'));
+
+app.use('*', (c, next) =>
+  serverRouterHono(router, {
+    serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
+  })(c, next),
+);
+```
+
+Paths outside every mount already pass through: the fetch adapter returns
+`null`, and the Hono and Connect middleware call `next()`. The host keeps its own fallthrough and 404
+handling.
+
 ## What problem it solves
 
 With [pushState URLs](/guides/location-plugins#html5-pushstate), every deep
