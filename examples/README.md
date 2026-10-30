@@ -46,7 +46,8 @@ The smallest possible lit-ui-router app.
 
 - **An import map** in `public/index.html` resolves `lit`, `@uirouter/core` and `lit-ui-router` to [esm.sh](https://esm.sh), at the exact versions its `package-lock.json` installs; `embeds.test.ts` fails when they drift apart. `lit-ui-router`'s URL carries esm.sh's `*` prefix, which leaves its own imports bare for the map to resolve, so the page loads one copy of `lit`
 - **No decorators or type annotations:** `customElements.define` registers the shell, and the state declarations are plain objects
-- **No bundler.** `public/` is the whole site, served as written by [`serve`](https://github.com/vercel/serve); `npm run build` copies it to `dist/`. The other npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, and nothing at runtime reads `node_modules`
+- **No bundler.** `public/` is the whole site, served as written by [`serve`](https://github.com/vercel/serve); `npm run build` copies it to `dist/`
+- **Still typechecked.** The other npm dependencies are for the editor: `tsconfig.json` checks `main.js` against the published types with `checkJs`, so the editor (StackBlitz included) shows completions, hover types and type errors without a single annotation, and `typecheck:example:helloworld-buildless` enforces it in CI. Nothing at runtime reads `node_modules`
 
 ### hellosolarsystem
 
