@@ -95,8 +95,9 @@ response state to its `respond` hook and writes a 2xx body at the path its url s
 
 `dehydrate` from `ui-router-server/ssr` and `seed` from `ui-router-server/ssr/client` take a
 `transport`: a record of transporters, each carrying one type of value plain JSON can't, keyed by a
-name both sides share. `encode` answers with plain JSON data for a value it carries and a falsy
-value for any other; `decode` rebuilds the value on the client. A value nested in an array or plain
+name both sides share. `encode` answers with plain JSON data for a value it carries and `false`,
+`null` or `undefined` for any other, so an encoding of `false` or `null` must be wrapped, as in
+`[false]`; `decode` rebuilds the value on the client. A value nested in an array or plain
 object is carried too.
 
 ```ts

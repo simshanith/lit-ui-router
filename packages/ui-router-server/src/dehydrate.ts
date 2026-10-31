@@ -79,9 +79,10 @@ export interface DehydrateResult {
  * {@link DehydrateOptions.transport | `transport`} carries more. Each value
  * that is not plain JSON data, at the top of a resolve or nested in its
  * arrays and plain objects, is offered to each transporter in key order, and
- * the first non-falsy encoding goes in. The payload lists where each one sits
- * in {@link ResolvePayload.transported | `transported`}, apart from the
- * values, so no value of the app's own can pass for one.
+ * the first encoding other than `false`, `null` or `undefined` goes in. The
+ * payload lists where each one sits in
+ * {@link ResolvePayload.transported | `transported`}, apart from the values,
+ * so no value of the app's own can pass for one.
  *
  * A `NOWAIT` resolve stays with the client: it is neither awaited nor drawn,
  * nor listed, and the client runs it as it would without a payload.
@@ -258,7 +259,7 @@ const claim = (
   for (const [type, transporter] of Object.entries(transport)) {
     const encoded = transporter.encode(value);
 
-    if (!encoded) continue;
+    if (encoded === false || encoded == null) continue;
 
     if (!isJsonValue(encoded))
       throw new TypeError(

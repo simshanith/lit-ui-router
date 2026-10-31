@@ -716,8 +716,9 @@ export const transport = {
 
 - **Encoding.** Each value that is not plain JSON data, at the top of a
   resolve or nested in its arrays and plain objects, is offered to each
-  transporter in key order. The first `encode` that answers with a non-falsy
-  value carries it, so an encoding is never falsy itself. A value none
+  transporter in key order. The first `encode` that answers with anything but
+  `false`, `null` or `undefined` carries it, so an encoding of `false` or
+  `null` must be wrapped, as in `[false]`. A value none
   carries, or one whose `encode` throws, lists its resolve in
   `unserializable`. `shouldDehydrate` runs first, so a resolve it declines is
   offered to no transporter.

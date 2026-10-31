@@ -64,7 +64,7 @@ export const decoded: Equal<
 
 export const loose: Transporter = {
   ...DateTransporter,
-  // @ts-expect-error encode answers with JSON data or a falsy value, not a Date
+  // @ts-expect-error encode answers with JSON data, false, null or undefined, not a Date
   encode: () => new Date(),
 };
 

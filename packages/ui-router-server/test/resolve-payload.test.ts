@@ -643,15 +643,22 @@ describe('transport', () => {
     ]);
   });
 
-  it('asks the transporters in key order, the first non-falsy encoding winning', async () => {
+  it('asks the transporters in key order, skipping false, null and undefined', async () => {
     const asked: string[] = [];
+
+    const skip = (
+      name: string,
+      answer: false | null | undefined,
+    ): Transporter => ({
+      encode: () => (asked.push(name), answer),
+      decode: (value) => value,
+    });
 
     const { payload } = await drawn('/app/sheet/7B', {
       transport: {
-        First: {
-          encode: () => (asked.push('First'), 0),
-          decode: (value) => value,
-        },
+        False: skip('False', false),
+        Null: skip('Null', null),
+        Undefined: skip('Undefined', undefined),
         Date: {
           ...DateTransporter,
           encode: (value) => (
@@ -667,10 +674,49 @@ describe('transport', () => {
       shouldDehydrate: ({ token }) => token === 'drawnAt',
     });
 
-    assert.deepEqual(asked, ['First', 'Date']);
+    assert.deepEqual(asked, ['False', 'Null', 'Undefined', 'Date']);
     assert.deepEqual(payload.transported, {
       'app.sheet': { drawnAt: [{ type: 'Date', path: [] }] },
     });
+  });
+
+  it('round-trips a value encoded as 0 or ""', async () => {
+    const Zero: Transporter<Date> = {
+      encode: (value) => value instanceof Date && value.getTime() === 0 && 0,
+      decode: () => new Date(0),
+    };
+
+    const Blank: Transporter<Sheet> = {
+      encode: (value) => value instanceof Sheet && '',
+      decode: () => new Sheet(''),
+    };
+
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      transport: { Zero, Blank },
+    });
+
+    assert.deepEqual(unserializable, []);
+    assert.equal(payload.resolves['app.sheet']?.drawnAt, 0);
+    assert.equal(payload.resolves['app.sheet']?.sheet, '');
+    assert.deepEqual(payload.transported, {
+      'app.sheet': {
+        drawnAt: [{ type: 'Zero', path: [] }],
+        sheet: [{ type: 'Blank', path: [] }],
+      },
+    });
+
+    const { router, calls } = makeRouter();
+    seed(router, roundTrip(payload), { transport: { Zero, Blank } });
+
+    const transition = await settle(router, '/app/sheet/7B');
+    const drawnAt: unknown = transition.injector().get('drawnAt');
+    const sheet: unknown = transition.injector().get('sheet');
+
+    assert.deepEqual([...calls.keys()], ['app.sheet.comments']);
+    assert.ok(drawnAt instanceof Date);
+    assert.equal(drawnAt.getTime(), 0);
+    assert.ok(sheet instanceof Sheet);
+    assert.equal(sheet.num, '');
   });
 
   it('never offers plain JSON data or a declined resolve to a transporter', async () => {
