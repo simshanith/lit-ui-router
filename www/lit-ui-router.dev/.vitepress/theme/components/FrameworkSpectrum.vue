@@ -125,15 +125,15 @@ function stateClass(id: string) {
 
 <style scoped>
 .framework-spectrum {
-  margin-block: 20px 8px;
+  margin-block: var(--site-space-5) var(--site-space-2);
 }
 
 .bands {
   position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-card);
   background: var(--vp-c-bg-soft);
   overflow: clip;
 }
@@ -167,14 +167,14 @@ function stateClass(id: string) {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--site-space-2);
   min-height: 120px;
-  padding-block: 8px;
-  padding-inline: 6px;
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-1-5);
 }
 
 .band + .band {
-  border-inline-start: 1px solid var(--vp-c-divider);
+  border-inline-start: var(--site-border-width) solid var(--vp-c-divider);
 }
 
 .band-label {
@@ -195,9 +195,9 @@ function stateClass(id: string) {
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 50%;
-  font-size: 10px;
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-pill);
+  font-size: var(--site-text-micro);
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg);
 }
@@ -205,7 +205,7 @@ function stateClass(id: string) {
 .band-points {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--site-space-1);
   align-content: flex-start;
 }
 
@@ -217,15 +217,15 @@ function stateClass(id: string) {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 50%;
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-pill);
   background: var(--vp-c-bg);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color 0.15s var(--ease-out),
-    opacity 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .point img {
@@ -242,12 +242,12 @@ function stateClass(id: string) {
 
 .point.active {
   border-color: var(--vp-c-brand-1);
-  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
+  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .point.active {
-    transform: translateY(-1px);
+    transform: translateY(calc(-1 * var(--site-border-width)));
   }
 }
 
@@ -258,18 +258,18 @@ function stateClass(id: string) {
 
 /* …and active still reads stronger */
 .point.featured.active {
-  box-shadow: 0 0 0 2px var(--vp-c-brand-1);
+  box-shadow: 0 0 0 calc(2 * var(--site-border-width)) var(--vp-c-brand-1);
 }
 
 .point:focus-visible,
 .legend-entry:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 .ambient {
   display: flex;
-  gap: 6px;
+  gap: var(--site-space-1-5);
   margin-block-start: auto;
   color: var(--vp-c-text-3);
   opacity: 0.55;
@@ -281,8 +281,8 @@ function stateClass(id: string) {
 }
 
 .axis-caption {
-  margin-block-start: 6px;
-  font-size: 11px;
+  margin-block-start: var(--site-space-1-5);
+  font-size: var(--site-text-caption);
   color: var(--vp-c-text-2);
   text-align: end;
 }
@@ -290,9 +290,9 @@ function stateClass(id: string) {
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--site-space-1-5);
   max-width: 320px;
-  margin-block: 12px 0;
+  margin-block: var(--site-space-3) 0;
   margin-inline: 0;
   padding: 0;
   list-style: none;
@@ -306,25 +306,25 @@ function stateClass(id: string) {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 8px;
-  padding-block: 6px;
-  padding-inline: 10px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  gap: var(--site-space-2);
+  padding-block: var(--site-space-1-5);
+  padding-inline: var(--site-space-3);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   background: none;
-  font-size: 12.5px;
+  font-size: var(--site-text-xs);
   text-align: start;
   color: var(--vp-c-text-2);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color 0.15s var(--ease-out),
-    opacity 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .legend li.featured {
-  margin-block-end: 6px;
+  margin-block-end: var(--site-space-1-5);
 }
 
 .legend-entry.featured {
@@ -336,7 +336,7 @@ function stateClass(id: string) {
 .legend-entry.active {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-text-1);
-  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
+  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
 }
 
 .legend-mark {
@@ -399,7 +399,7 @@ function stateClass(id: string) {
   }
 
   .band:nth-child(n + 4) {
-    border-block-start: 1px solid var(--vp-c-divider);
+    border-block-start: var(--site-border-width) solid var(--vp-c-divider);
   }
 
   .band {

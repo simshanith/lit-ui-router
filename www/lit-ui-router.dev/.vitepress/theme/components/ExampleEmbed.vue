@@ -82,7 +82,7 @@ onUnmounted(() => {
     <div class="example-embed-actions">
       <button
         type="button"
-        class="fullscreen-btn btn"
+        class="fullscreen-btn site-button"
         :disabled="isFullscreenSupported === false"
         :title="
           isFullscreenSupported === false
@@ -91,20 +91,29 @@ onUnmounted(() => {
         "
         @click="toggleFullscreen"
       >
-        <span class="btn-icon">
+        <span class="site-button-icon">
           <sp-icon-full-screen-exit v-if="isFullscreen" />
           <sp-icon-full-screen v-else />
         </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
-      <button @click="restartIframe" class="restart-btn btn" type="button">
-        <span class="btn-icon">
+      <button
+        @click="restartIframe"
+        class="restart-btn site-button"
+        type="button"
+      >
+        <span class="site-button-icon">
           <sp-icon-refresh label="Restart example" />
         </span>
         Restart
       </button>
-      <a :href="src" target="_blank" rel="noopener" class="open-btn btn">
-        <span class="btn-icon"><sp-icon-link-out /></span>
+      <a
+        :href="src"
+        target="_blank"
+        rel="noopener"
+        class="open-btn site-button"
+      >
+        <span class="site-button-icon"><sp-icon-link-out /></span>
         Open in new tab
       </a>
       <slot></slot>
@@ -122,9 +131,9 @@ onUnmounted(() => {
   max-width: 100%;
   height: var(--embed-height, 420px);
   /* Cap tall embeds so small viewports keep the page (svh dodges iOS toolbars). */
-  height: min(var(--embed-height, 420px), calc(100svh - 120px));
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 4px;
+  height: min(var(--embed-height, 420px), var(--example-frame-max-height));
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   overflow: clip;
   /* Shows only until the example paints; an example without color-scheme gets the UA's light canvas. */
   background: var(--vp-c-bg);
@@ -138,7 +147,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--example-actions-gap);
   background: var(--vp-c-bg);
-  padding: 16px;
+  padding: var(--site-space-4);
 }
 
 .example-embed:fullscreen iframe,
@@ -146,7 +155,6 @@ onUnmounted(() => {
   flex: 1 1 0;
   min-height: 0;
   height: auto;
-  border-radius: 8px;
   width: 88%;
 }
 
@@ -163,31 +171,28 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: no-preference) {
   .example-embed {
     transition:
-      padding 0.3s var(--ease-out),
-      width 0.3s var(--ease-out);
+      padding var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .example-embed iframe {
     transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .example-embed:fullscreen iframe,
   .example-embed:-webkit-full-screen iframe {
     transition:
-      height 0.3s var(--ease-out),
-      width 0s,
-      border-radius 0.3s var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width 0s;
   }
 
   .example-embed.fullscreen:fullscreen iframe,
   .example-embed.fullscreen:-webkit-full-screen iframe {
     transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 }
 
@@ -195,58 +200,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--site-space-3);
   margin-block-start: var(--example-actions-gap);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding-block: 6px;
-  padding-inline: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vp-c-text-1);
-  text-decoration: none;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  min-block-size: var(--example-control-size);
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    background-color 0.2s var(--ease-out),
-    border-color 0.2s var(--ease-out),
-    transform 0.15s var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover {
-    background: var(--vp-c-bg-mute);
-    border-color: var(--vp-c-brand-1);
-  }
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
-}
-
-.btn:disabled {
-  color: var(--vp-c-text-3);
-  cursor: not-allowed;
-}
-
-/* Holds the async-loaded icon's box from the server render on. */
-.btn-icon {
-  display: inline-flex;
-  flex: none;
-  inline-size: var(--example-icon-size);
-  block-size: var(--example-icon-size);
 }
 </style>
