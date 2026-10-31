@@ -22,30 +22,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--lur-space-2);
+  gap: var(--site-space-2);
   block-size: 44px;
-  padding-inline: var(--lur-space-4);
+  padding-inline: var(--site-space-4);
   font-family: var(--vp-font-family-mono);
-  font-size: var(--lur-text-md);
+  font-size: var(--site-text-md);
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-pill);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-pill);
   touch-action: manipulation;
-  transition: border-color var(--lur-duration-fast) var(--ease-out);
+  transition: border-color var(--site-duration-fast) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-install {
     transition:
-      border-color var(--lur-duration-fast) var(--ease-out),
-      transform var(--lur-duration-fast) var(--ease-out);
+      border-color var(--site-duration-fast) var(--ease-out),
+      transform var(--site-duration-fast) var(--ease-out);
   }
 }
 
 .hero-install:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {

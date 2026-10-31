@@ -164,7 +164,7 @@ onMounted(() => {
 
 <style scoped>
 .live-example {
-  margin-block: var(--lur-space-4);
+  margin-block: var(--site-space-4);
 }
 
 .live-example-bar {
@@ -173,34 +173,34 @@ onMounted(() => {
   flex-wrap: wrap;
   /* Links sit at the end of a shared row and at the start once wrapped. */
   justify-content: space-between;
-  gap: var(--lur-space-3);
-  margin-block-end: var(--lur-space-2);
+  gap: var(--site-space-3);
+  margin-block-end: var(--site-space-2);
 }
 
 .live-example-tablist {
   display: inline-flex;
-  gap: var(--lur-space-1);
-  padding: var(--lur-inset-control);
+  gap: var(--site-space-1);
+  padding: var(--site-inset-control);
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
 }
 
 .tab {
-  padding-block: var(--lur-space-1);
-  padding-inline: var(--lur-space-3);
-  font-size: var(--lur-text-sm);
+  padding-block: var(--site-space-1);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
   font-weight: 500;
   color: var(--vp-c-text-2);
   background: transparent;
   border: 0;
-  border-radius: var(--lur-radius-control-inner);
+  border-radius: var(--site-radius-control-inner);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color var(--lur-duration-base) var(--ease-out),
-    color var(--lur-duration-base) var(--ease-out),
-    transform var(--lur-duration-fast) var(--ease-out);
+    background-color var(--site-duration-base) var(--ease-out),
+    color var(--site-duration-base) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -214,20 +214,20 @@ onMounted(() => {
 }
 
 .tab:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 .tab.active {
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg);
-  box-shadow: 0 0 0 var(--lur-border-width) var(--vp-c-divider);
+  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-divider);
 }
 
 .live-example-links {
   display: flex;
   align-items: center;
-  gap: var(--lur-space-2);
+  gap: var(--site-space-2);
 }
 
 .open-badge,
@@ -235,10 +235,10 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   overflow: clip;
-  transition: border-color var(--lur-duration-base) var(--ease-out);
+  transition: border-color var(--site-duration-base) var(--ease-out);
 }
 
 .source-link {
@@ -246,13 +246,13 @@ onMounted(() => {
   inline-size: var(--example-control-size);
   block-size: var(--example-control-size);
   color: var(--vp-c-text-1);
-  font-size: var(--lur-icon-sm);
+  font-size: var(--site-icon-sm);
   background: var(--vp-c-bg-soft);
 }
 
 .source-link:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -264,7 +264,7 @@ onMounted(() => {
 
 .open-badge img {
   display: block;
-  height: calc(var(--example-control-size) - 2 * var(--lur-border-width));
+  height: calc(var(--example-control-size) - 2 * var(--site-border-width));
   /* The width/height attributes give the ratio before the badge loads. */
   width: auto;
   /* .vp-doc gives content imgs 16px vertical margin — kill the gap. */
@@ -288,13 +288,13 @@ onMounted(() => {
 }
 
 .fallback-note {
-  padding-block: var(--lur-space-2);
-  padding-inline: var(--lur-space-3);
-  font-size: var(--lur-text-sm);
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
 }
 
 .fallback-note p {

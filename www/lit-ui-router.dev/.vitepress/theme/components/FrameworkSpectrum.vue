@@ -125,15 +125,15 @@ function stateClass(id: string) {
 
 <style scoped>
 .framework-spectrum {
-  margin-block: var(--lur-space-5) var(--lur-space-2);
+  margin-block: var(--site-space-5) var(--site-space-2);
 }
 
 .bands {
   position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-card);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-card);
   background: var(--vp-c-bg-soft);
   overflow: clip;
 }
@@ -167,14 +167,14 @@ function stateClass(id: string) {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--lur-space-2);
+  gap: var(--site-space-2);
   min-height: 120px;
-  padding-block: var(--lur-space-2);
-  padding-inline: var(--lur-space-1-5);
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-1-5);
 }
 
 .band + .band {
-  border-inline-start: var(--lur-border-width) solid var(--vp-c-divider);
+  border-inline-start: var(--site-border-width) solid var(--vp-c-divider);
 }
 
 .band-label {
@@ -195,9 +195,9 @@ function stateClass(id: string) {
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-pill);
-  font-size: var(--lur-text-micro);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-pill);
+  font-size: var(--site-text-micro);
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg);
 }
@@ -205,7 +205,7 @@ function stateClass(id: string) {
 .band-points {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--lur-space-1);
+  gap: var(--site-space-1);
   align-content: flex-start;
 }
 
@@ -217,15 +217,15 @@ function stateClass(id: string) {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-pill);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-pill);
   background: var(--vp-c-bg);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color var(--lur-duration-fast) var(--ease-out),
-    opacity var(--lur-duration-fast) var(--ease-out),
-    transform var(--lur-duration-fast) var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .point img {
@@ -242,12 +242,12 @@ function stateClass(id: string) {
 
 .point.active {
   border-color: var(--vp-c-brand-1);
-  box-shadow: 0 0 0 var(--lur-border-width) var(--vp-c-brand-1);
+  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .point.active {
-    transform: translateY(calc(-1 * var(--lur-border-width)));
+    transform: translateY(calc(-1 * var(--site-border-width)));
   }
 }
 
@@ -258,18 +258,18 @@ function stateClass(id: string) {
 
 /* …and active still reads stronger */
 .point.featured.active {
-  box-shadow: 0 0 0 calc(2 * var(--lur-border-width)) var(--vp-c-brand-1);
+  box-shadow: 0 0 0 calc(2 * var(--site-border-width)) var(--vp-c-brand-1);
 }
 
 .point:focus-visible,
 .legend-entry:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 .ambient {
   display: flex;
-  gap: var(--lur-space-1-5);
+  gap: var(--site-space-1-5);
   margin-block-start: auto;
   color: var(--vp-c-text-3);
   opacity: 0.55;
@@ -281,8 +281,8 @@ function stateClass(id: string) {
 }
 
 .axis-caption {
-  margin-block-start: var(--lur-space-1-5);
-  font-size: var(--lur-text-caption);
+  margin-block-start: var(--site-space-1-5);
+  font-size: var(--site-text-caption);
   color: var(--vp-c-text-2);
   text-align: end;
 }
@@ -290,9 +290,9 @@ function stateClass(id: string) {
 .legend {
   display: flex;
   flex-direction: column;
-  gap: var(--lur-space-1-5);
+  gap: var(--site-space-1-5);
   max-width: 320px;
-  margin-block: var(--lur-space-3) 0;
+  margin-block: var(--site-space-3) 0;
   margin-inline: 0;
   padding: 0;
   list-style: none;
@@ -306,25 +306,25 @@ function stateClass(id: string) {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: var(--lur-space-2);
-  padding-block: var(--lur-space-1-5);
-  padding-inline: var(--lur-space-3);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  gap: var(--site-space-2);
+  padding-block: var(--site-space-1-5);
+  padding-inline: var(--site-space-3);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   background: none;
-  font-size: var(--lur-text-xs);
+  font-size: var(--site-text-xs);
   text-align: start;
   color: var(--vp-c-text-2);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color var(--lur-duration-fast) var(--ease-out),
-    opacity var(--lur-duration-fast) var(--ease-out),
-    transform var(--lur-duration-fast) var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .legend li.featured {
-  margin-block-end: var(--lur-space-1-5);
+  margin-block-end: var(--site-space-1-5);
 }
 
 .legend-entry.featured {
@@ -336,7 +336,7 @@ function stateClass(id: string) {
 .legend-entry.active {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-text-1);
-  box-shadow: 0 0 0 var(--lur-border-width) var(--vp-c-brand-1);
+  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
 }
 
 .legend-mark {
@@ -399,7 +399,7 @@ function stateClass(id: string) {
   }
 
   .band:nth-child(n + 4) {
-    border-block-start: var(--lur-border-width) solid var(--vp-c-divider);
+    border-block-start: var(--site-border-width) solid var(--vp-c-divider);
   }
 
   .band {

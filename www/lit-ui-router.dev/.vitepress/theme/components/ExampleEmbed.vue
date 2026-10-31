@@ -82,7 +82,7 @@ onUnmounted(() => {
     <div class="example-embed-actions">
       <button
         type="button"
-        class="fullscreen-btn lur-button"
+        class="fullscreen-btn site-button"
         :disabled="isFullscreenSupported === false"
         :title="
           isFullscreenSupported === false
@@ -91,7 +91,7 @@ onUnmounted(() => {
         "
         @click="toggleFullscreen"
       >
-        <span class="lur-button-icon">
+        <span class="site-button-icon">
           <sp-icon-full-screen-exit v-if="isFullscreen" />
           <sp-icon-full-screen v-else />
         </span>
@@ -99,16 +99,21 @@ onUnmounted(() => {
       </button>
       <button
         @click="restartIframe"
-        class="restart-btn lur-button"
+        class="restart-btn site-button"
         type="button"
       >
-        <span class="lur-button-icon">
+        <span class="site-button-icon">
           <sp-icon-refresh label="Restart example" />
         </span>
         Restart
       </button>
-      <a :href="src" target="_blank" rel="noopener" class="open-btn lur-button">
-        <span class="lur-button-icon"><sp-icon-link-out /></span>
+      <a
+        :href="src"
+        target="_blank"
+        rel="noopener"
+        class="open-btn site-button"
+      >
+        <span class="site-button-icon"><sp-icon-link-out /></span>
         Open in new tab
       </a>
       <slot></slot>
@@ -127,8 +132,8 @@ onUnmounted(() => {
   height: var(--embed-height, 420px);
   /* Cap tall embeds so small viewports keep the page (svh dodges iOS toolbars). */
   height: min(var(--embed-height, 420px), var(--example-frame-max-height));
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   overflow: clip;
   /* Shows only until the example paints; an example without color-scheme gets the UA's light canvas. */
   background: var(--vp-c-bg);
@@ -142,7 +147,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--example-actions-gap);
   background: var(--vp-c-bg);
-  padding: var(--lur-space-4);
+  padding: var(--site-space-4);
 }
 
 .example-embed:fullscreen iframe,
@@ -166,28 +171,28 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: no-preference) {
   .example-embed {
     transition:
-      padding var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      padding var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .example-embed iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .example-embed:fullscreen iframe,
   .example-embed:-webkit-full-screen iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
+      height var(--site-duration-slow) var(--ease-out),
       width 0s;
   }
 
   .example-embed.fullscreen:fullscreen iframe,
   .example-embed.fullscreen:-webkit-full-screen iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 }
 
@@ -195,7 +200,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--lur-space-3);
+  gap: var(--site-space-3);
   margin-block-start: var(--example-actions-gap);
 }
 </style>

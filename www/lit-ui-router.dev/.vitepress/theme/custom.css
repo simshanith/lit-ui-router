@@ -1,50 +1,50 @@
 /* Theme tokens: spacing on a 4px unit, radii by role, type and icon sizes, durations. */
 :root {
-  --lur-unit: 4px;
-  --lur-space-0-5: calc(0.5 * var(--lur-unit));
-  --lur-space-1: var(--lur-unit);
-  --lur-space-1-5: calc(1.5 * var(--lur-unit));
-  --lur-space-2: calc(2 * var(--lur-unit));
-  --lur-space-3: calc(3 * var(--lur-unit));
-  --lur-space-4: calc(4 * var(--lur-unit));
-  --lur-space-5: calc(5 * var(--lur-unit));
-  --lur-space-6: calc(6 * var(--lur-unit));
-  --lur-space-8: calc(8 * var(--lur-unit));
+  --site-unit: 4px;
+  --site-space-0-5: calc(0.5 * var(--site-unit));
+  --site-space-1: var(--site-unit);
+  --site-space-1-5: calc(1.5 * var(--site-unit));
+  --site-space-2: calc(2 * var(--site-unit));
+  --site-space-3: calc(3 * var(--site-unit));
+  --site-space-4: calc(4 * var(--site-unit));
+  --site-space-5: calc(5 * var(--site-unit));
+  --site-space-6: calc(6 * var(--site-unit));
+  --site-space-8: calc(8 * var(--site-unit));
 
-  --lur-border-width: 1px;
-  --lur-focus-ring-width: 2px;
-  --lur-focus-ring-offset: 1px;
+  --site-border-width: 1px;
+  --site-focus-ring-width: 2px;
+  --site-focus-ring-offset: 1px;
 
   /* Radii by role; a nested corner shares its container's centre: inner = outer − border − inset. */
-  --lur-radius-control: 8px;
-  --lur-radius-card: 12px;
-  --lur-radius-pill: 9999px;
-  --lur-inset-control: var(--lur-space-1);
-  --lur-radius-control-inner: calc(
-    var(--lur-radius-control) - var(--lur-border-width) -
-      var(--lur-inset-control)
+  --site-radius-control: 8px;
+  --site-radius-card: 12px;
+  --site-radius-pill: 9999px;
+  --site-inset-control: var(--site-space-1);
+  --site-radius-control-inner: calc(
+    var(--site-radius-control) - var(--site-border-width) -
+      var(--site-inset-control)
   );
 
-  --lur-text-micro: 10px;
-  --lur-text-caption: 11px;
-  --lur-text-xs: 12px;
-  --lur-text-sm: 14px;
-  --lur-text-md: 15px;
+  --site-text-micro: 10px;
+  --site-text-caption: 11px;
+  --site-text-xs: 12px;
+  --site-text-sm: 14px;
+  --site-text-md: 15px;
 
-  --lur-icon-sm: 20px;
-  --lur-icon-md: 24px;
+  --site-icon-sm: 20px;
+  --site-icon-md: 24px;
 
-  --lur-duration-fast: 150ms;
-  --lur-duration-base: 200ms;
-  --lur-duration-slow: 300ms;
+  --site-duration-fast: 150ms;
+  --site-duration-base: 200ms;
+  --site-duration-slow: 300ms;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* Example embed geometry, shared by LiveExample's reservation and the embeds. */
-  --example-actions-gap: var(--lur-space-2);
+  --example-actions-gap: var(--site-space-2);
   --example-control-size: calc(
-    var(--lur-icon-md) + 2 * (var(--lur-space-1-5) + var(--lur-border-width))
+    var(--site-icon-md) + 2 * (var(--site-space-1-5) + var(--site-border-width))
   );
-  --example-icon-size: var(--lur-icon-md);
+  --example-icon-size: var(--site-icon-md);
   /* Caps a tall frame so a small viewport keeps the page; svh dodges mobile toolbars. */
   --example-frame-max-height: calc(100svh - 120px);
   /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
@@ -68,51 +68,51 @@
 }
 
 /* The theme's one button style; :is() lifts it over .vp-doc a for button-styled links. */
-:is(.lur-button, .vp-doc a.lur-button) {
+:is(.site-button, .vp-doc a.site-button) {
   display: inline-flex;
   align-items: center;
-  gap: var(--lur-space-1-5);
+  gap: var(--site-space-1-5);
   min-block-size: var(--example-control-size);
-  padding-block: var(--lur-space-1-5);
-  padding-inline: var(--lur-space-3);
-  font-size: var(--lur-text-sm);
+  padding-block: var(--site-space-1-5);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
   font-weight: 500;
   color: var(--vp-c-text-1);
   text-decoration: none;
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color var(--lur-duration-base) var(--ease-out),
-    border-color var(--lur-duration-base) var(--ease-out),
-    transform var(--lur-duration-fast) var(--ease-out);
+    background-color var(--site-duration-base) var(--ease-out),
+    border-color var(--site-duration-base) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :is(.lur-button, .vp-doc a.lur-button):hover {
+  :is(.site-button, .vp-doc a.site-button):hover {
     background: var(--vp-c-bg-mute);
     border-color: var(--vp-c-brand-1);
   }
 }
 
-.lur-button:active {
+.site-button:active {
   transform: scale(0.97);
 }
 
-.lur-button:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+.site-button:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
-.lur-button:disabled {
+.site-button:disabled {
   color: var(--vp-c-text-3);
   cursor: not-allowed;
 }
 
 /* Holds the async-loaded icon's box from the server render on. */
-.lur-button-icon {
+.site-button-icon {
   display: inline-flex;
   flex: none;
   inline-size: var(--example-icon-size);
@@ -123,7 +123,7 @@
 .VPHero .tagline a {
   color: var(--vp-c-brand-1);
   text-decoration: none;
-  transition: color var(--lur-duration-base) var(--ease-out);
+  transition: color var(--site-duration-base) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -158,14 +158,14 @@
 
 .vp-doc .badges a.badge>img {
   display: inline-block;
-  border-radius: var(--lur-radius-control-inner);
+  border-radius: var(--site-radius-control-inner);
   box-shadow: 0 0 0 0 currentColor;
-  transition: box-shadow var(--lur-duration-base) var(--ease-out);
+  transition: box-shadow var(--site-duration-base) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .vp-doc .badges a.badge:hover>img {
-    box-shadow: 0 0 var(--lur-space-3) 0 currentColor;
+    box-shadow: 0 0 var(--site-space-3) 0 currentColor;
   }
 }
 
@@ -173,7 +173,7 @@
 .VPHero.has-image .actions.actions {
   display: grid;
   grid-template-columns: repeat(2, auto);
-  gap: var(--lur-space-3);
+  gap: var(--site-space-3);
   inline-size: fit-content;
   margin-inline: auto;
   margin-block: 0;
@@ -199,14 +199,14 @@
 .vp-doc .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--lur-space-2);
-  margin-block: var(--lur-space-4) var(--lur-space-6);
+  gap: var(--site-space-2);
+  margin-block: var(--site-space-4) var(--site-space-6);
 }
 
 /* The atlas thumb on the companion overview: one image per scheme, the
    figure beside the prose from the sidebar breakpoint up. */
 .vp-doc .atlas-thumb {
-  margin-block: var(--lur-space-6);
+  margin-block: var(--site-space-6);
   max-inline-size: 320px;
   margin-inline: auto;
 }
@@ -218,9 +218,9 @@
   aspect-ratio: 3 / 2;
   object-fit: cover;
   object-position: center 8%;
-  border-radius: var(--lur-radius-card);
+  border-radius: var(--site-radius-card);
   box-shadow: 0 0 0 0 currentColor;
-  transition: box-shadow var(--lur-duration-base) var(--ease-out);
+  transition: box-shadow var(--site-duration-base) var(--ease-out);
 }
 
 .vp-doc .atlas-thumb .dark-only,
@@ -234,13 +234,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .vp-doc .atlas-thumb a:hover > img {
-    box-shadow: 0 0 var(--lur-space-3) 0 currentColor;
+    box-shadow: 0 0 var(--site-space-3) 0 currentColor;
   }
 }
 
 .vp-doc .atlas-thumb figcaption {
-  margin-block-start: var(--lur-space-2);
-  font-size: var(--lur-text-sm);
+  margin-block-start: var(--site-space-2);
+  font-size: var(--site-text-sm);
   line-height: 1.5;
   color: var(--vp-c-text-2);
 }
@@ -249,8 +249,8 @@
   .vp-doc .atlas-thumb {
     float: inline-end;
     inline-size: 220px;
-    margin-block: 0 var(--lur-space-4);
-    margin-inline: var(--lur-space-6) 0;
+    margin-block: 0 var(--site-space-4);
+    margin-inline: var(--site-space-6) 0;
   }
 }
 
@@ -287,7 +287,7 @@
 
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
 .VPHero.has-image .image {
-  margin: 0 0 var(--lur-space-8);
+  margin: 0 0 var(--site-space-8);
   container-type: inline-size;
 }
 
@@ -330,7 +330,7 @@
 
 /* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
 .VPHome.VPHome {
-  margin-block-end: var(--lur-space-6);
+  margin-block-end: var(--site-space-6);
 }
 
 @media (min-width: 768px) {
@@ -350,7 +350,7 @@
 
 .box>.VPImage {
   background-color: var(--vp-c-bg);
-  border-radius: var(--lur-radius-control);
+  border-radius: var(--site-radius-control);
 }
 
 @media (min-width: 960px) {

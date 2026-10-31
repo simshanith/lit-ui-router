@@ -51,23 +51,23 @@ function toggle() {
 .framework-card {
   display: flex;
   flex-direction: column;
-  gap: var(--lur-space-2);
+  gap: var(--site-space-2);
   width: 100%;
-  padding: var(--lur-space-4);
+  padding: var(--site-space-4);
   /* the button reset: the card owns its own type and alignment */
   font: inherit;
   text-align: start;
   color: inherit;
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-card);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-card);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    transform var(--lur-duration-fast) var(--ease-out),
-    border-color var(--lur-duration-fast) var(--ease-out),
-    box-shadow var(--lur-duration-fast) var(--ease-out),
-    opacity var(--lur-duration-fast) var(--ease-out);
+    transform var(--site-duration-fast) var(--ease-out),
+    border-color var(--site-duration-fast) var(--ease-out),
+    box-shadow var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out);
 }
 
 .framework-card.active {
@@ -80,14 +80,14 @@ function toggle() {
 }
 
 .framework-card:focus-visible {
-  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
-  outline-offset: var(--lur-focus-ring-offset);
+  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 /* cosmetic lift only — linked highlighting is click-intent */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .framework-card:hover {
-    transform: translateY(calc(-1 * var(--lur-space-0-5)));
+    transform: translateY(calc(-1 * var(--site-space-0-5)));
   }
 }
 
@@ -116,19 +116,19 @@ function toggle() {
 }
 
 .name {
-  font-size: var(--lur-text-md);
+  font-size: var(--site-text-md);
   color: var(--vp-c-text-1);
 }
 
 .blurb {
   display: block;
   margin: 0;
-  font-size: var(--lur-text-sm);
+  font-size: var(--site-text-sm);
   line-height: 1.55;
   color: var(--vp-c-text-2);
 }
 
 .blurb :deep(code) {
-  font-size: var(--lur-text-xs);
+  font-size: var(--site-text-xs);
 }
 </style>

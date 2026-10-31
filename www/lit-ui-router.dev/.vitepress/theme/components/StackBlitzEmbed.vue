@@ -93,11 +93,17 @@ onUnmounted(() => {
       :title="title"
       :height="fallbackHeight"
     >
-      <a :href="openUrl" target="_blank" rel="noopener" class="lur-button">
+      <a :href="openUrl" target="_blank" rel="noopener" class="site-button">
         Open in StackBlitz
       </a>
     </ExampleEmbed>
-    <a v-else :href="openUrl" target="_blank" rel="noopener" class="lur-button">
+    <a
+      v-else
+      :href="openUrl"
+      target="_blank"
+      rel="noopener"
+      class="site-button"
+    >
       Open in StackBlitz
     </a>
   </div>
@@ -118,7 +124,7 @@ onUnmounted(() => {
     <div class="stackblitz-embed-actions">
       <button
         type="button"
-        class="fullscreen-btn lur-button"
+        class="fullscreen-btn site-button"
         :disabled="isFullscreenSupported === false"
         :title="
           isFullscreenSupported === false
@@ -127,14 +133,14 @@ onUnmounted(() => {
         "
         @click="toggleFullscreen"
       >
-        <span class="lur-button-icon">
+        <span class="site-button-icon">
           <sp-icon-full-screen-exit v-if="isFullscreen" />
           <sp-icon-full-screen v-else />
         </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
-      <button @click="refreshIframe" class="refresh-btn lur-button">
-        <span class="lur-button-icon">
+      <button @click="refreshIframe" class="refresh-btn site-button">
+        <span class="site-button-icon">
           <sp-icon-refresh label="Refresh iframe" />
         </span>
       </button>
@@ -160,7 +166,7 @@ onUnmounted(() => {
   min-height: 320px;
   max-height: var(--example-frame-max-height);
   border: 0;
-  border-radius: var(--lur-radius-control);
+  border-radius: var(--site-radius-control);
   overflow: clip;
   margin: auto;
 }
@@ -172,7 +178,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--example-actions-gap);
   background: var(--vp-c-bg);
-  padding: var(--lur-space-4);
+  padding: var(--site-space-4);
 }
 
 .stackblitz-embed:fullscreen iframe,
@@ -198,28 +204,28 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: no-preference) {
   .stackblitz-embed {
     transition:
-      padding var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      padding var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .stackblitz-embed iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 
   .stackblitz-embed:fullscreen iframe,
   .stackblitz-embed:-webkit-full-screen iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
+      height var(--site-duration-slow) var(--ease-out),
       width 0s;
   }
 
   .stackblitz-embed.fullscreen:fullscreen iframe,
   .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
     transition:
-      height var(--lur-duration-slow) var(--ease-out),
-      width var(--lur-duration-slow) var(--ease-out);
+      height var(--site-duration-slow) var(--ease-out),
+      width var(--site-duration-slow) var(--ease-out);
   }
 }
 
@@ -227,37 +233,37 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--lur-space-3);
+  gap: var(--site-space-3);
   margin-block-start: var(--example-actions-gap);
 }
 
 .fallback-note {
-  margin-block: 0 var(--lur-space-2);
-  padding-block: var(--lur-space-2);
-  padding-inline: var(--lur-space-3);
-  font-size: var(--lur-text-sm);
+  margin-block: 0 var(--site-space-2);
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
 }
 
-/* Framed like the sibling .lur-button controls; border present in both states so
+/* Framed like the sibling .site-button controls; border present in both states so
    hover changes color only, never size. */
 .stackblitz-embed-actions :deep(a) {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: var(--lur-border-width) solid var(--vp-c-divider);
-  border-radius: var(--lur-radius-control);
+  border: var(--site-border-width) solid var(--vp-c-divider);
+  border-radius: var(--site-radius-control);
   overflow: clip;
-  transition: border-color var(--lur-duration-base) var(--ease-out);
+  transition: border-color var(--site-duration-base) var(--ease-out);
 }
 
 .stackblitz-embed-actions :deep(a img) {
   display: block;
-  /* Inside the frame's border, level with the sibling .lur-button controls. */
-  height: calc(var(--example-control-size) - 2 * var(--lur-border-width));
+  /* Inside the frame's border, level with the sibling .site-button controls. */
+  height: calc(var(--example-control-size) - 2 * var(--site-border-width));
   /* .vp-doc gives content imgs 16px vertical margin — the actual gap culprit. */
   margin: 0;
 }

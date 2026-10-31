@@ -21,7 +21,7 @@ const carded = frameworks.filter((f) => f.blurb);
 .framework-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
-  gap: var(--lur-space-4);
-  margin-block: var(--lur-space-5);
+  gap: var(--site-space-4);
+  margin-block: var(--site-space-5);
 }
 </style>
