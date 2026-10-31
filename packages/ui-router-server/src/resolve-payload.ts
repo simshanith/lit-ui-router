@@ -71,9 +71,10 @@ export interface ResolvePayload {
 export interface Transporter<T = unknown> {
   /**
    * Encodes `value` as plain JSON data when it is a value this transporter
-   * carries. For any other value it answers with a falsy value, and the next
-   * transporter is asked, so an encoding is never falsy itself. When it
-   * throws, `dehydrate` lists that resolve in `unserializable`.
+   * carries. For any other value it answers with `false`, `null` or
+   * `undefined`, and the next transporter is asked, so an encoding of `false`
+   * or `null` must be wrapped, as in `[false]`; `0` and `""` are encodings.
+   * When it throws, `dehydrate` lists that resolve in `unserializable`.
    */
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- asked about any value a resolve returns that isn't plain JSON data
   encode(value: unknown): JsonValue | false | null | undefined;

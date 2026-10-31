@@ -643,15 +643,22 @@ describe('transport', () => {
     ]);
   });
 
-  it('asks the transporters in key order, the first non-falsy encoding winning', async () => {
+  it('asks the transporters in key order, skipping false, null and undefined', async () => {
     const asked: string[] = [];
+
+    const skip = (
+      name: string,
+      answer: false | null | undefined,
+    ): Transporter => ({
+      encode: () => (asked.push(name), answer),
+      decode: (value) => value,
+    });
 
     const { payload } = await drawn('/app/sheet/7B', {
       transport: {
-        First: {
-          encode: () => (asked.push('First'), 0),
-          decode: (value) => value,
-        },
+        False: skip('False', false),
+        Null: skip('Null', null),
+        Undefined: skip('Undefined', undefined),
         Date: {
           ...DateTransporter,
           encode: (value) => (
@@ -667,10 +674,49 @@ describe('transport', () => {
       shouldDehydrate: ({ token }) => token === 'drawnAt',
     });
 
-    assert.deepEqual(asked, ['First', 'Date']);
+    assert.deepEqual(asked, ['False', 'Null', 'Undefined', 'Date']);
     assert.deepEqual(payload.transported, {
       'app.sheet': { drawnAt: [{ type: 'Date', path: [] }] },
     });
+  });
+
+  it('round-trips a value encoded as 0 or ""', async () => {
+    const Zero: Transporter<Date> = {
+      encode: (value) => value instanceof Date && value.getTime() === 0 && 0,
+      decode: () => new Date(0),
+    };
+
+    const Blank: Transporter<Sheet> = {
+      encode: (value) => value instanceof Sheet && '',
+      decode: () => new Sheet(''),
+    };
+
+    const { payload, unserializable } = await drawn('/app/sheet/7B', {
+      transport: { Zero, Blank },
+    });
+
+    assert.deepEqual(unserializable, []);
+    assert.equal(payload.resolves['app.sheet']?.drawnAt, 0);
+    assert.equal(payload.resolves['app.sheet']?.sheet, '');
+    assert.deepEqual(payload.transported, {
+      'app.sheet': {
+        drawnAt: [{ type: 'Zero', path: [] }],
+        sheet: [{ type: 'Blank', path: [] }],
+      },
+    });
+
+    const { router, calls } = makeRouter();
+    seed(router, roundTrip(payload), { transport: { Zero, Blank } });
+
+    const transition = await settle(router, '/app/sheet/7B');
+    const drawnAt: unknown = transition.injector().get('drawnAt');
+    const sheet: unknown = transition.injector().get('sheet');
+
+    assert.deepEqual([...calls.keys()], ['app.sheet.comments']);
+    assert.ok(drawnAt instanceof Date);
+    assert.equal(drawnAt.getTime(), 0);
+    assert.ok(sheet instanceof Sheet);
+    assert.equal(sheet.num, '');
   });
 
   it('never offers plain JSON data or a declined resolve to a transporter', async () => {
@@ -786,6 +832,64 @@ describe('transport', () => {
 
     assert.equal(client.calls.get('at'), 1);
   });
+
+  it('keeps an own __proto__ key as data beside a carried value', async () => {
+    // SAFETY: the text is a JSON object.
+    const meta = JSON.parse('{"__proto__":{"polluted":1}}') as object;
+
+    const server = oddRouter({ doc: () => ({ at: new Date(0), meta }) });
+
+    const { payload } = dehydrate(await settle(server.router, '/odd'), {
+      transport,
+    });
+
+    assert.deepEqual(payload.transported, {
+      odd: { doc: [{ type: 'Date', path: ['at'] }] },
+    });
+
+    const client = oddRouter({ doc: () => null });
+    seed(client.router, roundTrip(payload), { transport });
+
+    const transition = await settle(client.router, '/odd');
+
+    // SAFETY: the doc resolve returns { at, meta }.
+    const doc = transition.injector().get('doc') as {
+      at: unknown;
+      meta: object;
+    };
+
+    assert.equal(total(client.calls), 0);
+    assert.ok(doc.at instanceof Date);
+    assert.equal(Object.getPrototypeOf(doc.meta), Object.prototype);
+    assert.deepEqual(Object.getOwnPropertyDescriptor(doc.meta, '__proto__'), {
+      value: { polluted: 1 },
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+    assert.equal('polluted' in {}, false);
+  });
+
+  for (const type of ['constructor', '__proto__'])
+    it(`never takes an inherited ${type} for a transporter`, async (t) => {
+      const { payload } = dehydrate(
+        await settle(oddRouter({ at: () => new Date(0) }).router, '/odd'),
+        { transport: Object.fromEntries([[type, DateTransporter]]) },
+      );
+
+      assert.deepEqual(payload.transported, {
+        odd: { at: [{ type, path: [] }] },
+      });
+
+      silenceWarn(t);
+      const client = oddRouter({ at: () => null });
+
+      seed(client.router, roundTrip(payload), { transport: {} });
+      await settle(client.router, '/odd');
+
+      assert.equal(client.calls.get('at'), 1);
+      assert.equal('polluted' in {}, false);
+    });
 
   it('falls back without warning outside development', async (t) => {
     const { payload } = await drawn('/app/sheet/7B', { transport });
