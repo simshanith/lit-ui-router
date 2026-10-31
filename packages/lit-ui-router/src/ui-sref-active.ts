@@ -23,6 +23,7 @@ import {
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
 } from './sref-internals.js';
 import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
@@ -538,6 +539,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
         // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
+      this.element!.addEventListener(
+        UI_SREF_TARGET_REMOVED_EVENT,
+        this.onUiSrefTargetRemovedEvent,
+      );
     }
 
     this.element!.addEventListener(
@@ -619,6 +624,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onUiSrefTargetEvent as EventListener,
     );
     this.element.removeEventListener(
+      UI_SREF_TARGET_REMOVED_EVENT,
+      this.onUiSrefTargetRemovedEvent,
+    );
+    this.element.removeEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
@@ -680,6 +689,25 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target);
     this._linkTargets.set(event.target, targetState);
+
+    if (this._firstUpdated) {
+      this.onStatesChanged();
+    }
+  };
+
+  /** @internal */
+  onUiSrefTargetRemovedEvent = (event: Event): void => {
+    // SAFETY: a link dispatches its own removal, so `target` is the key `onUiSrefTargetEvent` stored
+    const link = event.target as UiSrefElement;
+    const previous = this._linkTargets.get(link);
+
+    if (!previous) {
+      return;
+    }
+
+    this.targetStates.delete(previous);
+    this.uiSrefs.delete(previous);
+    this._linkTargets.delete(link);
 
     if (this._firstUpdated) {
       this.onStatesChanged();
