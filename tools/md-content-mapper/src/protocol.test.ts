@@ -9,10 +9,10 @@ import { blockKey, transform } from './protocol.ts';
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
 
 const source =
-  '```ts\nconst a = 1;\n```\n\n```ts nocheck\nnope;\n```\n\n```ts\nb;\n```\n';
+  '```ts check\nconst a = 1;\n```\n\n```ts\nnope;\n```\n\n```ts check\nb;\n```\n';
 
 describe('transform', () => {
-  it('emits an empty canonical output and one supplemental module per checked fence', () => {
+  it('emits an empty canonical output and one supplemental module per flagged fence', () => {
     const result = transform({
       fileName: '/x.md',
       content: source,
@@ -24,7 +24,7 @@ describe('transform', () => {
       result.supplemental?.map((output) => output.text),
       ['const a = 1;\n', 'b;\n'],
     );
-    assert.deepEqual(result.supplemental?.[0].mappings, [[0, 12, 6, 12, 0]]);
+    assert.deepEqual(result.supplemental?.[0].mappings, [[0, 12, 12, 12, 0]]);
   });
 
   it('leaves out the fences the skip option names', () => {
@@ -41,7 +41,7 @@ describe('transform', () => {
 });
 
 describe('tsc --runExternalCode', () => {
-  it('reports a fence error at its Markdown position and never checks a nocheck fence', () => {
+  it('reports a fence error at its Markdown position and never checks an unflagged fence', () => {
     const result = spawnSync(
       path.join(packageDir, 'node_modules', '.bin', 'tsc'),
       [

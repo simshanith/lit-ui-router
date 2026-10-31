@@ -25,26 +25,35 @@ describe('extractBlocks', () => {
 
   it('records fence lines and the meta after the language', () => {
     const [block] = extractBlocks(
-      `# Title\n\n${fence('ts [main.ts] {2}', 'a;\nb;')}`,
+      `# Title\n\n${fence('ts [main.ts] {2} check', 'a;\nb;')}`,
     );
 
     assert.equal(block.line, 3);
     assert.equal(block.endLine, 6);
-    assert.equal(block.meta, '[main.ts] {2}');
+    assert.equal(block.meta, '[main.ts] {2} check');
     assert.equal(block.skip, undefined);
   });
 
-  it('skips a fence flagged nocheck, outside a title or highlight', () => {
-    const [flagged, inTitle] = extractBlocks(
-      [fence('ts nocheck', 'a;'), fence('ts [nocheck.ts]', 'b;')].join('\n'),
+  it('checks a fence flagged check outside a title or highlight, and skips the rest', () => {
+    const [flagged, titled, inTitle, inHighlight, unflagged] = extractBlocks(
+      [
+        fence('ts check', 'a;'),
+        fence('ts [main.ts] check', 'b;'),
+        fence('ts [check.ts]', 'c;'),
+        fence('ts {check}', 'd;'),
+        fence('ts', 'e;'),
+      ].join('\n'),
     );
 
-    assert.equal(flagged.skip, 'nocheck');
-    assert.equal(inTitle.skip, undefined);
+    assert.equal(flagged.skip, undefined);
+    assert.equal(titled.skip, undefined);
+    assert.equal(inTitle.skip, 'unflagged');
+    assert.equal(inHighlight.skip, 'unflagged');
+    assert.equal(unflagged.skip, 'unflagged');
   });
 
-  it('skips an empty fence', () => {
-    assert.equal(extractBlocks(fence('ts', ''))[0].skip, 'empty');
+  it('skips an empty flagged fence', () => {
+    assert.equal(extractBlocks(fence('ts check', ''))[0].skip, 'empty');
   });
 
   it('maps each line verbatim, past the indent a list strips', () => {

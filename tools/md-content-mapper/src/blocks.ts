@@ -3,10 +3,10 @@ import MarkdownIt from 'markdown-it';
 /** Fence languages this mapper type-checks. */
 export const CHECKED_LANGS: ReadonlySet<string> = new Set(['ts', 'typescript']);
 
-/** Fence meta word that opts a block out of the check. */
-export const SKIP_FLAG = 'nocheck';
+/** Fence meta word that opts a block into the check. */
+export const CHECK_FLAG = 'check';
 
-export type SkipReason = 'nocheck' | 'empty';
+export type SkipReason = 'unflagged' | 'empty';
 
 export interface CodeBlock {
   lang: string;
@@ -40,11 +40,11 @@ const parseInfo = (info: string): { lang: string; meta: string } => {
     : { lang: '', meta: '' };
 };
 
-const hasSkipFlag = (meta: string): boolean =>
+const hasCheckFlag = (meta: string): boolean =>
   meta
     .replace(/\[[^\]]*\]|\{[^}]*\}/g, ' ')
     .split(/\s+/)
-    .includes(SKIP_FLAG);
+    .includes(CHECK_FLAG);
 
 /** Map each content line to the source line it was copied from, minus the container indent markdown-it stripped. */
 const mapLines = (
@@ -99,7 +99,7 @@ export const extractBlocks = (source: string): CodeBlock[] => {
       spans: mapLines(source, starts, token.map[0] + 1, token.content),
     };
 
-    if (hasSkipFlag(meta)) block.skip = 'nocheck';
+    if (!hasCheckFlag(meta)) block.skip = 'unflagged';
     else if (token.content.trim() === '') block.skip = 'empty';
 
     blocks.push(block);

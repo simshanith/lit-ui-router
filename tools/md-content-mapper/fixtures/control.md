@@ -2,14 +2,14 @@
 
 - A list item with an indented fence:
 
-  ```ts
+  ```ts check
   const n: number = 'not a number';
   ```
 
-```ts nocheck
-const skipped: number = 'never reported';
+```ts
+const unflagged: number = 'never reported';
 ```
 
-```typescript [title.ts]
+```typescript [title.ts] check
 export const ok: string = 'fine';
 ```

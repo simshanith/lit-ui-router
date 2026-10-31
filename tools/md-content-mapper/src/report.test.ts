@@ -2,12 +2,17 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { extractBlocks } from './blocks.ts';
-import { attribute, brokenBlocks, parseDiagnostics } from './report.ts';
+import {
+  attribute,
+  brokenBlocks,
+  parseDiagnostics,
+  summarize,
+} from './report.ts';
 
 describe('attribute', () => {
   it('assigns each diagnostic to the fence whose lines hold it', () => {
     const blocks = extractBlocks(
-      '```ts\nx;\n```\n\n```ts\ny(;\n```\n\n```ts\nz;\n```\n',
+      '```ts check\nx;\n```\n\n```ts check\ny(;\n```\n\n```ts check\nz;\n```\n\n```ts\nw;\n```\n',
     );
 
     const diagnostics = parseDiagnostics(
@@ -25,11 +30,16 @@ describe('attribute', () => {
     assert.deepEqual([...broken], ['a.md:1', 'a.md:5']);
     assert.deepEqual(
       attribute(blocksByFile, diagnostics, broken).map((r) => r.status),
-      ['syntax', 'syntax', 'clean'],
+      ['syntax', 'syntax', 'clean', 'skipped'],
     );
     assert.deepEqual(
       attribute(blocksByFile, diagnostics).map((r) => r.status),
-      ['semantic', 'semantic', 'clean'],
+      ['semantic', 'semantic', 'clean', 'skipped'],
     );
+
+    const summary = summarize(attribute(blocksByFile, diagnostics, broken));
+
+    assert.match(summary, /^blocks skipped: 1 \(unflagged 1\)$/m);
+    assert.match(summary, /^blocks checked: 3 of 4$/m);
   });
 });

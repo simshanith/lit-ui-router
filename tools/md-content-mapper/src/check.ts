@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Type-check the repo's Markdown ts fences through the content mapper, then
-// re-run without the syntax-broken fences, since tsc skips every semantic
-// check while any syntax error remains.
+// Type-check the repo's Markdown ts fences flagged `check` through the
+// content mapper, then re-run without the syntax-broken fences, since tsc
+// skips every semantic check while any syntax error remains.
 // Reads the workspace packages' built types, so build first.
 // Usage: check [tsconfig] (default docs/tsconfig.json)
 import { spawnSync } from 'node:child_process';
