@@ -1,0 +1,26 @@
+{
+  "name": "@tools/doc-example-check",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Type-checks the ts code blocks in @example tags of the published sources' doc comments on the TypeScript 7.1 sync API",
+  "type": "module",
+  "scripts": {
+    "check": "./src/check.ts",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tools/bootstrap": "catalog:workspace",
+    "typescript": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:"
+  }
+}

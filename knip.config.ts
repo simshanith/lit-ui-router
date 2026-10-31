@@ -200,6 +200,10 @@ const workspaces = {
     // bundled by path in free-of.test.ts, never imported
     entry: ['fixtures/*.ts'],
   },
+  'tools/doc-example-check': {
+    // read by path in check.test.ts, never imported
+    entry: ['fixtures/*.ts'],
+  },
   'tools/dts-backtest': {
     entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
     // the TS version matrix is imported by computed specifier
