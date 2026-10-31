@@ -66,7 +66,7 @@
     <!-- astronaut sibling -->
     <rect x="584" y="126" width="128" height="110" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="594" y="146" font-size="11" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">galaxy.astronaut</text>
-    <text x="594" y="160" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">astronaut-view</text>
+    <text x="594" y="160" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">astronaut-detail</text>
     <text x="594" y="178" font-size="11" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)">+ /astronaut</text>
     <text x="594" y="198" font-size="10" fill="var(--vp-c-text-2, #67676c)">a sibling of</text>
     <text x="594" y="212" font-size="10" fill="var(--vp-c-text-2, #67676c)">galaxy.stars</text>

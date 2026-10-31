@@ -87,7 +87,7 @@ The `galaxy` state's component is a shell: section navigation plus a `<ui-view>`
 ```typescript
 @customElement('galaxy-shell')
 class GalaxyShellComponent extends LitElement {
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -272,9 +272,9 @@ Note the `:starId` parameter here is a string slug (`sirius`, `proxima-centauri`
 Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of `galaxy.stars`: activating it swaps the entire stars UI out of the shell's `<ui-view>` and renders a 3D model instead — the Smithsonian's high-resolution scan of Neil Armstrong's Apollo 11 spacesuit, displayed with the `<model-viewer>` web component:
 
 ```typescript
-@customElement('astronaut-view')
-class AstronautViewComponent extends LitElement {
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+@customElement('astronaut-detail')
+class AstronautDetailComponent extends LitElement {
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -314,7 +314,7 @@ class AstronautViewComponent extends LitElement {
 const astronautState: LitStateDeclaration = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
-  component: AstronautViewComponent,
+  component: AstronautDetailComponent,
   resolve: [
     {
       // Resolves can await code, not just data: model-viewer loads on state
