@@ -76,6 +76,12 @@ region as updating for assistive technology from the moment the transition
 starts. The promise is handled on both sides because a failed transition
 rejects it, and the error is the `onError` hook's to report.
 
+The recipe assumes LAZY resolves, the default. Core fetches an
+[EAGER](https://ui-router.github.io/core/docs/latest/interfaces/_resolve_interface_.resolvepolicy.html#when)
+resolve from its own `onStart` hook, which runs ahead of this one, so the
+indicator only starts once that fetch settles and never shows for it. For
+EAGER resolves, register the same hook with `onBefore`.
+
 Inside a Lit element, a
 [`TransitionController`](/api/reference/controllers/TransitionController)
 observing `onStart` registers the same hook for as long as the element is
@@ -176,8 +182,8 @@ class ContactList extends LitElement {
 A template function can hand the promise to lit's
 [`until()`](https://lit.dev/docs/templates/directives/#until) instead:
 `until(resolves.contacts.then(renderList), skeleton)`. The `.then()` builds a
-new promise on every render, so the skeleton shows again each time the view
-re-renders.
+new promise on every render, so each re-render rebuilds the skeleton in the
+DOM; it paints only while the promise is pending.
 
 A rejected NOWAIT resolve does not fail the transition, which has already
 succeeded; the component renders that failure itself, as the task's `error`
