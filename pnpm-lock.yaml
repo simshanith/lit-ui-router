@@ -121,6 +121,9 @@ catalogs:
     cf:
       specifier: 1.0.0-beta.24
       version: 1.0.0-beta.24
+    cloudflare-effect-tracer:
+      specifier: ^0.2.0
+      version: 0.2.0
     concurrently:
       specifier: ^10.0.6
       version: 10.0.6
@@ -3049,6 +3052,9 @@ importers:
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
+      cloudflare-effect-tracer:
+        specifier: 'catalog:'
+        version: 0.2.0(effect@4.0.7)
       effect:
         specifier: 'catalog:'
         version: 4.0.7
@@ -6239,6 +6245,11 @@ packages:
   clone@2.1.2:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
+
+  cloudflare-effect-tracer@0.2.0:
+    resolution: {integrity: sha512-DLeh71GqNozHmB7E4E7HR4ttu5jjamK7qjKT3PN4lfwATWxEEsnDv7e9RvmLAEPEgtGyLVnE5u39YwFnNAApPQ==}
+    peerDependencies:
+      effect: ^4.0.0
 
   color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
@@ -12384,6 +12395,10 @@ snapshots:
       wrap-ansi: 9.0.2
 
   clone@2.1.2: {}
+
+  cloudflare-effect-tracer@0.2.0(effect@4.0.7):
+    dependencies:
+      effect: 4.0.7
 
   color-convert@1.9.3:
     dependencies:
