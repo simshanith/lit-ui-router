@@ -44,10 +44,6 @@ const ALLOWED: SplitAllowance[] = [
     why: 'catalogs.peerFloor pins hono-floor to 4.0.0, the ui-router-server peer floor check:bundle bundles against',
   },
   {
-    name: 'lit-ui-router',
-    why: 'peerFloorEffect, peerFloorMobx and peerFloorSignals pin lit-ui-router-floor to 1.15.0 and peerFloorSsr to 1.16.1, each adapter its own published floor',
-  },
-  {
     name: 'lit',
     why: 'the lit-2 alias (catalogs.lit2-compat) runs test:lit2-compat beside the lit 3 line',
   },

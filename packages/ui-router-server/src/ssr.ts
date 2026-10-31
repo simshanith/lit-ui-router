@@ -2,7 +2,8 @@
  * The server side of server-side rendering, for any renderer: moving a server
  * router to a path and waiting for its transition to land, and drawing the
  * resolved values it landed with for `seed` from `ui-router-server/ssr/client`
- * to hand the client's boot transition.
+ * to hand the client's boot transition, plus the types a response state's
+ * handler is bound by.
  *
  * It imports `@uirouter/core` eagerly and no renderer.
  */
@@ -16,11 +17,63 @@ import type {
   UIRouter,
 } from '@uirouter/core';
 
+import type { ResponseState, RouteDeclaration } from './index.ts';
+
 export { dehydrate } from './dehydrate.ts';
 
-export type { DehydrateResult } from './dehydrate.ts';
+export type {
+  DehydrateCandidate,
+  DehydrateOptions,
+  DehydrateResult,
+} from './dehydrate.ts';
 
-export type { JsonValue, ResolvePayload } from './resolve-payload.ts';
+export type {
+  JsonValue,
+  ResolvePayload,
+  Transporter,
+} from './resolve-payload.ts';
+
+/** Resolved values by token, as a transition hands them over: any value a resolve returns. */
+// oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- a resolve returns any value
+export type ResponseResolves = Readonly<Record<string, unknown>>;
+
+/** What a response state's handler reads: the resolves its transition landed with, inherited ones included, and the request. */
+export interface ResponseContext<Resolves extends object = ResponseResolves> {
+  /** The landed state's resolved values by token. */
+  resolves: Resolves;
+  /** The request being answered; a prerender hands over one built from the path. */
+  request: Request;
+}
+
+/** Builds a response state's answer from its {@link ResponseContext}. */
+export type ResponseHandler<
+  Resolves extends object = ResponseContext['resolves'],
+> = (context: ResponseContext<Resolves>) => Response | Promise<Response>;
+
+/**
+ * A handler for every response state a router declares, keyed by state name:
+ * exactly the names of the rows marked `response: true` for `as const`
+ * routes, any name for an untyped router. `Resolves` types each handler's
+ * resolves by state name; a state it omits reads untyped resolves.
+ *
+ * @example
+ * ```ts
+ * const responses = {
+ *   badge: ({ resolves }) => new Response(resolves.svg, { headers: { 'Content-Type': 'image/svg+xml' } }),
+ * } satisfies ResponseHandlers<(typeof routes)[number], { badge: { svg: string } }>;
+ * ```
+ */
+export type ResponseHandlers<
+  Decls extends RouteDeclaration = RouteDeclaration,
+  // oxlint-disable-next-line typescript/no-empty-object-type -- no state's resolves typed
+  Resolves extends object = {},
+> = {
+  readonly [N in ResponseState<Decls>]: ResponseHandler<
+    N extends keyof Resolves
+      ? Resolves[N] & object
+      : ResponseContext['resolves']
+  >;
+};
 
 /** Options for {@link settle | `settle`}. */
 export interface SettleOptions {

@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {
@@ -61,6 +61,14 @@
       "deno": "./dist/register.js",
       "node": "./dist/development/register.js",
       "default": "./dist/register.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "development": "./dist/development/testing.js",
+      "production": "./dist/testing.js",
+      "deno": "./dist/testing.js",
+      "node": "./dist/development/testing.js",
+      "default": "./dist/testing.js"
     }
   },
   "scripts": {
@@ -157,6 +165,20 @@
     "./register": {
       "free": [
         "@lit-labs/ssr",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./testing": {
+      "free": [
+        "@lit-labs/ssr",
+        "@lit-labs/ssr-client",
+        "@uirouter/core",
+        "lit",
+        "lit-ui-router",
+        "ui-router-server",
         "hono",
         "vite",
         "node:fs",

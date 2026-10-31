@@ -28,10 +28,61 @@ export interface ResolvePayload {
    * they stay out, and so does a parameter without a value.
    */
   readonly params: Readonly<Record<string, JsonValue>>;
-  /** Resolved values keyed by state name, then by resolve token. */
+  /**
+   * Resolved values keyed by state name, then by resolve token. A value a
+   * transporter carried, or one nested in it, is its transporter's encoding.
+   */
   readonly resolves: Readonly<
     Record<string, Readonly<Record<string, JsonValue>>>
   >;
+  /**
+   * Where the values transporters encoded sit in
+   * {@link ResolvePayload.resolves | `resolves`}, keyed by state name, then by
+   * resolve token: each one's transporter name and its path of keys from the
+   * resolve's value (`[]` for the value itself). Absent when no transporter
+   * encoded anything.
+   */
+  readonly transported?: Readonly<
+    Record<
+      string,
+      Readonly<
+        Record<
+          string,
+          readonly {
+            /** The name of the transporter that encoded the value. */
+            readonly type: string;
+            /** The keys from the resolve's value to the encoded value; `[]` for the value itself. */
+            readonly path: readonly (string | number)[];
+          }[]
+        >
+      >
+    >
+  >;
+}
+
+/**
+ * Carries one type of value that plain JSON data can't, such as a `Date`,
+ * through the payload. `dehydrate` from `ui-router-server/ssr` and `seed`
+ * from `ui-router-server/ssr/client` take a record of them, keyed by a name
+ * both sides share.
+ *
+ * @typeParam T - the type of value it carries
+ */
+export interface Transporter<T = unknown> {
+  /**
+   * Encodes `value` as plain JSON data when it is a value this transporter
+   * carries. For any other value it answers with `false`, `null` or
+   * `undefined`, and the next transporter is asked, so an encoding of `false`
+   * or `null` must be wrapped, as in `[false]`; `0` and `""` are encodings.
+   * When it throws, `dehydrate` lists that resolve in `unserializable`.
+   */
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- asked about any value a resolve returns that isn't plain JSON data
+  encode(value: unknown): JsonValue | false | null | undefined;
+  /**
+   * Rebuilds the value from what `encode` returned, after a JSON round trip.
+   * When it throws, `seed` adopts nothing for that resolve.
+   */
+  decode(encoded: JsonValue): T;
 }
 
 /**

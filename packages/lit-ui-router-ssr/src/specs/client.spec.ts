@@ -31,6 +31,7 @@ import type {
 } from '../client.js';
 import { signatureBlock } from '../prerender.js';
 import { signatureAttribute, signatureSelector } from '../signature.js';
+import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   DetailView,
@@ -87,12 +88,12 @@ afterEach(() => {
 describe('the round trip', () => {
   it('adopts the server nodes rather than replacing them', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
 
     await boot(container, rootTemplate, '/shell/detail');
 
-    const kept = served.filter((element) => container.contains(element));
-    expect(kept).toHaveLength(served.length);
+    // the one addition is <ui-router>'s shadow <slot>, which the server never draws
+    expect(countRetained(stamp)).toMatchObject({ removed: 0, added: 1 });
     // no fallback anywhere: every part the server wrote matched the client value
     expect(warn).not.toHaveBeenCalled();
   });
@@ -136,7 +137,7 @@ describe('the round trip', () => {
 
   it('wakes every view from its own slot part, with no node marker to help', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
     // `@lit-labs/ssr` emits these only under a host-stack entry it leaks for light-DOM renderers, so nothing here may depend on them.
     expect(dropViewNodeMarkers(container)).toBe(2);
 
@@ -150,9 +151,7 @@ describe('the round trip', () => {
       expect(view.hasUpdated).toBe(true);
     }
 
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(warn).not.toHaveBeenCalled();
     expect(
       comments(container).filter((data) => data.startsWith('served:')),
@@ -180,7 +179,7 @@ describe('the round trip', () => {
 describe('bootstrap', () => {
   it('adopts a document drawn for the state it boots into', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
 
     const result = await bootAt(container, rootTemplate, '/shell/detail');
 
@@ -189,9 +188,7 @@ describe('bootstrap', () => {
       signature: 'matched',
       router: result.router,
     });
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     expect(warn).not.toHaveBeenCalled();
@@ -231,7 +228,7 @@ describe('bootstrap', () => {
   });
 
   it('renders the page once over a document with no signature', async () => {
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       withoutSignature(await drawShell('/shell/detail')),
     );
 
@@ -245,7 +242,7 @@ describe('bootstrap', () => {
       outcome: 'cold',
       signature: 'absent',
     });
-    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(countRetained(stamp)).toMatchObject({ retained: 0 });
     expect(container.querySelectorAll('.detail')).toHaveLength(1);
   });
 
@@ -265,12 +262,12 @@ describe('bootstrap', () => {
       '"version":"99.0.0"',
     );
 
-    const { container, served } = serve(markup);
+    const { container, stamp } = serve(markup);
 
     const matched = await bootAt(container, rootTemplate, '/shell/detail');
 
     expect(matched).toMatchObject({ outcome: 'cold', signature: 'matched' });
-    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(countRetained(stamp)).toMatchObject({ retained: 0 });
 
     const elsewhere = await bootAt(
       serve(markup).container,
@@ -286,7 +283,7 @@ describe('bootstrap', () => {
 
   it('seeds the boot transition with the payload it is handed', async () => {
     const detail = vi.fn(() => 'leaf');
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
 
     const { outcome } = await bootAt(
       container,
@@ -304,16 +301,53 @@ describe('bootstrap', () => {
 
     expect(outcome).toBe('adopted');
     expect(detail).not.toHaveBeenCalled();
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
+  });
+
+  describe('over a form the visitor typed into before boot', () => {
+    /** Types into a served input the way a visitor does: its value changes, its attribute doesn't. */
+    const typeInto = (container: HTMLElement, selector: string): void => {
+      const input = container.querySelector<HTMLInputElement>(selector)!;
+      input.value = 'typed';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    it('keeps the text in an input whose value is bound as an attribute', async () => {
+      const { container } = serve(await drawShell('/shell/form'));
+      const input = container.querySelector('.by-attribute');
+      typeInto(container, '.by-attribute');
+
+      const { signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/form',
+      );
+
+      expect(signature).toBe('matched');
+      expect(container.querySelector('.by-attribute')).toBe(input);
+      expect(
+        container.querySelector<HTMLInputElement>('.by-attribute')?.value,
+      ).toBe('typed');
+    });
+
+    // Hydrate commits property parts, so a `.value` binding overwrites what the visitor typed: bind `value=` instead.
+    it('overwrites the text in an input whose value is bound as a property', async () => {
+      const { container } = serve(await drawShell('/shell/form'));
+      typeInto(container, '.by-property');
+
+      await bootAt(container, rootTemplate, '/shell/form');
+
+      expect(
+        container.querySelector<HTMLInputElement>('.by-property')?.value,
+      ).toBe('drawn');
+    });
   });
 
   describe('comparing the url parameters the document was drawn with', () => {
     it('leaves a config parameter out, so a document drawn for the url adopts', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       // `shell.item` declares a `mode` config parameter the signature never carries.
-      const { container, served } = serve(await drawShell('/shell/item/7'));
+      const { container, stamp } = serve(await drawShell('/shell/item/7'));
       expect(readHydrationSignature(container)?.params).toEqual({ id: '7' });
 
       const { outcome, signature, router } = await bootAt(
@@ -327,11 +361,72 @@ describe('bootstrap', () => {
         outcome: 'adopted',
         signature: 'matched',
       });
-      expect(
-        served.filter((element) => container.contains(element)),
-      ).toHaveLength(served.length);
+      expect(countRetained(stamp)).toMatchObject({ removed: 0 });
       expect(warn).not.toHaveBeenCalled();
     });
+
+    it('shows the booted path parameter, not the drawn one, in a view it adopts', async () => {
+      const { container } = serve(await drawShell('/shell/item/7'));
+
+      await bootAt(container, rootTemplate, '/shell/item/8');
+
+      expect(container.querySelector('.item')?.textContent).toBe('8');
+    });
+
+    it('shows the booted query, not the drawn one, in a view it adopts', async () => {
+      // A CDN-cached search page is drawn once, without a query, and served for every query.
+      const { container } = serve(await drawShell('/shell/search'));
+
+      const { signature } = await bootAt(
+        container,
+        rootTemplate,
+        '/shell/search?q=foo',
+      );
+
+      expect(signature).toBe('elsewhere');
+      expect(container.querySelector('.search')?.textContent).toBe('foo');
+    });
+
+    it.each([
+      ['path parameter', '/shell/item/7', '/shell/item/8', '.item', '8'],
+      ['query', '/shell/search', '/shell/search?q=foo', '.search', 'foo'],
+    ])(
+      'renders the view cold over another %s, keeping its ancestors',
+      async (_, drawnAt, bootedAt, selector, shown) => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        // A CDN-cached search page is drawn once, without a query, and served for every query.
+        const { container } = serve(await drawShell(drawnAt));
+        const shell = container.querySelector('h1');
+        const leaf = container.querySelector(selector);
+        const onAdopt = vi.fn();
+
+        const { outcome, signature } = await bootAt(
+          container,
+          rootTemplate,
+          bootedAt,
+          { onAdopt },
+        );
+
+        expect({ outcome, signature }).toEqual({
+          outcome: 'adopted',
+          signature: 'elsewhere',
+        });
+        expect(container.querySelector(selector)?.textContent).toBe(shown);
+        expect(container.querySelector(selector)).not.toBe(leaf);
+        expect(container.querySelector('h1')).toBe(shell);
+        expect(
+          onAdopt.mock.calls.map(([, out, error]) => [out, error]),
+        ).toEqual([
+          ['adopted', undefined],
+          [
+            'fell-back',
+            'the view was drawn for another state or other url parameters',
+          ],
+        ]);
+        // One state drawn for every value of its url parameters is a shared shell's normal case.
+        expect(warn).not.toHaveBeenCalled();
+      },
+    );
 
     it('tells a boot into other url parameter values from the drawn ones', async () => {
       const { container } = serve(await drawShell('/shell/item/7'));
@@ -374,7 +469,7 @@ describe('bootstrap', () => {
     it('warns once for the boot, renders that view cold, and keeps its ancestors', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       // Drawn with the nested view routed; the client boots into the parent state.
-      const { container, served } = serve(await drawShell('/shell/detail'));
+      const { container, stamp } = serve(await drawShell('/shell/detail'));
       const shell = container.querySelector('h1');
 
       const { outcome, signature } = await bootAt(
@@ -398,9 +493,9 @@ describe('bootstrap', () => {
       expect(container.querySelector('.detail')).toBeNull();
       // the shell's own nodes were hydrated, not thrown away with the mismatch
       expect(container.querySelector('h1')).toBe(shell);
-      expect(served.filter((element) => container.contains(element))).toContain(
-        shell,
-      );
+      expect(
+        stamp.elements.filter((element) => container.contains(element)),
+      ).toContain(shell);
     });
 
     it('says nothing when the document drew that view empty', async () => {
@@ -485,7 +580,7 @@ describe('bootstrap', () => {
   it('renders cold, and resolves with the rejection, when the boot transition fails', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
     const router = makeRouter();
     router.transitionService.onBefore({ to: 'shell.detail' }, () => false);
 
@@ -499,20 +594,20 @@ describe('bootstrap', () => {
 
     expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
     expect(result.error).toMatchObject({ type: RejectType.ABORTED });
-    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(countRetained(stamp)).toMatchObject({ retained: 0 });
     expect(container.querySelector('ui-router')).not.toBeNull();
     expect(container.querySelector('.detail')).toBeNull();
     expect(warn).not.toHaveBeenCalled();
   });
 
   it('renders cold when the url starts no transition', async () => {
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
 
     const result = await bootAt(container, rootTemplate, '/nowhere');
 
     expect(result).toMatchObject({ outcome: 'cold', signature: 'elsewhere' });
     expect(result).not.toHaveProperty('error');
-    expect(served.some((element) => container.contains(element))).toBe(false);
+    expect(countRetained(stamp)).toMatchObject({ retained: 0 });
   });
 
   it('renders cold, and resolves with what the root walk threw, over a template the document was not drawn from', async () => {
@@ -774,7 +869,7 @@ describe('the adopter hydrateRoot provides', () => {
 describe('a view detached before its update flushes', () => {
   it('sleeps until it is re-attached, then adopts through the pin', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell'));
+    const { container, stamp } = serve(await drawShell('/shell'));
     const router = makeRouter();
     await settle(router, '/shell');
     const shell = container.querySelector('h1');
@@ -798,7 +893,9 @@ describe('a view detached before its update flushes', () => {
     // The root provider is gone, so only the pin can have answered.
     expect(view.querySelector('h1')).toBe(shell);
     expect(view.querySelector('h1')?.textContent).toContain('shell hello');
-    expect(served.filter((element) => view.contains(element))).toContain(shell);
+    expect(
+      stamp.elements.filter((element) => view.contains(element)),
+    ).toContain(shell);
     expect(warn).not.toHaveBeenCalled();
     // answered once, then off: nothing on the element is left to answer a second request
     expect(requestContext(view, adoptUiViewContext)).toBeUndefined();
@@ -864,7 +961,7 @@ describe('a view the document drew with authored fallback content', () => {
   it('parks it around the served render it stands in front of', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       await draw(slottedFallbackRootTemplate, [UiViewRenderer], '/shell'),
     );
 
@@ -876,9 +973,9 @@ describe('a view the document drew with authored fallback content', () => {
 
     // Adopted, not re-rendered: the server's own heading is the live one.
     expect(container.querySelector('h1')).toBe(shell);
-    expect(served.filter((element) => container.contains(element))).toContain(
-      shell,
-    );
+    expect(
+      stamp.elements.filter((element) => container.contains(element)),
+    ).toContain(shell);
     expect(container.querySelector('.loading')).toBeNull();
 
     await router.stateService.go('bare');
@@ -1416,15 +1513,13 @@ describe('the hydration signature', () => {
 
   it('adopts with the block in place ahead of the render, and keeps it', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawShell('/shell/detail'));
+    const { container, stamp } = serve(await drawShell('/shell/detail'));
     const signature = container.firstElementChild;
     expect(signature?.matches(signatureSelector)).toBe(true);
 
     await boot(container, rootTemplate, '/shell/detail');
 
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
     expect(container.firstElementChild).toBe(signature);
     expect(readHydrationSignature(container)?.state).toBe('shell.detail');
@@ -1476,13 +1571,11 @@ describe('the hydration signature', () => {
 
   it('adopts a document from another patch on the same release line', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await drawnBy(`${major}.${minor}.999`));
+    const { container, stamp } = serve(await drawnBy(`${major}.${minor}.999`));
 
     await boot(container, rootTemplate, '/shell/detail');
 
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(warn).not.toHaveBeenCalled();
   });
 

@@ -19,9 +19,7 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
-// SAFETY: node's real Response, which the fetch globals shim shadows, has text().
-const bodyText = (res: Response): Promise<string> =>
-  (res as Response & { text(): Promise<string> }).text();
+const bodyText = (res: Response): Promise<string> => res.text();
 
 const ORIGIN = 'https://example.test';
 
@@ -516,6 +514,88 @@ describe('createFetchHandler delegates', () => {
   });
 });
 
+describe('createFetchHandler response states', () => {
+  const routes = [
+    { name: 'about', url: '/about' },
+    { name: 'badge', url: '/badge.svg', response: true },
+  ] as const;
+
+  const router = createServerRouter({ mounts: { '/app': { routes } } });
+
+  const image = (path: string, method = 'GET'): Request =>
+    new Request(`${ORIGIN}${path}`, {
+      method,
+      headers: { accept: 'image/*' },
+    });
+
+  it('hands a GET or HEAD of any Accept to serveResponse, its Response untouched', async () => {
+    const calls: Array<{ verdict: Verdict; request: Request }> = [];
+    const badge = new Response('<svg/>', { status: 200 });
+
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      serveResponse: (verdict, request) => {
+        calls.push({ verdict, request });
+
+        return badge;
+      },
+    });
+
+    const request = image('/app/badge.svg');
+    assert.equal(await handler(request), badge);
+    assert.equal(await handler(navigation('/app/badge.svg')), badge);
+    assert.equal(await handler(image('/app/badge.svg', 'HEAD')), badge);
+    assert.equal(calls[0].request, request);
+    assert.deepEqual(calls[0].verdict, {
+      kind: 'response',
+      mount: '/app',
+      subpath: '/badge.svg',
+      state: 'badge',
+      params: {},
+    });
+    assert.equal(calls.length, 3);
+    assert.equal(await handler(image('/app/about')), null);
+  });
+
+  it('answers another method with a 405', async () => {
+    const handler = createFetchHandler(router, {
+      serveShell: noShell,
+      serveResponse: noShell,
+    });
+
+    const res = await handler(post('/app/badge.svg', ''));
+    assert.equal(res?.status, 405);
+    assert.equal(res?.headers.get('Allow'), 'GET, HEAD');
+  });
+
+  it('throws at construction when a router declares response states without serveResponse', () => {
+    assert.throws(
+      () =>
+        // @ts-expect-error a typed router that declares response states requires serveResponse
+        createFetchHandler(router, { serveShell: noShell }),
+      /No serveResponse for response state 'badge'/,
+    );
+  });
+
+  it('throws per request for a structural router without serveResponse', async () => {
+    const handler = createFetchHandler(
+      routerOf({
+        kind: 'response',
+        mount: '/app',
+        subpath: '/badge.svg',
+        state: 'badge',
+        params: {},
+      }),
+      { serveShell: noShell },
+    );
+
+    await assert.rejects(
+      handler(navigation('/app/badge.svg')),
+      /No serveResponse for response state 'badge'/,
+    );
+  });
+});
+
 describe('createFetchHandler delegate work', () => {
   const routes = [
     { name: 'about', url: '/about' },
@@ -570,7 +650,7 @@ describe('createFetchHandler delegate work', () => {
     const registration = registeredDelegates(router);
     assert.ok(registration);
     const resolve = mock.method(router, 'resolve');
-    const delegateFor = mock.method(registration, 'delegateFor');
+    const markedFor = mock.method(registration, 'markedFor');
 
     const handler = createFetchHandler(router, {
       serveShell: noShell,
@@ -580,7 +660,7 @@ describe('createFetchHandler delegate work', () => {
     assert.equal(await handler(asset('/app/about')), null);
     assert.equal(await handler(post('/app/about', '')), null);
     assert.equal(resolve.mock.callCount(), 0);
-    assert.equal(delegateFor.mock.callCount(), 0);
+    assert.equal(markedFor.mock.callCount(), 0);
   });
 
   it('hands the delegate the in-mount subpath with the original request', async () => {

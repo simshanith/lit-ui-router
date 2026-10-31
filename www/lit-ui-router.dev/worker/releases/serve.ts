@@ -1,17 +1,21 @@
 // The /releases and /gh verdicts as responses: a page rendered with lit-ui-router-ssr, a response state's answer, a redirect, or a 404.
 import { Rejection } from '@uirouter/core';
-import type { StateRule, Transition } from '@uirouter/core';
-import { UIRouterLit, type UIViewResolves } from 'lit-ui-router/pure';
+import { UIRouterLit } from 'lit-ui-router/pure';
 import 'lit-ui-router-ssr/register';
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { prerender, responder, settle } from 'lit-ui-router-ssr';
 import { createServerRouter, mergeSearch } from 'ui-router-server';
+import type { ServerRouter, Verdict } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
 import { type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
 import { mounts, urlConfig } from './routes.ts';
-import { type ReleaseState, releaseStates } from './states.ts';
+import {
+  type ReleaseState,
+  releaseResponses,
+  releaseStates,
+} from './states.ts';
 import { rootView, unavailableView } from './views.ts';
 
 export const resolver = createServerRouter({ mounts });
@@ -51,9 +55,14 @@ const headOf = (router: UIRouterLit): PageHead => {
   };
 };
 
-type Outcome =
-  | { kind: 'page'; status: number; head: PageHead }
-  | { kind: 'response'; response: Response };
+type PageVerdict = Extract<Verdict, { kind: 'shell' }>;
+
+type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
+
+interface Page {
+  status: number;
+  head: PageHead;
+}
 
 const UNAVAILABLE: PageHead = {
   title: 'Releases are unavailable',
@@ -83,37 +92,20 @@ const routerFor = (mount: string, ledger: LedgerReader) => {
 
 type PageRouter = ReturnType<typeof routerFor>;
 
-/** The state the url rule for `subpath` names, without running a transition. */
-const stateAt = (
-  { router, states }: PageRouter,
-  subpath: string,
-): ReleaseState | undefined => {
-  const best = router.urlService.match({ path: subpath, search: {}, hash: '' });
-
-  // SAFETY: a `STATE` rule is core's `StateRule`.
-  return best?.rule.type === 'STATE'
-    ? states.get((best.rule as StateRule).state.name)
-    : undefined;
-};
-
-const resolvesOf = (trans: Transition): UIViewResolves =>
-  Object.fromEntries(
-    trans
-      .getResolveTokens()
-      .filter((token): token is string => typeof token === 'string')
-      .map((token) => [token, trans.injector().get<unknown>(token)]),
-  );
-
-/** Renders one shell verdict's page, or the answer of the response state its transition landed on. */
+/** Renders one shell verdict's page; `failure` is a response state's failed settle, rendered as the page it means. */
 const render = async (
   request: Request,
-  { router, states }: PageRouter,
-): Promise<{ outcome: Outcome; html: string }> => {
-  let outcome: Outcome = { kind: 'page', status: 200, head: UNAVAILABLE };
+  { router }: PageRouter,
+  verdict: PageVerdict,
+  failure?: Error,
+): Promise<{ page: Page; html: string }> => {
+  let page: Page = { status: 200, head: UNAVAILABLE };
   let html = '';
+  // serveReleases already holds the verdict, so the loop resolves nothing again.
+  const decided: ServerRouter = { resolve: () => Promise.resolve(verdict) };
 
   await prerender({
-    resolver,
+    resolver: decided,
     router,
     paths: [new URL(request.url).pathname],
     outDir: '',
@@ -122,22 +114,13 @@ const render = async (
     write: (_file, body) => {
       html = body;
     },
-    renderShell: async (verdict, { subpath }) => {
+    renderShell: async (_verdict, { subpath }) => {
       try {
-        const trans = await settle(router, subpath);
-        const respond = states.get(trans.$to().name)?.respond;
-
-        if (respond) {
-          outcome = {
-            kind: 'response',
-            response: respond({ resolves: resolvesOf(trans), request }),
-          };
-
-          return '';
-        }
+        if (failure) throw failure;
+        await settle(router, subpath);
       } catch (error) {
         if (!(error instanceof Error && isNotInLedger(error))) {
-          outcome = { kind: 'page', status: 503, head: UNAVAILABLE };
+          page = { status: 503, head: UNAVAILABLE };
 
           return unavailableView();
         }
@@ -145,8 +128,7 @@ const render = async (
         await router.stateService.go('notFound', {}, { location: false });
       }
 
-      outcome = {
-        kind: 'page',
+      page = {
         status:
           router.globals.current.name === 'notFound'
             ? 404
@@ -156,11 +138,10 @@ const render = async (
 
       return rootView(router);
     },
-    document: (body) =>
-      outcome.kind === 'page' ? releaseDocument(body, outcome.head) : '',
+    document: (body) => releaseDocument(body, page.head),
   });
 
-  return { outcome, html };
+  return { page, html };
 };
 
 const redirect = (location: string, status: number, url: URL): Response =>
@@ -176,24 +157,77 @@ const cacheControl = (status: number): string =>
 const withoutBody = (response: Response): Response =>
   new Response(null, { status: response.status, headers: response.headers });
 
+/** A response state's answer, or the page its failure means. */
+const respond = async (
+  request: Request,
+  pageRouter: PageRouter,
+  verdict: ResponseVerdict,
+): Promise<Response | Error> => {
+  try {
+    // As a GET, so the edge keeps a body; serveReleases drops it for a HEAD.
+    return await responder(pageRouter.router, releaseResponses)(
+      verdict,
+      new Request(request, { method: 'GET' }),
+    );
+  } catch (error) {
+    if (error instanceof Error) return error;
+    throw error;
+  }
+};
+
+const htmlAnswer = async (
+  request: Request,
+  pageRouter: PageRouter,
+  verdict: PageVerdict,
+  failure?: Error,
+): Promise<Answer> => {
+  const { page, html } = await render(request, pageRouter, verdict, failure);
+  const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
+  headers.set('Cache-Control', cacheControl(page.status));
+
+  return {
+    response: new Response(html, { status: page.status, headers }),
+    cacheable: false,
+  };
+};
+
 /** A response state's answer, which the edge may keep, or the page the transition rendered, which it may not. */
 const answer = async (
   request: Request,
   pageRouter: PageRouter,
+  verdict: PageVerdict | ResponseVerdict,
 ): Promise<Answer> => {
-  const { outcome, html } = await render(request, pageRouter);
+  if (verdict.kind === 'shell') return htmlAnswer(request, pageRouter, verdict);
 
-  if (outcome.kind === 'response')
-    return { response: outcome.response, cacheable: true };
+  const answered = await respond(request, pageRouter, verdict);
 
-  const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
-  headers.set('Cache-Control', cacheControl(outcome.status));
-
-  return {
-    response: new Response(html, { status: outcome.status, headers }),
-    cacheable: false,
-  };
+  return answered instanceof Error
+    ? htmlAnswer(
+        request,
+        pageRouter,
+        { kind: 'shell', mount: verdict.mount },
+        answered,
+      )
+    : { response: answered, cacheable: true };
 };
+
+// A page lives at the slashed spelling; a response state keeps the url it was asked for.
+const wantsSlash = (
+  verdict: PageVerdict | ResponseVerdict,
+  url: URL,
+): boolean =>
+  verdict.kind === 'shell' &&
+  verdict.status === undefined &&
+  !url.pathname.endsWith('/');
+
+const cacheKeyOf = (
+  { states }: PageRouter,
+  verdict: PageVerdict | ResponseVerdict,
+  request: Request,
+): Request | undefined =>
+  verdict.kind === 'response'
+    ? states.get(verdict.state)?.cacheKey?.(request)
+    : undefined;
 
 /** Serves a /releases or /gh request, or returns null for a path neither mount owns; `edge` caches the states that name a key. */
 export const serveReleases = async (
@@ -213,19 +247,15 @@ export const serveReleases = async (
   if (verdict.kind === 'redirect')
     return redirect(slashed(verdict.location), verdict.status, url);
 
+  // Both mounts project otherwise and name no delegates, so only pages and response states remain.
+  if (verdict.kind !== 'shell' && verdict.kind !== 'response') return null;
+
+  if (wantsSlash(verdict, url)) return redirect(`${url.pathname}/`, 308, url);
+
   const pageRouter = routerFor(mount, ledger);
-  const state = stateAt(pageRouter, url.pathname.substring(mount.length));
+  const fresh = () => answer(request, pageRouter, verdict);
 
-  if (
-    verdict.kind === 'shell' &&
-    verdict.status === undefined &&
-    !url.pathname.endsWith('/') &&
-    state?.response !== true
-  )
-    return redirect(`${url.pathname}/`, 308, url);
-
-  const fresh = () => answer(request, pageRouter);
-  const key = state?.cacheKey?.(request);
+  const key = cacheKeyOf(pageRouter, verdict, request);
 
   const response =
     edge === undefined || key === undefined

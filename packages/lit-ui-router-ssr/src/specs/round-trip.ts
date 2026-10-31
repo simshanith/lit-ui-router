@@ -6,6 +6,8 @@ import { settle } from 'ui-router-server/ssr';
 import { bootstrap, hydrateRoot } from '../client.js';
 import type { BootstrapOptions, BootstrapResult } from '../client.js';
 import { renderPage } from '../prerender.js';
+import { stampServed } from '../testing.js';
+import type { ServedStamp } from '../testing.js';
 import { makeRouter } from './fixture.js';
 
 export { stripComments, withoutSignature } from './markup.js';
@@ -42,10 +44,10 @@ const attachShadowRoots = (root: ParentNode): void => {
   }
 };
 
-/** A served container and the elements it held, in document order. */
+/** A served container and the stamp taken of its elements before any boot. */
 export interface Served {
   container: HTMLElement;
-  served: Element[];
+  stamp: ServedStamp;
 }
 
 /** Parses `markup` into a live container and stamps every element it holds. */
@@ -54,13 +56,8 @@ export const serve = (markup: string): Served => {
   document.body.append(container);
   container.innerHTML = markup;
   attachShadowRoots(container);
-  const served = [...container.querySelectorAll('*')];
 
-  for (const [index, element] of served.entries()) {
-    element.setAttribute('data-served', String(index));
-  }
-
-  return { container, served };
+  return { container, stamp: stampServed(container) };
 };
 
 const tick = (): Promise<void> =>

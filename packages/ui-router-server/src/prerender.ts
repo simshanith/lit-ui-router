@@ -1,7 +1,8 @@
 /**
  * A static site from a mount table: each path's verdict becomes a page the
- * caller renders, a host rules line, a warning, or a delegated path for the
- * host's server, written through the caller's `write`.
+ * caller renders, a response state's body or rules line, a host rules line, a
+ * warning, or a delegated path for the host's server, written through the
+ * caller's `write`.
  *
  * It imports no renderer and no filesystem, so it runs under any runtime.
  */
@@ -71,6 +72,18 @@ export interface PrerenderOptions {
     context: RenderContext,
   ) => string | Promise<string>;
   /**
+   * Answers one response verdict: settle the state and run the handler bound
+   * to its name. A 2xx answer's body, read as text, is written to the path
+   * its url spells (`badge.svg`; `index.html` at the mount root), its headers
+   * dropped; a 3xx becomes a rules line to its `Location`; any other status
+   * throws. Runs in the same sequence as `render`. `lit-ui-router-ssr`'s
+   * `prerender` supplies it from the handlers bound by state name.
+   */
+  respond?: (
+    verdict: ResponseVerdict,
+    context: RenderContext,
+  ) => Response | Promise<Response>;
+  /**
    * The 404 document, emitted once from the `otherwise` projection. `false`
    * emits none, and nothing is emitted when the probed mount declares no
    * projection.
@@ -126,6 +139,8 @@ export interface PrerenderTally {
   notFound: number;
   /** Paths a delegating state's host handler answers — see {@link PrerenderResult.delegated}. */
   delegate: number;
+  /** Response states, written as their body or a rules line, counted once each. */
+  response: number;
   /** The 404 document: 1 when the projection produced one, 0 otherwise. */
   document: number;
 }
@@ -150,6 +165,8 @@ export interface PrerenderResult {
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
+type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
+
 const DEFAULT_NOT_FOUND_FILE = '404.html';
 
 // A path no route claims, appended to a mount base for the otherwise probe.
@@ -166,6 +183,10 @@ const subpathIn = (mount: string, path: string): string => {
     ? path.slice(base.length).replace(/\/+$/, '')
     : path;
 };
+
+// The response body's file: the subpath as spelled, or 'index.html' at the mount root.
+const responseFileFor = (subpath: string): string =>
+  subpath.replace(/^\/+/, '').replace(/\/+$/, '') || 'index.html';
 
 // '<subpath>/index.html', or 'index.html' at the mount root.
 const fileFor = (subpath: string): string => {
@@ -204,14 +225,10 @@ const wantsSlashProbe = (
 
 const redirectLines = (
   path: string,
-  verdict: Extract<Verdict, { kind: 'redirect' }>,
+  { location, status }: { location: string; status: number },
   trailingSlash: PrerenderOptions['trailingSlash'],
 ): RedirectLine[] => {
-  const line: RedirectLine = {
-    from: path,
-    to: verdict.location,
-    status: verdict.status,
-  };
+  const line: RedirectLine = { from: path, to: location, status };
 
   const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
 
@@ -270,8 +287,9 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html` holding whatever `render` returns, a redirect
- * becomes a rules line and no page, a delegating state is listed in
+ * `<subpath>/index.html` holding whatever `render` returns, a response
+ * state becomes the body or rules line its `respond` answer carries, a
+ * redirect becomes a rules line and no page, a delegating state is listed in
  * `delegated` and skipped, and the `otherwise` projection becomes the 404
  * document. A verdict kind this package doesn't know throws rather than being
  * counted.
@@ -285,6 +303,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
+ * @throws an `Error` when a path matches a response state and no `respond` is supplied, or its answer is neither a 2xx nor a 3xx with a `Location`
  *
  * @example
  * ```ts
@@ -316,6 +335,7 @@ export async function prerender(
     paths,
     outDir,
     render,
+    respond,
     notFound,
     rules = '_redirects',
     extraRules = [],
@@ -331,6 +351,7 @@ export async function prerender(
     redirect: 0,
     notFound: 0,
     delegate: 0,
+    response: 0,
     document: 0,
   };
 
@@ -353,6 +374,45 @@ export async function prerender(
       file,
       verdict,
       bytes: new TextEncoder().encode(html).length,
+    });
+  };
+
+  const answer = async (
+    verdict: ResponseVerdict,
+    path: string,
+  ): Promise<void> => {
+    const subpath = subpathIn(verdict.mount, path);
+    const file = responseFileFor(subpath);
+
+    if (respond === undefined)
+      throw new Error(
+        `prerender: '${path}' matched response state '${verdict.state}'; pass \`respond\` to answer it`,
+      );
+    const response = await respond(verdict, { path, subpath, file });
+    const { status } = response;
+    const location = response.headers.get('Location');
+    tally.response += 1;
+
+    if (status >= 300 && status < 400 && location !== null) {
+      generated.push(
+        ...redirectLines(path, { location, status }, trailingSlash),
+      );
+
+      return;
+    }
+
+    if (status < 200 || status >= 300)
+      throw new Error(
+        `prerender: response state '${verdict.state}' answered '${path}' with ${status}, which a static host cannot serve`,
+      );
+    const body = await response.text();
+
+    if (!dryRun) await write(joinPath(outDir, file), body);
+    pages.push({
+      path,
+      file,
+      verdict,
+      bytes: new TextEncoder().encode(body).length,
     });
   };
 
@@ -385,6 +445,12 @@ export async function prerender(
     if (verdict.kind === 'redirect') {
       tally.redirect += 1;
       generated.push(...redirectLines(path, verdict, trailingSlash));
+
+      return;
+    }
+
+    if (verdict.kind === 'response') {
+      await answer(verdict, path);
 
       return;
     }

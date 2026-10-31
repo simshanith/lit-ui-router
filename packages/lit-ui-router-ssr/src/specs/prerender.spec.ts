@@ -12,7 +12,7 @@ import { requestRouter } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
-import { settle } from 'ui-router-server/ssr';
+import { dehydrate, settle } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
@@ -422,6 +422,7 @@ describe('dryRun', () => {
       redirect: 1,
       notFound: 1,
       delegate: 0,
+      response: 0,
       document: 1,
     });
     expect(result.rules).toHaveLength(2);
@@ -659,13 +660,17 @@ describe('the hydration signature', () => {
   const version = import.meta.env.PACKAGE_VERSION;
 
   /** Prerenders `paths` with a renderShell that settles the router on each one first. */
-  const settled = (paths: string[]) => {
+  const settled = (
+    paths: string[],
+    overrides: Partial<Parameters<typeof prerender>[0]> = {},
+  ) => {
     const router = sheetRouter();
 
     return run({
       router,
       paths,
       notFound: false,
+      ...overrides,
       renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
         await settle(router, path);
 
@@ -739,6 +744,44 @@ describe('the hydration signature', () => {
       state: 'configured',
       params: { q: '1' },
     });
+  });
+
+  it('carries the resolves the payload hook draws for the landed transition', async () => {
+    const seen: [string, string, string][] = [];
+
+    const { files } = await settled(['/sheet/7B', '/sheet/9'], {
+      payload: (transition, { path }) => {
+        const { num } = transition.params();
+        seen.push([path, transition.to().name ?? '', String(num)]);
+
+        return {
+          ...dehydrate(transition).payload,
+          resolves: { sheet: { title: `</script> ${String(num)}` } },
+        };
+      },
+    });
+
+    expect(seen).toEqual([
+      ['/sheet/7B', 'sheet', '7B'],
+      ['/sheet/9', 'sheet', '9'],
+    ]);
+
+    const page = files.get('dist/sheet/7B/index.html')!;
+
+    expect(signatureText(page)).not.toMatch(/[<>]/);
+    expect(signatureIn(page)).toEqual({
+      version,
+      state: 'sheet',
+      params: { num: '7B' },
+      resolves: { sheet: { title: '</script> 7B' } },
+    });
+  });
+
+  it('writes the same block without resolves when the hook returns none', async () => {
+    const bare = await settled(['/sheet/7B']);
+    const hooked = await settled(['/sheet/7B'], { payload: () => undefined });
+
+    expect(hooked.files).toEqual(bare.files);
   });
 
   it('writes none ahead of a string renderShell returns', async () => {

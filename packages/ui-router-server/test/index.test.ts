@@ -407,14 +407,14 @@ for (const strategy of TIERS) {
 
       for (const path of ['/app/claims', '/app/receipts/7', '/app/claims/3'])
         assert.deepEqual(
-          await registration.delegateFor(path),
+          await registration.markedFor(path),
           ((verdict) => (verdict.kind === 'delegate' ? verdict : null))(
             await router.resolve(path),
           ),
         );
 
       for (const path of ['/app/old-claims', '/app/submit', '/app', '/x'])
-        assert.equal(await registration.delegateFor(path), null);
+        assert.equal(await registration.markedFor(path), null);
     });
 
     it('serves the shell for a child of a delegating state', async () => {
@@ -441,7 +441,7 @@ for (const strategy of TIERS) {
         strategy === 'simulate' ? 'delegate' : 'redirect',
       );
       assert.deepEqual(
-        await registeredDelegates(shadowed)?.delegateFor('/app/claims'),
+        await registeredDelegates(shadowed)?.markedFor('/app/claims'),
         verdict.kind === 'delegate' ? verdict : null,
       );
     });
@@ -548,7 +548,7 @@ describe('delegate configuration', () => {
 
     const registration = registeredDelegates(router);
     assert.ok(registration);
-    assert.equal(await registration.delegateFor('/static/welcome'), null);
+    assert.equal(await registration.markedFor('/static/welcome'), null);
   });
 
   it('matches no delegate when the simulate router throws', async (t) => {
@@ -562,7 +562,126 @@ describe('delegate configuration', () => {
       throw new Error('tripped');
     });
 
-    assert.equal(await registration.delegateFor('/app/claims'), null);
+    assert.equal(await registration.markedFor('/app/claims'), null);
+  });
+});
+
+const responseMount = (strategy: Tier): MountConfig => ({
+  ...tierConfig(strategy),
+  routes: [
+    { name: 'home', url: '' },
+    { name: 'pkg', url: '/{pkg}' },
+    { name: 'pkg.latest', url: '/latest', response: true },
+    // Not inherited: a child of a response state serves the shell.
+    { name: 'pkg.latest.notes', url: '/notes' },
+    { name: 'badge', url: '/badge.svg', response: true },
+    { name: 'claims', url: '/claims', delegate: 'ledger' },
+    { name: 'old', url: '/old-badge', redirectTo: 'badge' },
+  ],
+});
+
+for (const strategy of TIERS) {
+  describe(`response verdicts (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: { '/app': responseMount(strategy) },
+    });
+
+    it('answers a response state with its name and params', async () => {
+      assert.deepEqual(await router.resolve('/app/lit/latest'), {
+        kind: 'response',
+        mount: '/app',
+        subpath: '/lit/latest',
+        state: 'pkg.latest',
+        params: { pkg: 'lit' },
+      });
+      assert.deepEqual(await router.resolve('/app/badge.svg?style=flat'), {
+        kind: 'response',
+        mount: '/app',
+        subpath: '/badge.svg',
+        state: 'badge',
+        params: {},
+      });
+    });
+
+    it('serves the shell for a page and for a child of a response state', async () => {
+      assert.deepEqual(await router.resolve('/app/lit'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+      assert.deepEqual(await router.resolve('/app/lit/latest/notes'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+    });
+
+    it('redirects onto a response state', async () => {
+      assert.deepEqual(await router.resolve('/app/old-badge'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/badge.svg',
+        status: 302,
+      });
+    });
+
+    it('matches response states without a transition, agreeing with resolve', async () => {
+      const registration = registeredDelegates(router);
+      assert.ok(registration);
+      assert.deepEqual([...registration.responses], ['pkg.latest', 'badge']);
+
+      for (const path of ['/app/lit/latest', '/app/badge.svg', '/app/claims'])
+        assert.deepEqual(
+          await registration.markedFor(path),
+          await router.resolve(path),
+        );
+
+      for (const path of ['/app/lit', '/app/lit/latest/notes', '/app'])
+        assert.equal(await registration.markedFor(path), null);
+    });
+
+    it('counts a response state at the bare base as served', () => {
+      const bare = createServerRouter({
+        mounts: {
+          '/feed': {
+            ...tierConfig(strategy),
+            routes: [{ name: 'feed', url: '', response: true }],
+          },
+        },
+      });
+
+      assert.deepEqual(diagnoseMounts(bare), []);
+    });
+  });
+}
+
+describe('response configuration', () => {
+  const mountOf = (routes: MountConfig['routes']) => ({
+    mounts: { '/app': { routes } },
+  });
+
+  it('rejects a url-less, redirecting or delegating response state at construction', () => {
+    assert.throws(
+      () => createServerRouter(mountOf([{ name: 'feed', response: true }])),
+      /response state 'feed' must declare a url/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([
+            { name: 'home', url: '/' },
+            { name: 'feed', url: '/feed', response: true, redirectTo: 'home' },
+          ]),
+        ),
+      /response state 'feed' cannot also declare redirectTo/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter(
+          mountOf([
+            { name: 'feed', url: '/feed', response: true, delegate: 'x' },
+          ]),
+        ),
+      /response state 'feed' cannot also delegate/,
+    );
   });
 });
 

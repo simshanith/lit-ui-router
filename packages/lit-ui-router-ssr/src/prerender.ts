@@ -3,6 +3,7 @@ import { render } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
+import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter, withRouterSync } from 'lit-ui-router/context';
 import { isString } from '@uirouter/core';
@@ -14,9 +15,12 @@ import type {
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
 } from 'ui-router-server/prerender';
+import type { ResolvePayload } from 'ui-router-server/ssr';
 import { devGate } from '#dev-gate';
 
 import { LightElementRenderer } from './light-element-renderer.js';
+import { responder } from './respond.js';
+import type { BoundResponses } from './respond.js';
 import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { UiViewRenderer } from './ui-view-renderer.js';
 
@@ -28,6 +32,8 @@ export type {
 } from 'ui-router-server/prerender';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
+
+type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 
 // Built at runtime so no node: specifier enters the static module graph; a supplied `write` needs none.
 const NODE_FS = 'node:fs/promises';
@@ -68,7 +74,7 @@ export interface RenderContext extends SiteRenderContext {
  */
 export interface PrerenderOptions extends Omit<
   SitePrerenderOptions,
-  'render' | 'write'
+  'render' | 'respond' | 'write'
 > {
   /**
    * The router the render reads: provided on {@link PrerenderOptions.root | root}
@@ -111,8 +117,53 @@ export interface PrerenderOptions extends Omit<
    * `<ui-view>` to fill.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
+  /**
+   * Handlers for the router's response states, keyed by state name, as
+   * {@link responder} takes them. A path that matches one settles
+   * {@link PrerenderOptions.router | router} on it and writes what its
+   * handler answers: a 2xx body at the path its url spells, or a 3xx as a
+   * rules line. The handler's request is a GET for the path at
+   * {@link PrerenderOptions.origin | origin}. Without this option, a response
+   * state throws.
+   */
+  responses?: BoundResponses;
+  /**
+   * The origin of the request a response handler gets, such as
+   * `https://example.com`. Defaults to `http://lit-ui-router-ssr`, a host that
+   * names this package so a url built from it stands out in the output. A
+   * handler that answers with paths needs none; pass the site's own origin
+   * when a handler builds absolute urls from `request.url`.
+   */
+  origin?: string;
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
+  /**
+   * Draws the resolve payload for a rendered page, handed the transition the
+   * router last landed, once `renderShell` has returned a template. The
+   * payload's `resolves` go into the page's hydration signature, beside the
+   * state and parameters the router stands on, and the client adopts them on
+   * boot in place of running those resolve functions. Return `undefined` to
+   * write none. Without this hook no page carries resolves.
+   *
+   * `dehydrate` from `ui-router-server/ssr` draws the payload; its
+   * documentation says which values it leaves out. The payload's
+   * `transported` marks go into the signature too, so a value a transporter
+   * carried is rebuilt when `bootstrap()` gets the same `transport`.
+   *
+   * @example
+   * ```ts
+   * payload: (transition, { path }) => {
+   *   const { payload, unserializable } = dehydrate(transition);
+   *   for (const { state, token } of unserializable)
+   *     console.warn(`${path}: ${state}.${token} re-runs on the client`);
+   *   return payload;
+   * },
+   * ```
+   */
+  payload?: (
+    transition: Transition,
+    context: RenderContext,
+  ) => ResolvePayload | undefined;
 }
 
 /** What {@link prerender} did. */
@@ -137,13 +188,28 @@ interface WrittenSignature {
   readonly version: string;
   readonly state: string;
   readonly params: Readonly<Record<string, string | string[]>>;
+  readonly resolves?: ResolvePayload['resolves'];
+  readonly transported?: ResolvePayload['transported'];
 }
 
-/** The signature of the page `router` currently stands on, encoded as the client compares it. */
-export const signatureOf = (router: UIRouterLit): WrittenSignature => {
-  const [state, params] = routeOf(router.globals);
+/** What a page's signature carries of its resolve payload. */
+type DrawnResolves = Pick<ResolvePayload, 'resolves' | 'transported'>;
 
-  return { version: packageVersion, state, params };
+/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the payload's `resolves` and `transported` when given. */
+export const signatureOf = (
+  router: UIRouterLit,
+  drawn?: DrawnResolves,
+): WrittenSignature => {
+  const [state, params] = routeOf(router.globals);
+  const signature = { version: packageVersion, state, params };
+
+  if (!drawn) return signature;
+
+  const { resolves, transported } = drawn;
+
+  return transported
+    ? { ...signature, resolves, transported }
+    : { ...signature, resolves };
 };
 
 /**
@@ -170,8 +236,9 @@ export const renderPage = (
   router: UIRouterLit,
   root: EventTarget,
   elementRenderers: RenderInfo['elementRenderers'],
+  drawn?: DrawnResolves,
 ): string =>
-  signatureBlock(signatureOf(router)) +
+  signatureBlock(signatureOf(router, drawn)) +
   withRouterSync(router, () =>
     collectResultSync(
       render(body, {
@@ -197,8 +264,10 @@ const warnUnregistered = (): void => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, a redirect becomes a rules line and no page, and the
- * `otherwise` projection becomes the 404 document. The loop is
+ * `<subpath>/index.html`, a response state becomes the body or rules line its
+ * handler in {@link PrerenderOptions.responses | responses} answers, a
+ * redirect becomes a rules line and no page, and the `otherwise` projection
+ * becomes the 404 document. The loop is
  * `ui-router-server/prerender`'s `prerender`; this supplies its lit render.
  *
  * The router is provided on the render root for `context-request` and scoped
@@ -210,7 +279,9 @@ const warnUnregistered = (): void => {
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
  * package's version and the state and parameter values the router stood on,
- * which `hydrateRoot()` reads before it touches the document. A `renderShell`
+ * which `hydrateRoot()` reads before it touches the document. A
+ * {@link PrerenderOptions.payload | `payload`} hook adds the resolved values
+ * the page was drawn with, which `bootstrap()` adopts. A `renderShell`
  * that returns a string is written as-is, with no signature, so the client
  * renders it cold.
  *
@@ -250,10 +321,24 @@ export async function prerender(
     elementRenderers = [UiViewRenderer, LightElementRenderer],
     root = new EventTarget(),
     write = nodeWrite,
+    payload,
+    responses,
+    origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
 
   warnUnregistered();
+
+  const payloadOf = (context: RenderContext): ResolvePayload | undefined => {
+    if (!payload) return undefined;
+
+    // SAFETY: `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
+    const landed = router.globals.successfulTransitions.peekTail() as
+      | Transition
+      | undefined;
+
+    return landed && payload(landed, context);
+  };
 
   const renderLit = async (
     verdict: ShellVerdict,
@@ -264,7 +349,7 @@ export async function prerender(
 
     const markup = isString(body)
       ? body
-      : renderPage(body, router, root, elementRenderers);
+      : renderPage(body, router, root, elementRenderers, payloadOf(context));
 
     return document ? document(markup, context) : markup;
   };
@@ -272,7 +357,27 @@ export async function prerender(
   const uninstall = provideRouter(root, router);
 
   try {
-    const result = await prerenderSite({ ...site, render: renderLit, write });
+    const respond = (
+      verdict: ResponseVerdict,
+      { path }: SiteRenderContext,
+    ): Promise<Response> => {
+      if (responses === undefined)
+        throw new Error(
+          `prerender: '${path}' matched response state '${verdict.state}'; pass \`responses\` to answer it`,
+        );
+
+      return responder(router, responses)(
+        verdict,
+        new Request(new URL(path, origin)),
+      );
+    };
+
+    const result = await prerenderSite({
+      ...site,
+      render: renderLit,
+      respond,
+      write,
+    });
 
     return { ...result, root };
   } finally {

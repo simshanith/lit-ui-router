@@ -37,6 +37,15 @@ export const MarkView: RoutedLitTemplate = () =>
 export const ItemView: RoutedLitTemplate = (props) =>
   html`<p class="item">${String(props.resolves.item ?? '')}</p>`;
 
+/** A leaf drawn from a query parameter, as a search page is: the same template for every query. */
+export const SearchView: RoutedLitTemplate = (props) =>
+  html`<p class="search">${String(props.resolves.query ?? '')}</p>`;
+
+/** A leaf with two inputs drawn with the same value: one bound as an attribute, one as a property. */
+export const FormView: RoutedLitTemplate = () =>
+  html`<input class="by-attribute" value=${'drawn'} />
+    <input class="by-property" .value=${'drawn'} />`;
+
 /** A routed view whose one node is a shadow-DOM element, so the reveal has to reach into its shadow root. */
 export const BadgeView: RoutedLitTemplate = () =>
   html`<shadow-badge></shadow-badge>`;
@@ -150,6 +159,20 @@ export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
         },
       ],
     },
+    {
+      name: 'shell.search',
+      url: '/search?q',
+      component: SearchView,
+      resolve: [
+        {
+          token: 'query',
+          deps: ['$transition$'],
+          resolveFn: (transition: Transition) =>
+            String(transition.params().q ?? ''),
+        },
+      ],
+    },
+    { name: 'shell.form', url: '/form', component: FormView },
     { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];

@@ -15,13 +15,16 @@ const clientSpecs = [
   'src/specs/client.spec.ts',
   'src/specs/light-dom.spec.ts',
   'src/specs/register.spec.ts',
+  'src/specs/resolve-payload.spec.ts',
   'src/specs/served-view.spec.ts',
+  'src/specs/testing.spec.ts',
 ];
 
-// One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports.
+// One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports. A routed class renders into a shadow root, so its specs need that support too.
 const coexistSpecs = [
   'src/specs/client-coexist.spec.ts',
   'src/specs/light-dom-coexist.spec.ts',
+  'src/specs/class-view.spec.ts',
 ];
 
 // Specs that must also hold against the published build of `@lit-labs/ssr-client`.

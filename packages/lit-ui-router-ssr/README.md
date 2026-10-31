@@ -24,14 +24,17 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, and that state's url parameter values. A page `renderShell` returns
-  as a string is written as-is, without one.
+  state the router stood on, that state's url parameter values, and the resolved values the
+  `payload` hook supplies. A page `renderShell` returns as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root` and `elementRenderers`. No SPA catch-all is ever written: one turns every 404 into a 200.
+  `root`, `elementRenderers`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
+  turns every 404 into a 200.
+- **Response states after settle.** `responder` runs the handler bound to a response state's name
+  with the resolves its transition landed with.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
   `lit-ui-router-ssr/client` adopts what it drew.
 
@@ -49,6 +52,9 @@ npm install lit-ui-router-ssr
 `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
 the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-client` is optional:
 install it when you import `lit-ui-router-ssr/client`.
+
+The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the helper `<ui-view>`
+renders through, and the client hands a served class element to the view it wakes.
 
 ## Quick Start
 
@@ -125,6 +131,53 @@ A page fails to land in four ways, and each rejects rather than hangs:
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
 
+## Response states
+
+A [response state](https://lit-ui-router.dev/packages/server#response-states) answers with a
+`Response` built from its resolves instead of a page. `responder(router, responses)` settles
+`router` on the verdict's subpath, query included, runs the handler bound to the landed state's
+name with that transition's resolves (inherited ones included) and the request, and returns the
+`Response` as built; a HEAD gets it without its body. A resolve that throws rejects before any
+handler runs. It fits the fetch adapter's `serveResponse`, and `prerender` takes the same handlers
+as `responses`, writing a 2xx body at the path its url spells or a 3xx as a rules line. See
+[response states](https://lit-ui-router.dev/packages/ssr#response-states).
+
+## Adopting the resolves on boot
+
+The `payload` option hands each rendered page's landed transition to a hook, which returns the
+resolve payload to write. `dehydrate` from `ui-router-server/ssr` draws one, and the hook decides what to do with the resolves it leaves out:
+
+```typescript
+import { prerender } from 'lit-ui-router-ssr';
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) => {
+    const { payload, unserializable } = dehydrate(transition);
+
+    for (const { state, token } of unserializable)
+      console.warn(`${path}: ${state}.${token} re-runs on the client`);
+
+    return payload;
+  },
+});
+```
+
+The payload's `resolves` go into the page's hydration signature, beside `version`, `state` and
+`params`, so the one block is the payload. `bootstrap()` seeds the boot transition from it before
+the router starts: each resolve the page was drawn with adopts its value in place of running its
+function. Every other resolve runs as it would without one: a value `dehydrate` left out, a
+`NOWAIT` resolve, every resolve of a boot that lands on another state or other parameters, and
+every resolve of a page whose block carries no `resolves`. Without the hook no page carries
+resolves. What `dehydrate` draws, and which values it leaves out, is in
+[its documentation](https://lit-ui-router.dev/packages/server#handing-resolves-to-the-client).
+
+A value plain JSON can't carry, such as a `Date`, travels through a transporter. Pass the same
+`transport` to `dehydrate` in the hook and to `bootstrap()`: the signature keeps the payload's
+`transported` marks, and `bootstrap()` hands `transport` to `seed`. See
+[values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json).
+
 ## The routed view, drawn on the server
 
 `elementRenderers` defaults to `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
@@ -137,6 +190,20 @@ component into the element's light DOM between the part markers the element's ow
 hydrates against. An address no state routes gets empty markers. That pair stays plain, so the walk
 hydrating the view's surroundings reads it as the `uiViewSlot()` part and stops there; every marker
 between it carries a prefix, so the same walk reads past the view's interior.
+
+The template comes from `lit-ui-router`'s own render helper, the one `<ui-view>`'s `render()` calls,
+so the served markup and the client's first render share one source. A routed `LitElement` class,
+plain or `sticky`, prerenders too: `lit-ui-router` builds the element and assigns its props, and
+`LitElementRenderer` writes it, shadow root included, into the slot `<ui-view>` places a class in.
+At the wake the served view hands that element to `lit-ui-router`, which adopts it instead of
+building its own, so the element the server wrote is the element the client keeps. A class that
+renders into its own light DOM prerenders into it when it uses
+[`LightDomHydrating`](#light-dom-elements), and hydrates those nodes in place. Without it, the class
+is written as its bare element, with no shadow root to hide its render, and renders on the client. A
+class must be on the `customElements` registry to prerender.
+
+The served `<ui-view>` markup is internal to this package and `lit-ui-router` and changes with them.
+Post-processing of prerendered HTML keys on the [hydration signature](#the-client-half) block.
 
 The use site opts in with `uiViewSlot()`, which is what reaches the renderer's light-DOM render and
 commits nothing on the client:
@@ -362,15 +429,19 @@ const { outcome } = await bootstrap(router, root, page(router));
 - **The boot decides mismatches once.** A boot that lands where the document was drawn adopts every
   view, and a view that still mismatches warns in development: the two halves render that template
   differently. A boot that lands elsewhere — one static document served for a family of urls, or a
-  redirect — adopts the views that match and renders the rest cold without a warning each; once the
-  page is live, the development build warns once, naming both states and how many views rendered
-  cold.
-- **The boot transition takes a seed.** `options.payload` is handed to `seed()` from
+  redirect — adopts the views that match and renders the rest cold without a warning each. A view
+  whose state, or whose url parameters (its own and inherited), differ from the drawn ones renders
+  cold. Once the page is live, a boot into another state warns once in development, naming both
+  states and how many views rendered cold; a boot into other url parameters of the drawn state is
+  silent.
+- **The boot transition is seeded.** The payload the signature carries is handed to `seed()` from
   `ui-router-server/ssr/client` before the router starts, so the boot transition adopts the
-  resolved values a server render drew in place of running their resolve functions.
-- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls `router.start()`,
-  awaits the first successful transition, then `hydrateRoot(root, page(router))`, and renders
-  `page(router)` itself when that returns `false`.
+  resolved values the prerender drew in place of running their resolve functions.
+  `options.payload` takes its place when given.
+- **`hydrateRoot()` is the step underneath.** An app that owns its own boot calls
+  `seed(router, readResolvePayload(root))` and `router.start()`, awaits the first successful
+  transition, then `hydrateRoot(root, page(router))`, and renders `page(router)` itself when that
+  returns `false`.
 - **The signature decides first.** `hydrateRoot()` reads the container's hydration signature before
   it touches the document, and returns `false` over an emptied container when there is none — a
   cold client render, a dev server, a page from an earlier `prerender()`, a string `renderShell` —
@@ -499,6 +570,46 @@ so an app that never prerenders carries none of it — Qwik, which resumes rathe
 the grid entirely.
 
 The [guide](https://lit-ui-router.dev/packages/ssr#how-this-compares) carries the longer discussion.
+
+## Measuring the round trip
+
+`lit-ui-router-ssr/testing` counts how many of the server's elements survive the boot. It imports
+nothing — no lit, no router — and runs anywhere there is a DOM. `stampServed(root)` takes every
+element under `root`, open shadow roots included, before the client boots; `countRetained(stamp)`
+returns `{ served, retained, removed, added }` after it. A hydrated page keeps `removed` at 0. A view
+the client rendered over counts its served elements as removed and its new ones as added; an element
+a component draws in `firstUpdated`, or the shadow `<slot>` each `<ui-router>` renders, counts only
+as added.
+
+```ts
+import { countRetained, stampServed } from 'lit-ui-router-ssr/testing';
+
+const stamp = stampServed(container); // after the prerender is parsed in, before bootstrap()
+await bootstrap(router, container, page(router));
+expect(countRetained(stamp)).toMatchObject({ removed: 0 });
+```
+
+In a browser the stamp and the count must run in the page. Each helper is self-contained, so its
+source text is valid page script. In Playwright, an init script stamps the body when parsing ends,
+before module scripts run:
+
+```ts
+import { countRetained, stampServed } from 'lit-ui-router-ssr/testing';
+
+await page.addInitScript(`
+  const stampServed = ${stampServed};
+  window.countRetained = ${countRetained};
+  document.addEventListener('readystatechange', () => {
+    if (document.readyState === 'interactive') window.servedStamp = stampServed(document.body);
+  });
+`);
+await page.goto('/sheet/7B/');
+await page.waitForFunction(() => !document.querySelector('[defer-hydration]'));
+
+expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
+  removed: 0,
+});
+```
 
 ## Documentation
 
