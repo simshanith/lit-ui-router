@@ -175,5 +175,11 @@ change before the incoming element has rendered, so during the hold a
 `[routed]` rule styles the incoming element, not the outgoing one still on
 screen.
 
+A template component can also swap its elements without the view updating,
+as `until()` does when its content replaces a placeholder. `routedElement`
+returns the new first element at once, and the `routed` attribute follows a
+microtask later, so code that reads `[routed]` in the same task as the swap
+still finds the old element.
+
 The attribute is set when the view renders in the browser, so a prerendered
 page carries it once its views have hydrated.
