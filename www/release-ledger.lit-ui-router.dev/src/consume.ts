@@ -169,6 +169,11 @@ const distTagChanges = (
 
 const handleClaim = (message: LedgerMessage, claim: Claim) =>
   Effect.gen(function* () {
+    yield* Effect.annotateCurrentSpan({
+      'ledger.package': claim.name,
+      'ledger.version': claim.version,
+    });
+
     if (Option.isSome(yield* findClaim({ message_id: message.id }))) {
       return ACK;
     }
@@ -327,6 +332,14 @@ export const consume = (batch: LedgerBatch) =>
         batch.queue === DEAD_LETTER_QUEUE
           ? exhaust(message)
           : decodeOrBury(message),
+      ).pipe(
+        Effect.withSpan('ledger.message', {
+          attributes: {
+            'messaging.destination.name': batch.queue,
+            'messaging.message.id': message.id,
+            'messaging.message.attempts': message.attempts,
+          },
+        }),
       ),
     { discard: true },
   );
