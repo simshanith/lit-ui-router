@@ -24,11 +24,10 @@ const openUrl = computed(() => {
 
 const container = useTemplateRef('container');
 
-const isFullscreenSupported = ref(false);
+// Unknown until mounted; the button renders either way so the row never reflows.
+const isFullscreenSupported = ref<boolean>();
 
 const isFullscreen = ref(false);
-
-const iconsLoaded = ref(false);
 
 const toggleFullscreen = () => {
   if (screenfull.isEnabled && container.value) {
@@ -48,13 +47,12 @@ function refreshIframe() {
   if (el) el.src += '';
 }
 
-async function loadIcons() {
-  await Promise.all([
+function loadIcons() {
+  return Promise.all([
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
   ]);
-  iconsLoaded.value = true;
 }
 
 if (!import.meta.env.SSR) {
@@ -119,17 +117,26 @@ onUnmounted(() => {
     />
     <div class="stackblitz-embed-actions">
       <button
-        v-if="isFullscreenSupported"
         type="button"
         class="fullscreen-btn btn"
+        :disabled="isFullscreenSupported === false"
+        :title="
+          isFullscreenSupported === false
+            ? 'Fullscreen is not supported in this browser'
+            : undefined
+        "
         @click="toggleFullscreen"
       >
-        <sp-icon-full-screen-exit v-if="iconsLoaded && isFullscreen" />
-        <sp-icon-full-screen v-if="iconsLoaded && !isFullscreen" />
+        <span class="btn-icon">
+          <sp-icon-full-screen-exit v-if="isFullscreen" />
+          <sp-icon-full-screen v-else />
+        </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
       <button @click="refreshIframe" class="refresh-btn btn">
-        <sp-icon-refresh v-if="iconsLoaded" label="Refresh iframe" />
+        <span class="btn-icon">
+          <sp-icon-refresh label="Refresh iframe" />
+        </span>
       </button>
       <slot></slot>
     </div>
@@ -158,17 +165,30 @@ onUnmounted(() => {
   margin: auto;
 }
 
+/* The frame flexes into whatever the padding, gap and a wrapped action row leave. */
 .stackblitz-embed:fullscreen,
 .stackblitz-embed:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--example-actions-gap);
   background: var(--vp-c-bg);
   padding: 16px;
 }
 
 .stackblitz-embed:fullscreen iframe,
 .stackblitz-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px);
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  aspect-ratio: auto;
   border-radius: 8px;
   width: 88%;
+}
+
+.stackblitz-embed:fullscreen .stackblitz-embed-actions,
+.stackblitz-embed:-webkit-full-screen .stackblitz-embed-actions {
+  margin-block-start: 0;
 }
 
 .stackblitz-embed.fullscreen:fullscreen iframe,
@@ -212,7 +232,7 @@ onUnmounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-block-start: 8px;
+  margin-block-start: var(--example-actions-gap);
 }
 
 .fallback-note {
@@ -239,6 +259,7 @@ onUnmounted(() => {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
+  min-block-size: var(--example-control-size);
   cursor: pointer;
   touch-action: manipulation;
   transition:
@@ -261,6 +282,19 @@ onUnmounted(() => {
 .btn:focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 1px;
+}
+
+.btn:disabled {
+  color: var(--vp-c-text-3);
+  cursor: not-allowed;
+}
+
+/* Holds the async-loaded icon's box from the server render on. */
+.btn-icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--example-icon-size);
+  block-size: var(--example-icon-size);
 }
 
 /* Framed like the sibling .btn controls; border present in both states so

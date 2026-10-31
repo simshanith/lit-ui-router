@@ -1,5 +1,9 @@
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Example embed geometry, shared by LiveExample's reservation and the embeds. */
+  --example-actions-gap: 8px;
+  --example-control-size: 38px;
+  --example-icon-size: 24px;
   /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
      320px, giving the deep API identifiers room to sit on one line. The
      ≥1440px width formula derives from this variable too. */
