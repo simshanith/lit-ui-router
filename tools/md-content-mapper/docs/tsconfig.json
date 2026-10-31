@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleDetection": "force",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler"
+  },
+  "contentMappers": [
+    {
+      "package": "..",
+      "extensions": [".md"]
+    }
+  ],
+  "include": [
+    "../../../*.md",
+    "../../../apps/*.md",
+    "../../../docs/*.md",
+    "../../../packages/*/*.md",
+    "../../../www/lit-ui-router.dev/**/*.md"
+  ],
+  "exclude": [
+    "../../../**/node_modules",
+    "../../../**/dist",
+    "../../../**/CHANGELOG.md",
+    "../../../www/lit-ui-router.dev/api/*/**/*"
+  ]
+}

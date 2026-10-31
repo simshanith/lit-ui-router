@@ -454,6 +454,7 @@
         "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",
+        "tools/md-content-mapper/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/release-config/**/*.test.ts",
