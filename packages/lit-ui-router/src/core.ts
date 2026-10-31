@@ -80,7 +80,7 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  *
  * @example Basic usage
  * ```ts
- * import { UIRouterLit } from 'lit-ui-router';
+ * import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
  * import { hashLocationPlugin } from '@uirouter/core';
  *
  * // Create router instance
@@ -90,11 +90,10 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  * router.plugin(hashLocationPlugin);
  *
  * // Register states
- * router.stateRegistry.register({
- *   name: 'home',
- *   url: '/home',
- *   component: HomeComponent
- * });
+ * const states: LitStateDeclaration[] = [
+ *   { name: 'home', url: '/home', component: HomeComponent },
+ * ];
+ * states.forEach((state) => router.stateRegistry.register(state));
  *
  * // Start the router
  * router.start();
@@ -106,10 +105,8 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  * import { pushStateLocationPlugin } from '@uirouter/core';
  *
  * const router = new UIRouterLit();
+ * // Reads the base URL from the document's <base href="/app/"> tag
  * router.plugin(pushStateLocationPlugin);
- *
- * // Configure base URL for push state
- * router.urlService.config.baseHref('/app/');
  *
  * router.start();
  * ```
