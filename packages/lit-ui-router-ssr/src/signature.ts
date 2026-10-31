@@ -60,8 +60,11 @@ export const urlParamsOf = (
   Object.fromEntries(
     state
       .parameters()
-      .filter((param) => param.location !== DefType.CONFIG)
-      .map((param) => [param.id, param.type.encode(params[param.id])]),
+      .flatMap((param): [string, string | string[]][] =>
+        param.location === DefType.CONFIG
+          ? []
+          : [[param.id, param.type.encode(params[param.id])]],
+      ),
   );
 
 /**
