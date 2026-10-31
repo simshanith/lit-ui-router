@@ -652,6 +652,8 @@ router.stateRegistry.register(astronautState);
 
 router.urlService.rules.initial({ state: 'galaxy.stars' });
 
+router.urlService.rules.otherwise({ state: 'galaxy.stars' });
+
 router.start();
 
 // Render
