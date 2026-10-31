@@ -175,9 +175,6 @@ export interface UiSrefActiveParams {
   targetStates: TargetState[];
 }
 
-/** @internal */
-let _first: UiSrefActiveDirective | null = null;
-
 type deregisterFn = () => void;
 
 /**
@@ -310,8 +307,6 @@ export class UiSrefActiveDirective extends AsyncDirective {
         'The `uiSrefActive` directive must be used as an element',
       );
     }
-
-    _first = _first || this;
   }
 
   /** @internal */
