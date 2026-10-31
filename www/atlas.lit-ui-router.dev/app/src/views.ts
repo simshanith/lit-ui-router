@@ -411,6 +411,7 @@ export class AtlasThemer extends LightDomHydrating(LitElement) {
     const button = (value: ThemeChoice, label: string): TemplateResult => html`
       <button
         type="button"
+        data-choice=${value}
         aria-pressed=${this.choice === value ? 'true' : 'false'}
         @click=${() => this.#pick(value)}
       >

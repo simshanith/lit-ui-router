@@ -340,7 +340,9 @@ and reads nothing but `document` and `localStorage`: a stored `light` or `dark` 
 `auto` is removed, and with nothing stored a `data-theme` the host stamped is kept, which is how
 the claude.ai Artifact pins the viewer's theme. `npm test` runs the inline text with only those
 two names in scope and `readTheme` + `applyTheme` over the same stored values and stamps, and
-asserts the one attribute; the ship `app` step runs it after the typecheck.
+asserts the one attribute; the ship `app` step runs it after the typecheck. The themer's underline
+follows the root's `data-theme` through each button's `data-choice`, so it stands under the pinned
+choice from the first frame too; the served `aria-pressed` reads `auto` until the client renders.
 
 **Enlarge (`src/lightbox.ts`).** Every figure — a plate, a lane's stage, the frame of the city,
 the plant or the bricks — is a `.fillable` box with one `.fill` button reading ENLARGE, and the

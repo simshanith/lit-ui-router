@@ -741,7 +741,10 @@
         opacity: 0;
         pointer-events: none;
       }
-      .themer button[aria-pressed='true'] {
+      /* the underline follows the root's data-theme, set before first paint; the served aria-pressed is auto until the client renders */
+      :root:not([data-theme]) .themer button[data-choice='auto'],
+      :root[data-theme='light'] .themer button[data-choice='light'],
+      :root[data-theme='dark'] .themer button[data-choice='dark'] {
         color: var(--ink);
         border-block-end-color: var(--accent);
       }
