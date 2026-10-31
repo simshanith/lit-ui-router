@@ -51,23 +51,23 @@ function toggle() {
 .framework-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--lur-space-2);
   width: 100%;
-  padding: 16px;
+  padding: var(--lur-space-4);
   /* the button reset: the card owns its own type and alignment */
   font: inherit;
   text-align: start;
   color: inherit;
   background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
+  border: var(--lur-border-width) solid var(--vp-c-divider);
+  border-radius: var(--lur-radius-card);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    transform 0.15s var(--ease-out),
-    border-color 0.15s var(--ease-out),
-    box-shadow 0.15s var(--ease-out),
-    opacity 0.15s var(--ease-out);
+    transform var(--lur-duration-fast) var(--ease-out),
+    border-color var(--lur-duration-fast) var(--ease-out),
+    box-shadow var(--lur-duration-fast) var(--ease-out),
+    opacity var(--lur-duration-fast) var(--ease-out);
 }
 
 .framework-card.active {
@@ -80,14 +80,14 @@ function toggle() {
 }
 
 .framework-card:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--lur-focus-ring-offset);
 }
 
 /* cosmetic lift only — linked highlighting is click-intent */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .framework-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(calc(-1 * var(--lur-space-0-5)));
   }
 }
 
@@ -116,19 +116,19 @@ function toggle() {
 }
 
 .name {
-  font-size: 15px;
+  font-size: var(--lur-text-md);
   color: var(--vp-c-text-1);
 }
 
 .blurb {
   display: block;
   margin: 0;
-  font-size: 13.5px;
+  font-size: var(--lur-text-sm);
   line-height: 1.55;
   color: var(--vp-c-text-2);
 }
 
 .blurb :deep(code) {
-  font-size: 12px;
+  font-size: var(--lur-text-xs);
 }
 </style>

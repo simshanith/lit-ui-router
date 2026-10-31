@@ -164,7 +164,7 @@ onMounted(() => {
 
 <style scoped>
 .live-example {
-  margin-block: 16px;
+  margin-block: var(--lur-space-4);
 }
 
 .live-example-bar {
@@ -173,34 +173,34 @@ onMounted(() => {
   flex-wrap: wrap;
   /* Links sit at the end of a shared row and at the start once wrapped. */
   justify-content: space-between;
-  gap: 12px;
-  margin-block-end: 8px;
+  gap: var(--lur-space-3);
+  margin-block-end: var(--lur-space-2);
 }
 
 .live-example-tablist {
   display: inline-flex;
-  gap: 4px;
-  padding: 3px;
+  gap: var(--lur-space-1);
+  padding: var(--lur-inset-control);
   background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border: var(--lur-border-width) solid var(--vp-c-divider);
+  border-radius: var(--lur-radius-control);
 }
 
 .tab {
-  padding-block: 5px;
-  padding-inline: 12px;
-  font-size: 14px;
+  padding-block: var(--lur-space-1);
+  padding-inline: var(--lur-space-3);
+  font-size: var(--lur-text-sm);
   font-weight: 500;
   color: var(--vp-c-text-2);
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--lur-radius-control-inner);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color 0.2s var(--ease-out),
-    color 0.2s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    background-color var(--lur-duration-base) var(--ease-out),
+    color var(--lur-duration-base) var(--ease-out),
+    transform var(--lur-duration-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -214,20 +214,20 @@ onMounted(() => {
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--lur-focus-ring-offset);
 }
 
 .tab.active {
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg);
-  box-shadow: 0 0 0 1px var(--vp-c-divider);
+  box-shadow: 0 0 0 var(--lur-border-width) var(--vp-c-divider);
 }
 
 .live-example-links {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--lur-space-2);
 }
 
 .open-badge,
@@ -235,24 +235,24 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  border: var(--lur-border-width) solid var(--vp-c-divider);
+  border-radius: var(--lur-radius-control);
   overflow: clip;
-  transition: border-color 0.2s var(--ease-out);
+  transition: border-color var(--lur-duration-base) var(--ease-out);
 }
 
 .source-link {
   justify-content: center;
-  inline-size: 38px;
-  block-size: 38px;
+  inline-size: var(--example-control-size);
+  block-size: var(--example-control-size);
   color: var(--vp-c-text-1);
-  font-size: 20px;
+  font-size: var(--lur-icon-sm);
   background: var(--vp-c-bg-soft);
 }
 
 .source-link:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--lur-focus-ring-width) solid var(--vp-c-brand-1);
+  outline-offset: var(--lur-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -264,7 +264,7 @@ onMounted(() => {
 
 .open-badge img {
   display: block;
-  height: 36px;
+  height: calc(var(--example-control-size) - 2 * var(--lur-border-width));
   /* The width/height attributes give the ratio before the badge loads. */
   width: auto;
   /* .vp-doc gives content imgs 16px vertical margin — kill the gap. */
@@ -275,7 +275,7 @@ onMounted(() => {
    doesn't shift the page. */
 .live-example-panels {
   min-height: calc(
-    min(var(--embed-height, 420px), 100svh - 120px) +
+    min(var(--embed-height, 420px), var(--example-frame-max-height)) +
       var(--example-actions-gap) + var(--example-control-size)
   );
 }
@@ -288,13 +288,13 @@ onMounted(() => {
 }
 
 .fallback-note {
-  padding-block: 8px;
-  padding-inline: 12px;
-  font-size: 14px;
+  padding-block: var(--lur-space-2);
+  padding-inline: var(--lur-space-3);
+  font-size: var(--lur-text-sm);
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  border: var(--lur-border-width) solid var(--vp-c-divider);
+  border-radius: var(--lur-radius-control);
 }
 
 .fallback-note p {
