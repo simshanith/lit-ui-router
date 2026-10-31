@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
+import { VPIcon } from 'vitepress/theme';
 
 // Same-origin iframe embed for the tutorial examples served at
 // /examples/<name>/ — no StackBlitz boot, just the built app.
@@ -36,19 +37,6 @@ function restartIframe() {
   const el = iframe.value;
 
   if (el) el.src += '';
-}
-
-function loadIcons() {
-  return Promise.all([
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-link-out.js'),
-  ]);
-}
-
-if (!import.meta.env.SSR) {
-  loadIcons();
 }
 
 onMounted(async () => {
@@ -91,9 +79,18 @@ onUnmounted(() => {
         "
         @click="toggleFullscreen"
       >
+        <!-- Both render: the build only ships CSS for icons in the server render. -->
         <span class="site-button-icon">
-          <sp-icon-full-screen-exit v-if="isFullscreen" />
-          <sp-icon-full-screen v-else />
+          <VPIcon
+            v-show="!isFullscreen"
+            icon="lucide:maximize"
+            aria-hidden="true"
+          />
+          <VPIcon
+            v-show="isFullscreen"
+            icon="lucide:minimize"
+            aria-hidden="true"
+          />
         </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
@@ -103,7 +100,7 @@ onUnmounted(() => {
         type="button"
       >
         <span class="site-button-icon">
-          <sp-icon-refresh label="Restart example" />
+          <VPIcon icon="lucide:rotate-cw" aria-hidden="true" />
         </span>
         Restart
       </button>
@@ -113,7 +110,9 @@ onUnmounted(() => {
         rel="noopener"
         class="open-btn site-button"
       >
-        <span class="site-button-icon"><sp-icon-link-out /></span>
+        <span class="site-button-icon">
+          <VPIcon icon="lucide:external-link" aria-hidden="true" />
+        </span>
         Open in new tab
       </a>
       <slot></slot>

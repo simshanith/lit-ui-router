@@ -167,12 +167,15 @@
   cursor: not-allowed;
 }
 
-/* Holds the async-loaded icon's box from the server render on. */
+/* UI icons are Lucide through VPIcon, drawn at --site-icon-sm in a fixed box. */
 .site-button-icon {
   display: inline-flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
   inline-size: var(--example-icon-size);
   block-size: var(--example-icon-size);
+  font-size: var(--site-icon-sm);
 }
 
 /* Style links in the homepage tagline */

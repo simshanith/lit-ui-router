@@ -22,6 +22,7 @@ catalog:
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
   '@effect/sql-d1': ^4.1.0
+  '@iconify-json/lucide': ^1.2.149
   '@lit-labs/signals': ^0.3.0
   '@lit-labs/ssr': ^4.1.0
   '@lit-labs/ssr-client': ^1.1.8
@@ -33,7 +34,6 @@ catalog:
   '@pnpm/workspace.projects-reader': 1101.1.6
   '@pnpm/workspace.workspace-manifest-reader': 1100.3.2
   '@release-it/conventional-changelog': ^12.0.2
-  '@spectrum-web-components/icons-workflow': ^1.12.5
   '@types/dom-navigation': ^1.0.7
   '@types/lodash-es': ^4.17.12
   '@types/node': ^24.19.2

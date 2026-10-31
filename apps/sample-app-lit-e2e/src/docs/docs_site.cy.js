@@ -15,9 +15,9 @@ describe('docs site', () => {
 
   it('navigates without a full page load', () => {
     cy.visit('/tutorial/live-examples');
-    // The refresh icon only upgrades after Vue mounts (see the ExampleEmbed
-    // spec below), so waiting on it keeps the click from racing hydration.
-    cy.get('.restart-btn sp-icon-refresh:defined').should('exist');
+    // Vue sets __vue_app__ on #app once it mounts, so waiting on it keeps the
+    // click from racing hydration.
+    cy.get('#app').its('0.__vue_app__').should('exist');
     cy.window().then((win) => {
       win.hydrationProbe = true;
     });
@@ -52,10 +52,10 @@ describe('docs site', () => {
     cy.get('.example-embed iframe[src="/examples/helloworld/"]').should(
       'exist',
     );
-    // The iframe, .restart-btn and its icon tag are server-rendered. The icon's
-    // definition is a client-only dynamic import, so it upgrades only once Vue
-    // has mounted.
-    cy.get('.restart-btn sp-icon-refresh:defined').should('exist');
+    // The iframe, .restart-btn and its icon are server-rendered; they are
+    // still there once Vue has mounted.
+    cy.get('#app').its('0.__vue_app__').should('exist');
+    cy.get('.restart-btn .vpi-lucide-rotate-cw').should('be.visible');
   });
 
   it('serves the embedded example apps same-origin', () => {

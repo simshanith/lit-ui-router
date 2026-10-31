@@ -390,15 +390,6 @@ const config = {
   vite: {
     configFile: './.vitepress/vite.config.ts',
   },
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement(tag: string) {
-          return tag.startsWith('sp-');
-        },
-      },
-    },
-  },
   themeConfig: {
     logo: '/images/lit-ui-router.svg',
     search: {

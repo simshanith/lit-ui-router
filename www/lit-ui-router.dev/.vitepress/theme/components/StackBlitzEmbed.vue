@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef, ref, computed, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
+import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
 import { webContainersSupported } from './webcontainers';
 
@@ -45,18 +46,6 @@ function refreshIframe() {
   const el = iframe.value;
 
   if (el) el.src += '';
-}
-
-function loadIcons() {
-  return Promise.all([
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
-  ]);
-}
-
-if (!import.meta.env.SSR) {
-  loadIcons();
 }
 
 onMounted(async () => {
@@ -133,16 +122,30 @@ onUnmounted(() => {
         "
         @click="toggleFullscreen"
       >
+        <!-- Both render: the build only ships CSS for icons in the server render. -->
         <span class="site-button-icon">
-          <sp-icon-full-screen-exit v-if="isFullscreen" />
-          <sp-icon-full-screen v-else />
+          <VPIcon
+            v-show="!isFullscreen"
+            icon="lucide:maximize"
+            aria-hidden="true"
+          />
+          <VPIcon
+            v-show="isFullscreen"
+            icon="lucide:minimize"
+            aria-hidden="true"
+          />
         </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
-      <button @click="refreshIframe" class="refresh-btn site-button">
+      <button
+        @click="refreshIframe"
+        class="refresh-btn site-button"
+        type="button"
+      >
         <span class="site-button-icon">
-          <sp-icon-refresh label="Refresh iframe" />
+          <VPIcon icon="lucide:rotate-cw" aria-hidden="true" />
         </span>
+        Restart
       </button>
       <slot></slot>
     </div>

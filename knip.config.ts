@@ -225,6 +225,8 @@ const workspaces = {
       'sample-app-lit-mobx',
       'sample-app-lit-effect',
       'sample-app-lit-signals',
+      // VitePress loads icon collections by the prefix in a VPIcon name
+      '@iconify-json/lucide',
     ],
   },
   // knip has no cf plugin, and the config names its entrypoint as a string
