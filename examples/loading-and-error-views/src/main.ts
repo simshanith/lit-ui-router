@@ -25,20 +25,26 @@ import {
 
 const REQUEST_MS = 1200;
 
+const FAST_REQUEST_MS = 200;
+
 /** A transition that settles sooner never shows its pending view. */
 const PENDING_DELAY_MS = 150;
 
-/** The simulated server; the shell's checkbox sets `failing`. */
-const server = { failing: false };
+/** Once shown, the pending view stays at least this long. */
+const MIN_SHOWN_MS = 400;
+
+/** The simulated server; the shell's checkboxes set `failing` and `fast`. */
+const server = { failing: false, fast: false };
 
 function request<T>(value: T): Promise<T> {
-  const { failing } = server;
+  const { failing, fast } = server;
+  const ms = fast ? FAST_REQUEST_MS : REQUEST_MS;
 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (failing) reject(new Error('The server did not answer.'));
       else resolve(value);
-    }, REQUEST_MS);
+    }, ms);
   });
 }
 
@@ -308,32 +314,52 @@ export class AppShell extends LitElement {
 
   @state() private showPending = false;
 
+  private latest?: Transition;
+
+  private showTimer?: ReturnType<typeof setTimeout>;
+
+  private shownAt?: number;
+
+  private settle(trans: Transition) {
+    // A superseded transition settles too; only the latest owns the pending view.
+    if (trans !== this.latest) return;
+    this.pending = undefined;
+    clearTimeout(this.showTimer);
+    this.showTimer = undefined;
+
+    if (this.shownAt === undefined) return;
+
+    setTimeout(
+      () => {
+        if (trans !== this.latest) return;
+        this.shownAt = undefined;
+        this.showPending = false;
+      },
+      Math.max(0, this.shownAt + MIN_SHOWN_MS - Date.now()),
+    );
+  }
+
   readonly transitions = new TransitionController(this, {
     events: ['onStart'],
     callback: (trans, reason) => {
       if (reason !== 'onStart' || !trans) return;
-      this.pending = trans;
+      this.latest = this.pending = trans;
 
-      const timer = setTimeout(() => {
-        if (this.pending === trans) this.showPending = true;
-      }, PENDING_DELAY_MS);
+      if (this.shownAt === undefined && this.showTimer === undefined) {
+        this.showTimer = setTimeout(() => {
+          this.shownAt = Date.now();
+          this.showPending = true;
+        }, PENDING_DELAY_MS);
+      }
 
-      // A superseded transition settles too; only the latest clears the pending view.
-      const done = () => {
-        clearTimeout(timer);
-
-        if (this.pending !== trans) return;
-        this.pending = undefined;
-        this.showPending = false;
-      };
-
+      const done = () => this.settle(trans);
       void trans.promise.then(done, done);
     },
   });
 
   render() {
     const pendingView =
-      (this.pending && viewData(this.pending)?.pending) ?? spinner;
+      (this.latest && viewData(this.latest)?.pending) ?? spinner;
 
     return html`
       <h2>Loading and error views</h2>
@@ -364,6 +390,16 @@ export class AppShell extends LitElement {
             }}
           />
           Fail requests
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            @change=${(event: Event) => {
+              // SAFETY: the listener is bound on the checkbox
+              server.fast = (event.currentTarget as HTMLInputElement).checked;
+            }}
+          />
+          Fast requests
         </label>
       </p>
       <div class="region" aria-busy=${this.pending ? 'true' : nothing}>

@@ -155,9 +155,9 @@ An inbox on [`ui-router-navigation-location-plugin`](https://lit-ui-router.dev/p
 
 ### loading-and-error-views
 
-Three pages behind a simulated server, with a _Fail requests_ checkbox that makes every request reject. Embedded in the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views).
+Three pages behind a simulated server, with a _Fail requests_ checkbox that makes every request reject and a _Fast requests_ checkbox that answers in 200 ms instead of 1200 ms. Embedded in the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views).
 
-- **Pending views.** A `TransitionController` in the shell observes `onStart` and clears its flag when the transition's `promise` settles, on success or failure. While it is set past a short delay, the shell hides the `<ui-view>` and renders the pending view the target state's `data.pending` names, or a default spinner
+- **Pending views.** A `TransitionController` in the shell observes `onStart` and clears its flag when the transition's `promise` settles, on success or failure. While it is set past a short delay, the shell hides the `<ui-view>` and renders the pending view the target state's `data.pending` names, or a default spinner, and keeps it for a minimum display time once shown
 - **Inherited `data`.** `account` names a skeleton and an `account.error` state in its `data`; `account.profile` and `account.activity` inherit both, while the top-level `report` falls back to the shell's spinner and the `error` state
 - **Error views.** An `onError` hook sends a transition whose resolve rejected to the error state its target inherits, with the failed `TargetState` as a param and `{ location: false }`. The error view's Retry is a new transition to that target
 - **NOWAIT.** `account.activity`'s resolve does not hold the transition: the view renders the promise with `until()`, shows a skeleton, and retries a rejection in place with `stateService.reload`
