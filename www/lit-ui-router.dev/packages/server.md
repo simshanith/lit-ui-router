@@ -47,9 +47,9 @@ leaves the ones before it unchanged:
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
    [`prerender`](#emitting-a-static-site).
-3. **Representations of a state.** [Response states](#response-states)
-   answer with their own `Response` (a redirect, JSON, a badge) built from
-   their resolves once `settle` lands them.
+3. **[Response states](#response-states).** A state answers with its own
+   `Response` (a redirect, JSON, a badge) built from its resolves once
+   `settle` lands it.
 4. **Commands whose url the tree defines.**
    [Delegating states](#delegating-states) hand a url to a host handler.
    Delegate when the tree is the authority for the url: a command that shares
