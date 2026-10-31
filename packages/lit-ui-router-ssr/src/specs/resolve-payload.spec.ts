@@ -47,6 +47,7 @@ const resolvers = () => ({
   when: vi.fn(() => new Date(0)),
   later: vi.fn(() => Promise.resolve('later')),
   sheet: vi.fn((): Sheet => ({ title: 'Plate 7B', tags: ['atlas', 'sheet'] })),
+  found: vi.fn(() => 'found'),
 });
 
 type Resolvers = ReturnType<typeof resolvers>;
@@ -95,6 +96,7 @@ const routerWith = (fns: Resolvers): Router => {
       name: 'search',
       url: '/search/{n:int}?q&{tags:string}',
       params: { tags: { array: true }, mode: 'list' },
+      resolve: [counted('found', fns.found)],
     },
   ];
 
@@ -210,6 +212,22 @@ describe('the resolves a signature carries', () => {
     expect(fns.detail).toHaveBeenCalledOnce();
     expect(fns.when).toHaveBeenCalledOnce();
   });
+
+  it.each(['/search/8', '/search/7?q=foo'])(
+    'run every function when the boot lands on other url parameters, at %s',
+    async (path) => {
+      const markup = await drawWith('/search/7');
+      expect(readResolvePayload(serve(markup).container)?.resolves).toEqual({
+        search: { found: 'found' },
+      });
+      document.body.replaceChildren();
+
+      const { signature, fns } = await bootOver(markup, path);
+
+      expect(signature).toBe('elsewhere');
+      expect(fns.found).toHaveBeenCalledOnce();
+    },
+  );
 
   it('are absent without a payload hook, so every function runs', async () => {
     const markup = await drawWith('/shell/detail', () => undefined);

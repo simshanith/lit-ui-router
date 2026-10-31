@@ -9,7 +9,7 @@ import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
 import { isFunction, RejectType } from '@uirouter/core';
-import type { Transition } from '@uirouter/core';
+import type { StateObject, Transition } from '@uirouter/core';
 import { noChange, render } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
@@ -25,7 +25,12 @@ import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
 import { isLightDomElement } from './light-dom-brand.js';
 import { servedMarkerPrefix } from './served-markers.js';
-import { packageVersion, routeOf, signatureSelector } from './signature.js';
+import {
+  packageVersion,
+  routeOf,
+  signatureSelector,
+  urlParamsOf,
+} from './signature.js';
 import type { HydrationSignature } from './signature.js';
 
 export {
@@ -60,7 +65,8 @@ const DEFER = 'defer-hydration';
  *
  * - `adopted`: the element hydrated its served nodes, and they are the live ones.
  * - `fell-back`: the served pair did not match the render the client booted
- *   into, or was lost; the view dropped the served interior and rendered cold.
+ *   into, was drawn for another state or other url parameters, or was lost;
+ *   the view dropped the served interior and rendered cold.
  * - `none`: nothing to adopt — an empty served pair, the address no state
  *   routed, or a view the document served no markers for.
  */
@@ -78,7 +84,7 @@ export const uiViewAdoptEventName = 'ui-view:adopt' as const;
 export interface UiViewAdoptDetail {
   /** What the wake came to. */
   readonly outcome: AdoptOutcome;
-  /** What `hydrate()` threw, or why the pair was lost; present only on `fell-back`. */
+  /** What `hydrate()` threw, or why the view did not adopt; present only on `fell-back`. */
   readonly error?: unknown;
 }
 
@@ -215,6 +221,8 @@ interface AdoptPolicy {
   readonly reporter?: AdoptReporter;
   /** Set by a boot that already warned the document was drawn for another state. */
   readonly quiet?: boolean;
+  /** Set by a boot that landed elsewhere: whether a view renders what the document was drawn for. */
+  readonly drawn?: (view: AdoptableView) => boolean;
 }
 
 /** The policy of the walk in progress, which the pins it sets carry. */
@@ -477,6 +485,13 @@ const adopt = (view: AdoptableView, policy: AdoptPolicy): void => {
   // The address no state routed: nothing between the pair to adopt, and the element renders after it.
   if (isPart(open.nextSibling, '/lit-part')) {
     return report(view, reporter, 'none');
+  }
+
+  // Lit's hydrate takes the client's values as committed without writing them, so drawn text would stay.
+  if (policy.drawn && !policy.drawn(view)) {
+    clearInterior(open);
+
+    return report(view, reporter, 'fell-back', notDrawn);
   }
 
   try {
@@ -928,6 +943,35 @@ const startBoot = (router: UIRouterLit): Promise<BootLanding> =>
     if (!created) land({});
   });
 
+/** Why a view drawn for another state or other url parameters fell back. */
+const notDrawn = 'the view was drawn for another state or other url parameters';
+
+/**
+ * Whether a view renders a state on the path the document was drawn for, with
+ * the url parameter values it was drawn with, its own and inherited. A view
+ * with no routed state is left to its hydrate.
+ */
+const drawnView =
+  (signature: HydrationSignature, router: UIRouterLit) =>
+  (view: AdoptableView): boolean => {
+    if (!(view instanceof UiView) || !view.viewContext) return true;
+    // SAFETY: a lit view's `$context` is the StateObject that declared it.
+    const state = view.viewContext as StateObject;
+    const drawnState = router.stateRegistry.get(String(signature.state));
+
+    if (!drawnState?.$$state?.().path.includes(state)) return false;
+
+    // SAFETY: `prerender()` writes `params` as an object keyed by parameter id; a missing key compares as undefined.
+    const drawnParams = (signature.params ?? {}) as Partial<
+      ReturnType<typeof urlParamsOf>
+    >;
+
+    return Object.entries(urlParamsOf(state, router.globals.params)).every(
+      ([id, value]) =>
+        JSON.stringify(value) === JSON.stringify(drawnParams[id]),
+    );
+  };
+
 /** Whether the router stands where the signature says the document was drawn. */
 const signatureMatches = (
   signature: HydrationSignature,
@@ -1006,9 +1050,11 @@ const renderCold = (
  *   since that is a template the two halves render differently.
  * - The boot lands elsewhere — a static host serving one document for a
  *   family of urls, or a redirect: the views that match adopt, and the views
- *   that differ render cold without a warning of their own. Once the page is
- *   live, one development warning names both states and how many views
- *   rendered cold, when any did.
+ *   that differ render cold without a warning of their own. A view whose
+ *   state, or whose url parameters, its own and inherited, differ from the
+ *   drawn ones renders cold. Once the page is live, a boot into another state
+ *   warns once in development, naming both states and how many views rendered
+ *   cold; a boot into other url parameters of the drawn state is silent.
  * - The boot fails, or the url starts no transition: the container is emptied
  *   and `value` rendered cold. The root `hydrate()` throwing, as over a
  *   mutated document, does the same. The call resolves rather than rejects.
@@ -1080,10 +1126,14 @@ export async function bootstrap(
   let release: () => void;
 
   try {
-    release = adoptRoot(container, value, renderOptions, {
-      reporter,
-      quiet: !drawn,
-    });
+    release = adoptRoot(
+      container,
+      value,
+      renderOptions,
+      drawn
+        ? { reporter, quiet: false }
+        : { reporter, quiet: true, drawn: drawnView(signature, router) },
+    );
   } catch (error) {
     render(value, container, renderOptions);
     await settleViews(container);
@@ -1094,7 +1144,9 @@ export async function bootstrap(
   await settleViews(container);
   release();
 
-  if (!drawn && fellBack > 0) warnBootElsewhere(signature, router, fellBack);
+  // Other url parameters for the same state are a shared shell's normal case, and stay silent.
+  if (fellBack > 0 && signature.state !== router.globals.current.name)
+    warnBootElsewhere(signature, router, fellBack);
 
   return { outcome: 'adopted', signature: compared };
 }
