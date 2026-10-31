@@ -20,15 +20,6 @@ const origin = process.env.DOMAIN_SEARCH_ORIGIN;
 const target: Target =
   origin === 'vercel' ? vercel : ours(origin ?? 'http://localhost:8787');
 
-// The query-only elsewhere fix (branch fix/ssr-elsewhere-stale-params) flips these; Vercel's page has no such step.
-const PENDING_ELSEWHERE_FIX = target.external
-  ? false
-  : {
-      label:
-        'bootstrap keeps the drawn data-view on a query-only elsewhere boot (fix/ssr-elsewhere-stale-params)',
-      match: /'idle' !== 'results'/,
-    };
-
 let browser: Browser;
 
 before(async () => {
@@ -194,7 +185,7 @@ describe(`${target.name}, ${CONDITIONS}`, () => {
 
   test(
     'after a boot at ?q=, the input sits in the bar',
-    { skip: target.external, expectFailure: PENDING_ELSEWHERE_FIX },
+    { skip: target.external },
     async () => {
       const { page, close } = await open();
 

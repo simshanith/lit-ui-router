@@ -81,9 +81,6 @@ mise run test_e2e domain-search
 `pnpm --filter domain-search measure:vercel` runs the frame-0 checks, read-only, against
 `vercel.com/domains`. It is a manual script and never runs in CI.
 
-One check, that a boot at `?q=` moves the input to the bar, is marked `expectFailure`: `bootstrap`
-keeps the drawn `data-view` when a boot differs from the drawn page in its query alone.
-
 ## Lighthouse
 
 Lighthouse isn't a dependency. For its score, TBT and diagnostics, run it ad hoc from outside the
