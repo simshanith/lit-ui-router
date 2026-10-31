@@ -27,8 +27,8 @@ hook or resolve rejects.
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 
-const DELAY = 150; // ms a transition runs before the indicator shows
-const MIN_SHOWN = 400; // ms the indicator stays once shown
+const PENDING_DELAY_MS = 150; // a transition runs this long before the indicator shows
+const MIN_SHOWN_MS = 400; // the indicator stays at least this long once shown
 
 export function trackPending(router: UIRouterLit, region: HTMLElement): void {
   let latest: Transition | undefined;
@@ -41,6 +41,7 @@ export function trackPending(router: UIRouterLit, region: HTMLElement): void {
     region.removeAttribute('aria-busy');
     clearTimeout(showTimer);
     showTimer = undefined;
+
     if (shownAt === undefined) return;
 
     setTimeout(
@@ -49,18 +50,19 @@ export function trackPending(router: UIRouterLit, region: HTMLElement): void {
         shownAt = undefined;
         region.classList.remove('pending');
       },
-      Math.max(0, shownAt + MIN_SHOWN - Date.now()),
+      Math.max(0, shownAt + MIN_SHOWN_MS - Date.now()),
     );
   };
 
   router.transitionService.onStart({}, (trans) => {
     latest = trans;
     region.setAttribute('aria-busy', 'true');
+
     if (shownAt === undefined && showTimer === undefined) {
       showTimer = setTimeout(() => {
         shownAt = Date.now();
         region.classList.add('pending');
-      }, DELAY);
+      }, PENDING_DELAY_MS);
     }
 
     const done = () => settle(trans);
@@ -286,6 +288,7 @@ resolve, so the shell shows the pending view their state's `data` names:
 default. Activity's resolve is NOWAIT, so its view renders at once and fills in
 when the promise settles. Check _Fail requests_ to see the default error state,
 the `account.error` state that `account`'s `data` names for its subtree, and
-Activity's in-place retry with `reload`.
+Activity's in-place retry with `reload`. Check _Fast requests_ to see the
+pending view held for its minimum display time.
 
 <LiveExample name="loading-and-error-views" />
