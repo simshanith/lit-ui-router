@@ -36,8 +36,8 @@ Each use adds one concept and leaves the ones before it unchanged:
    `serveShell`.
 2. **Server-rendered pages:** the same states' resolves and views, rendered with
    `lit-ui-router-ssr` on `settle` and `prerender`.
-3. **Representations of a state:** response states answer with their own `Response` (a redirect,
-   JSON, a badge) built from their resolves once `settle` lands them.
+3. **Response states:** a state answers with its own `Response` (a redirect, JSON, a badge) built
+   from its resolves once `settle` lands it.
 4. **Commands whose url the tree defines:** delegating states hand a url to a host handler.
    Delegate when the tree is the authority for the url: a command that shares params with a page,
    or a path `prerender` must skip.
