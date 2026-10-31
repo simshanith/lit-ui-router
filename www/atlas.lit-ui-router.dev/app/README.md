@@ -323,7 +323,11 @@ arrow keys read the shell's resolved `manifest` off the transition rather than c
 `loadManifest()`, so a page makes one `manifest.json` request. A cold container —
 the dev server, the artifact build — is emptied and the same template rendered into it.
 `<html data-boot>` records the result as `outcome:signature`, `adopted:matched` on every
-prerendered page.
+prerendered page. `generator/check-scenes.mjs` proves the adoption with the round-trip helpers
+from `lit-ui-router-ssr/testing`: an init script stamps every served element under the body
+before the module script runs, and after the boot `countRetained` reports `removed: 0` on the
+cover, a sheet, a city page and the 404, with the `<ui-router>` slot and the viewer's own
+elements as the only additions.
 
 **The light-DOM elements.** `<atlas-themer>`, `<atlas-copy-link>` and `<atlas-prefs>` extend
 `LightDomHydrating(LitElement)` and sit at their use sites with `lightSlot()` as their child, so

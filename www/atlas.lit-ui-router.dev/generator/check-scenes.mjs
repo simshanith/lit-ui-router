@@ -112,7 +112,9 @@ const server = createServer((req, res) => {
       res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
       res.end(body);
     } catch {
-      res.writeHead(404).end('not found');
+      // as Pages does: the prerendered 404 page, so a bad deep link boots too
+      res.writeHead(404, { 'content-type': 'text/html' });
+      res.end(await readFile(join(DIST, '404.html')));
     }
   })();
 });
@@ -544,6 +546,29 @@ try {
     });
     check(!row.scroll && row.inside && row.rows > 1 && row.page <= row.w, `on a phone the picker wraps every build onto ${row.rows} rows inside its width and the page keeps its own (${row.page} ≤ ${row.w})`, JSON.stringify(row));
     await page.close();
+  }
+
+  // ---- the round trip: the served elements a boot kept, counted by lit-ui-router-ssr/testing ----
+  {
+    // the app's own install of the door sheet 11 draws; its helpers are self-contained, so their source is page script
+    const appRequire = createRequire(join(ROOT, 'www/atlas.lit-ui-router.dev/app/package.json'));
+    const { countRetained, stampServed } = await import(appRequire.resolve('lit-ui-router-ssr/testing'));
+    for (const path of ['/', '/sheet/7B/', '/sheet/11/', '/city/', '/nope/']) {
+      const page = await browser.newPage();
+      page.on('pageerror', (e) => errors.push(`${path}: ${e.message}`));
+      await page.addInitScript(`
+        const stampServed = ${stampServed};
+        window.__countRetained = ${countRetained};
+        document.addEventListener('readystatechange', () => {
+          if (document.readyState === 'interactive') window.__servedStamp = stampServed(document.body);
+        });`);
+      await page.goto(`${origin}${path}`, { waitUntil: 'load' });
+      await page.waitForFunction(() => document.documentElement.dataset.boot !== undefined);
+      const r = await page.evaluate(() => ({ boot: document.documentElement.dataset.boot, ...window.__countRetained(window.__servedStamp) }));
+      check(r.boot === 'adopted:matched' && r.removed === 0 && r.served > 0,
+        `${path} boots ${r.boot} and keeps every one of its ${r.served} served elements (${r.added} added beside them)`, JSON.stringify(r));
+      await page.close();
+    }
   }
 
   // ---- the artifact: the gallery and the colophon offline, every plate a link to the live site ----

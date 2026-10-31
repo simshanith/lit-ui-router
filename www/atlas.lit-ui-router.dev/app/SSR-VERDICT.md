@@ -806,3 +806,13 @@ rough edges reported on #1640 closed with these releases: the opt-out, and
 the payload's own block. The other two stand: a loader called directly
 bypasses the seed, and hydrate commits no attribute value.
 
+**Update, 2026-10-31.** The round-trip helpers in `lit-ui-router-ssr/testing`
+(0.7.0) are in the atlas's own checks. `generator/check-scenes.mjs` serialises
+`stampServed` into a Playwright init script that stamps every element under
+the body when parsing ends, and after the boot reads `countRetained`: the
+cover, sheet 7B, sheet 11, the city and the 404 deep link each keep every
+served element (`removed: 0`), with the `<ui-router>` slot and, on the city,
+the viewer's own elements as the only additions. The helpers did what the
+README says with no adaptation; the one thing the check needed was a static
+server that answers a bad path with the prerendered 404 page, as Pages does.
+
