@@ -7,7 +7,7 @@
     }
     text { font-family: Inter, sans-serif; }
     .hero { font-size: 64px; font-weight: 700; letter-spacing: -0.4px; }
-    .name { fill: #a8b1ff; }
+    .name { fill: #0098dc; }
     .text { fill: #dfdfd6; }
     .tagline { font-size: 28px; font-weight: 500; fill: #98989f; }
     .library { fill: #a8b1ff; }
