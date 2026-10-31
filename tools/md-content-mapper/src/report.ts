@@ -115,7 +115,7 @@ export const summarize = (results: BlockResult[]): string => {
     `files with ts fences: ${new Set(results.map((r) => r.file)).size}`,
     `blocks found: ${results.length}`,
     `blocks skipped: ${skipped.length} (${tally(skipped.map((r) => r.block.skip ?? ''))})`,
-    `blocks checked: ${results.length - skipped.length}`,
+    `blocks checked: ${results.length - skipped.length} of ${results.length}`,
     `  clean: ${count('clean')}`,
     `  syntax errors (not checked further): ${count('syntax')}`,
     `  type errors: ${count('semantic')}`,
