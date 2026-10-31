@@ -85,7 +85,10 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * @example Show an error view, and wait for it to render
  * ```ts
- * router.transitionService.onError({}, async () => {
+ * router.transitionService.onError({}, async (trans) => {
+ *   // Skip superseded transitions, and stop if the error state itself fails.
+ *   if (trans.error()?.type !== RejectType.ERROR) return;
+ *   if (trans.to().name === 'error') return;
  *   const redirect = router.stateService.go('error');
  *   await viewRendered(router, redirect.transition);
  *   document.querySelector<HTMLElement>('main h1')?.focus();
