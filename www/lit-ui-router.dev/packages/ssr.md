@@ -706,6 +706,48 @@ Lit's `defer-hydration` contract unchanged. All of it is in this package:
 `lit-ui-router-ssr/register` defines `<ui-view>` with the served class, so an
 app that never prerenders carries none of it.
 
+## Measuring the round trip
+
+`lit-ui-router-ssr/testing` counts how many of the server's elements survive
+the boot. It imports nothing — no lit, no router — and runs anywhere there is
+a DOM. `stampServed(root)` takes every element under `root`, open shadow roots
+included, before the client boots; `countRetained(stamp)` returns
+`{ served, retained, removed, added }` after it. A hydrated page keeps
+`removed` at 0. A view the client rendered over counts its served elements as
+removed and its new ones as added; an element a component draws in
+`firstUpdated`, or the shadow `<slot>` each `<ui-router>` renders, counts only
+as added.
+
+```ts
+import { countRetained, stampServed } from 'lit-ui-router-ssr/testing';
+
+const stamp = stampServed(container); // after the prerender is parsed in, before bootstrap()
+await bootstrap(router, container, page(router));
+expect(countRetained(stamp)).toMatchObject({ removed: 0 });
+```
+
+In a browser the stamp and the count must run in the page. Each helper is
+self-contained, so its source text is valid page script. In Playwright, an
+init script stamps the body when parsing ends, before module scripts run:
+
+```ts
+import { countRetained, stampServed } from 'lit-ui-router-ssr/testing';
+
+await page.addInitScript(`
+  const stampServed = ${stampServed};
+  window.countRetained = ${countRetained};
+  document.addEventListener('readystatechange', () => {
+    if (document.readyState === 'interactive') window.servedStamp = stampServed(document.body);
+  });
+`);
+await page.goto('/sheet/7B/');
+await page.waitForFunction(() => !document.querySelector('[defer-hydration]'));
+
+expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
+  removed: 0,
+});
+```
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-ssr/)

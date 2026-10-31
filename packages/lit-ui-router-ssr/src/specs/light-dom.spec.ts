@@ -4,6 +4,8 @@ import { settle } from 'ui-router-server/ssr';
 
 import { hydrateRoot, lightDomAdoptEventName } from '../client.js';
 import type { LightDomAdoptEvent } from '../client.js';
+import { countRetained } from '../testing.js';
+import type { ServedStamp } from '../testing.js';
 
 import { rootTemplate } from './fixture.js';
 import {
@@ -33,17 +35,17 @@ const roundTrip = async (
   page: Page,
   path: string,
   clientPage: Page = page,
-): Promise<{ container: HTMLElement; served: Element[]; removed: Node[] }> => {
-  const { container, served } = serve(await drawLight(page, path));
+): Promise<{ container: HTMLElement; stamp: ServedStamp; removed: Node[] }> => {
+  const { container, stamp } = serve(await drawLight(page, path));
   const stop = watchRemovals(container);
   const release = await hydrateLight(container, clientPage, path);
   await drain(container);
   release();
 
-  return { container, served, removed: stop() };
+  return { container, stamp, removed: stop() };
 };
 
-const kept = (container: HTMLElement, served: Element[]): Element[] =>
+const kept = (container: HTMLElement, served: readonly Element[]): Element[] =>
   served.filter((element) => container.contains(element));
 
 /** Logs each served view's adoption into {@link wakes}, beside the elements' first updates. */
@@ -68,7 +70,7 @@ describe('a light-DOM element that opted in', () => {
   it('renders on the server and hydrates with 0 nodes removed', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       await drawLight(cardPage('served'), '/bare'),
     );
 
@@ -82,7 +84,7 @@ describe('a light-DOM element that opted in', () => {
     release();
 
     expect(stop()).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('.card-label')).toHaveLength(1);
     expect(container.querySelector('#top .card-label')).toBe(label);
     expect(warn).not.toHaveBeenCalled();
@@ -96,7 +98,7 @@ describe('a light-DOM element that opted in', () => {
   });
 
   it('answers an @event listener on the served node', async () => {
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       await drawLight(cardPage('served'), '/bare'),
     );
 
@@ -113,7 +115,7 @@ describe('a light-DOM element that opted in', () => {
     button?.click();
 
     expect(pressed).toHaveBeenCalledOnce();
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
   });
 
   it('updates the served node in place on a later property change', async () => {
@@ -137,7 +139,7 @@ describe('a light-DOM element that opted in', () => {
 describe('a light-DOM element that did not opt in', () => {
   // Today's behaviour, pinned: the server writes the element empty and the client renders it cold, once. A subclass opting in leaves its base as it was.
   it('is served empty and renders cold, once, beside an opted-in subclass', async () => {
-    const { container, served } = serve(await drawLight(plainPage, '/bare'));
+    const { container, stamp } = serve(await drawLight(plainPage, '/bare'));
     const plain = container.querySelector<PlainLightCard>('#plain')!;
     expect(plain.querySelector('.card-label')).toBeNull();
     expect(plain.childNodes).toHaveLength(0);
@@ -147,7 +149,7 @@ describe('a light-DOM element that did not opt in', () => {
     release();
 
     expect(container.querySelector('#plain')).toBe(plain);
-    expect(kept(container, served)).toContain(plain);
+    expect(kept(container, stamp.elements)).toContain(plain);
     expect(plain.querySelectorAll('.card-label')).toHaveLength(1);
     expect(plain.querySelector('.card-label')?.textContent).toBe('plain');
     expect(plain.hasAttribute('defer-hydration')).toBe(false);
@@ -156,7 +158,7 @@ describe('a light-DOM element that did not opt in', () => {
 
 describe('author children beside the element’s own render', () => {
   it('keeps both, once each, in the order the server wrote them', async () => {
-    const { container, served } = serve(await drawLight(panelPage, '/bare'));
+    const { container, stamp } = serve(await drawLight(panelPage, '/bare'));
     const authored = container.querySelector('#panel .authored');
     const heading = container.querySelector('#panel .panel-heading');
     expect(heading?.textContent).toBe('Panel');
@@ -168,7 +170,7 @@ describe('author children beside the element’s own render', () => {
     const panel = container.querySelector<LightPanel>('#panel')!;
 
     expect(stop()).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(panel.querySelector('.authored')).toBe(authored);
     expect(panel.querySelector('.panel-heading')).toBe(heading);
     expect(panel.querySelectorAll('.authored')).toHaveLength(1);
@@ -213,7 +215,7 @@ describe('nesting', () => {
   it('wakes a light-DOM element inside a <ui-view> after that view adopts', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const { container, served, removed } = await roundTrip(
+    const { container, stamp, removed } = await roundTrip(
       rootTemplate,
       '/card',
     );
@@ -223,7 +225,7 @@ describe('nesting', () => {
       'routed',
     );
     expect(removed).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -232,7 +234,7 @@ describe('nesting', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const adopted: string[] = [];
 
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       await drawLight(rootTemplate, '/routed-class'),
     );
 
@@ -260,7 +262,7 @@ describe('nesting', () => {
     expect(card.querySelector('.routed-light')).toBe(leaf);
     expect(card.querySelectorAll('.routed-light')).toHaveLength(1);
     expect(stop()).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -288,7 +290,7 @@ describe('nesting', () => {
 
   it('wakes a <ui-view> inside a light-DOM element’s own render after that element', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served, removed } = await roundTrip(framePage, '/card');
+    const { container, stamp, removed } = await roundTrip(framePage, '/card');
 
     expect(wakes).toEqual([
       'light-frame#frame',
@@ -301,14 +303,14 @@ describe('nesting', () => {
       'routed',
     );
     expect(removed).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
   });
 
   it('wakes two levels of light-DOM elements parent first', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served, removed } = await roundTrip(outerPage, '/bare');
+    const { container, stamp, removed } = await roundTrip(outerPage, '/bare');
     const inner = container.querySelector<LightCard>('#inner');
 
     expect(wakes).toEqual(['light-outer#outer', 'light-card#inner']);
@@ -316,7 +318,7 @@ describe('nesting', () => {
     expect(container.querySelectorAll('.outer-heading')).toHaveLength(1);
     expect(container.querySelectorAll('.card-label')).toHaveLength(1);
     expect(removed).toEqual([]);
-    expect(kept(container, served)).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
   });

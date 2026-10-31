@@ -6,6 +6,7 @@ import type { ShadowBadge } from './fixture.js';
 // prototype and proves the two mechanisms are independent.
 import '../register.js';
 
+import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {
   badgeRootTemplate,
@@ -48,12 +49,11 @@ describe('alongside lit’s own hydrate support', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     // The premise of this lane: lit's support installed before `lit-element` read for it.
     expect(globalThis).toHaveProperty('litElementHydrateSupport');
-    const { container, served } = serve(await drawBoth('/shell/detail'));
+    const { container, stamp } = serve(await drawBoth('/shell/detail'));
 
     await boot(container, badgeRootTemplate, '/shell/detail');
 
-    const kept = served.filter((element) => container.contains(element));
-    expect(kept).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(warn).not.toHaveBeenCalled();
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
