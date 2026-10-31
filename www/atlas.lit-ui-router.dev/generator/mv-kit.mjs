@@ -4,6 +4,15 @@
 /** The true isometric polar angle, 90° − atan(1/√2), as model-viewer's camera-orbit phi. */
 export const ISO_POLAR = +(90 - (Math.atan(1 / Math.SQRT2) * 180) / Math.PI).toFixed(3);
 
+/**
+ * The field of view, in degrees: home, and the wheel's zoom-in and zoom-out limits. The viewer
+ * frames its auto and percent radii from this angle, so a narrow field stands the camera far back
+ * at the same framing, and at 3° the verticals stand parallel: the plates' isometric, in the round.
+ */
+export const FOV = { home: 3, min: 1, max: 4.5 };
+/** The three field-of-view attributes of a plate's <model-viewer>. */
+export const fovAttrs = `field-of-view="${FOV.home}deg" min-field-of-view="${FOV.min}deg" max-field-of-view="${FOV.max}deg"`;
+
 /** A camera-orbit at azimuth `az` on the isometric polar, at `radius`. */
 export const orbitAt = (az, radius = 'auto') => `${az}deg ${ISO_POLAR}deg ${radius}`;
 

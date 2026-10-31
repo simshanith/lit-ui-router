@@ -12,7 +12,7 @@ import { BUILD_JS, FOCUS_JS } from './focus.mjs';
 import { basisStrip, laneCss } from './lane-chrome.mjs';
 import { ASSEMBLE_SECONDS, PITCH, assembleMotion } from './brick-glb.mjs';
 import { BUILD_GLB_BUDGET, atModel, buildGlb, explodeOf } from './builds-glb.mjs';
-import { frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
+import { fovAttrs, frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BUILD_BOX, BUILD_MODELS } from './sheet2c.mjs';
 import { BASE } from '../app/src/routes.ts';
 
@@ -228,7 +228,7 @@ export function buildsMarkup() {
   <p class="sheet-sub">${meta.sub}</p>
   <div class="bd-frame fillable" id="bd-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="bd-stage">
-      <model-viewer id="bd-viewer" class="bd-view" src="${DATA.builds[0].glb}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" field-of-view="14deg" min-field-of-view="5deg" max-field-of-view="18deg" exposure="1" shadow-intensity="0" animation-name="assemble" alt="${ALT}">
+      <model-viewer id="bd-viewer" class="bd-view" src="${DATA.builds[0].glb}" loading="eager" reveal="manual" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="${CORNERS[0].orbit}" max-camera-orbit="${SEATED_MAX}" ${fovAttrs} exposure="1" shadow-intensity="0" animation-name="assemble" alt="${ALT}">
 ${pins}
       </model-viewer>
 ${partsMarkup('bd-parts', 'Parts', chips)}

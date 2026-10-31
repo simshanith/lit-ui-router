@@ -15,7 +15,7 @@ import { PLANT_RULES } from './city-plant.mjs';
 import {
   CITY_GLB, DRESS_JS, FACES, HATCH, LIT, PLANT_GLB, PX, RISE_SECONDS, TIERS, TINT, cityModel, materialPlan,
 } from './city-glb.mjs';
-import { ISO_POLAR, frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
+import { FOV, ISO_POLAR, fovAttrs, frameCss, mvJs, orbitAt, partsCss, partsMarkup, pinCss } from './mv-kit.mjs';
 import { BASE } from '../app/src/routes.ts';
 
 export const REV = 'H';
@@ -53,7 +53,7 @@ for (const b of CITY) {
 }
 
 /** The camera: the four diagonals at the iso polar, the home field of view, and how far a pin frames. */
-const HOME_FOV = 14;
+const HOME_FOV = FOV.home;
 const CORNERS = [45, 135, 225, 315];
 // the home pose aims at the ground's centre; its radius is set on load to the stage's aspect
 const HOME_TARGET = 'auto 0m auto';
@@ -660,7 +660,7 @@ const BASIS_NOTES = (plant) => [
   ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; the walls take a <code>--paper-2</code> stone, the tier's hue pulled ${pct(TINT)}% of the way in so the tiers still part at a glance, each wall graded a breath darker toward its foot. Every material is unlit and baked in the vellum palette, and the page recomputes each one from its own tokens on load and on every theme turn, so the cyanotype theme stands the city on navy paper. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink) as a strip on the faces either side of the edge.`],
   ['HATCH', `Laid in world space: a pattern tile repeated over the +x and −z walls, ${HATCH.hx.sp} CSS px apart across the rake at the home pose, so the stripes keep their spacing on the model and grow with it as the camera closes in. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
   ...(plant ? [['PLANT', `Every massed member is drawn as a working plant, after the sprite study's Factorio-leaning treatment, and every piece of it reads a field the census row already carries. The plant keeps to the roof's corners, clear of the pin over its centre. Stacks stand in a row up the west edge, one per ten authored files up to four, their height set by the footprint and banded in the tier's edge colour. Tanks line the north edge from the north-east corner, one at 150 sloc, two at 600, three at 1,800, as many as the roof holds. A header pipe joins them, and the field left over carries one vent per five files, up to six. A footprint of 45 units or more takes a portal gantry along its east edge, and one of 28 or more a catwalk rail. A wall of 20 units or more runs a riser up its east face, two from 60, and a mass of 40 or more is ringed by a deck every ${PLANT_RULES.deckEvery} units. A spec annex is joined by a pipe rack across the gap and carries three module lamps, lit green by sheet 7A's line coverage: three at 95 and over, two at 85, one below or unmetered, none when no suite loads the member. Where a choice is left, such as which roof cells the vents take, a generator seeded on the member's name makes it, so the same census always builds the same plant. Each solid is a box or two turned boxes, stacks and tanks as octagons, merged per material on its member's roof and shaded top to foot.`]] : []),
-  ['CAMERA', `Perspective, at a ${HOME_FOV}° field of view, so the city reads close to the plates' isometric. The camera orbits free under the pointer with the viewer's own damping, and four buttons turn it to the true diagonals, ${CORNERS.join('°, ')}° at the isometric polar angle of 54.736°, instantly under <code>prefers-reduced-motion</code>. A plain scroll over the plate scrolls the page; the wheel zooms once the plate has been touched.`],
+  ['CAMERA', `Perspective at a ${HOME_FOV}° field of view, narrow enough that the verticals stand parallel and the city reads as the plates' isometric. The camera orbits free under the pointer with the viewer's own damping, and four buttons turn it to the true diagonals, ${CORNERS.join('°, ')}° at the isometric polar angle of 54.736°, instantly under <code>prefers-reduced-motion</code>. A plain scroll over the plate scrolls the page; the wheel zooms once the plate has been touched.`],
   ['LETTERING', `Each member carries a numbered pin with sheet 7's own number, standing over its ${plant ? 'plant' : 'cap'}, in the page's data face and its colours. Once the plan stands smaller than ${pct(DOTS)}% of its size at home on a desktop stage, the unpinned pins fold to dots, so a distant or a phone-sized plan stays a plan. District names stand on their ground plates as labels of their own. The reading panel prints the same row the schedule does.`],
   ['RISE', `The model carries one clip, <code>rise</code>, ${RISE_SECONDS} s: every mass and its annex grow out of the ground in sheet 7's schedule order, district by district${plant ? ', and the plants grow onto their roofs over the last 0.4 s' : ''}. The plate opens raised and never plays by itself. RAISE ⇄ GROUND runs the clip at its own speed and the slider scrubs it, the pins riding the roofs; under <code>prefers-reduced-motion</code> the button lands at once.`],
   ['TEST LIGHT', `A second material lane over the same geometry, the model's <code>test-light</code> variant: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
@@ -724,7 +724,7 @@ ${CORNERS.map((az, i) => `          <button type="button" data-az="${az}" aria-p
       </div>
     </div>
     <div class="cs-stage" style="--plan-aspect: ${planAspect(data.home.span)}">
-      <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" field-of-view="${HOME_FOV}deg" min-field-of-view="4deg" max-field-of-view="20deg" tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
+      <model-viewer id="cs-viewer" class="cs-view" src="${BASE}${plant ? PLANT_GLB : CITY_GLB}" loading="eager" reveal="manual" camera-controls disable-tap touch-action="pan-y" interaction-prompt="none" camera-orbit="${orbitAt(CORNERS[0])}" camera-target="${HOME_TARGET}" max-camera-orbit="Infinity 88deg 160%" ${fovAttrs} tone-mapping="none" exposure="1" shadow-intensity="0" animation-name="rise" alt="${alt}">
 ${pins}
 ${labels}
       </model-viewer>

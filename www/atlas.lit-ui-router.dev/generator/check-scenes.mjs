@@ -20,6 +20,7 @@ import { BUILD_GLB_BUDGET } from './builds-glb.mjs';
 import { buildsGlbs } from './builds-scene.mjs';
 import { BUILD_MODELS } from './sheet2c.mjs';
 import { CITY } from './sheet7.mjs';
+import { FOV } from './mv-kit.mjs';
 
 const [OUT, ...FLAGS] = process.argv.slice(2);
 if (!OUT) throw new Error('usage: node check-scenes.mjs <outdir> [--shots <dir>] [--no-artifact]   (outdir is the one build.mjs was given)');
@@ -382,7 +383,7 @@ try {
     check(zoomed.y === y0 && Math.abs(zoomed.r - scrolled.r) > 1, 'an engaged wheel zooms and the page holds', `scrollY ${y0} → ${zoomed.y}, radius ${scrolled.r} → ${zoomed.r}`);
 
     // dots: pulled back, the unpinned pins fold
-    await page.evaluate(() => { const mv = document.querySelector('#cs-viewer'); mv.cameraOrbit = '45deg 54.736deg 160%'; mv.fieldOfView = '20deg'; mv.jumpCameraToGoal(); });
+    await page.evaluate((max) => { const mv = document.querySelector('#cs-viewer'); mv.cameraOrbit = '45deg 54.736deg 160%'; mv.fieldOfView = max + 'deg'; mv.jumpCameraToGoal(); }, FOV.max);
     await page.waitForFunction(() => document.querySelector('.cs-stage').classList.contains('far'));
     const dot = await page.evaluate(() => document.querySelector('[slot="hotspot-5"]').getBoundingClientRect().width);
     check(dot <= 10, `pulled back, the unpinned pins fold to ${dot}px dots`);
