@@ -828,7 +828,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *   </a>
  *
  *   <!-- mark the ancestor section as well as the current page:
- *        at `users` -> aria-current="page", at `users.detail` -> "location" -->
+ *        at 'users' -> aria-current="page", at 'users.detail' -> "location" -->
  *   <a ${uiSref('users')}
  *      ${uiSrefActive({
  *        activeClasses: ['active'],

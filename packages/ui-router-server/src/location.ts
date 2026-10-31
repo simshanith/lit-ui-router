@@ -129,11 +129,12 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * included — and constructing one here pins that choice. Build the router
  * yourself and hand it over; it comes back at the type it went in as.
  *
- * The url is set before any transition runs, so `router.start()` heads for
- * the state the request asked for. `start()` returns nothing, and the
+ * The url is set before any transition runs, so the router's first sync
+ * (`start()` on a `UIRouterLit`, `urlService.sync()` on a core router) heads
+ * for the state the request asked for. Neither returns anything, and the
  * transition settles asynchronously, resolves included: await it before
  * reading the router. `transitionService.onSuccess` fires when it lands;
- * `stateService.go()` returns the transition promise where `start()` does not.
+ * `stateService.go()` returns the transition promise where those do not.
  *
  * @typeParam T - the router type, returned unchanged
  * @param router - a freshly constructed router, with no location plugin yet
@@ -157,7 +158,7 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
  * });
- * router.start();
+ * router.urlService.sync();
  * await settled;
  * ```
  */
