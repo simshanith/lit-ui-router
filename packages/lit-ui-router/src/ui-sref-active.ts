@@ -172,8 +172,10 @@ export interface UiSrefActiveParams {
   /** Transition options */
   options?: TransitionOptions;
   /**
-   * Target states from nested uiSref directives
-   * @internal
+   * The states to watch, built with `router.stateService.target()`. Lets an
+   * element go active for several states, or for links that aren't `uiSref`
+   * directives. Takes precedence: when given, `state` is ignored and nested
+   * `uiSref` links are not tracked.
    */
   targetStates?: TargetState[];
 }
