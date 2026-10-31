@@ -58,8 +58,8 @@ function toggle() {
   font: inherit;
   text-align: start;
   color: inherit;
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-card);
   cursor: pointer;
   touch-action: manipulation;
@@ -71,7 +71,7 @@ function toggle() {
 }
 
 .framework-card.active {
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--site-color-interaction);
   box-shadow: var(--vp-shadow-2);
 }
 
@@ -80,7 +80,7 @@ function toggle() {
 }
 
 .framework-card:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
@@ -117,7 +117,7 @@ function toggle() {
 
 .name {
   font-size: var(--site-text-md);
-  color: var(--vp-c-text-1);
+  color: var(--site-color-text);
 }
 
 .blurb {
@@ -125,7 +125,7 @@ function toggle() {
   margin: 0;
   font-size: var(--site-text-sm);
   line-height: 1.55;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
 }
 
 .blurb :deep(code) {

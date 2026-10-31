@@ -181,8 +181,8 @@ onMounted(() => {
   display: inline-flex;
   gap: var(--site-space-1);
   padding: var(--site-inset-control);
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
 }
 
@@ -191,7 +191,7 @@ onMounted(() => {
   padding-inline: var(--site-space-3);
   font-size: var(--site-text-sm);
   font-weight: 500;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
   background: transparent;
   border: 0;
   border-radius: var(--site-radius-control-inner);
@@ -205,7 +205,7 @@ onMounted(() => {
 
 @media (hover: hover) and (pointer: fine) {
   .tab:hover {
-    color: var(--vp-c-text-1);
+    color: var(--site-color-text);
   }
 }
 
@@ -214,14 +214,14 @@ onMounted(() => {
 }
 
 .tab:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
 .tab.active {
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg);
-  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-divider);
+  color: var(--site-color-text);
+  background: var(--site-color-surface);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-line);
 }
 
 .live-example-links {
@@ -235,7 +235,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   overflow: clip;
   transition: border-color var(--site-duration-base) var(--ease-out);
@@ -245,20 +245,20 @@ onMounted(() => {
   justify-content: center;
   inline-size: var(--example-control-size);
   block-size: var(--example-control-size);
-  color: var(--vp-c-text-1);
+  color: var(--site-color-text);
   font-size: var(--site-icon-sm);
-  background: var(--vp-c-bg-soft);
+  background: var(--site-color-surface-soft);
 }
 
 .source-link:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .open-badge:hover,
   .source-link:hover {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 
@@ -291,9 +291,9 @@ onMounted(() => {
   padding-block: var(--site-space-2);
   padding-inline: var(--site-space-3);
   font-size: var(--site-text-sm);
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
 }
 

@@ -132,11 +132,11 @@ onUnmounted(() => {
   height: var(--embed-height, 420px);
   /* Cap tall embeds so small viewports keep the page (svh dodges iOS toolbars). */
   height: min(var(--embed-height, 420px), var(--example-frame-max-height));
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   overflow: clip;
   /* Shows only until the example paints; an example without color-scheme gets the UA's light canvas. */
-  background: var(--vp-c-bg);
+  background: var(--site-color-surface);
   margin: auto;
 }
 
@@ -146,7 +146,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--example-actions-gap);
-  background: var(--vp-c-bg);
+  background: var(--site-color-surface);
   padding: var(--site-space-4);
 }
 
