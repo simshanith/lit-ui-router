@@ -1,5 +1,5 @@
 ---
-title: UI-Router MobX
+title: ui-router-mobx
 description: A framework-agnostic MobX observable store of the router's current state with ui-router-mobx
 ---
 

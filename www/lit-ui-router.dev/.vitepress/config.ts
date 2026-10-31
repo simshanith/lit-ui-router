@@ -169,7 +169,7 @@ function makeSidebar() {
         { text: 'Reactive Components', link: '/guides/reactive-components' },
         { text: 'Design System Links', link: '/guides/design-system-links' },
         {
-          text: 'Development & Production Builds',
+          text: 'Development and Production Builds',
           link: '/guides/development-builds',
         },
       ],
@@ -247,7 +247,7 @@ function makeSidebar() {
           ],
         },
         {
-          text: 'Navigation Location',
+          text: 'Navigation API Plugin',
           link: '/packages/navigation-plugin',
           collapsed: true,
           items: [
@@ -319,7 +319,7 @@ function makeSidebar() {
           ],
         },
         {
-          text: 'SSR',
+          text: 'Static Prerendering',
           link: '/packages/ssr',
           collapsed: true,
           items: [

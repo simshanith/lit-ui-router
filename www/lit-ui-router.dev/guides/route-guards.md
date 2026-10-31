@@ -3,7 +3,7 @@ title: Route Guards
 description: Protect states with transition hooks - the requiresAuth pattern
 ---
 
-# Route Guards (Transition Hooks)
+# Route Guards
 
 Every navigation in UI-Router is a
 [Transition](https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html),

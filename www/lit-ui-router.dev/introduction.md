@@ -1,11 +1,11 @@
 ---
-title: Introduction
+title: What is Lit UI Router?
 description: What is Lit UI Router? State-based routing for Lit web components
 ---
 
 # What is Lit UI Router?
 
-**lit-ui-router** is a client-side routing framework for
+**Lit UI Router** (`lit-ui-router`) is a client-side routing framework for
 [Lit](https://lit.dev) web components. It is an implementation of
 [UI-Router](https://ui-router.github.io/), the state-based router that has
 powered large AngularJS, Angular, and React applications for over a decade —
@@ -91,7 +91,7 @@ This inversion pays off as applications grow:
   [404 state](./guides/unmatched-urls)) can participate in routing without
   claiming an address.
 
-## What lit-ui-router adds
+## What `lit-ui-router` adds
 
 `@uirouter/core` provides the state machine, URL handling, transitions, and
 resolves. `lit-ui-router` layers the Lit integration on top:
@@ -128,7 +128,7 @@ you need to start; the companions are optional layers.
 | [`ui-router-registry`](https://npmx.dev/package/ui-router-registry)                                     | Typed state names and params for UI-Router: a types-only registry for `@uirouter/core`. [Guide →](./packages/ui-router-registry)                                               |
 | [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)                   | ESLint rules that understand the router's directives — hrefless anchors, inert `href`s, `aria-current` conflicts and misplaced directives. [Guide →](./packages/eslint-plugin) |
 
-Because lit-ui-router is a `@uirouter/core` implementation, the wider
+Because `lit-ui-router` is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
 app</a> uses [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-states),
 [`@uirouter/dsr`](https://github.com/ui-router/dsr) (deep state redirect), and

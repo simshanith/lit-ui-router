@@ -1,5 +1,5 @@
 ---
-title: Effect Bindings
+title: lit-ui-router-effect
 description: A SubscriptionRef of the route and ref-following Lit controllers with lit-ui-router-effect
 ---
 
@@ -194,7 +194,7 @@ value a browser would.
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the mechanism
+[Development and Production Builds](/guides/development-builds) for the mechanism
 and the full warning inventory across packages.
 
 One warning exists here. A `RouterRefController` whose host has no

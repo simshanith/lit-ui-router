@@ -1,5 +1,5 @@
 ---
-title: Signals Bindings
+title: lit-ui-router-signals
 description: Watcher-based Lit controllers over TC39 Signals of the route with lit-ui-router-signals
 ---
 
