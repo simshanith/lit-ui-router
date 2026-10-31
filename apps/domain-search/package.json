@@ -1,0 +1,42 @@
+{
+  "name": "domain-search",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A domain-search page that is focused and prefilled at frame 0, with a harness that measures it",
+  "bin": {
+    "measure-domain-search": "./harness/measure.ts"
+  },
+  "type": "module",
+  "exports": {
+    "./routes": "./src/routes.ts"
+  },
+  "scripts": {
+    "build": "vite build && node scripts/prerender.ts",
+    "dev": "vite",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md,html,css}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md,html,css}\"",
+    "lint:oxlint": "oxlint .",
+    "measure:vercel": "./harness/measure.ts --vercel",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@lit-labs/ssr-client": "catalog:",
+    "@uirouter/core": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-ssr": "catalog:workspace",
+    "ui-router-server": "catalog:workspace"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "playwright": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "web-vitals": "catalog:"
+  }
+}

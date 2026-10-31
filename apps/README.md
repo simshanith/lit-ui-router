@@ -16,6 +16,7 @@ Portions are derived from the ui-router sample apps (MIT); see
 | [`sample-app-lit-signals`](./sample-app-lit-signals/) | The [TC39 Signals](https://github.com/tc39/proposal-signals) idiom: `@lit-labs/signals` and `lit-ui-router-signals`' `RouterSignalController`. Served at `/app-signals/`. |
 | [`sample-app-shared`](./sample-app-shared/)           | Private, source-only package with everything the apps have in common: feature modules, router config, styles, fixtures.                                                   |
 | [`sample-app-lit-e2e`](./sample-app-lit-e2e/)         | One Cypress suite, run against all four apps — this is what enforces the behavioral identity.                                                                             |
+| [`domain-search`](./domain-search/)                   | A domain-search page focused and prefilled at frame 0, with a harness that measures it beside vercel.com/domains. Served at `/domain-search`.                             |
 
 ## How an app is assembled
 
