@@ -2034,6 +2034,7 @@ describe('UiSrefActiveDirective methods', () => {
       const event: any = {
         detail: { targetState },
         target: element,
+        composedPath: () => [element],
       };
 
       directive.onUiSrefTargetEvent(event);
@@ -2044,7 +2045,12 @@ describe('UiSrefActiveDirective methods', () => {
   describe('onUiSrefTargetRemovedEvent', () => {
     it("should drop the removed link's target", () => {
       const targetState = router.stateService.target('home', {}, {});
-      const event: any = { detail: { targetState }, target: element };
+
+      const event: any = {
+        detail: { targetState },
+        target: element,
+        composedPath: () => [element],
+      };
 
       directive.onUiSrefTargetEvent(event);
       directive.onUiSrefTargetRemovedEvent(event);
@@ -2055,7 +2061,10 @@ describe('UiSrefActiveDirective methods', () => {
       const targetState = router.stateService.target('home', {}, {});
       directive.targetStates.add(targetState);
 
-      const event: any = { target: element };
+      const event: any = {
+        target: element,
+        composedPath: () => [element],
+      };
 
       directive.onUiSrefTargetRemovedEvent(event);
       expect(directive.targetStates.has(targetState)).toBe(true);

@@ -15,6 +15,7 @@ import { subscribeRouter } from './router-subscription.js';
 import {
   isNativeLink,
   mergeSrefStatus,
+  srefEventLink,
   srefStatus,
   toAriaCurrentValues,
   TransEvt,
@@ -679,7 +680,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
-    const previous = this._linkTargets.get(event.target);
+    // SAFETY: only a link dispatches UI_SREF_TARGET_EVENT; key by it, not a shadow host it retargets to
+    const link = srefEventLink(event) as UiSrefElement;
+    const previous = this._linkTargets.get(link);
 
     if (previous) {
       this.targetStates.delete(previous);
@@ -687,8 +690,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     }
 
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target);
-    this._linkTargets.set(event.target, targetState);
+    this.uiSrefs.set(targetState, link);
+    this._linkTargets.set(link, targetState);
 
     if (this._firstUpdated) {
       this.onStatesChanged();
@@ -697,8 +700,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   onUiSrefTargetRemovedEvent = (event: Event): void => {
-    // SAFETY: a link dispatches its own removal, so `target` is the key `onUiSrefTargetEvent` stored
-    const link = event.target as UiSrefElement;
+    // SAFETY: a link dispatches its own removal, the key `onUiSrefTargetEvent` stored
+    const link = srefEventLink(event) as UiSrefElement;
     const previous = this._linkTargets.get(link);
 
     if (!previous) {
