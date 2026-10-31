@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, render } from 'lit';
+import { html, nothing, render } from 'lit';
+import { cache } from 'lit/directives/cache.js';
 import { PartInfo, PartType } from 'lit/directive.js';
 import { TargetState, Transition, TreeChanges } from '@uirouter/core';
 
@@ -443,6 +444,70 @@ describe('uiSrefActive directive', () => {
       await tick(100);
       expect(li.classList.contains('active'), 'old target retired').toBe(false);
     });
+
+    it('should forget a child sref that left the container', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'users', url: '/users' },
+      ];
+
+      const { wrapper } = await setupWithStates(states);
+
+      const links = (users: boolean) =>
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          ${users ? html`<a ${uiSref('users')}>Users</a>` : nothing}
+          <a ${uiSref('home')}>Home</a>
+        </li>`;
+
+      render(links(true), wrapper);
+      await tick(50);
+      await routerGo(router, 'users');
+      await tick(50);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'users link present').toBe(true);
+
+      render(links(false), wrapper);
+      await tick(50);
+      expect(li.classList.contains('active'), 'at once').toBe(false);
+
+      await routerGo(router, 'home');
+      await routerGo(router, 'users');
+      await tick(50);
+      expect(li.classList.contains('active'), 'after transitions').toBe(false);
+    });
+
+    it('should hear a cached child sref again when it comes back', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'users', url: '/users' },
+      ];
+
+      const { wrapper } = await setupWithStates(states);
+
+      const links = (users: boolean) =>
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          ${cache(users ? html`<a ${uiSref('users')}>Users</a>` : nothing)}
+        </li>`;
+
+      render(links(true), wrapper);
+      await tick(50);
+      await routerGo(router, 'users');
+      await tick(50);
+
+      const li = wrapper.querySelector('li')!;
+      const anchor = wrapper.querySelector('a')!;
+      expect(li.classList.contains('active'), 'users link present').toBe(true);
+
+      render(links(false), wrapper);
+      await tick(50);
+      expect(li.classList.contains('active'), 'link cached away').toBe(false);
+
+      render(links(true), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('a')).toBe(anchor);
+      expect(li.classList.contains('active'), 'link back').toBe(true);
+    });
   });
 
   // the sample apps' nav bar: target from a child uiSref, router on a descendant
@@ -601,6 +666,41 @@ describe('uiSrefActive directive', () => {
         anchor.classList.contains('active'),
         'active again after returning',
       ).toBe(true);
+    });
+
+    it('should keep tracking a child sref across a container reconnect', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('about')}>About</a>
+        </li>`,
+        wrapper,
+      );
+
+      await tick(100);
+      await routerGo(router, 'about');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'active before').toBe(true);
+
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+      expect(li.classList.contains('active'), 'active after').toBe(true);
+
+      await routerGo(router, 'home');
+      await tick(100);
+      expect(li.classList.contains('active'), 'cleared after leaving').toBe(
+        false,
+      );
     });
 
     // the re-arm replays what update() was given, not the array as mutated since
@@ -1934,9 +2034,39 @@ describe('UiSrefActiveDirective methods', () => {
       const event: any = {
         detail: { targetState },
         target: element,
+        composedPath: () => [element],
       };
 
       directive.onUiSrefTargetEvent(event);
+      expect(directive.targetStates.has(targetState)).toBe(true);
+    });
+  });
+
+  describe('onUiSrefTargetRemovedEvent', () => {
+    it("should drop the removed link's target", () => {
+      const targetState = router.stateService.target('home', {}, {});
+
+      const event: any = {
+        detail: { targetState },
+        target: element,
+        composedPath: () => [element],
+      };
+
+      directive.onUiSrefTargetEvent(event);
+      directive.onUiSrefTargetRemovedEvent(event);
+      expect(directive.targetStates.has(targetState)).toBe(false);
+    });
+
+    it('should ignore a link it never heard from', () => {
+      const targetState = router.stateService.target('home', {}, {});
+      directive.targetStates.add(targetState);
+
+      const event: any = {
+        target: element,
+        composedPath: () => [element],
+      };
+
+      directive.onUiSrefTargetRemovedEvent(event);
       expect(directive.targetStates.has(targetState)).toBe(true);
     });
   });

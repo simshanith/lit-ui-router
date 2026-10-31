@@ -361,9 +361,15 @@ export class UiSrefDirective extends AsyncDirective {
   reconnected(): void {
     this.element = this._partElement;
 
-    if (this.element) {
-      this.firstUpdated();
+    if (!this.element) {
+      return;
     }
+
+    // lit reconnects while a cached fragment is still detached: announce the
+    // target once the element is back where the container hears it
+    setTimeout(() => {
+      this.firstUpdated();
+    }, 0);
   }
 
   /** @internal */

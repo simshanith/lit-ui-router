@@ -15,6 +15,7 @@ import { subscribeRouter } from './router-subscription.js';
 import {
   isNativeLink,
   mergeSrefStatus,
+  srefEventLink,
   srefStatus,
   toAriaCurrentValues,
   TransEvt,
@@ -23,6 +24,7 @@ import {
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
 } from './sref-internals.js';
 import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
@@ -538,6 +540,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
         // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
       );
+      this.element!.addEventListener(
+        UI_SREF_TARGET_REMOVED_EVENT,
+        this.onUiSrefTargetRemovedEvent,
+      );
     }
 
     this.element!.addEventListener(
@@ -619,6 +625,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onUiSrefTargetEvent as EventListener,
     );
     this.element.removeEventListener(
+      UI_SREF_TARGET_REMOVED_EVENT,
+      this.onUiSrefTargetRemovedEvent,
+    );
+    this.element.removeEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
@@ -670,7 +680,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
-    const previous = this._linkTargets.get(event.target);
+    // SAFETY: only a link dispatches UI_SREF_TARGET_EVENT; key by it, not a shadow host it retargets to
+    const link = srefEventLink(event) as UiSrefElement;
+    const previous = this._linkTargets.get(link);
 
     if (previous) {
       this.targetStates.delete(previous);
@@ -678,8 +690,27 @@ export class UiSrefActiveDirective extends AsyncDirective {
     }
 
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target);
-    this._linkTargets.set(event.target, targetState);
+    this.uiSrefs.set(targetState, link);
+    this._linkTargets.set(link, targetState);
+
+    if (this._firstUpdated) {
+      this.onStatesChanged();
+    }
+  };
+
+  /** @internal */
+  onUiSrefTargetRemovedEvent = (event: Event): void => {
+    // SAFETY: a link dispatches its own removal, the key `onUiSrefTargetEvent` stored
+    const link = srefEventLink(event) as UiSrefElement;
+    const previous = this._linkTargets.get(link);
+
+    if (!previous) {
+      return;
+    }
+
+    this.targetStates.delete(previous);
+    this.uiSrefs.delete(previous);
+    this._linkTargets.delete(link);
 
     if (this._firstUpdated) {
       this.onStatesChanged();
