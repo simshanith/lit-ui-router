@@ -154,6 +154,13 @@ Without the hook no page carries resolves. What `dehydrate` draws, and which
 values it leaves out, is in
 [Handing resolves to the client](/packages/server#handing-resolves-to-the-client).
 
+A value plain JSON can't carry, such as a `Date`, travels through a
+transporter. Pass the same `transport` to `dehydrate` in the hook and to
+[`bootstrap`](/api/lit-ui-router-ssr/client/interfaces/BootstrapOptions#transport):
+the signature keeps the payload's `transported` marks, and `bootstrap` hands
+`transport` to `seed`. See
+[Values beyond plain JSON](/packages/server#values-beyond-plain-json).
+
 ## Verdict to artefact
 
 | Verdict               | What is emitted                                                       |

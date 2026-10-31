@@ -19,7 +19,7 @@ import { provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { seed } from 'ui-router-server/ssr/client';
-import type { ResolvePayload } from 'ui-router-server/ssr/client';
+import type { ResolvePayload, SeedOptions } from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
@@ -881,8 +881,11 @@ export interface BootstrapResult {
   readonly error?: unknown;
 }
 
-/** {@link bootstrap}'s options: {@link HydrateRootOptions}, plus the boot transition's seed. */
-export interface BootstrapOptions extends HydrateRootOptions {
+/**
+ * {@link bootstrap}'s options: {@link HydrateRootOptions}, plus the boot
+ * transition's seed and the `transport` handed to `seed` with it.
+ */
+export interface BootstrapOptions extends HydrateRootOptions, SeedOptions {
   /**
    * Resolved values the document was drawn with, handed to `seed` from
    * `ui-router-server/ssr/client` before the router starts, so the boot
@@ -1074,7 +1077,7 @@ const renderCold = (
  * @param router - the client router, its states registered and not yet started
  * @param container - the element the server's markup was written into, or an empty one
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
- * @param options - lit render options, `onAdopt`, and the boot transition's `payload`
+ * @param options - lit render options, `onAdopt`, and the boot transition's `payload` and `transport`
  * @returns what the boot came to, once every awake view has updated
  * @throws what `router.start()` throws, as on a router already started
  * @throws the `TypeError` `seed` throws on a payload with no `resolves`, before the router starts
@@ -1086,9 +1089,9 @@ export async function bootstrap(
   value: unknown,
   options: BootstrapOptions = {},
 ): Promise<BootstrapResult> {
-  const { onAdopt, payload, ...renderOptions } = options;
+  const { onAdopt, payload, transport, ...renderOptions } = options;
   const served = readHydrationSignature(container);
-  const disarm = seed(router, payload ?? payloadIn(served));
+  const disarm = seed(router, payload ?? payloadIn(served), { transport });
   const signature = readAdoptable(container);
 
   if (!signature) {

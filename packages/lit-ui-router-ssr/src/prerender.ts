@@ -146,7 +146,9 @@ export interface PrerenderOptions extends Omit<
    * write none. Without this hook no page carries resolves.
    *
    * `dehydrate` from `ui-router-server/ssr` draws the payload; its
-   * documentation says which values it leaves out.
+   * documentation says which values it leaves out. The payload's
+   * `transported` marks go into the signature too, so a value a transporter
+   * carried is rebuilt when `bootstrap()` gets the same `transport`.
    *
    * @example
    * ```ts
@@ -187,18 +189,27 @@ interface WrittenSignature {
   readonly state: string;
   readonly params: Readonly<Record<string, string | string[]>>;
   readonly resolves?: ResolvePayload['resolves'];
+  readonly transported?: ResolvePayload['transported'];
 }
 
-/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying `resolves` when given. */
+/** What a page's signature carries of its resolve payload. */
+type DrawnResolves = Pick<ResolvePayload, 'resolves' | 'transported'>;
+
+/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the payload's `resolves` and `transported` when given. */
 export const signatureOf = (
   router: UIRouterLit,
-  resolves?: ResolvePayload['resolves'],
+  drawn?: DrawnResolves,
 ): WrittenSignature => {
   const [state, params] = routeOf(router.globals);
+  const signature = { version: packageVersion, state, params };
 
-  return resolves
-    ? { version: packageVersion, state, params, resolves }
-    : { version: packageVersion, state, params };
+  if (!drawn) return signature;
+
+  const { resolves, transported } = drawn;
+
+  return transported
+    ? { ...signature, resolves, transported }
+    : { ...signature, resolves };
 };
 
 /**
@@ -225,9 +236,9 @@ export const renderPage = (
   router: UIRouterLit,
   root: EventTarget,
   elementRenderers: RenderInfo['elementRenderers'],
-  resolves?: ResolvePayload['resolves'],
+  drawn?: DrawnResolves,
 ): string =>
-  signatureBlock(signatureOf(router, resolves)) +
+  signatureBlock(signatureOf(router, drawn)) +
   withRouterSync(router, () =>
     collectResultSync(
       render(body, {
@@ -338,13 +349,7 @@ export async function prerender(
 
     const markup = isString(body)
       ? body
-      : renderPage(
-          body,
-          router,
-          root,
-          elementRenderers,
-          payloadOf(context)?.resolves,
-        );
+      : renderPage(body, router, root, elementRenderers, payloadOf(context));
 
     return document ? document(markup, context) : markup;
   };

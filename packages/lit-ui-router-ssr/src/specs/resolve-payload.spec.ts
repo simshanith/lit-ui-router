@@ -9,7 +9,11 @@ import type {
 } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { dehydrate, settle } from 'ui-router-server/ssr';
-import type { DehydrateResult, ResolvePayload } from 'ui-router-server/ssr';
+import type {
+  DehydrateResult,
+  ResolvePayload,
+  Transporter,
+} from 'ui-router-server/ssr';
 import '../register.js';
 
 import {
@@ -129,7 +133,7 @@ const drawWith = async (
     router,
     new EventTarget(),
     [UiViewRenderer],
-    payload(transition)?.resolves,
+    payload(transition),
   );
 };
 
@@ -139,7 +143,12 @@ const bootOver = async (
   path: string,
   options?: BootstrapOptions,
 ): Promise<
-  BootstrapResult & { fns: Resolvers; container: HTMLElement; kept: boolean }
+  BootstrapResult & {
+    fns: Resolvers;
+    container: HTMLElement;
+    kept: boolean;
+    router: Router;
+  }
 > => {
   const { container, served } = serve(markup);
   const fns = resolvers();
@@ -155,7 +164,15 @@ const bootOver = async (
 
   const kept = served.every((element) => container.contains(element));
 
-  return { ...result, fns, container, kept };
+  return { ...result, fns, container, kept, router };
+};
+
+const transport = {
+  Date: {
+    encode: (value) => value instanceof Date && value.toISOString(),
+    // SAFETY: `encode` above answers with an ISO string, the only encoding `decode` gets.
+    decode: (encoded) => new Date(encoded as string),
+  } satisfies Transporter<Date>,
 };
 
 afterEach(() => {
@@ -278,6 +295,42 @@ describe('the resolves a signature carries', () => {
     expect(fns.when).toHaveBeenCalledOnce();
     expect(fns.detail).not.toHaveBeenCalled();
     expect(fns.greeting).not.toHaveBeenCalled();
+  });
+
+  it('carry a value a transporter encoded, rebuilt by the same transport on boot', async () => {
+    const markup = await drawWith(
+      '/shell/when',
+      (transition) => dehydrate(transition, { transport }).payload,
+    );
+
+    const { outcome, fns, router } = await bootOver(markup, '/shell/when', {
+      transport,
+    });
+
+    expect(readResolvePayload(serve(markup).container)).toMatchObject({
+      resolves: { 'shell.when': { when: '1970-01-01T00:00:00.000Z' } },
+      transported: { 'shell.when': { when: [{ type: 'Date', path: [] }] } },
+    });
+    expect(outcome).toBe('adopted');
+    expect(fns.when).not.toHaveBeenCalled();
+    expect(
+      router.globals.successfulTransitions.peekTail()?.injector().get('when'),
+    ).toEqual(new Date(0));
+  });
+
+  it("run a transported value's function when bootstrap has no transport", async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const markup = await drawWith(
+      '/shell/when',
+      (transition) => dehydrate(transition, { transport }).payload,
+    );
+
+    const { outcome, fns } = await bootOver(markup, '/shell/when');
+
+    expect(outcome).toBe('adopted');
+    expect(fns.when).toHaveBeenCalledOnce();
+    expect(fns.detail).not.toHaveBeenCalled();
   });
 
   it('leave a NOWAIT resolve for the client to run', async () => {

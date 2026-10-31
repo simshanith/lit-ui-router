@@ -23,6 +23,8 @@ export interface HydrationSignature {
    * by resolve token, when `prerender()`'s `payload` hook supplied them.
    */
   readonly resolves?: unknown;
+  /** Where values a transporter encoded sit in `resolves`, when the payload marked any. */
+  readonly transported?: unknown;
 }
 
 /**

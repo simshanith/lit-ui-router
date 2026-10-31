@@ -173,6 +173,11 @@ every resolve of a page whose block carries no `resolves`. Without the hook no p
 resolves. What `dehydrate` draws, and which values it leaves out, is in
 [its documentation](https://lit-ui-router.dev/packages/server#handing-resolves-to-the-client).
 
+A value plain JSON can't carry, such as a `Date`, travels through a transporter. Pass the same
+`transport` to `dehydrate` in the hook and to `bootstrap()`: the signature keeps the payload's
+`transported` marks, and `bootstrap()` hands `transport` to `seed`. See
+[values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json).
+
 ## The routed view, drawn on the server
 
 `elementRenderers` defaults to `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s
