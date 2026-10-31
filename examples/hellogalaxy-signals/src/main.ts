@@ -293,7 +293,8 @@ class GalaxyShellComponent extends SignalWatcher(LitElement) {
     }
   `;
 
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -614,8 +615,8 @@ class StarDetailComponent extends LitElement {
   }
 }
 
-@customElement('astronaut-view')
-class AstronautViewComponent extends LitElement {
+@customElement('astronaut-detail')
+class AstronautDetailComponent extends LitElement {
   static styles = css`
     h2 {
       margin: 0 0 12px;
@@ -656,7 +657,8 @@ class AstronautViewComponent extends LitElement {
     }
   `;
 
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -778,7 +780,7 @@ const starState = {
 const astronautState = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
-  component: AstronautViewComponent,
+  component: AstronautDetailComponent,
   resolve: [
     {
       // Resolves can await code, not just data: model-viewer loads on state
