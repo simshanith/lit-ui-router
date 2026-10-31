@@ -111,6 +111,8 @@ onMounted(() => {
           <img
             alt="Open in StackBlitz"
             src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+            width="162"
+            height="32"
           />
         </a>
       </div>
@@ -263,6 +265,8 @@ onMounted(() => {
 .open-badge img {
   display: block;
   height: 36px;
+  /* The width/height attributes give the ratio before the badge loads. */
+  width: auto;
   /* .vp-doc gives content imgs 16px vertical margin — kill the gap. */
   margin: 0;
 }
