@@ -147,7 +147,7 @@ catalogs:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.7
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
     lit-ui-router-floor: npm:lit-ui-router@1.19.0
-    ui-router-server-floor: npm:ui-router-server@0.6.0
+    ui-router-server-floor: npm:ui-router-server@0.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
@@ -173,7 +173,7 @@ catalogs:
     '@lit-labs/ssr-client': ^1.1.7
     lit: ^3.1.2
     lit-ui-router: ^1.19.0
-    ui-router-server: ^0.6.0
+    ui-router-server: ^0.7.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
   typescript6:
