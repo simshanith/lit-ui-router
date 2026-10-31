@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { globSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
@@ -17,6 +19,21 @@ const { fills, ink, inkRules } = readStatusColors();
 
 const themes: Theme[] = ['light', 'dark'];
 
+const site = join(import.meta.dirname, '../..');
+
+const css = readFileSync(join(site, '.vitepress/theme/custom.css'), 'utf8');
+
+const badgeTypes = globSync('**/*.md', {
+  cwd: site,
+  exclude: (path) => ['node_modules', 'dist'].includes(path),
+}).flatMap((path) =>
+  [
+    ...readFileSync(join(site, path), 'utf8').matchAll(
+      /<Badge type="status-([a-z-]+)"/g,
+    ),
+  ].map(([, status]) => ({ path, status })),
+);
+
 describe('HTTP status colors', () => {
   it('defines every status in both themes', () => {
     assert.ok(fills.light.size > 0);
@@ -26,6 +43,23 @@ describe('HTTP status colors', () => {
   it('computes every ink from its fill with one threshold', () => {
     assert.deepEqual([...inkRules.keys()], [...fills.light.keys()]);
     assert.equal(new Set(inkRules.values()).size, 1);
+  });
+
+  it('styles a status badge for every status', () => {
+    for (const status of fills.light.keys())
+      assert.ok(
+        css.includes(
+          `.VPBadge.status-${status} {\n  --status-fill: var(--status-${status});\n  --status-fill-ink: var(--status-${status}-ink);\n}`,
+        ),
+        status,
+      );
+  });
+
+  it('badges only defined statuses in the docs', () => {
+    assert.ok(badgeTypes.length > 0);
+
+    for (const { path, status } of badgeTypes)
+      assert.ok(fills.light.has(status), `${path}: status-${status}`);
   });
 
   for (const theme of themes) {
