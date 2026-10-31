@@ -11,6 +11,7 @@ export default {
     '**/tmp/**',
     '**/node_modules/**',
     '**/coverage/**',
+    '**/coverage-effect3/**',
     '**/.turbo/**',
     '**/.cache/**',
     '**/.vitest/**',
