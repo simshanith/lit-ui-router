@@ -580,9 +580,9 @@ and its second parameter types each handler's resolves by state name.
   redirect may target a response state.
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
-  `<img>` reaches its badge, and answer other methods with a 405. The host
-  settles the state there and runs its handler; the `Response` goes out
-  untouched. A typed router that declares response states requires
+  `<img>` reaches its badge, and answer other methods with a 405.
+  [`lit-ui-router-ssr`](/packages/ssr#response-states)'s `responder` settles
+  the state there and runs its handler; the `Response` goes out untouched. A typed router that declares response states requires
   `serveResponse` at compile time, and construction throws without it.
 - The Connect adapter throws for response states unless `responses: 'next'`.
 - `ui-router-server` augments core's `StateDeclaration` with
