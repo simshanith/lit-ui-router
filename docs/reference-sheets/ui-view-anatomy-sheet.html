@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ui-view anatomy · Structural drawing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+/* Layout: one Apple-style dimensional drawing sheet (notes · section · plan · tables · details · layouts · title block), black on white, single light theme by design. */
+:root{--paper:#ececec;--sheet:#ffffff;--ink:#111;--ink2:#444;--ink3:#7a7a7a;--fill:#f3f3f3;--fill2:#e6e6e6;--f:'Arimo','Helvetica Neue',Helvetica,Arial,sans-serif;color-scheme:light}
+body{background:var(--paper);color:var(--ink);font-family:var(--f)}
+.wrap{max-width:1760px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scroll{overflow-x:auto;background:var(--sheet);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+svg{display:block;width:100%;min-width:1100px;height:auto}
+.tb{background:var(--sheet);border:1.5px solid var(--ink);display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;margin-bottom:24px}
+.tb>div{border-right:1px solid #d0d0d0;border-bottom:1px solid #d0d0d0;padding:10px 12px;min-width:0}
+.tb .big{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.tb h1{font-size:clamp(26px,4vw,40px);line-height:1;margin:0;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.lbl{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--ink3);font-weight:600}
+.tb .v{font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.tb .notes{grid-column:1/-1;border-right:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 24px;font-size:13px;color:var(--ink2)}
+.tb .notes ol{margin:4px 0 0;padding-left:18px}
+.tb .figs{grid-column:1/-1;border-right:0;border-bottom:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 18px}
+.tb .figs .v{font-size:17px}
+@media (max-width:640px){.tb{grid-template-columns:1fr 1fr}.tb .big{grid-column:1/-1;grid-row:auto}}
+.sheetwrap{margin-bottom:28px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);padding:10px 2px 0}
+.foot b{font-weight:600;color:var(--ink)}
+/* drawing */
+.u{font-family:var(--f);text-transform:uppercase;letter-spacing:.07em}
+.border{fill:none;stroke:var(--ink);stroke-width:1.2}
+.obj{fill:var(--sheet);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.well{fill:var(--fill);stroke:var(--ink);stroke-width:1}
+.slot{fill:none;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:4 3}
+.hug{fill:var(--fill2);stroke:var(--ink);stroke-width:1}
+.thin{fill:none;stroke:var(--ink);stroke-width:.8}
+.ph{fill:none;stroke:var(--ink3);stroke-width:.8;stroke-dasharray:14 3 3 3}
+.cl{fill:none;stroke:var(--ink3);stroke-width:.7;stroke-dasharray:16 3 2 3}
+.cut{stroke:var(--ink);stroke-width:2}
+.dl{stroke:var(--ink);stroke-width:.7;fill:none}
+.ext{stroke:var(--ink);stroke-width:.55;fill:none}
+.arrow{fill:var(--ink)}
+.hl{stroke:var(--ink2);stroke-width:.7}
+.hs{stroke:var(--ink);stroke-width:.8}
+.env{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:10 3 2 3}
+.dt{font:400 11px var(--f);fill:var(--ink);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.dts{font:400 9.5px var(--f);fill:var(--ink2);letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:var(--sheet);stroke-width:3px}
+.sl{font:400 9px var(--f);fill:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+.nt{font:400 11.5px var(--f);fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.nth{font:700 13px var(--f);fill:var(--ink);letter-spacing:.06em}
+.vt{font:400 12px var(--f);fill:var(--ink);letter-spacing:.1em;text-transform:uppercase}
+.vtb{font:400 20px var(--f);fill:var(--ink);letter-spacing:.06em}
+.nb{fill:var(--sheet);stroke:var(--ink);stroke-width:.9}
+.nbt{font:400 9.5px var(--f);fill:var(--ink)}
+.lead{stroke:var(--ink);stroke-width:.7;fill:none}
+.dot{fill:var(--ink)}
+.th{font:400 10.5px var(--f);fill:var(--ink);letter-spacing:.05em;text-transform:uppercase}
+.tc{font:400 10.5px var(--f);fill:var(--ink)}
+.tbk{font:400 7px var(--f);fill:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.tbt{font:700 15px var(--f);fill:var(--ink)}
+.tbv{font:400 17px var(--f);fill:var(--ink);letter-spacing:.06em}
+
+/* title block restyled to match the drawing sheet: thin black rules, plain caps lettering */
+.tb{border:1.2px solid var(--ink);border-radius:16px;overflow:hidden}
+.tb>div{border-right:.8px solid var(--ink);border-bottom:.8px solid var(--ink);padding:10px 14px}
+.tb>div:nth-child(4),.tb>div:nth-child(7){border-right:0}
+.tb .lbl{font-size:9.5px;font-weight:400;letter-spacing:.06em;color:var(--ink2)}
+.tb h1{font-weight:400;letter-spacing:.1em;font-size:clamp(28px,4vw,44px);margin-top:4px}
+.tb .v{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+.tb .big .v{font-size:11px;color:var(--ink2);line-height:1.6}
+.tb .notes{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);line-height:1.9}
+.tb .notes ol{padding-left:20px}
+.tb .nh{font-weight:700;font-size:13px;letter-spacing:.06em}
+.tb .nh span{font-weight:400;font-size:11.5px;margin-left:6px}
+.tb .figs>div{border-left:.8px solid var(--ink);padding-left:14px}
+.tb .figs>div:first-child{border-left:0;padding-left:0}
+.tb .figs .v{font-size:18px;letter-spacing:.06em;text-transform:none;margin-top:4px}
+.foot{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.foot b{font-weight:700}
+</style>
+<style>body{margin:0}
+.act{fill:var(--sheet);stroke:var(--ink);stroke-width:1}
+.brk{fill:none;stroke:var(--ink);stroke-width:.8}
+</style>
+<style>.cutl{stroke:var(--ink);stroke-width:2.4;fill:none}.mk{fill:var(--ink)}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="tb">
+    <div class="big">
+      <div><div class="lbl">Router library · structural drawing</div><h1>&lt;ui-view&gt; anatomy</h1></div>
+      <div class="v" style="color:var(--ink2)">Structure and lifecycle order only: nesting, layer stack, one transition in section, link attributes. No pixels: the library ships no CSS and sets no sizes.</div>
+    </div>
+    <div><div class="lbl">Dwg no.</div><div class="v">LUR-VIEW-001</div></div>
+    <div><div class="lbl">Rev</div><div class="v">A · 2026-10-31</div></div>
+    <div><div class="lbl">Sheets</div><div class="v">1</div></div>
+    <div><div class="lbl">Units</div><div class="v">Hops (D) · steps (P, K) · no px</div></div>
+    <div><div class="lbl">Scale</div><div class="v">NTS · schematic</div></div>
+    <div><div class="lbl">Source</div><div class="v">packages/lit-ui-router/src · examples/helloworld</div></div>
+    <div class="notes">
+      <div><span class="nh">NOTES:<span>(UNLESS OTHERWISE SPECIFIED)</span></span><ol>
+        <li>Not to scale. Spans count nesting hops (D) or lifecycle steps (P, K); spacing between steps carries no duration.</li>
+        <li>Prefixes: N node · U runtime object · S state · V view · X place inside &lt;ui-view&gt; · P phase · R readout · A link-owned · K tick · D / DV / DR / B depth.</li>
+        <li>Slots are placeholders. Routed copy (the h3, the p) is drawn as slot boxes only.</li></ol></div>
+      <div><span class="nh" aria-hidden="true">&nbsp;</span><ol start="4">
+        <li>Source refs: UV ui-view.ts · SR ui-sref.ts · SA ui-sref-active.ts · VR view-rendered.ts · CO core.ts · HW helloworld main.ts · @C @uirouter/core 6.1.2 lib/hooks.</li>
+        <li>Reference instance: helloworld at S1, then one transition S1 → S2. Class-component behaviour is drawn for contrast; helloworld routes template functions.</li>
+        <li>[TBD] = an order or value the source does not fix. Grayscale by design.</li></ol></div>
+    </div>
+    <div class="figs">
+      <div><div class="lbl">DR · routed depth</div><div class="v">DV + D = 4</div></div>
+      <div><div class="lbl">B · shadow bounds</div><div class="v">1</div></div>
+      <div><div class="lbl">V1 · fqn</div><div class="v">'' → $default</div></div>
+      <div><div class="lbl">X · element places</div><div class="v">X1 + X2 (+ X0)</div></div>
+      <div><div class="lbl">P · one transition</div><div class="v">P1 → P11</div></div>
+      <div><div class="lbl">A1 · href lands</div><div class="v">K2 (task)</div></div>
+      <div><div class="lbl">R3 · viewRendered</div><div class="v">R4, then Σ pending = 0</div></div>
+    </div>
+  </header>
+  <div class="sheetwrap"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Single sheet: plan view of the helloworld nesting, exploded layer stack of ui-view, section through time of one transition, link detail, states side by side, code tables"></svg></div>
+  <div class="foot"><span>2026-10-31 &nbsp;|&nbsp; Router library reference · internal</span><span><b>&lt;ui-view&gt; anatomy, structure and lifecycle</b> &nbsp;|&nbsp; 1</span></div></div>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';let sv,A,HAT,uid=0;
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e}
+function tx(x,y,s,c,a,p){const t=mk('text',Object.assign({x:x,y:y,class:c||'dt'},a||{}),p);t.textContent=s;return t}
+function begin(id){sv=document.getElementById(id);sv.innerHTML='';const n=uid++;const d=mk('defs',{});const m=mk('marker',{id:'ar'+n,viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},d);mk('path',{d:'M0,1.7 L10,5 L0,8.3 z',class:'arrow'},m);
+ const pt=mk('pattern',{id:'hat'+n,width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},d);mk('line',{x1:0,y1:0,x2:0,y2:5,class:'hl'},pt);A='url(#ar'+n+')';HAT='url(#hat'+n+')';rr(20,20,1660,1020,16,'border')}
+
+/* ---- kit ---- */
+function dimH(x1,x2,y,e1,e2,l,o){o=o||{};[[x1,e1],[x2,e2]].forEach(([x,e])=>{if(e==null)return;const s=Math.sign(y-e)||1;mk('line',{x1:x,y1:e+s*3,x2:x,y2:y+s*5,class:'ext'})});
+ if(x2-x1>=28)mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl','marker-start':A,'marker-end':A});else{mk('line',{x1:x1-13,y1:y,x2:x1,y2:y,class:'dl','marker-end':A});mk('line',{x1:x2+13,y1:y,x2:x2,y2:y,class:'dl','marker-end':A});mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl'})}
+ tx((x1+x2)/2+(o.dx||0),(o.below?y+13:y-4)+(o.dy||0),l,o.c||'dt',{'text-anchor':'middle'})}
+function callout(px,py,ex,ey,l,dir,c){const s=dir||(ex>=px?1:-1);mk('circle',{cx:px,cy:py,r:1.8,class:'dot'});mk('polyline',{points:px+','+py+' '+ex+','+ey+' '+(ex+s*10)+','+ey,class:'lead'});tx(ex+s*14,ey+4,l,c||'dt',{'text-anchor':s>0?'start':'end'})}
+function nb(x,y,n){mk('rect',{x:x-6,y:y-6,width:12,height:12,class:'nb'});tx(x,y+3.5,String(n),'nbt',{'text-anchor':'middle'})}
+function rr(x,y,w,h,r,c){return mk('rect',{x:x,y:y,width:w,height:h,rx:r,class:c})}
+function slotLabel(x,y,w,h,l,al){tx(al==='l'?x+6:x+w/2,y+h/2+3.2,l,'sl',{'text-anchor':al==='l'?'start':'middle'})}
+function title(x,y,t,s){tx(x,y,t,'vt',{'text-anchor':'middle'});if(s)tx(x,y+14,s,'dts',{'text-anchor':'middle'})}
+function notes(list){const NX=50,NY=58;tx(NX,NY,'NOTES:','nth');tx(NX+62,NY,'(UNLESS OTHERWISE SPECIFIED)','nt');
+ list.forEach(([n,t],i)=>{const y=NY+28+i*23;if(n){nb(NX+6,y-4,n);tx(NX+22,y,t,'nt')}else tx(NX,y,t,'nt')})}
+function table(x,y,ttl,rows){const ws=[34,82,118],rh=17;tx(x,y-8,ttl,'vt');
+ const all=[['Code','Variable','Value']].concat(rows);all.forEach((r,i)=>{let cx2=x;r.forEach((c,j)=>{mk('rect',{x:cx2,y:y+i*rh,width:ws[j],height:rh,class:'thin'});tx(cx2+(j||!i?ws[j]/2:5),y+i*rh+12,c,i?'tc':'th',{'text-anchor':j||!i?'middle':'start'});cx2+=ws[j]})});return y+all.length*rh+34}
+function detailRef(cx,cy,r,lbl,lx,ly){mk('circle',{cx:cx,cy:cy,r:r,class:'ph'});const a=Math.atan2(ly-cy,lx-cx);mk('line',{x1:cx+r*Math.cos(a),y1:cy+r*Math.sin(a),x2:lx,y2:ly,class:'lead'});tx(lx+(lx<cx?-4:4),ly+4,lbl,'dts',{'text-anchor':lx<cx?'end':'start'})}
+function arrowLine(pts){mk('polyline',{points:pts.map(p=>p.join(',')).join(' '),class:'dl','marker-end':A})}
+
+/* ---- code tables (every code on the sheet is here) ---- */
+const T={
+ node:[['N1','#root','HW render target'],['N2','<ui-router>','shadow <slot>'],['N3','<app-root>','HW AppRoot'],['N4','<nav>','HW render()'],['N5','<a> hello','uiSref(S1)'],['N6','<a> about','uiSref(S2)'],['N7','<ui-view>','render root = this'],['N8','incoming el.','R1 · [routed]'],['N9','outgoing el.','UV outgoingElement']],
+ depth:[['D','hop','parent → child = 1'],['DV','view depth','3·D = 3'],['DR','routed depth','DV + D = 4'],['B','shadow bound','N3 | N7 = 1']],
+ run:[['U1','UIRouterLit','CO 122'],['U2','ActiveUIView','UV 647 · fqn'],['U3','LitViewConfig','CO 43 · load() now'],['V1','$default',"name '' · UV 638"],['S0','root','creationContext'],['S1','hello','/hello · initial'],['S2','about','/about']],
+ place:[['X0','fallback','fragment · empty'],['X1','slot[0]','UV 232'],['X2','slot[1]','free one = incoming'],['X3','template out','lit child part']],
+ phase:[['P0','connect','seek U1 · UV 335'],['P1','click','SR 370'],['P2','go()','SR 389'],['P3','onBefore','uiCanExit · UV 668'],['P4','onStart','eager resolve · @C'],['P5','onExit/Enter','lazy resolve · @C'],['P6','onFinish','load views · @C'],['P7','onSuccess','sync → U3 · UV 254'],['P8','settle','R4 resolves'],['P9','lit update','render · UV 906'],['P10','1st update','retire · UV 1029'],['P11','rendered','R3 · VR 100']],
+ read:[['R1','routedElement','UV 741'],['R2','[routed]','updated() · UV 882'],['R3','viewRendered()','R4 → Σ pending 0'],['R4','trans.promise','P8']],
+ link:[['A1','href','$state.href · SR 233'],['A2','class','activeClasses SA 327'],['A3','aria-current',"'page' · SA 361"],['A4','.targetState','expando · SR 230'],['A5','click','listener · SR 440'],['A6','uiSrefTarget','event → SA · SR 254']],
+ tick:[['K0','commit','directive update()'],['K1','microtask','K0 + μ · SA 486'],['K2','task','setTimeout · SR 415'],['K3','task','setTimeout · SA 554']]
+};
+
+/* =================== SHEET 1 =================== */
+begin('sh1');
+notes([[1,'N7 RENDER ROOT = THIS; ROUTED NODES ARE ITS LIGHT DOM.'],[2,"V1 NAME '' → $DEFAULT; NO PARENT VIEW, SO CONTEXT = S0."],[3,'HELLOWORLD ROUTES TEMPLATES: X3 SWAPS IN ONE COMMIT.'],[4,'CLASS ONLY: N9 STANDS IN ITS X UNTIL N8 FIRST UPDATES.'],[5,'R1 AND R2 MOVE TO N8 AT P9, BEFORE N8 HAS RENDERED.'],[6,'TEMPLATE R1 = FIRST ELEMENT ONLY; SIBLINGS UNMARKED.'],[7,'A1–A6 LAND AT K2: THE FIRST COMMIT PAINTS A BARE <A>.'],[8,'P4–P7: OLD LINK KEEPS A2 (FROM-PATH); A2 MOVES AT P8.'],[9,'R3 AWAITS R4, THEN LOOPS UNTIL NO UPDATE IS PENDING.'],[0,'P8 AND P9 ARE SEPARATE MICROTASKS; THEIR ORDER IS [TBD].'],[0,'NO PX: SPANS COUNT HOPS (D) OR STEPS (P, K) ONLY.']]);
+
+/* ---- plan view: nesting at S1 ---- */
+{
+ rr(600,100,550,370,0,'thin');tx(1142,121,'N1 · #ROOT','sl',{'text-anchor':'end'});
+ rr(634,134,482,302,0,'thin');tx(1108,155,'N2 · <UI-ROUTER> · SHADOW <SLOT>','sl',{'text-anchor':'end'});
+ rr(668,168,414,234,0,'thin');mk('rect',{x:674,y:174,width:402,height:222,class:'ph'});tx(1070,191,'N3 · <APP-ROOT> · INNER LINE = B','sl',{'text-anchor':'end'});
+ rr(702,202,346,34,0,'thin');rr(746,208,80,22,3,'hug');slotLabel(746,208,80,22,'N5 · LABEL');rr(836,208,80,22,3,'hug');slotLabel(836,208,80,22,'N6 · LABEL');tx(1040,223,'N4 · <NAV>','sl',{'text-anchor':'end'});
+ rr(702,250,346,134,0,'obj');
+ mk('rect',{x:716,y:262,width:318,height:96,class:'slot'});tx(1026,277,'X3 · TEMPLATE OUTPUT','sl',{'text-anchor':'end'});
+ rr(736,276,166,30,3,'hug');slotLabel(736,276,166,30,'N8 · H3 · [ROUTED]');
+ mk('rect',{x:736,y:316,width:250,height:28,class:'slot'});slotLabel(736,316,250,28,'Sibling nodes · not [routed]');
+ tx(1040,378,'N7 · <UI-VIEW> · REGISTERS U2 = V1','sl',{'text-anchor':'end'});
+ nb(1022,296,3);nb(1000,330,6);nb(1064,372,1);nb(802,374,2);
+ /* U1 provided by property */
+ rr(900,44,200,28,3,'hug');slotLabel(900,44,200,28,'U1 · UIROUTERLIT · S0 S1 S2');
+ mk('line',{x1:930,y1:72,x2:930,y2:134,class:'dl','marker-end':A});tx(936,112,'.UIROUTER','dts');
+ /* P0 seek: composed, crosses B */
+ arrowLine([[702,344],[651,344],[651,136]]);tx(645,240,'P0 · SEEK U1 ↑ COMPOSED','dts',{'text-anchor':'middle',transform:'rotate(-90 645 240)'});
+ /* depth chain */
+ const ty=84;dimH(600,634,ty,100,134,'D');dimH(634,668,ty,null,168,'D');dimH(668,702,ty,null,202,'D');dimH(702,736,ty,null,276,'D');
+ dimH(600,702,64,95,null,'DV = 3');dimH(600,736,44,null,null,'DR = 4');mk('line',{x1:736,y1:39,x2:736,y2:79,class:'ext'});
+ /* detail ref + cut line */
+ detailRef(786,219,44,'DETAIL A',856,160);
+ [[590,'s'],[1160,'e']].forEach(([x])=>{mk('line',{x1:x-8,y1:291,x2:x+8,y2:291,class:'cutl'});mk('line',{x1:x,y1:291,x2:x,y2:313,class:'dl','marker-end':A});tx(x,283,'A','vt',{'text-anchor':'middle'})});
+ title(875,500,'Plan view · S1 active','Schematic · nesting only · DR = DV + D = 4 · B = 1 between N3 and N7');
+}
+
+/* ---- exploded layer stack ---- */
+{const sc=.32,TX=300,TY=650,gap=40,a=.94*sc,b=.17*sc,c=-.34*sc,dd=.47*sc,W=520,H=260;
+ const P=(x,y,z)=>[TX+a*x+c*y,TY+b*x+dd*y-z];
+ const G=z=>mk('g',{transform:'matrix('+a+','+b+','+c+','+dd+','+TX+','+(TY-z)+')'});
+ const R2=(g,x,y,w,h,cls,extra)=>mk('rect',Object.assign({x:x,y:y,width:w,height:h,class:cls,'vector-effect':'non-scaling-stroke'},extra||{}),g);
+ [[0,0],[W,0],[W,H],[0,H]].forEach(([x,y])=>{const p1=P(x,y,gap),p2=P(x,y,gap*5);mk('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],class:'ph'})});
+ let g=G(0);R2(g,0,0,W,H,'thin');R2(g,20,20,150,60,'hug');
+ g=G(gap);R2(g,0,0,W,H,'obj');
+ g=G(gap*2);R2(g,20,20,160,60,'ph');
+ g=G(gap*3);R2(g,20,100,230,140,'hs',{fill:HAT});
+ g=G(gap*4);R2(g,270,100,230,140,'hug');
+ g=G(gap*5);R2(g,290,118,190,28,'slot');R2(g,290,156,190,66,'slot');
+ const LX=236;
+ [[0,[0,H],'U1 · Router','Via N2 · P0 seek target'],[gap,[0,H],'N7 · Host','V1 · render root = this'],[gap*2,[20,80],'X0 · Fallback','Parked fragment · empty in HW'],[gap*3,[20,240],'N9 · Outgoing','Held in its X until P10'],[gap*4,[270,240],'N8 · Incoming','Free X · R1 · [routed]'],[gap*5,[290,222],'Slots','N8 own render · content']].forEach(([z,[x,y],t,st],i)=>{
+  const p1=P(x,y,z),ly=689-i*40;mk('circle',{cx:p1[0],cy:p1[1],r:1.8,class:'dot'});mk('polyline',{points:p1[0]+','+p1[1]+' '+(LX+10)+','+ly+' '+LX+','+ly,class:'lead'});
+  tx(LX-4,ly-2,t,'vt',{'text-anchor':'end'});tx(LX-4,ly+11,st,'dts',{'text-anchor':'end'})});
+ title(300,750,'Exploded view · layer stack','Axonometric · provider at the bottom, content on top · z gaps not to scale');}
+
+/* ---- detail A · link N5 ---- */
+{const ax=90,ay=806;
+ rr(ax,ay,140,32,3,'hug');mk('rect',{x:ax+14,y:ay+7,width:112,height:18,rx:2,class:'slot'});slotLabel(ax+14,ay+7,112,18,'Label slot · hug');
+ const L=[['A1 · HREF = $STATE.HREF(S1) = #/HELLO'],['A2 · CLASS += ACTIVE (ACTIVECLASSES)'],['A3 · ARIA-CURRENT = PAGE WHEN EXACT'],['A4 · .TARGETSTATE EXPANDO'],['A5 · CLICK LISTENER → P1'],['A6 · UISREFTARGET EVENT → UISREFACTIVE']];
+ L.forEach(([l],i)=>callout(ax+140,ay+4+i*4.8,272,786+i*17,l,1,'dts'));
+ const yx=930,K=[110,230,350,470];
+ mk('line',{x1:90,y1:yx,x2:500,y2:yx,class:'thin'});
+ K.forEach((x,i)=>{mk('line',{x1:x,y1:yx-4,x2:x,y2:yx+4,class:'hs'})});
+ dimH(K[0],K[1],yx-16,yx-6,yx-6,'μ');dimH(K[1],K[2],yx-16,null,yx-6,'TASK',{c:'dts'});dimH(K[2],K[3],yx-16,null,yx-6,'TASK',{c:'dts'});
+ [['K0 · COMMIT','BARE <A>'],['K1 · SA ARMS','LISTENERS'],['K2 · A1–A6','LAND'],['K3 · RECHECK','A2 A3 AGAIN']].forEach(([a1,a2],i)=>{tx(K[i],yx+16,a1,'dts',{'text-anchor':'middle'});tx(K[i],yx+28,a2,'dts',{'text-anchor':'middle'})});
+ nb(K[2]+44,yx+22,7);
+ title(300,984,'Detail A · link N5','Schematic · attribute arrival by tick · HW binds uiSrefActive before uiSref');}
+
+/* ---- section A–A · one transition through time ---- */
+{const X=i=>700+(i-1)*46,LBX=684;
+ const lane=(y,l)=>tx(LBX,y+3.5,l,'dts',{'text-anchor':'end'});
+ const bar=(i1,i2,y,cls,extra)=>mk('rect',Object.assign({x:X(i1),y:y-4,width:X(i2)-X(i1),height:8,class:cls},extra||{}));
+ /* chains above */
+ dimH(X(1),X(11),556,null,null,'P1 → P11 · ORDER, NOT DURATION',{c:'dts'});
+ const cy=582;dimH(X(1),X(2),cy,null,null,'CLICK',{c:'dts'});dimH(X(2),X(7),cy,null,null,'HOOK CHAIN · U1',{c:'dts'});dimH(X(7),X(9),cy,null,null,'LIT SCHEDULE',{c:'dts'});dimH(X(9),X(10),cy,null,null,'HOLD',{c:'dts'});dimH(X(10),X(11),cy,null,null,'SETTLE',{c:'dts'});
+ for(let i=1;i<=11;i++)mk('line',{x1:X(i),y1:cy+4,x2:X(i),y2:842,class:'cl'});
+ lane(612,'N5 · A2');bar(1,8,612,'hug');
+ lane(634,'N6 · A2');bar(8,11,634,'hug');nb(X(5)+23,596,8);
+ lane(666,'U1 · TRANS');bar(2,7,666,'well');for(let i=3;i<=6;i++)mk('line',{x1:X(i),y1:661,x2:X(i),y2:671,class:'hs'});
+ mk('path',{d:'M'+X(8)+',660 l6,6 l-6,6 l-6,-6 z',class:'mk'});tx(X(8)+10,662,'R4','dt');
+ lane(698,'N7 · UPDATE');mk('circle',{cx:X(7),cy:698,r:3.5,class:'mk'});tx(X(7),689,'U3 · REQ','dts',{'text-anchor':'middle'});
+ bar(9,9.35,698,'hug');tx(X(9),689,'RENDER','dts',{'text-anchor':'middle'});mk('circle',{cx:X(10),cy:698,r:3.5,class:'mk'});tx(X(10)+4,689,'RETIRE','dts',{'text-anchor':'start'});
+ lane(730,'N9 · TEMPLATE');bar(1,9,730,'well');mk('line',{x1:X(9),y1:722,x2:X(9),y2:738,class:'cut'});
+ lane(752,'N9 · CLASS');bar(1,10,752,'hs',{fill:HAT});mk('line',{x1:X(10),y1:744,x2:X(10),y2:760,class:'cut'});nb(X(10)+20,752,4);
+ lane(786,'N8 · INCOMING');bar(9,11,786,'hug');tx(X(10),777,'FIRST UPDATE','dts',{'text-anchor':'middle'});mk('line',{x1:X(10),y1:780,x2:X(10),y2:792,class:'hs'});
+ lane(818,'R · READOUTS');
+ mk('path',{d:'M'+X(9)+',812 l6,6 l-6,6 l-6,-6 z',class:'mk'});tx(X(9)-10,822,'R1 · R2','dt',{'text-anchor':'end'});nb(X(9)+16,818,5);
+ mk('path',{d:'M'+X(11)+',812 l6,6 l-6,6 l-6,-6 z',class:'mk'});tx(X(11)-10,822,'R3','dt',{'text-anchor':'end'});nb(X(11)-44,818,9);
+ /* axis */
+ mk('line',{x1:X(1)-12,y1:842,x2:X(11)+8,y2:842,class:'thin'});
+ for(let i=1;i<=11;i++){mk('line',{x1:X(i),y1:838,x2:X(i),y2:846,class:'hs'});tx(X(i),860,'P'+i,'dt',{'text-anchor':'middle'})}
+ tx((X(8)+X(9))/2,878,'P8 / P9 ORDER [TBD]','dts',{'text-anchor':'middle'});
+ dimH(X(8),X(11),902,846,846,'R3 LOOP · Σ PENDING → 0',{c:'dts',below:true});
+ title(910,950,'Section A–A · through time','One transition S1 → S2 · N9 template vs class side by side · step spacing not to scale');}
+
+/* ---- states side by side: N7 between P9 and P10 ---- */
+{const sy=792;
+ rr(1206,sy,210,92,0,'obj');mk('rect',{x:1216,y:sy+10,width:190,height:72,class:'slot'});rr(1226,sy+20,120,24,3,'hug');slotLabel(1226,sy+20,120,24,'N8 · [ROUTED]');mk('rect',{x:1226,y:sy+52,width:170,height:20,class:'slot'});slotLabel(1226,sy+52,170,20,'Siblings');
+ tx(1311,sy+108,'X3 ONLY · N9 ALREADY GONE','dts',{'text-anchor':'middle'});
+ title(1311,sy+138,'A · Template (HW)','Lit replaces X3 in the P9 commit');
+ rr(1446,sy,210,92,0,'obj');mk('rect',{x:1456,y:sy+10,width:90,height:72,fill:HAT,class:'hs'});rr(1556,sy+10,90,72,3,'hug');slotLabel(1556,sy+10,90,72,'N8 · [ROUTED]');
+ tx(1501,sy+108,'X1 · N9 HELD','dts',{'text-anchor':'middle'});tx(1601,sy+108,'X2 · N8 = R1','dts',{'text-anchor':'middle'});
+ title(1551,sy+138,'B · Class component','N9 stands until N8 first updates (P10)');
+ tx(1431,sy-20,'STATES SIDE BY SIDE · N7 AT P9 → P10','vt',{'text-anchor':'middle'});}
+
+/* ---- tables ---- */
+{let y=table(1192,72,'Structure · N',T.node);y=table(1192,y,'Depth · D, B',T.depth);y=table(1192,y,'Runtime · U, V, S',T.run);table(1192,y,'Places in N7 · X',T.place);
+ y=table(1436,72,'Phases · P',T.phase);y=table(1436,y,'Readouts · R',T.read);y=table(1436,y,'Link-owned · A',T.link);table(1436,y,'Ticks · K',T.tick);}
+
+})();
+</script>
+
+</body>
+</html>
