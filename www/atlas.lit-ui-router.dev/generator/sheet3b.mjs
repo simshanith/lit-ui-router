@@ -124,21 +124,21 @@ const M = [
   // south-west of the yard: at 10, 155 its roof stood in the plate's title block
   [1,  'repo-checks',           355,  585, '@tools/repo-checks', `the guard house — ${cite('@tools/repo-checks#check:task-inputs')}, the tallest one-file guard`],
   // --- the root yard (`//`) — every //# task drawn alone -------------------------
-  // the root glob's slabs stand at a 44 pitch: a side is 1.2 · √files, 42.8 at 1,271
+  // the root glob's slabs stand at a 46 pitch: a side is 1.2 · √files, 44.1 at 1,350
   [2,  '//#format:check:root',    0,    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
   [3,  '//#format:check:toml',   88,  110, '//#format:check:toml', `mise run + tasks/${cite('//#format:check:toml')} — plate 3A, seam C`],
   [4,  '//#lint:actionlint',    144,  110, '//#lint:actionlint', 'mise run + config.toml run line'],
-  [5,  '//#lint:css',           132,    0, '//#lint:css', `one stylelint line · the same ${fmt(SURFACE)}-file surface`],
+  [5,  '//#lint:css',           138,    0, '//#lint:css', `one stylelint line · the same ${fmt(SURFACE)}-file surface`],
   [6,  '//#lint:markdown',       56,  110, '//#lint:markdown', `mise run + tasks/${cite('//#lint:markdown')}`],
-  [7,  '//#lint:package-json',   60,   48, '//#lint:package-json', `one eslint line watching ${fmt(row('//#lint:package-json').inputs)} manifests`],
-  [8,  '//#lint:root',           44,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
+  [7,  '//#lint:package-json',   60,   50, '//#lint:package-json', `one eslint line watching ${fmt(row('//#lint:package-json').inputs)} manifests`],
+  [8,  '//#lint:root',           46,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
   [9,  '//#lint:shellcheck',     28,  110, '//#lint:shellcheck', `mise run + tasks/${cite('//#lint:shellcheck')}`],
-  [10, '//#lint:templates',     176,    0, '//#lint:templates', `${cite('//#lint:templates')} + ${cite('//#lint:templates', 1)}`],
+  [10, '//#lint:templates',     184,    0, '//#lint:templates', `${cite('//#lint:templates')} + ${cite('//#lint:templates', 1)}`],
   [11, '//#lint:toml',          116,  110, '//#lint:toml', `mise run + tasks/${cite('//#lint:toml')} — chain hop ③`],
   [12, '//#lint:zizmor',        172,  110, '//#lint:zizmor', 'mise run + config.toml run line'],
-  [13, '//#typecheck:root',      88,    0, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
+  [13, '//#typecheck:root',      92,    0, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
   // born 2026-10-02 (#1058): the second slab row, east of lint:package-json
-  [14, '//#lint:complexity',    104,   48, '//#lint:complexity', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
+  [14, '//#lint:complexity',    106,   50, '//#lint:complexity', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
   // --- the package quarters — one block per packages/ member ----------------------
   [15, 'lit-ui-router',         250,   30, 'lit-ui-router', 'guards + oxc-emit + bundle-probe bins behind every task'],
   [16, 'lit-ui-router-mobx',    292,   30, 'lit-ui-router-mobx', `the lit2 and mobx6 guards ride ${numw(MOBX_GUARDED)} tasks`],
@@ -150,13 +150,13 @@ const M = [
   // born 2026-09-14 (#806)
   [21, 'lit-ui-router-ssr',      428,   30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge'],
   // born 2026-10-12/13 (#1185): the row's east end, west of the release road's x 560 leg
-  [30, 'lit-ui-router-signals',  456,   30, 'lit-ui-router-signals', 'the eighth quarter — the signals bindings'],
-  [31, 'ui-router-signals',      481,   30, 'ui-router-signals', 'the ninth quarter — the framework-agnostic signal mirror'],
-  [32, 'ui-router-effect',       499,   30, 'ui-router-effect', 'the tenth quarter — the framework-agnostic SubscriptionRef'],
-  [33, '@repo/route-snapshot',   519,   30, '@repo/route-snapshot', `the eleventh quarter — private, ${numw(SNAP.length)} one-line lanes, nothing to build`],
-  [34, 'ui-router-mobx',         529,   30, 'ui-router-mobx', 'the twelfth quarter — the framework-agnostic MobX store'],
+  [30, 'lit-ui-router-signals',  460,   30, 'lit-ui-router-signals', 'the eighth quarter — the signals bindings'],
+  [31, 'ui-router-signals',      485,   30, 'ui-router-signals', 'the ninth quarter — the framework-agnostic signal mirror'],
+  [32, 'ui-router-effect',       503,   30, 'ui-router-effect', 'the tenth quarter — the framework-agnostic SubscriptionRef'],
+  [33, '@repo/route-snapshot',   523,   30, '@repo/route-snapshot', `the eleventh quarter — private, ${numw(SNAP.length)} one-line lanes, nothing to build`],
+  [34, 'ui-router-mobx',         533,   30, 'ui-router-mobx', 'the twelfth quarter — the framework-agnostic MobX store'],
   // born 2026-10-16 (#1409): the row's east end, the quarters east of the server one step east for its grown block
-  [35, '@repo/dev-gate',         549,   30, '@repo/dev-gate', `the thirteenth quarter — private, the two halves of each package's #dev-gate import`],
+  [35, '@repo/dev-gate',         553,   30, '@repo/dev-gate', `the thirteenth quarter — private, the two halves of each package's #dev-gate import`],
   // born 2026-10-24
   [36, 'ui-router-registry',     535,   60, 'ui-router-registry', 'the fourteenth quarter — types only, no test lane'],
   // --- the instrument end of town -------------------------------------------------

@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "08ee3c27",
-  "commitDate": "2026-10-29T20:26:10-07:00",
-  "generatedAtTime": "2026-10-30T03:46:39.525Z",
+  "sha": "3f55e419",
+  "commitDate": "2026-10-30T22:33:40-07:00",
+  "generatedAtTime": "2026-10-31T06:11:39.514Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-nm.mjs",
-  "used": "git archive origin/main @ 08ee3c27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
+  "used": "git archive origin/main @ 3f55e419 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo"
@@ -23,7 +23,7 @@
     {"name":"@lit/reactive-element","version":"2.1.2","ws":false,"measured":"pkg","f":58,"l":4084,"df":30,"dl":2682},
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
     {"name":"lit-ui-router","version":"1.19.0","ws":true,"measured":"dist/","f":50,"l":3597,"df":25,"dl":3477},
-    {"name":"ui-router-server","version":"0.6.0","ws":true,"measured":"dist/","f":46,"l":3036,"df":23,"dl":1704},
+    {"name":"ui-router-server","version":"0.7.1","ws":true,"measured":"dist/","f":46,"l":3389,"df":23,"dl":1976},
     {"name":"d3-hierarchy","version":"2.0.0","ws":false,"measured":"pkg","f":35,"l":2688,"df":0,"dl":0},
     {"name":"@uirouter/dsr","version":"1.2.0","ws":false,"measured":"pkg","f":45,"l":2053,"df":8,"dl":236},
     {"name":"@lit/context","version":"1.1.6","ws":false,"measured":"pkg","f":27,"l":1675,"df":18,"dl":834},

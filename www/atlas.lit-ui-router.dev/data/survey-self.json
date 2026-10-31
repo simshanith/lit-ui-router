@@ -1,34 +1,34 @@
 {
   "ref": "www/atlas",
-  "sha": "867de4fc",
-  "commitDate": "2026-10-29T21:00:50-07:00",
-  "generatedAtTime": "2026-10-30T04:01:24.052Z",
+  "sha": "08a98096",
+  "commitDate": "2026-10-30T23:04:38-07:00",
+  "generatedAtTime": "2026-10-31T06:19:34.422Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-self.mjs",
-  "used": "git archive www/atlas @ 867de4fc",
+  "used": "git archive www/atlas @ 08a98096",
   "wasAssociatedWith": [
     "scc 4.0.0 (mise x aqua:boyter/scc)",
     "git"
   ],
   "scope": "www/atlas.lit-ui-router.dev/",
-  "tracked": 317,
+  "tracked": 318,
   "rows": [
-    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":29,"srcSloc":3174,"specFiles":0,"specSloc":0},
-    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":68,"srcSloc":18069,"specFiles":0,"specSloc":0},
-    {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":19,"srcSloc":4706,"specFiles":0,"specSloc":0},
-    {"member":"build","name":"the site build","ground":"app/* · app/test/ — prerender, vite, artifact, lint config, the route bench","srcFiles":4,"srcSloc":420,"specFiles":1,"specSloc":98}
+    {"member":"survey","name":"the survey office","ground":"generator/census*.mjs · basis.mjs · survey-*.mjs","srcFiles":29,"srcSloc":3171,"specFiles":0,"specSloc":0},
+    {"member":"drawing","name":"the drawing office","ground":"generator/ — every other module","srcFiles":68,"srcSloc":18078,"specFiles":0,"specSloc":0},
+    {"member":"site","name":"the routed site","ground":"app/src/ — not app/src/generated/","srcFiles":19,"srcSloc":4713,"specFiles":0,"specSloc":0},
+    {"member":"build","name":"the site build","ground":"app/* · app/test/ — prerender, vite, artifact, lint config, the route bench","srcFiles":4,"srcSloc":422,"specFiles":2,"specSloc":151}
   ],
   "excluded": [
-    {"rule":"data/ — the filed plates","files":24,"sloc":15359},
+    {"rule":"data/ — the filed plates","files":24,"sloc":15459},
     {"rule":"app/src/generated/ — written by build.mjs","files":12,"sloc":1262},
-    {"rule":"app/public/ — fragments, pictures, model, manifest","files":124,"sloc":23920},
-    {"rule":"*.md — README (generated), HISTORY and the other prose","files":14,"sloc":4949},
+    {"rule":"app/public/ — fragments, pictures, model, manifest","files":124,"sloc":24012},
+    {"rule":"*.md — README (generated), HISTORY and the other prose","files":14,"sloc":5019},
     {"rule":".agents/ · .claude/ · .claude-plugin/ — the skills and their manifest","files":4,"sloc":5}
   ],
   "offRuler": [
     {"path":"app/.oxlintrc.json","member":"build","lang":"JSON","code":21},
-    {"path":"app/index.html","member":"build","lang":"HTML","code":1675},
+    {"path":"app/index.html","member":"build","lang":"HTML","code":1678},
     {"path":"app/package-lock.json","member":"build","lang":null,"code":0},
-    {"path":"app/package.json","member":"build","lang":"JSON","code":65},
+    {"path":"app/package.json","member":"build","lang":"JSON","code":66},
     {"path":"app/src/experimental/experimental.css","member":"site","lang":"CSS","code":91},
     {"path":"app/src/registry.test-d.ts","member":"site","lang":"TypeScript","code":41},
     {"path":"app/tsconfig.json","member":"build","lang":"JSON","code":16},

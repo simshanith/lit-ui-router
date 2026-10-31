@@ -151,8 +151,8 @@ const lanes = (items, span) => {
 };
 
 // ---- geometry: the river's west mouth takes the cited items older than the window ----
-// the river runs to 1660, where five rows of the 8dfa5311 refresh's 43 yards reach 1,654
-const W = 1700, RXS = 140, RXE = 1660, CR = 7, BADGE_DX = 10, LP = 26, MOUTH_PITCH = 34;
+// the river runs to 1810, where five rows of the 3f55e419 refresh's 45 yards reach 1,800
+const W = 1850, RXS = 140, RXE = 1810, CR = 7, BADGE_DX = 10, LP = 26, MOUTH_PITCH = 34;
 const badgeW = (c) => tw(String(c.n), 'lbls');
 // lanes are counted on a provisional axis; the mouth's width then sets the axis itself
 const laneCount = (rx0) => {
@@ -408,7 +408,7 @@ const topLine = TOP
   : 'no work takes a consignment';
 
 export const sheet14 = {
-  num: 14, id: 'upstream', rev: 'D',
+  num: 14, id: 'upstream', rev: 'E',
   title: 'THE UPSTREAM WORKS',
   sub: `ALTITUDE 14 — the city among the commons it builds on · ${consWord} to ${yardsWord} cited by the city's own record, ${fmt(SENT)} sent and ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked, ${fmt(RETURNED)} returned home, ${fmt(OFF_RIVER)} off the river${GONE.length ? ` (${fmt(GONE.length)} missing)` : ''} · ${BASIS}`,
   scale: 'CITY × COMMONS',

@@ -78,7 +78,7 @@ const PLACED = [
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 257, 6],
   // east off 248 at the b499e2a5 refresh, with the server, off the flagship's annex
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 257, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 342, 178],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 362, 191],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
@@ -119,8 +119,8 @@ const PLACED = [
   //     the bindings in row one east of the mobx quarter ----------------------------
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
   // north off the CHURN key when its annex reached 340.4 at the 4dc0cbb7 refresh, and
-  // east with 3 when the flagship's annex reached 241.5 at the 9e656ab3 refresh
-  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 330, 122],
+  // east of ssr's annex, which reaches 618.4 at the 3f55e419 refresh
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 358, 134],
   // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
   // south off 156 at the b499e2a5 refresh, off the flagship's grown annex
   [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 174],
@@ -131,23 +131,23 @@ const PLACED = [
   // --- born 2026-10-12/13 (#1185): the packages lots are this sheet's own, clear of the
   //     reading box and both callouts; the bindings and the snapshot take the strip
   //     under ssr's annex, the agnostic cores the north-east corner east of 2's annex ---
-  [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 268],
-  // east off 440 with 47 at the 8dfa5311 refresh, when the server's annex reached 457, and 43 and 49 east off 500 with them
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 484, 10],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 533, 10],
-  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 256],
+  [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 275],
+  // the agnostic cores and the private gate stand in one column east of 2's annex, which reaches 825.5 at the 3f55e419 refresh
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 488, 10],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 488, 90],
+  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 263],
   // --- sheet 7's lots -------------------------------------------------------------
   [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
   [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
-  // the north-east corner, under 42
-  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 484, 50],
+  // the cores' column, under 42
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 488, 50],
   // --- born 2026-10-15/16 (#1388, #1409): the tool on the yard's south edge, clear of the
-  //     winter-wall callout; the private gate beside the mobx store under 43 ----------
+  //     winter-wall callout; the private gate at the foot of the cores' column ----------
   [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 300, 640],
-  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 533, 50],
+  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 488, 120],
   // --- born 2026-10-22/24: the registry east of the snapshot, clear of the plugin callout's leader;
   //     the ledger model on the yard's south edge east of ci-logs; the two workers north of docs ---
-  [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 342, 229],
+  [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 406, 232],
   [51, '@tools/release-ledger', 'tools/release-ledger', 'tool', 400, 630],
   [52, 'release-diffs', 'www/release-diffs.lit-ui-router.dev', 'site', 820, 280],
   [53, 'release-ledger', 'www/release-ledger.lit-ui-router.dev', 'site', 660, 250],
@@ -421,10 +421,10 @@ ${txt(60, 1078, `@tools/release — ${filesOf(row(12))} walls, every one summer-
 ${txt(60, 1092, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
 ${leader(130, 1064, 146, 1044)}
 
-${txt(526, 552, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
-${txt(526, 566, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
-${txt(526, 578, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
-${leader(530, 540, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
+${txt(545, 552, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
+${txt(545, 566, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
+${txt(545, 578, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
+${leader(549, 540, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
 
 // ---- assemble --------------------------------------------------------------------
 // the figure ends 20 px under the timeline's season lettering

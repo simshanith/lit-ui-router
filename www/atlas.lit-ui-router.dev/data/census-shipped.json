@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "08ee3c27",
-  "commitDate": "2026-10-29T20:26:10-07:00",
-  "generatedAtTime": "2026-10-30T03:49:48.667Z",
+  "sha": "3f55e419",
+  "commitDate": "2026-10-30T22:33:40-07:00",
+  "generatedAtTime": "2026-10-31T06:15:09.351Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 08ee3c27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 3f55e419 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -24,17 +24,17 @@
     "release-pages.css"
   ],
   "totals": {
-    "files": 1671,
-    "rawBytes": 69963726,
-    "gzBytes": 7971884
+    "files": 1771,
+    "rawBytes": 77976117,
+    "gzBytes": 8407620
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":869033,"top":{"name":"assets/inter-italic-latin-ext.DvFXn_K6.woff2","gz":141152}},
-    {"district":"html pages","files":364,"gz":3406286,"top":{"name":"guides/server-route-matching.html","gz":42781}},
-    {"district":"markdown pages","files":353,"gz":507079,"top":{"name":"llms-full.txt","gz":192838}},
+    {"district":"html pages","files":389,"gz":3755626,"top":{"name":"guides/server-route-matching.html","gz":43085}},
+    {"district":"markdown pages","files":378,"gz":538763,"top":{"name":"llms-full.txt","gz":204502}},
     {"district":"examples","files":36,"gz":1559165,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-C953Kw6z.js","gz":282315}},
-    {"district":"page chunks","files":706,"gz":694121,"top":{"name":"assets/guides_server-route-matching.md.BUkWwkbt.js","gz":26596}},
-    {"district":"vp framework","files":15,"gz":266705,"top":{"name":"assets/chunks/@localSearchIndexroot.D1v8NuoJ.js","gz":142345}},
+    {"district":"page chunks","files":756,"gz":739427,"top":{"name":"assets/guides_server-route-matching.md.BUkWwkbt.js","gz":26596}},
+    {"district":"vp framework","files":15,"gz":276116,"top":{"name":"assets/chunks/@localSearchIndexroot.BcicmCqL.js","gz":150667}},
     {"district":"images","files":103,"gz":157545,"top":{"name":"images/lit-ui-router.png","gz":68708}},
     {"district":"diagrams","files":14,"gz":21423,"top":{"name":"diagrams/about-this-site-architecture.svg","gz":3495}},
     {"district":"app: vanilla","files":19,"gz":132598,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
@@ -43,7 +43,7 @@
     {"district":"app: hash","files":4,"gz":16857,"top":{"name":"assets/main-PqzwnBo7.js","gz":8457}},
     {"district":"app: signals","files":13,"gz":100916,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":4,"gz":29726,"top":{"name":"assets/style.GD0enUhl.css","gz":21851}}
+    {"district":"site css","files":4,"gz":29721,"top":{"name":"assets/style.DqVikY2K.css","gz":21846}}
   ],
   "orphans": [
 

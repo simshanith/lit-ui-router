@@ -524,6 +524,25 @@ sitting); order is dependency order.
   gz; nm 173,820 lines / 41,155 d.ts; mass3b 13,307 hashes over 235 real tasks and 3,029 command
   sloc; the ci graph 864 / 235 / 3,024 edges; steam 643 commits; weather 448 dated files; 7A 11,937
   of 19,307 metered sloc lit over 25 members.
+- 2026-10-30 — THE TWENTY-SIXTH REFRESH, at `origin/main` @ 3f55e419 (commit 2026-10-30), the
+  census plates re-run at the one ref, 16 commits past the twenty-fifth (08ee3c27): `ui-router-server`
+  0.7.1 with response states, `shouldDehydrate` and named transporters, and `lit-ui-router-ssr` 0.7.0
+  with `./testing`, on the server's `^0.7.0`. The user: "new releases dropped. adopt". NO MEMBER WAS
+  BORN; upstream took two yards and two consignments through #1689 (nuxt/nuxt, gatsbyjs/gatsby).
+  What the refresh taught: A RACE IN THE TREE'S GRAPH CAN BLANK A PLATE. census-shadow's one turbo
+  pass failed when `ui-router-server#test:coverage`, which waits on `transit` and not on its own
+  `build:js`, read `dist/` before the concurrent build wrote it, and every turbo member filed `u`; the
+  probe exits 0 either way, so the log's `FAIL turbo-test-coverage` line is the stop, and the re-run at
+  the same ref passed. A TEST-ONLY DOOR CAN BE THE CHEAPEST A BROWSER OPENS: ssr's `./testing` (254 gz)
+  undercut the storefront's `./url-config`, so sheet 11's storefront paragraph lists the doors under
+  its cheapest off the plate (11 REV N). THE ROOT GLOB CROSSED THE SLAB PITCH: at 1,350 files a slab
+  is 44.1 a side, and 3B's root yard re-pitches 44 → 46. Sheet 14 widens again for 45 yards (REV E);
+  sheet 4's bay floor drops 2 for ssr's 18 files; lots moved with air on 3, 7, 9 (`OY` 647 → 716)
+  and 13, where the agnostic cores stand in one column east of the server's annex. THE NUMBERS: city
+  477 src files / 42,967 sloc and 254 spec / 46,674; doors 35 at 236,891 min / 85,519 gz; the bundle
+  126,866 gz in 18 chunks; the deploy 1,771 files / 8,407,620 gz; upstream 45 yards, 99 consignments;
+  pins 44 (52 with the atlas), none trailing; audit escapes 0, hits 0, text-on-text 121;
+  check-scenes 112; 34 card pictures × 2 themes.
 - 2026-10-29 — THE TWENTY-FIFTH REFRESH, at `origin/main` @ 08ee3c27 (commit 2026-10-29), the
   census plates re-run at the one ref, 27 commits past the twenty-fourth (8dfa5311): `lit-ui-router`
   1.19.0, `ui-router-server` 0.6.0 with `./prerender`, and `lit-ui-router-ssr` 0.6.0 on the

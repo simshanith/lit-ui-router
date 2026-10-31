@@ -92,7 +92,7 @@ const TIER_TEXT = {
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
   // east off 25, then 33 at the b499e2a5 refresh
-  [1,  'src — packages/*/src',      'line',    50,    30.45, ...C('src — packages/*/src'), null, null, SRC_NOTE],
+  [1,  'src — packages/*/src',      'line',    45,    24, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   // east off 201.1, then 222, with the src slab: the run between them needs 31.2 px of trims
   [2,  'build — @tools/oxc-emit',   'line',   244,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   334,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],

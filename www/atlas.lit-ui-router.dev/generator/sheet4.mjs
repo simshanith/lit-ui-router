@@ -205,7 +205,7 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 }).join('\n');
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
-const BAY_X = 1030, BAY_R = 1340, BAY_T = 10, BAY_B = 250, BAY_CX = 1185, BAY_COL = 155;
+const BAY_X = 1030, BAY_R = 1340, BAY_T = 10, BAY_B = 252, BAY_CX = 1185, BAY_COL = 155;
 // Two columns; rows stack by their own DRAWN height: name, version line, then the
 // mass block itself, and the next name clears it by 11 px, a row's step 26 + its block's height; the bay's top rose 14 → 10 for the registry's row. The header is one line, so rows start 34 under the bay's top.
 const bayY = new Map(), bayX = new Map();
