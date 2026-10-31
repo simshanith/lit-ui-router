@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <style>
+    @font-face {
+      font-family: Inter;
+      font-weight: 100 900;
+      src: url(../../node_modules/vitepress/dist/client/theme-default/fonts/inter-roman-latin.woff2) format('woff2');
+    }
+    text { font-family: Inter, sans-serif; }
+    .hero { font-size: 64px; font-weight: 700; letter-spacing: -0.4px; }
+    .name { fill: #a8b1ff; }
+    .text { fill: #dfdfd6; }
+    .tagline { font-size: 28px; font-weight: 500; fill: #98989f; }
+    .library { fill: #a8b1ff; }
+  </style>
+  <rect width="1200" height="630" fill="#1b1b1f"/>
+  <image href="../../public/images/hero-glow-dark.svg" x="603" y="-17" width="663" height="663"/>
+  <image href="../../public/images/lit-ui-router.svg" x="765" y="145" width="340" height="340" style="mix-blend-mode: plus-lighter"/>
+  <text class="hero name" x="80" y="215">Lit UI Router</text>
+  <text class="hero text" x="80" y="288">State-based routing</text>
+  <text class="hero text" x="80" y="361">for Lit</text>
+  <text class="tagline" x="80" y="433">A <tspan class="library" dx="36">UI-Router</tspan> implementation</text>
+  <image href="../../public/images/ui-router.svg" x="108.7" y="408.5" width="28" height="28"/>
+  <text class="tagline" x="80" y="475">for <tspan class="library" dx="36">Lit</tspan> web components</text>
+  <image href="../../public/images/lit-flame.svg" x="124.5" y="450.5" width="28" height="28"/>
+</svg>
