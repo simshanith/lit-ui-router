@@ -450,6 +450,7 @@
         "tools/ci-logs/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/crap/**/*.test.ts",
+        "tools/doc-example-check/**/*.test.ts",
         "tools/embed-heights/**/*.test.ts",
         "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
