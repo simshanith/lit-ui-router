@@ -279,3 +279,35 @@
     }
 }
 
+/* === HTTP status colors: one fill per status for the chips and diagrams === */
+html {
+  --status-ok: #18794e;
+  --status-redirect: #915930;
+  --status-not-found: #b8272c;
+  --status-as-served: #67676c;
+  --status-ink: #ffffff;
+  --status-ok-ink: var(--status-ink);
+  --status-redirect-ink: var(--status-ink);
+  --status-not-found-ink: var(--status-ink);
+  --status-as-served-ink: var(--status-ink);
+}
+
+html.dark {
+  --status-ok: #3dd68c;
+  --status-redirect: #f9b44e;
+  --status-not-found: #f66f81;
+  --status-as-served: #98989f;
+  --status-ink: #000000;
+}
+
+/* Ink is white on a fill darker than the threshold lightness and black on one lighter. */
+@supports (color: oklch(from red l c h)) {
+  html {
+    --status-ok-ink: oklch(from var(--status-ok) clamp(0, (0.6 - l) * 1000, 1) 0 0);
+    --status-redirect-ink: oklch(from var(--status-redirect) clamp(0, (0.6 - l) * 1000, 1) 0 0);
+    --status-not-found-ink: oklch(from var(--status-not-found) clamp(0, (0.6 - l) * 1000, 1) 0 0);
+    --status-as-served-ink: oklch(from var(--status-as-served) clamp(0, (0.6 - l) * 1000, 1) 0 0);
+  }
+}
+/* === end HTTP status colors === */
+

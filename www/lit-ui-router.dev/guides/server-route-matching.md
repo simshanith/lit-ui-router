@@ -449,43 +449,43 @@ binding, outside that budget entirely.
 
 Each diagram follows one request through the four lanes in production.
 
-#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-ok); color: var(--status-ok-ink)">200</span>
 
 Not a `run_worker_first` path, and the file exists. The worker never runs.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-1-static-page.svg-->
 
-#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-not-found); color: var(--status-not-found-ink)">404</span>
 
 Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-2-static-miss.svg-->
 
-#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-ok); color: var(--status-ok-ink)">200</span>
 
 A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-3-app-deep-link.svg-->
 
-#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-indigo-soft, rgba(100,108,255,0.14)); color: var(--vp-c-indigo-1, #3451b2)">302</span>
+#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-redirect); color: var(--status-redirect-ink)">302</span>
 
 A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-4-app-redirect.svg-->
 
-#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-not-found); color: var(--status-not-found-ink)">404</span>
 
 `/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg-->
 
-#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-not-found); color: var(--status-not-found-ink)">404</span>
 
 The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
 
 <!--@include: ../public/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg-->
 
-#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-default-soft, rgba(142,150,170,0.14)); color: var(--vp-c-text-1, #3c3c43)">as served</span>
+#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--status-as-served); color: var(--status-as-served-ink)">as served</span>
 
 The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
 

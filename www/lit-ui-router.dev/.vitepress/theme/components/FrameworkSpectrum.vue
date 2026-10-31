@@ -59,13 +59,13 @@ function stateClass(id: string) {
 <template>
   <figure
     class="framework-spectrum"
-    aria-label="Where the ecosystem lands on the server-support spectrum, level 0 (memory) through level 5 (full-stack); each point is a tool's documented position, detailed by the cards below"
+    aria-label="Where the ecosystem lands on the server-support spectrum, level 0 (memory location) through level 5 (full-stack shared router); each point is a tool's documented position, detailed by the cards below"
   >
     <div class="bands" role="presentation">
       <div v-for="level in levels" :key="level.n" class="band">
         <span class="band-label">
           <span class="band-n">{{ level.n }}</span>
-          {{ level.name }}
+          <span>{{ level.name }}</span>
         </span>
         <span class="band-points">
           <button
@@ -179,12 +179,13 @@ function stateClass(id: string) {
 
 .band-label {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 11px;
   line-height: 1.2;
   color: var(--vp-c-text-2);
-  white-space: nowrap;
+  text-wrap: balance;
 }
 
 .band-n {
