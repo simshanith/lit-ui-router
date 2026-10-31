@@ -74,6 +74,7 @@ export const LABELS = {
   A3: S('city', 'isometric', 'static', 'measured'),
   A4: S('city', 'isometric', 'static', 'measured'),
   A5: S('survey', 'plan', 'static'),
+  A6: S('survey', 'schematic', 'static'),
   city: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   plant: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   bricks: S('coupling', 'isometric', 'interactive'),

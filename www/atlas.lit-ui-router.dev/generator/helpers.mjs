@@ -99,6 +99,11 @@ export const DIMENSIONAL = {
   skill: 'https://github.com/enesozturk/dimensional-drawing',
   apple: 'https://developer.apple.com/accessories/dimensional-drawings',
 };
+// The NASA Graphics Standards Manual (NHB 1430.2, January 1976, Danne & Blackburn); the file NASA serves is a later reprint.
+export const NASA_MANUAL = {
+  page: 'https://www.nasa.gov/image-article/nasa-graphics-standards-manual/',
+  pdf: 'https://www3.nasa.gov/sites/default/files/atoms/files/nasa_graphics_manual_nhb_1430-2_jan_1976.pdf',
+};
 // Dimensional-drawing marks, in the chrome's own classes: a dimension line is
 // `sks` with the soft arrowheads (`${p}-as`, both ends), an extension line is a
 // `skf` hairline standing 3 off the feature and 5 past the dimension line, and

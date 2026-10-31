@@ -872,7 +872,7 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
         </div>
         <p class="rail-sec">ASCENT ORDER</p>
         ${groupsOf(railBands).map((group) => railGroup(group, here))}
-        <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
+        <!-- The type specimen and the colour standards are benches, not plates: reachable at /specimen and /colour, off the rail. -->
       </div>
     </nav>
   `;
@@ -1359,10 +1359,11 @@ type ManifestResolves = { manifest?: Manifest };
 type SheetResolves = { manifest?: Manifest; sheet?: SheetRow; fragment?: string };
 type SceneResolves = { extra?: ExtraRow; fragment?: string; viewer?: unknown };
 type SpecimenResolves = { specimen?: unknown };
+type ColourResolves = { colour?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
   // The ← / → walk stays inside the ascent; an appendix plate walks its own
-  // list (A1, A2, A2i, A3, A4, A5), so A1 never appears as "next" after sheet 13.
+  // list (A1, A2, A2i, A3, A4, A5, A6), so A1 never appears as "next" after sheet 13.
   const list = isAppendix(sheet.num) ? (manifest.appendix ?? []) : manifest.sheets;
   const index = list.findIndex((row) => row.id === sheet.id);
   return [list[index - 1], list[index + 1]];
@@ -1542,6 +1543,31 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
         AGAINST TODAY'S MONO
       </p>
       <atlas-specimen></atlas-specimen>
+    </section>
+  `;
+};
+
+// --- the colour standards: the specimen's sibling bench --------------------
+
+export const ColourView: RoutedLitTemplate<ColourResolves> = (props) => {
+  if (!props?.resolves?.colour) return html`<p class="loading">MIXING THE INKS…</p>`;
+  return html`
+    ${utilBar(html`${indexCrumb()}<span class="sh">COLOUR STANDARDS</span>`)}
+    <div class="plate-data">
+      <span>ALTITUDE · THE SET'S OWN CHROME</span>
+      <span>NOT A PLATE — A BENCH</span>
+    </div>
+    <section class="sheet">
+      <div class="sheet-head">
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
+        <span class="shno">COLOUR STANDARDS</span>
+      </div>
+      <h2 class="sheet-title">${THE}COLOUR STANDARDS</h2>
+      <p class="sheet-sub">
+        EVERY TOKEN THE SHEETS ARE INKED IN, READ OUT OF THE CHROME · ITS ROLE, THE GROUNDS IT
+        MAY STAND ON AND ITS CONTRAST IN BOTH THEMES · THE NUMBERS ARE THE BUILD GUARD'S OWN
+      </p>
+      <atlas-colour></atlas-colour>
     </section>
   `;
 };

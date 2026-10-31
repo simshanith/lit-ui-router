@@ -39,6 +39,7 @@ export const href = {
   bricks: `${BASE}bricks`,
   builds: `${BASE}builds`,
   specimen: `${BASE}specimen`,
+  colour: `${BASE}colour`,
   log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
   plate: (num: string): string => `${BASE}plate/${num}`,
@@ -113,6 +114,8 @@ export const routes = [
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.
   { name: 'atlas.specimen', url: '/specimen' },
+  // The colour standards: the specimen's sibling bench, the tokens and the guard's ratios.
+  { name: 'atlas.colour', url: '/colour' },
   // The survey office is appendix A2 under its own name.
   {
     name: 'atlas.office',

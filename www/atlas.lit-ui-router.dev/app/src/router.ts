@@ -27,6 +27,7 @@ import {
   SheetView,
   ShellView,
   SpecimenView,
+  ColourView,
 } from './views.ts';
 
 /**
@@ -184,6 +185,18 @@ export const states: LitStateDeclaration[] = ARTIFACT ? [shellState, galleryStat
       {
         token: 'specimen',
         resolveFn: (): Promise<unknown> => import('./specimen.ts'),
+      },
+    ],
+  } satisfies TypedLitStateDeclaration,
+  {
+    name: 'atlas.colour',
+    url: urlOf('atlas.colour'),
+    component: ColourView,
+    // The bench's element and its generated token table load with this state only.
+    resolve: [
+      {
+        token: 'colour',
+        resolveFn: (): Promise<unknown> => import('./colour.ts'),
       },
     ],
   } satisfies TypedLitStateDeclaration,

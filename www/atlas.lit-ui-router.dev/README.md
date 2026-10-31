@@ -2,11 +2,11 @@
 
 A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen altitudes
 on 26 plates — the numbered sheets, their A/B alternates and three interactive lanes —
-each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 6 more about the atlas itself. Sheets 7–10 are a survey
+each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 7 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
 measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase, A4 its deploy
-on sheet 9's ruler beside the docs deploy, and A5 dimensions the sheet chrome every plate is set in. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+on sheet 9's ruler beside the docs deploy, A5 dimensions the sheet chrome every plate is set in, and A6 draws the atlas's own drawing rules broken beside their correct forms. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -47,6 +47,7 @@ each sheet argue where that form fits and where it lies.
 | [A3](https://atlas.lit-ui-router.dev/sheet/A3) | THE ATLAS ITSELF | ISOMETRIC CITY |
 | [A4](https://atlas.lit-ui-router.dev/sheet/A4) | THE ATLAS ITSELF | SHIPPED CITY |
 | [A5](https://atlas.lit-ui-router.dev/sheet/A5) | THE ATLAS ITSELF | DIMENSIONED PLAN |
+| [A6](https://atlas.lit-ui-router.dev/sheet/A6) | THE ATLAS ITSELF | PAIRED SCHEMATIC |
 | [A2i](https://atlas.lit-ui-router.dev/sheet/A2i) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
 **Build and host.** `generator/ship.mjs` runs the shipment one named step per call, from the repo root, in order:

@@ -24,6 +24,7 @@
 //   app/src/generated/builds-init.js  the builds plate's wiring around <model-viewer>
 //   app/src/generated/icons.js      the icon sprite and key-id table (icons.mjs)
 //   app/src/generated/plate-page.js the bare plate's two inline scripts and the lanes' cytoscape url
+//   app/src/generated/tokens.js     the colour tokens parsed out of chrome.mjs, their roles and the guard's ratios
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, FILL_SCRIPT, PLATE_END_SCRIPT, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
@@ -35,6 +36,7 @@ import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { BRAND_DTS, brandModule, faviconSvg } from './brand.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
+import { TOKENS_DTS, assertColour, colourTable, tokensModule } from './check-colour.mjs';
 import { cityHero } from './sheet7.mjs';
 import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
@@ -53,7 +55,7 @@ const MODULE = {
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
   '13': 'sheet13.mjs', '14': 'sheet14.mjs',
-  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs', A3: 'sheetA3.mjs', A4: 'sheetA4.mjs', A5: 'sheetA5.mjs',
+  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs', A3: 'sheetA3.mjs', A4: 'sheetA4.mjs', A5: 'sheetA5.mjs', A6: 'sheetA6.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off
@@ -378,6 +380,11 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
   writeFileSync(join(generatedDir, 'brand.d.ts'), BRAND_DTS);
   writeFileSync(join(generatedDir, 'plate-page.js'), platePageModule());
   writeFileSync(join(generatedDir, 'plate-page.d.ts'), PLATE_PAGE_DTS);
+  // every TEXT and MARK token over its floor on every background it is allowed on, or the build stops
+  const colour = colourTable();
+  assertColour(colour);
+  writeFileSync(join(generatedDir, 'tokens.js'), tokensModule(colour));
+  writeFileSync(join(generatedDir, 'tokens.d.ts'), TOKENS_DTS);
   writeFileSync(join(publicDir, 'favicon.svg'), faviconSvg());
   const extras = scenes.map(([meta, refs]) => ({
     id: meta.id,

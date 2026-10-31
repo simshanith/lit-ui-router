@@ -15,6 +15,7 @@ export const TITLES = {
   bricks: `The Brick Assembly, in the Round — ${SET}`,
   builds: `The Builds, in the Round — ${SET}`,
   specimen: `The Type Specimen — ${SET}`,
+  colour: `The Colour Standards — ${SET}`,
   log: `Issue Log — ${SET}`,
   notFound: `Not in the set — ${SET}`,
 } as const;
@@ -42,6 +43,8 @@ export function titleFor(state: string | undefined, sheet?: SheetRow): string {
       return TITLES.builds;
     case 'atlas.specimen':
       return TITLES.specimen;
+    case 'atlas.colour':
+      return TITLES.colour;
     case 'atlas.log':
       return TITLES.log;
     case 'atlas.notFound':

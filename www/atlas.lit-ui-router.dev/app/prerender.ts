@@ -132,6 +132,7 @@ const components: Record<string, LitStateDeclaration['component']> = {
   'atlas.bricks': views.BricksView,
   'atlas.builds': views.BuildsView,
   'atlas.specimen': views.SpecimenView,
+  'atlas.colour': views.ColourView,
   'atlas.about': views.AboutView,
   'atlas.log': views.LogView,
   'atlas.notFound': views.NotFoundView,
@@ -166,8 +167,9 @@ const serverResolves: Record<string, LitStateDeclaration['resolve']> = {
   // The bench's element IS the resolve on the client (src/router.ts). The
   // server has no bench to draw — every reading on it is a measurement of a
   // live document — so a truthy token stands in and the view emits its head
-  // and an empty <atlas-specimen>.
+  // and an empty <atlas-specimen>; the colour bench mounts the same way.
   'atlas.specimen': [{ token: 'specimen', resolveFn: (): boolean => true }],
+  'atlas.colour': [{ token: 'colour', resolveFn: (): boolean => true }],
 };
 
 /** src/routes.ts's names and urls, with this half's components and resolves on them. */
@@ -223,13 +225,13 @@ ${FILL_SCRIPT}</script>
 `;
 /**
  * The resolve payload each shell page carries in its signature, for `bootstrap()` to seed.
- * `fragment` is the body's own HTML, `specimen` a server stand-in for the
- * bench the client imports, and `manifest` the 146 KB index the shell
+ * `fragment` is the body's own HTML, `specimen` and `colour` server stand-ins for the
+ * benches the client imports, and `manifest` the 146 KB index the shell
  * preloads (index.html) and the browser caches, so `shouldDehydrate` keeps
  * the three out; `viewer` resolves `undefined` and `dehydrate` lists it as
  * unserializable.
  */
-const LEFT_OUT = new Set(['fragment', 'specimen', 'manifest']);
+const LEFT_OUT = new Set(['fragment', 'specimen', 'colour', 'manifest']);
 const EXPECTED_UNSERIALIZABLE = new Set(['viewer']);
 const payloadReport: { path: string; bytes: number; unserializable: string[] }[] = [];
 
@@ -293,6 +295,7 @@ const titles = new Map<string, string>([
   ...(bricksRow ? ([[href.bricks, TITLES.bricks]] as [string, string][]) : []),
   ...(buildsRow ? ([[href.builds, TITLES.builds]] as [string, string][]) : []),
   [href.specimen, TITLES.specimen],
+  [href.colour, TITLES.colour],
   ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), sheetTitle(row)]),
   ...PLATES.map((row: SheetRow): [string, string] => [href.plate(row.num), sheetTitle(row)]),
 ]);

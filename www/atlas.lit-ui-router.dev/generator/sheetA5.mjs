@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { box, detailRef, dimH, dimV, keyRow, nb, schedule, txt, DIMENSIONAL } from './helpers.mjs';
+import { box, detailRef, dimH, dimV, keyRow, nb, schedule, txt, DIMENSIONAL, NASA_MANUAL } from './helpers.mjs';
 
 const P = 'sA5';
 const VB_W = 1560;
@@ -234,7 +234,7 @@ ${txt(PP.x - 30, PP.y - 50, 'SCALE 0.75:1 · one track; the run past the wrap is
 ${slot(pcx, PYS.head + 4, 200, 14, 'PROJECT MARK · HUG', { hug: true })}
 ${slot(pcx, PYS.head + pk(at('H1', NARROW)) - 20, 100, 14, 'SHEET NO', { hug: true })}
 <line x1="${pcx}" y1="${PYS.headEnd}" x2="${pcx + PCW}" y2="${PYS.headEnd}" class="sk"/>
-${slot(pcx, PYS.title, 180, pk(at('T1', NARROW)), 'TITLE · HUG', { hug: true })}
+${slot(pcx, PYS.title, 180, Math.max(14, pk(at('T1', NARROW))), 'TITLE · HUG', { hug: true })}
 ${slot(pcx, PYS.sub, PCW, 30, 'SUB · FILL · WRAPS')}
 <rect x="${pcx}" y="${PYS.plate}" width="${PCW}" height="${PYS.plateEnd - PYS.plate}" class="sks fp2"/>
 <path d="M${pcx + PCW},${PYS.plate + 6} H${pcx + PRUN} l-6,${(PYS.plateEnd - PYS.plate - 12) / 3} l12,${(PYS.plateEnd - PYS.plate - 12) / 3} l-6,${(PYS.plateEnd - PYS.plate - 12) / 3} H${pcx + PCW}" class="ska fnone" stroke-dasharray="6 4"/>
@@ -282,7 +282,105 @@ const notesSvg = [
 ].join('\n');
 for (const [, s] of N) if (s.length > 116) throw new Error(`appendix A5: a note runs past two lines: ${s}`);
 
-const VB_H = Math.ceil(Math.max(BOTTOM + S3 + 40, PHONE_BOTTOM + 30, DC.y + 120));
+const UPPER_H = Math.ceil(Math.max(BOTTOM + S3 + 40, PHONE_BOTTOM + 30, DC.y + 120));
+
+// ---- the grid: the chrome's tracks as hairlines over a schematic sheet at each width ---------------
+const px = (v) => Number.parseFloat(v);
+const trackList = (v) => String(v).trim().split(/\s+/).map(px);
+// slot heights are schematic, as the plan's are; every x and every track is the plate's
+const SCHEM = {
+  [WIDE]: { titleW: 320, sub: 18, cap: 48, notes: 0 },
+  [NARROW]: { titleW: 240, sub: 36, cap: 60, notes: 200 },
+};
+const sheetAt = (w) => {
+  const s = SCHEM[w];
+  const b = at('B', w), x0 = b + at('S2', w), w1 = at('W1', w), g1 = trackList(at('G1', w)), g2 = at('G2', w), g5 = trackList(at('G5', w));
+  const sum = g1.reduce((a, v) => a + v, 0) + g2 * (g1.length - 1);
+  if (Math.abs(sum - w1) > 0.01) throw new Error(`appendix A5: the notes tracks G1 and gutter G2 sum to ${sum} at ${w}, against W1 ${w1}`);
+  const w7 = at('W7', w);
+  if (Math.abs(2 * b + g5[0] + g5[1] - w7) > 0.01) throw new Error(`appendix A5: the title block's tracks G5 and frame B do not close on W7 ${w7} at ${w}`);
+  const els = [];
+  let yy = x0;
+  const put = (x, ww, h) => { els.push({ x, y: yy, w: ww, h }); yy += h; };
+  put(x0, w1, at('H1', w)); yy += S6;
+  put(x0, s.titleW, at('T1', w)); yy += S7;
+  put(x0, w1, s.sub); yy += S8 + S9;
+  put(x0, w1, at('W3', w) / AR); yy += 10;
+  put(x0, w1, 72); yy += 28;
+  put(x0, at('W4', w), s.cap); yy += 40;
+  const gridY = yy; yy += S13;
+  const cols = yy;
+  let key, tb;
+  if (g1.length === 2) {
+    const kx = x0 + g1[0] + g2;
+    key = { x: kx, y: cols, w: at('W6', w), h: 64 };
+    tb = { x: kx, y: key.y + key.h + 20, w: w7, h: TB_ROWS * TB_ROW };
+    els.push({ x: x0, y: cols, w: g1[0], h: tb.y + tb.h - cols });
+  } else {
+    els.push({ x: x0, y: cols, w: g1[0], h: s.notes });
+    key = { x: x0, y: cols + s.notes + g2, w: at('W6', w), h: 64 };
+    tb = { x: x0, y: key.y + key.h + 20, w: w7, h: TB_ROWS * TB_ROW };
+  }
+  els.push(key, tb);
+  return { w, W: at('W', w), H: tb.y + tb.h + x0, b, x0, w1, g1, g2, g5, gridY, key, tb, els, sticky: at('K', w) === 'sticky' };
+};
+const GRID = { y: UPPER_H + 10, gap: 26 };
+GRID.top = GRID.y + 110;
+const GROUPS = [{ s: sheetAt(WIDE), k: 0.25, x: 70 }, { s: sheetAt(NARROW), k: 0.3 }];
+GROUPS[1].x = GROUPS[0].x + 3 * GROUPS[0].s.W * GROUPS[0].k + 2 * GRID.gap + 70;
+const gridPanel = ({ s, k }, ox, mode) => {
+  const X = (v) => ox + v * k, Yg = (v) => GRID.top + v * k;
+  const ln = (x1, y1, x2, y2) => `<line x1="${X(x1).toFixed(1)}" y1="${Yg(y1).toFixed(1)}" x2="${X(x2).toFixed(1)}" y2="${Yg(y2).toFixed(1)}" class="skf"/>`;
+  const rect = (x, yy, ww, h, cls) => `<rect x="${X(x).toFixed(1)}" y="${Yg(yy).toFixed(1)}" width="${(ww * k).toFixed(1)}" height="${(h * k).toFixed(1)}" class="${cls}"/>`;
+  const inset = s.b + S1, bottom = s.H - s.x0;
+  const hairlines = [rect(0, 0, s.W, s.H, 'skf fnone'), rect(inset, inset, s.W - 2 * inset, s.H - 2 * inset, 'skf fnone')];
+  const edges = [s.x0];
+  let tx = s.x0;
+  s.g1.forEach((t, i) => { tx += t; edges.push(tx); if (i < s.g1.length - 1) { tx += s.g2; edges.push(tx); } });
+  for (const ex of edges) hairlines.push(ln(ex, s.x0, ex, bottom));
+  hairlines.push(ln(s.x0, s.x0, s.x0 + s.w1, s.x0), ln(s.x0, bottom, s.x0 + s.w1, bottom));
+  const t5 = [s.tb.x + s.b, s.tb.x + s.b + s.g5[0], s.tb.x + s.b + s.g5[0] + s.g5[1]];
+  for (const ex of t5) hairlines.push(ln(ex, s.tb.y, ex, s.tb.y + s.tb.h));
+  if (s.sticky) hairlines.push(ln(s.key.x, s.key.y, s.key.x + s.key.w, s.key.y));
+  const out = [];
+  if (mode === 'grid') out.push(rect(0, 0, s.W, s.H, 'fp'), ...hairlines);
+  else out.push(rect(0, 0, s.W, s.H, 'sk2 fp'), rect(inset, inset, s.W - 2 * inset, s.H - 2 * inset, 'skf fnone'));
+  if (mode === 'blocked') out.push(...s.els.map((e) => rect(e.x, e.y, e.w, e.h, 'skf fp2')), ...hairlines.slice(2));
+  if (mode !== 'grid') return out.join('\n');
+  // the codes, lettered in the air above and below the panel
+  const top = GRID.top, low = Yg(s.H);
+  let gx = s.x0;
+  s.g1.forEach((t, i) => {
+    out.push(dimH(P, X(gx), X(gx + t), top - 10, top, top, c('G1')));
+    gx += t;
+    if (i < s.g1.length - 1) { out.push(dimH(P, X(gx), X(gx + s.g2), top - 28, top, top, c('G2'))); gx += s.g2; }
+  });
+  out.push(dimH(P, X(s.b), X(inset), top - 28, null, null, c('S1'), { dx: -6 }));
+  out.push(dimH(P, X(t5[0]), X(t5[1]), low + 10, low, low, c('G5'), { below: true }));
+  out.push(dimH(P, X(t5[1]), X(t5[2]), low + 10, low, low, c('G5'), { below: true }));
+  if (s.sticky) out.push(txt(X(s.key.x + 12).toFixed(1), (Yg(s.key.y) + 12).toFixed(1), `${c('K')} · TOP AT ${c('ST')}`, 'lbld'));
+  return out.join('\n');
+};
+const PANEL_WORDS = [['empty', '1 · THE EMPTY SHEET', '1 · EMPTY'], ['grid', '2 · THE GRID', '2 · GRID'], ['blocked', '3 · BLOCKED IN', '3 · BLOCKED']];
+const gridGroup = (g, gi) => {
+  const pw = g.s.W * g.k;
+  const out = [txt(g.x, GRID.y + 62, `AT ${g.s.w} WIDE · ${g.s.g1.length} ${g.s.g1.length === 1 ? 'TRACK' : 'TRACKS'} · SCALE ${g.k}:1`, 'lblb')];
+  PANEL_WORDS.forEach(([mode, wide, narrow], i) => {
+    const ox = g.x + i * (pw + GRID.gap);
+    out.push(gridPanel(g, ox, mode), txt(ox, GRID.top + g.s.H * g.k + 44, gi === 0 ? wide : narrow, 'lbls'));
+  });
+  return out.join('\n');
+};
+const GRID_RIGHT = GROUPS[1].x + 3 * GROUPS[1].s.W * GROUPS[1].k + 2 * GRID.gap;
+if (GRID_RIGHT > VB_W - 40) throw new Error(`appendix A5: the grid row runs to ${GRID_RIGHT.toFixed(0)}, past the sheet's ${VB_W - 40}`);
+const GRID_BOTTOM = GRID.top + Math.max(...GROUPS.map((g) => g.s.H * g.k)) + 44;
+const gridRow = `
+${txt(30, GRID.y + 20, 'THE GRID — THE CHROME\'S TRACKS AS HAIRLINES', 'lblt')}
+${txt(30, GRID.y + 36, 'after the NASA Graphics Standards Manual, pages 5.14–5.16: the empty sheet, the grid alone, the elements blocked in on it', 'lbls')}
+${GROUPS.map(gridGroup).join('\n')}
+`;
+
+const VB_H = Math.ceil(GRID_BOTTOM + 30);
 const header = `${txt(1520, 34, `SCALE — spacing 1:1 at ${WIDE} wide · detail A 4:1 · detail B 3:1 · detail C 1.2:1 · the phone plan 0.75:1`, 'lbls', 'end')}
 ${txt(1520, 48, `${INSTANCES} instances, one geometry: every .sheet section on the routed pages and the bare plates`, 'lblf', 'end')}
 ${txt(1520, 62, `measured in chromium at ${WIDE} and ${NARROW} wide on ${PLATE.page}, after fonts.ready`, 'lblf', 'end')}`;
@@ -290,7 +388,7 @@ ${txt(1520, 62, `measured in chromium at ${WIDE} and ${NARROW} wide on ${PLATE.p
 const ARIA = `A dimensional drawing of the sheet chrome every plate in the atlas is set in. Notes at top left, numbered one to ${N.length}. `
   + `At the centre, the plan of one sheet at ${WIDE} wide, spacing at one to one: the double frame, the sheet head, title and sub slots, the plate with its fill button above, a schedule, the caption, the notes and the key column with the title block, dimensioned in codes. `
   + `At right, three details: the double frame's corner at four to one, the fill button at three to one, and the title block's last cell with its chop at one point two to one. `
-  + `At lower left, the same sheet at ${NARROW} wide, where the head wraps, the drawing scrolls past its wrap and the key stacks under the notes. Every code is a row in the schedules under the drawing.`;
+  + `At lower left, the same sheet at ${NARROW} wide, where the head wraps, the drawing scrolls past its wrap and the key stacks under the notes. Along the foot, the grid row: the sheet at each width three times, empty, as its tracks drawn in hairlines alone, and with its elements blocked in as grey slots on those tracks. Every code is a row in the schedules under the drawing.`;
 
 const detailRefs = [
   detailRef(PX + 12, PY + 12, 24, 'A', 1226, DA.y - 100),
@@ -309,6 +407,7 @@ ${detailA}
 ${detailB}
 ${detailC}
 ${phone}
+${gridRow}
 </svg>`;
 
 // ---- schedules: every row of the plate, by kind ---------------------------------------------------------
@@ -337,7 +436,7 @@ const CODES = new Set(PLATE.rows.map((r) => r.code)).size;
 export const SHEETA5_VERDICT = `meta — the sheet chrome every plate is set in, dimensioned: ${INSTANCES} instances, one geometry; ${CODES} variables measured in chromium at ${WIDE} and ${NARROW} wide or read from chrome.mjs; the ${declared('B')} px frame draws at ${at('B')} px`;
 
 export const sheetA5 = {
-  num: 'A5', id: 'self-chrome', rev: 'A',
+  num: 'A5', id: 'self-chrome', rev: 'B',
   head: 'APPENDIX A5 · META',
   appendix: true,
   title: 'THE SHEET, DIMENSIONED',
@@ -350,7 +449,8 @@ export const sheetA5 = {
   notes: `
 <p><strong>Method — the built app, measured.</strong> <code>generator/survey-chrome.mjs</code> serves the built app and reads one routed sheet, <code>${PLATE.page}</code>, the cover and the bare plate in chromium at ${WIDE} and ${NARROW} wide, after <code>document.fonts.ready</code>: every box the chrome draws, by <code>getBoundingClientRect</code> and <code>getComputedStyle</code>. A constant the CSS cannot show, such as the schedule split <code>SCHEDULE_SPLIT</code>, and every clamp expression are read off <code>chrome.mjs</code>'s own source and filed as their own rows. A missing selector stops the probe; the cover's frame and the routed sheet's must agree at both widths. The plate is <code>data/survey-chrome.json</code>, ${PLATE.rows.length} rows of ${CODES} codes at ${BASIS}: the atlas is not on main, so the plate stands outside the cabinet, as the other self-portraits do.</p>
 <p><strong>Codes, not numbers.</strong> The drawing letters codes; the values stand in the schedules. S is spacing, B a border or rule, W a width, H a height, Z a square, T a lettering size, G a grid track or count. A derived row carries its formula: the inner rule stands ${fmt(D.value)} px in from the outer edge, ${D.formula}. A row the two widths agree on is one row; a row they part on is two, one per width. The idiom is <a href="${DIMENSIONAL.skill}"><code>dimensional-drawing</code></a> by enesozturk (MIT), after <a href="${DIMENSIONAL.apple}">Apple's accessory dimensional drawings</a>: codes on the drawing, every code a row of a schedule, derived values written as formulas, nothing invented. The atlas sets it in its own chrome, in both themes, with colour kept editorial.</p>
-<p><strong>What the drawing says.</strong> The chrome declares a ${declared('B')} px frame on the sheet, the schedules, the caption's rule and the title block, and chromium draws each at ${at('B')} px at a device pixel ratio of ${PLATE.dpr}; the inner rule's offset follows the frame it is drawn by. Every corner is square. At ${NARROW} wide the head wraps to ${fmt(at('H1', NARROW))} px against ${fmt(at('H1'))}, the title steps down its clamp from ${at('T1')} to ${at('T1', NARROW)} px, the drawing keeps its ${at('W2')} px floor and scrolls inside a ${at('W1', NARROW)} px wrap, and the key leaves its sticky seat to stand under the notes.</p>`,
+<p><strong>What the drawing says.</strong> The chrome declares a ${declared('B')} px frame on the sheet, the schedules, the caption's rule and the title block, and chromium draws each at ${at('B')} px at a device pixel ratio of ${PLATE.dpr}; the inner rule's offset follows the frame it is drawn by. Every corner is square. At ${NARROW} wide the head wraps to ${fmt(at('H1', NARROW))} px against ${fmt(at('H1'))}, the title steps down its clamp from ${at('T1')} to ${at('T1', NARROW)} px, the drawing keeps its ${at('W2')} px floor and scrolls inside a ${at('W1', NARROW)} px wrap, and the key leaves its sticky seat to stand under the notes.</p>
+<p><strong>The grid.</strong> The row along the foot lays the chrome's tracks as hairlines over a schematic sheet at each measured width, the way the <a href="${NASA_MANUAL.page}">NASA Graphics Standards Manual</a> (NHB 1430.2, 1976, in NASA's later reprint) draws its grid over a spread and then blocks the elements in, on <a href="${NASA_MANUAL.pdf}">pages 5.14–5.16</a>: the empty sheet, the grid alone, the elements set on it as grey slots. The grid is the outer frame, the inner rule S1 in, the content edge, the notes grid's tracks G1 with the G2 gutter between them, the title block's two G5 tracks, and at ${WIDE} wide the key's top, the edge that rides ST under the viewport on the bare plate and ST2 in the routed app. At ${NARROW} wide the notes grid is one track and the key is static, so no sticky line stands. The tracks are the plate's at each width; the slot heights are schematic, as the plan's are. The hairlines are the chrome's faint line, so the accent stays on the fill button and the phone plan's scroll run.</p>`,
   key: [
     keyRow('<rect x="4" y="2" width="40" height="14" class="sk2 fnone"/><rect x="8" y="6" width="32" height="6" class="skf fnone"/>', 'the sheet: the outer frame and the inner rule'),
     keyRow('<rect x="4" y="3" width="40" height="12" class="skf fp2" stroke-dasharray="4 3"/>', 'a slot that hugs its content'),
@@ -359,5 +459,6 @@ export const sheetA5 = {
     keyRow(`<line x1="6" y1="9" x2="42" y2="9" class="sks" marker-start="url(#${P}-as)" marker-end="url(#${P}-as)"/>`, 'a dimension, lettered with its code'),
     keyRow('<circle cx="24" cy="9" r="7" class="skf fnone" stroke-dasharray="6 3"/>', 'a detail circle, drawn larger at right'),
     keyRow('<rect x="18" y="3" width="12" height="12" class="sk fp"/>', 'a boxed note number'),
+    keyRow('<rect x="4" y="2" width="40" height="14" class="skf fp2"/><line x1="16" y1="0" x2="16" y2="18" class="skf"/><line x1="32" y1="0" x2="32" y2="18" class="skf"/>', 'a grid hairline over an element blocked in on its tracks'),
   ].join('\n'),
 };
