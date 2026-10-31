@@ -541,6 +541,8 @@ text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-
 text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
 text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+/* dimension lettering: a paper knockout so a code can sit on its own dimension line */
+text.lbld  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink); letter-spacing: 0.05em; paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
 
 @media (prefers-reduced-motion: no-preference) {
   .sheet { transition: box-shadow 0.2s; }

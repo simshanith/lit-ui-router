@@ -1,17 +1,18 @@
 # www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
 A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen altitudes
-on 25 plates — the numbered sheets, their A/B alternates and three interactive lanes —
-each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 5 more about the atlas itself. Sheets 7–10 are a survey
+on 26 plates — the numbered sheets, their A/B alternates and three interactive lanes —
+each in the form that altitude earns, with sheets 2 and 7 standing in the round in the routed app, and an appendix of 6 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
 one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
 measured the rest, and A3 masses the atlas itself on sheet 7's ruler beside the codebase, A4 its deploy
-on sheet 9's ruler beside the docs deploy. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+on sheet 9's ruler beside the docs deploy, and A5 dimensions the sheet chrome every plate is set in. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
 | [1](https://atlas.lit-ui-router.dev/sheet/1) | ONE PACKAGE | ISO CIRCUIT |
+| [1A](https://atlas.lit-ui-router.dev/sheet/1A) | ONE PAGE | DIMENSIONED PLAN |
 | [1i](https://atlas.lit-ui-router.dev/sheet/1i) | ONE PACKAGE | INTERACTIVE CIRCUIT |
 | [2](https://atlas.lit-ui-router.dev/sheet/2) | TEN PACKAGES | BRICK ASSEMBLY |
 | [2A](https://atlas.lit-ui-router.dev/sheet/2A) | TEN PACKAGES | COUPLING PLAN |
@@ -45,6 +46,7 @@ each sheet argue where that form fits and where it lies.
 | [A2](https://atlas.lit-ui-router.dev/sheet/A2) | THE CENSUS PIPELINE | FLOW GRAPH |
 | [A3](https://atlas.lit-ui-router.dev/sheet/A3) | THE ATLAS ITSELF | ISOMETRIC CITY |
 | [A4](https://atlas.lit-ui-router.dev/sheet/A4) | THE ATLAS ITSELF | SHIPPED CITY |
+| [A5](https://atlas.lit-ui-router.dev/sheet/A5) | THE ATLAS ITSELF | DIMENSIONED PLAN |
 | [A2i](https://atlas.lit-ui-router.dev/sheet/A2i) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
 **Build and host.** `generator/ship.mjs` runs the shipment one named step per call, from the repo root, in order:
@@ -100,10 +102,11 @@ into the app's `/log` at build time. This file is written by `build.mjs`; edit t
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
 `generator/census-*.mjs` probes at one ref — currently origin/main @ 3f55e419 — on the scc 4.0.0
-`Code` basis. Lookups throw on a missing row; nothing is hand-pasted. Two plates stand outside the
+`Code` basis. Lookups throw on a missing row; nothing is hand-pasted. Three plates stand outside the
 cabinet: `data/survey-self.json` and `data/survey-shipped.json`, which `generator/survey-self.mjs` and
 `generator/survey-shipped.mjs` measure from an archive of the atlas's own branch for appendices A3 and
-A4, because main does not hold the atlas. `INITIATIVES.md` records
+A4, and `data/survey-chrome.json`, which `generator/survey-chrome.mjs` measures in the built app for
+appendix A5, because main does not hold the atlas. `INITIATIVES.md` records
 the pipeline's design and the traps of refreshing it. `docs/ISOMETRIC.md` is the drawing recipe the
 isometric sheets share, `docs/SHIPPING.md` the run that ships a change and `docs/COPY.md` the rules the
 words follow; the skills under `.agents/skills/` point at them.

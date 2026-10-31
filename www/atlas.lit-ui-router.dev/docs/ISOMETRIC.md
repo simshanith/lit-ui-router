@@ -110,6 +110,24 @@ Every open line ends on purpose, and its end is computed from geometry, never ty
 Dash marks a kind of line: phantom, soft road, district or chain. It never marks a hidden edge.†
 Arrow markers come from `defs(p)` in `chrome.mjs` (`ai`, `aa`, `ar`, `as`).
 
+### Dimensions
+
+A dimensional plate (a measured component drawn with chained dimensions) uses the kit in
+[`helpers.mjs`](../generator/helpers.mjs): `dimH` and `dimV` for a dimension with its extension
+lines and the soft arrowheads, `rad` for a radius callout, `nb` for a boxed note number, `detailRef`
+for the dashed circle that names a detail drawn larger elsewhere. The lettering class is `lbld`, a
+dimension code with a paper knockout. The rules it adds to the ones above:
+
+- **Codes, not numbers.** A dimension on the drawing is a code (`S1`, `H2`, `R1`); the code's
+  variable, value and unit are rows of a schedule under the plate, and a derived value is written
+  there as its formula with the result.
+- **Measured, then filed.** The values are read off the real thing by a probe module (Playwright's
+  box tree for a UI component, the generator's own constants for a drawn part) into a plate under
+  `data/`, and the sheet reads the plate. A code with no row throws.
+- **Slots, not copy.** A UI component is drawn as its slots, lettered by what sizes them (HUG, FLEX,
+  FILL), never by the words it happens to hold.
+- **A boxed number** on the drawing stands beside the same number in the general notes.
+
 ## Labels
 
 - **Classes.** Lettering uses `txt()` from [`helpers.mjs`](../generator/helpers.mjs) with the `text.lbl*`

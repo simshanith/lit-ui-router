@@ -178,6 +178,7 @@
 <rect x="72" y="637" width="64" height="12" class="ska fnone"/>
 <text x="142" y="646.5" class="lblf" text-anchor="start" >← the link, in situ</text>
 <text x="60" y="674" class="lbls" text-anchor="start" >DETAIL — the same window, flat</text>
+<text x="280" y="674" class="lbls" text-anchor="end" >SEE 1A</text>
 
 <!-- leg lettering: horizontal, in open pockets, leaders where the gap is wide -->
 <text x="355" y="272" class="lbls" text-anchor="middle" >popstate / navigate</text>
@@ -227,7 +228,7 @@
       <h3>GENERAL NOTES</h3>
       
 <p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> past the document's plates to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
-<p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old <a href="https://github.com/victorporof/Tilt">Tilt</a> inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment.</p>
+<p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old <a href="https://github.com/victorporof/Tilt">Tilt</a> inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment. <a class="xref" data-sheet="1A" href="/sheet/1A">Sheet 1A</a> draws that window flat and dimensioned: the sample app's contacts page, measured in a browser.</p>
 <p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/composed">composed</a> context <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent">CustomEvent</a>; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything in one window.</p>
 <p><strong>The six doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./<wbr>pure</code> is the same API with registration torn off. <code>sideEffects</code> in <a href="https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router/package.json">the manifest</a> names exactly the four register files.</p>
     </div>

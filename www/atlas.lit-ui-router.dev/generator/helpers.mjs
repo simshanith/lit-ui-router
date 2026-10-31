@@ -93,6 +93,64 @@ export function isoPt(ox, oy, x, y, z = 0) {
   return [ox + sx, oy + sy];
 }
 
+// ---- the dimension kit ----
+// Dimensional-drawing marks, in the chrome's own classes: a dimension line is
+// `sks` with the soft arrowheads (`${p}-as`, both ends), an extension line is a
+// `skf` hairline standing 3 off the feature and 5 past the dimension line, and
+// the code is `lbld` lettering with a paper knockout. A span under 28 takes its
+// arrowheads outside. Every code on a drawing is a row in a schedule.
+const f1 = (v) => Number(v).toFixed(1);
+const dimArrows = (p, a, b, span, axis) => {
+  const [k1, k2] = axis === 'x' ? ['x', 'y'] : ['y', 'x'];
+  const line = (u1, u2, v, mk) => `<line ${k1}1="${f1(u1)}" ${k2}1="${f1(v)}" ${k1}2="${f1(u2)}" ${k2}2="${f1(v)}" class="sks"${mk ? ` marker-end="url(#${p}-as)"` : ''}/>`;
+  if (span >= 28) return `<line ${k1}1="${f1(a.u)}" ${k2}1="${f1(a.v)}" ${k1}2="${f1(b.u)}" ${k2}2="${f1(b.v)}" class="sks" marker-start="url(#${p}-as)" marker-end="url(#${p}-as)"/>`;
+  return line(a.u - 13, a.u, a.v, true) + line(b.u + 13, b.u, b.v, true) + line(a.u, b.u, a.v, false);
+};
+
+/** A horizontal dimension from x1 to x2 along y; e1/e2 are the feature edges the extension lines leave from (null for none). */
+export function dimH(p, x1, x2, y, e1, e2, label, { below = false, dx = 0, dy = 0, cls = 'lbld' } = {}) {
+  const ext = [[x1, e1], [x2, e2]].filter(([, e]) => e != null).map(([x, e]) => {
+    const s = Math.sign(y - e) || 1;
+    return `<line x1="${f1(x)}" y1="${f1(e + s * 3)}" x2="${f1(x)}" y2="${f1(y + s * 5)}" class="skf"/>`;
+  }).join('');
+  return ext + dimArrows(p, { u: x1, v: y }, { u: x2, v: y }, x2 - x1, 'x')
+    + txt(f1((x1 + x2) / 2 + dx), f1((below ? y + 13 : y - 4) + dy), label, cls, 'middle');
+}
+
+/** A vertical dimension from y1 to y2 along x; side 'l' or 'r' sets the code beside the line, none rotates it onto the line. */
+export function dimV(p, y1, y2, x, e1, e2, label, { side = null, dx = 0, dy = 0, cls = 'lbld' } = {}) {
+  const ext = [[y1, e1], [y2, e2]].filter(([, e]) => e != null).map(([y, e]) => {
+    const s = Math.sign(x - e) || 1;
+    return `<line x1="${f1(e + s * 3)}" y1="${f1(y)}" x2="${f1(x + s * 5)}" y2="${f1(y)}" class="skf"/>`;
+  }).join('');
+  const c = (y1 + y2) / 2;
+  const code = side
+    ? txt(f1(x + (side === 'r' ? 6 : -6) + dx), f1(c + 4 + dy), label, cls, side === 'r' ? 'start' : 'end')
+    : txt(f1(x - 5 + dx), f1(c + dy), label, cls, 'middle', `transform="rotate(-90 ${f1(x - 5 + dx)} ${f1(c + dy)})"`);
+  return ext + dimArrows(p, { u: y1, v: x }, { u: y2, v: x }, y2 - y1, 'y') + code;
+}
+
+/** A radius callout at a corner ('tl'|'tr'|'bl'|'br' of the box whose corner is at cx,cy), the leader len long. */
+export function rad(cx, cy, r, corner, label, len = 22, cls = 'lbld') {
+  const sx = corner.includes('l') ? -1 : 1, sy = corner.includes('t') ? -1 : 1;
+  const px = cx - sx * r + sx * r * Math.SQRT1_2, py = cy - sy * r + sy * r * Math.SQRT1_2;
+  const ex = px + sx * len, ey = py + sy * len;
+  return leader(ex, ey, px, py) + txt(f1(ex + sx * 4), f1(ey + 4), label, cls, sx > 0 ? 'start' : 'end');
+}
+
+/** A boxed note number: the same number stands beside its note in the general notes. */
+export function nb(x, y, n) {
+  return `<rect x="${f1(x - 6)}" y="${f1(y - 6)}" width="12" height="12" class="sk fp"/>` + txt(f1(x), f1(y + 3.5), String(n), 'lbls', 'middle');
+}
+
+/** A detail circle: a phantom (dashed) ring with a leader to its label, which names the panel drawn larger elsewhere. */
+export function detailRef(cx, cy, r, label, lx, ly, cls = 'lbls') {
+  const a = Math.atan2(ly - cy, lx - cx);
+  return `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(r)}" class="skf fnone" stroke-dasharray="6 3"/>`
+    + `<line x1="${f1(cx + r * Math.cos(a))}" y1="${f1(cy + r * Math.sin(a))}" x2="${f1(lx)}" y2="${f1(ly)}" class="skf" stroke-dasharray="4 3"/>`
+    + txt(f1(lx + (lx < cx ? -4 : 4)), f1(ly + 4), label, cls, lx < cx ? 'end' : 'start');
+}
+
 // Key row helper: small inline swatch svg + description.
 export function keyRow(swatchSvg, desc) {
   return `<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true">${swatchSvg}</svg></td><td>${desc}</td></tr>`;

@@ -43,6 +43,7 @@ const S = (subject, projection, mode, basis) =>
  */
 export const LABELS = {
   '1': S('circuit', 'isometric', 'static'),
+  '1A': S('sample', 'plan', 'static'),
   '1i': S('circuit', 'graph', 'interactive'),
   '2': S('coupling', 'isometric', 'static'),
   '2A': S('coupling', 'plan', 'static'),
@@ -72,6 +73,7 @@ export const LABELS = {
   A2i: S('pipeline', 'graph', 'interactive'),
   A3: S('city', 'isometric', 'static', 'measured'),
   A4: S('city', 'isometric', 'static', 'measured'),
+  A5: S('survey', 'plan', 'static'),
   city: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   plant: S('city', 'isometric', 'interactive', 'real 3d isometric'),
   bricks: S('coupling', 'isometric', 'interactive'),

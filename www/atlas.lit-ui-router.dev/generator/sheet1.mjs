@@ -152,6 +152,7 @@ ${txt(104, 590.5, 'lit-ui-router.dev/people/32', 'lblf', 'start')}
 <rect x="72" y="637" width="64" height="12" class="ska fnone"/>
 ${txt(142, 646.5, '← the link, in situ', 'lblf', 'start')}
 ${txt(60, 674, 'DETAIL — the same window, flat', 'lbls', 'start')}
+${txt(280, 674, 'SEE 1A', 'lbls', 'end')}
 
 <!-- leg lettering: horizontal, in open pockets, leaders where the gap is wide -->
 ${txt(355, 272, 'popstate / navigate', 'lbls', 'middle')}
@@ -200,7 +201,7 @@ export const sheet1 = {
   caption: 'The loop sits on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city breaks its metaphor once, on purpose — the document is not a building but a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.',
   notes: `
 <p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> past the document's plates to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
-<p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old <a href="${HOME.tilt}">Tilt</a> inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment.</p>
+<p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old <a href="${HOME.tilt}">Tilt</a> inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment. Sheet 1A draws that window flat and dimensioned: the sample app's contacts page, measured in a browser.</p>
 <p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a <a href="${HOME.composed}">composed</a> context <a href="${HOME.customEvent}">CustomEvent</a>; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything in one window.</p>
 <p><strong>The six doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in <a href="${HOME.manifest}">the manifest</a> names exactly the four register files.</p>`,
   key: [
