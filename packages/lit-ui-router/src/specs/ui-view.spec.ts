@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement, nothing } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { until } from 'lit/directives/until.js';
 import { ActiveUIView, Transition, type RawParams } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
@@ -1339,6 +1340,12 @@ describe('UiView', () => {
   });
 
   describe('routedElement', () => {
+    let content = defer<string>();
+
+    beforeEach(() => {
+      content = defer<string>();
+    });
+
     const routedStates: LitStateDeclaration[] = [
       {
         name: 'template',
@@ -1346,6 +1353,17 @@ describe('UiView', () => {
         component: () =>
           html`<p class="first">First</p>
             <p>Second</p>`,
+      },
+      {
+        name: 'deferred',
+        url: '/deferred',
+        component: () =>
+          html`${until(
+            content.promise.then(
+              (text) => html`<p class="content">${text}</p>`,
+            ),
+            html`<p class="skeleton">Loading</p>`,
+          )}`,
       },
       { name: 'from', url: '/from', component: TestSwapFrom },
       { name: 'to', url: '/to', component: TestSwapTo },
@@ -1371,6 +1389,39 @@ describe('UiView', () => {
       expect(uiView.querySelectorAll('[routed]')).toEqual(
         uiView.querySelectorAll('.first'),
       );
+    });
+
+    it('should move the mark when until() swaps a template’s skeleton for content', async () => {
+      const { uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'deferred');
+      const skeleton = uiView.querySelector('.skeleton');
+      expect(skeleton?.hasAttribute('routed')).toBe(true);
+
+      content.resolve('Loaded');
+      await tick();
+
+      const loaded = uiView.querySelector('.content');
+      expect(uiView.routedElement).toBe(loaded);
+      expect(loaded?.hasAttribute('routed')).toBe(true);
+      expect(skeleton?.isConnected).toBe(false);
+      expect(skeleton?.hasAttribute('routed')).toBe(false);
+    });
+
+    it('should move the mark when until() resolves while the view is detached', async () => {
+      const { uiRouter, uiView } = await setupRouter(routedStates);
+      await routerGo(router, 'deferred');
+      const skeleton = uiView.querySelector('.skeleton');
+
+      uiRouter.remove();
+      content.resolve('Loaded');
+      await tick();
+      container.appendChild(uiRouter);
+      await tick();
+
+      const loaded = uiView.querySelector('.content');
+      expect(uiView.routedElement).toBe(loaded);
+      expect(loaded?.hasAttribute('routed')).toBe(true);
+      expect(skeleton?.hasAttribute('routed')).toBe(false);
     });
 
     it('should be the incoming class element while the outgoing one stands', async () => {

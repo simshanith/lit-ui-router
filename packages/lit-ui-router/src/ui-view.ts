@@ -240,6 +240,9 @@ export class UiView extends LitElement {
   /** The element carrying the `routed` attribute. */
   private markedElement?: Element;
 
+  /** Re-marks when a template component's directives swap its elements without updating the view. */
+  private templateObserver?: MutationObserver;
+
   /** @internal */
   createRenderRoot(): this {
     return this;
@@ -348,6 +351,7 @@ export class UiView extends LitElement {
     if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
+      this.syncRoutedMark();
     } else {
       // Past the first render the children are lit's own nodes and part markers, never authored content.
       this.captureContent();
@@ -699,6 +703,7 @@ export class UiView extends LitElement {
     this.providerSubscription?.();
     this.providerSubscription = undefined;
     this.deregisterAll();
+    this.templateObserver?.disconnect();
   }
 
   /**
@@ -875,7 +880,23 @@ export class UiView extends LitElement {
   /** @internal */
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
+    this.syncRoutedMark();
+  }
+
+  /** Marks the routed element, and watches the children while a template component renders them. */
+  private syncRoutedMark(): void {
     this.markRoutedElement();
+
+    if (this.classElement || this.showsFallback || !this.isConnected) {
+      this.templateObserver?.disconnect();
+
+      return;
+    }
+
+    this.templateObserver ??= new MutationObserver(() =>
+      this.markRoutedElement(),
+    );
+    this.templateObserver.observe(this, { childList: true });
   }
 
   /** Moves the `routed` attribute onto the current routed element. */
