@@ -309,5 +309,36 @@ html.dark {
     --status-as-served-ink: oklch(from var(--status-as-served) clamp(0, (0.6 - l) * 1000, 1) 0 0);
   }
 }
+
+/* <Badge type="status-…"> takes its fill and ink from the table above. */
+.VPBadge.status-ok {
+  --status-fill: var(--status-ok);
+  --status-fill-ink: var(--status-ok-ink);
+}
+
+.VPBadge.status-redirect {
+  --status-fill: var(--status-redirect);
+  --status-fill-ink: var(--status-redirect-ink);
+}
+
+.VPBadge.status-not-found {
+  --status-fill: var(--status-not-found);
+  --status-fill-ink: var(--status-not-found-ink);
+}
+
+.VPBadge.status-as-served {
+  --status-fill: var(--status-as-served);
+  --status-fill-ink: var(--status-as-served-ink);
+}
+
+.VPBadge:is(.status-ok, .status-redirect, .status-not-found, .status-as-served) {
+  margin-inline-start: 6px;
+  border-radius: 4px;
+  padding-inline: 6px;
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--status-fill-ink);
+  background-color: var(--status-fill);
+}
 /* === end HTTP status colors === */
 
