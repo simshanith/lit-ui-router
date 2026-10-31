@@ -29,10 +29,10 @@ const vitepress = {
   'vp-c-text-1': { light: '#3c3c43', dark: '#dfdfd6' },
   'vp-c-text-2': { light: '#67676c', dark: '#98989f' },
   'vp-c-text-3': { light: '#929295', dark: '#6a6a71' },
-  'vp-c-brand-1': { light: '#3451b2', dark: '#a8b1ff' },
+  'vp-c-brand-1': { light: '#006a9a', dark: '#29abe6' },
   'vp-c-brand-soft': {
-    light: 'rgba(100,108,255,0.14)',
-    dark: 'rgba(100, 108, 255, 0.16)',
+    light: 'rgba(0,152,220,0.14)',
+    dark: 'rgba(0, 152, 220, 0.16)',
   },
   'vp-c-default-soft': {
     light: 'rgba(142,150,170,0.14)',

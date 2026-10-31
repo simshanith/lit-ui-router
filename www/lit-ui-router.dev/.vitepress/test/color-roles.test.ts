@@ -218,7 +218,7 @@ describe('colour roles', () => {
     );
   });
 
-  it('reaches brand indigo only through the interaction roles', () => {
+  it('reaches the brand scale only through the interaction roles', () => {
     const sources = [
       customCss,
       ...readdirSync(join(THEME_DIR, 'components'))

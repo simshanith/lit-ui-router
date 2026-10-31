@@ -7,10 +7,10 @@
     }
     text { font-family: Inter, sans-serif; }
     .hero { font-size: 64px; font-weight: 700; letter-spacing: -0.4px; }
-    .name { fill: #0098dc; }
+    .name { fill: #29abe6; }
     .text { fill: #dfdfd6; }
     .tagline { font-size: 28px; font-weight: 500; fill: #98989f; }
-    .library { fill: #a8b1ff; }
+    .library { fill: #29abe6; }
   </style>
   <rect width="1200" height="630" fill="#1b1b1f"/>
   <image href="../../public/images/hero-glow-dark.svg" x="603" y="-17" width="663" height="663"/>

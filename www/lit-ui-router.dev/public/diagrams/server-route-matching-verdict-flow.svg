@@ -9,8 +9,8 @@
         --vp-c-divider: #2e2e32;
         --vp-c-text-1: #dfdfd6;
         --vp-c-text-2: #98989f;
-        --vp-c-brand-1: #a8b1ff;
-        --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
         --status-ok: #3dd68c;
         --status-ok-ink: #000000;
         --status-redirect: #f9b44e;
@@ -35,9 +35,9 @@
     <text x="92" y="156" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">/app/contacts/3</text>
     <line x1="168" y1="142" x2="214" y2="142" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
     <!-- resolve -->
-    <rect x="218" y="102" width="196" height="80" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="316" y="132" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">createServerRouter(&#8230;)</text>
-    <text x="316" y="150" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">.resolve(url)</text>
+    <rect x="218" y="102" width="196" height="80" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="316" y="132" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">createServerRouter(&#8230;)</text>
+    <text x="316" y="150" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">.resolve(url)</text>
     <text x="316" y="169" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">longest mount base wins</text>
     <text x="316" y="202" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">no fetch, no Response &#8212;</text>
     <text x="316" y="217" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mounts validate at construction</text>
