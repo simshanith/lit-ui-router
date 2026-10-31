@@ -345,8 +345,11 @@ router.stateRegistry.register(starsState);
 router.stateRegistry.register(starState);
 router.stateRegistry.register(astronautState);
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+router.urlService.rules.otherwise({ state: 'galaxy.stars' });
 router.start();
 ```
+
+`initial` sends the app root to the star list; `otherwise` sends any URL no state matches, such as `#/nowhere`, there too. A URL that does match a state still enters it: `#/galaxy/stars/nowhere` enters `galaxy.stars.star` and shows "Star not found". [Unmatched URLs](/guides/unmatched-urls) covers routing to a 404 state instead.
 
 ## Full Source Code
 
