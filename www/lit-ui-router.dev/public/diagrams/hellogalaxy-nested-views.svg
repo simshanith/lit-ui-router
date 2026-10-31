@@ -10,7 +10,6 @@
         --vp-c-divider: #2e2e32;
         --vp-c-text-1: #dfdfd6;
         --vp-c-text-2: #98989f;
-        --vp-c-text-3: #6a6a71;
         --vp-c-brand-1: #a8b1ff;
         --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
       }
@@ -18,13 +17,13 @@
   </style>
   <defs>
     <marker id="arr-nested" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
     </marker>
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- root viewport -->
     <rect x="12" y="20" width="564" height="344" rx="8" fill="none" stroke="var(--vp-c-brand-1, #3451b2)" stroke-dasharray="5 4" />
-    <rect x="20" y="26" width="66" height="16" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <rect x="20" y="26" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
     <text x="53" y="38" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">&lt;ui-view&gt;</text>
     <text x="94" y="38" font-size="10" fill="var(--vp-c-text-2, #67676c)">root viewport, in app-root</text>
     <!-- galaxy -->
@@ -32,11 +31,11 @@
     <text x="36" y="70" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">galaxy</text>
     <text x="36" y="85" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">galaxy-shell</text>
     <text x="552" y="70" font-size="11" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">/galaxy</text>
-    <rect x="36" y="94" width="516" height="24" rx="5" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="36" y="94" width="516" height="24" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="44" y="110" font-size="11" fill="var(--vp-c-text-2, #67676c)">nav: Stars &#183; Astronaut &#8212; uiSrefActive matches by inclusion</text>
     <!-- shell viewport -->
     <rect x="36" y="126" width="516" height="214" rx="8" fill="none" stroke="var(--vp-c-brand-1, #3451b2)" stroke-dasharray="5 4" />
-    <rect x="44" y="132" width="66" height="16" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <rect x="44" y="132" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
     <text x="77" y="144" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">&lt;ui-view&gt;</text>
     <text x="118" y="144" font-size="10" fill="var(--vp-c-text-2, #67676c)">children of galaxy render here</text>
     <!-- galaxy.stars -->
@@ -45,16 +44,16 @@
     <text x="60" y="189" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">stars-container</text>
     <text x="464" y="174" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" text-anchor="end"><tspan fill="var(--vp-c-text-2, #67676c)">/galaxy</tspan><tspan font-weight="600" fill="var(--vp-c-brand-1, #3451b2)"> + /stars</tspan></text>
     <!-- list column -->
-    <rect x="60" y="196" width="120" height="118" rx="5" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="196" width="120" height="118" rx="8" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="70" y="213" font-size="10" font-weight="600" fill="var(--vp-c-text-2, #67676c)">star list</text>
     <text x="70" y="230" font-size="10" fill="var(--vp-c-text-2, #67676c)">Sirius</text>
     <text x="70" y="245" font-size="10" fill="var(--vp-c-text-2, #67676c)">Vega</text>
     <text x="70" y="260" font-size="10" fill="var(--vp-c-text-2, #67676c)">&#8230;</text>
-    <text x="70" y="284" font-size="9" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">uiSref('.star')</text>
-    <text x="70" y="298" font-size="9" fill="var(--vp-c-text-2, #67676c)">relative sref</text>
+    <text x="70" y="284" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">uiSref('.star')</text>
+    <text x="70" y="298" font-size="10" fill="var(--vp-c-text-2, #67676c)">relative sref</text>
     <!-- stars viewport -->
     <rect x="192" y="196" width="272" height="118" rx="8" fill="none" stroke="var(--vp-c-brand-1, #3451b2)" stroke-dasharray="5 4" />
-    <rect x="200" y="202" width="66" height="16" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <rect x="200" y="202" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
     <text x="233" y="214" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">&lt;ui-view&gt;</text>
     <text x="274" y="214" font-size="10" fill="var(--vp-c-text-2, #67676c)">slotted fallback until a child activates</text>
     <!-- galaxy.stars.star -->
@@ -71,7 +70,7 @@
     <text x="594" y="178" font-size="11" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)">+ /astronaut</text>
     <text x="594" y="198" font-size="10" fill="var(--vp-c-text-2, #67676c)">a sibling of</text>
     <text x="594" y="212" font-size="10" fill="var(--vp-c-text-2, #67676c)">galaxy.stars</text>
-    <line x1="584" y1="226" x2="481" y2="247" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#arr-nested)" />
+    <line x1="584" y1="226" x2="481" y2="247" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-nested)" />
     <text x="586" y="256" font-size="10" fill="var(--vp-c-text-2, #67676c)">siblings swap in the</text>
     <text x="586" y="269" font-size="10" fill="var(--vp-c-text-2, #67676c)">same nested viewport</text>
     <!-- URL composition -->

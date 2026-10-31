@@ -342,3 +342,14 @@ html.dark {
 }
 /* === end HTTP status colors === */
 
+/* === Diagrams: the outline box every inlined diagram sits in (docs/DIAGRAMS.md) === */
+.vp-doc svg[role="img"][viewBox^="0 0 720 "] {
+  display: block;
+  box-sizing: border-box;
+  margin-block: 16px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 12px;
+}
+/* === end diagrams === */
+

@@ -22,22 +22,22 @@
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <line x1="90" y1="32" x2="90" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="28" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="28" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Browser</text>
     <line x1="270" y1="32" x2="270" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="208" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <rect data-brand="cloudflare" x="208" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
     <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Cloudflare</text>
     <line x1="450" y1="32" x2="450" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="388" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Static assets</text>
     <line x1="630" y1="32" x2="630" y2="232" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="568" y="6" width="124" height="26" rx="6" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="568" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Worker</text>
     <line x1="90" y1="62" x2="267" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
     <text x="180" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">GET /app/nope</text>
     <line x1="270" y1="92" x2="627" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
     <text x="450" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">worker-first</text>
-    <rect x="490" y="110" width="224" height="22" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <rect x="490" y="110" width="224" height="22" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
     <text x="602" y="125" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">resolve &#8594; notFound, mount /app</text>
     <line x1="630" y1="152" x2="453" y2="152" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-seq-6)" />
     <text x="540" y="146" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">fetch /app/404.html</text>
