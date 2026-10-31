@@ -5,13 +5,14 @@
     "docs:api": {
       "outputs": ["../../www/lit-ui-router.dev/api/ui-router-server/**"]
     },
+    // development-build and bundle-size specs read this package's own dist
     "test": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "build:js"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // root task keys inputs on vitest configs; this suite is node --test
     "test:coverage": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "build:js"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["coverage/**"]
     },
