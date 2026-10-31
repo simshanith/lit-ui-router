@@ -1,6 +1,5 @@
 import 'lit-ui-router-ssr/register';
 import { bootstrap } from 'lit-ui-router-ssr/client';
-import type { ResolvePayload } from 'ui-router-server/ssr/client';
 import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLightbox } from './lightbox.ts';
@@ -46,13 +45,8 @@ installExperimental(router);
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
 
-// THE BOOT: seed from the served payload, start, adopt or render cold; resolves when every awake <ui-view> has updated.
-const payloadBlock = document.getElementById('atlas-payload');
-const payload = payloadBlock?.textContent
-  ? (JSON.parse(payloadBlock.textContent) as ResolvePayload)
-  : undefined;
+// THE BOOT: seed from the signature's payload, start, adopt or render cold; resolves when every awake <ui-view> has updated.
 const { outcome, signature, error } = await bootstrap(router, root, page(router), {
-  payload,
   // Every served view reports its wake; anything but an adoption is a finding.
   onAdopt: (view, viewOutcome, viewError) => {
     if (import.meta.env.DEV && viewOutcome !== 'adopted')

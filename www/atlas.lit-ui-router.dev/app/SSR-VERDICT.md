@@ -795,3 +795,14 @@ Findings:
   router: the served page opens unpinned and no focus move reaches the scene,
   while a client-rendered city works. The explicit `router` option, taken
   from the view, binds the app's router on both paths.
+
+**Update, 2026-10-30.** The atlas is on `ui-router-server@0.7.1` and
+`lit-ui-router-ssr@0.7.0`. The payload rides in the hydration signature:
+`prerender.ts` passes a `payload` hook, which runs `dehydrate()` with
+`shouldDehydrate` keeping `fragment`, `specimen` and `manifest` out, and the
+own `#atlas-payload` block and the explicit `payload` option on `bootstrap()`
+are gone; the sizes and the boot outcome read as on 2026-10-29. Two of the
+rough edges reported on #1640 closed with these releases: the opt-out, and
+the payload's own block. The other two stand: a loader called directly
+bypasses the seed, and hydrate commits no attribute value.
+

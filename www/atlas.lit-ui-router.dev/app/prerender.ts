@@ -38,7 +38,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { LitStateDeclaration, UIRouterLit as LitRouter } from 'lit-ui-router';
 import type { Transition } from '@uirouter/core';
 import type { RedirectLine } from 'lit-ui-router-ssr';
-import type { JsonValue, ResolvePayload } from 'ui-router-server/ssr';
+import type { ResolvePayload } from 'ui-router-server/ssr';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
 import { BASE, MOUNT, SHEET_ALIASES, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
@@ -222,39 +222,28 @@ ${FILL_SCRIPT}</script>
 </html>
 `;
 /**
- * The resolve payload each shell page carries for `bootstrap()` to seed.
+ * The resolve payload each shell page carries in its signature, for `bootstrap()` to seed.
  * `fragment` is the body's own HTML, `specimen` a server stand-in for the
  * bench the client imports, and `manifest` the 146 KB index the shell
- * preloads (index.html) and the browser caches, so none of them seeds;
- * `viewer` resolves `undefined` and `dehydrate` lists it as unserializable.
+ * preloads (index.html) and the browser caches, so `shouldDehydrate` keeps
+ * the three out; `viewer` resolves `undefined` and `dehydrate` lists it as
+ * unserializable.
  */
 const LEFT_OUT = new Set(['fragment', 'specimen', 'manifest']);
 const EXPECTED_UNSERIALIZABLE = new Set(['viewer']);
-const payloads = new Map<string, ResolvePayload>();
 const payloadReport: { path: string; bytes: number; unserializable: string[] }[] = [];
 
-const drawPayload = (path: string, transition: Transition): void => {
-  const { payload, unserializable } = dehydrate(transition);
-  const resolves = Object.fromEntries(
-    Object.entries(payload.resolves)
-      .map(([state, tokens]): [string, Record<string, JsonValue>] => [
-        state,
-        Object.fromEntries(Object.entries(tokens).filter(([token]) => !LEFT_OUT.has(token))),
-      ])
-      .filter(([, tokens]) => Object.keys(tokens).length > 0),
-  );
-  const kept: ResolvePayload = { ...payload, resolves };
-  payloads.set(path, kept);
+const drawPayload = (transition: Transition, { path }: { path: string }): ResolvePayload => {
+  const { payload, unserializable } = dehydrate(transition, {
+    shouldDehydrate: ({ token }) => !LEFT_OUT.has(token),
+  });
   payloadReport.push({
     path,
-    bytes: Buffer.byteLength(JSON.stringify(kept)),
+    bytes: Buffer.byteLength(JSON.stringify(payload)),
     unserializable: unserializable.map(({ state, token }) => `${state}.${token}`),
   });
+  return payload;
 };
-
-/** The payload as a data block; `<\/` keeps a `</script>` inside a string from closing it. */
-const payloadScript = (payload: ResolvePayload): string =>
-  `<script type="application/json" id="atlas-payload">${JSON.stringify(payload).replaceAll('</', '<\\/')}</script>`;
 
 const routeRefFailures: string[] = [];
 let routeRefReads = 0;
@@ -346,23 +335,22 @@ const result = await prerender({
   // `settle()` drives the url directly and never calls `router.start()`; a
   // page that fails to land rejects, which fails the build.
   renderShell: async (_verdict, { path }) => {
-    const transition = await settle(router, path);
+    await settle(router, path);
     checkRouteRef(path);
     // A string is written as-is, with no hydration signature: the bare plate.
     const plate = plateOf.get(path);
     if (plate) return fragmentOf(plate);
-    drawPayload(path, transition);
     return views.page(router);
   },
+  // The landed transition's resolves, written into each shell page's signature block.
+  payload: drawPayload,
   document: (body, { path }) => {
     const plate = plateOf.get(path);
     if (plate) return plateDocument(plate, body);
     const title = titles.get(path) ?? TITLES.notFound;
-    const payload = payloads.get(path);
-    const block = payload ? `\n${payloadScript(payload)}` : '';
     return shellHtml
       .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-      .replace(ROOT_RE, () => `<div id="root">${body}</div>${block}`);
+      .replace(ROOT_RE, () => `<div id="root">${body}</div>`);
   },
 });
 

@@ -300,20 +300,21 @@ from `lit-ui-router`, which checks a component without inferring its template, a
 them as `LitStateDeclaration[]`. `src/registry.test-d.ts` holds the assertions and
 `npm run typecheck` runs them. The package emits no JavaScript, so the site build is unchanged.
 
-**The resolve payload (`prerender.ts`).** Each shell page carries the resolves it was drawn with:
-`dehydrate()` from `ui-router-server/ssr` reads them off the transition `settle()` lands, and the
-page embeds them as `<script type="application/json" id="atlas-payload">` after `#root`. The
-payload carries the per-page `sheet` and `extra`, 47 to 1,932 bytes. It leaves out `fragment`, the
-page's own HTML, which the body already holds; `specimen`, a stand-in on the server for the bench
-the client imports; and `manifest`, the 146 KB index every page shares, which the shell's
+**The resolve payload (`prerender.ts`).** Each shell page carries the resolves it was drawn with in
+its hydration signature: `prerender()`'s `payload` hook hands `dehydrate()` from
+`ui-router-server/ssr` the transition `settle()` lands, and the signature block carries the
+`resolves` beside `version`, `state` and `params`. The payload carries the per-page `sheet` and
+`extra`, 47 to 1,932 bytes. `shouldDehydrate` keeps three tokens out: `fragment`, the page's own
+HTML, which the body already holds; `specimen`, a stand-in on the server for the bench the client
+imports; and `manifest`, the 146 KB index every page shares, which the shell's
 `<link rel="preload" as="fetch" crossorigin>` in `index.html` starts beside the document and the
 browser keeps in its cache between pages. `viewer` resolves `undefined` and `dehydrate()` lists it
-as unserializable. The build
-prints each page's payload size and the resolves that re-run on the client, and exits 1 on an
-unserializable resolve other than `viewer`. The bare plate pages carry none.
+as unserializable. The build prints each page's payload size and the resolves that re-run on the
+client, and exits 1 on an unserializable resolve other than `viewer`. The bare plate pages carry
+none.
 
-**The boot (`src/main.ts`).** One `bootstrap(router, root, page(router), { payload, onAdopt })` from
-`lit-ui-router-ssr/client` seeds the boot transition with the parsed `#atlas-payload`, starts the
+**The boot (`src/main.ts`).** One `bootstrap(router, root, page(router), { onAdopt })` from
+`lit-ui-router-ssr/client` seeds the boot transition with the signature's resolves, starts the
 router, awaits the transition that lands, then adopts: the walk wakes every served `<ui-view>`,
 which adopts the nodes it already holds, and the call returns when every awake view has updated.
 A seeded boot runs two resolves: the shell's `manifest`, which picks up the preloaded
