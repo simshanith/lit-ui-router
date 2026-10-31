@@ -79,6 +79,7 @@ describe('viewRendered', () => {
       component: TestRenderedLeaf,
       resolve: [{ token: 'gate', resolveFn: () => gate.promise }],
     },
+    { name: 'error', url: '/error', component: TestRenderedOther },
   ];
 
   let gate = defer();
@@ -156,7 +157,28 @@ describe('viewRendered', () => {
     await pending;
   });
 
-  it('defaults to the last successful transition', async () => {
+  it('defaults to the transition in flight', async () => {
+    const uiView = await start();
+    let rendered: Promise<void> | undefined;
+    router.transitionService.onStart({ to: 'slow' }, () => {
+      rendered = viewRendered(router);
+    });
+
+    const pending = router.stateService.go('slow');
+    await tick();
+    let settled = false;
+    void rendered!.then(() => (settled = true));
+    await tick();
+    expect(settled).toBe(false);
+
+    gate.resolve();
+    await rendered;
+
+    expect(uiView.querySelector('.leaf')).not.toBeNull();
+    await pending;
+  });
+
+  it('defaults to the last successful transition when none is in flight', async () => {
     const uiView = await start();
 
     await router.stateService.go('parent.child');
@@ -177,6 +199,26 @@ describe('viewRendered', () => {
     await expect(failed).rejects.toBeDefined();
     restoreConsole();
     expect(uiView.textContent).toContain('home');
+  });
+
+  it('covers the view an onError redirect renders when awaited for the redirect', async () => {
+    const uiView = await start();
+    const restoreConsole = suppressConsoleErrors();
+    let redirected: Promise<void> | undefined;
+    router.transitionService.onError({ to: 'slow' }, () => {
+      redirected = viewRendered(
+        router,
+        router.stateService.go('error').transition,
+      );
+    });
+
+    const failed = router.stateService.go('slow');
+    gate.reject(new Error('denied'));
+    await viewRendered(router, failed.transition);
+    await redirected;
+    restoreConsole();
+
+    expect(uiView.querySelector('.other')).not.toBeNull();
   });
 
   it('resolves with no transition and no views', async () => {

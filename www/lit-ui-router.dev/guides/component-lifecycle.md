@@ -122,9 +122,18 @@ router.transitionService.onStart({}, (trans) => {
 });
 ```
 
-Without a transition, `viewRendered(router)` waits on the last successful one.
-A transition that fails renders nothing of its own, so the promise still
-resolves once the views settle; `trans.promise` carries the outcome.
+Without a transition, `viewRendered(router)` waits on the one in flight, else
+the last successful one. A transition that fails renders nothing of its own, so
+the promise still resolves once the views settle; `trans.promise` carries the
+outcome. A redirect started from an `onError` hook is a transition of its own;
+pass it to `viewRendered` to wait for the view it renders:
+
+```ts
+router.transitionService.onError({}, async () => {
+  const redirect = router.stateService.go('error');
+  await viewRendered(router, redirect.transition);
+});
+```
 
 ## Where these fit among the other hooks
 
