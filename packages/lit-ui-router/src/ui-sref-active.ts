@@ -144,9 +144,9 @@ const isLinkElement = (element: Element): boolean =>
  */
 export interface UiSrefActiveParams {
   /** CSS classes to add when the state (or a child state) is active */
-  activeClasses: string[];
+  activeClasses?: string[];
   /** CSS classes to add only when the exact state is active */
-  exactClasses: string[];
+  exactClasses?: string[];
   /**
    * The `aria-current` value to set when the **exact** state is active — the
    * same binding Vue Router's `ariaCurrentValue` uses.
@@ -166,13 +166,18 @@ export interface UiSrefActiveParams {
    */
   ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
-  state: string;
+  state?: string;
   /** State parameters to match */
   params?: RawParams;
   /** Transition options */
   options?: TransitionOptions;
-  /** Target states from nested uiSref directives */
-  targetStates: TargetState[];
+  /**
+   * The states to watch, built with `router.stateService.target()`. Lets an
+   * element go active for several states, or for links that aren't `uiSref`
+   * directives. Takes precedence: when given, `state` is ignored and nested
+   * `uiSref` links are not tracked.
+   */
+  targetStates?: TargetState[];
 }
 
 type deregisterFn = () => void;
@@ -454,8 +459,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     part: ElementPart,
     [
       {
-        activeClasses,
-        exactClasses,
+        activeClasses = [],
+        exactClasses = [],
         ariaCurrentValue,
         state,
         params = {},
