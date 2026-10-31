@@ -23,6 +23,7 @@ import type {
   LightCard,
   LightPanel,
   PlainLightCard,
+  RoutedLightCard,
 } from './light-dom-fixture.js';
 import type { Page } from './round-trip.js';
 import { drain, serve } from './round-trip.js';
@@ -222,6 +223,43 @@ describe('nesting', () => {
       'routed',
     );
     expect(removed).toEqual([]);
+    expect(kept(container, served)).toHaveLength(served.length);
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('hydrates a LightDomHydrating routed class in place: the same element, the same light-DOM nodes', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const adopted: string[] = [];
+
+    const { container, served } = serve(
+      await drawLight(rootTemplate, '/routed-class'),
+    );
+
+    const card = container.querySelector<RoutedLightCard>('routed-light-card')!;
+    const leaf = card.querySelector('.routed-light');
+    expect(leaf?.textContent?.trim()).toBe('routed class');
+    card.addEventListener('light-dom:adopt', (event) =>
+      adopted.push(event.detail.outcome),
+    );
+    const stop = watchRemovals(container);
+
+    const release = await hydrateLight(
+      container,
+      rootTemplate,
+      '/routed-class',
+    );
+
+    await drain(container);
+    release();
+
+    expect(wakes).toEqual(['ui-view', 'routed-light-card']);
+    expect(adopted).toEqual(['adopted']);
+    expect(container.querySelector('ui-view')?.routedElement).toBe(card);
+    expect(card.shadowRoot).toBeNull();
+    expect(card.querySelector('.routed-light')).toBe(leaf);
+    expect(card.querySelectorAll('.routed-light')).toHaveLength(1);
+    expect(stop()).toEqual([]);
     expect(kept(container, served)).toHaveLength(served.length);
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();

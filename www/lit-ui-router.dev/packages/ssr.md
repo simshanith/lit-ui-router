@@ -35,6 +35,10 @@ and `@lit-labs/ssr-client` the client half, so a bundle takes one or the other,
 never both. `@lit-labs/ssr-client` is optional: install it when you import
 `lit-ui-router-ssr/client`.
 
+The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
+helper `<ui-view>` renders through, and the client hands a served class element
+to the view it wakes.
+
 ## What this package owns
 
 - **The render call.** `provideRouter(root, router)` once, then
@@ -547,6 +551,27 @@ await bootstrap(router, root, page(router), {
   },
 });
 ```
+
+### Routed class views
+
+[`UiViewRenderer`](/api/lit-ui-router-ssr/index/classes/UiViewRenderer) draws a
+view through `lit-ui-router`'s own render helper, the one `<ui-view>`'s
+`render()` calls, so the served markup and the client's first render share one
+source. A routed `LitElement` class, plain or `sticky`, prerenders too:
+`lit-ui-router` builds the element and assigns its props, and
+`LitElementRenderer` writes it, shadow root included, into the slot `<ui-view>`
+places a class in. At the wake the served view hands that element to
+`lit-ui-router`, which adopts it instead of building its own, so the element
+the server wrote is the element the client keeps. A class that renders into its
+own light DOM prerenders into it when it uses
+[`LightDomHydrating`](#light-dom-elements), and hydrates those nodes in place.
+Without it, the class is written as its bare element, with no shadow root to
+hide its render, and renders on the client. A class must be on the
+`customElements` registry to prerender.
+
+The served `<ui-view>` markup is internal to this package and `lit-ui-router`
+and changes with them. Post-processing of prerendered HTML keys on the
+hydration signature block.
 
 ### Light-DOM elements
 

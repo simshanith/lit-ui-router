@@ -14,6 +14,7 @@ import {
   warnDeferredNeverWoken,
   warnDeferredWithoutClient,
 } from '../dev-warn.js';
+import { heldElement } from '../served-view.js';
 import type { ServedUiView } from '../served-view.js';
 import '../register.js';
 
@@ -867,5 +868,32 @@ describe('the served view warnings under node with NODE_ENV=production', () => {
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
     vi.unstubAllEnvs();
+  });
+});
+
+describe('heldElement', () => {
+  const holding = (markup: string): HTMLElement => {
+    const host = document.createElement('div');
+    host.innerHTML = markup;
+
+    return host;
+  };
+
+  it('reads the first element after the render marker, past the author’s fallback', () => {
+    const host = holding(
+      '<p class="fallback"></p><!--lit-part BRUAAAUVAAA--><!--served:lit-part--><routed-card></routed-card>',
+    );
+
+    expect(heldElement(host)?.localName).toBe('routed-card');
+  });
+
+  it('reads nothing from a host that holds no render', () => {
+    expect(heldElement(holding('<p class="fallback"></p>'))).toBeUndefined();
+  });
+
+  it('reads nothing from an empty render', () => {
+    expect(
+      heldElement(holding('<!--lit-part--><!--/lit-part-->')),
+    ).toBeUndefined();
   });
 });
