@@ -252,7 +252,6 @@ overrides:
   'fast-uri@<3.1.7': ^3.1.7
   'get-uri>basic-ftp': ^6.2.1
   'ip-address@<10.5.1': ^10.5.1
-  'joi@>=18 <18.2.5': ^18.2.5
   'js-yaml@>=4 <4.3.2': ^4.3.2
   'lit-dialog>lit': ^3.3.3
   'make-fetch-happen>http-cache-semantics': ^4.3.0
