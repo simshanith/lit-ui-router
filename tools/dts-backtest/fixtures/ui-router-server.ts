@@ -5,10 +5,12 @@ import {
   createServerRouter,
   diagnoseMounts,
   mergeSearch,
+  type ExclusiveMarkers,
   type MountConfig,
   type MountDiagnostic,
   type MountDiagnosticKind,
   type RedirectRule,
+  type ResponseState,
   type RouteDeclaration,
   type ServerRouter,
   type ServerRouterDeclarations,
@@ -31,6 +33,8 @@ import {
   type FetchAdapterOptions,
   type FetchHandler,
   type RequiredDelegates,
+  type RequiredServeResponse,
+  type ServeResponse,
 } from 'ui-router-server/fetch';
 import {
   delegateContext as honoDelegateContext,
@@ -78,6 +82,9 @@ import {
   type DehydrateCandidate,
   type DehydrateResult,
   type JsonValue,
+  type ResponseContext,
+  type ResponseHandler,
+  type ResponseHandlers,
   type SettleOptions,
 } from 'ui-router-server/ssr';
 import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';
@@ -168,6 +175,13 @@ export async function statusFor(pathname: string): Promise<number> {
     void verdict.params;
 
     return verdict.mount.length;
+  }
+
+  if (verdict.kind === 'response') {
+    void verdict.subpath.length;
+    void verdict.params;
+
+    return verdict.state.length;
   }
 
   // `notFound` is the only arm whose `mount` is optional.
@@ -673,3 +687,102 @@ export const plugin: ServerRouterPlugin = serverRouterPlugin(
   router,
   connectOptions,
 );
+
+// Response states: the marker types the state names a host binds handlers to.
+const badgeRoutes = [
+  { name: 'home', url: '' },
+  { name: 'badge', url: '/badge.svg', response: true },
+  { name: 'latest', url: '/{pkg}/latest', response: true },
+  { name: 'claims', url: '/claims', delegate: 'ledger' },
+] as const;
+
+type BadgeRoute = (typeof badgeRoutes)[number];
+
+const badgeRouter = createServerRouter({
+  mounts: { '/': { routes: badgeRoutes } },
+});
+
+export const responseName: ResponseState<BadgeRoute> = 'latest';
+
+// @ts-expect-error 'home' is a page, not a response state
+export const pageName: ResponseState<BadgeRoute> = 'home';
+
+export const looseResponseName: ResponseState = 'anything';
+
+const svgOf = ({ resolves }: ResponseContext<{ svg: string }>): Response =>
+  new Response(resolves.svg);
+
+export const responseHandlers: ResponseHandlers<
+  BadgeRoute,
+  { badge: { svg: string } }
+> = {
+  badge: svgOf,
+  latest: ({ resolves, request }) =>
+    Promise.resolve(
+      new Response(null, {
+        status: 302,
+        headers: { Location: `${String(resolves.version)}${request.url}` },
+      }),
+    ),
+};
+
+export const missingResponse: ResponseHandlers<BadgeRoute> = {
+  badge: () => new Response(''),
+  // @ts-expect-error a handler is required exactly where a row carries the marker
+  home: () => new Response(''),
+};
+
+export const looseResponses: ResponseHandlers = {
+  anything: (() => new Response('')) satisfies ResponseHandler,
+};
+
+const bothRoutes = [
+  { name: 'x', url: '/x', response: true, delegate: 'k' },
+] as const;
+
+// @ts-expect-error a state is a page, a response state or a delegate, never two
+export const bothMarkers = createServerRouter({
+  mounts: { '/': { routes: bothRoutes } },
+});
+
+export const exclusive: ExclusiveMarkers<BadgeRoute> = {};
+
+const serveBadge: ServeResponse<[{ QUEUE: string }]> = (
+  verdict,
+  request,
+  env,
+) => new Response(`${verdict.state} ${request.url} ${env.QUEUE}`);
+
+export const requiredServe: RequiredServeResponse<
+  [{ QUEUE: string }],
+  BadgeRoute
+> = { serveResponse: serveBadge };
+
+export const badgeHandler: FetchHandler<[{ QUEUE: string }]> =
+  createFetchHandler<typeof badgeRouter, [{ QUEUE: string }]>(badgeRouter, {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    delegates: { ledger: (_request, env) => new Response(env.QUEUE) },
+    serveResponse: serveBadge,
+  });
+
+// @ts-expect-error a typed router that declares response states requires serveResponse
+export const missingServe: FetchHandler = createFetchHandler(badgeRouter, {
+  serveShell: (_mountBase, request) => new Response(request.url),
+  delegates: { ledger },
+});
+
+export const badgeMiddleware: ConnectMiddleware = createConnectMiddleware(
+  badgeRouter,
+  { delegates: 'next', responses: 'next' },
+);
+
+export const badgeSite = (): Promise<PrerenderResult> =>
+  prerender({
+    resolver: badgeRouter,
+    paths: ['/badge.svg'],
+    outDir: 'dist',
+    notFound: false,
+    write: () => {},
+    render: () => '',
+    respond: (verdict, { file }) => new Response(`${verdict.state} ${file}`),
+  });

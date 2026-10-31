@@ -90,6 +90,7 @@ describe('prerender', () => {
       redirect: 1,
       notFound: 0,
       delegate: 0,
+      response: 0,
       document: 1,
     });
     assert.deepEqual(contexts[1], {
@@ -182,6 +183,7 @@ describe('prerender', () => {
       redirect: 0,
       notFound: 0,
       delegate: 1,
+      response: 0,
       document: 0,
     });
     assert.deepEqual(result.delegated, ['/app/claims']);
@@ -193,6 +195,110 @@ describe('prerender', () => {
     assert.deepEqual(result.warnings, []);
     assert.deepEqual([...files.keys()], ['dist/welcome/index.html']);
     assert.equal(warn.mock.callCount(), 0);
+  });
+
+  describe('response states', () => {
+    const responding = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        routes: [
+          ...appMount.routes,
+          { name: 'badge', url: '/badge.svg', response: true },
+          { name: 'latest', url: '/latest', response: true },
+        ],
+      },
+    } satisfies Record<string, MountConfig>;
+
+    const answers = {
+      badge: () =>
+        new Response('<svg/>', {
+          status: 200,
+          headers: { 'Content-Type': 'image/svg+xml' },
+        }),
+      latest: () =>
+        new Response(null, {
+          status: 302,
+          headers: { Location: '/app/welcome' },
+        }),
+    } satisfies Record<string, () => Response>;
+
+    it('writes a 2xx body at its url and a 3xx as a rules line', async () => {
+      const contexts: RenderContext[] = [];
+
+      const { files, result } = await run({
+        mounts: responding,
+        paths: ['/app/badge.svg', '/app/latest', '/app/welcome'],
+        notFound: false,
+        respond: (verdict, context) => {
+          contexts.push(context);
+
+          // SAFETY: the mount declares exactly these two response states.
+          return answers[verdict.state as keyof typeof answers]();
+        },
+      });
+
+      assert.deepEqual(result.tally, {
+        shell: 1,
+        redirect: 0,
+        notFound: 0,
+        delegate: 0,
+        response: 2,
+        document: 0,
+      });
+      assert.deepEqual(contexts[0], {
+        path: '/app/badge.svg',
+        subpath: '/badge.svg',
+        file: 'badge.svg',
+      });
+      assert.equal(files.get('dist/badge.svg'), '<svg/>');
+      assert.equal(result.pages[0]?.verdict.kind, 'response');
+      assert.equal(result.pages[0]?.bytes, 6);
+      assert.deepEqual(result.rules, [
+        { from: '/app/latest', to: '/app/welcome', status: 302 },
+        { from: '/app/latest/', to: '/app/welcome', status: 302 },
+      ]);
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/badge.svg', 'dist/welcome/index.html', 'dist/_redirects'],
+      );
+    });
+
+    it('throws when no respond is supplied', async () => {
+      await assert.rejects(
+        run({ mounts: responding, paths: ['/app/badge.svg'], notFound: false }),
+        /'\/app\/badge.svg' matched response state 'badge'; pass `respond`/,
+      );
+    });
+
+    it('throws for an answer a static host cannot serve', async () => {
+      for (const answer of [
+        new Response('gone', { status: 410 }),
+        new Response(null, { status: 302 }),
+      ])
+        await assert.rejects(
+          run({
+            mounts: responding,
+            paths: ['/app/badge.svg'],
+            notFound: false,
+            respond: () => answer,
+          }),
+          /response state 'badge' answered '\/app\/badge.svg' with (410|302)/,
+        );
+    });
+
+    it('plans a body under dryRun, writing nothing', async () => {
+      const { files, result } = await run({
+        mounts: responding,
+        paths: ['/app/badge.svg'],
+        notFound: false,
+        dryRun: true,
+        respond: answers.badge,
+      });
+
+      assert.equal(files.size, 0);
+      assert.equal(result.pages[0]?.file, 'badge.svg');
+    });
   });
 
   it('throws for a verdict kind it does not know instead of counting it', async () => {

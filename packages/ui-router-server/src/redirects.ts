@@ -48,6 +48,15 @@ export interface RouteDeclaration {
    * don't inherit it.
    */
   delegate?: string;
+  /**
+   * Marks a response state: its url answers with the `Response` a handler
+   * bound to the state's name builds from its resolves (a redirect, JSON, a
+   * badge) instead of a page, and the verdict is `response` instead of
+   * `shell`. The tree carries only the marker, so client bundles never import
+   * the handler. A response state needs a url and no `redirectTo`, and can't
+   * also delegate. Child states don't inherit it.
+   */
+  response?: true;
 }
 
 /** A redirect target in state terms; the matcher tier formats it back into a path. */

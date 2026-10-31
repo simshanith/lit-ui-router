@@ -5,6 +5,7 @@ import { UIRouterLit, type UIViewResolves } from 'lit-ui-router/pure';
 import 'lit-ui-router-ssr/register';
 import { prerender, settle } from 'lit-ui-router-ssr';
 import { createServerRouter, mergeSearch } from 'ui-router-server';
+import type { ServerRouter } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
 import { type PageHead, releaseDocument } from './document.ts';
@@ -15,6 +16,17 @@ import { type ReleaseState, releaseStates } from './states.ts';
 import { rootView, unavailableView } from './views.ts';
 
 export const resolver = createServerRouter({ mounts });
+
+// The page loop renders a response state's path too: renderShell answers it with the state's `respond`.
+const pageResolver: ServerRouter = {
+  resolve: async (path) => {
+    const verdict = await resolver.resolve(path);
+
+    return verdict.kind === 'response'
+      ? { kind: 'shell', mount: verdict.mount }
+      : verdict;
+  },
+};
 
 const slashed = (path: string): string =>
   path.endsWith('/') ? path : `${path}/`;
@@ -113,7 +125,7 @@ const render = async (
   let html = '';
 
   await prerender({
-    resolver,
+    resolver: pageResolver,
     router,
     paths: [new URL(request.url).pathname],
     outDir: '',
@@ -219,8 +231,7 @@ export const serveReleases = async (
   if (
     verdict.kind === 'shell' &&
     verdict.status === undefined &&
-    !url.pathname.endsWith('/') &&
-    state?.response !== true
+    !url.pathname.endsWith('/')
   )
     return redirect(`${url.pathname}/`, 308, url);
 

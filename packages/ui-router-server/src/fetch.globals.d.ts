@@ -1,4 +1,4 @@
-// The WinterCG fetch surface the `./fetch` adapter constructs and reads —
+// The WinterCG fetch surface the `./fetch` adapter and `./prerender` construct and read —
 // `Request`, `Response`, `Headers` exist on every server runtime the package
 // targets (workerd, node 18+, deno, bun) but not in the DOM-free ES2022 lib
 // it compiles against (tsconfig: types []), so the adapter's source declares
@@ -45,4 +45,5 @@ declare class Response {
   readonly status: number;
   readonly body: unknown;
   readonly headers: Headers;
+  text(): Promise<string>;
 }

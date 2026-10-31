@@ -36,8 +36,8 @@ Each use adds one concept and leaves the ones before it unchanged:
    `serveShell`.
 2. **Server-rendered pages:** the same states' resolves and views, rendered with
    `lit-ui-router-ssr` on `settle` and `prerender`.
-3. **Representations of a state:** a state whose answer is its own `Response` (a redirect, JSON,
-   a badge) built from its resolves once `settle` lands it.
+3. **Representations of a state:** response states answer with their own `Response` (a redirect,
+   JSON, a badge) built from their resolves once `settle` lands them.
 4. **Commands whose url the tree defines:** delegating states hand a url to a host handler.
    Delegate when the tree is the authority for the url: a command that shares params with a page,
    or a path `prerender` must skip.
@@ -74,6 +74,22 @@ the path in `result.tally.delegate` and lists it in `result.delegated`, so route
 your server; on Cloudflare, list them in the Worker's `assets.run_worker_first` so the asset layer
 doesn't answer them first. See
 [delegating states](https://lit-ui-router.dev/packages/server#delegating-states).
+
+## Response states
+
+A state marked `response: true`, `{ name: 'badge', url: '/{pkg}/badge.svg', response: true }`,
+answers with a `Response` built from its resolves instead of a page. The tree carries only the
+marker; the host binds a handler to the state's name, typed with `ResponseHandlers` from
+`ui-router-server/ssr`, which requires a handler for exactly the states `as const` routes mark.
+A handler receives `{ resolves, request }`. The verdict is `response`, decided by url matching
+alone, so a host tells it from a page before rendering. A response state needs a url and no
+`redirectTo`, and can't also delegate; `createServerRouter` throws for each, and `as const` routes
+make a row with both markers a compile error. The fetch and Hono adapters pass a GET or HEAD of any
+`Accept` that matches one to `serveResponse(verdict, request, ...args)` and answer other methods
+with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `prerender()` hands a
+response state to its `respond` hook and writes a 2xx body at the path its url spells
+(`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
+[response states](https://lit-ui-router.dev/packages/server#response-states).
 
 ## Attribution
 

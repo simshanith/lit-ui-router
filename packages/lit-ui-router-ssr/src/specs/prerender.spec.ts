@@ -422,6 +422,7 @@ describe('dryRun', () => {
       redirect: 1,
       notFound: 1,
       delegate: 0,
+      response: 0,
       document: 1,
     });
     expect(result.rules).toHaveLength(2);
