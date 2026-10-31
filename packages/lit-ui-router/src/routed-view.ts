@@ -22,7 +22,7 @@ const routedViewProps = (
 ): UIViewInjectedProps => {
   const injector = context.injector();
 
-  // Core nulls the transition tokens on an evicted transition's path, which a retained view still holds.
+  // Core nulls the transition tokens on an evicted transition's path; a view holding one was retained through the latest success, which is its transition.
   const transition =
     injector.get<Transition | null>(Transition) ??
     router.globals.successfulTransitions.peekTail();

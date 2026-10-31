@@ -1277,6 +1277,22 @@ describe('UiView', () => {
       expect(shell._uiViewProps?.transition?.params().starId).toBe('rigel');
     });
 
+    it('should hand an element retained by a dynamic param the latest successful transition', async () => {
+      const { uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+
+      await routerGo(router, 'star', { starId: 'rigel' });
+      await waitForUpdate(leaf);
+
+      const latest = router.globals.successfulTransitions.peekTail();
+      expect(uiView.firstElementChild).toBe(leaf);
+      expect(leaf._uiViewProps?.transition).toBe(latest);
+      expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
+    });
+
     it('should mint a new element when the state changes', async () => {
       const { uiView } = await setupRouter(nestedStates);
 
