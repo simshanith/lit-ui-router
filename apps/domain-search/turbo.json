@@ -7,6 +7,11 @@
       "dependsOn": ["^build", "^transit"],
       "outputs": ["dist/**"]
     },
+    // Uncached: it measures the host. The harness's knobs are transport, not inputs.
+    "measure:vercel": {
+      "cache": false,
+      "passThroughEnv": ["DOMAIN_SEARCH_RUNS", "DOMAIN_SEARCH_ORIGIN"]
+    },
     "typecheck:tsc": {
       "dependsOn": ["^build:types", "^transit"]
     }
