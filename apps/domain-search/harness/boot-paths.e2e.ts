@@ -8,7 +8,7 @@ import type { Browser, CDPSession, Page } from 'playwright';
 import { BOOT_PATHS, DOCUMENT_PATTERNS, fulfillDocument } from './boot.ts';
 import type { BootPath } from './boot.ts';
 import { CONDITIONS, frameZero, throttledPage } from './conditions.ts';
-import { ms, withRuns, writeSection } from './report.ts';
+import { ms, runs, spread, writeSection } from './report.ts';
 import { ours } from './targets.ts';
 import { VITALS, flushVitals, installVitals, readBlocking } from './vitals.ts';
 import type { Blocking, Vital } from './vitals.ts';
@@ -62,25 +62,28 @@ const cls = (value: number): string => value.toFixed(3);
 const present = (
   values: (number | undefined)[],
   format: (value: number) => string,
+  render: typeof spread,
 ): string => {
   const measured = values.filter((value) => value !== undefined);
   const none = values.length - measured.length;
 
-  if (measured.length === 0) return `none [${values.length} runs]`;
+  if (measured.length === 0) return `none in ${values.length} runs`;
 
   return none === 0
-    ? withRuns(measured, format)
-    : `${withRuns(measured, format)}, none in ${none}`;
+    ? render(measured, format)
+    : `${render(measured, format)}, none in ${none}`;
 };
+
+const unit = (name: Vital): string => (name === 'CLS' ? name : `${name}, ms`);
 
 const LOAD_ROWS: [string, keyof Load, (value: number) => string][] = [
   ...VITALS.map((name): [string, Vital, (value: number) => string] => [
-    name,
+    unit(name),
     name,
     name === 'CLS' ? cls : ms,
   ]),
-  ['LoAF blocking, navigation start → typed query in results', 'total', ms],
-  ['Longest animation frame, same window', 'longest', ms],
+  ['LoAF blocking, navigation start → typed query in results, ms', 'total', ms],
+  ['Longest animation frame, same window, ms', 'longest', ms],
 ];
 
 const UNTOUCHED_VITALS: Vital[] = ['LCP', 'FCP', 'CLS'];
@@ -88,19 +91,21 @@ const UNTOUCHED_VITALS: Vital[] = ['LCP', 'FCP', 'CLS'];
 const UNTOUCHED_ROWS: [string, keyof Load, (value: number) => string][] = [
   ...UNTOUCHED_VITALS.map(
     (name): [string, Vital, (value: number) => string] => [
-      name,
+      unit(name),
       name,
       name === 'CLS' ? cls : ms,
     ],
   ),
-  ['LoAF blocking, navigation start → settled', 'total', ms],
-  ['Longest animation frame, same window', 'longest', ms],
+  ['LoAF blocking, navigation start → settled, ms', 'total', ms],
+  ['Longest animation frame, same window, ms', 'longest', ms],
 ];
 
+const STATS = 'median (p25–p75, min–max), every run under Runs.';
+
 const ROWS: [string, keyof Timings][] = [
-  ['First contentful paint (`?q=`)', 'fcp'],
-  ['Navigation start → focused input', 'focused'],
-  ['Navigation start → typed query in results', 'reflected'],
+  ['First contentful paint (`?q=`), ms', 'fcp'],
+  ['Navigation start → focused input, ms', 'focused'],
+  ['Navigation start → typed query in results, ms', 'reflected'],
 ];
 
 let browser: Browser;
@@ -114,7 +119,7 @@ after(async () => {
   await writeSection({
     title: 'domain-search: prerendered vs cold',
     lead: [
-      `${target.idle}, ${CONDITIONS}, ${RUNS} runs per path, interleaved; median [runs].`,
+      `${target.idle}, ${CONDITIONS}, ${RUNS} runs per path, interleaved in alternating order; ${STATS}`,
       '',
       '- **prerendered:** the served document; `bootstrap()` adopts it.',
       '- **cold:** the same response with `#root` emptied, so `bootstrap()` has nothing to adopt and renders.',
@@ -124,13 +129,17 @@ after(async () => {
     header: ['Metric', 'prerendered', 'cold'],
     rows: ROWS.map(([label, key]) => [
       label,
-      ...BOOT_PATHS.map((path) => withRuns(timings[path][key], ms)),
+      ...BOOT_PATHS.map((path) => spread(timings[path][key], ms)),
+    ]),
+    runs: ROWS.map(([label, key]) => [
+      label,
+      ...BOOT_PATHS.map((path) => runs(timings[path][key], ms)),
     ]),
   });
   await writeSection({
     title: 'domain-search: Web Vitals and Long Animation Frames',
     lead: [
-      `${target.idle}, typing \`${QUERY}\`, the same loads as the keystroke row above; median [runs].`,
+      `${target.idle}, typing \`${QUERY}\`, the same loads as the keystroke row above; ${STATS}`,
       '',
       '- [web-vitals](https://github.com/GoogleChrome/web-vitals) with `reportAllChanges`, injected by the harness. INP covers the typing. Chrome stops LCP at the first input, so a run that types before the largest paint has none.',
       '- The page is hidden after the typed query shows, so each metric reports its final value.',
@@ -139,13 +148,17 @@ after(async () => {
     header: ['Metric', 'prerendered', 'cold'],
     rows: LOAD_ROWS.map(([label, key, format]) => [
       label,
-      ...BOOT_PATHS.map((path) => present(loads[path][key], format)),
+      ...BOOT_PATHS.map((path) => present(loads[path][key], format, spread)),
+    ]),
+    runs: LOAD_ROWS.map(([label, key, format]) => [
+      label,
+      ...BOOT_PATHS.map((path) => present(loads[path][key], format, runs)),
     ]),
   });
   await writeSection({
     title: 'domain-search: Web Vitals and Long Animation Frames, untouched',
     lead: [
-      `${target.idle}, loaded with no input; median [runs].`,
+      `${target.idle}, loaded with no input; ${STATS}`,
       '',
       '- Settled: booted, then the network idle. The page is hidden then, which ends LCP as web-vitals documents, so LCP always reports.',
       '- LoAF blocking sums `blockingDuration` over the long animation frames that start before the page settled.',
@@ -153,7 +166,13 @@ after(async () => {
     header: ['Metric', 'prerendered', 'cold'],
     rows: UNTOUCHED_ROWS.map(([label, key, format]) => [
       label,
-      ...BOOT_PATHS.map((path) => present(untouched[path][key], format)),
+      ...BOOT_PATHS.map((path) =>
+        present(untouched[path][key], format, spread),
+      ),
+    ]),
+    runs: UNTOUCHED_ROWS.map(([label, key, format]) => [
+      label,
+      ...BOOT_PATHS.map((path) => present(untouched[path][key], format, runs)),
     ]),
   });
 });
@@ -272,22 +291,26 @@ const untouchedLoad = async (path: BootPath): Promise<void> => {
   }
 };
 
+// ABBA: neither path always goes first, so drift and warm-up fall on both.
+const order = (run: number): readonly BootPath[] =>
+  run % 2 === 0 ? BOOT_PATHS : [...BOOT_PATHS].reverse();
+
 describe(`prerendered vs cold, ${CONDITIONS}`, () => {
   test('first contentful paint at ?q=', async () => {
     for (let run = 0; run < RUNS; run += 1) {
-      for (const path of BOOT_PATHS) await firstPaint(path);
+      for (const path of order(run)) await firstPaint(path);
     }
   });
 
   test('time to the first useful keystroke, with Web Vitals and LoAF, booted as each path', async () => {
     for (let run = 0; run < RUNS; run += 1) {
-      for (const path of BOOT_PATHS) await firstKeystroke(path);
+      for (const path of order(run)) await firstKeystroke(path);
     }
   });
 
   test('Web Vitals and LoAF on an untouched load, booted as each path', async () => {
     for (let run = 0; run < RUNS; run += 1) {
-      for (const path of BOOT_PATHS) await untouchedLoad(path);
+      for (const path of order(run)) await untouchedLoad(path);
     }
   });
 });
