@@ -40,6 +40,9 @@ client deployed across every point on the server-support spectrum.
 
 ## Links & Markup
 
+- [Named Views](./named-views) — fill several `<ui-view name="…">` viewports
+  from one state with `views`, and target a view another state created with
+  `name@state`, relative `^` anchors and absolute `!` paths
 - [View Fallback Content](./view-fallback-content) — what a `<ui-view>`
   renders when no routed component is active: the capture rules, the
   master/detail idiom, and what a prerendered shell emits

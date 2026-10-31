@@ -162,6 +162,7 @@ function makeSidebar() {
           link: '/guides/component-lifecycle',
         },
         { text: 'Routed Components', link: '/guides/routed-components' },
+        { text: 'Named Views', link: '/guides/named-views' },
         {
           text: 'View Fallback Content',
           link: '/guides/view-fallback-content',
