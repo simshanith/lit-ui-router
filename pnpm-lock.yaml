@@ -391,7 +391,7 @@ catalogs:
       version: 1.16.1
     ui-router-server-floor:
       specifier: npm:ui-router-server@0.6.0
-      version: npm:ui-router-server@0.6.0
+      version: 0.6.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -1625,7 +1625,7 @@ importers:
         version: link:../ui-router-server
       ui-router-server-floor:
         specifier: catalog:peerFloorSsr
-        version: link:../ui-router-server
+        version: ui-router-server@0.6.0(@uirouter/core@6.1.2)(hono@4.13.14)
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@21.0.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -9104,6 +9104,18 @@ packages:
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
+  ui-router-server@0.6.0:
+    resolution: {integrity: sha512-WBv701oRVxVSy1wnjl7CjjUzFEaWn9cH9kk1VwX9uN9hPVv7FpjbXqDBqVxMWwN4iwn5Jcnlc+lQbpcEQXElfw==}
+    engines: {node: '>=22.12'}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      hono: ^4.0.0
+    peerDependenciesMeta:
+      '@uirouter/core':
+        optional: true
+      hono:
+        optional: true
+
   unbash@6.0.1:
     resolution: {integrity: sha512-0db9eS5iqybux41zLkX69nk90KTci7F7eZ+gXzEG/Q7E0tAqEBhRh5fkZvk1N7jT7QkGWqq34i8SFGPFEe1V8A==}
     engines: {node: '>=14'}
@@ -15751,6 +15763,11 @@ snapshots:
   typical@4.0.0: {}
 
   uc.micro@2.1.0: {}
+
+  ui-router-server@0.6.0(@uirouter/core@6.1.2)(hono@4.13.14):
+    optionalDependencies:
+      '@uirouter/core': 6.1.2
+      hono: 4.13.14
 
   unbash@6.0.1: {}
 
