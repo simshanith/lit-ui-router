@@ -126,7 +126,8 @@ onUnmounted(() => {
   border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
   overflow: clip;
-  background: #fff;
+  /* Shows only until the example paints; an example without color-scheme gets the UA's light canvas. */
+  background: var(--vp-c-bg);
   margin: auto;
 }
 
