@@ -15,11 +15,10 @@ const props = withDefaults(
 
 const container = useTemplateRef('container');
 
-const isFullscreenSupported = ref(false);
+// Unknown until mounted; the button renders either way so the row never reflows.
+const isFullscreenSupported = ref<boolean>();
 
 const isFullscreen = ref(false);
-
-const iconsLoaded = ref(false);
 
 const toggleFullscreen = () => {
   if (screenfull.isEnabled && container.value) {
@@ -39,14 +38,13 @@ function restartIframe() {
   if (el) el.src += '';
 }
 
-async function loadIcons() {
-  await Promise.all([
+function loadIcons() {
+  return Promise.all([
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-link-out.js'),
   ]);
-  iconsLoaded.value = true;
 }
 
 if (!import.meta.env.SSR) {
@@ -83,21 +81,30 @@ onUnmounted(() => {
     />
     <div class="example-embed-actions">
       <button
-        v-if="isFullscreenSupported"
         type="button"
         class="fullscreen-btn btn"
+        :disabled="isFullscreenSupported === false"
+        :title="
+          isFullscreenSupported === false
+            ? 'Fullscreen is not supported in this browser'
+            : undefined
+        "
         @click="toggleFullscreen"
       >
-        <sp-icon-full-screen-exit v-if="iconsLoaded && isFullscreen" />
-        <sp-icon-full-screen v-if="iconsLoaded && !isFullscreen" />
+        <span class="btn-icon">
+          <sp-icon-full-screen-exit v-if="isFullscreen" />
+          <sp-icon-full-screen v-else />
+        </span>
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
       <button @click="restartIframe" class="restart-btn btn" type="button">
-        <sp-icon-refresh v-if="iconsLoaded" label="Restart example" />
+        <span class="btn-icon">
+          <sp-icon-refresh label="Restart example" />
+        </span>
         Restart
       </button>
       <a :href="src" target="_blank" rel="noopener" class="open-btn btn">
-        <sp-icon-link-out v-if="iconsLoaded" />
+        <span class="btn-icon"><sp-icon-link-out /></span>
         Open in new tab
       </a>
       <slot></slot>
@@ -123,17 +130,28 @@ onUnmounted(() => {
   margin: auto;
 }
 
+/* The frame flexes into whatever the padding, gap and a wrapped action row leave. */
 .example-embed:fullscreen,
 .example-embed:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--example-actions-gap);
   background: var(--vp-c-bg);
   padding: 16px;
 }
 
 .example-embed:fullscreen iframe,
 .example-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px);
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
   border-radius: 8px;
   width: 88%;
+}
+
+.example-embed:fullscreen .example-embed-actions,
+.example-embed:-webkit-full-screen .example-embed-actions {
+  margin-block-start: 0;
 }
 
 .example-embed.fullscreen:fullscreen iframe,
@@ -177,7 +195,7 @@ onUnmounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-block-start: 8px;
+  margin-block-start: var(--example-actions-gap);
 }
 
 .btn {
@@ -193,6 +211,7 @@ onUnmounted(() => {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
+  min-block-size: var(--example-control-size);
   cursor: pointer;
   touch-action: manipulation;
   transition:
@@ -215,5 +234,18 @@ onUnmounted(() => {
 .btn:focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 1px;
+}
+
+.btn:disabled {
+  color: var(--vp-c-text-3);
+  cursor: not-allowed;
+}
+
+/* Holds the async-loaded icon's box from the server render on. */
+.btn-icon {
+  display: inline-flex;
+  flex: none;
+  inline-size: var(--example-icon-size);
+  block-size: var(--example-icon-size);
 }
 </style>

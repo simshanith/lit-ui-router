@@ -111,6 +111,8 @@ onMounted(() => {
           <img
             alt="Open in StackBlitz"
             src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+            width="162"
+            height="32"
           />
         </a>
       </div>
@@ -163,13 +165,14 @@ onMounted(() => {
 <style scoped>
 .live-example {
   margin-block: 16px;
-  container-type: inline-size;
 }
 
 .live-example-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  /* Links sit at the end of a shared row and at the start once wrapped. */
+  justify-content: space-between;
   gap: 12px;
   margin-block-end: 8px;
 }
@@ -225,15 +228,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-inline-start: auto;
-}
-
-/* Below the tabs+links intrinsic width the bar wraps the links onto their own
-   row — align them with the tabs instead of the far edge. */
-@container (max-width: 480px) {
-  .live-example-links {
-    margin-inline-start: 0;
-  }
 }
 
 .open-badge,
@@ -271,14 +265,19 @@ onMounted(() => {
 .open-badge img {
   display: block;
   height: 36px;
+  /* The width/height attributes give the ratio before the badge loads. */
+  width: auto;
   /* .vp-doc gives content imgs 16px vertical margin — kill the gap. */
   margin: 0;
 }
 
-/* Reserve the preview pane's frame height so its iframe loading in doesn't
-   shift the page. */
+/* Reserve the preview pane's frame and action row so its iframe loading in
+   doesn't shift the page. */
 .live-example-panels {
-  min-height: min(var(--embed-height, 420px), calc(100svh - 120px));
+  min-height: calc(
+    min(var(--embed-height, 420px), 100svh - 120px) +
+      var(--example-actions-gap) + var(--example-control-size)
+  );
 }
 
 /* The StackBlitz pane sizes itself — the editor keeps its own aspect ratio
