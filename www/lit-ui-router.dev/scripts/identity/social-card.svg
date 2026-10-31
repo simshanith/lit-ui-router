@@ -7,14 +7,14 @@
     }
     text { font-family: Inter, sans-serif; }
     .hero { font-size: 64px; font-weight: 700; letter-spacing: -0.4px; }
-    .name { fill: #3451b2; }
-    .text { fill: #3c3c43; }
-    .tagline { font-size: 28px; font-weight: 500; fill: #67676c; }
-    .library { fill: #3451b2; }
+    .name { fill: #a8b1ff; }
+    .text { fill: #dfdfd6; }
+    .tagline { font-size: 28px; font-weight: 500; fill: #98989f; }
+    .library { fill: #a8b1ff; }
   </style>
-  <rect width="1200" height="630" fill="#ffffff"/>
-  <image href="../../public/images/hero-glow.svg" x="603" y="-17" width="663" height="663"/>
-  <image href="../../public/images/lit-ui-router.svg" x="765" y="145" width="340" height="340" style="mix-blend-mode: multiply"/>
+  <rect width="1200" height="630" fill="#1b1b1f"/>
+  <image href="../../public/images/hero-glow-dark.svg" x="603" y="-17" width="663" height="663"/>
+  <image href="../../public/images/lit-ui-router.svg" x="765" y="145" width="340" height="340" style="mix-blend-mode: plus-lighter"/>
   <text class="hero name" x="80" y="215">Lit UI Router</text>
   <text class="hero text" x="80" y="288">State-based routing</text>
   <text class="hero text" x="80" y="361">for Lit</text>
