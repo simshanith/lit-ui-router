@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // ORDER IS THE POINT: `vitest.setup.coexist.ts` installs lit's own hydrate support before `lit`, so the mixin runs with that support patched onto `LitElement` underneath it.
 import '../register.js';
+import { countRetained } from '../testing.js';
 
 import {
   cardPage,
@@ -23,7 +24,7 @@ describe('light-DOM elements alongside lit’s own hydrate support', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(globalThis).toHaveProperty('litElementHydrateSupport');
 
-    const { container, served } = serve(
+    const { container, stamp } = serve(
       await drawLight(cardPage('served'), '/bare'),
     );
 
@@ -37,9 +38,7 @@ describe('light-DOM elements alongside lit’s own hydrate support', () => {
     const card = container.querySelector<LightCard>('#top')!;
 
     expect(stop()).toEqual([]);
-    expect(
-      served.filter((element) => container.contains(element)),
-    ).toHaveLength(served.length);
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('.card-label')).toHaveLength(1);
     expect(container.querySelector('#top .card-label')).toBe(label);
     expect(card.labelAtFirstUpdate).toBe('served');

@@ -12,6 +12,12 @@ import {
   settle,
   type SettleOptions,
 } from 'lit-ui-router-ssr';
+import {
+  countRetained,
+  type RetainedCount,
+  stampServed,
+  type ServedStamp,
+} from 'lit-ui-router-ssr/testing';
 import type { MountConfig } from 'ui-router-server';
 
 const mounts = {
@@ -67,4 +73,11 @@ export const emit = async (): Promise<{
   const result: PrerenderResult = await prerender(options);
 
   return { tally: result.tally, first: result.pages[0] };
+};
+
+export const measure = (root: ParentNode): RetainedCount => {
+  const stamp: ServedStamp = stampServed(root);
+  void stamp.elements.length;
+
+  return countRetained(stamp);
 };

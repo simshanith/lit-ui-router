@@ -20,6 +20,7 @@ import {
 import type { BootstrapOptions, BootstrapResult } from '../client.js';
 import { renderPage } from '../prerender.js';
 import { routeOf } from '../signature.js';
+import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { DetailView, rootTemplate, ShellView } from './fixture.js';
 import { serve } from './round-trip.js';
@@ -141,7 +142,7 @@ const bootOver = async (
 ): Promise<
   BootstrapResult & { fns: Resolvers; container: HTMLElement; kept: boolean }
 > => {
-  const { container, served } = serve(markup);
+  const { container, stamp } = serve(markup);
   const fns = resolvers();
   const router = routerWith(fns);
   router.urlService.url(path);
@@ -153,7 +154,7 @@ const bootOver = async (
     options,
   );
 
-  const kept = served.every((element) => container.contains(element));
+  const kept = countRetained(stamp).removed === 0;
 
   return { ...result, fns, container, kept };
 };
