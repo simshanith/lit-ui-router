@@ -116,7 +116,10 @@ A dimensional plate (a measured component drawn with chained dimensions) uses th
 [`helpers.mjs`](../generator/helpers.mjs): `dimH` and `dimV` for a dimension with its extension
 lines and the soft arrowheads, `rad` for a radius callout, `nb` for a boxed note number, `detailRef`
 for the dashed circle that names a detail drawn larger elsewhere. The lettering class is `lbld`, a
-dimension code with a paper knockout. The rules it adds to the ones above:
+dimension code with a paper knockout. The idiom is
+[dimensional-drawing](https://github.com/enesozturk/dimensional-drawing) by enesozturk (MIT), after
+[Apple's accessory dimensional drawings](https://developer.apple.com/accessories/dimensional-drawings);
+the kit takes its method and leaves its monochrome. The rules it adds to the ones above:
 
 - **Codes, not numbers.** A dimension on the drawing is a code (`S1`, `H2`, `R1`); the code's
   variable, value and unit are rows of a schedule under the plate, and a derived value is written

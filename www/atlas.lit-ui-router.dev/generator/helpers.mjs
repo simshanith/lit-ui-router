@@ -94,6 +94,11 @@ export function isoPt(ox, oy, x, y, z = 0) {
 }
 
 // ---- the dimension kit ----
+// The idiom's homes: the skill the kit follows, and the drawings the skill follows.
+export const DIMENSIONAL = {
+  skill: 'https://github.com/enesozturk/dimensional-drawing',
+  apple: 'https://developer.apple.com/accessories/dimensional-drawings',
+};
 // Dimensional-drawing marks, in the chrome's own classes: a dimension line is
 // `sks` with the soft arrowheads (`${p}-as`, both ends), an extension line is a
 // `skf` hairline standing 3 off the feature and 5 past the dimension line, and
