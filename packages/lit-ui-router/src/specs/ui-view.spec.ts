@@ -1260,6 +1260,23 @@ describe('UiView', () => {
       expect(countsFor('test-retained-leaf').constructed).toBe(2);
     });
 
+    it('should hand a retained parent the latest successful transition', async () => {
+      const { uiView } = await setupRouter(nestedStates);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      // SAFETY: the 'galaxy' state renders a TestRetainedShell as the view's child
+      const shell = uiView.firstElementChild as TestRetainedShell;
+
+      await routerGo(router, 'galaxy.star', { starId: 'rigel' });
+      await waitForUpdate(shell);
+
+      const latest = router.globals.successfulTransitions.peekTail();
+      expect(uiView.firstElementChild).toBe(shell);
+      expect(shell._uiViewProps?.transition).toBe(latest);
+      expect(shell._uiViewProps?.resolves.$transition$).toBe(latest);
+      expect(shell._uiViewProps?.transition?.params().starId).toBe('rigel');
+    });
+
     it('should mint a new element when the state changes', async () => {
       const { uiView } = await setupRouter(nestedStates);
 

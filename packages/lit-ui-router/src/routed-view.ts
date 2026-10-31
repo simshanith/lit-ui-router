@@ -22,6 +22,11 @@ const routedViewProps = (
 ): UIViewInjectedProps => {
   const injector = context.injector();
 
+  // Core nulls the transition tokens on an evicted transition's path, which a retained view still holds.
+  const transition =
+    injector.get<Transition | null>(Transition) ??
+    router.globals.successfulTransitions.peekTail();
+
   // The injector hands a NOWAIT token's promise, which renders before it settles.
   const resolves = context
     .getTokens()
@@ -36,13 +41,12 @@ const routedViewProps = (
         resolvable.resolved ||
         context.getPolicy(resolvable).async === 'NOWAIT'
       ) {
-        pairs[token] = injector.get<unknown>(token);
+        pairs[token] =
+          token === '$transition$' ? transition : injector.get<unknown>(token);
       }
 
       return pairs;
     }, {});
-
-  const transition = injector.get<Transition>(Transition);
 
   return { router, resolves, transition };
 };
