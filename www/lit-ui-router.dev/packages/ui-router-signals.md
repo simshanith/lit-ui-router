@@ -1,5 +1,5 @@
 ---
-title: UI-Router Signals
+title: ui-router-signals
 description: A framework-agnostic TC39 Signals mirror of the router's current state with ui-router-signals
 ---
 

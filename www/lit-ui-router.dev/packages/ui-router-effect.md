@@ -1,5 +1,5 @@
 ---
-title: UI-Router Effect
+title: ui-router-effect
 description: A framework-agnostic Effect SubscriptionRef of the router's current state with ui-router-effect
 ---
 

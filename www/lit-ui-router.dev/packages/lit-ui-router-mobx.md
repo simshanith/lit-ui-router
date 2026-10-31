@@ -1,5 +1,5 @@
 ---
-title: MobX Bindings
+title: lit-ui-router-mobx
 description: Observable router state and reaction-based controllers with lit-ui-router-mobx
 ---
 
@@ -175,7 +175,7 @@ stale values.
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the mechanism
+[Development and Production Builds](/guides/development-builds) for the mechanism
 and the full warning inventory across packages.
 
 One warning exists here. A `RouterReactionController` whose host finds no

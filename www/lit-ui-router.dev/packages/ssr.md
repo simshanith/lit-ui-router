@@ -405,7 +405,7 @@ default avoids.
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the
+[Development and Production Builds](/guides/development-builds) for the
 mechanism.
 
 Three warnings come from `prerender()`. The first two come from the

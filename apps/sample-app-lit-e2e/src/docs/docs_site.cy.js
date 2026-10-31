@@ -38,7 +38,7 @@ describe('docs site', () => {
 
   it('renders the generated api reference', () => {
     cy.visit('/api/');
-    cy.title().should('match', /API Overview/);
+    cy.title().should('match', /^API \| /);
     cy.get('h1').should('exist');
     // A typedoc-authored page must list real exports; an empty or stale
     // generation would render the shell without them.
