@@ -36,8 +36,8 @@ export const GROUNDS = {
 
 export type GroundName = keyof typeof GROUNDS;
 
-/** `text` holds 4.5:1, `mark` 3:1; `exempt` names the reason WCAG gives none. */
-export type RoleKind = 'text' | 'mark' | 'exempt';
+/** `text` holds 4.5:1, `large-text` and `mark` 3:1; `exempt` names the reason WCAG gives none. */
+export type RoleKind = 'text' | 'large-text' | 'mark' | 'exempt';
 
 export interface Role {
   property: string;
@@ -101,8 +101,20 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the hero name and this stack's marks on the spectrum",
+    use: "the brand scale and this stack's marks on the spectrum",
     on: ['surface', 'surface-soft'],
+  },
+  {
+    property: '--site-color-identity-sweep-start',
+    kind: 'large-text',
+    use: 'the start of the hero name gradient',
+    on: ['surface'],
+  },
+  {
+    property: '--site-color-identity-sweep-end',
+    kind: 'large-text',
+    use: 'the end of the hero name gradient',
+    on: ['surface'],
   },
   {
     property: '--site-color-identity-start',
@@ -169,5 +181,6 @@ export const ROLES = [
 
 export const MINIMUM: Record<Exclude<RoleKind, 'exempt'>, number> = {
   text: 4.5,
+  'large-text': 3,
   mark: 3,
 };

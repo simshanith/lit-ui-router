@@ -72,13 +72,22 @@
   --site-color-identity-end: #ffe0a3;
   --site-color-identity-ink: #006a9a;
 
+  /* The hero name runs the logo's blue into its glow, darkened in light mode to hold large-text contrast. */
+  --site-color-identity-sweep-start: #0077ad;
+  --site-color-identity-sweep-end: #009aa6;
+
   /* One accent: the brand scale is the identity ink. */
   --vp-c-brand-1: var(--site-color-identity-ink);
   --vp-c-brand-2: #00577f;
   --vp-c-brand-3: var(--site-color-identity-ink);
   --vp-c-brand-soft: rgb(0 152 220 / 0.14);
 
-  --vp-home-hero-name-color: var(--site-color-identity-ink);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    var(--site-color-identity-sweep-start) 25%,
+    var(--site-color-identity-sweep-end)
+  );
   --vp-code-color: var(--site-color-text);
   --vp-c-tip-soft: var(--vp-c-default-soft);
 }
@@ -87,6 +96,8 @@
   --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
   --site-color-ground-shade: rgb(0 0 0 / 0.22);
   --site-color-identity-ink: #29abe6;
+  --site-color-identity-sweep-start: var(--site-color-identity-start);
+  --site-color-identity-sweep-end: #50ffff;
   --vp-c-brand-2: #4dbbec;
   --vp-c-brand-3: #006a9a;
   --vp-c-brand-soft: rgb(0 152 220 / 0.16);
