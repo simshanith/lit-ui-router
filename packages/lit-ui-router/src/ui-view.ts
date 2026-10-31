@@ -151,8 +151,9 @@ const noParentViewUnsubscribe = () => {};
  * @hideconstructor
  * @category components
  *
- * @slot - <code>&lt;ui-view&gt;</code> renders slotted content as fallback
- * whenever no routed component is active.
+ * @slot - <code>&lt;ui-view&gt;</code> captures its light-DOM children on
+ * connect and shows them as fallback content whenever no routed component is
+ * active. It renders to itself, so this is not a <code>&lt;slot&gt;</code>.
  *
  * @fires {CustomEvent} ui-router-context
  *
@@ -866,17 +867,6 @@ export class UiView extends LitElement {
     this.placeFallback();
   }
 
-  /**
-   * Reports a missing provider once this view has actually rendered nothing.
-   *
-   * Deliberately here rather than at the failed seek in `setupUiView`: the seek
-   * runs in `connectedCallback`, and custom-element upgrade order is not
-   * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
-   * upgrades. The first update's `willUpdate` re-seeks, so by the first
-   * completed update the no-op is observable.
-   *
-   * @internal
-   */
   /** @internal */
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
@@ -912,6 +902,17 @@ export class UiView extends LitElement {
     this.markedElement = element;
   }
 
+  /**
+   * Reports a missing provider once this view has actually rendered nothing.
+   *
+   * Deliberately here rather than at the failed seek in `setupUiView`: the seek
+   * runs in `connectedCallback`, and custom-element upgrade order is not
+   * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
+   * upgrades. The first update's `willUpdate` re-seeks, so by the first
+   * completed update the no-op is observable.
+   *
+   * @internal
+   */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
 

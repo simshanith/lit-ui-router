@@ -153,6 +153,10 @@ ui-view > [routed] {
 }
 ```
 
+A template component marks only its first element. When its template has
+several top-level elements, wrap them in one element so a `[routed]` rule
+reaches all of it.
+
 ```ts
 const view = document.querySelector('ui-view');
 view?.routedElement?.scrollIntoView();
@@ -162,8 +166,14 @@ When a state change replaces one class component with another, `<ui-view>`
 inserts the incoming element next to the outgoing one, and removes the
 outgoing element once the incoming one has completed its first update. The
 view keeps its content in between, so a layout read during the swap does not
-see a collapsed page. `routedElement` and the `routed` attribute point at the
-incoming element from the moment it is inserted.
+see a collapsed page. Only class-to-class swaps hold the outgoing element:
+fallback content and template components are replaced in the same update.
+
+`routedElement` points at the incoming element once the view renders it, and
+the `routed` attribute moves to it when that view update commits. Both
+change before the incoming element has rendered, so during the hold a
+`[routed]` rule styles the incoming element, not the outgoing one still on
+screen.
 
 The attribute is set when the view renders in the browser, so a prerendered
 page carries it once its views have hydrated.
