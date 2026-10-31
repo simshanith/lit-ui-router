@@ -65,3 +65,27 @@ export async function warnStrictSlash(
     path,
   );
 }
+
+/**
+ * Warns that `seed` left a resolve to its function because it couldn't
+ * rebuild a value a transporter carried.
+ *
+ * @param state - the name of the state that declares the resolve
+ * @param token - the resolve's token
+ * @param type - the transporter name the payload records
+ * @param reason - why the value wasn't rebuilt
+ *
+ * @internal
+ */
+export function warnUntransported(
+  state: string,
+  token: string,
+  type: string,
+  reason: string,
+): void {
+  // DEV folds the whole body out of dist/*.js (`?.`: node --test runs src unbundled); #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env?.DEV || !devGate()) return;
+  console.warn(
+    `ui-router-server: seed: ${state}'s ${token} resolve carries a ${JSON.stringify(type)} value and ${reason}, so it runs its function`,
+  );
+}

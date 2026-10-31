@@ -80,14 +80,21 @@ import {
   dehydrate,
   settle,
   type DehydrateCandidate,
+  type DehydrateOptions,
   type DehydrateResult,
   type JsonValue,
   type ResponseContext,
   type ResponseHandler,
   type ResponseHandlers,
   type SettleOptions,
+  type Transporter,
 } from 'ui-router-server/ssr';
-import { seed, type ResolvePayload } from 'ui-router-server/ssr/client';
+import {
+  seed,
+  type ResolvePayload,
+  type SeedOptions,
+  type Transporter as ClientTransporter,
+} from 'ui-router-server/ssr/client';
 import {
   applyUrlConfig,
   type RouterUrlConfig,
@@ -370,6 +377,52 @@ export async function adoptedSummary(
   void readIsAny;
 
   return transition.injector().get<SheetSummary>('summary');
+}
+
+// Ssr transport: one record of transporters fits both entries' options; a
+// transporter's type parameter reaches decode, and encode answers in JSON.
+const DateTransporter: Transporter<Date> = {
+  encode: (value) => value instanceof Date && value.toISOString(),
+  // SAFETY: encode writes an ISO string.
+  decode: (encoded) => new Date(encoded as string),
+};
+
+const transport = { Date: DateTransporter };
+
+export const transportOptions: [DehydrateOptions, SeedOptions] = [
+  { transport },
+  { transport },
+];
+
+export const sameTransporterType: [
+  AssignableTo<Transporter, ClientTransporter>,
+  AssignableTo<ClientTransporter, Transporter>,
+  AssignableTo<
+    ReturnType<Transporter['encode']>,
+    JsonValue | false | null | undefined
+  >,
+  AssignableTo<Parameters<Transporter['decode']>[0], JsonValue>,
+  AssignableTo<ReturnType<Transporter<Date>['decode']>, Date>,
+] = [true, true, true, true, true];
+
+export const transportedTypes = (payload: ResolvePayload): string[] =>
+  Object.values(payload.transported ?? {}).flatMap((tokens) =>
+    Object.values(tokens).flatMap((marks) => marks.map(({ type }) => type)),
+  );
+
+export const dateOut: Transporter = {
+  ...DateTransporter,
+  // @ts-expect-error encode answers with JSON data or a falsy value, not a Date
+  encode: () => new Date(),
+};
+
+export async function adoptedWithTransport(
+  client: UIRouter,
+  payload: ResolvePayload,
+): Promise<void> {
+  const disarm: () => void = seed(client, payload, { transport });
+  await settle(client, '/sheet/7B');
+  disarm();
 }
 
 // Url-config tier: one config object for a mount and any core router; the
