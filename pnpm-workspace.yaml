@@ -115,6 +115,7 @@ catalog:
   vitest: ^5.0.5
   vue: ^3.5.44
   vue-tsc: ^3.3.13
+  web-vitals: ^6.2.3
   wrangler: ^4.154.0
   yaml: ^2.9.0
 
@@ -206,6 +207,7 @@ catalogs:
     '@tools/wintercg-globals': workspace:*
     '@tools/workers-builds': workspace:*
     '@www/lit-ui-router.dev': workspace:*
+    domain-search: workspace:*
     eslint-plugin-lit-ui-router: workspace:*
     examples: workspace:*
     lit-ui-router: workspace:*

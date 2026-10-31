@@ -1,5 +1,6 @@
 import './dom-shim.ts';
 
+import { mounts as domainSearchMounts } from 'domain-search/routes';
 import { mounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
@@ -10,7 +11,9 @@ import { serveReleases } from './releases/serve.ts';
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
 // turns a verdict into an HTTP Response. Module scope: the mount tables
 // compile once per isolate.
-const router = createServerRouter({ mounts });
+const router = createServerRouter({
+  mounts: { ...mounts, ...domainSearchMounts },
+});
 
 // Mount-agnostic shell: ONE vanilla build serves every vanilla pushState mount.
 // The shell derives its <base href> from location.pathname at boot (see
@@ -30,10 +33,16 @@ const VANILLA_SHELL_MOUNTS = new Set([
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
+// /domain-search is a measured demo page, not documentation.
 // The generic adapter owns verdict -> HTTP; SEO policy stays the site's,
 // layered on the adapter's OUTPUT — a redirect Response the adapter builds has
 // no host hook, so noindex rides the request path, not a per-verdict callback.
-const EXHIBITS = ['/not-found-naive', '/not-found-spa', '/simulated-routing'];
+const EXHIBITS = [
+  '/not-found-naive',
+  '/not-found-spa',
+  '/simulated-routing',
+  '/domain-search',
+];
 
 const isExhibit = (pathname: string): boolean =>
   EXHIBITS.some((m) => pathname === m || pathname.startsWith(`${m}/`));

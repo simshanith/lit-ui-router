@@ -38,6 +38,8 @@
       "/not-found-spa/*",
       "/simulated-routing",
       "/simulated-routing/*",
+      "/domain-search",
+      "/domain-search/*",
       // The release pages and the /gh redirects, answered from the release ledger.
       "/releases",
       "/releases/*",
