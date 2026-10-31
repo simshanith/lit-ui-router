@@ -9,8 +9,8 @@
         --vp-c-divider: #2e2e32;
         --vp-c-text-1: #dfdfd6;
         --vp-c-text-2: #98989f;
-        --vp-c-brand-1: #a8b1ff;
-        --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
         --vp-c-green-1: #3dd68c;
         --vp-c-green-soft: rgba(16, 185, 129, 0.16);
         --vp-c-red-1: #f66f81;
@@ -25,8 +25,8 @@
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- chain -->
-    <rect x="16" y="52" width="88" height="36" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="60" y="74" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">onBefore</text>
+    <rect x="16" y="52" width="88" height="36" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="60" y="74" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">onBefore</text>
     <line x1="104" y1="70" x2="118" y2="70" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-lifecycle)" />
     <rect x="122" y="52" width="78" height="36" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="161" y="74" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">onStart</text>
@@ -58,9 +58,9 @@
     <line x1="502" y1="112" x2="502" y2="106" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="312" y="130" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">resolves fetch during the transition &#8212; data arrives before any view renders</text>
     <!-- guard callout -->
-    <line x1="60" y1="148" x2="60" y2="92" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <rect x="16" y="150" width="330" height="94" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="30" y="172" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)">a route guard is an onBefore hook</text>
+    <line x1="60" y1="148" x2="60" y2="92" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <rect x="16" y="150" width="330" height="94" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="30" y="172" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)">a route guard is an onBefore hook</text>
     <text x="30" y="188" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">criteria: { to: (s) =&gt; s.data.requiresAuth }</text>
     <text x="30" y="208" font-size="11" fill="var(--vp-c-text-1, #3c3c43)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">TargetState</tspan> &#8594; redirect (e.g. to login)</text>
     <text x="30" y="224" font-size="11" fill="var(--vp-c-text-1, #3c3c43)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">false</tspan> &#8594; cancel the transition</text>

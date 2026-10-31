@@ -52,6 +52,62 @@
      ≥1440px width formula derives from this variable too. */
   --vp-sidebar-width: 320px;
   --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
+
+  /* Colour roles. color-roles.ts says where each may sit; test/color-roles.test.ts holds the contrast. */
+  --site-color-text: var(--vp-c-text-1);
+  --site-color-text-muted: var(--vp-c-text-2);
+  --site-color-text-inactive: var(--vp-c-text-3);
+  --site-color-surface: var(--vp-c-bg);
+  --site-color-surface-soft: var(--vp-c-bg-soft);
+  --site-color-surface-hover: var(--vp-c-default-soft);
+  --site-color-ground-shade: rgb(0 0 0 / 0.05);
+  --site-color-line: var(--vp-c-divider);
+
+  /* The brand scale is for interaction only: links, buttons, focus, hover and active state. */
+  --site-color-interaction: var(--vp-c-brand-1);
+  --site-color-interaction-hover: var(--vp-c-brand-2);
+
+  /* The logo gradient is identity only; the ink is its blue, shifted per theme to hold text contrast. */
+  --site-color-identity-start: #0098dc;
+  --site-color-identity-end: #ffe0a3;
+  --site-color-identity-ink: #006a9a;
+
+  /* The hero name runs the logo's blue into its glow, darkened in light mode to hold large-text contrast. */
+  --site-color-identity-sweep-start: #0077ad;
+  --site-color-identity-sweep-end: #009aa6;
+
+  /* One accent: the brand scale is the identity ink. */
+  --vp-c-brand-1: var(--site-color-identity-ink);
+  --vp-c-brand-2: #00577f;
+  --vp-c-brand-3: var(--site-color-identity-ink);
+  --vp-c-brand-soft: rgb(0 152 220 / 0.14);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    var(--site-color-identity-sweep-start) 25%,
+    var(--site-color-identity-sweep-end)
+  );
+  --vp-code-color: var(--site-color-text);
+  --vp-c-tip-soft: var(--vp-c-default-soft);
+}
+
+.dark {
+  --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
+  --site-color-ground-shade: rgb(0 0 0 / 0.22);
+  --site-color-identity-ink: #29abe6;
+  --site-color-identity-sweep-start: var(--site-color-identity-start);
+  --site-color-identity-sweep-end: #50ffff;
+  --vp-c-brand-2: #4dbbec;
+  --vp-c-brand-3: #006a9a;
+  --vp-c-brand-soft: rgb(0 152 220 / 0.16);
+  --vp-button-brand-hover-bg: #00577f;
+  --vp-button-brand-active-bg: #004c6f;
+}
+
+/* A tip's links keep the interaction colour; its code is not a link. */
+.custom-block.tip :not(a) > code {
+  color: var(--vp-code-color);
 }
 
 /* Doc prose wrapping; overflow-wrap breaks only a word that would overflow. */
@@ -77,10 +133,10 @@
   padding-inline: var(--site-space-3);
   font-size: var(--site-text-sm);
   font-weight: 500;
-  color: var(--vp-c-text-1);
+  color: var(--site-color-text);
   text-decoration: none;
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   cursor: pointer;
   touch-action: manipulation;
@@ -92,8 +148,8 @@
 
 @media (hover: hover) and (pointer: fine) {
   :is(.site-button, .vp-doc a.site-button):hover {
-    background: var(--vp-c-bg-mute);
-    border-color: var(--vp-c-brand-1);
+    background: var(--site-color-surface-hover);
+    border-color: var(--site-color-interaction);
   }
 }
 
@@ -102,12 +158,12 @@
 }
 
 .site-button:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
 .site-button:disabled {
-  color: var(--vp-c-text-3);
+  color: var(--site-color-text-inactive);
   cursor: not-allowed;
 }
 
@@ -121,14 +177,14 @@
 
 /* Style links in the homepage tagline */
 .VPHero .tagline a {
-  color: var(--vp-c-brand-1);
+  color: var(--site-color-interaction);
   text-decoration: none;
   transition: color var(--site-duration-base) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .VPHero .tagline a:hover {
-    color: var(--vp-c-brand-2);
+    color: var(--site-color-interaction-hover);
     text-decoration: underline;
   }
 }
@@ -242,7 +298,7 @@
   margin-block-start: var(--site-space-2);
   font-size: var(--site-text-sm);
   line-height: 1.5;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
 }
 
 @media (min-width: 960px) {
@@ -271,18 +327,6 @@
   .VPHero  .tagline {
       max-width: 720px;
   }
-}
-
-/* Brand tokens hold 4.5:1 for white button text and for brand link text. */
-:root:not(.dark) {
-  --vp-c-brand-3: #4a67ca;
-}
-
-.dark {
-  --vp-c-brand-2: #7a8cf0;
-  --vp-button-brand-hover-bg: #4f6ad0;
-  --vp-button-brand-active-bg: #3a5ccc;
-  --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
 }
 
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
@@ -349,7 +393,7 @@
 }
 
 .box>.VPImage {
-  background-color: var(--vp-c-bg);
+  background-color: var(--site-color-surface);
   border-radius: var(--site-radius-control);
 }
 

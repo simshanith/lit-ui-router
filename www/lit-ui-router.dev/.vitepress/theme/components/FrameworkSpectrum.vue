@@ -132,9 +132,9 @@ function stateClass(id: string) {
   position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-card);
-  background: var(--vp-c-bg-soft);
+  background: var(--site-color-surface-soft);
   overflow: clip;
 }
 
@@ -147,20 +147,11 @@ function stateClass(id: string) {
   width: 45%;
   background: linear-gradient(
     to right,
-    rgb(0 0 0 / 0.05) 0%,
-    rgb(0 0 0 / 0.05) 72%,
+    var(--site-color-ground-shade) 0%,
+    var(--site-color-ground-shade) 72%,
     transparent 100%
   );
   pointer-events: none;
-}
-
-.dark .bands::before {
-  background: linear-gradient(
-    to right,
-    rgb(0 0 0 / 0.22) 0%,
-    rgb(0 0 0 / 0.22) 72%,
-    transparent 100%
-  );
 }
 
 .band {
@@ -174,7 +165,7 @@ function stateClass(id: string) {
 }
 
 .band + .band {
-  border-inline-start: var(--site-border-width) solid var(--vp-c-divider);
+  border-inline-start: var(--site-border-width) solid var(--site-color-line);
 }
 
 .band-label {
@@ -195,11 +186,11 @@ function stateClass(id: string) {
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-pill);
   font-size: var(--site-text-micro);
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface);
 }
 
 .band-points {
@@ -217,9 +208,9 @@ function stateClass(id: string) {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-pill);
-  background: var(--vp-c-bg);
+  background: var(--site-color-surface);
   cursor: pointer;
   touch-action: manipulation;
   transition:
@@ -235,14 +226,14 @@ function stateClass(id: string) {
   height: auto;
 }
 
-/* this stack's own points wear the brand ring at rest… */
+/* this stack's own points wear the identity ring at rest… */
 .point.featured {
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--site-color-identity-ink);
 }
 
 .point.active {
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
+  border-color: var(--site-color-interaction);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-interaction);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -258,12 +249,13 @@ function stateClass(id: string) {
 
 /* …and active still reads stronger */
 .point.featured.active {
-  box-shadow: 0 0 0 calc(2 * var(--site-border-width)) var(--vp-c-brand-1);
+  box-shadow: 0 0 0 calc(2 * var(--site-border-width))
+    var(--site-color-interaction);
 }
 
 .point:focus-visible,
 .legend-entry:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
@@ -271,7 +263,7 @@ function stateClass(id: string) {
   display: flex;
   gap: var(--site-space-1-5);
   margin-block-start: auto;
-  color: var(--vp-c-text-3);
+  color: var(--site-color-text-inactive);
   opacity: 0.55;
 }
 
@@ -283,7 +275,7 @@ function stateClass(id: string) {
 .axis-caption {
   margin-block-start: var(--site-space-1-5);
   font-size: var(--site-text-caption);
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
   text-align: end;
 }
 
@@ -309,12 +301,12 @@ function stateClass(id: string) {
   gap: var(--site-space-2);
   padding-block: var(--site-space-1-5);
   padding-inline: var(--site-space-3);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   background: none;
   font-size: var(--site-text-xs);
   text-align: start;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
   cursor: pointer;
   touch-action: manipulation;
   transition:
@@ -328,15 +320,15 @@ function stateClass(id: string) {
 }
 
 .legend-entry.featured {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-text-1);
+  border-color: var(--site-color-identity-ink);
+  background: var(--site-color-surface-soft);
+  color: var(--site-color-text);
 }
 
 .legend-entry.active {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-text-1);
-  box-shadow: 0 0 0 var(--site-border-width) var(--vp-c-brand-1);
+  border-color: var(--site-color-interaction);
+  color: var(--site-color-text);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-interaction);
 }
 
 .legend-mark {
@@ -379,17 +371,8 @@ function stateClass(id: string) {
     height: 50%;
     background: linear-gradient(
       to right,
-      rgb(0 0 0 / 0.05) 0%,
-      rgb(0 0 0 / 0.05) 60%,
-      transparent 80%
-    );
-  }
-
-  .dark .bands::before {
-    background: linear-gradient(
-      to right,
-      rgb(0 0 0 / 0.22) 0%,
-      rgb(0 0 0 / 0.22) 60%,
+      var(--site-color-ground-shade) 0%,
+      var(--site-color-ground-shade) 60%,
       transparent 80%
     );
   }
@@ -399,7 +382,7 @@ function stateClass(id: string) {
   }
 
   .band:nth-child(n + 4) {
-    border-block-start: var(--site-border-width) solid var(--vp-c-divider);
+    border-block-start: var(--site-border-width) solid var(--site-color-line);
   }
 
   .band {

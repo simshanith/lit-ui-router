@@ -177,7 +177,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--example-actions-gap);
-  background: var(--vp-c-bg);
+  background: var(--site-color-surface);
   padding: var(--site-space-4);
 }
 
@@ -242,9 +242,9 @@ onUnmounted(() => {
   padding-block: var(--site-space-2);
   padding-inline: var(--site-space-3);
   font-size: var(--site-text-sm);
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
 }
 
@@ -254,7 +254,7 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   overflow: clip;
   transition: border-color var(--site-duration-base) var(--ease-out);
@@ -270,7 +270,7 @@ onUnmounted(() => {
 
 @media (hover: hover) and (pointer: fine) {
   .stackblitz-embed-actions :deep(a:hover) {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 </style>

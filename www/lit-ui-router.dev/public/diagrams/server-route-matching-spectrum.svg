@@ -10,8 +10,8 @@
         --vp-c-divider: #2e2e32;
         --vp-c-text-1: #dfdfd6;
         --vp-c-text-2: #98989f;
-        --vp-c-brand-1: #a8b1ff;
-        --vp-c-brand-soft: rgba(100, 108, 255, 0.16);
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
         --vp-c-red-1: #f66f81;
       }
     }
@@ -23,7 +23,7 @@
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- legend -->
-    <rect x="404" y="6" width="10" height="10" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <rect x="404" y="6" width="10" height="10" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
     <text x="420" y="15" font-size="11" fill="var(--vp-c-text-2, #67676c)">= live mount on lit-ui-router.dev</text>
     <!-- axis -->
     <line x1="24" y1="400" x2="24" y2="34" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-spectrum)" />
@@ -34,21 +34,21 @@
     <text x="74" y="60" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">5</text>
     <text x="102" y="49" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; full-stack shared router</text>
     <text x="102" y="68" font-size="12" fill="var(--vp-c-text-2, #67676c)">a real headless router replays every URL server-side</text>
-    <rect x="559" y="44" width="133" height="20" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="625" y="58" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/simulated-routing</text>
+    <rect x="559" y="44" width="133" height="20" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
+    <text x="625" y="58" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">/simulated-routing</text>
     <!-- L4 (flagship) -->
-    <rect x="48" y="90" width="656" height="54" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <rect x="60" y="103" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="74" y="122" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">4</text>
+    <rect x="48" y="90" width="656" height="54" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <rect x="60" y="103" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="74" y="122" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">4</text>
     <text x="102" y="111" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; route-aware server</text>
     <text x="102" y="130" font-size="12" fill="var(--vp-c-text-2, #67676c)">the server knows the routes: shells, redirects, real 404s</text>
-    <text x="692" y="107" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">&#9733; flagship</text>
-    <rect x="460" y="116" width="40" height="18" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="480" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app</text>
-    <rect x="506" y="116" width="74" height="18" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
-    <text x="543" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app-mobx</text>
+    <text x="692" y="107" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="end">&#9733; flagship</text>
+    <rect x="460" y="116" width="40" height="18" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="480" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">/app</text>
+    <rect x="506" y="116" width="74" height="18" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="543" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">/app-mobx</text>
     <rect x="586" y="116" width="106" height="18" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="639" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-spa</text>
+    <text x="639" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">/not-found-spa</text>
     <!-- L3 -->
     <rect x="48" y="152" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <rect x="60" y="165" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
@@ -62,8 +62,8 @@
     <text x="74" y="246" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">2</text>
     <text x="102" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; platform-default fallback</text>
     <text x="102" y="254" font-size="12" fill="var(--vp-c-text-2, #67676c)">every path answers 200 with the shell &#8212; HTTP lies (soft-404s)</text>
-    <rect x="572" y="224" width="120" height="20" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
-    <text x="632" y="238" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-naive</text>
+    <rect x="572" y="224" width="120" height="20" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
+    <text x="632" y="238" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">/not-found-naive</text>
     <text x="692" y="260" font-size="11" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="end">200 for everything</text>
     <!-- L1 -->
     <rect x="48" y="276" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />

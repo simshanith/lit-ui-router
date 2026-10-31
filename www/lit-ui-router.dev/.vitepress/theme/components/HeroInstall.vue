@@ -27,9 +27,9 @@
   padding-inline: var(--site-space-4);
   font-family: var(--vp-font-family-mono);
   font-size: var(--site-text-md);
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg-soft);
-  border: var(--site-border-width) solid var(--vp-c-divider);
+  color: var(--site-color-text);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-pill);
   touch-action: manipulation;
   transition: border-color var(--site-duration-fast) var(--ease-out);
@@ -44,13 +44,13 @@
 }
 
 .hero-install:focus-visible {
-  outline: var(--site-focus-ring-width) solid var(--vp-c-brand-1);
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
   outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .hero-install:hover {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 
@@ -64,7 +64,7 @@
 }
 
 .prompt {
-  color: var(--vp-c-text-3);
+  color: var(--site-color-text-muted);
 }
 
 .hero-install code {
