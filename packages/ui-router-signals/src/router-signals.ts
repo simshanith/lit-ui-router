@@ -1,13 +1,17 @@
 import { Signal } from 'signal-polyfill';
 import {
   RawParams,
+  Rejection,
   StateDeclaration,
   StateOrName,
   Transition,
   UIRouter,
 } from '@uirouter/core';
-import { trackPending } from '@repo/pending-transition';
 import { snapshotRoute, type RouteSnapshot } from '@repo/route-snapshot';
+import {
+  trackTransitionStatus,
+  type TransitionStatus,
+} from '@repo/transition-status';
 
 import type { TypedRouteSnapshot } from './route-types.js';
 
@@ -28,8 +32,9 @@ const detached: RouteSnapshot = {
  * `watchSelection` callback, a framework binding such as
  * lit-ui-router-signals, or a `@lit-labs/signals` `SignalWatcher` render —
  * tracks exactly the fields it reads. `onSuccess` is the only hook a later transition cannot supersede, so
- * every value is a settled route. An `onStart` hook feeds the one in-flight
- * field, {@link RouterSignals.pending | pending}.
+ * every value is a settled route. An `onStart` hook feeds the two fields
+ * about the newest transition, {@link RouterSignals.pending | pending} and
+ * {@link RouterSignals.error | error}.
  *
  * Use the {@link RouterSignals.for | for} factory to get the signals for a
  * router: it memoizes one instance (and its transition hooks) per router.
@@ -37,9 +42,10 @@ const detached: RouteSnapshot = {
 export class RouterSignals {
   private readonly state = new Signal.State<RouteSnapshot>(detached);
 
-  private readonly pendingState = new Signal.State<Transition | undefined>(
-    undefined,
-  );
+  private readonly status = new Signal.State<TransitionStatus>({
+    pending: undefined,
+    error: undefined,
+  });
 
   /**
    * The whole route as one value, replaced per transition. Typed by
@@ -69,7 +75,19 @@ export class RouterSignals {
    * every snapshot is a settled route.
    */
   readonly pending: Signal.Computed<Transition | undefined> =
-    new Signal.Computed(() => this.pendingState.get());
+    new Signal.Computed(() => this.status.get().pending);
+
+  /**
+   * The newest transition's failure, as core's `Rejection`: set only for a
+   * `RejectType.ERROR` rejection, such as a throwing resolve, and cleared
+   * when the next transition starts. Superseded, redirected, aborted and
+   * ignored transitions leave it `undefined`, as does a success. A failure
+   * changes `pending` and `error` together. Not part of
+   * {@link RouterSignals.route | route}.
+   */
+  readonly error: Signal.Computed<Rejection | undefined> = new Signal.Computed(
+    () => this.status.get().error,
+  );
 
   private router?: UIRouter = undefined;
 
@@ -125,8 +143,8 @@ export class RouterSignals {
       this.state.set(snapshotRoute(router, transition)),
     ) as () => void;
 
-    const untrack = trackPending(router, (transition) =>
-      this.pendingState.set(transition),
+    const untrack = trackTransitionStatus(router, (status) =>
+      this.status.set(status),
     );
 
     this.deregister = () => {

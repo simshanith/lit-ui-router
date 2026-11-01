@@ -1,11 +1,11 @@
 {
-  "name": "@repo/pending-transition",
+  "name": "@repo/transition-status",
   "version": "0.0.0",
   "private": true,
-  "description": "Canonical source of trackPending, inlined into each consuming package's dist/ by oxc-emit",
+  "description": "Canonical source of trackTransitionStatus, inlined into each consuming package's dist/ by oxc-emit",
   "type": "module",
   "exports": {
-    ".": "./src/pending-transition.ts"
+    ".": "./src/transition-status.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",

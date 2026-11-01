@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Signal } from 'signal-polyfill';
+import { RejectType, type StateDeclaration } from '@uirouter/core';
 
 import { RouterSignals } from '../router-signals.js';
 import { watchSelection } from '../watch.js';
@@ -10,6 +11,17 @@ import {
   testStates,
   tick,
 } from './test-utils.js';
+
+/** A pending state name and an error type, as one observation. */
+type Seen = [string | undefined, RejectType | undefined];
+
+const failing: StateDeclaration = {
+  name: 'fails',
+  url: '/fails',
+  resolve: [
+    { token: 'data', resolveFn: () => Promise.reject(new Error('boom')) },
+  ],
+};
 
 describe('RouterSignals', () => {
   describe('for()', () => {
@@ -333,6 +345,135 @@ describe('RouterSignals', () => {
 
       release();
       await done;
+    });
+  });
+
+  describe('error', () => {
+    function createFailingRouter() {
+      const router = createTestRouter([...testStates, failing]);
+      router.stateService.defaultErrorHandler(() => {});
+
+      return router;
+    }
+
+    it('reads undefined before any transition', () => {
+      const signals = RouterSignals.for(createFailingRouter());
+
+      expect(signals.error.get()).toBeUndefined();
+    });
+
+    it('is set on an ERROR rejection, as pending clears', async () => {
+      const router = createFailingRouter();
+      const signals = RouterSignals.for(router);
+      const seen: Seen[] = [];
+
+      const select = (): Seen => [
+        signals.pending.get()?.to().name,
+        signals.error.get()?.type,
+      ];
+
+      const stop = watchSelection(
+        select,
+        (a, b) => a[0] === b[0] && a[1] === b[1],
+        (pair) => seen.push(pair),
+      );
+
+      await expect(router.stateService.go('fails')).rejects.toBeDefined();
+      await tick();
+      stop();
+
+      expect(signals.error.get()?.detail).toEqual(new Error('boom'));
+      expect(seen).toEqual([
+        [undefined, undefined],
+        ['fails', undefined],
+        [undefined, RejectType.ERROR],
+      ]);
+    });
+
+    it('is not set by a superseded, redirected, aborted or ignored transition', async () => {
+      const router = createFailingRouter();
+      const signals = RouterSignals.for(router);
+      router.transitionService.onEnter({ entering: 'b.child' }, () => false);
+      router.transitionService.onEnter({ entering: 'b' }, (transition) =>
+        transition.params().id === 'redirect'
+          ? transition.router.stateService.target('a')
+          : undefined,
+      );
+      const errors: unknown[] = [];
+
+      const stop = watchSelection(
+        () => signals.error.get(),
+        undefined,
+        (error) => errors.push(error),
+      );
+
+      const releaseA = hold(router, 'a');
+      const superseded = router.stateService.go('a');
+      await tick();
+      const redirected = router.stateService.go('b', { id: 'redirect' });
+      releaseA();
+      await expect(superseded).rejects.toMatchObject({
+        type: RejectType.SUPERSEDED,
+      });
+      await redirected.catch(() => {});
+      await tick();
+      expect(signals.current.get()?.name).toBe('a');
+
+      await expect(
+        router.stateService.go('b.child', { id: '1' }),
+      ).rejects.toMatchObject({ type: RejectType.ABORTED });
+      await router.stateService.go('a');
+      await tick();
+      stop();
+
+      expect(errors).toEqual([undefined]);
+    });
+
+    it('is cleared when the next transition starts', async () => {
+      const router = createFailingRouter();
+      const signals = RouterSignals.for(router);
+
+      await router.stateService.go('fails').catch(() => {});
+      await tick();
+      expect(signals.error.get()?.type).toBe(RejectType.ERROR);
+
+      const release = hold(router, 'a');
+      const retry = router.stateService.go('a');
+      await tick();
+      expect(signals.pending.get()?.to().name).toBe('a');
+      expect(signals.error.get()).toBeUndefined();
+
+      release();
+      await retry;
+      await tick();
+      expect(signals.error.get()).toBeUndefined();
+    });
+
+    it('ignores the late failure of a superseded transition', async () => {
+      const router = createFailingRouter();
+      let fail!: (reason: Error) => void;
+      router.transitionService.onEnter(
+        { entering: 'a' },
+        () => new Promise<void>((_, reject) => (fail = reject)),
+      );
+      const releaseB = hold(router, 'b');
+      const signals = RouterSignals.for(router);
+
+      const first = router.stateService.go('a');
+      await tick();
+      const second = router.stateService.go('b', { id: '1' });
+      await tick();
+
+      fail(new Error('late'));
+      await expect(first).rejects.toMatchObject({ type: RejectType.ERROR });
+      await tick();
+      expect(signals.pending.get()?.to().name).toBe('b');
+      expect(signals.error.get()).toBeUndefined();
+
+      releaseB();
+      await second;
+      await tick();
+      expect(signals.error.get()).toBeUndefined();
     });
   });
 });

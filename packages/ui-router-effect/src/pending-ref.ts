@@ -1,7 +1,7 @@
 import { Effect, SubscriptionRef } from 'effect';
 import { Transition, UIRouter } from '@uirouter/core';
 
-import { trackPending } from '@repo/pending-transition';
+import { trackTransitionStatus } from '@repo/transition-status';
 
 const pendingRefs = new WeakMap<
   UIRouter,
@@ -32,8 +32,8 @@ export function pendingRef(
   );
 
   pendingRefs.set(router, ref);
-  trackPending(router, (transition) => {
-    Effect.runSync(SubscriptionRef.set(ref, transition));
+  trackTransitionStatus(router, ({ pending }) => {
+    Effect.runSync(SubscriptionRef.set(ref, pending));
   });
 
   return ref;

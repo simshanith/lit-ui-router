@@ -1,6 +1,9 @@
 import { makeAutoObservable } from 'mobx';
 import { RawParams, StateOrName, Transition, UIRouter } from '@uirouter/core';
-import { trackPending } from '@repo/pending-transition';
+import {
+  trackTransitionStatus,
+  type TransitionStatus,
+} from '@repo/transition-status';
 
 import type {
   TypedStoreName,
@@ -113,7 +116,7 @@ export class RouterStore {
       this.update,
     ) as () => void;
 
-    const untrack = trackPending(router, this.setPending);
+    const untrack = trackTransitionStatus(router, this.setStatus);
 
     this.deregister = () => {
       deregister();
@@ -125,8 +128,8 @@ export class RouterStore {
     return this.deregister;
   }
 
-  private setPending(transition: Transition | undefined) {
-    this.pending = transition;
+  private setStatus({ pending }: TransitionStatus) {
+    this.pending = pending;
   }
 
   private update(transition?: Transition) {

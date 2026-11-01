@@ -3,7 +3,7 @@ import { GithubActionsReporter } from 'vitest/node';
 
 export default defineConfig({
   test: {
-    name: 'pending-transition',
+    name: 'transition-status',
     environment: 'node',
     include: ['src/specs/**/*.spec.ts'],
     // github-actions precedes the failure banner
