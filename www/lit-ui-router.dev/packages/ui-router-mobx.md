@@ -30,8 +30,9 @@ supported (`mobx@^6.0.0 || ^7.0.0`), and the store's API is the same on either.
 
 [`RouterStore.for(router)`](/api/ui-router-mobx/classes/RouterStore#for)
 returns the router's observable store. The first call for a router creates its
-one store and registers one `onSuccess` transition hook that updates it. Later
-calls return the same store. The store and the hook live as long as the router.
+one store and registers its transition hooks: `onSuccess` updates the settled
+fields, and `onStart` feeds `pending`. Later calls return the same store. The
+store and the hooks live as long as the router.
 
 Any MobX `reaction`, `autorun` or `computed` that reads the store re-runs when
 the values it reads change:
@@ -53,14 +54,29 @@ const dispose = reaction(
 | `current`                        | the current state declaration                                       |
 | `params`                         | the current parameter values, a fresh object per transition         |
 | `transition`                     | the most recent successful transition                               |
+| `pending`                        | the newest transition still in flight, `undefined` when none is     |
 | `includes(stateOrName, params?)` | an observable `StateService.includes`, globs like `'a.**'` included |
 
 Each field is replaced per transition, never mutated, so a reaction compares
 them by reference.
 
+`pending` is set when a transition starts. The transition's promise clears it
+when that transition settles, whether it succeeds, errors or is aborted. A
+superseded transition never clears its successor, and a transition already
+running on first use counts as pending. Both writes run in MobX actions, so
+`enforceActions` sees no unguarded writes. `transition` still means the most
+recent successful one, and failures still reach `onError` hooks, not a field.
+
+```ts
+const dispose = reaction(
+  () => store.pending !== undefined,
+  (busy) => document.body.toggleAttribute('aria-busy', busy),
+);
+```
+
 To manage a store yourself, call
 [`attach(router)`](/api/ui-router-mobx/classes/RouterStore#attach) on a
-`new RouterStore()`. It returns the hook's deregistration function, and it
+`new RouterStore()`. It returns the hooks' deregistration function, and it
 throws if the store already mirrors a different router.
 
 ## Typed stores

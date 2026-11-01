@@ -14,11 +14,12 @@ npm install ui-router-mobx mobx
 
 ## Features
 
-- **`RouterStore.for(router)`**: the observable store for a router. There is one store, and one `onSuccess` hook, per router, attached lazily on first use.
+- **`RouterStore.for(router)`**: the observable store for a router. There is one store, and one `onSuccess` and one `onStart` hook, per router, attached lazily on first use.
 - **`current`, `params` and `transition`**: the current state declaration, a fresh plain copy of the params, and the most recent successful transition. Each is replaced per transition, never mutated, so reactions compare them by reference.
+- **`pending`**: the newest transition still in flight, `undefined` when none is. Set on start, and cleared when that transition settles, however it settles, unless a newer one has started. Both writes run in MobX actions.
 - **`includes(stateOrName, params?)`**: an observable `StateService.includes`, glob patterns such as `'admin.**'` included.
 - **`RouteTypes`**: an empty interface an app or a registry fills in by module augmentation. Its `snapshot` member types `current`, `params` and the targets `includes` takes, and its `snapshots` member, keyed by state name, lets `includes(name)` narrow `current` and `params` to that state's subtree. Empty, the store's types are `StateDeclaration`, `RawParams` and `StateOrName`.
-- **`attach(router)`**: for managing a `new RouterStore()` yourself. It returns the hook's deregistration function and throws if the store already mirrors a different router.
+- **`attach(router)`**: for managing a `new RouterStore()` yourself. It returns the hooks' deregistration function and throws if the store already mirrors a different router.
 
 ## Usage
 
