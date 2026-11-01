@@ -3,7 +3,13 @@ import { Signal } from 'signal-polyfill';
 
 import { RouterSignals } from '../router-signals.js';
 import { watchSelection } from '../watch.js';
-import { createTestRouter, routerGo, testStates } from './test-utils.js';
+import {
+  createTestRouter,
+  hold,
+  routerGo,
+  testStates,
+  tick,
+} from './test-utils.js';
 
 describe('RouterSignals', () => {
   describe('for()', () => {
@@ -219,6 +225,114 @@ describe('RouterSignals', () => {
 
       expect(signals.includes('')).toBe(false);
       expect(signals.current.get()).toBeUndefined();
+    });
+  });
+
+  describe('pending', () => {
+    it('reads undefined before any transition', () => {
+      const signals = RouterSignals.for(createTestRouter(testStates));
+
+      expect(signals.pending.get()).toBeUndefined();
+    });
+
+    it('is set on start and cleared on success', async () => {
+      const router = createTestRouter(testStates);
+      const release = hold(router, 'a');
+      const signals = RouterSignals.for(router);
+      const names: (string | undefined)[] = [];
+
+      const stop = watchSelection(
+        () => signals.pending.get()?.to().name,
+        undefined,
+        (name) => names.push(name),
+      );
+
+      const done = router.stateService.go('a');
+      await tick();
+      expect(signals.pending.get()?.to().name).toBe('a');
+      expect(signals.current.get()?.name).toBe('');
+
+      release();
+      await done;
+      await tick();
+      stop();
+
+      expect(signals.pending.get()).toBeUndefined();
+      expect(names).toEqual([undefined, 'a', undefined]);
+    });
+
+    it('is cleared on error', async () => {
+      const router = createTestRouter(testStates);
+      router.stateService.defaultErrorHandler(() => {});
+      router.transitionService.onEnter({ entering: 'a' }, () => {
+        throw new Error('boom');
+      });
+      const signals = RouterSignals.for(router);
+
+      const done = router.stateService.go('a');
+      await tick();
+      await expect(done).rejects.toBeDefined();
+      await tick();
+
+      expect(signals.pending.get()).toBeUndefined();
+    });
+
+    it('is cleared on abort', async () => {
+      const router = createTestRouter(testStates);
+      router.stateService.defaultErrorHandler(() => {});
+      router.transitionService.onEnter({ entering: 'a' }, () => false);
+      const signals = RouterSignals.for(router);
+      const names: (string | undefined)[] = [];
+
+      const stop = watchSelection(
+        () => signals.pending.get()?.to().name,
+        undefined,
+        (name) => names.push(name),
+      );
+
+      await expect(router.stateService.go('a')).rejects.toBeDefined();
+      await tick();
+      stop();
+
+      expect(names).toEqual([undefined, 'a', undefined]);
+    });
+
+    it('a superseded transition does not clear the newer one', async () => {
+      const router = createTestRouter(testStates);
+      router.stateService.defaultErrorHandler(() => {});
+      const releaseA = hold(router, 'a');
+      const releaseB = hold(router, 'b');
+      const signals = RouterSignals.for(router);
+
+      const first = router.stateService.go('a');
+      await tick();
+      const second = router.stateService.go('b', { id: '1' });
+      await tick();
+
+      releaseA();
+      await expect(first).rejects.toBeDefined();
+      await tick();
+      expect(signals.pending.get()?.to().name).toBe('b');
+
+      releaseB();
+      await second;
+      await tick();
+      expect(signals.pending.get()).toBeUndefined();
+      expect(signals.current.get()?.name).toBe('b');
+    });
+
+    it('stops tracking once detached', async () => {
+      const router = createTestRouter(testStates);
+      const signals = new RouterSignals();
+      signals.attach(router)();
+
+      const release = hold(router, 'a');
+      const done = router.stateService.go('a');
+      await tick();
+      expect(signals.pending.get()).toBeUndefined();
+
+      release();
+      await done;
     });
   });
 });

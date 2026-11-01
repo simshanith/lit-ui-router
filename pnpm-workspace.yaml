@@ -182,6 +182,7 @@ catalogs:
     typescript-6: npm:typescript@^6.0.3
   workspace:
     '@repo/dev-gate': workspace:*
+    '@repo/pending-transition': workspace:*
     '@repo/route-snapshot': workspace:*
     '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*
