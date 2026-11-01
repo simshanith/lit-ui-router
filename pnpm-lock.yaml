@@ -391,7 +391,7 @@ catalogs:
       version: 4.1.0
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.19.0
-      version: npm:lit-ui-router@1.19.0
+      version: 1.19.0
     ui-router-server-floor:
       specifier: npm:ui-router-server@0.7.0
       version: 0.7.0
@@ -1594,7 +1594,7 @@ importers:
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloorSsr
-        version: link:../lit-ui-router
+        version: lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -7656,6 +7656,12 @@ packages:
 
   lit-ui-router@1.16.0:
     resolution: {integrity: sha512-Pnk1LY1Feb2HwSRsh/WeL0Umx+31aQ0AlNUusKQ1NhT3fbp9oH94CciEYJDqY1EvNdZLvp4u17c03aLGxluzCg==}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      lit: ^2.0.0 || ^3.0.0
+
+  lit-ui-router@1.19.0:
+    resolution: {integrity: sha512-zhNUixJo7Z8qCoeGD+AkRABOX/WvqVTE9MIcj4dyZdgoDRaOu9irx71yxBBgD+A9NGCyvUYGge2J0QLFb3G0QQ==}
     peerDependencies:
       '@uirouter/core': ^6.0.8
       lit: ^2.0.0 || ^3.0.0
@@ -13942,6 +13948,12 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3):
+    dependencies:
+      '@oxc-project/runtime': 0.156.0
+      '@uirouter/core': 6.1.2
+      lit: 3.3.3
+
+  lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
       '@oxc-project/runtime': 0.156.0
       '@uirouter/core': 6.1.2
