@@ -31,8 +31,8 @@ two separate signal graphs.
 ## RouterSignals
 
 [`RouterSignals.for(router)`](/api/ui-router-signals/classes/RouterSignals#for)
-returns the router's one instance, attaching a
-single `onSuccess` transition hook on first use. It writes one route snapshot
+returns the router's one instance, attaching its
+transition hooks on first use. An `onSuccess` hook writes one route snapshot
 per successful transition, so every value is a settled route. Its fields are
 read-only `Signal.Computed`s over that snapshot:
 
@@ -52,6 +52,24 @@ import { RouterSignals } from 'ui-router-signals';
 const signals = RouterSignals.for(router);
 
 signals.current.get()?.name;
+```
+
+## Pending transition
+
+`pending`, another read-only `Signal.Computed`, holds the newest transition
+still in flight, and `undefined` when none is. It sits beside `route`, not
+inside it, since every snapshot is a settled route. An `onStart` hook sets it,
+and the transition's promise clears it when that transition settles, whether it
+succeeds, errors or is aborted. A superseded transition never clears its
+successor, and a transition already running on first use counts as pending.
+Failures still reach `onError` hooks, not a field.
+
+```ts
+const stop = watchSelection(
+  () => signals.pending.get() !== undefined,
+  undefined,
+  (busy) => document.body.toggleAttribute('aria-busy', busy),
+);
 ```
 
 ## Typed snapshots

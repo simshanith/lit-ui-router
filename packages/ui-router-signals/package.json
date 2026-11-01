@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
+    "@repo/pending-transition": "catalog:workspace",
     "@repo/route-snapshot": "catalog:workspace",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",

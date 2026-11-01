@@ -70,6 +70,10 @@ component_management:
       name: dev-gate
       paths:
         - packages/shared/dev-gate/src/**
+    - component_id: pending-transition
+      name: pending-transition
+      paths:
+        - packages/shared/pending-transition/src/**
     - component_id: route-snapshot
       name: route-snapshot
       paths:

@@ -6,6 +6,7 @@ import {
   Transition,
   UIRouter,
 } from '@uirouter/core';
+import { trackPending } from '@repo/pending-transition';
 import { snapshotRoute, type RouteSnapshot } from '@repo/route-snapshot';
 
 import type { TypedRouteSnapshot } from './route-types.js';
@@ -27,13 +28,18 @@ const detached: RouteSnapshot = {
  * `watchSelection` callback, a framework binding such as
  * lit-ui-router-signals, or a `@lit-labs/signals` `SignalWatcher` render —
  * tracks exactly the fields it reads. `onSuccess` is the only hook a later transition cannot supersede, so
- * every value is a settled route.
+ * every value is a settled route. An `onStart` hook feeds the one in-flight
+ * field, {@link RouterSignals.pending | pending}.
  *
  * Use the {@link RouterSignals.for | for} factory to get the signals for a
- * router: it memoizes one instance (and one transition hook) per router.
+ * router: it memoizes one instance (and its transition hooks) per router.
  */
 export class RouterSignals {
   private readonly state = new Signal.State<RouteSnapshot>(detached);
+
+  private readonly pendingState = new Signal.State<Transition | undefined>(
+    undefined,
+  );
 
   /**
    * The whole route as one value, replaced per transition. Typed by
@@ -56,6 +62,15 @@ export class RouterSignals {
   readonly transition: Signal.Computed<Transition | undefined> =
     new Signal.Computed(() => this.state.get().transition);
 
+  /**
+   * The newest transition still in flight; `undefined` when none is. A
+   * superseded transition never clears its successor, and an error or abort
+   * clears it like a success does. Not part of {@link RouterSignals.route | route}:
+   * every snapshot is a settled route.
+   */
+  readonly pending: Signal.Computed<Transition | undefined> =
+    new Signal.Computed(() => this.pendingState.get());
+
   private router?: UIRouter = undefined;
 
   private deregister?: () => void = undefined;
@@ -64,7 +79,7 @@ export class RouterSignals {
 
   /**
    * The signals for the given router — one instance per router. The first
-   * call attaches the transition hook; the hook (and the instance) live as
+   * call attaches the transition hooks; the hooks (and the instance) live as
    * long as the router itself.
    */
   static for(router: UIRouter): RouterSignals {
@@ -86,13 +101,13 @@ export class RouterSignals {
    *
    * Idempotent per router: attaching again to the router already being
    * mirrored returns the same deregistration function instead of
-   * registering a second hook. Calling that function detaches, after which
+   * registering the hooks again. Calling that function detaches, after which
    * the instance can be attached again.
    *
    * @throws if already attached to a *different* router — one instance
    * mirrors one router; use {@link RouterSignals.for | for} to get that
    * router's own signals.
-   * @returns the hook's deregistration function.
+   * @returns the hooks' deregistration function.
    */
   attach(router: UIRouter): () => void {
     if (this.deregister) {
@@ -110,8 +125,13 @@ export class RouterSignals {
       this.state.set(snapshotRoute(router, transition)),
     ) as () => void;
 
+    const untrack = trackPending(router, (transition) =>
+      this.pendingState.set(transition),
+    );
+
     this.deregister = () => {
       deregister();
+      untrack();
       this.deregister = undefined;
       this.router = undefined;
     };
