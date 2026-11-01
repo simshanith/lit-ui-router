@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { contrast } from './color.ts';
 import {
   GROUNDS,
   MINIMUM,
@@ -146,25 +147,11 @@ function ground(theme: Theme, name: GroundName): Rgba {
   return over(own, ground(theme, spec.over));
 }
 
-function luminance([r, g, b]: Rgba): number {
-  const [lr, lg, lb] = [r, g, b].map((c) => {
-    const s = c / 255;
-
-    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
-
-  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
-}
-
-function contrast(a: Rgba, b: Rgba): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-
-  return (hi + 0.05) / (lo + 0.05);
+function hex([r, g, b]: Rgba): string {
+  return `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
 }
 
 const themes: Theme[] = ['light', 'dark'];
-
-const statusDefined = PROPS.light.has('--status-ok');
 
 describe('colour roles', () => {
   for (const role of ROLES) {
@@ -180,24 +167,19 @@ describe('colour roles', () => {
 
     for (const theme of themes) {
       for (const name of role.on) {
-        it(
-          `${role.property} on ${name} (${theme}) holds ${minimum}:1`,
-          {
-            skip:
-              'status' in role && !statusDefined
-                ? 'the HTTP status colors block is not in custom.css yet'
-                : false,
-          },
-          () => {
-            const bg = ground(theme, name);
-            const ratio = contrast(over(color(theme, role.property), bg), bg);
+        it(`${role.property} on ${name} (${theme}) holds ${minimum}:1`, () => {
+          const bg = ground(theme, name);
 
-            assert.ok(
-              ratio >= minimum,
-              `${ratio.toFixed(2)}:1 is under ${minimum}:1`,
-            );
-          },
-        );
+          const ratio = contrast(
+            hex(over(color(theme, role.property), bg)),
+            hex(bg),
+          );
+
+          assert.ok(
+            ratio >= minimum,
+            `${ratio.toFixed(2)}:1 is under ${minimum}:1`,
+          );
+        });
       }
     }
   }

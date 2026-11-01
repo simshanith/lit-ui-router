@@ -9,12 +9,6 @@ export interface StatusColors {
   inkRules: Map<string, number>;
 }
 
-// VitePress's --vp-c-bg in each theme.
-export const pageBackground: Record<Theme, string> = {
-  light: '#ffffff',
-  dark: '#1b1b1f',
-};
-
 const CSS = join(import.meta.dirname, '../theme/custom.css');
 
 const BLOCK =
@@ -70,7 +64,7 @@ function channels(hex: string): [number, number, number] {
   return [linear((n >> 16) & 255), linear((n >> 8) & 255), linear(n & 255)];
 }
 
-export function luminance(hex: string): number {
+function luminance(hex: string): number {
   const [r, g, b] = channels(hex);
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;

@@ -6,7 +6,6 @@ import { describe, it } from 'node:test';
 import {
   contrast,
   oklchLightness,
-  pageBackground,
   readStatusColors,
   type Theme,
 } from './color.ts';
@@ -15,7 +14,7 @@ const WHITE = '#ffffff';
 
 const BLACK = '#000000';
 
-const { fills, ink, inkRules } = readStatusColors();
+const { fills, inkRules } = readStatusColors();
 
 const themes: Theme[] = ['light', 'dark'];
 
@@ -64,10 +63,6 @@ describe('HTTP status colors', () => {
 
   for (const theme of themes) {
     for (const [status, fill] of fills[theme]) {
-      it(`${status} (${theme}) holds 3:1 against the page`, () => {
-        assert.ok(contrast(fill, pageBackground[theme]) >= 3);
-      });
-
       it(`${status} (${theme}) takes the higher-contrast ink, at 4.5:1`, () => {
         const threshold = inkRules.get(status) ?? Number.NaN;
         const computed = oklchLightness(fill) < threshold ? WHITE : BLACK;
@@ -77,10 +72,6 @@ describe('HTTP status colors', () => {
 
         assert.equal(computed, best);
         assert.ok(contrast(fill, computed) >= 4.5);
-      });
-
-      it(`${status} (${theme}) holds 4.5:1 with the fallback ink`, () => {
-        assert.ok(contrast(fill, ink[theme]) >= 4.5);
       });
     }
   }

@@ -45,8 +45,6 @@ export interface Role {
   use: string;
   on: readonly GroundName[];
   exempt?: string;
-  /** Defined by the HTTP status colors block (#1757); checked once that block is in custom.css. */
-  status?: true;
 }
 
 const PAGE_GROUNDS = [
@@ -142,28 +140,24 @@ export const ROLES = [
     kind: 'mark',
     use: 'HTTP 200 chips and diagram fills',
     on: ['surface', 'surface-soft'],
-    status: true,
   },
   {
     property: '--status-redirect',
     kind: 'mark',
     use: 'HTTP 3xx chips and diagram fills',
     on: ['surface', 'surface-soft'],
-    status: true,
   },
   {
     property: '--status-not-found',
     kind: 'mark',
     use: 'HTTP 404 chips and diagram fills',
     on: ['surface', 'surface-soft'],
-    status: true,
   },
   {
     property: '--status-as-served',
     kind: 'mark',
     use: 'responses passed through as served',
     on: ['surface', 'surface-soft'],
-    status: true,
   },
   {
     property: '--status-ink',
@@ -175,7 +169,6 @@ export const ROLES = [
       'status-not-found',
       'status-as-served',
     ],
-    status: true,
   },
 ] as const satisfies readonly Role[];
 
