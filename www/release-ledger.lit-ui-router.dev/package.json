@@ -17,6 +17,7 @@
   "dependencies": {
     "@effect/sql-d1": "catalog:",
     "@tools/release-ledger": "catalog:workspace",
+    "cloudflare-effect-tracer": "catalog:",
     "effect": "catalog:",
     "jose": "catalog:"
   },

@@ -118,7 +118,10 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       return yield* new InvalidToken({ reason: 'no bearer token' });
     }
 
-    const claims = yield* readClaims(token, env, keys);
+    const claims = yield* readClaims(token, env, keys).pipe(
+      Effect.withSpan('ledger.verify-token'),
+    );
+
     const body = yield* readBody(request);
 
     if (body.action !== undefined && body.action !== 'observe') {
@@ -149,23 +152,27 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       },
     };
 
+    yield* Effect.annotateCurrentSpan({
+      'ledger.package': claim.name,
+      'ledger.version': claim.version,
+    });
     yield* Effect.promise(() => env.LEDGER_QUEUE.send(claim));
 
     return text(202, 'accepted');
   });
 
 /** Answers one request; `keys` replaces GitHub's JWKS in tests. */
-export const ingest = (
+export const respond = (
   request: Request,
   env: IngestEnv,
   keys?: JWTVerifyGetKey,
-): Promise<Response> => {
+): Effect.Effect<Response> => {
   const { pathname } = new URL(request.url);
 
-  if (pathname !== '/claims') return Promise.resolve(text(404, 'not found'));
+  if (pathname !== '/claims') return Effect.succeed(text(404, 'not found'));
 
   if (request.method !== 'POST') {
-    return Promise.resolve(
+    return Effect.succeed(
       new Response('method not allowed', {
         status: 405,
         headers: { Allow: 'POST' },
@@ -173,18 +180,22 @@ export const ingest = (
     );
   }
 
-  return Effect.runPromise(
-    enqueue(request, env, keys).pipe(
-      Effect.catchTags({
-        InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
-        ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
-        BadRequest: (error) => Effect.succeed(text(400, error.reason)),
-        Misconfigured: (error) =>
-          Effect.as(
-            Effect.logError(error.reason),
-            text(500, 'the ledger is misconfigured'),
-          ),
-      }),
-    ),
+  return enqueue(request, env, keys).pipe(
+    Effect.catchTags({
+      InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
+      ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
+      BadRequest: (error) => Effect.succeed(text(400, error.reason)),
+      Misconfigured: (error) =>
+        Effect.as(
+          Effect.logError(error.reason),
+          text(500, 'the ledger is misconfigured'),
+        ),
+    }),
   );
 };
+
+export const ingest = (
+  request: Request,
+  env: IngestEnv,
+  keys?: JWTVerifyGetKey,
+): Promise<Response> => Effect.runPromise(respond(request, env, keys));

@@ -2,7 +2,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "release-ledger",
-  "compatibility_date": "2026-07-01",
+  "compatibility_date": "2026-09-25",
+  // cloudflare-effect-tracer imports node:async_hooks.
+  "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.ts",
   // Only the route serves /claims; Previews get no URL of their own.
   "workers_dev": false,
@@ -10,7 +12,7 @@
   "routes": [
     { "pattern": "release-ledger.lit-ui-router.dev", "custom_domain": true },
   ],
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "traces": { "enabled": true } },
   // A Preview binds only what this block names, so branches reach no production data.
   "previews": {},
   // Placeholder schedule for the tag sweep.
