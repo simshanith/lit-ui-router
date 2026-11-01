@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Effect, SubscriptionRef } from 'effect';
 
-import { pendingRef } from '../pending-ref.js';
+import { pendingRef } from '../transition-refs.js';
 import { routeRef } from '../route-ref.js';
 import { createTestRouter, hold, testStates, tick } from './test-utils.js';
 

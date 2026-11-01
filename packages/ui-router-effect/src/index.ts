@@ -1,4 +1,4 @@
-export { pendingRef } from './pending-ref.js';
+export { errorRef, pendingRef } from './transition-refs.js';
 
 export { routeRef } from './route-ref.js';
 
