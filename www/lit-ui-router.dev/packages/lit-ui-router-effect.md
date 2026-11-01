@@ -176,6 +176,10 @@ a thunk instead (`() => [ref]`) for refs that depend on the host's place in
 the DOM; it is resolved on every `hostConnected`, and `.value` carries
 `options.initialValue` until then.
 
+[`pendingRef(router)` and `errorRef(router)`](/packages/ui-router-effect#pendingref-and-errorref)
+are `SubscriptionRef`s too, so a `RefController` over them follows the
+in-flight transition and the last failed one.
+
 ## Lifecycle safety
 
 Each controller runs one fiber — `Stream.runForEach` over the refs' `changes`
