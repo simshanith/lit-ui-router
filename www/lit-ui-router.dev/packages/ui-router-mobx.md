@@ -31,7 +31,7 @@ supported (`mobx@^6.0.0 || ^7.0.0`), and the store's API is the same on either.
 [`RouterStore.for(router)`](/api/ui-router-mobx/classes/RouterStore#for)
 returns the router's observable store. The first call for a router creates its
 one store and registers its transition hooks: `onSuccess` updates the settled
-fields, and `onStart` feeds `pending`. Later calls return the same store. The
+fields, and `onStart` feeds `pending` and `error`. Later calls return the same store. The
 store and the hooks live as long as the router.
 
 Any MobX `reaction`, `autorun` or `computed` that reads the store re-runs when
@@ -49,13 +49,14 @@ const dispose = reaction(
 );
 ```
 
-| Member                           | Value                                                               |
-| -------------------------------- | ------------------------------------------------------------------- |
-| `current`                        | the current state declaration                                       |
-| `params`                         | the current parameter values, a fresh object per transition         |
-| `transition`                     | the most recent successful transition                               |
-| `pending`                        | the newest transition still in flight, `undefined` when none is     |
-| `includes(stateOrName, params?)` | an observable `StateService.includes`, globs like `'a.**'` included |
+| Member                           | Value                                                                |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `current`                        | the current state declaration                                        |
+| `params`                         | the current parameter values, a fresh object per transition          |
+| `transition`                     | the most recent successful transition                                |
+| `pending`                        | the newest transition still in flight, `undefined` when none is      |
+| `error`                          | the newest transition's `RejectType.ERROR` rejection, or `undefined` |
+| `includes(stateOrName, params?)` | an observable `StateService.includes`, globs like `'a.**'` included  |
 
 Each field is replaced per transition, never mutated, so a reaction compares
 them by reference.
@@ -63,14 +64,22 @@ them by reference.
 `pending` is set when a transition starts. The transition's promise clears it
 when that transition settles, whether it succeeds, errors or is aborted. A
 superseded transition never clears its successor, and a transition already
-running on first use counts as pending. Both writes run in MobX actions, so
-`enforceActions` sees no unguarded writes. `transition` still means the most
-recent successful one, and failures still reach `onError` hooks, not a field.
+running on first use counts as pending. `transition` still means the most
+recent successful one.
+
+`error` holds the newest transition's failure as core's `Rejection`. Only a
+`RejectType.ERROR` rejection, such as a resolve that throws, sets it;
+superseded, redirected, aborted and ignored transitions leave it `undefined`.
+The next transition clears it as it starts, so a retry clears the error as it
+begins, and a superseded transition that fails late never sets it.
+
+One MobX action writes `pending` and `error` together, so a reaction sees a
+failure as one change and `enforceActions` sees no unguarded writes.
 
 ```ts
 const dispose = reaction(
-  () => store.pending !== undefined,
-  (busy) => document.body.toggleAttribute('aria-busy', busy),
+  () => (store.pending ? 'loading' : store.error ? 'error' : 'idle'),
+  (status) => (document.body.dataset.routeStatus = status),
 );
 ```
 

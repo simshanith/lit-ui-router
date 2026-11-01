@@ -1,5 +1,11 @@
 import { makeAutoObservable } from 'mobx';
-import { RawParams, StateOrName, Transition, UIRouter } from '@uirouter/core';
+import {
+  RawParams,
+  Rejection,
+  StateOrName,
+  Transition,
+  UIRouter,
+} from '@uirouter/core';
 import {
   trackTransitionStatus,
   type TransitionStatus,
@@ -19,8 +25,9 @@ import type {
  * {@link RouterStore.attach | attach}) pushes the current state, params, and
  * transition into MobX observables. Any MobX `reaction`, `autorun` or
  * `computed` that reads the store re-runs when the values it reads change,
- * with no per-consumer transition hooks. An `onStart` hook feeds the one
- * in-flight field, {@link RouterStore.pending | pending}.
+ * with no per-consumer transition hooks. An `onStart` hook feeds the two
+ * fields about the newest transition, {@link RouterStore.pending | pending}
+ * and {@link RouterStore.error | error}.
  *
  * Use the {@link RouterStore.for | for} factory to get the store for a
  * router: it memoizes one store (and its transition hooks) per router
@@ -42,6 +49,16 @@ export class RouterStore {
    * clears it like a success does.
    */
   pending?: Transition = undefined;
+
+  /**
+   * The newest transition's failure, as core's `Rejection`: set only for a
+   * `RejectType.ERROR` rejection, such as a throwing resolve, and cleared
+   * when the next transition starts. Superseded, redirected, aborted and
+   * ignored transitions leave it `undefined`, as does a success. One action
+   * writes it with {@link RouterStore.pending | pending}, so a failure
+   * changes both together.
+   */
+  error?: Rejection = undefined;
 
   private router?: UIRouter = undefined;
 
@@ -128,8 +145,9 @@ export class RouterStore {
     return this.deregister;
   }
 
-  private setStatus({ pending }: TransitionStatus) {
+  private setStatus({ pending, error }: TransitionStatus) {
     this.pending = pending;
+    this.error = error;
   }
 
   private update(transition?: Transition) {
