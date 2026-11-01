@@ -168,7 +168,7 @@ catalogs:
     ui-router-mobx: ^0.2.0
   publishedPeerSignals:
     lit-ui-router: ^1.16.0
-    ui-router-signals: ^0.2.0
+    ui-router-signals: ^0.3.0
   publishedPeerSsr:
     '@lit-labs/ssr': ^4.1.0
     '@lit-labs/ssr-client': ^1.1.7
