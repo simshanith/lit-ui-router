@@ -165,13 +165,15 @@ before production.
 
 ### Workers Previews
 
-The release ledger and the release diffs build their branches as
+The release ledger builds its branches as
 [Workers Previews](https://developers.cloudflare.com/workers/previews/): each preview
 `deploy_command` names the `preview` mode. The ledger's `wrangler.jsonc` carries the `previews`
 block `wrangler preview` requires, and a Preview binds only what that block names, so a branch
 reaches none of the ledger's production data, while each Preview gets Durable Object namespaces of
-its own. `cf previews deploy` evaluates the release diffs' `cloudflare.config.ts` with `isPreview`
-set, so that config, not a `previews` block, decides what its Previews bind. The
+its own. The release diffs have no Workers Builds config yet, so their triggers entry is commented
+out and they deploy by hand with `./tools/workers-builds/cloudflare-deploy.ts main
+release-diffs.lit-ui-router.dev`. `cf previews deploy` evaluates their `cloudflare.config.ts` with
+`isPreview` set, so that config, not a `previews` block, decides what a Preview binds. The
 ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
 versions.
 
