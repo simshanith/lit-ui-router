@@ -12,7 +12,7 @@ A thin wrapper on top of `lit-ui-router` — it registers no custom elements and
 
 ## Features
 
-- **`RouterStore`** — an observable mirror of the current state, params, and transition; one store (and one transition hook) per router via `RouterStore.for(router)`
+- **`RouterStore`** — an observable mirror of the current state, params, and transition, plus the pending and last failed transitions; one store (and one set of transition hooks) per router via `RouterStore.for(router)`
 - **`RouterReactionController`** — observes the store of the router its nearest provider supplies, requested automatically over the `context-request` protocol; no prop drilling and no store wiring in router configuration
 - **`ReactionController`** — the generic primitive: runs a MobX `reaction` over an explicit selector while the host is connected; works with any MobX observables, not just the router
 - **Lifecycle-safe** — reactions are created in `hostConnected` and disposed in `hostDisconnected`; they fire immediately on (re)connect so components that re-enter the DOM (e.g. sticky states) never render stale values
@@ -79,7 +79,7 @@ No router configuration is required: on `hostConnected` the controller requests 
 
 ### `RouterStore`
 
-An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook. It is `ui-router-mobx`'s `RouterStore`, re-exported.
+An observable mirror of a router's current state, updated by its router's `onSuccess` and `onStart` hooks. It is `ui-router-mobx`'s `RouterStore`, re-exported.
 
 | Member                      | Description                                                                                                |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -87,6 +87,8 @@ An observable mirror of a router's current state, updated by one `transitionServ
 | `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
 | `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
 | `transition`                | The most recent successful `Transition`                                                                    |
+| `pending`                   | The newest transition still in flight, `undefined` when none is                                            |
+| `error`                     | The newest transition's `RejectType.ERROR` rejection, or `undefined`                                       |
 | `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
 | `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
