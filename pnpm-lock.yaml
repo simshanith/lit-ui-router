@@ -417,10 +417,10 @@ catalogs:
     '@repo/dev-gate':
       specifier: workspace:*
       version: workspace:*
-    '@repo/pending-transition':
+    '@repo/route-snapshot':
       specifier: workspace:*
       version: workspace:*
-    '@repo/route-snapshot':
+    '@repo/transition-status':
       specifier: workspace:*
       version: workspace:*
     '@tools/a11y':
@@ -1737,7 +1737,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@21.0.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
-  packages/shared/pending-transition:
+  packages/shared/route-snapshot:
     devDependencies:
       '@tools/lit-test-env':
         specifier: catalog:workspace
@@ -1764,7 +1764,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@21.0.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
-  packages/shared/route-snapshot:
+  packages/shared/transition-status:
     devDependencies:
       '@tools/lit-test-env':
         specifier: catalog:workspace
@@ -1796,12 +1796,12 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
-      '@repo/pending-transition':
-        specifier: catalog:workspace
-        version: link:../shared/pending-transition
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
+      '@repo/transition-status':
+        specifier: catalog:workspace
+        version: link:../shared/transition-status
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1877,9 +1877,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
-      '@repo/pending-transition':
+      '@repo/transition-status':
         specifier: catalog:workspace
-        version: link:../shared/pending-transition
+        version: link:../shared/transition-status
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -2117,12 +2117,12 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
-      '@repo/pending-transition':
-        specifier: catalog:workspace
-        version: link:../shared/pending-transition
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
+      '@repo/transition-status':
+        specifier: catalog:workspace
+        version: link:../shared/transition-status
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe

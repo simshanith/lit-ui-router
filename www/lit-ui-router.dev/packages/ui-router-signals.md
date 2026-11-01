@@ -54,21 +54,30 @@ const signals = RouterSignals.for(router);
 signals.current.get()?.name;
 ```
 
-## Pending transition
+## Pending and failed transitions
 
-`pending`, another read-only `Signal.Computed`, holds the newest transition
-still in flight, and `undefined` when none is. It sits beside `route`, not
-inside it, since every snapshot is a settled route. An `onStart` hook sets it,
-and the transition's promise clears it when that transition settles, whether it
-succeeds, errors or is aborted. A superseded transition never clears its
-successor, and a transition already running on first use counts as pending.
-Failures still reach `onError` hooks, not a field.
+Two more read-only `Signal.Computed`s sit beside `route`, not inside it,
+since every snapshot is a settled route. One `onStart` hook feeds both.
+
+- `pending` holds the newest transition still in flight, and `undefined` when
+  none is. The transition's promise clears it when that transition settles,
+  whether it succeeds, errors or is aborted. A superseded transition never
+  clears its successor, and a transition already running on first use counts
+  as pending.
+- `error` holds the newest transition's failure as core's `Rejection`, and
+  `undefined` otherwise. Only a `RejectType.ERROR` rejection, such as a
+  resolve that throws, sets it; superseded, redirected, aborted and ignored
+  transitions leave it `undefined`. The next transition clears it as it
+  starts, so a retry clears the error as it begins. A failure changes
+  `pending` and `error` together, and a superseded transition that fails
+  late changes neither.
 
 ```ts
 const stop = watchSelection(
-  () => signals.pending.get() !== undefined,
+  () =>
+    signals.pending.get() ? 'loading' : signals.error.get() ? 'error' : 'idle',
   undefined,
-  (busy) => document.body.toggleAttribute('aria-busy', busy),
+  (status) => (document.body.dataset.routeStatus = status),
 );
 ```
 
