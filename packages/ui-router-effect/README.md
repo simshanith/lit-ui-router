@@ -15,7 +15,7 @@ npm install ui-router-effect effect
 ## Features
 
 - **`routeRef(router)`**: a `SubscriptionRef<TypedRouteSnapshot>` of the current state, params and transition. There is one ref, and one `onSuccess` hook, per router, attached lazily on first use. Every value it holds is a settled route.
-- **`pendingRef(router)`**: a `SubscriptionRef<Transition | undefined>` of the newest transition still in flight, kept out of `RouteSnapshot`. One ref, and one `onStart` hook, per router, attached lazily on first use. The transition's promise clears it when that transition settles, however it settles, unless a newer one has started.
+- **`pendingRef(router)`** and **`errorRef(router)`**: `SubscriptionRef`s of the newest transition, kept out of `RouteSnapshot`. Two refs, and one `onStart` hook, per router, attached lazily on first use of either. `pendingRef` holds the transition still in flight, cleared when that transition settles, however it settles, unless a newer one has started. `errorRef` holds that transition's `RejectType.ERROR` rejection, cleared when the next transition starts.
 - **`RouteSnapshot`** and **`snapshotRoute(router, transition?)`**: the value the ref holds. Its `includes()` evaluates `StateService.includes` against the snapshot, not the live router.
 - **`RouteTypes`**: an empty interface an app or a registry fills in by module augmentation. Its `snapshot` member types the ref's value, so a snapshot whose `includes(name)` is a type predicate narrows `current` and `params`. Empty, the ref holds a `RouteSnapshot`. `snapshotRoute` stays untyped.
 
@@ -31,6 +31,25 @@ const names = SubscriptionRef.changes(routeRef(router)).pipe(
 );
 
 Effect.runFork(Stream.runForEach(names, (name) => Effect.log(name)));
+```
+
+### Loading and error state
+
+```ts
+import { Effect, Stream, SubscriptionRef } from 'effect';
+import { errorRef, pendingRef } from 'ui-router-effect';
+
+const status = Stream.zipLatestWith(
+  SubscriptionRef.changes(pendingRef(router)),
+  SubscriptionRef.changes(errorRef(router)),
+  (pending, error) => (pending ? 'loading' : error ? 'error' : 'idle'),
+).pipe(Stream.changes);
+
+Effect.runFork(
+  Stream.runForEach(status, (value) =>
+    Effect.sync(() => (document.body.dataset.routeStatus = value)),
+  ),
+);
 ```
 
 ## Dependencies
