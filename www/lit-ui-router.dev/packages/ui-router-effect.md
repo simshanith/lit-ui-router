@@ -94,6 +94,30 @@ const active = SubscriptionRef.changes(routeRef(router)).pipe(
 Effect.runFork(Stream.runForEach(active, (sections) => Effect.log(sections)));
 ```
 
+## pendingRef
+
+[`pendingRef(router)`](/api/ui-router-effect/functions/pendingRef) returns a
+`SubscriptionRef` of the newest transition still in flight, and `undefined`
+when none is. Like `routeRef`, the first call for a router creates its one ref
+and registers one hook, here `onStart`; later calls return the same ref. The
+transition's promise clears the value when that transition settles, whether it
+succeeds, errors or is aborted. A superseded transition never clears its
+successor, and a transition already running on first use counts as pending.
+It is a separate ref, not a `RouteSnapshot` field, since every snapshot is a
+settled route. Failures still reach `onError` hooks, not a ref.
+
+```ts
+import { Effect, Stream, SubscriptionRef } from 'effect';
+import { pendingRef } from 'ui-router-effect';
+
+const busy = SubscriptionRef.changes(pendingRef(router)).pipe(
+  Stream.map((transition) => transition !== undefined),
+  Stream.changes,
+);
+
+Effect.runFork(Stream.runForEach(busy, (isBusy) => Effect.log(isBusy)));
+```
+
 ## RouteSnapshot
 
 The ref holds a
