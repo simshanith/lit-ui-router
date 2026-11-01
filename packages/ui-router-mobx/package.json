@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
+    "@repo/pending-transition": "catalog:workspace",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",

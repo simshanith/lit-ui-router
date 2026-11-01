@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import { RawParams, StateOrName, Transition, UIRouter } from '@uirouter/core';
+import { trackPending } from '@repo/pending-transition';
 
 import type {
   TypedStoreName,
@@ -15,10 +16,11 @@ import type {
  * {@link RouterStore.attach | attach}) pushes the current state, params, and
  * transition into MobX observables. Any MobX `reaction`, `autorun` or
  * `computed` that reads the store re-runs when the values it reads change,
- * with no per-consumer transition hooks.
+ * with no per-consumer transition hooks. An `onStart` hook feeds the one
+ * in-flight field, {@link RouterStore.pending | pending}.
  *
  * Use the {@link RouterStore.for | for} factory to get the store for a
- * router: it memoizes one store (and one transition hook) per router
+ * router: it memoizes one store (and its transition hooks) per router
  * instance.
  */
 export class RouterStore {
@@ -31,6 +33,13 @@ export class RouterStore {
   /** The most recent successful transition. */
   transition?: Transition = undefined;
 
+  /**
+   * The newest transition still in flight; `undefined` when none is. A
+   * superseded transition never clears its successor, and an error or abort
+   * clears it like a success does.
+   */
+  pending?: Transition = undefined;
+
   private router?: UIRouter = undefined;
 
   private deregister?: () => void = undefined;
@@ -39,8 +48,8 @@ export class RouterStore {
 
   /**
    * The observable store for the given router — one per router instance.
-   * The first call attaches the store's transition hook; the hook (and the
-   * store) live as long as the router itself.
+   * The first call attaches the store's transition hooks; the hooks (and
+   * the store) live as long as the router itself.
    */
   static for(router: UIRouter): RouterStore {
     let store = this.stores.get(router);
@@ -79,13 +88,13 @@ export class RouterStore {
    *
    * Idempotent per router: attaching again to the router already being
    * mirrored returns the same deregistration function instead of
-   * registering a second hook. Calling that function detaches the store,
+   * registering the hooks again. Calling that function detaches the store,
    * after which it can be attached again.
    *
    * @throws if the store is already attached to a *different* router — one
    * store mirrors one router; use {@link RouterStore.for | for} to get that
    * router's own store.
-   * @returns the hook's deregistration function.
+   * @returns the hooks' deregistration function.
    */
   attach(router: UIRouter): () => void {
     if (this.deregister) {
@@ -104,13 +113,20 @@ export class RouterStore {
       this.update,
     ) as () => void;
 
+    const untrack = trackPending(router, this.setPending);
+
     this.deregister = () => {
       deregister();
+      untrack();
       this.deregister = undefined;
       this.router = undefined;
     };
 
     return this.deregister;
+  }
+
+  private setPending(transition: Transition | undefined) {
+    this.pending = transition;
   }
 
   private update(transition?: Transition) {
