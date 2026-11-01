@@ -48,6 +48,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the lit-2 alias (catalogs.lit2-compat) runs test:lit2-compat beside the lit 3 line',
   },
   {
+    name: 'lit-ui-router',
+    why: 'catalogs.peerFloorEffect, peerFloorMobx and peerFloorSignals pin lit-ui-router-floor to 1.16.0 and catalogs.peerFloorSsr pins it to 1.19.0, each companion peer floor; a floor equal to the workspace version links instead of splitting',
+  },
+  {
     name: 'mobx',
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line, and catalogs.peerFloor pins mobx-floor to 6.0.0, the mobx peer floor check:bundle bundles against',
   },
