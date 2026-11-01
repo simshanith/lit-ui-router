@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>View Lifecycle · Lifecycle Drawing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+/* Layout: one Apple-style dimensional drawing sheet (notes · section · plan · tables · details · layouts · title block), black on white, single light theme by design. */
+:root{--paper:#ececec;--sheet:#ffffff;--ink:#111;--ink2:#444;--ink3:#7a7a7a;--fill:#f3f3f3;--fill2:#e6e6e6;--f:'Arimo','Helvetica Neue',Helvetica,Arial,sans-serif;color-scheme:light}
+body{background:var(--paper);color:var(--ink);font-family:var(--f)}
+.wrap{max-width:1760px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scroll{overflow-x:auto;background:var(--sheet);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+svg{display:block;width:100%;min-width:1100px;height:auto}
+.tb{background:var(--sheet);border:1.5px solid var(--ink);display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;margin-bottom:24px}
+.tb>div{border-right:1px solid #d0d0d0;border-bottom:1px solid #d0d0d0;padding:10px 12px;min-width:0}
+.tb .big{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.tb h1{font-size:clamp(26px,4vw,40px);line-height:1;margin:0;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.lbl{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--ink3);font-weight:600}
+.tb .v{font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.tb .notes{grid-column:1/-1;border-right:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 24px;font-size:13px;color:var(--ink2)}
+.tb .notes ol{margin:4px 0 0;padding-left:18px}
+.tb .figs{grid-column:1/-1;border-right:0;border-bottom:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 18px}
+.tb .figs .v{font-size:17px}
+@media (max-width:640px){.tb{grid-template-columns:1fr 1fr}.tb .big{grid-column:1/-1;grid-row:auto}}
+.sheetwrap{margin-bottom:28px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);padding:10px 2px 0}
+.foot b{font-weight:600;color:var(--ink)}
+/* drawing */
+.u{font-family:var(--f);text-transform:uppercase;letter-spacing:.07em}
+.border{fill:none;stroke:var(--ink);stroke-width:1.2}
+.obj{fill:var(--sheet);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.well{fill:var(--fill);stroke:var(--ink);stroke-width:1}
+.slot{fill:none;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:4 3}
+.hug{fill:var(--fill2);stroke:var(--ink);stroke-width:1}
+.thin{fill:none;stroke:var(--ink);stroke-width:.8}
+.ph{fill:none;stroke:var(--ink3);stroke-width:.8;stroke-dasharray:14 3 3 3}
+.cl{fill:none;stroke:var(--ink3);stroke-width:.7;stroke-dasharray:16 3 2 3}
+.cut{stroke:var(--ink);stroke-width:2}
+.dl{stroke:var(--ink);stroke-width:.7;fill:none}
+.ext{stroke:var(--ink);stroke-width:.55;fill:none}
+.arrow{fill:var(--ink)}
+.hl{stroke:var(--ink2);stroke-width:.7}
+.hs{stroke:var(--ink);stroke-width:.8}
+.env{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:10 3 2 3}
+.dt{font:400 11px var(--f);fill:var(--ink);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.dts{font:400 9.5px var(--f);fill:var(--ink2);letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:var(--sheet);stroke-width:3px}
+.sl{font:400 9px var(--f);fill:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+.nt{font:400 11.5px var(--f);fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.nth{font:700 13px var(--f);fill:var(--ink);letter-spacing:.06em}
+.vt{font:400 12px var(--f);fill:var(--ink);letter-spacing:.1em;text-transform:uppercase}
+.vtb{font:400 20px var(--f);fill:var(--ink);letter-spacing:.06em}
+.nb{fill:var(--sheet);stroke:var(--ink);stroke-width:.9}
+.nbt{font:400 9.5px var(--f);fill:var(--ink)}
+.lead{stroke:var(--ink);stroke-width:.7;fill:none}
+.dot{fill:var(--ink)}
+.th{font:400 10.5px var(--f);fill:var(--ink);letter-spacing:.05em;text-transform:uppercase}
+.tc{font:400 10.5px var(--f);fill:var(--ink)}
+.tbk{font:400 7px var(--f);fill:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.tbt{font:700 15px var(--f);fill:var(--ink)}
+.tbv{font:400 17px var(--f);fill:var(--ink);letter-spacing:.06em}
+
+/* title block restyled to match the drawing sheet: thin black rules, plain caps lettering */
+.tb{border:1.2px solid var(--ink);border-radius:16px;overflow:hidden}
+.tb>div{border-right:.8px solid var(--ink);border-bottom:.8px solid var(--ink);padding:10px 14px}
+.tb>div:nth-child(4),.tb>div:nth-child(7){border-right:0}
+.tb .lbl{font-size:9.5px;font-weight:400;letter-spacing:.06em;color:var(--ink2)}
+.tb h1{font-weight:400;letter-spacing:.1em;font-size:clamp(28px,4vw,44px);margin-top:4px}
+.tb .v{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+.tb .big .v{font-size:11px;color:var(--ink2);line-height:1.6}
+.tb .notes{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);line-height:1.9}
+.tb .notes ol{padding-left:20px}
+.tb .nh{font-weight:700;font-size:13px;letter-spacing:.06em}
+.tb .nh span{font-weight:400;font-size:11.5px;margin-left:6px}
+.tb .figs>div{border-left:.8px solid var(--ink);padding-left:14px}
+.tb .figs>div:first-child{border-left:0;padding-left:0}
+.tb .figs .v{font-size:18px;letter-spacing:.06em;text-transform:none;margin-top:4px}
+.foot{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.foot b{font-weight:700}
+</style>
+
+<style>body{margin:0}
+.hz{stroke:var(--ink);stroke-width:.7}
+.zone{fill:#f7f7f7;stroke:none}
+.brk{fill:none;stroke:var(--ink);stroke-width:.8}
+.tk{stroke:var(--ink);stroke-width:1}
+.tl{font:400 10.5px var(--f);fill:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="tb">
+    <div class="big">
+      <div><div class="lbl">Router component · lifecycle drawing</div><h1>View Lifecycle</h1></div>
+      <div class="v" style="color:var(--ink2)">Architecture only: phases, hooks, view states and DOM layers of one &lt;ui-view&gt; through a transition that succeeds and one that fails. Dimensioned in order, not pixels. Content is out of scope.</div>
+    </div>
+    <div><div class="lbl">Dwg no.</div><div class="v">LUR-VIEW-LC-001</div></div>
+    <div><div class="lbl">Rev</div><div class="v">A · 2026-10-31</div></div>
+    <div><div class="lbl">Sheets</div><div class="v">1</div></div>
+    <div><div class="lbl">Units</div><div class="v">Lifecycle order · ms where noted (D#)</div></div>
+    <div><div class="lbl">Scale</div><div class="v">Schematic · not to time</div></div>
+    <div><div class="lbl">Source</div><div class="v">examples/loading-and-error-views · packages/lit-ui-router/src · @uirouter/core 6.1.2 lib/</div></div>
+    <div class="notes">
+      <div><span class="nh">NOTES:<span>(UNLESS OTHERWISE SPECIFIED)</span></span><ol>
+        <li>Do not scale time from the drawing. The horizontal axis is lifecycle order.</li>
+        <li>Durations in ms appear only where source defines them (D#). Microtask phases have no duration; order is the dimension.</li>
+        <li>Slots are placeholders. Routed markup, copy and styling are not part of the drawing.</li></ol></div>
+      <div><span class="nh" aria-hidden="true">&nbsp;</span><ol start="4">
+        <li>Codes: P phase · T hook or event · V view state · X transition · D duration · L layer · R relation. Relations are ordering formulas: a &lt; b = a completes before b begins.</li>
+        <li>HELD = outgoing element stands beside the incoming one · PARKED = fallback nodes moved to a fragment, off-document.</li>
+        <li>[TBD] = not fixed by source. Grayscale by design.</li></ol></div>
+    </div>
+    <div class="figs">
+      <div><div class="lbl">D1 · pending-delay</div><div class="v">150 ms</div></div>
+      <div><div class="lbl">D2 · request</div><div class="v">1200 ms</div></div>
+      <div><div class="lbl">R1 · swap</div><div class="v">in T6 onSuccess</div></div>
+      <div><div class="lbl">R5 · pending V2</div><div class="v">t ≥ T2 + D1</div></div>
+      <div><div class="lbl">R7 · held V4</div><div class="v">P6 → P8</div></div>
+      <div><div class="lbl">R9 · viewRendered</div><div class="v">T9 ≥ P8</div></div>
+      <div><div class="lbl">R10 · failure</div><div class="v">X2 → T7 → X3</div></div>
+    </div>
+  </header>
+  <div class="sheetwrap"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Single sheet: a ui-view's lifecycle through a successful and a failed transition on one time axis, view states side by side, exploded DOM layers at the overlap moment, settle-order detail, phase, hook, state, duration, transition, layer and relation tables"></svg></div>
+  <div class="foot"><span>2026-10-31 &nbsp;|&nbsp; Router component reference</span><span><b>View lifecycle, architecture</b> &nbsp;|&nbsp; 1</span></div></div>
+</div>
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';let sv,A,HAT,uid=0;
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e}
+function tx(x,y,s,c,a,p){const t=mk('text',Object.assign({x:x,y:y,class:c||'dt'},a||{}),p);t.textContent=s;return t}
+function begin(id){sv=document.getElementById(id);sv.innerHTML='';const n=uid++;const d=mk('defs',{});const m=mk('marker',{id:'ar'+n,viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},d);mk('path',{d:'M0,1.7 L10,5 L0,8.3 z',class:'arrow'},m);
+ const pt=mk('pattern',{id:'hat'+n,width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},d);mk('line',{x1:0,y1:0,x2:0,y2:5,class:'hl'},pt);A='url(#ar'+n+')';HAT='url(#hat'+n+')';rr(20,20,1660,1020,16,'border')}
+
+/* ---- kit ---- */
+function dimH(x1,x2,y,e1,e2,l,o){o=o||{};[[x1,e1],[x2,e2]].forEach(([x,e])=>{if(e==null)return;const s=Math.sign(y-e)||1;mk('line',{x1:x,y1:e+s*3,x2:x,y2:y+s*5,class:'ext'})});
+ if(x2-x1>=28)mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl','marker-start':A,'marker-end':A});else{mk('line',{x1:x1-13,y1:y,x2:x1,y2:y,class:'dl','marker-end':A});mk('line',{x1:x2+13,y1:y,x2:x2,y2:y,class:'dl','marker-end':A});mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl'})}
+ tx((x1+x2)/2+(o.dx||0),(o.below?y+13:y-4)+(o.dy||0),l,o.c||'dt',{'text-anchor':'middle'})}
+function callout(px,py,ex,ey,l,dir,c){const s=dir||(ex>=px?1:-1);mk('circle',{cx:px,cy:py,r:1.8,class:'dot'});mk('polyline',{points:px+','+py+' '+ex+','+ey+' '+(ex+s*10)+','+ey,class:'lead'});tx(ex+s*14,ey+4,l,c||'dt',{'text-anchor':s>0?'start':'end'})}
+function nb(x,y,n){mk('rect',{x:x-6,y:y-6,width:12,height:12,class:'nb'});tx(x,y+3.5,String(n),'nbt',{'text-anchor':'middle'})}
+function rr(x,y,w,h,r,c){return mk('rect',{x:x,y:y,width:w,height:h,rx:r,class:c})}
+function title(x,y,t,s){tx(x,y,t,'vt',{'text-anchor':'middle'});if(s)tx(x,y+14,s,'dts',{'text-anchor':'middle'})}
+function notes(list){const NX=50,NY=58;tx(NX,NY,'NOTES:','nth');tx(NX+62,NY,'(UNLESS OTHERWISE SPECIFIED)','nt');
+ list.forEach(([n,t],i)=>{const y=NY+30+i*24;if(n){nb(NX+6,y-4,n);tx(NX+22,y,t,'nt')}else tx(NX,y,t,'nt')})}
+function table(x,y,ttl,rows,ws,al){ws=ws||[40,106,114];const rh=16;tx(x,y-8,ttl,'vt');
+ const hd=ws.length===4?['Code','Relation','Holds','Source']:['Code','Variable','Value'];
+ [hd].concat(rows).forEach((r,i)=>{let cx2=x;r.forEach((c,j)=>{mk('rect',{x:cx2,y:y+i*rh,width:ws[j],height:rh,class:'thin'});const left=!j||al==='l';tx(cx2+(left?5:ws[j]/2),y+i*rh+11.5,c,i?'tc':'th',{'text-anchor':left?'start':'middle'});cx2+=ws[j]})});return y+(rows.length+1)*rh+30}
+function detailRef(cx,cy,r,lbl,lx,ly){mk('circle',{cx:cx,cy:cy,r:r,class:'ph'});const a=Math.atan2(ly-cy,lx-cx);mk('line',{x1:cx+r*Math.cos(a),y1:cy+r*Math.sin(a),x2:lx,y2:ly,class:'lead'});tx(lx+(lx<cx?-4:4),ly+4,lbl,'dts',{'text-anchor':lx<cx?'end':'start'})}
+/* lifecycle additions: lane bar, hook tick, lane label */
+function bar(x1,x2,y,h,cls,l,extra){const r=mk('rect',Object.assign({x:x1,y:y-h/2,width:x2-x1,height:h,class:cls},extra||{}));if(l)tx(x1+6,y+3.2,l,'sl');return r}
+function hatch(x1,x2,y,h){mk('rect',{x:x1,y:y-h/2,width:x2-x1,height:h,class:'hz',fill:HAT})}
+function tick(x,y,code,pos){mk('line',{x1:x,y1:y-7,x2:x,y2:y+7,class:'tk'});tx(x,pos==='b'?y+19:y-11,code,'tl',{'text-anchor':'middle'})}
+function lane(y,l){tx(688,y+3.2,l,'sl',{'text-anchor':'end'})}
+function brk(x,y){mk('path',{d:'M'+(x-6)+','+(y-7)+' l4,14 M'+(x+2)+','+(y-7)+' l4,14',class:'brk'})}
+
+const TABLES={
+ phase:[['P0','idle','old view stands'],['P1','before','onBefore · sync'],['P2','start','onStart hooks'],['P3','run','onExit → onFinish'],['P4','settle','promise + hooks, sync'],['P5','callbacks','promise.then jobs'],['P6','view update','ui-view render'],['P7','first update','incoming · class'],['P8','retire','outgoing removed'],['P9','rendered','from T9']],
+ hook:[['T1','onBefore','uiCanExit wired'],['T2','onStart','shell: pending = X'],['T3','onEnter','LAZY · prio 1000'],['T4','onFinish','resolveRemaining'],['T5','trans.promise','resolve | reject'],['T6','onSuccess','activateViews'],['T7','onError','go(errorState)'],['T8','hostUpdated','retire(incoming)'],['T9','viewRendered()','promise resolves']],
+ view:[['V0','unconnected','<slot> · no capture'],['V1','fallback','authored nodes'],['V2','pending','shell template'],['V3','rendered','routed · [routed]'],['V4','held','outgoing + incoming'],['V5','error','routed error state'],['V6','nowait','until() skeleton']],
+ dur:[['D1','pending-delay','150 ms'],['D2','request','1200 ms'],['D3','guide DELAY','150 ms · guide'],['D4','guide MIN_SHOWN','400 ms · guide']],
+ trans:[['X1','succeeds','home → report'],['X2','fails','→ report, failing'],['X3','error','→ error · no url'],['X4','retry','go(failed)']],
+ layer:[['L0','shell region','.region div'],['L1','ui-view host','light DOM'],['L2','fallback','parked fragment'],['L3','outgoing','held slot'],['L4','nested view','noChange'],['L5','incoming','[routed]']],
+ rel:[['R1','swap in T6','views change on success','views.js:45-46'],['R2','T5 < T6 < P5','settle, then hooks, sync','transition.js:577'],['R3','P5 < P6','callbacks before render','ui-view.ts:298,765'],['R4','T2 < T3 (LAZY)','pending before fetch','resolvable.js:11-12'],['R5','V2 iff t ≥ T2+D1','after delay, if latest','main.ts:317-319'],['R6','V2 off at P5','latest settle clears it','main.ts:322-330'],['R7','V4 = P6 → P8','held · class only','ui-view.ts:947-1039'],['R8','routedElement=in, P6','incoming once placed','ui-view.ts:741,958'],['R9','T9 ≥ P8','after the retire update','view-rendered.ts:108'],['R10','X2 → T7 → X3','error state, url kept','main.ts:400-413'],['R11','V1 iff no component','fallback is never held','ui-view.ts:604,912'],['R12','L4 in L3 → noChange','nested view frozen','ui-view.ts:908-910'],['R13','X2·P5 → X3·P6 · 1 task','old view never painted','main.ts:325-330,371']]
+};
+
+begin('sh1');
+notes([[1,'VIEWS SWAP ONLY IN ONSUCCESS; THE OLD VIEW STANDS P0 TO P4.'],[2,'PENDING V2 IS THE SHELL’S; UI-VIEW IS HIDDEN, NOT EMPTIED.'],[3,'RESOLVES ARE LAZY: THE REQUEST STARTS AT T3, AFTER T2.'],[4,'TRANS.PROMISE SETTLES BEFORE ANY VIEW RENDERS. SEE DETAIL C.'],[5,'A CLASS ELEMENT IS HELD BESIDE ITS SUCCESSOR, P6 TO P8.'],[6,'ROUTEDELEMENT AND [ROUTED] MOVE TO THE INCOMING ONE IN P6.'],[7,'A REJECTED RESOLVE FAILS X2; T7 STARTS X3. THE URL STAYS.'],[8,'VIEWRENDERED(X2) WAITS ON X2 ONLY; ORDER VS X3 IS [TBD].'],[9,'VIEWS NESTED IN A HELD ELEMENT RENDER NOCHANGE (L4).'],[0,'TEMPLATE VIEWS HERE, SO NO V4; CLASS → CLASS SWAPS HOLD.'],[0,'FALLBACK V1 SHOWS ONLY WITH NO ROUTED COMPONENT; NEVER HELD.']]);
+
+/* ---- SECTIONS A–A, B–B on one time axis ---- */
+{const AX=122,PB=[700,740,770,800,1060,1095,1135,1180,1225,1270,1310];
+ const T={t1:755,t2:785,t3:815,d1:865,t4:1047,t5:1068,t6:1086,p5:1115,p6:1158,p8:1248};
+ mk('rect',{x:PB[5],y:AX+8,width:PB[10]-PB[5],height:414,class:'zone'});
+ mk('line',{x1:PB[0],y1:AX,x2:PB[10]+22,y2:AX,class:'dl','marker-end':A});tx(PB[10]+26,AX+4,'t','dt');
+ PB.forEach(x=>mk('line',{x1:x,y1:AX-4,x2:x,y2:AX+4,class:'thin'}));brk(950,AX);
+ for(let i=0;i<10;i++)dimH(PB[i],PB[i+1],100,i?null:AX,AX,'P'+i);
+ dimH(PB[1],PB[10],74,AX-12,AX-12,'X1 · P1 → P9 (REF)');
+ [T.t2,T.t3,T.d1,T.t4].forEach(x=>mk('line',{x1:x,y1:AX-3,x2:x,y2:AX+3,class:'thin'}));
+ dimH(T.t2,T.d1,142,AX,AX,'D1');dimH(T.t3,T.t4,160,AX,AX,'D2 (REF)',{dx:40});
+
+ /* A–A: X1 succeeds */
+ tx(700,190,'A–A · X1 SUCCEEDS','vt');
+ const ha=214,sa=258,ua=296;lane(ha,'Hooks · X1');lane(sa,'Shell');lane(ua+8,'UI-view');
+ mk('line',{x1:PB[1],y1:ha,x2:T.t6,y2:ha,class:'ph'});
+ tick(T.t1,ha,'T1');tick(T.t2,ha,'T2');tick(T.t3,ha,'T3');tick(T.t4,ha,'T4');tick(T.t5,ha,'T5','b');tick(T.t6,ha,'T6');
+ nb(T.t3,ha+24,3);nb(T.t6+20,ha,1);
+ mk('line',{x1:T.t2,y1:sa-12,x2:T.p5,y2:sa-12,class:'ph'});tx(1000,sa-16,'ARIA-BUSY','sl',{'text-anchor':'middle'});
+ bar(T.d1,T.p5,sa,12,'hug','V2 · pending');nb(T.d1-14,sa,2);
+ bar(PB[0],T.p6,ua,12,'hug','V3 · outgoing');hatch(T.d1,T.p5,ua,12);tx(990,ua+18,'HIDDEN','sl',{'text-anchor':'middle'});
+ bar(T.p6,T.p8,ua,12,'ph');bar(T.p6,PB[10]+14,ua+16,12,'hug','V3 · incoming');
+ dimH(T.p6,T.p8,ua+42,ua+22,ua+6,'V4 HELD',{below:true,c:'dts'});nb(T.p8+14,ua+42,5);nb(T.p6-12,ua+30,6);
+ detailRef(1205,ha+40,58,'DETAIL C',1290,ha-38);
+
+ /* B–B: X2 fails, X3 lands the error view */
+ tx(700,370,'B–B · X2 FAILS → X3','vt');
+ const hb=394,xb=428,sb=466,ub=500;lane(hb,'Hooks · X2');lane(xb,'Hooks · X3');lane(sb,'Shell');lane(ub+8,'UI-view');
+ mk('line',{x1:PB[1],y1:hb,x2:T.t6,y2:hb,class:'ph'});
+ tick(T.t1,hb,'T1');tick(T.t2,hb,'T2');tick(T.t3,hb,'T3');tick(T.t5,hb,'T5');tick(T.t6,hb,'T7','b');
+ tx(T.t5-10,hb-10,'REJECT','sl',{'text-anchor':'end'});
+ mk('line',{x1:T.t6,y1:xb,x2:1225,y2:xb,class:'ph'});tick(1150,xb,'T2','b');tick(1215,xb,'T6','b');nb(T.t6-16,xb,7);
+ mk('line',{x1:T.t2,y1:sb-12,x2:T.p5,y2:sb-12,class:'ph'});mk('line',{x1:1150,y1:sb-12,x2:1225,y2:sb-12,class:'ph'});
+ bar(T.d1,T.p5,sb,12,'hug','V2 · pending');
+ bar(PB[0],1250,ub,12,'hug','V3 · outgoing');hatch(T.d1,T.p5,ub,12);
+ bar(1250,PB[10]+14,ub+16,12,'hug','V5');
+ dimH(T.p5,1250,ub-16,ub-6,ub-6,'ONE TASK · NOT PAINTED',{c:'dts',dx:22});nb(T.t5-36,hb+18,8);
+ tx(1202,554,'MICROTASK ZONE · ORDER, NOT DURATION','dts',{'text-anchor':'middle'});
+ title(1005,588,'Sections A–A · B–B','One time axis · schematic · ms only where D# · B–B reads X3 on the same order');}
+
+/* ---- STATES SIDE BY SIDE ---- */
+{const Y0=376,BW=66,BH=104,STEP=81,X0=54;
+ const st=[['V0','Unconnected','SSR · <slot>'],['V1','Fallback','authored'],['V2','Pending','shell region'],['V3','Rendered','[routed]'],['V4','Held','class only'],['V5','Error','error state'],['V6','NOWAIT','until()']];
+ st.forEach(([c,n,s],i)=>{const x=X0+i*STEP,y=Y0;
+  rr(x,y,BW,BH,3,'obj');const ix=x+7,iw=BW-14;
+  if(i===0){mk('rect',{x:ix,y:y+8,width:iw,height:BH-16,class:'env'});rr(ix+6,y+30,iw-12,40,2,'slot');tx(x+BW/2,y+54,'SLOT','sl',{'text-anchor':'middle'})}
+  if(i===1){rr(ix,y+10,iw,BH-20,2,'slot');tx(x+BW/2,y+BH/2+3,'FALLBACK','sl',{'text-anchor':'middle'})}
+  if(i===2){rr(ix,y+8,iw,26,2,'hug');tx(x+BW/2,y+24,'PENDING','sl',{'text-anchor':'middle'});mk('rect',{x:ix,y:y+42,width:iw,height:BH-50,class:'hz',fill:HAT})}
+  if(i===3){rr(ix,y+10,iw,BH-20,2,'hug');tx(x+BW/2,y+BH/2+3,'ROUTED','sl',{'text-anchor':'middle'})}
+  if(i===4){rr(ix,y+8,iw,40,2,'ph');tx(x+BW/2,y+31,'OUT','sl',{'text-anchor':'middle'});rr(ix,y+56,iw,40,2,'hug');tx(x+BW/2,y+79,'IN','sl',{'text-anchor':'middle'})}
+  if(i===5){rr(ix,y+10,iw,BH-20,2,'hug');rr(ix+6,y+20,iw-12,30,2,'slot');tx(x+BW/2,y+38,'ERROR','sl',{'text-anchor':'middle'});rr(ix+3,y+62,iw-6,18,9,'obj');tx(x+BW/2,y+74,'RETRY','sl',{'text-anchor':'middle'})}
+  if(i===6){rr(ix,y+10,iw,BH-20,2,'hug');[0,1,2].forEach(k=>mk('rect',{x:ix+6,y:y+26+k*18,width:k===2?(iw-12)*.6:iw-12,height:8,rx:2,class:'well'}))}
+  tx(x+BW/2,y+BH+20,c,'vt',{'text-anchor':'middle'});tx(x+BW/2,y+BH+34,n,'dts',{'text-anchor':'middle'});tx(x+BW/2,y+BH+47,s,'dts',{'text-anchor':'middle'});});
+ nb(X0+2*STEP+BW+7,Y0+6,2);nb(X0+3*STEP+BW+7,Y0+6,6);nb(X0+4*STEP+BW+7,Y0+6,5);nb(X0+5*STEP+BW+7,Y0+6,7);
+ title(X0+3*STEP+BW/2,Y0+BH+82,'States side by side','One ui-view · schematic · V2 is the shell region around it');}
+
+/* ---- EXPLODED VIEW · layers at P7, class component ---- */
+{const sc=.5,TX=232,TY=900,gap=40,a=.94*sc,b=.17*sc,c=-.34*sc,dd=.47*sc,W=300,H=190;
+ const P=(x,y,z)=>[TX+a*x+c*y,TY+b*x+dd*y-z];
+ const G=z=>mk('g',{transform:'matrix('+a+','+b+','+c+','+dd+','+TX+','+(TY-z)+')'});
+ const R2=(g,x,y,w,h,r,cls,extra)=>mk('rect',Object.assign({x:x,y:y,width:w,height:h,rx:r,class:cls,'vector-effect':'non-scaling-stroke'},extra||{}),g);
+ [[0,0],[W,0],[W,H],[0,H]].forEach(([x,y])=>{const p1=P(x,y,gap),p2=P(x,y,gap*5);mk('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],class:'ph'})});
+ let g=G(0);R2(g,0,0,W,H,4,'thin');
+ g=G(gap);R2(g,0,0,W,H,2,'obj');
+ g=G(gap*2);R2(g,20,20,W-40,H-40,2,'ph',{fill:HAT,'fill-opacity':.5});
+ g=G(gap*3);R2(g,20,20,W-40,H-40,2,'ph');R2(g,150,60,110,80,2,'slot');
+ g=G(gap*4);R2(g,150,60,110,80,2,'slot',{fill:HAT});
+ g=G(gap*5);R2(g,20,20,W-40,H-40,2,'hug');
+ const LX=180;
+ [[0,[0,H],'L0 · Shell region','.region · busy flag'],[gap,[0,H],'L1 · UI-view host','Light DOM · no shadow'],[gap*2,[20,H-20],'L2 · Fallback','Parked · off-document'],[gap*3,[20,H-20],'L3 · Outgoing','Held · slot A'],[gap*4,[150,140],'L4 · Nested view','Inside L3 · noChange'],[gap*5,[20,H-20],'L5 · Incoming','Slot B · [routed]']].forEach(([z,[x,y],t,s])=>{
+  const p1=P(x,y,z);mk('circle',{cx:p1[0],cy:p1[1],r:1.8,class:'dot'});mk('polyline',{points:p1[0]+','+p1[1]+' '+(LX+10)+','+p1[1]+' '+LX+','+p1[1],class:'lead'});
+  tx(LX-4,p1[1]-2,t,'vt',{'text-anchor':'end'});tx(LX-4,p1[1]+11,s,'dts',{'text-anchor':'end'})});
+ const q=P(W,0,gap*4);nb(q[0]+14,q[1],9);
+ title(250,1004,'Exploded view · at P7','Axonometric · class component · z gaps not to scale');}
+
+/* ---- DETAIL C · settle order P4–P9 ---- */
+{const X0=506,CW=64,Y0=690,cx=i=>X0+i*CW;
+ const rows=[['Core',726],['UI-view',756],['Outgoing',786],['Incoming',816],['routedElement',846],['[routed]',876],['viewRendered()',906]];
+ for(let i=0;i<6;i++)dimH(cx(i),cx(i+1),Y0,i?null:Y0+18,Y0+18,'P'+(i+4));
+ for(let i=0;i<=6;i++)mk('line',{x1:cx(i),y1:Y0+18,x2:cx(i),y2:922,class:'ext','stroke-dasharray':'2 3'});
+ rows.forEach(([l,y])=>tx(X0-10,y+3.2,l,'sl',{'text-anchor':'end'}));
+ const [rc,ru,ro,ri,rre,rat,rvr]=rows.map(r=>r[1]);
+ tick(cx(0)+16,rc,'T5');tick(cx(0)+44,rc,'T6');
+ mk('line',{x1:cx(0)+44,y1:ru,x2:cx(2)+6,y2:ru,class:'ph'});bar(cx(2)+6,cx(3)-6,ru,12,'hug','Render');
+ mk('line',{x1:cx(3)+6,y1:ru,x2:cx(4)+6,y2:ru,class:'ph'});bar(cx(4)+6,cx(5)-6,ru,12,'hug','Retire');
+ bar(X0,cx(5)-6,ro,12,'ph');mk('path',{d:'M'+(cx(5)-10)+','+(ro-6)+' l8,12 M'+(cx(5)-2)+','+(ro-6)+' l-8,12',class:'thin'});
+ bar(cx(2)+20,cx(3)+6,ri,12,'ph');bar(cx(3)+6,cx(6),ri,12,'hug');tx(cx(3)+14,ri+3.2,'UPDATED','sl');tick(cx(3)+6,ri,'T8','b');
+ bar(X0,cx(2)+20,rre,12,'well','Out');bar(cx(2)+20,cx(6),rre,12,'hug','In');
+ bar(X0,cx(3)-6,rat,12,'well','Out');bar(cx(3)-6,cx(6),rat,12,'hug','In');nb(cx(2)+32,rat-15,6);
+ mk('line',{x1:cx(1)+8,y1:rvr,x2:cx(5)+14,y2:rvr,class:'ph'});mk('circle',{cx:cx(5)+14,cy:rvr,r:3.2,class:'dot'});tx(cx(5)+22,rvr+4,'T9','tl');nb(cx(1)+32,rc,4);
+ tx(X0+3*CW,946,'TEMPLATE VIEW: OUTGOING LEAVES IN P6 · P7 AND P8 ARE EMPTY','dts',{'text-anchor':'middle'});
+ title(X0+3*CW,978,'Detail C · settle order','Order 1:1 per phase · class component replaced · microtask counts [TBD]');}
+
+/* ---- TABLES ---- */
+{let y=86;y=table(1412,y,'Phases',TABLES.phase);y=table(1412,y,'Hooks · events',TABLES.hook);y=table(1412,y,'View states',TABLES.view);y=table(1412,y,'Durations',TABLES.dur);y=table(1412,y,'Transitions',TABLES.trans);table(1412,y,'Layers',TABLES.layer);
+ table(930,700,'Relations',TABLES.rel,[40,140,146,122],'l');}
+})();
+</script>
+</body>
+</html>
