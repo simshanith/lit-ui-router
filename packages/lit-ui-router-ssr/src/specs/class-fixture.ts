@@ -68,7 +68,7 @@ export class BoundCard extends RoutedCard {
 customElements.define('bound-card', BoundCard);
 
 /** The sample apps' shape: light DOM, props through the constructor. */
-export class LightCard extends LitElement {
+export class LightClassCard extends LitElement {
   _uiViewProps?: UIViewInjectedProps;
 
   constructor(props?: UIViewInjectedProps) {
@@ -87,7 +87,7 @@ export class LightCard extends LitElement {
   }
 }
 
-customElements.define('light-card', LightCard);
+customElements.define('light-class-card', LightClassCard);
 
 /** One state per card, each resolving `detail`, and a template state to leave for. */
 export const makeClassRouter = (): UIRouterLit => {
@@ -117,7 +117,7 @@ export const makeClassRouter = (): UIRouterLit => {
     {
       name: 'light',
       url: '/light',
-      component: LightCard,
+      component: LightClassCard,
       resolve: { detail: () => 'light leaf' },
     },
     { name: 'other', url: '/other', component: OtherView },

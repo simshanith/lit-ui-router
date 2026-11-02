@@ -257,7 +257,7 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
     const markup = await classAt('/light');
 
     expect(markup).toContain(
-      '<!--served:lit-part--><light-card defer-hydration></light-card><!--served:/lit-part-->',
+      '<!--served:lit-part--><light-class-card defer-hydration></light-class-card><!--served:/lit-part-->',
     );
     expect(markup).not.toContain('shadowroot');
   });
