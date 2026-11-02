@@ -67,14 +67,8 @@ export interface ViteBuildContext {
   environment?: {
     /** The environment's name. */
     name: string;
-    /** The environment's own resolved config. */
-    config: {
-      /** The environment's build options. */
-      build: {
-        /** The environment's output directory, as configured. */
-        outDir: string;
-      };
-    };
+    /** The environment's own resolved config; under `buildApp` each environment has its own. */
+    config: ViteResolvedConfig;
   };
 }
 
@@ -164,6 +158,8 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
+const NODE_PROCESS = 'node:process';
+
 const VITE = 'vite';
 
 // Typed structurally so src never pulls in @types/node or vite.
@@ -175,6 +171,11 @@ interface NodeFsPromises {
   readFile(path: string, encoding: string): Promise<string>;
   stat(path: string): Promise<{ isFile(): boolean }>;
   writeFile(path: string, data: string, encoding: string): Promise<void>;
+}
+
+interface NodeProcess {
+  execArgv: string[];
+  env: Record<string, string | undefined>;
 }
 
 interface NodePath {
@@ -193,7 +194,12 @@ interface RunnerConfig {
     {
       consumer: 'server';
       dev: { moduleRunnerTransform: true };
-      resolve: { external: true; mainFields: string[]; conditions: string[] };
+      resolve: {
+        external: true;
+        mainFields: string[];
+        conditions: string[];
+        externalConditions: string[];
+      };
     }
   >;
 }
@@ -232,6 +238,30 @@ const nodeFs = async () => (await import(NODE_FS)) as NodeFsPromises;
 
 // SAFETY: `NODE_PATH` names `node:path`, whose `dirname` and `resolve` take these shapes.
 const nodePath = async () => (await import(NODE_PATH)) as NodePath;
+
+// SAFETY: `NODE_PROCESS` names `node:process`, whose `execArgv` and `env` take these shapes.
+const nodeProcess = async () => (await import(NODE_PROCESS)) as NodeProcess;
+
+const CONDITIONS_FLAG = /^(?:--conditions|-C)(?:=(.+))?$/;
+
+// The `--conditions` node runs with, from `execArgv` and `NODE_OPTIONS`.
+const processConditions = async (): Promise<string[]> => {
+  const { execArgv, env } = await nodeProcess();
+  const args = [...execArgv, ...(env.NODE_OPTIONS ?? '').split(/\s+/)];
+
+  return args.flatMap((arg, index) => {
+    const match = CONDITIONS_FLAG.exec(arg);
+
+    if (!match) return [];
+
+    const value = match[1] ?? args[index + 1];
+
+    return value === undefined ? [] : [value];
+  });
+};
+
+// Vite's default `resolve.externalConditions`.
+const EXTERNAL_CONDITIONS = ['node', 'module-sync'];
 
 const NOT_FOUND_FILE = '404.html';
 
@@ -288,6 +318,8 @@ const runEntry = async (
   // SAFETY: `VITE` names the host's `vite`, which exports both functions on the peer range.
   const vite = (await import(VITE)) as ViteRunnerApi;
 
+  const conditions = await processConditions();
+
   const resolved = await vite.resolveConfig(
     {
       root: config.root,
@@ -298,7 +330,13 @@ const runEntry = async (
         [RUNNER]: {
           consumer: 'server',
           dev: { moduleRunnerTransform: true },
-          resolve: { external: true, mainFields: [], conditions: ['node'] },
+          // Externals resolve with the process's own conditions, so the entry and the process share one copy of each dependency.
+          resolve: {
+            external: true,
+            mainFields: [],
+            conditions: ['node', ...conditions],
+            externalConditions: [...EXTERNAL_CONDITIONS, ...conditions],
+          },
         },
       },
     },
@@ -338,10 +376,9 @@ const summary = (result: PrerenderResult, outDir: string): string => {
 const runPrerender = async (
   entry: string,
   config: ViteResolvedConfig,
-  configuredOutDir: string,
 ): Promise<void> => {
   const [fs, path] = await Promise.all([nodeFs(), nodePath()]);
-  const outDir = path.resolve(config.root, configuredOutDir);
+  const outDir = path.resolve(config.root, config.build.outDir);
 
   const shellHtml = await fs.readFile(
     path.resolve(outDir, 'index.html'),
@@ -433,20 +470,17 @@ export function serverRouterPlugin(
       order: 'post',
       sequential: true,
       async handler(error) {
-        const config = resolved;
+        const environment = this.environment;
+
+        if (environment && environment.name !== 'client') return;
+        // Under `buildApp`, `configResolved` last saw another environment's config.
+        const config = environment?.config ?? resolved;
 
         if (entry === undefined || !config || error) return;
 
         if (config.command !== 'build' || config.build.ssr) return;
-        const environment = this.environment;
 
-        if (environment && environment.name !== 'client') return;
-
-        await runPrerender(
-          entry,
-          config,
-          environment?.config.build.outDir ?? config.build.outDir,
-        );
+        await runPrerender(entry, config);
       },
     },
   };

@@ -287,7 +287,8 @@
         "lit-ui-router",
         "vite",
         "node:fs",
-        "node:path"
+        "node:path",
+        "node:process"
       ]
     }
   }

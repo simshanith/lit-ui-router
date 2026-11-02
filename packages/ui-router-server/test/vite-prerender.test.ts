@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
+import type { TestContext } from 'node:test';
+import { promisify } from 'node:util';
 
-import { build, preview } from 'vite';
+import { build, createBuilder, preview } from 'vite';
 import type { PreviewServer } from 'vite';
 
 import { createServerRouter } from '../src/index.ts';
@@ -89,5 +92,83 @@ describe('serverRouterPlugin prerender, end to end', () => {
     const legacy = await page('/legacy');
     assert.equal(legacy.status, 302);
     assert.equal(legacy.headers.get('location'), '/about');
+  });
+});
+
+const tempDir = async (t: TestContext) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'ui-router-server-vite-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+
+  return dir;
+};
+
+describe('serverRouterPlugin prerender, per environment', () => {
+  it("prerenders once, after the client environment's build under buildApp", async (t) => {
+    const [outDir, ssrOutDir] = await Promise.all([tempDir(t), tempDir(t)]);
+
+    const builder = await createBuilder({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      builder: {},
+      environments: {
+        client: { build: { outDir, emptyOutDir: true } },
+        ssr: {
+          build: {
+            outDir: ssrOutDir,
+            emptyOutDir: true,
+            ssr: path.join(root, 'src/main.ts'),
+          },
+        },
+      },
+      plugins: [plugin()],
+    });
+
+    await builder.buildApp();
+
+    const about = await readFile(path.join(outDir, 'about/index.html'), 'utf8');
+    assert.match(about, /<p>\/about 200<\/p>/);
+    assert.ok(!(await readdir(ssrOutDir)).includes('_redirects'));
+  });
+
+  const execNode = promisify(execFile);
+
+  const buildUnder = async (
+    t: TestContext,
+    args: string[],
+    env: Record<string, string> = {},
+  ) => {
+    const outDir = await tempDir(t);
+    await execNode(
+      process.execPath,
+      [
+        ...args,
+        '--import',
+        './test/import-meta-env.ts',
+        path.join(root, 'build-identity.ts'),
+        outDir,
+      ],
+      {
+        cwd: path.join(import.meta.dirname, '..'),
+        env: { ...process.env, ...env },
+      },
+    );
+
+    return readFile(path.join(outDir, 'index.html'), 'utf8');
+  };
+
+  // This package's `node` export is its development build, so `production` is the condition that splits it.
+  it("loads the entry's dependencies under the process's --conditions", async (t) => {
+    assert.match(
+      await buildUnder(t, ['--conditions', 'production']),
+      /one copy: true/,
+    );
+  });
+
+  it('reads --conditions from NODE_OPTIONS too', async (t) => {
+    assert.match(
+      await buildUnder(t, [], { NODE_OPTIONS: '--conditions=production' }),
+      /one copy: true/,
+    );
   });
 });

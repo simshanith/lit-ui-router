@@ -175,13 +175,13 @@ const configOf = (
   };
 };
 
-const client: ViteBuildContext = {
-  environment: { name: 'client', config: { build: { outDir: 'dist' } } },
-};
+const clientOf = (config: ViteResolvedConfig): ViteBuildContext => ({
+  environment: { name: 'client', config },
+});
 
 const runHook = async (
   config: ViteResolvedConfig,
-  context: ViteBuildContext = client,
+  context: ViteBuildContext = clientOf(config),
   error?: Error,
   prerender: ServerRouterPluginOptions['prerender'] = { entry: './entry.mjs' },
 ) => {
@@ -222,7 +222,7 @@ describe('serverRouterPlugin prerender build step', () => {
     );
 
     const config = configOf(root);
-    await runHook(config, client, undefined, './entry.mjs');
+    await runHook(config, clientOf(config), undefined, './entry.mjs');
     assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
   });
 
@@ -267,16 +267,47 @@ describe('serverRouterPlugin prerender build step', () => {
     await runHook(configOf(root, { command: 'serve' }));
     await runHook(configOf(root, { build: { outDir: 'dist', ssr: true } }));
     await runHook(configOf(root), {
-      environment: { name: 'ssr', config: { build: { outDir: 'dist' } } },
+      environment: { name: 'ssr', config: configOf(root) },
     });
-    await runHook(configOf(root), client, new Error('build failed'));
+    await runHook(configOf(root), undefined, new Error('build failed'));
     await assert.rejects(runHook(configOf(root)), /loaded/);
+  });
+
+  it("reads the client environment's config, not the last one resolved", async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default ({ outDir }) => ({ ${RESULT}, outDir });`,
+    );
+
+    const plugin = serverRouterPlugin(routerOf({ kind: 'notFound' }), {
+      prerender: './entry.mjs',
+    });
+
+    const config = configOf(root);
+    plugin.configResolved(config);
+    plugin.configResolved(
+      configOf('/nonexistent', { build: { outDir: 'ssr', ssr: true } }),
+    );
+    await plugin.closeBundle.handler.call(clientOf(config));
+    assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
+  });
+
+  it('falls back to the resolved config without an environment', async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default ({ outDir }) => ({ ${RESULT}, outDir });`,
+    );
+
+    const config = configOf(root);
+    await runHook(config, {});
+    assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
   });
 
   it('does nothing without the prerender option', async () => {
     const plugin = serverRouterPlugin(routerOf({ kind: 'notFound' }));
-    plugin.configResolved(configOf('/nonexistent'));
-    await plugin.closeBundle.handler.call(client);
+    const config = configOf('/nonexistent');
+    plugin.configResolved(config);
+    await plugin.closeBundle.handler.call(clientOf(config));
   });
 
   it('previews the mount shell for a path the build wrote no page for', async () => {
