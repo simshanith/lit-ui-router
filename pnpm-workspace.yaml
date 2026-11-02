@@ -160,7 +160,7 @@ catalogs:
     lit: '^2.0.0 || ^3.0.0'
     mobx: '^6.0.0 || ^7.0.0'
     signal-polyfill: ^0.2.0
-    vite: ^8.0.0
+    vite: '^7.0.0 || ^8.0.0'
   publishedPeerEffect:
     lit-ui-router: ^1.16.0
     ui-router-effect: ^0.3.0
@@ -176,6 +176,8 @@ catalogs:
     lit: ^3.1.2
     lit-ui-router: ^1.19.0
     ui-router-server: ^0.7.0
+  vite7-compat:
+    vite-7: npm:vite@^7.3.7
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
   typescript6:

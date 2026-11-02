@@ -145,6 +145,14 @@
       "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
       "outputs": ["coverage-effect3/**"]
     },
+    // The node --test suites resolved against the vite-7 alias (the 7.x line
+    // the vite peer range covers) through a module resolve hook; mirrors
+    // test:mobx6-compat. The vite-7 types ride typecheck:vite7.
+    "test:vite7-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
+    },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package
     // override replaces dependsOn wholesale, so it restates these lists.
@@ -371,7 +379,8 @@
         "typecheck:src",
         "typecheck:lit2",
         "typecheck:mobx6",
-        "typecheck:effect3"
+        "typecheck:effect3",
+        "typecheck:vite7"
       ]
     },
     "typecheck:tsc": {
@@ -413,6 +422,15 @@
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
+    // the vite seams against the vite-7 alias's types; mirrors typecheck:mobx6.
+    "typecheck:vite7": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
       // versions, so gating would break atomic core-API + mobx-adoption PRs
@@ -437,6 +455,7 @@
         "test:lit2-compat",
         "test:mobx6-compat",
         "test:effect3-compat",
+        "test:vite7-compat",
         "lint",
         "typecheck",
         "format:check",

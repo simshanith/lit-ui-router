@@ -42,6 +42,7 @@ ci:pull_request
 ├── test:lit2-compat
 ├── test:mobx6-compat
 ├── test:effect3-compat
+├── test:vite7-compat
 ├── lint                                  (umbrella)
 │   ├── lint:oxlint
 │   │   └── ^build:types
@@ -71,7 +72,8 @@ ci:pull_request
 │   ├── typecheck:src
 │   ├── typecheck:lit2
 │   ├── typecheck:mobx6
-│   └── typecheck:effect3
+│   ├── typecheck:effect3
+│   └── typecheck:vite7
 ├── format:check                          (umbrella)
 │   ├── format:check:oxfmt
 │   ├── //#format:check:root
@@ -143,12 +145,12 @@ key and its own upstream edges (`^build:types` sits on `lint:oxlint` and
 `typecheck:tsc`, not on the umbrella). Siblings under one umbrella run in
 parallel, and a leaf's failure fails the run.
 
-| Umbrella       | Per-package leaf     | Other leaves                                                                                   |
-| -------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| `lint`         | `lint:oxlint`        | the `//#lint:*` lanes, `@tools/repo-checks#check:*`, `@tools/release#check:release-closure`    |
-| `typecheck`    | `typecheck:tsc`      | `//#typecheck:root`, `typecheck:src`, `typecheck:lit2`, `typecheck:mobx6`, `typecheck:effect3` |
-| `format`       | `format:oxfmt`       | `//#format:root`, `//#format:toml`                                                             |
-| `format:check` | `format:check:oxfmt` | `//#format:check:root`, `//#format:check:toml`                                                 |
+| Umbrella       | Per-package leaf     | Other leaves                                                                                                      |
+| -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `lint`         | `lint:oxlint`        | the `//#lint:*` lanes, `@tools/repo-checks#check:*`, `@tools/release#check:release-closure`                       |
+| `typecheck`    | `typecheck:tsc`      | `//#typecheck:root`, `typecheck:src`, `typecheck:lit2`, `typecheck:mobx6`, `typecheck:effect3`, `typecheck:vite7` |
+| `format`       | `format:oxfmt`       | `//#format:root`, `//#format:toml`                                                                                |
+| `format:check` | `format:check:oxfmt` | `//#format:check:root`, `//#format:check:toml`                                                                    |
 
 Packages add their own leaves by overriding the umbrella: eslint-plugin-lit-ui-router
 (`lint:docs`, `lint:rules`; its `test` umbrella over `test:unit`, `test:oxlint`,
@@ -295,25 +297,26 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 
 ### Task-to-CI Mapping
 
-| Turbo Task                                 | CI Placement                                                                                                                                                                             |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build`                                    | `ci:pull_request` (every PR and push)                                                                                                                                                    |
-| `test`                                     | `ci:pull_request`                                                                                                                                                                        |
-| `test:coverage`                            | `ci:pull_request`, feeds coverage reports                                                                                                                                                |
-| `lint`                                     | `ci:pull_request`                                                                                                                                                                        |
-| `typecheck`                                | `ci:pull_request`                                                                                                                                                                        |
-| `test:lit2-compat`, `typecheck:lit2`       | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` is a leaf of the `typecheck` umbrella |
-| `test:mobx6-compat`, `typecheck:mobx6`     | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx and ui-router-mobx); `typecheck:mobx6` is likewise a leaf of `typecheck`                                     |
-| `test:effect3-compat`, `typecheck:effect3` | `ci:pull_request` — same split against the effect-3 alias (lit-ui-router-effect only); `typecheck:effect3` is likewise a leaf of `typecheck`                                             |
-| `format:check`                             | `ci:pull_request`                                                                                                                                                                        |
-| `check:bundle`, `codecov:bundle`           | `ci:pull_request`                                                                                                                                                                        |
-| `test:engines`                             | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                |
-| `@tools/release#check:pack`                | `ci:main` only                                                                                                                                                                           |
-| `@tools/dts-backtest#test:matrix`          | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                       |
-| `@www/lit-ui-router.dev#check:embeds`      | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                               |
-| `typecheck:peer-floor`                     | Neither ci graph — Release signals check runs + bump gate                                                                                                                                |
-| `bench`                                    | Neither ci graph — the advisory `acceptance (bench)` job (Acceptance workflow): `mise run bench_pulse`, uncached; its job summary is the ui-router-server bench pulse                    |
-| `test:peer-floor`                          | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                         |
+| Turbo Task                                 | CI Placement                                                                                                                                                                                    |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build`                                    | `ci:pull_request` (every PR and push)                                                                                                                                                           |
+| `test`                                     | `ci:pull_request`                                                                                                                                                                               |
+| `test:coverage`                            | `ci:pull_request`, feeds coverage reports                                                                                                                                                       |
+| `lint`                                     | `ci:pull_request`                                                                                                                                                                               |
+| `typecheck`                                | `ci:pull_request`                                                                                                                                                                               |
+| `test:lit2-compat`, `typecheck:lit2`       | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` is a leaf of the `typecheck` umbrella        |
+| `test:mobx6-compat`, `typecheck:mobx6`     | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx and ui-router-mobx); `typecheck:mobx6` is likewise a leaf of `typecheck`                                            |
+| `test:effect3-compat`, `typecheck:effect3` | `ci:pull_request` — same split against the effect-3 alias (lit-ui-router-effect only); `typecheck:effect3` is likewise a leaf of `typecheck`                                                    |
+| `test:vite7-compat`, `typecheck:vite7`     | `ci:pull_request` — the node suites and the vite seam types against the vite-7 alias (ui-router-server only), redirected by a resolve hook; `typecheck:vite7` is likewise a leaf of `typecheck` |
+| `format:check`                             | `ci:pull_request`                                                                                                                                                                               |
+| `check:bundle`, `codecov:bundle`           | `ci:pull_request`                                                                                                                                                                               |
+| `test:engines`                             | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                       |
+| `@tools/release#check:pack`                | `ci:main` only                                                                                                                                                                                  |
+| `@tools/dts-backtest#test:matrix`          | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                              |
+| `@www/lit-ui-router.dev#check:embeds`      | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                                      |
+| `typecheck:peer-floor`                     | Neither ci graph — Release signals check runs + bump gate                                                                                                                                       |
+| `bench`                                    | Neither ci graph — the advisory `acceptance (bench)` job (Acceptance workflow): `mise run bench_pulse`, uncached; its job summary is the ui-router-server bench pulse                           |
+| `test:peer-floor`                          | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                                |
 
 ## Remote Caching
 

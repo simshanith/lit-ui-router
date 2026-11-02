@@ -60,6 +60,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'catalogs.peerFloor pins signal-polyfill-floor to 0.2.0, the ui-router-signals peer floor check:bundle bundles against',
   },
   {
+    name: 'vite',
+    why: 'the vite-7 alias (catalogs.vite7-compat) runs test:vite7-compat beside the vite 8 line',
+  },
+  {
     name: 'typescript',
     why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
   },
