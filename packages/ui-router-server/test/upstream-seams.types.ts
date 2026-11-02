@@ -1,13 +1,23 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite';
+import type {
+  Connect,
+  Plugin,
+  PreviewServer,
+  ResolvedConfig,
+  ViteDevServer,
+} from 'vite';
 
 import type {
   ConnectMiddleware,
   ConnectRequest,
   ConnectResponse,
 } from '../src/connect.ts';
-import type { ServerRouterPlugin, ViteMiddlewareServer } from '../src/vite.ts';
+import type {
+  ServerRouterPlugin,
+  ViteMiddlewareServer,
+  ViteResolvedConfig,
+} from '../src/vite.ts';
 
 // The connect/vite adapters keep HAND-WRITTEN structural host contracts on
 // purpose: ./connect and ./vite export no upstream node/vite types and drag in
@@ -41,4 +51,6 @@ export const seams: [
   AssignableTo<ServerRouterPlugin, Plugin>,
   AssignableTo<ViteDevServer, ViteMiddlewareServer>,
   AssignableTo<PreviewServer, ViteMiddlewareServer>,
-] = [true, true, true, true, true, true];
+  // ...and the resolved config its configResolved hook reads.
+  AssignableTo<ResolvedConfig, ViteResolvedConfig>,
+] = [true, true, true, true, true, true, true];

@@ -46,7 +46,8 @@ leaves the ones before it unchanged:
 2. **Server-rendered pages.** The same states' resolves and views, rendered
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
-   [`prerender`](#emitting-a-static-site).
+   [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
+   after [`vite build`](/guides/prerender-with-vite).
 3. **[Response states](#response-states).** A state answers with its own
    `Response` (a redirect, JSON, a badge) built from its resolves once
    `settle` lands it.
@@ -349,8 +350,9 @@ The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
 `vite preview` answer the same 302s and mount-owned 404s the production
 server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
-returned object is a structural subset of Vite's `Plugin`, so Vite stays a
-type-only peer this package never imports.
+returned object is a structural subset of Vite's `Plugin`. Vite is an optional
+peer the plugin imports only for its build step, which
+[prerenders the built app](#after-vite-build).
 
 In this example each mount's HTML entry is built to `<mount>.html`:
 
@@ -776,6 +778,13 @@ The loop never touches a filesystem itself: `write` receives each file with
 a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
+
+### After `vite build`
+
+`serverRouterPlugin` prerenders the built app after `vite build`, through a
+prerender script whose default export calls `prerender()` with a renderer of
+its own. [Prerender with Vite](/guides/prerender-with-vite) walks through the
+plugin option and the script.
 
 A delegated path has no static file, so the host must send it to the server.
 On Cloudflare Workers, list `result.delegated` in

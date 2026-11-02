@@ -35,7 +35,8 @@ Each use adds one concept and leaves the ones before it unchanged:
    redirects, and the shell for the client's routes, with `createServerRouter`, an adapter, and a
    `serveShell`.
 2. **Server-rendered pages:** the same states' resolves and views, rendered with
-   `lit-ui-router-ssr` on `settle` and `prerender`.
+   `lit-ui-router-ssr` on `settle` and `prerender`, which `serverRouterPlugin` runs after
+   [`vite build`](https://lit-ui-router.dev/guides/prerender-with-vite).
 3. **Response states:** a state answers with its own `Response` (a redirect, JSON, a badge) built
    from its resolves once `settle` lands it.
 4. **Commands whose url the tree defines:** delegating states hand a url to a host handler.

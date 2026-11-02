@@ -24,7 +24,9 @@
 
 import { registeredDelegates } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
-import type { ServerRouter } from './index.ts';
+import type { ServerRouter, Verdict } from './index.ts';
+
+type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
 /** The subset of `http.IncomingMessage` the middleware reads (and rewrites). */
 export interface ConnectRequest {
@@ -74,13 +76,16 @@ export interface ConnectAdapterOptions {
    * {@link ConnectAdapterOptions.shellPath | shellPath} and `next()`s into the downstream static layer. By the
    * time this runs the adapter has already done the status'd-shell
    * mechanics: request validators stripped and the response relabeled to
-   * the verdict's status — a host override only owns the asset IO.
+   * the verdict's status — a host override only owns the asset IO. The
+   * verdict arrives last, so a host can serve a 404 page for the `otherwise`
+   * projection's `status`.
    */
   serveShell?: (
     mount: string,
     req: ConnectRequest,
     res: ConnectResponse,
     next: ConnectNext,
+    verdict: ShellVerdict,
   ) => void;
   /**
    * Serve a mount-owned miss (`notFound` with a mount: the mount owned the
@@ -259,7 +264,7 @@ export function createConnectMiddleware(
           relabel(res, verdict.status);
         }
 
-        serveShell(verdict.mount, req, res, next);
+        serveShell(verdict.mount, req, res, next, verdict);
 
         return;
       }

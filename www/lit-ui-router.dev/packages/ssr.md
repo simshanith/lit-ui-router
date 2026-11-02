@@ -235,6 +235,13 @@ writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
 your host reads.
 
+## After `vite build`
+
+[`serverRouterPlugin`](/packages/server#after-vite-build) prerenders the built
+app after `vite build`. Call this package's `prerender` in the prerender
+script for Lit rendering; [Prerender with Vite](/guides/prerender-with-vite)
+shows the script in full.
+
 ## Static hosts add a trailing slash
 
 A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and

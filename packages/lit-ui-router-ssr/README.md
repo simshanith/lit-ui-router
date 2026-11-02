@@ -88,6 +88,12 @@ on. `dryRun: true` plans all of it and writes nothing.
 Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
 virtual fs instead.
 
+## After `vite build`
+
+`ui-router-server/vite`'s `serverRouterPlugin` prerenders the built app after `vite build`. Call
+this package's `prerender` in the prerender script for Lit rendering;
+[Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows the script in full.
+
 ## Static hosts add a trailing slash
 
 A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and S3-style hosts serve

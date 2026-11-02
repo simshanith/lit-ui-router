@@ -153,6 +153,7 @@ function makeSidebar() {
           text: 'Server-Side Routing',
           link: '/guides/server-route-matching',
         },
+        { text: 'Prerender with Vite', link: '/guides/prerender-with-vite' },
         { text: 'Route Guards', link: '/guides/route-guards' },
         {
           text: 'Loading and Error Views',

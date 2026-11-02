@@ -31,6 +31,11 @@
       "deno": "./dist/dev-gate.js",
       "node": "./dist/dev-gate.node.js",
       "default": "./dist/dev-gate.js"
+    },
+    "#node-conditions": {
+      "types": "./src/node-conditions.ts",
+      "node": "./dist/node-conditions.node.js",
+      "default": "./dist/node-conditions.js"
     }
   },
   "exports": {
@@ -190,13 +195,17 @@
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
-    "hono": "catalog:publishedPeer"
+    "hono": "catalog:publishedPeer",
+    "vite": "catalog:publishedPeer"
   },
   "peerDependenciesMeta": {
     "@uirouter/core": {
       "optional": true
     },
     "hono": {
+      "optional": true
+    },
+    "vite": {
       "optional": true
     }
   },
@@ -277,7 +286,14 @@
     },
     "./vite": {
       "free": [
-        "@uirouter/core"
+        "@uirouter/core",
+        "@lit-labs/ssr",
+        "lit",
+        "lit-ui-router",
+        "vite",
+        "node:fs",
+        "node:path",
+        "node:process"
       ]
     }
   }

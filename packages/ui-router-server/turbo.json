@@ -29,8 +29,9 @@
         "typecheck:runtime-globals"
       ]
     },
+    // the vite-prerender fixture imports this package by name, from its own dist
     "typecheck:tests": {
-      "dependsOn": ["^build:types"],
+      "dependsOn": ["^build:types", "build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     // transit carries the dep closure's hashes: the shims this withdraws live
