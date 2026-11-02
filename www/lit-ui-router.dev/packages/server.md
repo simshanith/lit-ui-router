@@ -783,8 +783,17 @@ render, and writes through `node:fs` by default.
 
 `serverRouterPlugin` prerenders the built app after `vite build`, through a
 prerender script whose default export calls `prerender()` with a renderer of
-its own. [Prerender with Vite](/guides/prerender-with-vite) walks through the
-plugin option and the script.
+its own. The script runs in a worker thread, one per build, after the modules
+listed in `preload`, so whatever they install never reaches Vite's process:
+
+```ts
+serverRouterPlugin(router, {
+  prerender: { entry: './src/prerender.ts', preload: ['./src/dom-shim.ts'] },
+});
+```
+
+[Prerender with Vite](/guides/prerender-with-vite) walks through the plugin
+option and the script.
 
 A delegated path has no static file, so the host must send it to the server.
 On Cloudflare Workers, list `result.delegated` in

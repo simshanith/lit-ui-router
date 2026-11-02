@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import { build, createBuilder, preview } from 'vite';
@@ -13,6 +14,8 @@ import type { PreviewServer } from 'vite';
 import { createServerRouter } from '../src/index.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
 import { mounts } from './fixtures/vite-prerender/src/routes.ts';
+
+const execNode = promisify(execFile);
 
 const root = path.join(import.meta.dirname, 'fixtures/vite-prerender');
 
@@ -102,6 +105,57 @@ const tempDir = async (t: TestContext) => {
   return dir;
 };
 
+describe('serverRouterPlugin prerender, in a worker', () => {
+  const buildElement = async (outDir: string) => {
+    await build({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      build: { outDir, emptyOutDir: true },
+      plugins: [
+        serverRouterPlugin(createServerRouter({ mounts }), {
+          prerender: {
+            entry: './src/prerender-element.ts',
+            preload: ['./src/registry.ts'],
+          },
+        }),
+      ],
+    });
+
+    return readFile(path.join(outDir, 'index.html'), 'utf8');
+  };
+
+  it('prerenders twice in one process, with nothing left in its globals', async (t) => {
+    const [first, second] = [await tempDir(t), await tempDir(t)];
+
+    assert.equal(
+      await buildElement(first),
+      '<fixture-element></fixture-element>',
+    );
+    assert.equal(
+      await buildElement(second),
+      '<fixture-element></fixture-element>',
+    );
+    assert.ok(!('fixtureRegistry' in globalThis));
+  });
+
+  it('prerenders under vitest, in a happy-dom environment', async () => {
+    const vitest = fileURLToPath(
+      import.meta
+        .resolve('vitest/package.json')
+        .replace(/package\.json$/, 'vitest.mjs'),
+    );
+
+    await execNode(
+      process.execPath,
+      [vitest, 'run', '--config', 'vitest.config.ts'],
+      {
+        cwd: root,
+      },
+    );
+  });
+});
+
 describe('serverRouterPlugin prerender, per environment', () => {
   it("prerenders once, after the client environment's build under buildApp", async (t) => {
     const [outDir, ssrOutDir] = await Promise.all([tempDir(t), tempDir(t)]);
@@ -131,8 +185,6 @@ describe('serverRouterPlugin prerender, per environment', () => {
     assert.ok(!(await readdir(ssrOutDir)).includes('_redirects'));
   });
 
-  const execNode = promisify(execFile);
-
   const buildUnder = async (
     t: TestContext,
     args: string[],
@@ -145,6 +197,8 @@ describe('serverRouterPlugin prerender, per environment', () => {
         ...args,
         '--import',
         './test/import-meta-env.ts',
+        '--import',
+        path.join(root, 'capture-prerender.ts'),
         path.join(root, 'build-identity.ts'),
         outDir,
       ],

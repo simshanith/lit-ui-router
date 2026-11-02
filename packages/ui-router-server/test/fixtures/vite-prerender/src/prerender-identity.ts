@@ -3,7 +3,7 @@ import { definePrerender } from 'ui-router-server/vite';
 
 import { mounts } from './routes.ts';
 
-// SAFETY: build-identity.ts stores the process's own `prerender` here before the build.
+// SAFETY: capture-prerender.ts stores the `prerender` node itself resolved here, in the worker too.
 const { processPrerender } = globalThis as { processPrerender?: unknown };
 
 export default definePrerender((site) =>

@@ -7,9 +7,10 @@
  * table.
  *
  * With {@link ServerRouterPluginOptions.prerender | prerender}, `vite build`
- * also emits the static site: after the client build it loads the app's
- * prerender script through Vite's module runner and hands it the output
- * directory, the built `index.html` and a writer over `node:fs`.
+ * also emits the static site: after the client build it starts a
+ * `worker_thread`, which loads the app's prerender script through a Vite
+ * module runner of its own and hands it the output directory, the built
+ * `index.html` and a writer over `node:fs`.
  *
  * Dependency-free like the tiers it fronts: the structural types below
  * declare the sliver of Vite's plugin surface the plugin touches, so Vite
@@ -30,6 +31,7 @@ import type {
 } from './connect.ts';
 import type { ServerRouter, Verdict } from './index.ts';
 import type { FileWriter, PrerenderResult } from './prerender.ts';
+import type { PrerenderJob } from './prerender-thread.ts';
 import { fileFor, subpathIn } from './site-paths.ts';
 
 /** The sliver of Vite's dev/preview server the plugin uses: the Connect stack. */
@@ -113,8 +115,11 @@ export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
    * Prerenders the app after `vite build`. `entry` names the prerender
    * script, resolved against Vite's root, whose default export is a
    * {@link PrerenderEntry}; a string is shorthand for `{ entry }`. The script
-   * is loaded through Vite's module runner with the root and mode, without
-   * the app's plugins, and its dependencies load from node.
+   * runs in a `worker_thread` of its own, after any
+   * {@link PrerenderOptions.preload | preload} modules, so nothing it installs
+   * reaches Vite's process. It is loaded through a Vite module runner with
+   * the root and mode, without the app's plugins, and its dependencies load
+   * from node.
    *
    * `vite preview` then serves each page the build wrote, and `404.html` for
    * a path the `otherwise` rule sends to a 404 state, while redirects and
@@ -124,12 +129,19 @@ export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
    *
    * @see https://lit-ui-router.dev/guides/prerender-with-vite
    */
-  prerender?:
-    | string
-    | {
-        /** The prerender entry module, such as `./src/prerender.ts`. */
-        entry: string;
-      };
+  prerender?: string | PrerenderOptions;
+}
+
+/** The object form of {@link ServerRouterPluginOptions.prerender}. */
+export interface PrerenderOptions {
+  /** The prerender entry module, such as `./src/prerender.ts`. */
+  entry: string;
+  /**
+   * Modules the worker loads, in order, before the entry, such as a DOM shim
+   * or a renderer's element registrations. A relative path resolves against
+   * Vite's root; a bare specifier resolves as the entry's imports do.
+   */
+  preload?: readonly string[];
 }
 
 /** A structural subset of Vite's `Plugin` — assignable into `plugins: [...]`. */
@@ -160,82 +172,55 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
+const NODE_URL = 'node:url';
+
+const NODE_WORKER_THREADS = 'node:worker_threads';
+
+const PRERENDER_THREAD = '#prerender-thread';
+
 const VITE = 'vite';
 
 // Typed structurally so src never pulls in @types/node or vite.
 interface NodeFsPromises {
-  mkdir(
-    path: string,
-    options: { recursive: boolean },
-  ): Promise<string | undefined>;
   readFile(path: string, encoding: string): Promise<string>;
   stat(path: string): Promise<{ isFile(): boolean }>;
-  writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
 interface NodePath {
-  dirname(path: string): string;
   resolve(...paths: string[]): string;
 }
 
-// The config runnerImport resolves: one server environment that externalizes every dependency.
-interface RunnerConfig {
-  root: string;
-  mode: string;
-  configFile: false;
-  logLevel: 'warn';
-  environments: Record<
-    string,
-    {
-      consumer: 'server';
-      dev: { moduleRunnerTransform: true };
-      resolve: {
-        external: true;
-        mainFields: string[];
-        conditions: string[];
-        externalConditions: string[];
-      };
-    }
-  >;
+interface PrerenderWorker {
+  on(event: 'message', listener: (result: PrerenderResult) => void): void;
+  on(event: 'error', listener: (error: Error) => void): void;
+  on(event: 'exit', listener: (code: number) => void): void;
+  terminate(): Promise<number>;
 }
 
-// Opaque here: only handed back to createRunnableDevEnvironment.
-interface ResolvedRunnerConfig {
-  root: string;
+interface NodeWorkerThreads {
+  Worker: new (
+    filename: string,
+    options: { workerData: PrerenderJob },
+  ) => PrerenderWorker;
 }
 
-interface RunnerContext {
-  runnerOptions: { hmr: { logger: false } };
-  hot: false;
+interface NodeUrl {
+  fileURLToPath(url: string): string;
 }
 
-interface RunnableEnvironment {
-  init(): Promise<void>;
-  close(): Promise<void>;
-  runner: { import(url: string): Promise<{ default?: PrerenderEntry }> };
+interface NodeImportMeta {
+  resolve(specifier: string): string;
 }
 
-// The environment runnerImport builds, kept open until the entry's prerender() returns.
-interface ViteRunnerApi {
-  resolveConfig(
-    inlineConfig: RunnerConfig,
-    command: 'serve',
-  ): Promise<ResolvedRunnerConfig>;
-  createRunnableDevEnvironment(
-    name: string,
-    config: ResolvedRunnerConfig,
-    context: RunnerContext,
-  ): RunnableEnvironment;
-}
+// SAFETY: the build step runs under node, whose `import.meta` has `resolve`.
+const resolveHere = (specifier: string): string =>
+  (import.meta as ImportMeta & NodeImportMeta).resolve(specifier);
 
 // SAFETY: `NODE_FS` names `node:fs/promises`, whose members take these shapes.
 const nodeFs = async () => (await import(NODE_FS)) as NodeFsPromises;
 
-// SAFETY: `NODE_PATH` names `node:path`, whose `dirname` and `resolve` take these shapes.
+// SAFETY: `NODE_PATH` names `node:path`, whose `resolve` takes this shape.
 const nodePath = async () => (await import(NODE_PATH)) as NodePath;
-
-// Vite's default `resolve.externalConditions`.
-const EXTERNAL_CONDITIONS = ['node', 'module-sync'];
 
 const NOT_FOUND_FILE = '404.html';
 
@@ -281,61 +266,36 @@ const previewShell =
     }, next);
   };
 
-const RUNNER = 'ui_router_server_prerender';
+// SAFETY: `NODE_WORKER_THREADS` and `NODE_URL` name node's modules, whose members take these shapes.
+const nodeWorker = async () =>
+  (await Promise.all([import(NODE_WORKER_THREADS), import(NODE_URL)])) as [
+    NodeWorkerThreads,
+    NodeUrl,
+  ];
 
-// Every dependency loads from node, as under `node entry.ts`; only the app's own modules go through Vite.
-const runEntry = async (
-  file: string,
-  config: ViteResolvedConfig,
-  build: PrerenderBuild,
-): Promise<PrerenderResult> => {
-  // SAFETY: `VITE` names the host's `vite`, which exports both functions on the peer range.
-  const vite = (await import(VITE)) as ViteRunnerApi;
+// One thread per build: globals, registries and loader hooks the entry installs die with it.
+const runInWorker = async (job: PrerenderJob): Promise<PrerenderResult> => {
+  const [{ Worker }, { fileURLToPath }] = await nodeWorker();
 
-  const conditions = nodeConditions();
-
-  const resolved = await vite.resolveConfig(
-    {
-      root: config.root,
-      mode: config.mode,
-      configFile: false,
-      logLevel: 'warn',
-      environments: {
-        [RUNNER]: {
-          consumer: 'server',
-          dev: { moduleRunnerTransform: true },
-          // Externals resolve with node's own `--conditions`, so the entry and the build share one copy of each dependency.
-          resolve: {
-            external: true,
-            mainFields: [],
-            conditions: ['node', ...conditions],
-            externalConditions: [...EXTERNAL_CONDITIONS, ...conditions],
-          },
-        },
-      },
-    },
-    'serve',
-  );
-
-  const environment = vite.createRunnableDevEnvironment(RUNNER, resolved, {
-    runnerOptions: { hmr: { logger: false } },
-    hot: false,
+  // A path, not a URL: under happy-dom the global URL is not node's.
+  const worker = new Worker(fileURLToPath(resolveHere(PRERENDER_THREAD)), {
+    workerData: job,
   });
 
-  await environment.init();
-
-  try {
-    const { default: entry } = await environment.runner.import(file);
-
-    if (!(entry instanceof Function))
-      throw new Error(
-        `serverRouterPlugin: prerender entry '${file}' has no default export function`,
+  return new Promise<PrerenderResult>((resolve, reject) => {
+    worker.on('message', (result) => {
+      resolve(result);
+      void worker.terminate();
+    });
+    worker.on('error', reject);
+    worker.on('exit', (code) => {
+      reject(
+        new Error(
+          `serverRouterPlugin: prerender worker exited with code ${String(code)} before it returned`,
+        ),
       );
-
-    return await entry(build);
-  } finally {
-    await environment.close();
-  }
+    });
+  });
 };
 
 const summary = (result: PrerenderResult, outDir: string): string => {
@@ -348,7 +308,7 @@ const summary = (result: PrerenderResult, outDir: string): string => {
 };
 
 const runPrerender = async (
-  entry: string,
+  { entry, preload = [] }: PrerenderOptions,
   config: ViteResolvedConfig,
 ): Promise<void> => {
   const [fs, path] = await Promise.all([nodeFs(), nodePath()]);
@@ -359,15 +319,15 @@ const runPrerender = async (
     'utf8',
   );
 
-  const write: FileWriter = async (file, body) => {
-    await fs.mkdir(path.dirname(file), { recursive: true });
-    await fs.writeFile(file, body, 'utf8');
-  };
-
-  const result = await runEntry(path.resolve(config.root, entry), config, {
+  const result = await runInWorker({
+    vite: resolveHere(VITE),
+    root: config.root,
+    mode: config.mode,
+    conditions: nodeConditions(),
+    entry: path.resolve(config.root, entry),
+    preload,
     outDir,
     shellHtml,
-    write,
   });
 
   if (result.warnings.length > 0)
@@ -411,15 +371,15 @@ export function serverRouterPlugin(
 ): ServerRouterPlugin {
   const { prerender, ...adapter } = options;
 
-  const entry =
+  const job =
     // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the option's own union: a string is shorthand for `{ entry }`
-    typeof prerender === 'string' ? prerender : prerender?.entry;
+    typeof prerender === 'string' ? { entry: prerender } : prerender;
 
   const middleware = createConnectMiddleware(router, adapter);
   let resolved: ViteResolvedConfig | undefined;
 
   const preview =
-    entry !== undefined && adapter.serveShell === undefined
+    job !== undefined && adapter.serveShell === undefined
       ? createConnectMiddleware(router, {
           ...adapter,
           serveShell: previewShell(
@@ -450,11 +410,11 @@ export function serverRouterPlugin(
         // Under `buildApp`, `configResolved` last saw another environment's config.
         const config = environment?.config ?? resolved;
 
-        if (entry === undefined || !config || error) return;
+        if (job === undefined || !config || error) return;
 
         if (config.command !== 'build' || config.build.ssr) return;
 
-        await runPrerender(entry, config);
+        await runPrerender(job, config);
       },
     },
   };

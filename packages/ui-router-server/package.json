@@ -36,6 +36,9 @@
       "types": "./src/node-conditions.ts",
       "node": "./dist/node-conditions.node.js",
       "default": "./dist/node-conditions.js"
+    },
+    "#prerender-thread": {
+      "node": "./dist/prerender-thread.js"
     }
   },
   "exports": {
@@ -181,6 +184,7 @@
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/core-floor": "catalog:peerFloor",
+    "happy-dom": "catalog:",
     "hono": "catalog:",
     "hono-floor": "catalog:peerFloor",
     "oxfmt": "catalog:",
@@ -194,7 +198,8 @@
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
     "vite": "catalog:",
-    "vite-7": "catalog:vite7-compat"
+    "vite-7": "catalog:vite7-compat",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",

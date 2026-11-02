@@ -226,6 +226,53 @@ describe('serverRouterPlugin prerender build step', () => {
     assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
   });
 
+  it('loads the preloads in order before the entry, in a worker of its own', async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default async ({ outDir, write }) => {
+        await write(outDir + '/order.txt', globalThis.preloaded.join(' '));
+        return { ${RESULT}, outDir };
+      };`,
+    );
+
+    await writeFile(path.join(root, 'a.mjs'), "globalThis.preloaded = ['a'];");
+    await writeFile(
+      path.join(root, 'b.mjs'),
+      "globalThis.preloaded.push('b');",
+    );
+
+    await runHook(configOf(root), undefined, undefined, {
+      entry: './entry.mjs',
+      preload: ['./a.mjs', path.join(root, 'b.mjs')],
+    });
+
+    assert.equal(
+      await readFile(path.join(root, 'dist/order.txt'), 'utf8'),
+      'a b',
+    );
+    assert.ok(!('preloaded' in globalThis));
+  });
+
+  it('fails the build with the error a preload throws', async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default ({ outDir }) => ({ ${RESULT}, outDir });`,
+    );
+
+    await writeFile(
+      path.join(root, 'a.mjs'),
+      'throw new Error("preload failed");',
+    );
+
+    await assert.rejects(
+      runHook(configOf(root), undefined, undefined, {
+        entry: './entry.mjs',
+        preload: ['./a.mjs'],
+      }),
+      /preload failed/,
+    );
+  });
+
   it('definePrerender returns its argument', () => {
     const entry: PrerenderEntry = () => ({
       tally: {

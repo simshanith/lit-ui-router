@@ -53,6 +53,22 @@ owns but no state matches is that mount's 404, which `serveNotFound` can answer 
 404 page. See
 [when to use it](https://lit-ui-router.dev/packages/server#when-to-use-it).
 
+## After `vite build`
+
+`serverRouterPlugin` prerenders the built app after `vite build`, through a prerender script whose
+default export calls `prerender()` with a renderer of its own. The script runs in a worker thread,
+one per build, after the modules listed in `preload`, so whatever they install never reaches Vite's
+process:
+
+```ts
+serverRouterPlugin(router, {
+  prerender: { entry: './src/prerender.ts', preload: ['./src/dom-shim.ts'] },
+});
+```
+
+[Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) walks through the
+plugin option and the script.
+
 ## Delegating states
 
 A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,
