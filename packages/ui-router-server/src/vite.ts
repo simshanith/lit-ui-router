@@ -267,7 +267,7 @@ const runEntry = async (
   config: ViteResolvedConfig,
   build: PrerenderBuild,
 ): Promise<PrerenderResult> => {
-  // SAFETY: `VITE` names the host's `vite`, which exports both functions from 6.1, the peer floor.
+  // SAFETY: `VITE` names the host's `vite`, which exports both functions on the peer range.
   const vite = (await import(VITE)) as ViteRunnerApi;
 
   const resolved = await vite.resolveConfig(
