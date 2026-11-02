@@ -141,7 +141,8 @@ const revive = (
  * import { seed } from 'ui-router-server/ssr/client';
  *
  * seed(router, payload);
- * router.start();
+ * router.urlService.listen();
+ * router.urlService.sync();
  * ```
  */
 export const seed = (

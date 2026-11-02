@@ -129,6 +129,9 @@ outcome. A redirect started from an `onError` hook is a transition of its own;
 pass it to `viewRendered` to wait for the view it renders:
 
 ```ts
+import { RejectType } from '@uirouter/core';
+import { viewRendered } from 'lit-ui-router';
+
 router.transitionService.onError({}, async (trans) => {
   // Skip superseded transitions, and stop if the error state itself fails.
   if (trans.error()?.type !== RejectType.ERROR) return;
