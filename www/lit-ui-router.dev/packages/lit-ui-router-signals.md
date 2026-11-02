@@ -54,7 +54,7 @@ class AppNav extends LitElement {
 
 No router configuration is required: the controller discovers the router from
 the enclosing `<ui-router>` element when the host connects, and
-`RouterSignals.for` attaches its single transition hook on first use.
+`RouterSignals.for` attaches its transition hooks on first use.
 
 ## The pieces
 
