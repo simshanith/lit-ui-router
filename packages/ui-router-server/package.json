@@ -160,10 +160,12 @@
     "lint:oxlint": "oxlint .",
     "test": "node --import ./test/import-meta-env.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "test:coverage": "mkdir -p coverage && node --import ./test/import-meta-env.ts --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=@tools/shared/test-reporter.ts --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
+    "test:vite7-compat": "vite7-compat-guard && node --import ./test/import-meta-env.ts --import ./test/vite7-compat.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
+    "typecheck:vite7": "vite7-compat-guard && tsc -p tsconfig.vite7.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
@@ -191,7 +193,8 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-7": "catalog:vite7-compat"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",

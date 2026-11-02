@@ -350,8 +350,8 @@ The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
 `vite preview` answer the same 302s and mount-owned 404s the production
 server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
-returned object is a structural subset of Vite's `Plugin`. Vite is an optional
-peer the plugin imports only for its build step, which
+returned object is a structural subset of Vite's `Plugin`. Vite (7 or 8) is an
+optional peer the plugin imports only for its build step, which
 [prerenders the built app](#after-vite-build).
 
 In this example each mount's HTML entry is built to `<mount>.html`:

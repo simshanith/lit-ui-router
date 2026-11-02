@@ -78,6 +78,7 @@
         "typecheck:lit2",
         "typecheck:mobx6",
         "typecheck:effect3",
+        "typecheck:vite7",
         "typecheck:vue",
         "typecheck:worker",
         "typecheck:worker:tests"

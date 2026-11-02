@@ -1,0 +1,11 @@
+{
+  // Typechecks the vite seams against the vite-7 alias (the 7.x line the vite
+  // peer range covers), not the catalog's vite 8. Never emits.
+  "extends": "./test/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "vite": ["./node_modules/vite-7/dist/node/index.d.ts"]
+    }
+  },
+  "include": ["test/upstream-seams.types.ts", "src/**/*"]
+}

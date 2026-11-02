@@ -190,6 +190,8 @@ const workspaces = {
       '@release-it/conventional-changelog',
       '@uirouter/core-floor',
       'hono-floor',
+      // node resolve-hook target for the vite 7 compat lane
+      'vite-7',
     ],
   },
   'packages/eslint-plugin-lit-ui-router': {
