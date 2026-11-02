@@ -52,8 +52,8 @@ to the view it wakes.
   [`prerender`](/packages/server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers`, `payload` and
-  `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
+  `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
+  `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **Response states after settle.** [`responder`](#response-states) runs
   the handler bound to a response state's name with the resolves its
   transition landed with.
@@ -118,26 +118,20 @@ router, started or not.
 
 ## Adopting the resolves on boot
 
-The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload) option
-hands each rendered page's landed transition to a hook, which returns the
-resolve payload to write.
+The [`dehydrate`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#dehydrate)
+option draws each rendered page's resolve payload: `prerender` calls
 [`dehydrate`](/api/ui-router-server/ssr/functions/dehydrate) from
-`ui-router-server/ssr` draws one, and the hook decides what to do with the
-resolves it leaves out:
+`ui-router-server/ssr` on the page's landed transition with the options given,
+so `shouldDehydrate` and `transport` act exactly as they do there. Pass `{}`
+to draw every resolve:
 
 ```ts
 import { prerender } from 'lit-ui-router-ssr';
-import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
   // mounts, router, paths, renderShell, …
-  payload: (transition, { path }) => {
-    const { payload, unserializable } = dehydrate(transition);
-
-    for (const { state, token } of unserializable)
-      console.warn(`${path}: ${state}.${token} re-runs on the client`);
-
-    return payload;
+  dehydrate: {
+    shouldDehydrate: ({ token }) => token !== 'manifest',
   },
 });
 ```
@@ -150,16 +144,33 @@ with adopts its value in place of running its function. Every other resolve
 runs as it would without one: a value `dehydrate` left out, a `NOWAIT`
 resolve, every resolve of a boot that lands on another state or other
 parameters, and every resolve of a page whose block carries no `resolves`.
-Without the hook no page carries resolves. What `dehydrate` draws, and which
-values it leaves out, is in
+Without `dehydrate` or a `payload` hook no page carries resolves. What
+`dehydrate` draws, and which values it leaves out, is in
 [Handing resolves to the client](/packages/server#handing-resolves-to-the-client).
 
 A value plain JSON can't carry, such as a `Date`, travels through a
-transporter. Pass the same `transport` to `dehydrate` in the hook and to
+transporter. Pass the same `transport` in `dehydrate` and to
 [`bootstrap`](/api/lit-ui-router-ssr/client/interfaces/BootstrapOptions#transport):
 the signature keeps the payload's `transported` marks, and `bootstrap` hands
 `transport` to `seed`. See
 [Values beyond plain JSON](/packages/server#values-beyond-plain-json).
+
+The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload)
+option takes the drawing over by hand: a hook handed each page's landed
+transition returns the payload to write, or `undefined` to write none. Pass
+one or the other; passing both throws.
+
+```ts
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) =>
+    path.startsWith('/drafts/')
+      ? undefined
+      : dehydrate(transition, { transport }).payload,
+});
+```
 
 ## Verdict to artefact
 
@@ -536,8 +547,8 @@ whose state or url parameters differ from the drawn ones renders cold.
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
 version, the name of the state the router stood on, that state's url
-parameter values, and the resolved values the
-[`payload` hook](#adopting-the-resolves-on-boot) supplies.
+parameter values, and the resolved values
+[`dehydrate` or the `payload` hook](#adopting-the-resolves-on-boot) draws.
 It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 

@@ -13,6 +13,7 @@ import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 import { dehydrate, settle } from 'ui-router-server/ssr';
+import type { DehydrateOptions, Transporter } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
@@ -788,6 +789,100 @@ describe('the hydration signature', () => {
     const { files } = await run({ paths: ['/'], notFound: false });
 
     expect(files.get('dist/index.html')).toBe('<p>page</p>');
+  });
+});
+
+describe('the dehydrate option', () => {
+  const transport = {
+    Date: {
+      encode: (value) => value instanceof Date && value.toISOString(),
+      // SAFETY: `encode` above answers with an ISO string, the only encoding `decode` gets.
+      decode: (encoded) => new Date(encoded as string),
+    } satisfies Transporter<Date>,
+  };
+
+  // `deps: []`, since core reads a bare function's dependencies from its source.
+  const resolved = <T>(token: string, resolveFn: () => T) => ({
+    token,
+    resolveFn,
+    deps: [],
+  });
+
+  /** Prerenders `paths` over a `plate` state whose resolves take a string, a `Date` and a site-wide manifest. */
+  const plates = (
+    paths: string[],
+    overrides: Partial<Parameters<typeof prerender>[0]> = {},
+  ) => {
+    const router = sheetRouter();
+    router.stateRegistry.register({
+      name: 'plate',
+      url: '/plate/:num',
+      resolve: [
+        resolved('title', () => 'Plate 7B'),
+        resolved('when', () => new Date(0)),
+        resolved('manifest', () => ['7B', '9']),
+      ],
+    });
+
+    return run({
+      router,
+      paths,
+      notFound: false,
+      mounts: {
+        '/': {
+          routes: [{ name: 'plate', url: '/plate/:num' }],
+          config: { strict: false },
+        },
+      },
+      ...overrides,
+      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
+        await settle(router, path);
+
+        return html`<p>page</p>`;
+      },
+    });
+  };
+
+  const keepManifestOut: DehydrateOptions['shouldDehydrate'] = ({ token }) =>
+    token !== 'manifest';
+
+  it.each<[string, DehydrateOptions]>([
+    ['no options', {}],
+    ['shouldDehydrate', { shouldDehydrate: keepManifestOut }],
+    ['transport', { transport }],
+    ['both', { shouldDehydrate: keepManifestOut, transport }],
+  ])(
+    'writes the signature a payload hook calling dehydrate() writes, given %s',
+    async (_name, options) => {
+      const paths = ['/plate/7B', '/plate/9'];
+      const built = await plates(paths, { dehydrate: options });
+
+      const hooked = await plates(paths, {
+        payload: (transition) => dehydrate(transition, options).payload,
+      });
+
+      expect(built.files).toEqual(hooked.files);
+    },
+  );
+
+  it('carries what shouldDehydrate keeps and transport encodes', async () => {
+    const { files } = await plates(['/plate/7B'], {
+      dehydrate: { shouldDehydrate: keepManifestOut, transport },
+    });
+
+    expect(signatureIn(files.get('dist/plate/7B/index.html')!)).toMatchObject({
+      state: 'plate',
+      resolves: {
+        plate: { title: 'Plate 7B', when: '1970-01-01T00:00:00.000Z' },
+      },
+      transported: { plate: { when: [{ type: 'Date', path: [] }] } },
+    });
+  });
+
+  it('throws when a payload hook is passed too', async () => {
+    await expect(
+      plates(['/plate/7B'], { dehydrate: {}, payload: () => undefined }),
+    ).rejects.toThrow('pass `dehydrate` or `payload`, not both');
   });
 });
 

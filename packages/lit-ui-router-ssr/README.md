@@ -24,14 +24,14 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, that state's url parameter values, and the resolved values the
-  `payload` hook supplies. A page `renderShell` returns as a string is written as-is, without one.
+  state the router stood on, that state's url parameter values, and the resolved values
+  `dehydrate` or the `payload` hook draws. A page `renderShell` returns as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root`, `elementRenderers`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
+  `root`, `elementRenderers`, `dehydrate`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
   turns every 404 into a 200.
 - **Response states after settle.** `responder` runs the handler bound to a response state's name
   with the resolves its transition landed with.
@@ -144,22 +144,17 @@ as `responses`, writing a 2xx body at the path its url spells or a 3xx as a rule
 
 ## Adopting the resolves on boot
 
-The `payload` option hands each rendered page's landed transition to a hook, which returns the
-resolve payload to write. `dehydrate` from `ui-router-server/ssr` draws one, and the hook decides what to do with the resolves it leaves out:
+The `dehydrate` option draws each rendered page's resolve payload: `prerender` calls `dehydrate`
+from `ui-router-server/ssr` on the page's landed transition with the options given, so
+`shouldDehydrate` and `transport` act exactly as they do there. Pass `{}` to draw every resolve:
 
 ```typescript
 import { prerender } from 'lit-ui-router-ssr';
-import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
   // mounts, router, paths, renderShell, …
-  payload: (transition, { path }) => {
-    const { payload, unserializable } = dehydrate(transition);
-
-    for (const { state, token } of unserializable)
-      console.warn(`${path}: ${state}.${token} re-runs on the client`);
-
-    return payload;
+  dehydrate: {
+    shouldDehydrate: ({ token }) => token !== 'manifest',
   },
 });
 ```
@@ -169,14 +164,30 @@ The payload's `resolves` go into the page's hydration signature, beside `version
 the router starts: each resolve the page was drawn with adopts its value in place of running its
 function. Every other resolve runs as it would without one: a value `dehydrate` left out, a
 `NOWAIT` resolve, every resolve of a boot that lands on another state or other parameters, and
-every resolve of a page whose block carries no `resolves`. Without the hook no page carries
-resolves. What `dehydrate` draws, and which values it leaves out, is in
+every resolve of a page whose block carries no `resolves`. Without `dehydrate` or a `payload` hook
+no page carries resolves. What `dehydrate` draws, and which values it leaves out, is in
 [its documentation](https://lit-ui-router.dev/packages/server#handing-resolves-to-the-client).
 
 A value plain JSON can't carry, such as a `Date`, travels through a transporter. Pass the same
-`transport` to `dehydrate` in the hook and to `bootstrap()`: the signature keeps the payload's
-`transported` marks, and `bootstrap()` hands `transport` to `seed`. See
+`transport` in `dehydrate` and to `bootstrap()`: the signature keeps the payload's `transported`
+marks, and `bootstrap()` hands `transport` to `seed`. See
 [values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json).
+
+The `payload` option takes the drawing over by hand: a hook handed each page's landed transition
+returns the payload to write, or `undefined` to write none. Pass one or the other; passing both
+throws.
+
+```typescript
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) =>
+    path.startsWith('/drafts/')
+      ? undefined
+      : dehydrate(transition, { transport }).payload,
+});
+```
 
 ## The routed view, drawn on the server
 
