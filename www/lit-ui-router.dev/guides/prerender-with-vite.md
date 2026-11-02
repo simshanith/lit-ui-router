@@ -130,7 +130,8 @@ router need to
 Four parties share one `vite build`. Vite runs the client build and owns
 `dist/`. `ui-router-server` owns the plugin and the verdicts, and never
 imports Lit. Your app owns the route table, the paths, the router and the
-page. `lit-ui-router-ssr` owns the Lit render. The tinted boxes are
+page. `lit-ui-router-ssr` owns the Lit render. The
+<span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
 lit-ui-router's part; the tinted files are the ones it adds to `dist/`.
 
 <!--@include: ../public/diagrams/prerender-with-vite-build-flow.svg-->

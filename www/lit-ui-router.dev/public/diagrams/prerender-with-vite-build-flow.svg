@@ -88,6 +88,6 @@
     <line x1="30" y1="199" x2="154" y2="199" stroke="var(--vp-c-divider, #e2e2e3)" />
     <!-- label -->
     <text x="8" y="312" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">vite build, with prerender: './src/prerender.ts'</text>
-    <text x="712" y="312" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">tinted: lit-ui-router's part &#183; the files it adds</text>
+    <text x="712" y="312" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="end"><tspan fill="var(--vp-c-brand-1, #006a9a)">tinted</tspan>: lit-ui-router's part &#183; the files it adds</text>
   </g>
 </svg>
