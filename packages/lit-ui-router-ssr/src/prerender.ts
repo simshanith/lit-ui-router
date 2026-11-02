@@ -15,7 +15,8 @@ import type {
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
 } from 'ui-router-server/prerender';
-import type { ResolvePayload } from 'ui-router-server/ssr';
+import { dehydrate as dehydrateLanded } from 'ui-router-server/ssr';
+import type { DehydrateOptions, ResolvePayload } from 'ui-router-server/ssr';
 import { devGate } from '#dev-gate';
 
 import { LightElementRenderer } from './light-element-renderer.js';
@@ -138,26 +139,45 @@ export interface PrerenderOptions extends Omit<
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
   /**
-   * Draws the resolve payload for a rendered page, handed the transition the
+   * Draws each rendered page's resolve payload with `dehydrate` from
+   * `ui-router-server/ssr`, called with these options on the transition the
    * router last landed, once `renderShell` has returned a template. The
    * payload's `resolves` go into the page's hydration signature, beside the
    * state and parameters the router stands on, and the client adopts them on
-   * boot in place of running those resolve functions. Return `undefined` to
-   * write none. Without this hook no page carries resolves.
+   * boot in place of running those resolve functions. Pass `{}` to draw every
+   * resolve `dehydrate` draws by default. Without this option or
+   * {@link PrerenderOptions.payload | `payload`}, no page carries resolves.
    *
-   * `dehydrate` from `ui-router-server/ssr` draws the payload; its
-   * documentation says which values it leaves out. The payload's
+   * `dehydrate`'s documentation says which values it leaves out and how
+   * `shouldDehydrate` and `transport` act. The payload's
    * `transported` marks go into the signature too, so a value a transporter
    * carried is rebuilt when `bootstrap()` gets the same `transport`.
    *
    * @example
    * ```ts
-   * payload: (transition, { path }) => {
-   *   const { payload, unserializable } = dehydrate(transition);
-   *   for (const { state, token } of unserializable)
-   *     console.warn(`${path}: ${state}.${token} re-runs on the client`);
-   *   return payload;
+   * dehydrate: {
+   *   shouldDehydrate: ({ token }) => token !== 'manifest',
+   *   transport,
    * },
+   * ```
+   */
+  dehydrate?: DehydrateOptions;
+  /**
+   * Draws the resolve payload for a rendered page by hand, in place of
+   * {@link PrerenderOptions.dehydrate | `dehydrate`}: handed the transition the
+   * router last landed, once `renderShell` has returned a template, it returns
+   * the payload the page's signature carries, or `undefined` to write none.
+   * Passing both this and `dehydrate` throws.
+   *
+   * @example
+   * Shape the payload `dehydrate` draws before it is written:
+   * ```ts
+   * import { dehydrate } from 'ui-router-server/ssr';
+   *
+   * payload: (transition, { path }) =>
+   *   path.startsWith('/drafts/')
+   *     ? undefined
+   *     : dehydrate(transition, { transport }).payload,
    * ```
    */
   payload?: (
@@ -279,8 +299,9 @@ const warnUnregistered = (): void => {
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
  * package's version and the state and parameter values the router stood on,
- * which `hydrateRoot()` reads before it touches the document. A
- * {@link PrerenderOptions.payload | `payload`} hook adds the resolved values
+ * which `hydrateRoot()` reads before it touches the document.
+ * {@link PrerenderOptions.dehydrate | `dehydrate`}, or a
+ * {@link PrerenderOptions.payload | `payload`} hook, adds the resolved values
  * the page was drawn with, which `bootstrap()` adopts. A `renderShell`
  * that returns a string is written as-is, with no signature, so the client
  * renders it cold.
@@ -295,6 +316,7 @@ const warnUnregistered = (): void => {
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
+ * @throws an `Error` when both `dehydrate` and `payload` are supplied
  *
  * @example
  * ```ts
@@ -321,23 +343,35 @@ export async function prerender(
     elementRenderers = [UiViewRenderer, LightElementRenderer],
     root = new EventTarget(),
     write = nodeWrite,
+    dehydrate: dehydrateOptions,
     payload,
     responses,
     origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
 
+  if (dehydrateOptions && payload)
+    throw new Error(
+      'prerender: pass `dehydrate` or `payload`, not both; a `payload` hook calls `dehydrate()` itself',
+    );
+
   warnUnregistered();
 
+  const draw =
+    payload ??
+    (dehydrateOptions &&
+      ((transition: Transition) =>
+        dehydrateLanded(transition, dehydrateOptions).payload));
+
   const payloadOf = (context: RenderContext): ResolvePayload | undefined => {
-    if (!payload) return undefined;
+    if (!draw) return undefined;
 
     // SAFETY: `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
     const landed = router.globals.successfulTransitions.peekTail() as
       | Transition
       | undefined;
 
-    return landed && payload(landed, context);
+    return landed && draw(landed, context);
   };
 
   const renderLit = async (
