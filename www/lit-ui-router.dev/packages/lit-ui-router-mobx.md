@@ -104,9 +104,8 @@ protocols.
 ### RouterStore
 
 [`RouterStore`](/api/lit-ui-router-mobx/classes/RouterStore) is an observable
-mirror of a router's current state, updated by one
-`transitionService.onSuccess` hook per router. It is `ui-router-mobx`'s
-`RouterStore`, re-exported.
+mirror of a router's current state, updated by its router's `onSuccess` and
+`onStart` hooks. It is `ui-router-mobx`'s `RouterStore`, re-exported.
 
 | Member                      | Description                                                                                                |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -114,6 +113,8 @@ mirror of a router's current state, updated by one
 | `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
 | `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
 | `transition`                | The most recent successful `Transition`                                                                    |
+| `pending`                   | The newest transition still in flight, `undefined` when none is                                            |
+| `error`                     | The newest transition's `RejectType.ERROR` rejection, or `undefined`                                       |
 | `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
 | `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
@@ -202,9 +203,10 @@ composition-friendly alternative:
 
 ## Resolves stay on view props
 
-`RouterStore` mirrors `current`, `params` and `transition` — not resolves.
-Resolved data reaches a routed component exactly as it does without these
-bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+`RouterStore` mirrors `current`, `params`, `transition`, `pending` and
+`error` — not resolves. Resolved data reaches a routed component exactly as it
+does without these bindings: as
+[`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
 on `_uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the store, and
