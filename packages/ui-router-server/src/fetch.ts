@@ -169,6 +169,66 @@ export type RequiredDelegates<
           delegates: DelegateHandlers<Args, Decls>;
         };
 
+/** The guard keys a router's delegating states name: `string` for an untyped router. */
+export type GuardKey<Decls extends RouteDeclaration = RouteDeclaration> =
+  string extends Decls['name']
+    ? string
+    : Decls extends {
+          /** A typed declaration's guard key. */
+          readonly guard: infer K extends string;
+        }
+      ? K
+      : never;
+
+/**
+ * Exploration (shape c): a denial the adapter answers itself. A 401 must
+ * carry a challenge (RFC 9110 15.5.2); `reason` becomes a text/plain body.
+ */
+export type GuardDenial =
+  | {
+      /** Unauthenticated. */
+      status: 401;
+      /** The `WWW-Authenticate` value, e.g. `Bearer`. */
+      challenge: string;
+      /** A text/plain body. */
+      reason?: string;
+    }
+  | {
+      /** Authenticated but not allowed. */
+      status: 403;
+      /** A text/plain body. */
+      reason?: string;
+    };
+
+/**
+ * Exploration: runs before a delegating state's handler, with the matched
+ * route and the handler's arguments. `undefined` delegates; a `Response`
+ * (shape b) or a {@link GuardDenial} (shape c) answers instead.
+ */
+export type Guard<Args extends unknown[] = []> = (
+  context: DelegateContext,
+  request: Request,
+  ...args: Args
+) =>
+  | Response
+  | GuardDenial
+  | undefined
+  | Promise<Response | GuardDenial | undefined>;
+
+/** Exploration: makes `guards` required when a typed router names guard keys. */
+export type RequiredGuards<
+  Args extends unknown[] = [],
+  Decls extends RouteDeclaration = RouteDeclaration,
+> =
+  string extends GuardKey<Decls>
+    ? unknown
+    : [GuardKey<Decls>] extends [never]
+      ? unknown
+      : {
+          /** Guards for every key the router names. */
+          guards: { readonly [K in GuardKey<Decls>]: Guard<Args> };
+        };
+
 /**
  * Answers a request whose pathname matched a response state, handed the
  * verdict, the original request and the arguments the adapter was called
@@ -260,6 +320,18 @@ export interface FetchAdapterOptions<
    * structural router's response verdict throws per request instead.
    */
   serveResponse?: ServeResponse<Args>;
+  /** Exploration: guards bound by the keys delegating states name in `guard`. */
+  guards?: Readonly<Record<string, Guard<Args>>>;
+  /**
+   * Exploration (throw policy): answers a guard's or delegate's throw. Absent,
+   * the throw propagates to the host, as today.
+   */
+  onError?: (
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a handler may throw anything
+    error: unknown,
+    request: Request,
+    ...args: Args
+  ) => Response | Promise<Response>;
 }
 
 const acceptsHtml = (request: Request): boolean => {
@@ -372,6 +444,30 @@ const markedMatcher = (
 const methodNotAllowed = (): Response =>
   new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
 
+const methodsNotAllowed = (methods: readonly string[]): Response =>
+  new Response(null, {
+    status: 405,
+    headers: { Allow: methods.join(', ') },
+  });
+
+// GET admits HEAD, as fetch hosts answer HEAD from GET.
+const allows = (methods: readonly string[], method: string): boolean =>
+  methods.includes(method) || (method === 'HEAD' && methods.includes('GET'));
+
+const denialResponse = (denial: GuardDenial): Response => {
+  const headers = new Headers({
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'no-store',
+  });
+
+  if (denial.status === 401) headers.set('WWW-Authenticate', denial.challenge);
+
+  return new Response(denial.reason ?? null, {
+    status: denial.status,
+    headers,
+  });
+};
+
 const isDelegatedTo = <K extends string>(
   context: DelegateContext,
   key: K,
@@ -463,7 +559,8 @@ export function createFetchHandler<
   router: R,
   options: FetchAdapterOptions<Args, ServerRouterDeclarations<R>> &
     RequiredDelegates<Args, ServerRouterDeclarations<R>> &
-    RequiredServeResponse<Args, ServerRouterDeclarations<R>>,
+    RequiredServeResponse<Args, ServerRouterDeclarations<R>> &
+    RequiredGuards<Args, ServerRouterDeclarations<R>>,
 ): FetchHandler<Args> {
   const {
     serveShell,
@@ -471,6 +568,8 @@ export function createFetchHandler<
     shellPath = (mount) => mount,
     shouldHandle = isNavigation,
     serveResponse,
+    guards = {},
+    onError,
   } = options;
 
   // SAFETY: a DelegateHandlers record keyed by string; the key check below covers the typed keys at runtime.
@@ -480,6 +579,12 @@ export function createFetchHandler<
 
   const registration = registeredDelegates(router);
   checkDelegates(registration, delegates);
+
+  for (const key of registration?.guards ?? []) {
+    if (!Object.hasOwn(guards, key))
+      throw new Error(`No guard in guards for guard key '${key}'`);
+  }
+
   checkServeResponse(registration, serveResponse !== undefined);
 
   const marking =
@@ -489,6 +594,30 @@ export function createFetchHandler<
 
   const markedFor = markedMatcher(router, registration);
 
+  const guarded = async (
+    verdict: DelegateVerdict,
+    context: DelegateContext,
+    request: Request,
+    args: Args,
+  ): Promise<Response> => {
+    const { delegate, guard, methods } = verdict;
+
+    if (methods !== undefined && !allows(methods, request.method))
+      return methodsNotAllowed(methods);
+
+    if (guard !== undefined) {
+      if (!Object.hasOwn(guards, guard))
+        throw new Error(`No guard in guards for guard key '${guard}'`);
+      const outcome = await guards[guard](context, request, ...args);
+
+      if (outcome instanceof Response) return outcome;
+
+      if (outcome !== undefined) return denialResponse(outcome);
+    }
+
+    return delegates[delegate](request, ...args);
+  };
+
   const delegateTo = (
     verdict: DelegateVerdict,
     request: Request,
@@ -497,12 +626,22 @@ export function createFetchHandler<
     const { delegate, mount, subpath, state, params } = verdict;
 
     if (!Object.hasOwn(delegates, delegate)) throw missingDelegate(delegate);
-    delegatedRequests.set(request, {
-      context: { mount, subpath, delegate, state, params },
-      router,
-    });
+    const context = { mount, subpath, delegate, state, params };
+    delegatedRequests.set(request, { context, router });
 
-    return delegates[delegate](request, ...args);
+    if (
+      verdict.guard === undefined &&
+      verdict.methods === undefined &&
+      !onError
+    )
+      return delegates[delegate](request, ...args);
+
+    const answered = guarded(verdict, context, request, args);
+
+    return onError === undefined
+      ? answered
+      : // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a handler may throw anything
+        answered.catch((error: unknown) => onError(error, request, ...args));
   };
 
   const respondTo = (

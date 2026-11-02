@@ -1,11 +1,11 @@
 // GET /ledger: the versions and dist-tags for the release-signals reconcile
 // check, behind a read policy that shares nothing with /claims but the pins.
-import { Effect, Schema } from 'effect';
+import { Effect } from 'effect';
 import type { JWTVerifyGetKey } from 'jose';
 
-import { bearerOf, readClaims, text } from './ingest.ts';
+import { authenticate, text } from './ingest.ts';
 import type { LedgerSnapshot } from './ledger-sql.ts';
-import { ForbiddenClaim, InvalidToken, runForbiddenReason } from './oidc.ts';
+import { ForbiddenClaim, runForbiddenReason } from './oidc.ts';
 
 export interface ReadEnv {
   OIDC_READ_AUDIENCE?: string;
@@ -16,27 +16,15 @@ export interface ReadEnv {
   LEDGER_DEV_SKIP_OIDC?: string;
 }
 
-export const LEDGER_PATH = '/ledger';
-
-class Unavailable extends Schema.TaggedError<Unavailable>()('Unavailable', {
-  cause: Schema.Unknown,
-}) {}
-
-const respond = (
+/** The read token's verified claims, its run pins checked; no body is needed. */
+export const authorizeRead = (
   request: Request,
   env: ReadEnv,
-  snapshot: Effect.Effect<LedgerSnapshot, unknown>,
   keys?: JWTVerifyGetKey,
 ) =>
   Effect.gen(function* () {
-    const token = bearerOf(request);
-
-    if (token === undefined) {
-      return yield* new InvalidToken({ reason: 'no bearer token' });
-    }
-
-    const claims = yield* readClaims(
-      token,
+    const claims = yield* authenticate(
+      request,
       {
         variable: 'OIDC_READ_AUDIENCE',
         audience: env.OIDC_READ_AUDIENCE,
@@ -58,24 +46,34 @@ const respond = (
       });
     }
 
-    const body = yield* snapshot.pipe(
-      Effect.mapError((cause) => new Unavailable({ cause })),
-    );
-
-    return Response.json(body, {
-      headers: { 'Cache-Control': 'no-store' },
-    });
+    return claims;
   });
 
-/** Answers GET /ledger; `snapshot` reads D1, and `keys` replaces GitHub's JWKS in tests. */
-export const readLedger = (
+/** Answers GET /ledger once the caller is authorized. */
+export const readSnapshot = (
+  snapshot: Effect.Effect<LedgerSnapshot, unknown>,
+): Effect.Effect<Response> =>
+  snapshot.pipe(
+    Effect.map((body) =>
+      Response.json(body, { headers: { 'Cache-Control': 'no-store' } }),
+    ),
+    Effect.catch((cause) =>
+      Effect.as(
+        Effect.logError('the ledger read failed', cause),
+        text(503, 'the ledger is unavailable'),
+      ),
+    ),
+  );
+
+/** Answers GET /ledger, the token checked here; `snapshot` reads D1, and `keys` replaces GitHub's JWKS in tests. */
+export const respondRead = (
   request: Request,
   env: ReadEnv,
   snapshot: Effect.Effect<LedgerSnapshot, unknown>,
   keys?: JWTVerifyGetKey,
-): Promise<Response> => {
+): Effect.Effect<Response> => {
   if (request.method !== 'GET') {
-    return Promise.resolve(
+    return Effect.succeed(
       new Response('method not allowed', {
         status: 405,
         headers: { Allow: 'GET' },
@@ -83,22 +81,24 @@ export const readLedger = (
     );
   }
 
-  return Effect.runPromise(
-    respond(request, env, snapshot, keys).pipe(
-      Effect.catchTags({
-        InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
-        ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
-        Misconfigured: (error) =>
-          Effect.as(
-            Effect.logError(error.reason),
-            text(500, 'the ledger is misconfigured'),
-          ),
-        Unavailable: (error) =>
-          Effect.as(
-            Effect.logError('the ledger read failed', error.cause),
-            text(503, 'the ledger is unavailable'),
-          ),
-      }),
-    ),
+  return authorizeRead(request, env, keys).pipe(
+    Effect.andThen(readSnapshot(snapshot)),
+    Effect.catchTags({
+      InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
+      ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
+      Misconfigured: (error) =>
+        Effect.as(
+          Effect.logError(error.reason),
+          text(500, 'the ledger is misconfigured'),
+        ),
+    }),
   );
 };
+
+export const readLedger = (
+  request: Request,
+  env: ReadEnv,
+  snapshot: Effect.Effect<LedgerSnapshot, unknown>,
+  keys?: JWTVerifyGetKey,
+): Promise<Response> =>
+  Effect.runPromise(respondRead(request, env, snapshot, keys));

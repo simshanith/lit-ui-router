@@ -57,6 +57,16 @@ export interface RouteDeclaration {
    * also delegate. Child states don't inherit it.
    */
   response?: true;
+  /**
+   * Exploration (#1435 x #349): names a guard the adapter's `guards` option
+   * binds, run before this delegating state's handler. Delegating states only.
+   */
+  guard?: string;
+  /**
+   * Exploration: the methods this delegating state answers; the adapter
+   * answers any other with 405 and `Allow` before the guard and the handler.
+   */
+  methods?: readonly string[];
 }
 
 /** A redirect target in state terms; the matcher tier formats it back into a path. */

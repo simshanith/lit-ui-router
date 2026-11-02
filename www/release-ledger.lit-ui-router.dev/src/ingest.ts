@@ -8,6 +8,7 @@ import {
   ClaimBody,
   type LedgerQueue,
   MAINTAINER_ACTIONS,
+  type OidcClaims,
 } from './claim.ts';
 import {
   ForbiddenClaim,
@@ -123,7 +124,12 @@ const readBody = (request: Request) =>
     );
   });
 
-const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
+/** The bearer token's verified claims, for the audience `source` names. */
+export const authenticate = (
+  request: Request,
+  source: AudienceSource,
+  keys?: JWTVerifyGetKey,
+) =>
   Effect.gen(function* () {
     const token = bearerOf(request);
 
@@ -131,16 +137,20 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       return yield* new InvalidToken({ reason: 'no bearer token' });
     }
 
-    const claims = yield* readClaims(
-      token,
-      {
-        variable: 'OIDC_AUDIENCE',
-        audience: env.OIDC_AUDIENCE,
-        devSkip: env.LEDGER_DEV_SKIP_OIDC,
-      },
-      keys,
-    ).pipe(Effect.withSpan('ledger.verify-token'));
+    return yield* readClaims(token, source, keys).pipe(
+      Effect.withSpan('ledger.verify-token'),
+    );
+  });
 
+export const publishAudience = (env: IngestEnv): AudienceSource => ({
+  variable: 'OIDC_AUDIENCE',
+  audience: env.OIDC_AUDIENCE,
+  devSkip: env.LEDGER_DEV_SKIP_OIDC,
+});
+
+// The publish policy reads the body, so its 403 can only come after the body is decoded.
+const admit = (request: Request, env: IngestEnv, claims: OidcClaims) =>
+  Effect.gen(function* () {
     const body = yield* readBody(request);
 
     if (body.action !== undefined && body.action !== 'observe') {
@@ -180,26 +190,13 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
     return text(202, 'accepted');
   });
 
-/** Answers one request; `keys` replaces GitHub's JWKS in tests. */
-export const respond = (
-  request: Request,
-  env: IngestEnv,
-  keys?: JWTVerifyGetKey,
-): Effect.Effect<Response> => {
-  const { pathname } = new URL(request.url);
-
-  if (pathname !== '/claims') return Effect.succeed(text(404, 'not found'));
-
-  if (request.method !== 'POST') {
-    return Effect.succeed(
-      new Response('method not allowed', {
-        status: 405,
-        headers: { Allow: 'POST' },
-      }),
-    );
-  }
-
-  return enqueue(request, env, keys).pipe(
+const answer = (
+  effect: Effect.Effect<
+    Response,
+    InvalidToken | ForbiddenClaim | BadRequest | Misconfigured
+  >,
+): Effect.Effect<Response> =>
+  effect.pipe(
     Effect.catchTags({
       InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
       ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
@@ -211,7 +208,35 @@ export const respond = (
         ),
     }),
   );
+
+/** Answers POST /claims, the token checked here; `keys` replaces GitHub's JWKS in tests. */
+export const respond = (
+  request: Request,
+  env: IngestEnv,
+  keys?: JWTVerifyGetKey,
+): Effect.Effect<Response> => {
+  if (request.method !== 'POST') {
+    return Effect.succeed(
+      new Response('method not allowed', {
+        status: 405,
+        headers: { Allow: 'POST' },
+      }),
+    );
+  }
+
+  return answer(
+    authenticate(request, publishAudience(env), keys).pipe(
+      Effect.flatMap((claims) => admit(request, env, claims)),
+    ),
+  );
 };
+
+/** Answers POST /claims for claims a guard already verified. */
+export const respondVerified = (
+  request: Request,
+  env: IngestEnv,
+  claims: OidcClaims,
+): Effect.Effect<Response> => answer(admit(request, env, claims));
 
 export const ingest = (
   request: Request,

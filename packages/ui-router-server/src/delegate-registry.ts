@@ -29,6 +29,8 @@ export function sharedWeakMap<K extends object, V>(
 export interface DelegateRegistration {
   /** Every key the router's states name. */
   readonly keys: ReadonlySet<string>;
+  /** Exploration: every guard key the router's delegating states name. */
+  readonly guards?: ReadonlySet<string>;
   /** Every response state's name. */
   readonly responses: ReadonlySet<string>;
   /** The delegate or response verdict for a pathname or url, or null; url matching only, never a transition. */

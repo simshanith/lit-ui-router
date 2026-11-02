@@ -1,7 +1,7 @@
-// The release-ledger worker: `fetch` enqueues verified claims and serves the
-// reconcile check's GET /ledger, `scheduled` enqueues a sweep of every release
-// tag, `queue` folds claims into D1, and LedgerReader serves reads over a
-// service binding.
+// The release-ledger worker: `fetch` routes /claims and /ledger through
+// delegating states, `scheduled` enqueues a sweep of every release tag,
+// `queue` folds claims into D1, and LedgerReader serves reads over a service
+// binding.
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
 import { makeCloudflareTracer } from 'cloudflare-effect-tracer';
@@ -10,7 +10,7 @@ import { FetchHttpClient } from 'effect/http';
 
 import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
-import { respond } from '../src/ingest.ts';
+import { text } from '../src/ingest.ts';
 import {
   findLedger,
   findPackages,
@@ -20,13 +20,19 @@ import {
   type LedgerVersion,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
-import { LEDGER_PATH, readLedger } from '../src/read.ts';
+import {
+  guardBeforeDelegation,
+  guardInHandlers,
+  type Wiring,
+} from '../src/routes.ts';
 import { sweep } from '../src/sweep.ts';
 
 /** Secrets and local flags `wrangler types` cannot see in wrangler.jsonc. */
 type LedgerEnv = Env & {
   GITHUB_TOKEN?: string;
   LEDGER_DEV_SKIP_OIDC?: string;
+  /** Exploration only: which wiring answers fetch. */
+  LEDGER_ROUTING?: keyof typeof routings;
 };
 
 const database = (env: LedgerEnv) => D1Client.layer({ db: env.DB });
@@ -39,6 +45,24 @@ const run = <A, E>(name: string, effect: Effect.Effect<A, E>): Promise<A> =>
       Effect.provideService(Tracer.Tracer, makeCloudflareTracer()),
     ),
   );
+
+const wiring: Wiring<LedgerEnv> = {
+  snapshot: (env) => findLedger.pipe(Effect.provide(database(env))),
+  run,
+};
+
+// Built once per isolate; the routers are module-scope data.
+const routings = {
+  handlers: guardInHandlers(wiring),
+  response: guardBeforeDelegation(wiring, 'response'),
+  denial: guardBeforeDelegation(wiring, 'denial'),
+  adapter500: guardInHandlers({
+    ...wiring,
+    onError: () => text(500, 'the ledger failed'),
+  }),
+};
+
+const notFound = (): Response => text(404, 'not found');
 
 /** Read-only access for other workers; a D1 binding would grant writes too. */
 export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
@@ -71,10 +95,9 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
 }
 
 export default {
-  fetch: (request, env) =>
-    new URL(request.url).pathname === LEDGER_PATH
-      ? readLedger(request, env, findLedger.pipe(Effect.provide(database(env))))
-      : run('ledger.fetch', respond(request, env)),
+  fetch: async (request, env) =>
+    (await routings[env.LEDGER_ROUTING ?? 'handlers'](request, env)) ??
+    notFound(),
   scheduled: (controller, env) =>
     run(
       'ledger.sweep',

@@ -964,3 +964,83 @@ describe('GET /ledger in workerd', { timeout: 120_000 }, () => {
     });
   });
 });
+
+// Exploration (#1435 x #349): the guard shapes and the throw policy on the real bundle.
+describe('delegating states in workerd', { timeout: 120_000 }, () => {
+  const routed = (routing: string, vars = DEPLOYED_VARS) =>
+    server.update({
+      root: SCRATCH,
+      workers: [
+        { config: harnessConfig({ ...vars, LEDGER_ROUTING: routing }) },
+      ],
+    });
+
+  for (const [routing, challenge] of [
+    ['handlers', null],
+    ['response', null],
+    ['denial', 'Bearer'],
+  ] as const) {
+    it(`answers 401, 405 and the worker's 404 with LEDGER_ROUTING=${routing}`, async () => {
+      await routed(routing);
+
+      const unauthenticated = await server.fetch('/claims', {
+        method: 'POST',
+        body: '{}',
+      });
+
+      assert.equal(unauthenticated.status, 401);
+      assert.equal(unauthenticated.headers.get('WWW-Authenticate'), challenge);
+
+      const wrongMethod = await server.fetch('/claims');
+
+      assert.equal(wrongMethod.status, 405);
+      assert.equal(wrongMethod.headers.get('Allow'), 'POST');
+
+      const navigation = await server.fetch('/releases', {
+        headers: { Accept: 'text/html' },
+      });
+
+      assert.equal(navigation.status, 404);
+      assert.equal(await navigation.text(), 'not found');
+      assert.equal((await server.fetch('/ledger')).status, 401);
+    });
+  }
+
+  // No queue binding: the send throws a TypeError inside the claims handler.
+  const withoutQueue = (routing: string) =>
+    server.update({
+      root: SCRATCH,
+      workers: [
+        {
+          config: {
+            ...harnessConfig({
+              ...DEPLOYED_VARS,
+              OIDC_AUDIENCE: '',
+              LEDGER_DEV_SKIP_OIDC: 'true',
+              LEDGER_ROUTING: routing,
+            }),
+            queues: { producers: [] },
+          },
+        },
+      ],
+    });
+
+  const validClaim = () =>
+    postClaim(JSON.stringify({ name: 'lit-ui-router', version: '1.0.0' }));
+
+  // workerd counts the invocation as an exception (Cloudflare's 1101 page); the harness rethrows it into the test.
+  it("leaves a handler's throw to workerd by default", async () => {
+    await withoutQueue('handlers');
+
+    await assert.rejects(validClaim(), /reading 'send'/);
+  });
+
+  it("answers a handler's throw through onError when the host opts in", async () => {
+    await withoutQueue('adapter500');
+
+    const response = await validClaim();
+
+    assert.equal(response.status, 500);
+    assert.equal(await response.text(), 'the ledger failed');
+  });
+});

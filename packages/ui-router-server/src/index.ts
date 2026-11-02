@@ -43,6 +43,10 @@ declare module '@uirouter/core' {
     delegate?: string;
     /** Marks a response state, answered by the handler bound to its name (see {@link RouteDeclaration.response}). */
     response?: true;
+    /** Exploration: a guard key run before this delegating state's handler (see {@link RouteDeclaration.guard}). */
+    guard?: string;
+    /** Exploration: the methods this delegating state answers (see {@link RouteDeclaration.methods}). */
+    methods?: readonly string[];
   }
 }
 
@@ -210,6 +214,10 @@ export type Verdict =
       state: string;
       /** The params the pathname alone resolves; search params hold their declared defaults. */
       params: RawParams;
+      /** Exploration: the guard key the matched state names, run before its handler. */
+      guard?: string;
+      /** Exploration: the methods the matched state answers. */
+      methods?: readonly string[];
     }
   /**
    * Answer with the `Response` the handler bound to `state` builds from its
@@ -325,6 +333,8 @@ interface Mount {
   strategy: 'matcher' | 'simulate';
   compiled: CompiledResolver;
   delegates: Map<string, string>;
+  guards: Map<string, string>;
+  methods: Map<string, readonly string[]>;
   responses: Set<string>;
   pool: RouterPool;
   prewarm: number;
@@ -544,6 +554,31 @@ const compileDelegates = (
   return delegates;
 };
 
+// Exploration: guards and methods ride delegating rows only; a page guard is #349's shell verdict, not prototyped here.
+const compileDelegateMarker = <T>(
+  base: string,
+  config: MountConfig,
+  delegates: Map<string, string>,
+  marker: 'guard' | 'methods',
+  read: (route: RouteDeclaration) => T | undefined,
+): Map<string, T> => {
+  const marked = new Map<string, T>();
+
+  for (const route of config.routes) {
+    const value = read(route);
+
+    if (value === undefined) continue;
+
+    if (!delegates.has(route.name))
+      throw new Error(
+        `Mount '${base}': state '${route.name}' declares ${marker} but does not delegate`,
+      );
+    marked.set(route.name, value);
+  }
+
+  return marked;
+};
+
 // A response state is answered by its handler, so it must be url-addressable, must not also redirect, and is never a delegate.
 const compileResponses = (base: string, config: MountConfig): Set<string> => {
   const responses = new Set<string>();
@@ -584,6 +619,20 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
     strategy: config.strategy ?? 'matcher',
     prewarm,
     delegates,
+    guards: compileDelegateMarker(
+      base,
+      config,
+      delegates,
+      'guard',
+      (route) => route.guard,
+    ),
+    methods: compileDelegateMarker(
+      base,
+      config,
+      delegates,
+      'methods',
+      (route) => route.methods,
+    ),
     responses,
     // Simulate mounts accept the same declaration subset, so the
     // dependency-free compilation doubles as their construction-time
@@ -717,6 +766,12 @@ const delegateVerdict = (
   delegate,
   state: match.state,
   params: match.params,
+  ...(mount.guards.has(match.state) && {
+    guard: mount.guards.get(match.state),
+  }),
+  ...(mount.methods.has(match.state) && {
+    methods: mount.methods.get(match.state),
+  }),
 });
 
 const responseVerdict = (
@@ -997,6 +1052,7 @@ export function createServerRouter<
   compiledMounts.set(router, declared);
   registerDelegates(router, {
     keys: new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
+    guards: new Set(declared.flatMap((mount) => [...mount.guards.values()])),
     responses: new Set(declared.flatMap((mount) => [...mount.responses])),
     async markedFor(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
