@@ -13,6 +13,7 @@ import { devGate } from '#dev-gate';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
+import { fileFor, subpathIn } from './site-paths.ts';
 
 /** One emitted artefact, as {@link prerender} planned it. */
 export interface EmittedPage {
@@ -175,25 +176,9 @@ const PROBE_SEGMENT = '__ui-router-server-probe__';
 const joinPath = (dir: string, file: string): string =>
   dir === '' ? file : `${dir.replace(/\/+$/, '')}/${file}`;
 
-// The mount-relative path: '' at the mount root, '/sheet/7B' below it.
-const subpathIn = (mount: string, path: string): string => {
-  const base = mount === '/' ? '' : mount.replace(/\/+$/, '');
-
-  return path.startsWith(base)
-    ? path.slice(base.length).replace(/\/+$/, '')
-    : path;
-};
-
 // The response body's file: the subpath as spelled, or 'index.html' at the mount root.
 const responseFileFor = (subpath: string): string =>
   subpath.replace(/^\/+/, '').replace(/\/+$/, '') || 'index.html';
-
-// '<subpath>/index.html', or 'index.html' at the mount root.
-const fileFor = (subpath: string): string => {
-  const trimmed = subpath.replace(/^\/+/, '').replace(/\/+$/, '');
-
-  return trimmed === '' ? 'index.html' : `${trimmed}/index.html`;
-};
 
 // The same path spelled the other way round, or undefined at the host root.
 const otherSpelling = (from: string): string | undefined => {

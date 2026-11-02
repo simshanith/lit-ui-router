@@ -46,7 +46,8 @@ leaves the ones before it unchanged:
 2. **Server-rendered pages.** The same states' resolves and views, rendered
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
-   [`prerender`](#emitting-a-static-site).
+   [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
+   after [`vite build`](#after-vite-build).
 3. **[Response states](#response-states).** A state answers with its own
    `Response` (a redirect, JSON, a badge) built from its resolves once
    `settle` lands it.
@@ -349,8 +350,9 @@ The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
 `vite preview` answer the same 302s and mount-owned 404s the production
 server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
-returned object is a structural subset of Vite's `Plugin`, so Vite stays a
-type-only peer this package never imports.
+returned object is a structural subset of Vite's `Plugin`. Vite is an optional
+peer the plugin imports only for its build step, which
+[prerenders the built app](#after-vite-build).
 
 In this example each mount's HTML entry is built to `<mount>.html`:
 
@@ -776,6 +778,47 @@ The loop never touches a filesystem itself: `write` receives each file with
 a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
+
+### After `vite build`
+
+`serverRouterPlugin` runs the loop as part of `vite build` when it gets a
+`prerender` entry:
+
+```ts
+serverRouterPlugin(router, { prerender: { entry: './src/prerender.ts' } });
+```
+
+Once the client build has written its output, the plugin loads the entry
+through Vite's module runner, with the project root and mode but without the
+app's plugins, and every dependency loads from node. The entry's default
+export, a
+[`PrerenderEntry`](/api/ui-router-server/vite/type-aliases/PrerenderEntry),
+receives Vite's resolved `outDir`, the built `index.html` as `template`, and a
+`write` over `node:fs`, and returns the loop's result. Spreading them into
+`prerender()` first lets the entry override any of them:
+
+```ts
+import { prerender } from 'ui-router-server/prerender';
+import type { PrerenderEntry } from 'ui-router-server/vite';
+
+const entry: PrerenderEntry = (build) =>
+  prerender({
+    ...build,
+    mounts,
+    paths,
+    render: (verdict, { path }) => fill(build.template, path),
+  });
+
+export default entry;
+```
+
+A listed path that matches no route fails the build. The entry runs whichever
+loop it imports, so a lit app returns
+[`lit-ui-router-ssr`](/packages/ssr#after-vite-build)'s `prerender` instead.
+`vite preview` keeps answering through the middleware, so redirects and
+mount-owned 404s answer as before, and serves each shell from the emitted
+`<subpath>/index.html` when the build wrote one, and the `otherwise`
+projection from `404.html`.
 
 A delegated path has no static file, so the host must send it to the server.
 On Cloudflare Workers, list `result.delegated` in

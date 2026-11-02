@@ -88,6 +88,36 @@ on. `dryRun: true` plans all of it and writes nothing.
 Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
 virtual fs instead.
 
+## After `vite build`
+
+`ui-router-server/vite`'s `serverRouterPlugin` runs the prerender as part of `vite build`. Its
+`prerender` entry is a module whose default export receives Vite's `outDir`, the built `index.html`
+as `template`, and a `write` over `node:fs`, and returns this package's `prerender()` result:
+
+```typescript
+import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+
+import type { PrerenderEntry } from 'ui-router-server/vite';
+
+const entry: PrerenderEntry = async (build) => {
+  const { prerender } = await import('lit-ui-router-ssr');
+  return prerender({
+    ...build,
+    mounts,
+    router,
+    paths,
+    renderShell,
+    document: (body) => fill(build.template, body),
+  });
+};
+
+export default entry;
+```
+
+The [registering rules](#a-prerendered-app) hold in the entry, as in any build-time entry. See
+[after `vite build`](https://lit-ui-router.dev/packages/server#after-vite-build) for the plugin line
+and what `vite preview` serves.
+
 ## Static hosts add a trailing slash
 
 A shell page lands at `<subpath>/index.html`. Cloudflare Pages, Netlify, and S3-style hosts serve
