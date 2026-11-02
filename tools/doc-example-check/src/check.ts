@@ -76,6 +76,24 @@ export interface CheckOptions {
 const virtualName = (file: string, block: ExampleBlock): string =>
   path.join(virtualDir, `${file.replace(/\.ts$/, '')}.L${block.line}.ts`);
 
+const AUGMENTATION = /^[ \t]*declare[ \t]+module[ \t]+(['"])([^'"\n]+)\1/gm;
+
+// an augmentation never loads its module, so import it after the mapped lines
+const virtualText = (block: ExampleBlock): string => {
+  const modules = new Set(
+    [...block.text.matchAll(AUGMENTATION)].map((match) => match[2]),
+  );
+
+  return [...modules].reduce(
+    (text, module) => `${text}import ${JSON.stringify(module)};\n`,
+    block.text,
+  );
+};
+
+// diagnostics on the appended imports repeat the augmentation's own TS2664
+const inBlock = (target: Target, d: TsDiagnostic): boolean =>
+  (d.startPosition?.line ?? 0) < target.block.lines.length;
+
 const toSource = (target: Target, d: TsDiagnostic): Diagnostic => {
   const at = d.startPosition ?? { line: 0, character: 0 };
   const origin = target.block.lines[at.line] ?? target.block.lines.at(-1);
@@ -108,7 +126,7 @@ const overlay = (
         files: prelude ? [...roots, path.resolve(prelude)] : roots,
       }),
     ],
-    ...targets.map((t): [string, string] => [t.virtual, t.block.text]),
+    ...targets.map((t): [string, string] => [t.virtual, virtualText(t.block)]),
   ]);
 
   return { config, fileSystem };
@@ -191,7 +209,9 @@ const diagnose = (
 
   const results = targets.map((target): BlockResult => {
     const ownOf = (diagnostics: TsDiagnostic[]) =>
-      diagnostics.filter((d) => d.fileName === target.virtual);
+      diagnostics.filter(
+        (d) => d.fileName === target.virtual && inBlock(target, d),
+      );
 
     const own = ownOf([...syntactic, ...semantic]);
 
