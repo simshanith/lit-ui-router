@@ -216,6 +216,10 @@ const workspaces = {
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },
+  'tools/lit-template-check': {
+    // checked by path in check.test.ts, never imported
+    entry: ['src/fixtures/**/*.ts'],
+  },
   'tools/oxc-emit': {
     // reached via createRequire(), which knip does not follow
     ignoreDependencies: ['@ampproject/remapping'],

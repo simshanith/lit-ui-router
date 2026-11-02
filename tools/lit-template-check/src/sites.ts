@@ -4,6 +4,7 @@ import {
   isCallExpression,
   isClassDeclaration,
   isDecorator,
+  isExportDeclaration,
   isExportKeyword,
   isIdentifier,
   isPropertyAccessExpression,
@@ -33,6 +34,8 @@ export interface Definition {
   className: string;
   exported: boolean;
   topLevel: boolean;
+  /** Offset of the decorator or `define` call. */
+  start: number;
   /** Names from `@fires` or a literal `this.dispatchEvent(new X('name'))`. */
   events: string[];
 }
@@ -46,6 +49,18 @@ export interface FileSites {
   definitions: Definition[];
   /** Module `nothing` resolves from in this file. */
   litModule: string;
+  /** Specifiers of every import and re-export. */
+  specifiers: string[];
+}
+
+function specifiersOf(sourceFile: SourceFile): string[] {
+  return sourceFile.statements.flatMap((statement) =>
+    (isImportDeclaration(statement) || isExportDeclaration(statement)) &&
+    statement.moduleSpecifier &&
+    isStringLiteral(statement.moduleSpecifier)
+      ? [statement.moduleSpecifier.text]
+      : [],
+  );
 }
 
 function importsOf(sourceFile: SourceFile): Map<string, string> {
@@ -76,6 +91,19 @@ function importsOf(sourceFile: SourceFile): Map<string, string> {
 }
 
 type ClassFacts = Pick<Definition, 'exported' | 'topLevel' | 'events'>;
+
+const pending = (
+  tag: string,
+  className: string,
+  start: number,
+): Definition => ({
+  tag,
+  className,
+  exported: false,
+  topLevel: false,
+  start,
+  events: [],
+});
 
 /** The tag of a `customElement('tag')` or `customElements.define('tag', …)` call. */
 function definedTag(call: CallExpression): string | undefined {
@@ -119,13 +147,14 @@ function classDefinitions(
 
     const tag = definedTag(call);
 
-    return tag
-      ? [{ tag, className, exported: false, topLevel: false, events: [] }]
-      : [];
+    return tag ? [pending(tag, className, modifier.getStart(sourceFile))] : [];
   });
 }
 
-function defineCall(node: CallExpression): Definition[] {
+function defineCall(
+  node: CallExpression,
+  sourceFile: SourceFile,
+): Definition[] {
   const callee = node.expression;
 
   if (
@@ -141,15 +170,7 @@ function defineCall(node: CallExpression): Definition[] {
   const second = node.arguments[1];
 
   return tag && second && isIdentifier(second)
-    ? [
-        {
-          tag,
-          className: second.text,
-          exported: false,
-          topLevel: false,
-          events: [],
-        },
-      ]
+    ? [pending(tag, second.text, node.getStart(sourceFile))]
     : [];
 }
 
@@ -214,7 +235,7 @@ export function findSites(sourceFile: SourceFile): FileSites {
     if (isClassDeclaration(node)) {
       definitions.push(...classDefinitions(node, sourceFile, classes));
     } else if (isCallExpression(node)) {
-      definitions.push(...defineCall(node));
+      definitions.push(...defineCall(node, sourceFile));
     } else if (isTaggedTemplateExpression(node) && isIdentifier(node.tag)) {
       const tag = tagOf(node.tag.text);
 
@@ -234,5 +255,10 @@ export function findSites(sourceFile: SourceFile): FileSites {
     .map((name) => (imports.get(name) ?? '').split('\0')[1])
     .find((module) => module === 'lit' || module === 'lit-html');
 
-  return { sites, definitions, litModule: litModule ?? 'lit' };
+  return {
+    sites,
+    definitions,
+    litModule: litModule ?? 'lit',
+    specifiers: specifiersOf(sourceFile),
+  };
 }

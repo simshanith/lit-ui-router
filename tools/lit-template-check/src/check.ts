@@ -9,7 +9,12 @@ import { dirname, join, relative } from 'node:path';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import { createFileSystemLayer } from 'typescript/fs';
-import { API, DiagnosticCategory, type Diagnostic } from 'typescript/sync';
+import {
+  API,
+  DiagnosticCategory,
+  type Diagnostic,
+  ModuleKind,
+} from 'typescript/sync';
 
 import {
   type LowerStats,
@@ -17,10 +22,10 @@ import {
   type Segment,
   toOriginal,
 } from './lower.ts';
-import { registryFor } from './registry.ts';
+import { type DuplicateTag, registryFor } from './registry.ts';
 import { type FileSites, findSites } from './sites.ts';
 
-type ParsedFile = FileSites & { path: string; source: string };
+export type ParsedFile = FileSites & { path: string; source: string };
 
 interface LoweredFile {
   path: string;
@@ -33,7 +38,8 @@ interface Finding {
   path: string;
   offset: number;
   rule: string;
-  code: number;
+  /** Absent for findings the tool reports itself. */
+  code?: number;
   text: string;
 }
 
@@ -74,7 +80,7 @@ const virtualOffset = (text: string, diagnostic: Diagnostic): number => {
   return offset + start.character;
 };
 
-function parseFiles(api: API, files: string[]): ParsedFile[] {
+export function parseFiles(api: API, files: string[]): ParsedFile[] {
   const parsed: ParsedFile[] = [];
 
   for (const path of files) {
@@ -90,27 +96,42 @@ function parseFiles(api: API, files: string[]): ParsedFile[] {
   return parsed;
 }
 
-// the unlowered programs, only to learn which definitions each one holds
-function programFilesOf(api: API, openFiles: string[]) {
+// the unlowered programs, only to learn which definitions each file can see
+export function programFilesOf(api: API, open: ParsedFile[]) {
   const programFiles = new Map<string, Set<string>>();
-  const base = api.createSnapshot({ openFiles });
+  const imports = new Map<string, Set<string>>();
+  const base = api.createSnapshot({ openFiles: open.map((file) => file.path) });
 
   try {
-    for (const path of openFiles) {
+    for (const { path, specifiers } of open) {
       const program = base.getDefaultProjectForFile(path)?.program;
 
       programFiles.set(path, new Set(program?.getSourceFileNames() ?? []));
+      imports.set(
+        path,
+        new Set(
+          specifiers.flatMap((specifier) => {
+            const resolved = program?.getResolvedModule(
+              path,
+              specifier,
+              ModuleKind.ESNext,
+            );
+
+            return resolved ? [resolved.resolvedFileName] : [];
+          }),
+        ),
+      );
     }
   } finally {
     base.dispose();
   }
 
-  return programFiles;
+  return { programFiles, imports };
 }
 
-function lowerAll(
+export function lowerAll(
   parsed: ParsedFile[],
-  programFiles: Map<string, Set<string>>,
+  { programFiles, imports }: ReturnType<typeof programFilesOf>,
 ) {
   const totals: LowerStats = {
     templates: 0,
@@ -121,6 +142,7 @@ function lowerAll(
 
   const defining = parsed.filter((file) => file.definitions.length > 0);
   const unnameable = new Set<string>();
+  const duplicates = new Map<string, DuplicateTag>();
   const lowered: LoweredFile[] = [];
 
   for (const { path, source, sites, litModule } of parsed) {
@@ -130,9 +152,15 @@ function lowerAll(
       path,
       defining,
       programFiles.get(path) ?? new Set(),
+      imports.get(path),
     );
 
     for (const key of registry.unnameable) unnameable.add(key);
+
+    for (const duplicate of registry.duplicates) {
+      duplicates.set(`${duplicate.path}#${duplicate.start}`, duplicate);
+    }
+
     const result = lowerFile(source, sites, litModule, registry);
 
     totals.templates += result.stats.templates;
@@ -147,7 +175,12 @@ function lowerAll(
     });
   }
 
-  return { lowered, totals, unnameable: unnameable.size };
+  return {
+    lowered,
+    totals,
+    unnameable: unnameable.size,
+    duplicates: [...duplicates.values()],
+  };
 }
 
 function classify(
@@ -245,16 +278,17 @@ const main = (): void => {
   let lowerMs = 0;
   let lowering: ReturnType<typeof lowerAll>;
   let checked: CheckResult;
+  let parsed: ParsedFile[];
 
   try {
-    const parsed = parseFiles(api, files);
+    parsed = parseFiles(api, files);
 
-    const programFiles = programFilesOf(
+    const visibility = programFilesOf(
       api,
-      parsed.filter((file) => file.sites.length > 0).map((file) => file.path),
+      parsed.filter((file) => file.sites.length > 0),
     );
 
-    lowering = lowerAll(parsed, programFiles);
+    lowering = lowerAll(parsed, visibility);
     lowerMs = performance.now() - started;
 
     if (dumpDir) dump(dumpDir, lowering.lowered);
@@ -263,18 +297,27 @@ const main = (): void => {
     api.close();
   }
 
-  const { lowered, totals, unnameable } = lowering;
+  const { lowered, totals, unnameable, duplicates } = lowering;
   const { findings, internal, unmapped } = checked;
-  const sources = new Map(lowered.map((file) => [file.path, file.source]));
+  const sources = new Map(parsed.map((file) => [file.path, file.source]));
+
+  for (const { tag, path, start, first } of duplicates) {
+    findings.push({
+      path,
+      offset: start,
+      rule: 'duplicate-tag',
+      text: `<${tag}> is already defined in ${relative(workspaceRoot, first)}`,
+    });
+  }
 
   findings.sort((a, b) => a.path.localeCompare(b.path) || a.offset - b.offset);
 
   for (const { path, offset, rule, code, text } of findings) {
     const at = lineCol(sources.get(path) ?? '', offset);
 
-    console.log(
-      `${relative(workspaceRoot, path)}:${at} ${rule} TS${code}: ${text}`,
-    );
+    const source = code === undefined ? rule : `${rule} TS${code}`;
+
+    console.log(`${relative(workspaceRoot, path)}:${at} ${source}: ${text}`);
   }
 
   for (const line of internal) console.error(`internal: ${line}`);
