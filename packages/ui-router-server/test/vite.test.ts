@@ -269,7 +269,11 @@ describe('serverRouterPlugin prerender build step', () => {
         entry: './entry.mjs',
         preload: ['./a.mjs'],
       }),
-      /preload failed/,
+      (error: Error) =>
+        error.message ===
+          'serverRouterPlugin: prerender failed: preload failed' &&
+        error.cause instanceof Error &&
+        error.cause.message === 'preload failed',
     );
   });
 

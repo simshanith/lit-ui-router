@@ -488,30 +488,33 @@ await bootstrap(router, root, page(router));
 
 A `<ui-view>` another class already defined throws, naming both ways out.
 
-The build-time entry that calls `prerender()` imports
-`lit-ui-router-ssr/register` too, once the DOM shim has finished installing.
-The shim module awaits at its top level, so a static import beside it evaluates
-first: lit's Node build installs a registry of its own, the elements are defined
-there, and the shim then replaces `globalThis.customElements` with an empty one.
-Import the shim statically and everything that defines or reaches an element by
-dynamic import:
+The build-time entry that calls `prerender()` needs the DOM shim installed
+before anything defines an element. The shim module awaits at its top level, so
+a static import beside it evaluates first: lit's Node build installs a registry
+of its own, the elements are defined there, and the shim then replaces
+`globalThis.customElements` with an empty one. Load the shim and
+`lit-ui-router-ssr/register` before the entry starts. Under
+`serverRouterPlugin`, name them as preloads:
 
 ```ts
-import '@lit-labs/ssr/lib/install-global-dom-shim.js';
-
-await import('lit-ui-router-ssr/register');
-const { UIRouterLit } = await import('lit-ui-router/pure');
-const { prerender, settle } = await import('lit-ui-router-ssr');
-const { page } = await import('./views.js');
+serverRouterPlugin(
+  { mounts },
+  {
+    prerender: {
+      entry: './src/prerender.ts',
+      preload: [
+        '@lit-labs/ssr/lib/install-global-dom-shim.js',
+        'lit-ui-router-ssr/register',
+      ],
+    },
+  },
+);
 ```
 
-The atlas's
-[`app/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/prerender.ts)
-is a complete entry in this shape.
-
-Preloading the shim with
-`node --import @lit-labs/ssr/lib/install-global-dom-shim.js` finishes it before
-the entry's graph starts, so static imports hold there too.
+The entry then uses plain static imports; see
+[Prerender with Vite](/guides/prerender-with-vite). An entry node runs directly
+gets the same order from
+`node --import @lit-labs/ssr/lib/install-global-dom-shim.js`.
 [`UiViewRenderer`](/api/lit-ui-router-ssr/index/classes/UiViewRenderer) draws the
 served class, and a `<ui-view>` nothing defined on the server renders as an
 inert element with an empty part pair — no error, and every page's body

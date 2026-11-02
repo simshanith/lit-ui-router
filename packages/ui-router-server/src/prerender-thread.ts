@@ -168,7 +168,7 @@ const runJob = async (job: PrerenderJob): Promise<PrerenderResult> => {
 
     if (!(entry instanceof Function))
       throw new Error(
-        `serverRouterPlugin: prerender entry '${job.entry}' has no default export function`,
+        `prerender entry '${job.entry}' has no default export function`,
       );
 
     return await entry({

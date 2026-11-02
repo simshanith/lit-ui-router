@@ -287,7 +287,14 @@ const runInWorker = async (job: PrerenderJob): Promise<PrerenderResult> => {
       resolve(result);
       void worker.terminate();
     });
-    worker.on('error', reject);
+    // The worker's error arrives as a structured clone; `cause` carries it whole.
+    worker.on('error', (error) => {
+      reject(
+        new Error(`serverRouterPlugin: prerender failed: ${error.message}`, {
+          cause: error,
+        }),
+      );
+    });
     worker.on('exit', (code) => {
       reject(
         new Error(
