@@ -127,26 +127,62 @@ router need to
 
 ## How it runs
 
-```text
-vite build
-  └─ client build writes dist/
-  └─ serverRouterPlugin
-       └─ loads src/prerender.ts, calls its default export with site
-            └─ lit-ui-router-ssr prerender()
-                 └─ ui-router-server/prerender prerender()
-                      for each path in paths, the route table's verdict:
-                        page      → Lit render → write <path>/index.html
-                        redirect  → add a _redirects line
-                        no route  → warning
-                      then the otherwise rule's state → Lit render → write 404.html
-                      returns the pages, the _redirects lines and the warnings
-  └─ any warning fails the build
-```
+Four parties share one `vite build`. Vite runs the client build and owns
+`dist/`. `ui-router-server` owns the plugin and the verdicts, and never
+imports Lit. Your app owns the route table, the paths, the router and the
+page. `lit-ui-router-ssr` owns the Lit render. The tinted boxes are
+lit-ui-router's part; the tinted files are the ones it adds to `dist/`.
 
-`lit-ui-router-ssr`'s `prerender()` supplies the Lit render;
-`ui-router-server`'s visits the paths, asks the route table for each verdict
-and writes the files. A path in `paths` that matches no route, with no
-`otherwise` rule to fall back on, fails `vite build` with the path's name.
+<!--@include: ../public/diagrams/prerender-with-vite-build-flow.svg-->
+
+`lit-ui-router-ssr`'s `prerender()` supplies the Lit render and hands the
+rest to `ui-router-server`'s, which visits the paths, asks the route table
+for each verdict and writes the files. The diagrams below follow each step.
+
+### What the plugin hands the script
+
+The plugin runs once the client build has written `dist/`. It reads the
+built `index.html` as `shellHtml`, loads the prerender script and calls its
+default export with `site`. The script spreads `site` into `prerender()` and
+returns the result unchanged: the pages, the `_redirects` lines, the
+warnings and the delegated paths. A non-empty `warnings` fails the build;
+otherwise the plugin logs a summary line.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-1-site.svg-->
+
+### A page
+
+`/about` is the whole render path. The route table's verdict is a page, so
+`ui-router-server` asks `lit-ui-router-ssr` to render it. Your `renderShell`
+settles the router on the path and returns the page's template, Lit renders
+it to html, and your `document` puts that body into `shellHtml` in place of
+the marker. The finished document is written as `about/index.html`.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-2-page.svg-->
+
+### A redirect
+
+`/legacy` never reaches Lit. Its verdict is a redirect, so it becomes a line
+in `_redirects`, plus the same line for `/legacy/`, and no page is written.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-3-redirect.svg-->
+
+### The 404 page
+
+After the listed paths, `ui-router-server` asks the route table about a path
+no route claims under the mount. The `otherwise` rule answers with the
+`notFound` page carrying status 404, which renders like any other page and
+is written once, as `404.html`.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-4-not-found.svg-->
+
+### A path with no route
+
+A path in `paths` that matches no route, with no `otherwise` rule to fall
+back on, gets no file and lands in `warnings`. The plugin turns that into an
+error naming the path, and `vite build` fails.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-5-no-route.svg-->
 
 ## Details
 
@@ -161,6 +197,8 @@ with no route, so `/legacy` answers 302. Every other path gets the file the
 build wrote for it, `404.html` for a path the `otherwise` rule catches, and
 `index.html` for a path the build wrote no page for. A `serveShell` passed
 to the plugin replaces this.
+
+<!--@include: ../public/diagrams/prerender-with-vite-seq-6-preview.svg-->
 
 **Other renderers.** The prerender script picks the `prerender()` it calls.
 For an app that does not render with Lit, call `prerender` from

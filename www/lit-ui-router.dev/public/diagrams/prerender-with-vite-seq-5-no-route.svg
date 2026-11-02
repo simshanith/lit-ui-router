@@ -1,0 +1,54 @@
+<svg viewBox="0 0 720 270" width="100%" style="max-width: 720px" role="img" aria-label="A listed path with no route fails the build: ui-router-server's prerender asks the route table for the verdict of /nowhere, a path in paths that no route and no otherwise rule claims. The verdict is no route, so the path lands in warnings and nothing is written. The result reaches serverRouterPlugin, which throws, naming the path, and vite build fails." xmlns="http://www.w3.org/2000/svg">
+  <title>A listed path with no route fails the build</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-red-1: #f66f81;
+        --vp-c-red-soft: rgba(244, 63, 94, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-pre-5" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="266" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="10" y="6" width="160" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <svg x="18" y="13" width="20" height="12" viewBox="0 0 23 14"><path fill="var(--vp-c-text-1, #3c3c43)" d="M2.07027 3.05176e-05C-0.682028 3.93963 -0.698142 10.0463 2.07027 14H3.92985C1.16208 10.0463 1.1782 3.93963 3.92985 3.05176e-05H2.07027Z" /><path fill="var(--vp-c-text-1, #3c3c43)" d="M20.7482 0H18.8887C21.641 3.93959 21.6571 10.0462 18.8887 14H20.7482C23.516 10.0462 23.4999 3.93959 20.7482 0Z" /><path data-brand="vite" fill="#863BFF" d="M12.0135 13.6771C11.815 13.9297 11.4089 13.7892 11.4089 13.4682V10.3853C11.4089 10.0114 11.106 9.70846 10.7321 9.70846H7.32818C7.05295 9.70846 6.89245 9.39713 7.05295 9.17347L9.29089 6.04023C9.61124 5.59225 9.29089 4.9696 8.73979 4.9696H4.62036C4.34513 4.9696 4.18463 4.65828 4.34512 4.43461L7.24632 0.372548C7.31013 0.283598 7.41262 0.230743 7.52155 0.230743H16.1671C16.4424 0.230743 16.6029 0.542069 16.4424 0.765734L14.2044 3.89897C13.8841 4.34695 14.2044 4.9696 14.7555 4.9696H18.1595C18.4418 4.9696 18.6004 5.29511 18.4257 5.51748L12.0142 13.6777L12.0135 13.6771Z" /></svg>
+    <text x="44" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">vite build</text>
+    <line x1="270" y1="32" x2="270" y2="266" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="190" y="6" width="160" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <svg data-brand="ui-router" x="200" y="11" width="16" height="16" viewBox="36 36 88 88"><defs><linearGradient id="uir-pre-5" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(88.2456,86.5496,-86.5496,88.2456,47.1714,47.8033)"><stop offset="0" stop-color="#0098dc" /><stop offset="1" stop-color="#ffe0a3" /></linearGradient></defs><path fill="url(#uir-pre-5)" fill-rule="evenodd" d="M52.416,36.478c-8.766,0 -15.938,7.172 -15.938,15.938l0,55.298c0,8.767 7.172,15.939 15.938,15.939l55.299,0c8.766,0 15.937,-7.172 15.937,-15.939l0,-55.298c0,-8.766 -7.171,-15.938 -15.937,-15.938l-55.299,0ZM65.459,85.086l-0.463,-0.677l-0.457,-0.672c0.156,-0.865 3.199,-7.515 6.762,-14.779c3.563,-7.264 7.064,-13.821 7.782,-14.571l0.981,0l0.979,-0.006c0.719,0.755 4.221,7.315 7.783,14.578c3.561,7.264 6.58,13.498 6.709,13.854l0,0.335c0,0.438 -0.134,0.876 -0.4,1.261l-0.463,0.677c-0.909,0.229 -7.481,0.415 -14.607,0.415c-7.126,0 -13.698,-0.186 -14.606,-0.415ZM91.432,105.585l-0.18,-0.262l-0.178,-0.26c0.062,-0.336 1.242,-2.912 2.623,-5.727c1.38,-2.815 2.736,-5.357 3.013,-5.649l0.76,0c0.279,0.292 1.637,2.834 3.016,5.649c1.381,2.815 2.55,5.23 2.6,5.369l0,0.129c0,0.17 -0.053,0.341 -0.155,0.489l-0.179,0.262c-0.352,0.088 -2.899,0.16 -5.66,0.16c-2.763,0 -5.309,-0.072 -5.66,-0.16ZM74.407,105.585l-0.181,-0.262l-0.178,-0.26c0.061,-0.336 1.241,-2.912 2.623,-5.727c1.379,-2.815 2.736,-5.357 3.014,-5.649l0.759,0c0.278,0.292 1.636,2.834 3.016,5.649c1.38,2.815 2.55,5.23 2.599,5.369l0,0.129c0,0.17 -0.051,0.341 -0.154,0.489l-0.179,0.262c-0.352,0.088 -2.9,0.16 -5.661,0.16c-2.761,0 -5.307,-0.072 -5.658,-0.16ZM57.38,105.585l-0.18,-0.262l-0.176,-0.26c0.059,-0.336 1.238,-2.912 2.619,-5.727c1.381,-2.815 2.739,-5.357 3.016,-5.649l0.759,0c0.28,0.292 1.636,2.834 3.016,5.649c1.38,2.815 2.55,5.23 2.599,5.369l0,0.129c0,0.17 -0.052,0.341 -0.154,0.489l-0.18,0.262c-0.351,0.088 -2.899,0.16 -5.66,0.16c-2.761,0 -5.308,-0.072 -5.659,-0.16Z" /></svg>
+    <text x="224" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">serverRouterPlugin</text>
+    <line x1="450" y1="32" x2="450" y2="266" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="370" y="6" width="160" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <svg data-brand="ui-router" x="380" y="11" width="16" height="16" viewBox="36 36 88 88"><defs><linearGradient id="uir-pre-5" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(88.2456,86.5496,-86.5496,88.2456,47.1714,47.8033)"><stop offset="0" stop-color="#0098dc" /><stop offset="1" stop-color="#ffe0a3" /></linearGradient></defs><path fill="url(#uir-pre-5)" fill-rule="evenodd" d="M52.416,36.478c-8.766,0 -15.938,7.172 -15.938,15.938l0,55.298c0,8.767 7.172,15.939 15.938,15.939l55.299,0c8.766,0 15.937,-7.172 15.937,-15.939l0,-55.298c0,-8.766 -7.171,-15.938 -15.937,-15.938l-55.299,0ZM65.459,85.086l-0.463,-0.677l-0.457,-0.672c0.156,-0.865 3.199,-7.515 6.762,-14.779c3.563,-7.264 7.064,-13.821 7.782,-14.571l0.981,0l0.979,-0.006c0.719,0.755 4.221,7.315 7.783,14.578c3.561,7.264 6.58,13.498 6.709,13.854l0,0.335c0,0.438 -0.134,0.876 -0.4,1.261l-0.463,0.677c-0.909,0.229 -7.481,0.415 -14.607,0.415c-7.126,0 -13.698,-0.186 -14.606,-0.415ZM91.432,105.585l-0.18,-0.262l-0.178,-0.26c0.062,-0.336 1.242,-2.912 2.623,-5.727c1.38,-2.815 2.736,-5.357 3.013,-5.649l0.76,0c0.279,0.292 1.637,2.834 3.016,5.649c1.381,2.815 2.55,5.23 2.6,5.369l0,0.129c0,0.17 -0.053,0.341 -0.155,0.489l-0.179,0.262c-0.352,0.088 -2.899,0.16 -5.66,0.16c-2.763,0 -5.309,-0.072 -5.66,-0.16ZM74.407,105.585l-0.181,-0.262l-0.178,-0.26c0.061,-0.336 1.241,-2.912 2.623,-5.727c1.379,-2.815 2.736,-5.357 3.014,-5.649l0.759,0c0.278,0.292 1.636,2.834 3.016,5.649c1.38,2.815 2.55,5.23 2.599,5.369l0,0.129c0,0.17 -0.051,0.341 -0.154,0.489l-0.179,0.262c-0.352,0.088 -2.9,0.16 -5.661,0.16c-2.761,0 -5.307,-0.072 -5.658,-0.16ZM57.38,105.585l-0.18,-0.262l-0.176,-0.26c0.059,-0.336 1.238,-2.912 2.619,-5.727c1.381,-2.815 2.739,-5.357 3.016,-5.649l0.759,0c0.28,0.292 1.636,2.834 3.016,5.649c1.38,2.815 2.55,5.23 2.599,5.369l0,0.129c0,0.17 -0.052,0.341 -0.154,0.489l-0.18,0.262c-0.351,0.088 -2.899,0.16 -5.66,0.16c-2.761,0 -5.308,-0.072 -5.659,-0.16Z" /></svg>
+    <text x="404" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
+    <line x1="630" y1="32" x2="630" y2="266" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="550" y="6" width="160" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <svg x="560" y="11" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--vp-c-text-1, #3c3c43)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /></svg>
+    <text x="584" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">route table</text>
+    <line x1="450" y1="56" x2="627" y2="56" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-pre-5)" />
+    <text x="540" y="50" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">verdict for /nowhere</text>
+    <line x1="630" y1="86" x2="453" y2="86" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-pre-5)" />
+    <text x="540" y="80" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">no route</text>
+    <rect x="366.5" y="116" width="167" height="22" rx="4" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" stroke="var(--vp-c-red-1, #b8272c)" />
+    <text x="450" y="131" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">warnings: ['/nowhere']</text>
+    <text x="450" y="152" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">no file for it</text>
+    <line x1="450" y1="176" x2="273" y2="176" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-pre-5)" />
+    <text x="360" y="170" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">the result</text>
+    <rect x="153" y="206" width="234" height="22" rx="4" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" stroke="var(--vp-c-red-1, #b8272c)" />
+    <text x="270" y="221" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">throw: no route matched /nowhere</text>
+    <line x1="270" y1="250" x2="93" y2="250" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-pre-5)" />
+    <text x="180" y="244" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">vite build fails</text>
+  </g>
+</svg>
