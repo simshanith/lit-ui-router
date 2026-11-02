@@ -31,6 +31,11 @@
       "deno": "./dist/dev-gate.js",
       "node": "./dist/dev-gate.node.js",
       "default": "./dist/dev-gate.js"
+    },
+    "#node-conditions": {
+      "types": "./src/node-conditions.ts",
+      "node": "./dist/node-conditions.node.js",
+      "default": "./dist/node-conditions.js"
     }
   },
   "exports": {

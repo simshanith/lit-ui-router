@@ -18,6 +18,8 @@
  * straight into `plugins: [...]`.
  */
 
+import { nodeConditions } from '#node-conditions';
+
 import { createConnectMiddleware } from './connect.ts';
 import type {
   ConnectAdapterOptions,
@@ -158,8 +160,6 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
-const NODE_PROCESS = 'node:process';
-
 const VITE = 'vite';
 
 // Typed structurally so src never pulls in @types/node or vite.
@@ -171,11 +171,6 @@ interface NodeFsPromises {
   readFile(path: string, encoding: string): Promise<string>;
   stat(path: string): Promise<{ isFile(): boolean }>;
   writeFile(path: string, data: string, encoding: string): Promise<void>;
-}
-
-interface NodeProcess {
-  execArgv: string[];
-  env: Record<string, string | undefined>;
 }
 
 interface NodePath {
@@ -239,27 +234,6 @@ const nodeFs = async () => (await import(NODE_FS)) as NodeFsPromises;
 // SAFETY: `NODE_PATH` names `node:path`, whose `dirname` and `resolve` take these shapes.
 const nodePath = async () => (await import(NODE_PATH)) as NodePath;
 
-// SAFETY: `NODE_PROCESS` names `node:process`, whose `execArgv` and `env` take these shapes.
-const nodeProcess = async () => (await import(NODE_PROCESS)) as NodeProcess;
-
-const CONDITIONS_FLAG = /^(?:--conditions|-C)(?:=(.+))?$/;
-
-// The `--conditions` node runs with, from `execArgv` and `NODE_OPTIONS`.
-const processConditions = async (): Promise<string[]> => {
-  const { execArgv, env } = await nodeProcess();
-  const args = [...execArgv, ...(env.NODE_OPTIONS ?? '').split(/\s+/)];
-
-  return args.flatMap((arg, index) => {
-    const match = CONDITIONS_FLAG.exec(arg);
-
-    if (!match) return [];
-
-    const value = match[1] ?? args[index + 1];
-
-    return value === undefined ? [] : [value];
-  });
-};
-
 // Vite's default `resolve.externalConditions`.
 const EXTERNAL_CONDITIONS = ['node', 'module-sync'];
 
@@ -318,7 +292,7 @@ const runEntry = async (
   // SAFETY: `VITE` names the host's `vite`, which exports both functions on the peer range.
   const vite = (await import(VITE)) as ViteRunnerApi;
 
-  const conditions = await processConditions();
+  const conditions = nodeConditions();
 
   const resolved = await vite.resolveConfig(
     {
@@ -330,7 +304,7 @@ const runEntry = async (
         [RUNNER]: {
           consumer: 'server',
           dev: { moduleRunnerTransform: true },
-          // Externals resolve with the process's own conditions, so the entry and the process share one copy of each dependency.
+          // Externals resolve with node's own `--conditions`, so the entry and the build share one copy of each dependency.
           resolve: {
             external: true,
             mainFields: [],
