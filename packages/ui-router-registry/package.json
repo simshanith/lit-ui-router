@@ -86,9 +86,9 @@
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
-    "ui-router-effect": "catalog:publishedPeerEffect",
-    "ui-router-mobx": "catalog:publishedPeerMobx",
-    "ui-router-signals": "catalog:publishedPeerSignals"
+    "ui-router-effect": "catalog:publishedPeerRegistry",
+    "ui-router-mobx": "catalog:publishedPeerRegistry",
+    "ui-router-signals": "catalog:publishedPeerRegistry"
   },
   "peerDependenciesMeta": {
     "ui-router-effect": {

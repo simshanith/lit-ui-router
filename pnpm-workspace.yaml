@@ -166,6 +166,10 @@ catalogs:
   publishedPeerMobx:
     lit-ui-router: ^1.16.0
     ui-router-mobx: ^0.3.0
+  publishedPeerRegistry:
+    ui-router-effect: ^0.3.0
+    ui-router-mobx: ^0.3.0
+    ui-router-signals: ^0.3.0
   publishedPeerSignals:
     lit-ui-router: ^1.16.0
     ui-router-signals: ^0.3.0

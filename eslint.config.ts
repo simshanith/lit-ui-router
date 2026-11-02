@@ -176,7 +176,14 @@ export default defineConfig(
         'error',
         {
           checkDuplicates: 'exact-version',
-          allow: ['@lit-labs/ssr', 'lit-ui-router', 'lit-ui-router-floor'],
+          allow: [
+            '@lit-labs/ssr',
+            'lit-ui-router',
+            'lit-ui-router-floor',
+            'ui-router-effect',
+            'ui-router-mobx',
+            'ui-router-signals',
+          ],
         },
       ],
     },
