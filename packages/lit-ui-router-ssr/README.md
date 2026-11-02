@@ -195,6 +195,22 @@ await prerender({
 });
 ```
 
+Each rendered page's entry in `result.pages` reports its payload as `payload`: `bytes`, what the
+payload adds to the page's signature as written, and, when `dehydrate` drew it, `unserializable`,
+the resolves left out to re-run on the client. A hook returns the payload alone, so behind one the
+report carries `bytes` only. A page with no payload has no `payload` field.
+
+```typescript
+const { pages } = await prerender({ /* … */ dehydrate: {} });
+
+for (const { path, payload } of pages) {
+  if (!payload) continue;
+  console.log(`${path}: ${payload.bytes} bytes of resolves`);
+  for (const { state, token } of payload.unserializable ?? [])
+    console.warn(`${path}: ${state}.${token} re-runs on the client`);
+}
+```
+
 ## The routed view, drawn on the server
 
 `elementRenderers` defaults to `[UiViewRenderer, LightElementRenderer]` — not `@lit-labs/ssr`'s

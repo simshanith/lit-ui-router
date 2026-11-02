@@ -792,57 +792,64 @@ describe('the hydration signature', () => {
   });
 });
 
-describe('the dehydrate option', () => {
-  const transport = {
-    Date: {
-      encode: (value) => value instanceof Date && value.toISOString(),
-      // SAFETY: `encode` above answers with an ISO string, the only encoding `decode` gets.
-      decode: (encoded) => new Date(encoded as string),
-    } satisfies Transporter<Date>,
-  };
+const transport = {
+  Date: {
+    encode: (value) => value instanceof Date && value.toISOString(),
+    // SAFETY: `encode` above answers with an ISO string, the only encoding `decode` gets.
+    decode: (encoded) => new Date(encoded as string),
+  } satisfies Transporter<Date>,
+};
 
-  // `deps: []`, since core reads a bare function's dependencies from its source.
-  const resolved = <T>(token: string, resolveFn: () => T) => ({
-    token,
-    resolveFn,
-    deps: [],
+// `deps: []`, since core reads a bare function's dependencies from its source.
+const resolved = <T>(token: string, resolveFn: () => T) => ({
+  token,
+  resolveFn,
+  deps: [],
+});
+
+/** Prerenders `paths` over a `plate` state whose resolves take a string, a `Date` and a site-wide manifest; `/plain` renders as a string. */
+const plates = (
+  paths: string[],
+  overrides: Partial<Parameters<typeof prerender>[0]> = {},
+) => {
+  const router = sheetRouter();
+  router.stateRegistry.register({
+    name: 'plate',
+    url: '/plate/:num',
+    resolve: [
+      resolved('title', () => 'Plate 7B'),
+      resolved('when', () => new Date(0)),
+      resolved('manifest', () => ['7B', '9']),
+    ],
   });
+  router.stateRegistry.register({ name: 'plain', url: '/plain' });
 
-  /** Prerenders `paths` over a `plate` state whose resolves take a string, a `Date` and a site-wide manifest. */
-  const plates = (
-    paths: string[],
-    overrides: Partial<Parameters<typeof prerender>[0]> = {},
-  ) => {
-    const router = sheetRouter();
-    router.stateRegistry.register({
-      name: 'plate',
-      url: '/plate/:num',
-      resolve: [
-        resolved('title', () => 'Plate 7B'),
-        resolved('when', () => new Date(0)),
-        resolved('manifest', () => ['7B', '9']),
-      ],
-    });
-
-    return run({
-      router,
-      paths,
-      notFound: false,
-      mounts: {
-        '/': {
-          routes: [{ name: 'plate', url: '/plate/:num' }],
-          config: { strict: false },
-        },
+  return run({
+    router,
+    paths,
+    notFound: false,
+    mounts: {
+      '/': {
+        routes: [
+          { name: 'plate', url: '/plate/:num' },
+          { name: 'plain', url: '/plain' },
+        ],
+        config: { strict: false },
       },
-      ...overrides,
-      renderShell: async (_verdict, { path }): Promise<TemplateResult> => {
-        await settle(router, path);
+    },
+    ...overrides,
+    renderShell: async (
+      _verdict,
+      { path },
+    ): Promise<TemplateResult | string> => {
+      await settle(router, path);
 
-        return html`<p>page</p>`;
-      },
-    });
-  };
+      return path === '/plain' ? '<p>plain</p>' : html`<p>page</p>`;
+    },
+  });
+};
 
+describe('the dehydrate option', () => {
   const keepManifestOut: DehydrateOptions['shouldDehydrate'] = ({ token }) =>
     token !== 'manifest';
 
@@ -883,6 +890,71 @@ describe('the dehydrate option', () => {
     await expect(
       plates(['/plate/7B'], { dehydrate: {}, payload: () => undefined }),
     ).rejects.toThrow('pass `dehydrate` or `payload`, not both');
+  });
+});
+
+describe('the payload report', () => {
+  /** The bytes the signature's `resolves` and `transported` add to `page`, as written. */
+  const addedBytes = (page: string): number => {
+    const {
+      resolves: _resolves,
+      transported: _transported,
+      ...bare
+    } = signatureIn(page);
+
+    return signatureText(page).length - JSON.stringify(bare).length;
+  };
+
+  it('reports the bytes and unserializable resolves of a page dehydrate drew', async () => {
+    const { files, result } = await plates(['/plate/7B'], { dehydrate: {} });
+
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].payload).toEqual({
+      bytes: addedBytes(files.get('dist/plate/7B/index.html')!),
+      unserializable: [{ state: 'plate', token: 'when' }],
+    });
+    expect(result.pages[0].payload!.bytes).toBeGreaterThan(0);
+  });
+
+  it('reports none unserializable when transport carries the value', async () => {
+    const { result } = await plates(['/plate/7B'], {
+      dehydrate: { transport },
+    });
+
+    expect(result.pages[0].payload?.unserializable).toEqual([]);
+  });
+
+  it('omits the field on a page with no payload', async () => {
+    const { result } = await plates(['/plate/7B', '/plain'], {
+      dehydrate: {},
+    });
+
+    const [plate, plain] = result.pages;
+
+    expect(plate.payload).toBeDefined();
+    expect(plain.path).toBe('/plain');
+    expect(plain).not.toHaveProperty('payload');
+  });
+
+  it('omits the field when there is nothing to draw with or a hook returns none', async () => {
+    const bare = await plates(['/plate/7B']);
+    const hooked = await plates(['/plate/7B'], { payload: () => undefined });
+
+    expect(bare.result.pages[0]).not.toHaveProperty('payload');
+    expect(hooked.result.pages[0]).not.toHaveProperty('payload');
+  });
+
+  it('reports bytes only behind a payload hook', async () => {
+    const options: DehydrateOptions = { transport };
+    const built = await plates(['/plate/7B'], { dehydrate: options });
+
+    const hooked = await plates(['/plate/7B'], {
+      payload: (transition) => dehydrate(transition, options).payload,
+    });
+
+    expect(hooked.result.pages[0].payload).toEqual({
+      bytes: built.result.pages[0].payload!.bytes,
+    });
   });
 });
 

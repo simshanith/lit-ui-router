@@ -7,7 +7,9 @@
 export {
   type EmittedPage,
   type FileWriter,
+  type PagePayload,
   prerender,
+  type PrerenderedPage,
   type PrerenderOptions,
   type PrerenderResult,
   type PrerenderTally,
