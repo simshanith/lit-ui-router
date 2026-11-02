@@ -10,13 +10,18 @@ import { isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import { prerender as prerenderSite } from 'ui-router-server/prerender';
 import type {
+  EmittedPage,
   FileWriter,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
 } from 'ui-router-server/prerender';
 import { dehydrate as dehydrateLanded } from 'ui-router-server/ssr';
-import type { DehydrateOptions, ResolvePayload } from 'ui-router-server/ssr';
+import type {
+  DehydrateOptions,
+  DehydrateResult,
+  ResolvePayload,
+} from 'ui-router-server/ssr';
 import { devGate } from '#dev-gate';
 
 import { LightElementRenderer } from './light-element-renderer.js';
@@ -186,8 +191,37 @@ export interface PrerenderOptions extends Omit<
   ) => ResolvePayload | undefined;
 }
 
+/** What a page's hydration signature carries of its resolve payload. */
+export interface PagePayload {
+  /**
+   * The bytes the payload adds to the page's signature as written: its
+   * `resolves` and `transported` members, escaped as the block spells them.
+   */
+  bytes: number;
+  /**
+   * The resolves {@link PrerenderOptions.dehydrate | `dehydrate`} left out of
+   * the payload because their value is not plain JSON data and no transporter
+   * carries it, each to re-run on the client. Present only when `dehydrate`
+   * drew the payload: a {@link PrerenderOptions.payload | `payload`} hook
+   * returns the payload alone.
+   */
+  unserializable?: DehydrateResult['unserializable'];
+}
+
+/** A page {@link prerender} emitted. */
+export interface PrerenderedPage extends EmittedPage {
+  /**
+   * What the page's signature carries of its resolve payload. Absent on a page
+   * that carries none: one drawn with no payload, one `renderShell` returned
+   * as a string, and a response state's body.
+   */
+  payload?: PagePayload;
+}
+
 /** What {@link prerender} did. */
-export interface PrerenderResult extends SitePrerenderResult {
+export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
+  /** Every page emitted or planned, in enumeration order. */
+  pages: PrerenderedPage[];
   /** The root event target, created or passed through. */
   root: EventTarget;
 }
@@ -244,6 +278,14 @@ export const signatureBlock = (signature: WrittenSignature): string => {
 
   return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
 };
+
+const utf8Length = (text: string): number =>
+  new TextEncoder().encode(text).length;
+
+/** The bytes `drawn` adds to the signature of the page `router` stands on. */
+const payloadBytes = (router: UIRouterLit, drawn: DrawnResolves): number =>
+  utf8Length(signatureBlock(signatureOf(router, drawn))) -
+  utf8Length(signatureBlock(signatureOf(router)));
 
 /**
  * Renders one page: the signature first, then the render, so the client reads
@@ -302,7 +344,9 @@ const warnUnregistered = (): void => {
  * which `hydrateRoot()` reads before it touches the document.
  * {@link PrerenderOptions.dehydrate | `dehydrate`}, or a
  * {@link PrerenderOptions.payload | `payload`} hook, adds the resolved values
- * the page was drawn with, which `bootstrap()` adopts. A `renderShell`
+ * the page was drawn with, which `bootstrap()` adopts; the page's entry in
+ * the result's `pages` reports the bytes they add and, from `dehydrate`, the
+ * resolves left to re-run on the client. A `renderShell`
  * that returns a string is written as-is, with no signature, so the client
  * renders it cold.
  *
@@ -357,21 +401,44 @@ export async function prerender(
 
   warnUnregistered();
 
-  const draw =
-    payload ??
-    (dehydrateOptions &&
-      ((transition: Transition) =>
-        dehydrateLanded(transition, dehydrateOptions).payload));
+  const draw = (
+    transition: Transition,
+    context: RenderContext,
+  ): Partial<DehydrateResult> => {
+    if (dehydrateOptions) return dehydrateLanded(transition, dehydrateOptions);
 
-  const payloadOf = (context: RenderContext): ResolvePayload | undefined => {
-    if (!draw) return undefined;
+    return { payload: payload?.(transition, context) };
+  };
+
+  const drawLanded = (context: RenderContext): Partial<DehydrateResult> => {
+    if (!dehydrateOptions && !payload) return {};
 
     // SAFETY: `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
     const landed = router.globals.successfulTransitions.peekTail() as
       | Transition
       | undefined;
 
-    return landed && draw(landed, context);
+    return landed ? draw(landed, context) : {};
+  };
+
+  const reports = new Map<string, PagePayload>();
+
+  const renderTemplate = (
+    body: TemplateResult,
+    context: RenderContext,
+  ): string => {
+    const { payload: drawn, unserializable } = drawLanded(context);
+
+    if (drawn) {
+      const bytes = payloadBytes(router, drawn);
+
+      reports.set(
+        context.file,
+        unserializable ? { bytes, unserializable } : { bytes },
+      );
+    }
+
+    return renderPage(body, router, root, elementRenderers, drawn);
   };
 
   const renderLit = async (
@@ -381,9 +448,7 @@ export async function prerender(
     const context: RenderContext = { ...siteContext, root };
     const body = await renderShell(verdict, context);
 
-    const markup = isString(body)
-      ? body
-      : renderPage(body, router, root, elementRenderers, payloadOf(context));
+    const markup = isString(body) ? body : renderTemplate(body, context);
 
     return document ? document(markup, context) : markup;
   };
@@ -413,7 +478,13 @@ export async function prerender(
       write,
     });
 
-    return { ...result, root };
+    const pages = result.pages.map((page): PrerenderedPage => {
+      const report = reports.get(page.file);
+
+      return report ? { ...page, payload: report } : page;
+    });
+
+    return { ...result, pages, root };
   } finally {
     uninstall();
   }
