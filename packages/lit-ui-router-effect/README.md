@@ -117,6 +117,8 @@ class NavHeader extends LitElement {
 
 The refs are a tuple, and the selector receives their values positionally. Pass a thunk instead (`() => [ref]`) for refs that depend on the host's place in the DOM; it is resolved on every `hostConnected`, and `.value` carries `options.initialValue` until then.
 
+`ui-router-effect`'s `pendingRef(router)` and `errorRef(router)` are `SubscriptionRef`s too, so a `RefController` over them follows the in-flight transition and the last failed one.
+
 ## Development and production builds
 
 `dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
