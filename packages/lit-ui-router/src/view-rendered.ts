@@ -85,6 +85,9 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * @example Show an error view, and wait for it to render
  * ```ts
+ * import { RejectType } from '@uirouter/core';
+ * import { viewRendered } from 'lit-ui-router';
+ *
  * router.transitionService.onError({}, async (trans) => {
  *   // Skip superseded transitions, and stop if the error state itself fails.
  *   if (trans.error()?.type !== RejectType.ERROR) return;
@@ -97,6 +100,8 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * @example Release a View Transition
  * ```ts
+ * import { viewRendered } from 'lit-ui-router';
+ *
  * router.transitionService.onStart({}, (trans) => {
  *   if (!document.startViewTransition) return;
  *   let captured!: () => void;

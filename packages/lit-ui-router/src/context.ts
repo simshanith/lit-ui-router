@@ -306,8 +306,11 @@ export const requestContext: <T extends UnknownContext>(
  * @example
  * ```ts
  * import { requestRouter } from 'lit-ui-router/context';
+ * import type { UIRouterLit } from 'lit-ui-router';
  *
  * class MyElement extends LitElement {
+ *   router?: UIRouterLit;
+ *
  *   connectedCallback() {
  *     super.connectedCallback();
  *     this.router = requestRouter(this);

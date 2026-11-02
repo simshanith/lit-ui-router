@@ -68,7 +68,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.get('/healthz', (c) => c.text('ok'));
 
 app.use('*', (c, next) =>
-  serverRouterHono(router, {
+  serverRouterHono<typeof router, { Bindings: Env }>(router, {
     serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
   })(c, next),
 );
@@ -420,7 +420,7 @@ const router = createServerRouter({ mounts });
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', (c, next) =>
-  serverRouterHono(router, {
+  serverRouterHono<typeof router, { Bindings: Env }>(router, {
     serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
   })(c, next),
 );
