@@ -90,33 +90,9 @@ virtual fs instead.
 
 ## After `vite build`
 
-`ui-router-server/vite`'s `serverRouterPlugin` runs the prerender as part of `vite build`. Its
-`prerender` entry is a module whose default export receives Vite's `outDir`, the built `index.html`
-as `template`, and a `write` over `node:fs`, and returns this package's `prerender()` result:
-
-```typescript
-import '@lit-labs/ssr/lib/install-global-dom-shim.js';
-
-import type { PrerenderEntry } from 'ui-router-server/vite';
-
-const entry: PrerenderEntry = async (build) => {
-  const { prerender } = await import('lit-ui-router-ssr');
-  return prerender({
-    ...build,
-    mounts,
-    router,
-    paths,
-    renderShell,
-    document: (body) => fill(build.template, body),
-  });
-};
-
-export default entry;
-```
-
-The [registering rules](#a-prerendered-app) hold in the entry, as in any build-time entry. See
-[after `vite build`](https://lit-ui-router.dev/packages/server#after-vite-build) for the plugin line
-and what `vite preview` serves.
+`ui-router-server/vite`'s `serverRouterPlugin` prerenders the built app after `vite build`. Call
+this package's `prerender` in the prerender script for Lit rendering;
+[Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows the script in full.
 
 ## Static hosts add a trailing slash
 

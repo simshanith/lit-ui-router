@@ -47,7 +47,7 @@ leaves the ones before it unchanged:
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
    [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
-   after [`vite build`](#after-vite-build).
+   after [`vite build`](/guides/prerender-with-vite).
 3. **[Response states](#response-states).** A state answers with its own
    `Response` (a redirect, JSON, a badge) built from its resolves once
    `settle` lands it.
@@ -781,44 +781,10 @@ render, and writes through `node:fs` by default.
 
 ### After `vite build`
 
-`serverRouterPlugin` runs the loop as part of `vite build` when it gets a
-`prerender` entry:
-
-```ts
-serverRouterPlugin(router, { prerender: { entry: './src/prerender.ts' } });
-```
-
-Once the client build has written its output, the plugin loads the entry
-through Vite's module runner, with the project root and mode but without the
-app's plugins, and every dependency loads from node. The entry's default
-export, a
-[`PrerenderEntry`](/api/ui-router-server/vite/type-aliases/PrerenderEntry),
-receives Vite's resolved `outDir`, the built `index.html` as `template`, and a
-`write` over `node:fs`, and returns the loop's result. Spreading them into
-`prerender()` first lets the entry override any of them:
-
-```ts
-import { prerender } from 'ui-router-server/prerender';
-import type { PrerenderEntry } from 'ui-router-server/vite';
-
-const entry: PrerenderEntry = (build) =>
-  prerender({
-    ...build,
-    mounts,
-    paths,
-    render: (verdict, { path }) => fill(build.template, path),
-  });
-
-export default entry;
-```
-
-A listed path that matches no route fails the build. The entry runs whichever
-loop it imports, so a lit app returns
-[`lit-ui-router-ssr`](/packages/ssr#after-vite-build)'s `prerender` instead.
-`vite preview` keeps answering through the middleware, so redirects and
-mount-owned 404s answer as before, and serves each shell from the emitted
-`<subpath>/index.html` when the build wrote one, and the `otherwise`
-projection from `404.html`.
+`serverRouterPlugin` prerenders the built app after `vite build`, through a
+prerender script whose default export calls `prerender()` with a renderer of
+its own. [Prerender with Vite](/guides/prerender-with-vite) walks through the
+plugin option and the script.
 
 A delegated path has no static file, so the host must send it to the server.
 On Cloudflare Workers, list `result.delegated` in

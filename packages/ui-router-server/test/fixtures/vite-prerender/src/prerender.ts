@@ -1,18 +1,17 @@
-import type { PrerenderEntry } from 'ui-router-server/vite';
 import { prerender } from 'ui-router-server/prerender';
+import { definePrerender } from 'ui-router-server/vite';
 
 import { mounts } from './routes.ts';
 
-const entry: PrerenderEntry = (build) =>
+export default definePrerender((site) =>
   prerender({
-    ...build,
+    ...site,
     mounts,
     paths: ['/', '/about', '/legacy'],
     render: (verdict, { path }) =>
-      build.template.replace(
+      site.shellHtml.replace(
         '<div id="root"></div>',
         `<div id="root"><p>${path} ${String(verdict.status ?? 200)}</p></div>`,
       ),
-  });
-
-export default entry;
+  }),
+);

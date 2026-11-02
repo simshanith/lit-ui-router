@@ -23,6 +23,10 @@ client deployed across every point on the server-support spectrum.
   server-support spectrum (every level [live on the site](/sample-app)), and
   [`lit-ui-router-ssr`](/packages/ssr) for prerendering those verdicts to
   static html at build time
+- [Prerender with Vite](./prerender-with-vite) — one `serverRouterPlugin`
+  option and a prerender script turn `vite build` into one HTML page per
+  route, a `404.html` and a `_redirects` file, decided by the app's own route
+  table
 
 ## Transitions & Guards
 

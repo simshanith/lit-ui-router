@@ -8,7 +8,7 @@
  *
  * With {@link ServerRouterPluginOptions.prerender | prerender}, `vite build`
  * also emits the static site: after the client build it loads the app's
- * prerender entry through Vite's module runner and hands it the output
+ * prerender script through Vite's module runner and hands it the output
  * directory, the built `index.html` and a writer over `node:fs`.
  *
  * Dependency-free like the tiers it fronts: the structural types below
@@ -78,44 +78,62 @@ export interface ViteBuildContext {
   };
 }
 
-/** What the plugin hands the prerender entry after `vite build`. */
+/** What the plugin hands the prerender script's default export after `vite build`. */
 export interface PrerenderBuild {
   /** Vite's resolved output directory, absolute. */
   outDir: string;
-  /** The built `index.html`, read before any page is written. */
-  template: string;
+  /** The built `index.html` as a string, read before any page is written. */
+  shellHtml: string;
   /** Writes a file over `node:fs`, creating its directory. */
   write: FileWriter;
 }
 
 /**
- * The prerender entry's default export: runs a prerender loop — this
- * package's `prerender`, or `lit-ui-router-ssr`'s — with the build's values
- * and returns its result. Spread `build` first to let the entry override any
- * of them.
+ * The prerender script's default export: calls a `prerender()` — this
+ * package's from `ui-router-server/prerender`, or `lit-ui-router-ssr`'s —
+ * with the build's values and returns its result. Spread `build` first to
+ * let the script override any of them.
  */
 export type PrerenderEntry = (
   build: PrerenderBuild,
 ) => PrerenderResult | Promise<PrerenderResult>;
 
+/**
+ * Types a prerender script's default export as a {@link PrerenderEntry}. It
+ * returns `entry` unchanged, as Vite's `defineConfig` returns its config.
+ *
+ * @example
+ * ```ts
+ * export default definePrerender((site) => prerender({ ...site, mounts, paths, render }));
+ * ```
+ */
+export function definePrerender(entry: PrerenderEntry): PrerenderEntry {
+  return entry;
+}
+
 /** Options for {@link serverRouterPlugin}: the Connect adapter's, plus the build step. */
 export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
   /**
-   * Prerenders the app after `vite build`. `entry` names a module, resolved
-   * against Vite's root, whose default export is a {@link PrerenderEntry}. It
+   * Prerenders the app after `vite build`. `entry` names the prerender
+   * script, resolved against Vite's root, whose default export is a
+   * {@link PrerenderEntry}; a string is shorthand for `{ entry }`. The script
    * is loaded through Vite's module runner with the root and mode, without
-   * the app's plugins, and dependencies load from node.
+   * the app's plugins, and its dependencies load from node.
    *
-   * `vite preview` then serves each request the emitted
-   * `<subpath>/index.html` when one exists, and `404.html` for the
-   * `otherwise` projection's 404, while redirects and mount-owned 404s still
-   * answer through the middleware. A {@link ConnectAdapterOptions.serveShell | serveShell}
-   * passed here replaces that.
+   * `vite preview` then serves each page the build wrote, and `404.html` for
+   * a path the `otherwise` rule sends to a 404 state, while redirects and
+   * plain 404s still answer through the middleware. A
+   * {@link ConnectAdapterOptions.serveShell | serveShell} passed here
+   * replaces that.
+   *
+   * @see https://lit-ui-router.dev/guides/prerender-with-vite
    */
-  prerender?: {
-    /** The prerender entry module, such as `./src/prerender.ts`. */
-    entry: string;
-  };
+  prerender?:
+    | string
+    | {
+        /** The prerender entry module, such as `./src/prerender.ts`. */
+        entry: string;
+      };
 }
 
 /** A structural subset of Vite's `Plugin` — assignable into `plugins: [...]`. */
@@ -196,7 +214,7 @@ interface RunnableEnvironment {
   runner: { import(url: string): Promise<{ default?: PrerenderEntry }> };
 }
 
-// The environment runnerImport builds, kept open until the entry's loop returns.
+// The environment runnerImport builds, kept open until the entry's prerender() returns.
 interface ViteRunnerApi {
   resolveConfig(
     inlineConfig: RunnerConfig,
@@ -325,7 +343,7 @@ const runPrerender = async (
   const [fs, path] = await Promise.all([nodeFs(), nodePath()]);
   const outDir = path.resolve(config.root, configuredOutDir);
 
-  const template = await fs.readFile(
+  const shellHtml = await fs.readFile(
     path.resolve(outDir, 'index.html'),
     'utf8',
   );
@@ -337,7 +355,7 @@ const runPrerender = async (
 
   const result = await runEntry(path.resolve(config.root, entry), config, {
     outDir,
-    template,
+    shellHtml,
     write,
   });
 
@@ -381,11 +399,16 @@ export function serverRouterPlugin(
   options: ServerRouterPluginOptions = {},
 ): ServerRouterPlugin {
   const { prerender, ...adapter } = options;
+
+  const entry =
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the option's own union: a string is shorthand for `{ entry }`
+    typeof prerender === 'string' ? prerender : prerender?.entry;
+
   const middleware = createConnectMiddleware(router, adapter);
   let resolved: ViteResolvedConfig | undefined;
 
   const preview =
-    prerender && adapter.serveShell === undefined
+    entry !== undefined && adapter.serveShell === undefined
       ? createConnectMiddleware(router, {
           ...adapter,
           serveShell: previewShell(
@@ -412,7 +435,7 @@ export function serverRouterPlugin(
       async handler(error) {
         const config = resolved;
 
-        if (!prerender || !config || error) return;
+        if (entry === undefined || !config || error) return;
 
         if (config.command !== 'build' || config.build.ssr) return;
         const environment = this.environment;
@@ -420,7 +443,7 @@ export function serverRouterPlugin(
         if (environment && environment.name !== 'client') return;
 
         await runPrerender(
-          prerender.entry,
+          entry,
           config,
           environment?.config.build.outDir ?? config.build.outDir,
         );

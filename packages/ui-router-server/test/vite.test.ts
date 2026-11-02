@@ -8,8 +8,13 @@ import type { TestContext } from 'node:test';
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import type { ConnectMiddleware } from '../src/connect.ts';
-import { serverRouterPlugin } from '../src/vite.ts';
-import type { ViteBuildContext, ViteResolvedConfig } from '../src/vite.ts';
+import { definePrerender, serverRouterPlugin } from '../src/vite.ts';
+import type {
+  PrerenderEntry,
+  ServerRouterPluginOptions,
+  ViteBuildContext,
+  ViteResolvedConfig,
+} from '../src/vite.ts';
 
 const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
@@ -178,9 +183,10 @@ const runHook = async (
   config: ViteResolvedConfig,
   context: ViteBuildContext = client,
   error?: Error,
+  prerender: ServerRouterPluginOptions['prerender'] = { entry: './entry.mjs' },
 ) => {
   const plugin = serverRouterPlugin(routerOf({ kind: 'notFound' }), {
-    prerender: { entry: './entry.mjs' },
+    prerender,
   });
 
   plugin.configResolved(config);
@@ -193,8 +199,8 @@ describe('serverRouterPlugin prerender build step', () => {
   it('hands the entry the outDir, the built index.html and a node:fs writer', async (t) => {
     const root = await buildRoot(
       t,
-      `export default async ({ outDir, template, write }) => {
-        await write(outDir + '/deep/page/index.html', template + '!');
+      `export default async ({ outDir, shellHtml, write }) => {
+        await write(outDir + '/deep/page/index.html', shellHtml + '!');
         return { ${RESULT}, outDir };
       };`,
     );
@@ -207,6 +213,36 @@ describe('serverRouterPlugin prerender build step', () => {
       '<main></main>!',
     );
     assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
+  });
+
+  it('takes the entry path as a string', async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default ({ outDir }) => ({ ${RESULT}, outDir });`,
+    );
+
+    const config = configOf(root);
+    await runHook(config, client, undefined, './entry.mjs');
+    assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
+  });
+
+  it('definePrerender returns its argument', () => {
+    const entry: PrerenderEntry = () => ({
+      tally: {
+        shell: 0,
+        redirect: 0,
+        notFound: 0,
+        delegate: 0,
+        response: 0,
+        document: 0,
+      },
+      pages: [],
+      rules: [],
+      warnings: [],
+      delegated: [],
+    });
+
+    assert.equal(definePrerender(entry), entry);
   });
 
   it('fails the build when a listed path matches no route', async (t) => {
