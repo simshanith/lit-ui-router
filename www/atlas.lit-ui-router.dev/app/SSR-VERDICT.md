@@ -816,3 +816,26 @@ the viewer's own elements as the only additions. The helpers did what the
 README says with no adaptation; the one thing the check needed was a static
 server that answers a bad path with the prerendered 404 page, as Pages does.
 
+**Update, 2026-11-03.** The atlas is on `ui-router-server@0.8.0` and
+`lit-ui-router-ssr@0.8.0` (#1818). `vite build` runs the prerender: the
+plugin from `lit-ui-router-ssr/vite` loads `prerender.ts` in a worker after
+the client build, with the DOM shim and `lit-ui-router-ssr/register` loaded
+before it, so the script's imports are static and the shim dance of #808 is
+the plugin's. The script's default export comes from `definePrerender` and
+returns the options; the atlas wraps it once more to run its own checks on
+the result, which throw where they set the exit code. `prerender()`'s
+`dehydrate` option replaces the `payload` hook, and the per-page `payload`
+report on the result (bytes in the signature as written, 14 to 1,859 here
+against 47 to 1,932 by the old `JSON.stringify` count) feeds the same build
+log lines. `prerender.ts` went from 401 lines to 384, `vite.config.ts` from
+141 to 137, and the build script is `vite build` alone; the emitted `dist/`
+is byte-identical across its 290 files apart from the asset hash and the
+signature's version, and the wall time holds at two seconds. Preview now
+serves `404.html` for a path the otherwise rule catches, where the custom
+`serveShell` it replaced served the shell. Two edges. The worker's stdout
+is a port to the parent and the parent terminates the worker on the result
+message, so every report line after the first was lost until the script
+awaited a write's drain before returning. And the wrapper's `definePrerender`
+returns `ui-router-server/vite`'s `PrerenderEntry`, whose `pages` are the
+server's `EmittedPage`, so a script that reads the lit result's `payload`
+casts the pages.

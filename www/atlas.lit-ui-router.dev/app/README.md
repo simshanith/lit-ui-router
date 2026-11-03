@@ -7,8 +7,7 @@ tutorial examples (`examples/helloworld`, `examples/hellosolarsystem-mobx`): pla
 ```bash
 npm install
 npm run dev            # vite, with ui-router-server answering real 302s / 404s
-npm run build          # vite build + node prerender.ts
-npm run build:spa      # vite build alone, no prerender
+npm run build          # vite build, which runs prerender.ts after the client build
 npm run build:artifact # vite build --mode artifact + node artifact.ts
 npm run preview
 npm run typecheck
@@ -269,13 +268,16 @@ is skipped in this mode. Nothing above changes the site build, which prerenders 
 `src/routes.ts` is the one route table. `ui-router-server` compiles it into a mount at the site root
 and is used twice:
 
-- **`vite.config.ts`** — `serverRouterPlugin`, so `vite dev` and `vite preview` answer the same 302
-  for `/office` and the same honest 404 for `/sheet/99` the deployed site does. Preview also serves
-  the prerendered `dist/<subpath>/index.html` for a shell verdict, slash or no slash, so what you
-  curl is what Pages serves.
-- **`prerender.ts`** — after `vite build`, it hands the mount table, one router and the views in
-  `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which resolves every listed path to a
-  verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
+- **`vite.config.ts`** — `serverRouterPlugin` from `lit-ui-router-ssr/vite`, so `vite dev` and
+  `vite preview` answer the same 302 for `/office` and the same honest 404 for `/sheet/99` the
+  deployed site does. Its `prerender` option names `prerender.ts`, which the plugin runs after the
+  client build in a worker with the DOM shim and `lit-ui-router-ssr/register` loaded first.
+  Preview then serves the prerendered `dist/<subpath>/index.html` for a shell verdict, slash or no
+  slash, and `404.html` for a path the otherwise rule catches, so what you curl is what Pages
+  serves.
+- **`prerender.ts`** — its default export, from the plugin's `definePrerender`, hands the mount
+  table, one router and the views in `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which
+  resolves every listed path to a verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
   becomes a line in `dist/_redirects` (both spellings of the path), and the `otherwise` projection
   becomes `dist/404.html`. The mount here takes the `simulate` tier with `prewarm: 1`: one pooled
   headless `@uirouter/core` router, built before the first path, replays the whole list. Dev and
@@ -285,7 +287,7 @@ and is used twice:
   to each path; the render is `views.page(router)`, and `UiViewRenderer` draws each `<ui-view>`'s
   routed component into the element's light DOM. Once each page's router settles, a
   `RefController` over `routeRef(router)` on a host that never connects must read the same route
-  as `router.globals`, or the build exits 1 (`SSR-VERDICT.md` §8).
+  as `router.globals`, or the build throws (`SSR-VERDICT.md` §8).
 
 The same table is the app's type registry. `routes` is `as const`, and `src/routes.ts` extends
 `ui-router-registry`'s `RegisteredStates` with `StatesOf<typeof routes>`, and
@@ -301,16 +303,18 @@ them as `LitStateDeclaration[]`. `src/registry.test-d.ts` holds the assertions a
 `npm run typecheck` runs them. The package emits no JavaScript, so the site build is unchanged.
 
 **The resolve payload (`prerender.ts`).** Each shell page carries the resolves it was drawn with in
-its hydration signature: `prerender()`'s `payload` hook hands `dehydrate()` from
-`ui-router-server/ssr` the transition `settle()` lands, and the signature block carries the
-`resolves` beside `version`, `state` and `params`. The payload carries the per-page `sheet` and
-`extra`, 47 to 1,932 bytes. `shouldDehydrate` keeps three tokens out: `fragment`, the page's own
+its hydration signature: `prerender()`'s `dehydrate` option draws it from the transition
+`settle()` lands, and the signature block carries the `resolves` beside `version`, `state` and
+`params`. The payload carries the per-page `sheet` and `extra`, 14 to 1,859 bytes added to the
+signature as written. `shouldDehydrate` keeps three tokens out: `fragment`, the page's own
 HTML, which the body already holds; `specimen`, a stand-in on the server for the bench the client
 imports; and `manifest`, the 146 KB index every page shares, which the shell's
 `<link rel="preload" as="fetch" crossorigin>` in `index.html` starts beside the document and the
 browser keeps in its cache between pages. `viewer` resolves `undefined` and `dehydrate()` lists it
-as unserializable. The build prints each page's payload size and the resolves that re-run on the
-client, and exits 1 on an unserializable resolve other than `viewer`. The bare plate pages carry
+as unserializable. The build reads each page's `payload` off `prerender()`'s result, prints its
+size and the resolves that re-run on the client, and throws on an unserializable resolve other than
+`viewer`. The script runs in the plugin's worker, whose stdout is a port to the parent, so it waits
+for a write to drain before it returns; the parent terminates the worker on the result. The bare plate pages carry
 none.
 
 **The boot (`src/main.ts`).** One `bootstrap(router, root, page(router), { onAdopt })` from

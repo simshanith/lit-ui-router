@@ -2,8 +2,11 @@
  * Build-time prerender: `ui-router-server` decides, `lit-ui-router-ssr` draws
  * and emits, this file supplies the page template, the titles and the router.
  *
- * Run after `vite build` (npm run build does both). `prerender()` asks the
- * mount table in src/routes.ts for a verdict on every path listed here:
+ * `vite build` runs it: the `lit-ui-router-ssr/vite` plugin in vite.config.ts
+ * loads this script in a worker after the client build, with the DOM shim and
+ * `lit-ui-router-ssr/register` loaded first, so every import here is static.
+ * The default export returns `prerender()`'s options; the plugin calls it with
+ * the mount table in src/routes.ts, which gives a verdict on every path listed:
  *
  *   shell     → dist/<subpath>/index.html, rendered from src/views.ts
  *   plate     → dist/plate/<num>/index.html, one fragment in a bare document
@@ -27,61 +30,46 @@
  * string in a document of its own — no shell, no hydration signature, no
  * client bundle — so a reader who opts out of the router still gets the plate
  * the route table defines.
+ *
+ * THE ATLAS'S OWN CHECKS run after the loop, on the result: every render read
+ * the scoped router, every plate is a page, and no resolve but `viewer` is
+ * left to re-run on the client. Each throws, which fails the build.
  */
-import '@lit-labs/ssr/lib/install-global-dom-shim.js';
-
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
-// Type-only, so they are erased and the values still arrive by dynamic import.
-import type { LitStateDeclaration, UIRouterLit as LitRouter } from 'lit-ui-router';
 import type { Transition } from '@uirouter/core';
-import type { RedirectLine } from 'lit-ui-router-ssr';
-import type { ResolvePayload } from 'ui-router-server/ssr';
+import type { LitStateDeclaration, UIRouterLit as LitRouter } from 'lit-ui-router';
+import { withRouterSync } from 'lit-ui-router/context';
+import { UIRouterLit } from 'lit-ui-router/pure';
+import { RouterRefController } from 'lit-ui-router-effect';
+import { settle } from 'lit-ui-router-ssr';
+import type { PrerenderedPage, RedirectLine } from 'lit-ui-router-ssr';
+import { definePrerender } from 'lit-ui-router-ssr/vite';
+import type { PrerenderEntry } from 'lit-ui-router-ssr/vite';
+import { createServerRouter, diagnoseMounts } from 'ui-router-server';
+import { installServerLocation } from 'ui-router-server/location';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
 import { BASE, MOUNT, SHEET_ALIASES, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 import { ICON_SPRITE } from './src/generated/icons.js';
 import { CYTOSCAPE_URL, FILL_SCRIPT, PLATE_END_SCRIPT } from './src/generated/plate-page.js';
+import * as views from './src/views.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DIST = join(HERE, 'dist');
 const PUBLIC = join(HERE, 'public');
 
 const manifest: Manifest = JSON.parse(
   readFileSync(join(PUBLIC, 'manifest.json'), 'utf8'),
 ) as Manifest;
 
-const shellHtml = readFileSync(join(DIST, 'index.html'), 'utf8');
 const ROOT_RE = /(<div id="root">)(\s*)(<\/div>)/;
-if (!ROOT_RE.test(shellHtml))
-  throw new Error('prerender: dist/index.html has no empty <div id="root">');
-// The stand-in font links, as the shell carries them; the stager swaps them for the kit.
-const FONT_LINKS = shellHtml.match(/<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>/g) ?? [];
 
 // BOTH lists narrow the `/sheet/{num:...}` alternation: the appendix is out of
 // the ascent, but /sheet/A1 is as real a url as /sheet/13.
 const PLATES = allSheets(manifest);
-
-// --- loaded AFTER the shim -------------------------------------------------
-// NOTE the dynamic imports. `lit-ui-router` must be loaded after the DOM shim
-// has finished installing, or <ui-view>/<ui-router> stay unregistered and
-// render as inert unknown elements with no error at all (repo #808).
-// `lit-ui-router-ssr` reaches only `lit-ui-router/context` and a static import
-// of it measured byte-identical here; it rides with the family all the same.
-// The elements come from the register entry src/main.ts uses; src/views.ts
-// imports `lit-ui-router/pure`, which registers nothing.
-await import('lit-ui-router-ssr/register');
-const { UIRouterLit } = await import('lit-ui-router/pure');
-const { createServerRouter, diagnoseMounts } = await import('ui-router-server');
-const { installServerLocation } = await import('ui-router-server/location');
-const { prerender, settle } = await import('lit-ui-router-ssr');
-const { dehydrate } = await import('ui-router-server/ssr');
-const { RouterRefController } = await import('lit-ui-router-effect');
-const { withRouterSync } = await import('lit-ui-router/context');
-const views = await import('./src/views.ts');
 
 /**
  * ONE router, driven from page to page.
@@ -199,7 +187,7 @@ const plateOf = new Map(PLATES.map((row): [string, SheetRow] => [href.plate(row.
  * (chrome.mjs's `sheetSection`), so the page adds the head, the sprite, the
  * two inline scripts every standalone page carries, and the lanes' cytoscape.
  */
-const plateDocument = (row: SheetRow, fragment: string): string => `<!doctype html>
+const plateDocument = (row: SheetRow, fragment: string, fontLinks: string[]): string => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -211,7 +199,7 @@ const plateDocument = (row: SheetRow, fragment: string): string => `<!doctype ht
 <link rel="icon" href="${BASE}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${BASE}apple-touch-icon.png">
 <link rel="stylesheet" href="${BASE}sheets/atlas.css">
-${FONT_LINKS.join('\n')}
+${fontLinks.join('\n')}
 ${row.needsCytoscape ? `<script defer src="${CYTOSCAPE_URL}"></script>\n` : ''}</head>
 <body>
 <main>
@@ -233,19 +221,6 @@ ${FILL_SCRIPT}</script>
  */
 const LEFT_OUT = new Set(['fragment', 'specimen', 'colour', 'manifest']);
 const EXPECTED_UNSERIALIZABLE = new Set(['viewer']);
-const payloadReport: { path: string; bytes: number; unserializable: string[] }[] = [];
-
-const drawPayload = (transition: Transition, { path }: { path: string }): ResolvePayload => {
-  const { payload, unserializable } = dehydrate(transition, {
-    shouldDehydrate: ({ token }) => !LEFT_OUT.has(token),
-  });
-  payloadReport.push({
-    path,
-    bytes: Buffer.byteLength(JSON.stringify(payload)),
-    unserializable: unserializable.map(({ state, token }) => `${state}.${token}`),
-  });
-  return payload;
-};
 
 const routeRefFailures: string[] = [];
 let routeRefReads = 0;
@@ -323,79 +298,87 @@ const megacanvas: RedirectLine[] = [
 const findings = diagnoseMounts(createServerRouter({ mounts: mountsFor(PLATES.map((sheet) => sheet.num)) }));
 if (findings.length > 0) throw new Error(`prerender: ${findings.map((f) => `${f.mount} — ${f.message}`).join('; ')}`);
 
-const result = await prerender({
-  // One pooled router, built up front, serves the whole walk.
-  mounts: mountsFor(
-    PLATES.map((sheet) => sheet.num),
-    { strategy: 'simulate', prewarm: 1 },
-  ),
-  router,
-  outDir: DIST,
-  paths: [...titles.keys(), ...verdictOnly],
-  extraRules: megacanvas,
-  // The default `[UiViewRenderer, LightElementRenderer]` draws each
-  // `<ui-view>` and the atlas's own `LightDomHydrating` elements in place.
-  // `settle()` drives the url directly and never calls `router.start()`; a
-  // page that fails to land rejects, which fails the build.
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    checkRouteRef(path);
-    // A string is written as-is, with no hydration signature: the bare plate.
-    const plate = plateOf.get(path);
-    if (plate) return fragmentOf(plate);
-    return views.page(router);
-  },
-  // The landed transition's resolves, written into each shell page's signature block.
-  payload: drawPayload,
-  document: (body, { path }) => {
-    const plate = plateOf.get(path);
-    if (plate) return plateDocument(plate, body);
-    const title = titles.get(path) ?? TITLES.notFound;
-    return shellHtml
-      .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-      .replace(ROOT_RE, () => `<div id="root">${body}</div>`);
-  },
+const site = definePrerender(({ shellHtml }) => {
+  if (!ROOT_RE.test(shellHtml)) throw new Error('prerender: dist/index.html has no empty <div id="root">');
+  // The stand-in font links, as the shell carries them; the stager swaps them for the kit.
+  const fontLinks = shellHtml.match(/<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>/g) ?? [];
+  return {
+    // One pooled router, built up front, serves the whole walk.
+    mounts: mountsFor(
+      PLATES.map((sheet) => sheet.num),
+      { strategy: 'simulate', prewarm: 1 },
+    ),
+    router,
+    paths: [...titles.keys(), ...verdictOnly],
+    extraRules: megacanvas,
+    // The default `[UiViewRenderer, LightElementRenderer]` draws each
+    // `<ui-view>` and the atlas's own `LightDomHydrating` elements in place.
+    // `settle()` drives the url directly and never calls `router.start()`; a
+    // page that fails to land rejects, which fails the build.
+    renderShell: async (_verdict, { path }) => {
+      await settle(router, path);
+      checkRouteRef(path);
+      // A string is written as-is, with no hydration signature: the bare plate.
+      const plate = plateOf.get(path);
+      if (plate) return fragmentOf(plate);
+      return views.page(router);
+    },
+    // The landed transition's resolves, written into each shell page's signature block.
+    dehydrate: { shouldDehydrate: ({ token }) => !LEFT_OUT.has(token) },
+    document: (body, { path }) => {
+      const plate = plateOf.get(path);
+      if (plate) return plateDocument(plate, body, fontLinks);
+      const title = titles.get(path) ?? TITLES.notFound;
+      return shellHtml
+        .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+        .replace(ROOT_RE, () => `<div id="root">${body}</div>`);
+    },
+  };
 });
 
-// A listed path that matches no route is a build bug for this app: every one of
-// them comes out of the manifest the mounts were compiled from.
-for (const path of result.warnings) console.error(`prerender: no route for ${path}`);
+/** The atlas's checks on what the loop emitted; the plugin itself fails a path with no route. */
+const entry: PrerenderEntry = async (build) => {
+  const result = await site(build);
+  // `definePrerender` types `pages` as the server's; the lit prerender's carry `payload`.
+  const pages = result.pages as PrerenderedPage[];
 
-console.log(
-  `prerendered ${String(result.tally.shell)} pages + ` +
-    `${String(result.tally.document)} × 404.html · ` +
-    `${String(result.rules.length)} redirects → _redirects`,
-);
+  console.log(
+    `prerendered ${String(result.tally.shell)} pages + ` +
+      `${String(result.tally.document)} × 404.html · ` +
+      `${String(result.rules.length)} redirects → _redirects`,
+  );
 
-if (result.warnings.length > 0) process.exitCode = 1;
+  // Every render was read, and every plate is a page.
+  const rendered = result.tally.shell + result.tally.document;
+  if (routeRefReads !== rendered)
+    throw new Error(`prerender: routeRef read ${String(routeRefReads)} of ${String(rendered)} renders`);
+  if (routeRefSheets !== PLATES.length)
+    throw new Error(`prerender: routeRef read ${String(routeRefSheets)} of ${String(PLATES.length)} sheets`);
+  console.log(
+    `scoped router at construction: ${String(routeRefReads - routeRefMisses)}/` +
+      `${String(routeRefReads)} renders match router.globals (${String(routeRefSheets)} sheets by num)`,
+  );
+  if (routeRefFailures.length > 0) throw new Error(`prerender: ${routeRefFailures.join('; ')}`);
 
-// Every render was read, and every plate is a page.
-const rendered = result.tally.shell + result.tally.document;
-if (routeRefReads !== rendered)
-  throw new Error(`prerender: routeRef read ${String(routeRefReads)} of ${String(rendered)} renders`);
-if (routeRefSheets !== PLATES.length)
-  throw new Error(`prerender: routeRef read ${String(routeRefSheets)} of ${String(PLATES.length)} sheets`);
-for (const failure of routeRefFailures) console.error(`prerender: ${failure}`);
-console.log(
-  `scoped router at construction: ${String(routeRefReads - routeRefMisses)}/` +
-    `${String(routeRefReads)} renders match router.globals (${String(routeRefSheets)} sheets by num)`,
-);
-if (routeRefFailures.length > 0) process.exitCode = 1;
+  // The payload report the lit prerender returns per page: its bytes in the signature as written.
+  const carried = pages.flatMap((page) => (page.payload ? [{ path: page.path, ...page.payload }] : []));
+  const sizes = carried.map(({ bytes }) => bytes).sort((a, b) => a - b);
+  const median = sizes[Math.floor(sizes.length / 2)] ?? 0;
+  console.log(
+    `resolve payload: ${String(carried.length)} shell pages · ` +
+      `${String(sizes[0] ?? 0)}–${String(sizes.at(-1) ?? 0)} bytes, median ${String(median)}`,
+  );
+  const unexpected: string[] = [];
+  for (const { path, bytes, unserializable = [] } of carried) {
+    const reruns = unserializable.map(({ state, token }) => `${state}.${token}`);
+    console.log(`  ${path}: ${String(bytes)} bytes${reruns.length > 0 ? ` · re-runs ${reruns.join(', ')}` : ''}`);
+    for (const { token } of unserializable)
+      if (!EXPECTED_UNSERIALIZABLE.has(token)) unexpected.push(`${path}: ${token}`);
+  }
+  if (unexpected.length > 0) throw new Error(`prerender: unserializable resolve ${unexpected.join('; ')}`);
+  // The worker is terminated on the result; its stdout is a port to the parent, so the lines above wait to be taken.
+  await new Promise<void>((resolve) => process.stdout.write('', () => resolve()));
+  return result;
+};
 
-const sizes = payloadReport.map(({ bytes }) => bytes).sort((a, b) => a - b);
-const median = sizes[Math.floor(sizes.length / 2)] ?? 0;
-console.log(
-  `resolve payload: ${String(payloadReport.length)} shell pages · ` +
-    `${String(sizes[0] ?? 0)}–${String(sizes.at(-1) ?? 0)} bytes, median ${String(median)}`,
-);
-for (const { path, bytes, unserializable } of payloadReport) {
-  const reruns = unserializable.length > 0 ? ` · re-runs ${unserializable.join(', ')}` : '';
-  console.log(`  ${path}: ${String(bytes)} bytes${reruns}`);
-}
-const unexpected = payloadReport.flatMap(({ path, unserializable }) =>
-  unserializable
-    .filter((token) => !EXPECTED_UNSERIALIZABLE.has(token.slice(token.lastIndexOf('.') + 1)))
-    .map((token) => `${path}: ${token}`),
-);
-for (const miss of unexpected) console.error(`prerender: unserializable resolve ${miss}`);
-if (unexpected.length > 0) process.exitCode = 1;
+export default entry;

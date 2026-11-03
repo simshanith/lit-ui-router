@@ -1,11 +1,11 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
+import { serverRouterPlugin } from 'lit-ui-router-ssr/vite';
 import { createServerRouter } from 'ui-router-server';
-import { serverRouterPlugin } from 'ui-router-server/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { allSheets } from './src/manifest.ts';
@@ -14,7 +14,6 @@ import { BASE, mountsFor } from './src/routes.ts';
 import { prepaintScript } from './src/theme.ts';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
-const DIST = join(HERE, 'dist');
 // The visualizer's css asks for `../../images/…` against the document, so the
 // icons are served at /images/ beside the page, as the sample apps serve them.
 const VISUALIZER_IMAGES = join(
@@ -85,7 +84,7 @@ const artifactHtmlPlugin: Plugin = {
   },
 };
 
-export default defineConfig(({ isPreview, mode }) => {
+export default defineConfig(({ mode }) => {
   if (mode === 'artifact') {
     return {
       base: './',
@@ -122,15 +121,12 @@ export default defineConfig(({ isPreview, mode }) => {
         ],
       }),
       serverRouterPlugin(serverRouter, {
-        // Preview serves what Pages serves: the prerendered `<subpath>/index.html`
-        // when the build wrote one, with or without the trailing slash. Dev has
-        // no dist, so every shell verdict is the live index.html.
-        serveShell: (_mount, req, _res, next) => {
-          const path = (req.url ?? '/').replace(/[?#].*$/, '').replace(/\/+$/, '');
-          const file = `${path}/index.html`;
-          req.url = isPreview && existsSync(join(DIST, file)) ? file : BASE;
-          next();
-        },
+        // After the client build the plugin runs the script in a worker, with
+        // the DOM shim and `lit-ui-router-ssr/register` loaded first. Preview
+        // then serves what Pages serves: the prerendered `<subpath>/index.html`,
+        // slash or no slash, and `404.html` for a path the otherwise rule
+        // catches. Dev has no dist, so every shell verdict is the live index.html.
+        prerender: './prerender.ts',
         // The adapter sits in front of the static layer here, so it should
         // judge asset requests too — otherwise `vite preview` answers 200 for
         // a path that only looks like a route.
