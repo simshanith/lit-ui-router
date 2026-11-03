@@ -373,6 +373,9 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.16.0
       version: 1.16.0
+    ui-router-effect-floor:
+      specifier: npm:ui-router-effect@0.3.0
+      version: npm:ui-router-effect@0.3.0
   peerFloorEslintPlugin:
     eslint-floor:
       specifier: npm:eslint@9.0.0
@@ -1346,6 +1349,9 @@ importers:
         version: typescript@7.0.2
       ui-router-effect:
         specifier: catalog:workspace
+        version: link:../ui-router-effect
+      ui-router-effect-floor:
+        specifier: catalog:peerFloorEffect
         version: link:../ui-router-effect
       vitest:
         specifier: 'catalog:'
