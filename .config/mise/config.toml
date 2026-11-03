@@ -59,6 +59,8 @@ release_closure = "--filter @tools/release... --filter {packages/*}..."
 [shell_alias]
 # Activated shells only: a task runs in a child process and can't move the caller.
 cd_config_root = 'cd "{{config_root}}"'
+# Every worktree shares the main checkout's .git, so its parent is the main checkout.
+cd_main_checkout = 'cd "$(git rev-parse --path-format=absolute --git-common-dir)/.."'
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here

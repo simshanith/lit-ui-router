@@ -38,7 +38,7 @@ every later step.
 
 An activated shell also gets the config's `[shell_alias]` entries. `cd_config_root`
 changes to the root of the checkout or worktree you are in, from any directory
-inside it.
+inside it. `cd_main_checkout` changes to the main checkout's root, from any worktree.
 
 An `[env]` assignment overrides the inherited value, and the checked-in config
 evaluates before `config.local.toml`, so a default declared there defeats a
