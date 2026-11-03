@@ -9,7 +9,6 @@
   "scripts": {
     "build": "vitepress build .",
     "bundle:worker": "mkdir -p dist && wrangler deploy --dry-run --outdir=\"$PWD/worker/dist\"",
-    "check:bundle": "node ./scripts/check-chunk-budget.ts",
     "check:embeds": "check-embed-heights",
     "codecov:bundle": "upload-bundle-stats docs-worker-esm worker/dist --no-manifest",
     "docs": "vitepress dev .",

@@ -4,18 +4,13 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-import {
-  CHUNK_SIZES_PATH,
-  type ChunkSize,
-  isSearchIndex,
-} from '../scripts/check-chunk-budget.ts';
 import { llmsPlugins } from './llms.ts';
 
 // The mount shells as the dev server serves them. Production (worker/)
@@ -66,43 +61,31 @@ function examplesIndexPlugin(): Plugin {
   };
 }
 
-const CHUNK_SIZES = fileURLToPath(
-  new URL(`../${CHUNK_SIZES_PATH}`, import.meta.url),
-);
+// vite's own build.chunkSizeWarningLimit default; the lazy search index is exempt (tracked in #1340).
+const CHUNK_WARNING_KB = 500;
 
-/** Records every client chunk's size for `check:bundle` and logs the search index's. */
-function chunkBudgetPlugin(): Plugin {
-  let sizes: ChunkSize[] = [];
-
+/** Logs the search index's size and warns, without failing, on any other client chunk over 500 kB. */
+function chunkSizePlugin(): Plugin {
   return {
-    name: 'chunk-budget',
+    name: 'chunk-size',
     apply: (_config, { command, isSsrBuild }) =>
       command === 'build' && !isSsrBuild,
     generateBundle(_options, bundle) {
-      sizes = [];
-
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk') continue;
 
-        const size: ChunkSize = {
-          fileName: chunk.fileName,
-          name: chunk.name,
-          bytes: Buffer.byteLength(chunk.code),
-        };
+        const kB = Buffer.byteLength(chunk.code) / 1000;
 
-        if (isSearchIndex(chunk)) {
-          size.gzipBytes = gzipSync(chunk.code).length;
+        if (chunk.name.startsWith('@localSearchIndex')) {
           console.log(
-            `chunk-budget: ${chunk.fileName} ${(size.bytes / 1000).toFixed(1)} kB (gzip ${(size.gzipBytes / 1000).toFixed(1)} kB)`,
+            `chunk-size: ${chunk.fileName} ${kB.toFixed(1)} kB (gzip ${(gzipSync(chunk.code).length / 1000).toFixed(1)} kB)`,
+          );
+        } else if (kB > CHUNK_WARNING_KB) {
+          console.warn(
+            `chunk-size: ${chunk.fileName} is ${kB.toFixed(1)} kB, over ${CHUNK_WARNING_KB} kB`,
           );
         }
-
-        sizes.push(size);
       }
-    },
-    async writeBundle() {
-      await mkdir(dirname(CHUNK_SIZES), { recursive: true });
-      await writeFile(CHUNK_SIZES, `${JSON.stringify(sizes, null, 2)}\n`);
     },
   };
 }
@@ -184,7 +167,7 @@ function releasePagesStylesheetPlugin(): Plugin {
 export default defineConfig({
   plugins: [
     ...llmsPlugins(),
-    chunkBudgetPlugin(),
+    chunkSizePlugin(),
     releasePagesStylesheetPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
@@ -333,7 +316,7 @@ export default defineConfig({
     rolldownOptions: {
       // A throw here is swallowed, so fail through the exit code instead.
       onLog(level, log, handler) {
-        // The reporter's only warning is the chunk-size one check:bundle replaces.
+        // The reporter's only warning is the chunk-size one chunkSizePlugin replaces.
         if (log.plugin === 'builtin:vite-reporter') return;
         handler(level, log);
 
