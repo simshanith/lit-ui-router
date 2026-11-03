@@ -175,6 +175,12 @@ Previews base config on the Worker itself, which `check:workers-builds` diffs an
 trigger's place. The switched command applies to every branch at once, so a branch whose checkout
 predates the `preview` mode fails its preview build until it is rebased.
 
+A branch's first push copies the base config into a per-branch trigger, which later applies never
+touch and `cf builds triggers list` does not return. Branches first pushed before 2026-11-03T18:21Z
+copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
+[`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
+until none of those branches remain.
+
 ### Adding a site
 
 1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` or a

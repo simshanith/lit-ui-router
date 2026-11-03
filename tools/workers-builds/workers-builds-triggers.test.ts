@@ -233,6 +233,19 @@ describe('desiredStateFromConfig', () => {
     assert.equal(flagship.preview.build_command, BUILD_SCRIPT);
   });
 
+  // Previews per-branch triggers created before the switch still run the shim.
+  it('keeps the shell shim exec-ing the TypeScript build script', async () => {
+    const shim = await readFile(
+      join(import.meta.dirname, 'cloudflare-build.sh'),
+      'utf8',
+    );
+
+    assert.match(
+      shim,
+      /^exec \.\/tools\/workers-builds\/cloudflare-build\.ts "\$@"$/m,
+    );
+  });
+
   // The deploy command is a repo script too, for the same reason: a branch that
   // moves wrangler.jsonc changes the script, not the dashboard. So follow the
   // path here as well — a pinned path that names no file would break every
