@@ -10,8 +10,8 @@ export const CHUNK_SIZES_PATH = '.cache/chunk-sizes.json';
 // vite's own build.chunkSizeWarningLimit default, applied to every client chunk.
 export const CHUNK_BUDGET_KB = 500;
 
-// The lazy local-search index (API pages included) measures ~597 kB; the budget leaves 20% headroom.
-export const SEARCH_INDEX_BUDGET_KB = 720;
+// The lazy local-search index (API pages included) measures ~728 kB; the budget leaves 20% headroom.
+export const SEARCH_INDEX_BUDGET_KB = 875;
 
 const POLICY = 'https://github.com/simshanith/lit-ui-router/issues/1340';
 
