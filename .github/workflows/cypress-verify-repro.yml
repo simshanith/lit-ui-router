@@ -1,4 +1,4 @@
-# Scratch sampler for #1858: times a cold `cypress verify` per runner image, with and without a session bus.
+# Scratch sampler for #1858: times a cold `cypress verify` per runner image, after warming the font cache or the binary's pages.
 name: Cypress verify repro
 
 on:
@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sample: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-        bus: [none, session]
+        sample: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        prep: [none, fc-cache, preread]
     steps:
       - name: Restore the CI Cypress binary
         uses: actions/cache/restore@v6
@@ -33,20 +33,26 @@ jobs:
         env:
           CYPRESS_INSTALL_BINARY: '0'
         run: npm install --no-save --no-package-lock --no-audit --no-fund cypress@16.2.1
-      - name: Start a session bus
-        if: matrix.bus == 'session'
+      - name: Warm one suspect
+        env:
+          PREP: ${{ matrix.prep }}
         run: |
-          address=$(dbus-daemon --session --fork --print-address=1)
-          echo "DBUS_SESSION_BUS_ADDRESS=$address" >> "$GITHUB_ENV"
+          echo "fontconfig cache before: $(ls ~/.cache/fontconfig 2>/dev/null | wc -l) files; fonts: $(fc-list | wc -l)"
+          start=$(date +%s%3N)
+          case "$PREP" in
+            fc-cache) fc-cache ;;
+            preread) find ~/.cache/Cypress -type f -exec cat {} + > /dev/null ;;
+          esac
+          echo "PREP_MS=$(( $(date +%s%3N) - start ))" >> "$GITHUB_ENV"
       - name: Time cypress verify
         working-directory: ${{ runner.temp }}
         env:
-          BUS: ${{ matrix.bus }}
+          PREP: ${{ matrix.prep }}
           # Measure the real start time instead of failing at the 30 s default.
           CYPRESS_VERIFY_TIMEOUT: '120000'
           DEBUG: 'cypress:cli,cypress:cli:*'
         run: |
-          echo "load: $(cat /proc/loadavg) nproc: $(nproc) dbus: ${DBUS_SESSION_BUS_ADDRESS:-unset} display: ${DISPLAY:-unset}"
+          echo "load: $(cat /proc/loadavg) nproc: $(nproc) mem: $(free -m | awk '/Mem/{print $2"MB"}')"
           times=()
           for attempt in cold warm1 warm2; do
             start=$(date +%s%3N)
@@ -55,5 +61,5 @@ jobs:
             times+=("$attempt=$(( $(date +%s%3N) - start ))ms/exit$status")
           done
           grep -h -i "dbus\|xvfb\|smoke\|spawn" verify-cold.log | head -40 || true
-          echo "RESULT image=$ImageVersion bus=$BUS ${times[*]}"
-          echo "| $ImageVersion | $BUS | ${times[*]} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "RESULT image=$ImageVersion prep=$PREP prep_ms=$PREP_MS ${times[*]}"
+          echo "| $ImageVersion | $PREP | $PREP_MS | ${times[*]} |" >> "$GITHUB_STEP_SUMMARY"
