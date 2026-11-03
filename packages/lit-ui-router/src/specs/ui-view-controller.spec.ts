@@ -10,6 +10,7 @@ import type {
   UiOnParamsChanged,
   UIViewInjectedProps,
 } from '../interface.js';
+import { uiSref } from '../ui-sref.js';
 import { UiView } from '../ui-view.js';
 import '../ui-view.register.js';
 import { UiViewController } from '../ui-view-controller.js';
@@ -78,6 +79,26 @@ class OwnRouterHost extends LitElement {
   }
 }
 
+@customElement('test-outlet-sibling-host')
+class SiblingOutletHost extends LitElement {
+  readonly view = new UiViewController(this);
+
+  render() {
+    return html`<aside>
+        <ui-view name="sidebar"></ui-view>
+        <a class="sibling-link" ${uiSref('.child')}>Child</a>
+      </aside>
+      <main>${this.view.outlet()}</main>`;
+  }
+}
+
+@customElement('test-outlet-class-shell')
+class ClassShell extends LitElement {
+  render() {
+    return html`<div class="class-shell"><ui-view></ui-view></div>`;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'test-outlet-host': OutletHost;
@@ -85,6 +106,8 @@ declare global {
     'test-outlet-detail': OutletDetail;
     'test-outlet-nested-host': NestedOutletHost;
     'test-outlet-own-router-host': OwnRouterHost;
+    'test-outlet-sibling-host': SiblingOutletHost;
+    'test-outlet-class-shell': ClassShell;
   }
 }
 
@@ -127,6 +150,31 @@ const states: LitStateDeclaration[] = [
     name: 'outer.inner',
     url: '/inner',
     component: () => html`<p class="inner">Inner</p>`,
+  },
+  {
+    name: 'frame',
+    url: '/frame',
+    component: SiblingOutletHost,
+  },
+  {
+    name: 'frame.child',
+    url: '/child',
+    component: () => html`<div class="shell"><ui-view></ui-view></div>`,
+  },
+  {
+    name: 'frame.child.leaf',
+    url: '/leaf',
+    component: () => html`<p class="leaf">Leaf</p>`,
+  },
+  {
+    name: 'frame.classy',
+    url: '/classy',
+    component: ClassShell,
+  },
+  {
+    name: 'frame.classy.leaf',
+    url: '/leaf',
+    component: () => html`<p class="leaf">Leaf</p>`,
   },
   {
     name: 'layout',
@@ -258,6 +306,52 @@ describe('UiViewController', () => {
     expect(
       inner.shadowRoot!.querySelector('.nested-outlet p.inner')?.textContent,
     ).toBe('Inner');
+  });
+
+  describe('beside a sibling <ui-view> and relative uiSref in the host template', () => {
+    async function mountFrame(): Promise<SiblingOutletHost> {
+      const root = await mount(document.createElement('ui-view'));
+      await go('frame.child.leaf');
+      // uiSref seeks its router a task after the first render
+      await tick();
+
+      return root.querySelector('test-outlet-sibling-host')!;
+    }
+
+    it('leaves the siblings to the view above', async () => {
+      const host = await mountFrame();
+      const root = host.parentElement!.closest('ui-view')!;
+
+      const aside = host.shadowRoot!.querySelector('aside')!;
+      const sidebar = aside.querySelector<UiView>('ui-view')!;
+      const link = aside.querySelector('a.sibling-link')!;
+      expect(host.view.fqn).toBe('$default.$default');
+      expect(UiView.seekParentView(sidebar)).toBe(root);
+      expect(UiView.seekParentView(link)).toBe(root);
+      expect(link.getAttribute('href')).toBe('#/frame/child');
+      expect(registeredFqns(router)).toContain('$default.sidebar');
+      expect(registeredFqns(router)).not.toContain('$default.$default.sidebar');
+    });
+
+    it('is the parent of a <ui-view> a template component renders', async () => {
+      const host = await mountFrame();
+
+      const nested = host.shadowRoot!.querySelector<UiView>('.shell ui-view')!;
+      expect(UiView.seekParentView(nested)).toBe(host.view);
+      expect(nested.querySelector('p.leaf')?.textContent).toBe('Leaf');
+      expect(registeredFqns(router)).toContain('$default.$default.$default');
+    });
+
+    it('is the parent of a <ui-view> a class component renders', async () => {
+      const host = await mountFrame();
+      await go('frame.classy.leaf');
+
+      const shell = host.shadowRoot!.querySelector('test-outlet-class-shell')!;
+      const nested = shell.shadowRoot!.querySelector<UiView>('ui-view')!;
+      expect(UiView.seekParentView(nested)).toBe(host.view);
+      expect(nested.querySelector('p.leaf')?.textContent).toBe('Leaf');
+      expect(registeredFqns(router)).toContain('$default.$default.$default');
+    });
   });
 
   it('fills a named view', async () => {

@@ -1,10 +1,18 @@
 import { nothing } from 'lit';
 import type {
+  ChildPart,
   ReactiveController,
   ReactiveControllerHost,
   ReactiveElement,
   TemplateResult,
 } from 'lit';
+import { AsyncDirective } from 'lit/async-directive.js';
+import {
+  directive,
+  type DirectiveResult,
+  type PartInfo,
+  PartType,
+} from 'lit/directive.js';
 import {
   type ActiveUIView,
   isFunction,
@@ -58,6 +66,78 @@ export interface UiViewControllerOptions {
 
 /** The outlet each host holds; a host fills one view. */
 const outlets = new WeakMap<HTMLElement, UiViewController>();
+
+type OutletPartCallback = (part: ChildPart, connected: boolean) => void;
+
+/** Renders the outlet's output and reports the child part holding it. */
+class OutletDirective extends AsyncDirective {
+  private part?: ChildPart;
+
+  private onPart?: OutletPartCallback;
+
+  constructor(partInfo: PartInfo) {
+    super(partInfo);
+
+    if (partInfo.type !== PartType.CHILD) {
+      throw new Error(
+        'UiViewController.outlet() must be used in child position',
+      );
+    }
+  }
+
+  render(
+    _onPart: OutletPartCallback,
+    value: TemplateResult | typeof nothing,
+  ): TemplateResult | typeof nothing {
+    return value;
+  }
+
+  override update(
+    part: ChildPart,
+    [onPart, value]: Parameters<this['render']>,
+  ): TemplateResult | typeof nothing {
+    this.part = part;
+    this.onPart = onPart;
+    onPart(part, true);
+
+    return value;
+  }
+
+  protected override disconnected(): void {
+    this.onPart?.(this.part!, false);
+  }
+
+  protected override reconnected(): void {
+    this.onPart?.(this.part!, true);
+  }
+}
+
+const outletDirective = directive(OutletDirective);
+
+/** Whether `node` lies in `part`'s content, through any shadow roots between them. */
+function isInPart(part: ChildPart, node: Node | null): boolean {
+  const { parentNode: container, startNode, endNode } = part;
+
+  while (node && node.parentNode !== container) {
+    node = node instanceof ShadowRoot ? node.host : node.parentNode;
+  }
+
+  if (!node || node === startNode || node === endNode) {
+    return false;
+  }
+
+  return (
+    (!startNode ||
+      !!(
+        startNode.compareDocumentPosition(node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )) &&
+    (!endNode ||
+      !!(
+        node.compareDocumentPosition(endNode) & Node.DOCUMENT_POSITION_FOLLOWING
+      ))
+  );
+}
 
 /**
  * A Lit
@@ -142,6 +222,9 @@ export class UiViewController implements ReactiveController {
 
   private readonly routerSubscribers = new RouterSubscribers();
 
+  /** The child part `outlet()` renders into, while it is connected. */
+  private outletPart?: ChildPart;
+
   /**
    * @throws an `Error` when `host` already holds a `UiViewController`
    */
@@ -163,23 +246,38 @@ export class UiViewController implements ReactiveController {
   }
 
   /**
-   * The routed view's template, or `nothing` while no component fills the
-   * view. Call it from the host's `render`.
+   * The routed view, or nothing while no component fills the view. Call it
+   * from the host's `render`, in child position.
+   *
+   * Only views and `uiSref` links inside this output take the outlet as their
+   * parent view; a <code>&lt;ui-view name="…"&gt;</code> or link elsewhere in
+   * the host's template belongs to the view above.
    */
-  outlet(): TemplateResult | typeof nothing {
+  outlet(): DirectiveResult {
     const { component, router, resolveContext } = this;
 
     if (!component || !router || !resolveContext) {
       this.classElement = undefined;
 
-      return nothing;
+      return outletDirective(this.onOutletPart, nothing);
     }
 
     const result = routedViewTemplate(component, router, resolveContext);
     this.classElement = routedElementOf(result);
 
-    return result;
+    return outletDirective(this.onOutletPart, result);
   }
+
+  private readonly onOutletPart = (
+    part: ChildPart,
+    connected: boolean,
+  ): void => {
+    if (connected) {
+      this.outletPart = part;
+    } else if (this.outletPart === part) {
+      this.outletPart = undefined;
+    }
+  };
 
   /**
    * The element a class component rendered, once {@link outlet} has rendered
@@ -356,10 +454,15 @@ export class UiViewController implements ReactiveController {
     this.routerSubscribers.answer(event, this.options.router, false);
   };
 
-  /** Answers a nested view's parent seek with this outlet. */
+  /** Answers the parent seek of a view inside the outlet's output with this outlet. */
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
-    // The host's own seek belongs to the view above.
-    if (event.composedPath()[0] === this.host) {
+    // A seek from outside the output, the host's own included, belongs to the view above.
+    const { outletPart } = this;
+
+    // SAFETY: a `UiViewContextEvent` is dispatched from an element
+    const seeker = event.composedPath()[0] as Node;
+
+    if (!outletPart || !isInPart(outletPart, seeker)) {
       return;
     }
 
