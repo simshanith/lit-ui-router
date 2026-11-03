@@ -10,18 +10,18 @@ import {
   isFunction,
   ResolveContext,
   trace,
-  type UIRouter,
   type ViewConfig,
   type ViewContext,
 } from '@uirouter/core';
 
-import { LitViewConfig } from './core.js';
+import { contextRequestEventName } from './context.js';
+import { LitViewConfig, type UIRouterLit } from './core.js';
 import type { UiViewContextEvent } from './events.js';
 import { uiViewContextEventName } from './events.js';
 import type { RoutedLitTemplate } from './interface.js';
 import { routedElementOf } from './routed-element.js';
 import { routedViewTemplate } from './routed-view.js';
-import { subscribeRouter } from './router-subscription.js';
+import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
 import { UiView } from './ui-view.js';
 import { setViewHost } from './view-rendered.js';
 import {
@@ -42,15 +42,22 @@ export interface UiViewControllerOptions {
   name?: string;
 
   /**
-   * The {@link UIRouter} instance to render for.
+   * The {@link UIRouterLit} instance to render for.
+   *
+   * The controller offers it to the host's descendants over the router
+   * `context-request`, so `uiSref` links in the host's template and views in
+   * the routed component find it with no <code>&lt;ui-router&gt;</code>.
    *
    * When omitted, the controller discovers the router from an ancestor
    * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) each time
    * the host connects, and follows the placeholder router a
    * <code>&lt;ui-router&gt;</code> mints for itself to the one that replaces it.
    */
-  router?: UIRouter;
+  router?: UIRouterLit;
 }
+
+/** The outlet each host holds; a host fills one view. */
+const outlets = new WeakMap<HTMLElement, UiViewController>();
 
 /**
  * A Lit
@@ -66,8 +73,13 @@ export interface UiViewControllerOptions {
  * `uiOnParamsChanged` hooks run as they do under
  * <code>&lt;ui-view&gt;</code>.
  *
- * One controller fills one view name; a host with named views adds one
- * controller per name.
+ * A host holds one outlet: a second `UiViewController` on the same host
+ * throws. A host with named views renders
+ * <code>&lt;ui-view name="…"&gt;</code> elements in place of the outlet.
+ *
+ * Passed a `router`, the outlet needs no lit-ui-router elements at all: plain
+ * lit templates, this controller and `uiSref` on plain anchors, all from
+ * `lit-ui-router/pure`.
  *
  * It renders on the client only: `lit-ui-router-ssr` neither prerenders nor
  * hydrates an outlet.
@@ -83,15 +95,19 @@ export interface UiViewControllerOptions {
  * }
  * ```
  *
- * @example Named views
+ * @example With no lit-ui-router elements
  * ```ts
- * class AppShell extends LitElement {
- *   private readonly header = new UiViewController(this, { name: 'header' });
- *   private readonly body = new UiViewController(this);
+ * import { UIRouterLit, UiViewController, uiSref } from 'lit-ui-router/pure';
+ *
+ * const router = new UIRouterLit();
+ * // …plugins and states…
+ *
+ * class HelloApp extends LitElement {
+ *   private readonly view = new UiViewController(this, { router });
  *
  *   render() {
- *     return html`<header>${this.header.outlet()}</header>
- *       <main>${this.body.outlet()}</main>`;
+ *     return html`<a ${uiSref('hello')}>Hello</a>
+ *       <main>${this.view.outlet()}</main>`;
  *   }
  * }
  * ```
@@ -105,10 +121,10 @@ export class UiViewController implements ReactiveController {
 
   private readonly id = nextViewId();
 
-  private router?: UIRouter;
+  private router?: UIRouterLit;
 
   /** The router the registration was made with; a late provider supersedes it. */
-  private registeredRouter?: UIRouter;
+  private registeredRouter?: UIRouterLit;
 
   private registration?: ActiveUIView;
 
@@ -124,10 +140,22 @@ export class UiViewController implements ReactiveController {
   /** drops the subscription to a provider that may still replace its router */
   private unsubscribe?: DeregisterFn;
 
+  private readonly routerSubscribers = new RouterSubscribers();
+
+  /**
+   * @throws an `Error` when `host` already holds a `UiViewController`
+   */
   constructor(
     host: ReactiveControllerHost & HTMLElement,
     options: UiViewControllerOptions = {},
   ) {
+    if (outlets.has(host)) {
+      throw new Error(
+        `lit-ui-router: <${host.localName}> already has a UiViewController, and a host holds one outlet. Render <ui-view name="…"> elements in its place for named views.`,
+      );
+    }
+
+    outlets.set(host, this);
     this.host = host;
     this.options = options;
     this.router = options.router;
@@ -203,7 +231,12 @@ export class UiViewController implements ReactiveController {
       this.onUiViewContextEvent as EventListener,
     );
 
-    if (!this.options.router) {
+    if (this.options.router) {
+      this.host.addEventListener(
+        contextRequestEventName,
+        this.onContextRequest,
+      );
+    } else {
       this.seekRouter();
     }
 
@@ -230,6 +263,10 @@ export class UiViewController implements ReactiveController {
       // SAFETY: only `UiViewContextEvent`s are dispatched under this name
       this.onUiViewContextEvent as EventListener,
     );
+    this.host.removeEventListener(
+      contextRequestEventName,
+      this.onContextRequest,
+    );
     this.unsubscribe?.();
     this.unsubscribe = undefined;
     this.deregister();
@@ -248,7 +285,7 @@ export class UiViewController implements ReactiveController {
     this.unsubscribe = unsubscribe;
   }
 
-  private readonly onRouterReplaced = (router: UIRouter): void => {
+  private readonly onRouterReplaced = (router: UIRouterLit): void => {
     this.unsubscribe = undefined;
     this.router = router;
     this.register();
@@ -309,9 +346,19 @@ export class UiViewController implements ReactiveController {
     this.host.requestUpdate();
   };
 
-  /** Answers a nested view's parent seek with this outlet; the first controller on a host to answer wins. */
+  /** Offers the router from the options to the host's descendants. */
+  private readonly onContextRequest = (event: Event): void => {
+    // The host's own requests belong to the provider above.
+    if (event.composedPath()[0] === this.host) {
+      return;
+    }
+
+    this.routerSubscribers.answer(event, this.options.router, false);
+  };
+
+  /** Answers a nested view's parent seek with this outlet. */
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
-    // The host's own seek, for this or a sibling controller, belongs to the view above.
+    // The host's own seek belongs to the view above.
     if (event.composedPath()[0] === this.host) {
       return;
     }

@@ -34,11 +34,8 @@ class OutletHost extends LitElement {
 class NamedOutletHost extends LitElement {
   readonly header = new UiViewController(this, { name: 'header' });
 
-  readonly body = new UiViewController(this);
-
   render() {
-    return html`<header>${this.header.outlet()}</header>
-      <main>${this.body.outlet()}</main>`;
+    return html`<header>${this.header.outlet()}</header>`;
   }
 }
 
@@ -263,15 +260,35 @@ describe('UiViewController', () => {
     ).toBe('Inner');
   });
 
-  it('fills named views, one controller per name', async () => {
+  it('fills a named view', async () => {
     const host = await mount(document.createElement('test-named-outlet-host'));
 
     await go('layout');
 
-    const root = host.shadowRoot!;
-    expect(root.querySelector('header .title')?.textContent).toBe('Title');
-    expect(root.querySelector('main .content')?.textContent).toBe('Content');
+    expect(host.shadowRoot!.querySelector('header .title')?.textContent).toBe(
+      'Title',
+    );
     expect(host.header.fqn).toBe('header');
+  });
+
+  it('throws on a second outlet on the same host, naming the host', () => {
+    const host = document.createElement('test-outlet-host');
+
+    expect(() => new UiViewController(host, { name: 'header' })).toThrow(
+      /<test-outlet-host> already has a UiViewController.*<ui-view name="…">/,
+    );
+  });
+
+  it('keeps one outlet across disconnect and reconnect', async () => {
+    const host = await mount(document.createElement('test-outlet-host'));
+    const parent = host.parentElement!;
+
+    host.remove();
+    parent.appendChild(host);
+    await go('home');
+
+    expect(host.shadowRoot!.querySelector('h1.home')).not.toBeNull();
+    expect(() => new UiViewController(host)).toThrow(/already has/);
   });
 
   it('deregisters on disconnect and registers again on reconnect', async () => {
