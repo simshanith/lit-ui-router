@@ -1,0 +1,77 @@
+<svg viewBox="0 0 720 376" width="100%" style="max-width: 720px" role="img" aria-label="The hellogalaxy state tree beside its view tree. States: galaxy, with children galaxy.stars and galaxy.astronaut; galaxy.stars has the child galaxy.stars.star. Views: galaxy renders galaxy-shell into the ui-view in app-root; galaxy.stars renders stars-container, or galaxy.astronaut renders astronaut-detail, into the ui-view in galaxy-shell; galaxy.stars.star renders star-detail into the ui-view in stars-container. Each state's component renders into the ui-view of its parent state's component, so the two trees mirror each other." xmlns="http://www.w3.org/2000/svg">
+  <title>State tree beside view tree</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-state-view" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- column heads -->
+    <text x="24" y="40" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">state tree</text>
+    <text x="336" y="40" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">view tree</text>
+    <!-- state tree lines -->
+    <polyline points="36,108 36,286 48,286" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <line x1="36" y1="150" x2="48" y2="150" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <polyline points="60,164 60,206 72,206" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <!-- states -->
+    <rect x="24" y="80" width="120" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="36" y="98" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">galaxy</text>
+    <rect x="48" y="136" width="140" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="60" y="154" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">galaxy.stars</text>
+    <rect x="72" y="192" width="166" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="84" y="210" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">galaxy.stars.star</text>
+    <rect x="48" y="272" width="160" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="60" y="290" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">galaxy.astronaut</text>
+    <!-- root viewport -->
+    <rect x="336" y="52" width="360" height="284" rx="8" fill="none" stroke="var(--vp-c-brand-1, #006a9a)" stroke-dasharray="5 4" />
+    <rect x="344" y="58" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
+    <text x="377" y="70" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">&lt;ui-view&gt;</text>
+    <text x="418" y="70" font-size="10" fill="var(--vp-c-text-2, #67676c)">in app-root</text>
+    <!-- galaxy-shell -->
+    <rect x="348" y="80" width="336" height="244" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="360" y="98" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">galaxy-shell</text>
+    <!-- shell viewport -->
+    <rect x="360" y="108" width="312" height="204" rx="8" fill="none" stroke="var(--vp-c-brand-1, #006a9a)" stroke-dasharray="5 4" />
+    <rect x="368" y="114" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
+    <text x="401" y="126" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">&lt;ui-view&gt;</text>
+    <text x="442" y="126" font-size="10" fill="var(--vp-c-text-2, #67676c)">in galaxy-shell</text>
+    <!-- stars-container -->
+    <rect x="372" y="136" width="288" height="108" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="384" y="154" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">stars-container</text>
+    <!-- stars viewport -->
+    <rect x="384" y="164" width="264" height="68" rx="8" fill="none" stroke="var(--vp-c-brand-1, #006a9a)" stroke-dasharray="5 4" />
+    <rect x="392" y="170" width="66" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
+    <text x="425" y="182" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">&lt;ui-view&gt;</text>
+    <text x="466" y="182" font-size="10" fill="var(--vp-c-text-2, #67676c)">in stars-container</text>
+    <!-- star-detail -->
+    <rect x="396" y="192" width="240" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="408" y="210" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">star-detail</text>
+    <!-- sibling fill -->
+    <text x="516" y="262" font-size="11" font-style="italic" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">or</text>
+    <!-- astronaut-detail -->
+    <rect x="372" y="272" width="288" height="28" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="384" y="290" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">astronaut-detail</text>
+    <!-- state renders into view -->
+    <text x="246" y="88" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">renders into</text>
+    <line x1="144" y1="94" x2="346" y2="94" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-state-view)" />
+    <line x1="188" y1="150" x2="370" y2="150" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-state-view)" />
+    <line x1="238" y1="206" x2="394" y2="206" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-state-view)" />
+    <line x1="208" y1="286" x2="370" y2="286" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-state-view)" />
+    <!-- caption -->
+    <text x="24" y="362" font-size="10" fill="var(--vp-c-text-2, #67676c)">Each state's component renders into the &lt;ui-view&gt; of its parent state's component, so the two trees mirror each other.</text>
+  </g>
+</svg>
