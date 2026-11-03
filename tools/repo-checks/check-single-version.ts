@@ -1,7 +1,8 @@
 // `pnpm dedupe --check` only fails when re-resolving would shrink the tree,
 // so an exact pin beside a newer caret — no version satisfies both — leaves
 // two copies of a package the workspace chooses the version of. Fail on any
-// such name that resolves to more than one version, less the splits below.
+// such name that resolves to more than one version, less `*-floor` catalog
+// pins and the splits below.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -9,6 +10,7 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   auditSplits,
   controlledNames,
+  floorPins,
   formatSplit,
   lockVersions,
   parseLock,
@@ -20,44 +22,16 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
-    name: '@lit-labs/ssr-client',
-    why: 'catalogs.peerFloorSsr pins @lit-labs/ssr-client-floor to 1.1.7, the ssr peer floor check:bundle bundles against',
-  },
-  {
-    name: '@oxc-project/runtime',
-    why: 'catalogs.oxc-compat pins @oxc-project/runtime-floor to 0.50.0, the published dependency floor check:bundle bundles dist against',
-  },
-  {
-    name: '@uirouter/core',
-    why: 'catalogs.peerFloor pins @uirouter/core-floor to 6.0.8, every package peer floor check:bundle bundles against',
-  },
-  {
     name: 'effect',
-    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line, and catalogs.peerFloor pins effect-floor to 3.22.0, the effect peer floor check:bundle bundles against',
-  },
-  {
-    name: 'eslint',
-    why: 'catalogs.peerFloorEslintPlugin pins eslint-floor to 9.0.0, the plugin peer floor, beside the 10.x linter',
-  },
-  {
-    name: 'hono',
-    why: 'catalogs.peerFloor pins hono-floor to 4.0.0, the ui-router-server peer floor check:bundle bundles against',
+    why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
   },
   {
     name: 'lit',
     why: 'the lit-2 alias (catalogs.lit2-compat) runs test:lit2-compat beside the lit 3 line',
   },
   {
-    name: 'lit-ui-router',
-    why: 'catalogs.peerFloorEffect, peerFloorMobx and peerFloorSignals pin lit-ui-router-floor to 1.16.0 and catalogs.peerFloorSsr pins it to 1.19.0, each companion peer floor; a floor equal to the workspace version links instead of splitting',
-  },
-  {
     name: 'mobx',
-    why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line, and catalogs.peerFloor pins mobx-floor to 6.0.0, the mobx peer floor check:bundle bundles against',
-  },
-  {
-    name: 'signal-polyfill',
-    why: 'catalogs.peerFloor pins signal-polyfill-floor to 0.2.0, the ui-router-signals peer floor check:bundle bundles against',
+    why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
   },
   {
     name: 'vite',
@@ -80,6 +54,7 @@ const main = (): void => {
     lockVersions(lock),
     controlled,
     ALLOWED,
+    floorPins(lock),
   );
 
   if (controlled.size === 0) {

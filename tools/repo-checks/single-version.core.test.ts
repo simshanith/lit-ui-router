@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   auditSplits,
   controlledNames,
+  floorPins,
   formatSplit,
   lockVersions,
   parseLock,
@@ -21,6 +22,17 @@ catalogs:
     mobx-6:
       specifier: npm:mobx@^6.16.1
       version: 6.16.1
+  peerFloor:
+    '@scope/child-floor':
+      specifier: npm:@scope/child@0.9.0
+      version: 0.9.0
+    wrangler-floor:
+      specifier: npm:wrangler@4.0.0
+      version: 4.0.0
+  peerFloorOther:
+    wrangler-floor:
+      specifier: npm:wrangler@4.1.0
+      version: 4.1.0
 
 overrides:
   'wrangler>esbuild': 0.28.2
@@ -179,6 +191,54 @@ describe('auditSplits', () => {
     );
 
     assert.deepEqual(failures[0]?.versions, ['5.9.3', '5.10.0']);
+  });
+});
+
+describe('floorPins', () => {
+  it('collects every *-floor catalog alias by target, across catalogs', () => {
+    assert.deepEqual(
+      floorPins(lock),
+      new Map([
+        ['@scope/child', new Set(['0.9.0'])],
+        ['wrangler', new Set(['4.0.0', '4.1.0'])],
+      ]),
+    );
+  });
+
+  it('passes a split made only of floor pins beside the workspace line', () => {
+    const { failures, stale } = auditSplits(
+      new Map([['wrangler', ['4.0.0', '4.1.0', '4.136.1']]]),
+      new Set(['wrangler']),
+      [],
+      floorPins(lock),
+    );
+
+    assert.deepEqual(failures, []);
+    assert.deepEqual(stale, []);
+  });
+
+  it('still fails a split beyond the floor pins', () => {
+    const { failures } = auditSplits(
+      new Map([['wrangler', ['4.0.0', '4.100.0', '4.136.1']]]),
+      new Set(['wrangler']),
+      [],
+      floorPins(lock),
+    );
+
+    assert.deepEqual(failures, [
+      { name: 'wrangler', versions: ['4.100.0', '4.136.1'] },
+    ]);
+  });
+
+  it('reports a row as stale once floor pins explain its split', () => {
+    const { stale } = auditSplits(
+      new Map([['wrangler', ['4.0.0', '4.136.1']]]),
+      new Set(['wrangler']),
+      [{ name: 'wrangler', why: 'floor' }],
+      floorPins(lock),
+    );
+
+    assert.deepEqual(stale, ['wrangler']);
   });
 });
 

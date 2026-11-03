@@ -150,6 +150,15 @@ flag "--package <package>" help="Package being bumped" required=#true env="PACKA
 '''
 run = 'PACKAGE="${usage_package?}" node src/steps/release-peer-floor-gate.ts'
 
+[tasks.dependent_floor_gate]
+# Run by bump's after:bump hook, after the lockfile is re-resolved and before
+# release-it commits and pushes; standalone it checks the checked-out version.
+description = "Fail a bump when a dependent's peer floor stops proving its published range"
+usage = '''
+flag "--package <package>" help="Package being bumped" required=#true env="PACKAGE"
+'''
+run = 'PACKAGE="${usage_package?}" node src/steps/release-dependent-floor-gate.ts'
+
 [tasks.bump]
 # env: GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
 description = "Compute the bumped version, branch, commit, push, and open the release PR"
