@@ -1,11 +1,11 @@
 {
-  // Typechecks src against the published floors of the lit-ui-router and mobx
-  // peer ranges (the <peer>-floor aliases), not the workspace or dev copies.
-  // Never emits.
+  // Typechecks src against the published floors of its peer ranges (the
+  // <peer>-floor aliases), not the workspace or dev copies. Never emits.
   "extends": "./tsconfig.src.json",
   "compilerOptions": {
     "noEmit": true,
     "paths": {
+      "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"],
       "lit-ui-router": ["./node_modules/lit-ui-router-floor/dist/index.d.ts"],
       "lit-ui-router/pure": [
         "./node_modules/lit-ui-router-floor/dist/pure.d.ts"
@@ -14,7 +14,8 @@
         "./node_modules/lit-ui-router-floor/dist/context.d.ts"
       ],
       "lit-ui-router/*": ["./node_modules/lit-ui-router-floor/*"],
-      "mobx": ["./node_modules/mobx-floor/dist/mobx.d.ts"]
+      "mobx": ["./node_modules/mobx-floor/dist/mobx.d.ts"],
+      "ui-router-mobx": ["./node_modules/ui-router-mobx-floor/dist/index.d.ts"]
     }
   }
 }

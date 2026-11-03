@@ -381,6 +381,9 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.16.0
       version: 1.16.0
+    ui-router-mobx-floor:
+      specifier: npm:ui-router-mobx@0.3.0
+      version: npm:ui-router-mobx@0.3.0
   peerFloorSignals:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.16.0
@@ -1442,6 +1445,9 @@ importers:
         version: typescript@7.0.2
       ui-router-mobx:
         specifier: catalog:workspace
+        version: link:../ui-router-mobx
+      ui-router-mobx-floor:
+        specifier: catalog:peerFloorMobx
         version: link:../ui-router-mobx
       vitest:
         specifier: 'catalog:'
