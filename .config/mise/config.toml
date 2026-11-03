@@ -260,7 +260,7 @@ usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   # --continue=dependencies-successful: one failing task still lets the rest
   # report and turbo still exits non-zero, while a failed build skips its
   # dependents. Bare --continue means `always`, which runs them against no output.
@@ -287,7 +287,7 @@ usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   # --continue=dependencies-successful: as in ci_graph.
   "mise run pause_commands -- turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
@@ -349,7 +349,7 @@ run = "turbo run codecov:bundle --ui=stream --log-order=stream --summarize --log
 
 [tasks.bench_pulse]
 # The benches one at a time on a short budget, for the `acceptance (bench)`
-# job; //tools/build_and_test:bench_summary reports the result files and
+# job; //tools/turbo-summary:bench_summary reports the result files and
 # turbo_summary the run, as for ci_graph.
 depends = ["turbo_force_guard"]
 description = "Run the tinybench benches on a short time budget via turbo"
@@ -358,7 +358,7 @@ flag "--time-ms <time_ms>" help="tinybench time budget per bench task, in ms" de
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   "BENCH_TIME_MS=\"${usage_time_ms?}\" mise run pause_commands -- turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 

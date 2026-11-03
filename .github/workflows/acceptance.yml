@@ -59,7 +59,7 @@ jobs:
       - name: Bench summary
         # After a crash too: it reports whichever result file was written.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:bench_summary
+        run: mise run //tools/turbo-summary:bench_summary
       - name: Upload turbo run summaries
         # Same fail-open uploads as build-test-run.yml; the report links both.
         id: run_summaries
@@ -96,7 +96,7 @@ jobs:
       - name: Turbo run summary
         # Goes red after a crashed bench, so a red job opens on the report.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ steps.bench.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).
@@ -139,7 +139,7 @@ jobs:
         run: mise run //tools/build_and_test:playwright
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
-        run: mise run //tools/build_and_test:mark_session
+        run: mise run //tools/turbo-summary:mark_session
       - name: Axe
         # Same continue-on-error hand-off to the summary step as build-test-run.yml.
         id: axe
@@ -201,7 +201,7 @@ jobs:
       - name: Turbo run summary
         # Goes red after a failed suite, so a red job opens on the report.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ steps.axe.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).

@@ -75,7 +75,7 @@ jobs:
         run: mise run setup --release
       - name: Mark summary session
         # Bounds the report below to the published_diff runs.
-        run: mise run //tools/build_and_test:mark_session
+        run: mise run //tools/turbo-summary:mark_session
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:
@@ -137,7 +137,7 @@ jobs:
       - name: Turbo run summary
         # Reports the published_diff runs; no BUILD_OUTCOME, since that step goes red itself.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           # Presence only: the remote is off by design without a token (Dependabot, forks).
           TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}

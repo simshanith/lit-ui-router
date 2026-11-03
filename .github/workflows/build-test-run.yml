@@ -222,7 +222,7 @@ jobs:
         # The summary step rewrites the same patch. Fails open, like the summary.
         if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
         continue-on-error: true
-        run: mise run //tools/build_and_test:format_patch
+        run: mise run //tools/turbo-summary:format_patch
       - name: Upload format patch
         # Written only when a format check failed.
         id: format_patch
@@ -254,7 +254,7 @@ jobs:
         # BUILD_OUTCOME: this step goes red after a failed build, so a red job
         # opens here.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ inputs.mainGraph && steps.build_main.outcome || steps.build.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).
@@ -335,7 +335,7 @@ jobs:
         run: mise run //tools/build_and_test:xvfb
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
-        run: mise run //tools/build_and_test:mark_session
+        run: mise run //tools/turbo-summary:mark_session
       - name: E2E
         # The docs build is a remote-cache hit once any job of this commit has
         # uploaded it; on a cold commit every leg reaches it before `run` does.
@@ -404,7 +404,7 @@ jobs:
       - name: Turbo run summary
         # Goes red after a failed suite, so a red job opens on the report.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ steps.e2e.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).
