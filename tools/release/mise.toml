@@ -107,7 +107,6 @@ usage = '''
 flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
   "turbo run resolve:published --summarize --log-file",
   'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff --summarize --log-file',
 ]
