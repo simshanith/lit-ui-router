@@ -1,0 +1,59 @@
+# Scratch sampler for #1858: times a cold `cypress verify` per runner image, with and without a session bus.
+name: Cypress verify repro
+
+on:
+  push:
+    branches:
+      - scratch/cypress-verify-repro
+    paths:
+      - .github/workflows/cypress-verify-repro.yml
+
+permissions: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        bus: [none, session]
+    steps:
+      - name: Restore the CI Cypress binary
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/Cypress
+          key: Linux-cypress-16.2.1
+          fail-on-cache-miss: true
+      - name: Install the cypress CLI
+        working-directory: ${{ runner.temp }}
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+        run: npm install --no-save --no-package-lock --no-audit --no-fund cypress@16.2.1
+      - name: Start a session bus
+        if: matrix.bus == 'session'
+        run: |
+          address=$(dbus-daemon --session --fork --print-address=1)
+          echo "DBUS_SESSION_BUS_ADDRESS=$address" >> "$GITHUB_ENV"
+      - name: Time cypress verify
+        working-directory: ${{ runner.temp }}
+        env:
+          BUS: ${{ matrix.bus }}
+          # Measure the real start time instead of failing at the 30 s default.
+          CYPRESS_VERIFY_TIMEOUT: '120000'
+          DEBUG: 'cypress:cli,cypress:cli:*'
+        run: |
+          echo "load: $(cat /proc/loadavg) nproc: $(nproc) dbus: ${DBUS_SESSION_BUS_ADDRESS:-unset} display: ${DISPLAY:-unset}"
+          times=()
+          for attempt in cold warm1 warm2; do
+            start=$(date +%s%3N)
+            status=0
+            npx cypress verify > "verify-$attempt.log" 2>&1 || status=$?
+            times+=("$attempt=$(( $(date +%s%3N) - start ))ms/exit$status")
+          done
+          grep -h -i "dbus\|xvfb\|smoke\|spawn" verify-cold.log | head -40 || true
+          echo "RESULT image=$ImageVersion bus=$BUS ${times[*]}"
+          echo "| $ImageVersion | $BUS | ${times[*]} |" >> "$GITHUB_STEP_SUMMARY"
