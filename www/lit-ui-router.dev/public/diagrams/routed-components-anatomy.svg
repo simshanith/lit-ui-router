@@ -1,0 +1,53 @@
+<svg viewBox="0 0 720 232" width="100%" style="max-width: 720px" role="img" aria-label="How a routed component comes to be. A state declaration names its url, its resolves, which read params or await the element module, and its component. ui-view renders the component and hands it UIViewInjectedProps: the router, the transition that rendered the view, and the state's resolves, as the _uiViewProps property of a class component or the argument of a template function. The element the component rendered is the view's routedElement and carries the routed attribute." xmlns="http://www.w3.org/2000/svg">
+  <title>The anatomy of a routed component</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-anatomy" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <text x="118" y="18" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">the state declaration</text>
+    <text x="482" y="18" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">the view renders its component</text>
+    <!-- state declaration -->
+    <rect x="16" y="30" width="204" height="150" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="28" y="54" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">name: 'user'</text>
+    <text x="28" y="76" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">url: '/users/:id'</text>
+    <text x="28" y="98" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">resolve: [userId]</text>
+    <text x="28" y="112" font-size="10" fill="var(--vp-c-text-2, #67676c)">a param, or the element module</text>
+    <text x="28" y="136" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">component: UserDetail</text>
+    <text x="28" y="150" font-size="10" fill="var(--vp-c-text-2, #67676c)">a class, or a template function</text>
+    <line x1="228" y1="105" x2="254" y2="105" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-anatomy)" />
+    <!-- ui-view -->
+    <rect x="260" y="30" width="444" height="150" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="270" y="45" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="274" y="54" width="212" height="112" rx="8" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="284" y="72" font-size="11" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">UIViewInjectedProps</text>
+    <text x="284" y="90" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">router</tspan></text>
+    <text x="284" y="105" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">transition</tspan> that rendered the view</text>
+    <text x="284" y="120" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">resolves</tspan> of the state</text>
+    <text x="284" y="142" font-size="10" fill="var(--vp-c-text-2, #67676c)">class: its <tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">_uiViewProps</tspan> property</text>
+    <text x="284" y="155" font-size="10" fill="var(--vp-c-text-2, #67676c)">template: the function's argument</text>
+    <line x1="492" y1="110" x2="514" y2="110" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-anatomy)" />
+    <rect x="520" y="84" width="170" height="52" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="530" y="102" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)">UserDetail element</text>
+    <text x="530" y="118" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan></text>
+    <text x="520" y="196" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; this element</text>
+    <text x="520" y="209" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">ui-view &gt; [routed]</tspan> for CSS</text>
+    <text x="16" y="222" font-size="10" fill="var(--vp-c-text-2, #67676c)">Resolves settle before the state is entered, so the component renders with its inputs ready.</text>
+  </g>
+</svg>

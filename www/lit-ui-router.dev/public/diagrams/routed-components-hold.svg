@@ -1,0 +1,77 @@
+<svg viewBox="0 0 720 396" width="100%" style="max-width: 720px" role="img" aria-label="How ui-view swaps one routed component for another. Class component: before the swap the outgoing element is the routed element and carries the routed attribute. When the view updates, the incoming element is placed next to the outgoing one; routedElement and the routed attribute move to the incoming element at once, while the outgoing element stays on screen until the incoming element completes its first update, then it is removed. Template component: the view update replaces the outgoing element in place, with no hold. A template component that swaps its own elements without the view updating, as until() does, moves routedElement at once and the routed attribute a microtask later." xmlns="http://www.w3.org/2000/svg">
+  <title>The hold: how ui-view replaces one routed component with another</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-hold" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <text x="185" y="18" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">before the swap</text>
+    <text x="395" y="18" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">the view updates</text>
+    <text x="605" y="18" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">the incoming element</text>
+    <text x="605" y="31" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">completes its first update</text>
+    <!-- class component -->
+    <text x="16" y="68" font-size="11" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">class</text>
+    <text x="16" y="82" font-size="11" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">component</text>
+    <rect x="100" y="48" width="170" height="128" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="110" y="63" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="114" y="72" width="142" height="40" rx="8" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="124" y="88" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">outgoing element</text>
+    <text x="124" y="103" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan></text>
+    <line x1="276" y1="112" x2="304" y2="112" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-hold)" />
+    <rect x="310" y="48" width="170" height="128" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="320" y="63" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="324" y="72" width="142" height="40" rx="8" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="334" y="88" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">outgoing element</text>
+    <text x="334" y="103" font-size="10" fill="var(--vp-c-text-2, #67676c)">still on screen</text>
+    <rect x="324" y="122" width="142" height="40" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="334" y="138" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)">incoming element</text>
+    <text x="334" y="153" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan> &#183; not rendered</text>
+    <line x1="486" y1="112" x2="514" y2="112" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-hold)" />
+    <rect x="520" y="48" width="170" height="128" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="530" y="63" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="534" y="72" width="142" height="40" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="544" y="88" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)">incoming element</text>
+    <text x="544" y="103" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan></text>
+    <text x="100" y="192" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; outgoing</text>
+    <text x="310" y="192" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; incoming</text>
+    <text x="520" y="192" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; incoming</text>
+    <text x="310" y="205" font-size="10" fill="var(--vp-c-text-2, #67676c)">the hold: both stand until the incoming</text>
+    <text x="310" y="218" font-size="10" fill="var(--vp-c-text-2, #67676c)">element has rendered</text>
+    <text x="520" y="205" font-size="10" fill="var(--vp-c-text-2, #67676c)">outgoing element removed</text>
+    <!-- template component -->
+    <text x="16" y="258" font-size="11" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">template</text>
+    <text x="16" y="272" font-size="11" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">component</text>
+    <rect x="100" y="238" width="170" height="78" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="110" y="253" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="114" y="262" width="142" height="40" rx="8" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="124" y="278" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">outgoing element</text>
+    <text x="124" y="293" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan></text>
+    <line x1="276" y1="277" x2="304" y2="277" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-hold)" />
+    <rect x="310" y="238" width="170" height="78" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="320" y="253" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">&lt;ui-view&gt;</text>
+    <rect x="324" y="262" width="142" height="40" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="334" y="278" font-size="12" font-weight="600" fill="var(--vp-c-brand-1, #006a9a)">incoming element</text>
+    <text x="334" y="293" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">[routed]</tspan></text>
+    <text x="100" y="332" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; outgoing</text>
+    <text x="310" y="332" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> &#8594; incoming</text>
+    <text x="310" y="345" font-size="10" fill="var(--vp-c-text-2, #67676c)">replaced in the same update: no hold</text>
+    <text x="16" y="372" font-size="10" fill="var(--vp-c-text-2, #67676c)">A template component that swaps its own elements without the view updating, as <tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">until()</tspan> does, moves <tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routedElement</tspan> at once;</text>
+    <text x="16" y="385" font-size="10" fill="var(--vp-c-text-2, #67676c)">the <tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">routed</tspan> attribute follows a microtask later.</text>
+  </g>
+</svg>
