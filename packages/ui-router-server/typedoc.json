@@ -8,6 +8,7 @@
     "src/simulate.ts",
     "src/location.ts",
     "src/url-config.ts",
+    "src/url-pattern.ts",
     "src/ssr.ts",
     "src/ssr-client.ts",
     "src/connect.ts",

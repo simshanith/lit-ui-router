@@ -140,6 +140,14 @@
       "node": "./dist/development/url-config.js",
       "default": "./dist/url-config.js"
     },
+    "./url-pattern": {
+      "types": "./dist/url-pattern.d.ts",
+      "development": "./dist/development/url-pattern.js",
+      "production": "./dist/url-pattern.js",
+      "deno": "./dist/url-pattern.js",
+      "node": "./dist/development/url-pattern.js",
+      "default": "./dist/url-pattern.js"
+    },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "development": "./dist/development/vite.js",
@@ -288,6 +296,11 @@
       ]
     },
     "./url-config": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-pattern": {
       "free": [
         "@uirouter/core"
       ]

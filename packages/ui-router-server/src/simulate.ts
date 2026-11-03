@@ -4,6 +4,7 @@ import type { StateDeclaration } from '@uirouter/core';
 import { serverLocationPlugin } from './location.ts';
 import { applyUrlConfig } from './url-config.ts';
 import type { RouterUrlConfig } from './url-config.ts';
+import { hookedUrl, urlHooks } from './url-hooks.ts';
 
 /**
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
@@ -21,6 +22,9 @@ export function createHeadlessRouter(
   router.plugin(servicesPlugin);
   router.plugin(serverLocationPlugin);
   applyUrlConfig(router, config);
+  const hooked = states.map((state) => hookedUrl(state.url)).find(Boolean);
+
+  if (hooked) router.plugin(hooked[urlHooks].plugin);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));

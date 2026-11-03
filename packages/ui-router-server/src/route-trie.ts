@@ -12,12 +12,19 @@
 
 import { matchRoute } from './redirects.ts';
 import type { CompiledRoute, RouteIndex, RouteMatch } from './redirects.ts';
+import type { CompiledMatcher } from './url-matcher.ts';
+import { mayMatchSlash } from './regexp-slash.ts';
+import { isCompiledUrlPattern } from './url-hooks.ts';
 
 /**
- * Why a route stays out of the trie: its compiler was `caseInsensitive`, or
- * a path param's pattern (or squash string) may consume a `/`.
+ * Why a route stays out of the trie: its compiler was `caseInsensitive`, a
+ * path param's pattern (or squash string) may consume a `/`, or a URLPattern
+ * route's literal text holds a character URLPattern percent-encodes.
  */
-export type InexpressibleReason = 'case-insensitive' | 'slash-spanning-param';
+export type InexpressibleReason =
+  | 'case-insensitive'
+  | 'slash-spanning-param'
+  | 'encoded-literal';
 
 /** A route the trie can't express, with the reason. */
 export interface InexpressibleRoute {
@@ -48,47 +55,22 @@ type Segment = string | null;
 
 const node = (): TrieNode => ({ literal: new Map(), param: null, routes: [] });
 
-// An escape, a character class, or one source character.
-const atom =
-  /\\(?:x[\da-fA-F]{2}|u[\da-fA-F]{4}|c[a-zA-Z]|[\s\S])|\[(?:\\[\s\S]|[^\\\]])*\]|[\s\S]/g;
-
-// Numeric escapes are backreferences or legacy octals (\057 is '/'): refuse them unread.
-const opaqueEscape = /^\\[\dk]/;
-
-const atomMatchesSlash = (token: string): boolean => {
-  if (token.length === 1) return token === '/' || token === '.';
-
-  if (opaqueEscape.test(token)) return true;
-
-  return new RegExp(`^(?:${token})$`).test('/');
-};
-
-/** True when a regexp source may consume a `/` or close a group it didn't open; never a false negative. */
-const mayMatchSlash = (source: string): boolean => {
-  let depth = 0;
-
-  for (const token of source.match(atom) ?? []) {
-    if (token === '(') depth++;
-
-    if (token === ')') depth--;
-
-    if (depth < 0 || atomMatchesSlash(token)) return true;
-  }
-
-  return depth !== 0;
-};
-
-const slashSpanningParam = (route: CompiledRoute): string | undefined =>
-  route.matcher.pathParams.find(
+const slashSpanningParam = (matcher: CompiledMatcher): string | undefined =>
+  matcher.pathParams.find(
     ({ type, squash }) =>
       mayMatchSlash(type.pattern.source) ||
       (squash !== true && squash !== false && mayMatchSlash(squash)),
   )?.id;
 
 const classify = (route: CompiledRoute): InexpressibleRoute | null => {
-  if (route.matcher.regexp.flags.includes('i'))
+  const { matcher } = route;
+
+  if (isCompiledUrlPattern(matcher))
+    return matcher.inexpressible && { route, ...matcher.inexpressible };
+
+  if (matcher.regexp.flags.includes('i'))
     return { route, reason: 'case-insensitive' };
-  const param = slashSpanningParam(route);
+  const param = slashSpanningParam(matcher);
 
   return param === undefined
     ? null
@@ -138,7 +120,11 @@ const spellingsOf = ({ matcher }: CompiledRoute): Segment[][] => {
   });
 
   // compile() appends `/?` only when not strict; quoted static text escapes `?`.
-  if (matcher.regexp.source.endsWith('\\/?$'))
+  if (
+    isCompiledUrlPattern(matcher)
+      ? !matcher.strict
+      : matcher.regexp.source.endsWith('\\/?$')
+  )
     spellings = [
       ...spellings,
       ...spellings.map((spelling) => appendText(spelling, '/')),
@@ -231,18 +217,22 @@ export function compileRouteTrie(routes: CompiledRoute[]): RouteTrie {
   return Object.freeze({ match, inexpressible: Object.freeze(inexpressible) });
 }
 
-const reasonText = ({ reason, param }: InexpressibleRoute): string =>
-  reason === 'case-insensitive'
-    ? 'it compiles caseInsensitive'
-    : `its param '${param}' may match a '/'`;
+const reasonText = ({ reason, param }: InexpressibleRoute): string => {
+  if (reason === 'case-insensitive') return 'it compiles caseInsensitive';
+
+  if (reason === 'encoded-literal')
+    return 'its literal text holds a character URLPattern encodes';
+
+  return `its param '${param}' may match a '/'`;
+};
 
 /**
  * The trie {@link RouteIndex}: hand it to
  * {@link index!MountConfig.routeIndex | `MountConfig.routeIndex`} to resolve a
  * 'matcher' mount by segment trie instead of a linear scan. Verdicts are the
  * linear scan's. It throws at construction, naming each route it can't
- * express: a case-insensitive url config, or a path param whose pattern may
- * match a `/`.
+ * express: a case-insensitive url config, a path param whose pattern may
+ * match a `/`, or URLPattern literal text the engine percent-encodes.
  *
  * @example
  * ```ts

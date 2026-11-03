@@ -308,7 +308,12 @@ export interface CompiledParam {
   readonly defaultValue: unknown;
 }
 
-const compileParam = (
+/**
+ * Compiles one param of `pattern` from its declaration in `config.params`.
+ *
+ * @internal
+ */
+export const compileParam = (
   id: string,
   urlType: ParamType | null,
   isSearch: boolean,
@@ -392,8 +397,15 @@ const paramIsDefault = (param: CompiledParam, input: unknown): boolean => {
   return typeEquals(param.type, defaultValue, input);
 };
 
-/** Whether a typed value can appear in a built url (core's Param.validates). */
-const paramValidates = (param: CompiledParam, input: unknown): boolean => {
+/**
+ * Whether a typed value can appear in a built url (core's Param.validates).
+ *
+ * @internal
+ */
+export const paramValidates = (
+  param: CompiledParam,
+  input: unknown,
+): boolean => {
   // No value, but the param is optional.
   if ((input === undefined || input === null) && param.isOptional) return true;
 
@@ -452,7 +464,13 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
 export interface UrlMatcherCompilerConfig
   extends RouterUrlConfig, Pick<UrlMatcherCompileConfig, 'decodeParams'> {}
 
-interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
+/**
+ * A compiler config with its defaults applied, plus one pattern's params.
+ *
+ * @internal
+ */
+export interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
+  /** The pattern's param declarations. */
   params: NonNullable<UrlMatcherCompileOptions['params']>;
 }
 
@@ -579,9 +597,19 @@ const compileMatcher = <M>(
 // Core's sort weights: slash → 1, static text → 2, param → 3; search
 // params carry no weight. Memoized as in core; the WeakMap keeps the
 // cache off the matcher's inert data.
-const weightsCache = new WeakMap<CompiledMatcher<unknown>, number[]>();
+/**
+ * The pieces of a compiled pattern that sorting and url building read.
+ *
+ * @internal
+ */
+export type MatcherParts = Pick<
+  CompiledMatcher<unknown>,
+  'segments' | 'pathParams' | 'searchParams'
+>;
 
-const segmentWeights = (matcher: CompiledMatcher<unknown>): number[] => {
+const weightsCache = new WeakMap<MatcherParts, number[]>();
+
+const segmentWeights = (matcher: MatcherParts): number[] => {
   const cached = weightsCache.get(matcher);
 
   if (cached) return cached;
@@ -609,6 +637,15 @@ export function compare(
   a: CompiledMatcher<unknown>,
   b: CompiledMatcher<unknown>,
 ): number {
+  return compareParts(a, b);
+}
+
+/**
+ * {@link compare} over any {@link MatcherParts}.
+ *
+ * @internal
+ */
+export function compareParts(a: MatcherParts, b: MatcherParts): number {
   const weightsA = segmentWeights(a);
   const weightsB = segmentWeights(b);
   const length = Math.max(weightsA.length, weightsB.length);
@@ -641,9 +678,22 @@ export function exec(
   if (match.length - 1 !== matcher.pathParams.length)
     throw new Error(`Unbalanced capture group in route '${matcher.pattern}'`);
 
+  return decodeCaptures(matcher, match.slice(1));
+}
+
+/**
+ * {@link exec}'s values from the captured path strings, in path-param order:
+ * replaced, percent-decoded, typed and defaulted; search params defaulted.
+ *
+ * @internal
+ */
+export function decodeCaptures(
+  matcher: MatcherParts & Pick<CompiledMatcher<unknown>, 'decodeParams'>,
+  captures: readonly (string | undefined)[],
+): RawParams {
   const values: RawParams = {};
   matcher.pathParams.forEach((param, index) => {
-    let value: unknown = match[index + 1];
+    let value: unknown = captures[index];
 
     for (const { from, to } of param.replace) {
       if (from === value) value = to;
@@ -682,6 +732,36 @@ export function format(
   matcher: CompiledMatcher<unknown>,
   values: RawParams = {},
 ): string | null {
+  const parts = formatParts(matcher, values);
+
+  return parts === null ? null : parts.path + parts.query + parts.fragment;
+}
+
+/**
+ * A built url's pieces, as {@link formatParts} returns them.
+ *
+ * @internal
+ */
+export interface FormattedParts {
+  /** The path. */
+  readonly path: string;
+  /** The query string with its `?`, or empty. */
+  readonly query: string;
+  /** The fragment with its `#`, or empty. */
+  readonly fragment: string;
+  /** Each path param's encoded value, in path-param order. */
+  readonly encodedPath: readonly unknown[];
+}
+
+/**
+ * {@link format} over any {@link MatcherParts}, its pieces kept apart.
+ *
+ * @internal
+ */
+export function formatParts(
+  matcher: MatcherParts,
+  values: RawParams = {},
+): FormattedParts | null {
   const details = (param: CompiledParam) => {
     const value = paramValue(param, values[param.id]);
     const isValid = paramValidates(param, value);
@@ -753,23 +833,22 @@ export function format(
     .filter((pair) => pair !== null)
     .join('&');
 
-  const fragment = values['#'] ? `#${String(values['#'])}` : '';
-
-  return result + (query ? `?${query}` : '') + fragment;
+  return {
+    path: result,
+    query: query ? `?${query}` : '',
+    fragment: values['#'] ? `#${String(values['#'])}` : '',
+    encodedPath: path.map(({ encoded }) => encoded),
+  };
 }
 
 /**
- * Creates a matcher compiler — named for core's UrlMatcherFactory, whose
- * defaults it keeps: strict trailing-slash matching, case-sensitive,
- * percent-decoding on, and a default squash policy of false.
+ * A compiler config with core's defaults applied, its squash policy checked.
+ *
+ * @internal
  */
-export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
-  /** Compiles one pattern into a {@link CompiledMatcher}, with per-pattern {@link UrlMatcherCompileOptions}. */
-  compile: <M = undefined>(
-    pattern: string,
-    options?: UrlMatcherCompileOptions<M>,
-  ) => CompiledMatcher<M>;
-} {
+export function resolveCompilerConfig(
+  config: UrlMatcherCompilerConfig = {},
+): Required<UrlMatcherCompilerConfig> {
   const {
     strict = true,
     caseInsensitive = false,
@@ -786,6 +865,24 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
     throw new Error(
       `Invalid squash policy: ${String(defaultSquashPolicy)}. Valid policies: false, true, arbitrary-string`,
     );
+
+  return { strict, caseInsensitive, decodeParams, defaultSquashPolicy };
+}
+
+/**
+ * Creates a matcher compiler — named for core's UrlMatcherFactory, whose
+ * defaults it keeps: strict trailing-slash matching, case-sensitive,
+ * percent-decoding on, and a default squash policy of false.
+ */
+export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
+  /** Compiles one pattern into a {@link CompiledMatcher}, with per-pattern {@link UrlMatcherCompileOptions}. */
+  compile: <M = undefined>(
+    pattern: string,
+    options?: UrlMatcherCompileOptions<M>,
+  ) => CompiledMatcher<M>;
+} {
+  const { strict, caseInsensitive, decodeParams, defaultSquashPolicy } =
+    resolveCompilerConfig(config);
 
   // oxlint-disable-next-line anti-slop/no-known-value-widening -- published return shape; naming it would add a matcher export
   return {

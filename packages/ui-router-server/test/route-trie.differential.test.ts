@@ -9,6 +9,7 @@ import type {
 } from '../src/redirects.ts';
 import { compileRouteTrie } from '../src/route-trie.ts';
 import type { UrlMatcherCompilerConfig } from '../src/url-matcher.ts';
+import { urlPattern } from '../src/url-pattern.ts';
 
 // The divergence guard for the trie: every route set/url pair runs through
 // the trie and through matchRoute over the routes the trie expresses, and
@@ -316,6 +317,48 @@ const featureCases: DifferentialCase[] = [
     ],
     urls: ['/files/a', '/files/a/b', '/files/', '/s', '/s/x', '/s/x/y'],
     inexpressible: ['files', 'any'],
+  },
+  {
+    label: 'URLPattern routes mixed with string routes',
+    routes: [
+      { name: 'users', url: urlPattern('/users') },
+      {
+        name: 'users.detail',
+        url: urlPattern('/:id'),
+        params: { id: { type: 'int' } },
+      },
+      { name: 'users.new', url: urlPattern('/new') },
+      { name: 'files', url: urlPattern('/files/:name.:ext') },
+      { name: 'codes', url: urlPattern('/codes/:code([a-z]{3})') },
+      { name: 'rest', url: urlPattern('/rest/:all(.*)') },
+      { name: 'legacy', url: '/users/{id:int}/old' },
+      { name: 'plain', url: '/files/:id' },
+    ],
+    urls: [
+      '/users',
+      '/users/',
+      '/users/42',
+      '/users/new',
+      '/users/abc',
+      '/users/42/old',
+      '/files/a.b.c',
+      '/files/a',
+      '/codes/abc',
+      '/codes/abcd',
+      '/rest/a/b',
+      '/files/%zz',
+    ],
+    inexpressible: ['rest'],
+  },
+  {
+    label: 'URLPattern routes mixed with string routes, not strict',
+    routes: [
+      { name: 'users', url: urlPattern('/users') },
+      { name: 'user', url: urlPattern('/users/:id') },
+      { name: 'legacy', url: '/legacy/:id' },
+    ],
+    config: { strict: false },
+    urls: ['/users', '/users/', '/users/1', '/users/1/', '/legacy/1/', '/'],
   },
   {
     label: 'a case-insensitive compiler',

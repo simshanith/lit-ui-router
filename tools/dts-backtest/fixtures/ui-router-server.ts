@@ -70,6 +70,8 @@ import {
   compileRedirects,
   compileRoutes,
   evaluateRedirects,
+  execRoute,
+  formatRoute,
   matchRoute,
   type CompiledRoute,
   type RedirectTable,
@@ -99,6 +101,14 @@ import {
   applyUrlConfig,
   type RouterUrlConfig,
 } from 'ui-router-server/url-config';
+import {
+  urlPattern,
+  urlPatternOf,
+  urlPatternPlugin,
+  type UrlPatternDeclaration,
+  type UrlPatternOptions,
+  type UrlPatternUrl,
+} from 'ui-router-server/url-pattern';
 import {
   serverRouterPlugin,
   type ServerRouterPlugin,
@@ -430,6 +440,34 @@ export async function adoptedWithTransport(
 export function sharedUrlConfig(router: UIRouter): UIRouter {
   return applyUrlConfig(router, matcherConfig);
 }
+
+// URLPattern tier: the branded url fits core's string-typed url field.
+const patternOptions: UrlPatternOptions = { query: ['sort'] };
+
+const usersPattern: UrlPatternUrl = urlPattern(
+  { pathname: '/users/:id' },
+  patternOptions,
+);
+
+export function patternRouter(router: UIRouter): UrlPatternDeclaration | null {
+  router.plugin(urlPatternPlugin);
+  router.stateRegistry.register({ name: 'users', url: usersPattern });
+
+  return urlPatternOf(usersPattern);
+}
+
+export const patternRoutes: CompiledRoute[] = compileRoutes([
+  { name: 'user', url: urlPattern('/user/:id') },
+]);
+
+export const patternParams: RawParams | null = execRoute(
+  patternRoutes[0],
+  '/user/42',
+);
+
+export const patternHref: string | null = formatRoute(patternRoutes[0], {
+  id: 42,
+});
 
 const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
 
