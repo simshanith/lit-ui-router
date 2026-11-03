@@ -23,8 +23,8 @@ catalogs:
       specifier: 4.14.0
       version: 4.14.0
     '@cloudflare/config':
-      specifier: 0.29.0
-      version: 0.29.0
+      specifier: 0.29.1
+      version: 0.29.1
     '@codecov/bundle-analyzer':
       specifier: ^2.0.1
       version: 2.0.1
@@ -41,8 +41,8 @@ catalogs:
       specifier: ^0.11.0
       version: 0.11.0
     '@effect/sql-d1':
-      specifier: ^4.1.1
-      version: 4.1.1
+      specifier: ^4.1.2
+      version: 4.1.2
     '@iconify-json/lucide':
       specifier: ^1.2.150
       version: 1.2.150
@@ -143,8 +143,8 @@ catalogs:
       specifier: ^9.0.0
       version: 9.0.0
     effect:
-      specifier: ^4.1.1
-      version: 4.1.1
+      specifier: ^4.1.2
+      version: 4.1.2
     esbuild:
       specifier: ^0.28.2
       version: 0.28.2
@@ -688,7 +688,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.1(@types/node@24.19.2)
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   apps/sample-app-lit-e2e:
     dependencies:
@@ -737,7 +737,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -786,7 +786,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.1(@types/node@24.19.2)
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   apps/sample-app-lit-mobx:
     dependencies:
@@ -1285,7 +1285,7 @@ importers:
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       effect-3:
         specifier: catalog:effect3-compat
         version: effect@3.22.4
@@ -1841,7 +1841,7 @@ importers:
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       effect-3:
         specifier: catalog:effect3-compat
         version: effect@3.22.4
@@ -1985,7 +1985,7 @@ importers:
         version: '@uirouter/core@6.0.8'
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -2408,7 +2408,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       hono:
         specifier: 'catalog:'
         version: 4.13.16
@@ -2963,7 +2963,7 @@ importers:
     devDependencies:
       '@cloudflare/config':
         specifier: 'catalog:'
-        version: 0.29.0
+        version: 0.29.1
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
@@ -3099,7 +3099,7 @@ importers:
         version: 1.14.0(supports-color@10.2.2)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.1(@types/node@24.19.2)
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   www/release-diffs.lit-ui-router.dev:
     devDependencies:
@@ -3117,22 +3117,22 @@ importers:
         version: 7.0.2
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.1(@types/node@24.19.2)
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   www/release-ledger.lit-ui-router.dev:
     dependencies:
       '@effect/sql-d1':
         specifier: 'catalog:'
-        version: 4.1.1(effect@4.1.1)
+        version: 4.1.2(effect@4.1.2)
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
       cloudflare-effect-tracer:
         specifier: 'catalog:'
-        version: 0.2.0(effect@4.1.1)
+        version: 0.2.0(effect@4.1.2)
       effect:
         specifier: 'catalog:'
-        version: 4.1.1
+        version: 4.1.2
       jose:
         specifier: 'catalog:'
         version: 6.2.15
@@ -3157,7 +3157,7 @@ importers:
         version: 7.0.2
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.1(@types/node@24.19.2)
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
 packages:
 
@@ -3275,6 +3275,9 @@ packages:
   '@cloudflare/config@0.29.0':
     resolution: {integrity: sha512-0sD73G6xRdz6/9DXNcAuLv6VbnNiWA09zo7VwhPyaa3ysIGvLMXJR5G19r3+iG5ZIB9ErGMwqgprVOVaYKsIpw==}
 
+  '@cloudflare/config@0.29.1':
+    resolution: {integrity: sha512-3wWliifIE9yLDp+56Y5iLT1a6fIjBVjkHpJ5Q48UpJwcGOrQ23cNppLlvjVSjxV4+S5gZEZwElLC1fwQ2hmOEQ==}
+
   '@cloudflare/kv-asset-handler@0.5.0':
     resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
     engines: {node: '>=22.0.0'}
@@ -3351,8 +3354,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@5.20261018.1':
-    resolution: {integrity: sha512-0o+tp586a2/IJELadYMnuh6kQapnwLsEpsR7yV/eFxp76QdC46ACMmLMILCTwU1hcd/y2b+bnCopuPUeas6OAg==}
+  '@cloudflare/workers-types@5.20261102.1':
+    resolution: {integrity: sha512-rRNznLGla+8vRdToTN/5M+AzlopILSLLZ3qo2L5Ku/dY792iOlX/K9ZLkLnLYji1jycv7+FB12hiE+fFjVgMrw==}
 
   '@codecov/bundle-analyzer@2.0.1':
     resolution: {integrity: sha512-SkL0+Ccs6VuHIA9Bxb8/J110CffRXpqtKt7m18FTWC0P6gDKEsoieUerDdcd6K9BFKujj6gaUdTt5i4I/v8GTA==}
@@ -3520,10 +3523,10 @@ packages:
   '@docsearch/sidepanel-js@4.7.1':
     resolution: {integrity: sha512-uyOKbC6rjHCZBVbLCSZVb1NDWzjbD27WqxTuRYnkTW717laEj2dX+W8Ho1fNHSyG4dqssIlPWlXdg+McGxxxxg==}
 
-  '@effect/sql-d1@4.1.1':
-    resolution: {integrity: sha512-CQMOiw9bmj4ifsUA4KLwIgBJBMpPHaF3OYdXnA9oOxeEmD61+XDLkJUSA2mG7BWCIEZc7MquGxl3HuUVOeqtSA==}
+  '@effect/sql-d1@4.1.2':
+    resolution: {integrity: sha512-7uzFwDg/SQali/+Edp6H/t0nQSXtdDsNO8dHkC8xl45/YITJ6F5Os0pBZdXMCdtqehekhDM3qzTtJut4rLGcEA==}
     peerDependencies:
-      effect: ^4.1.1
+      effect: ^4.1.2
 
   '@emnapi/core@1.11.2':
     resolution: {integrity: sha512-TC8MkTuZUtcTSiFeuC0ksCh9QIJ5+F21MvZ4Wn4ORfYaFJ/0dsiudv5tVkejgwZlwQ39jL9WWDe2lz8x0WglOA==}
@@ -6839,8 +6842,8 @@ packages:
   effect@3.22.4:
     resolution: {integrity: sha512-RNshu7AXVxxDh6aS4lothhJ+QoZ4xSykbWNaaVdvDN72RMyVwhCGdALkyl1TbEydgAmRIdD1eTyJqBUGwSBGDA==}
 
-  effect@4.1.1:
-    resolution: {integrity: sha512-XYu65BrcmNqu5i7PPvP4dqL+R5ma37zIsfuSPjcn78mog+6e5PkilNg7Xo+pBpjXJYlWEIpH4j91tMrfW05CMw==}
+  effect@4.1.2:
+    resolution: {integrity: sha512-d3Oah1WyKxFLFh19yWheS5IXIVaITzxZ71JkE1rkUozq/6EcJSU5nPk5bF2QrSygZ3SQoiNQB8TsxFriyMeMaQ==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -10053,6 +10056,10 @@ snapshots:
     dependencies:
       zod: 4.6.7
 
+  '@cloudflare/config@0.29.1':
+    dependencies:
+      zod: 4.6.7
+
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
   '@cloudflare/runtime-types@0.1.19(@types/node@24.19.2)':
@@ -10100,7 +10107,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261101.1':
     optional: true
 
-  '@cloudflare/workers-types@5.20261018.1': {}
+  '@cloudflare/workers-types@5.20261102.1': {}
 
   '@codecov/bundle-analyzer@2.0.1':
     dependencies:
@@ -10318,10 +10325,10 @@ snapshots:
 
   '@docsearch/sidepanel-js@4.7.1': {}
 
-  '@effect/sql-d1@4.1.1(effect@4.1.1)':
+  '@effect/sql-d1@4.1.2(effect@4.1.2)':
     dependencies:
-      '@cloudflare/workers-types': 5.20261018.1
-      effect: 4.1.1
+      '@cloudflare/workers-types': 5.20261102.1
+      effect: 4.1.2
 
   '@emnapi/core@1.11.2':
     dependencies:
@@ -12771,9 +12778,9 @@ snapshots:
 
   clone@2.1.2: {}
 
-  cloudflare-effect-tracer@0.2.0(effect@4.1.1):
+  cloudflare-effect-tracer@0.2.0(effect@4.1.2):
     dependencies:
-      effect: 4.1.1
+      effect: 4.1.2
 
   color-convert@1.9.3:
     dependencies:
@@ -13149,7 +13156,7 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  effect@4.1.1: {}
+  effect@4.1.2: {}
 
   emoji-regex@10.6.0: {}
 
@@ -16556,7 +16563,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20261101.1
       '@cloudflare/workerd-windows-64': 1.20261101.1
 
-  wrangler@4.156.1(@types/node@24.19.2):
+  wrangler@4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261101.1)
@@ -16567,6 +16574,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20261101.1
     optionalDependencies:
+      '@cloudflare/workers-types': 5.20261102.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - '@types/node'
