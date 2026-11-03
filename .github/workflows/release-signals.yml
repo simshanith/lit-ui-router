@@ -25,33 +25,9 @@ on:
   # congested cron slot.
   schedule:
     - cron: '17 7 * * 0'
-  # Called by publish-npm.yml after a successful publish: release-it pushes
-  # the bump commit before npm `latest` moves, so the push-triggered run sees
-  # stale drift; the post-publish call flips the badge green. Calls always
-  # run the full package set.
-  workflow_call:
-    secrets:
-      TURBO_TOKEN:
-        # Remote turbo cache; absent = local cache only.
-        required: false
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
-        # Signs/verifies remote artifacts; absent = local cache only.
-        required: false
-      TURBO_API:
-        # Remote cache endpoint; a secret (not a var) so the worker domain stays
-        # out of public logs. Secrets don't auto-propagate into a called
-        # workflow, so the caller must pass it; absent = local cache only.
-        required: false
-      CLOUDFLARE_API_TOKEN:
-        # Read-scoped ("Workers Scripts: Read" for the name -> tag lookup,
-        # "Workers Builds Configuration: Read", and "Pages: Read" for the
-        # atlas deploy), USER-scoped — account-owned tokens don't cover the
-        # Builds triggers API. Absent = both Cloudflare signals report neutral
-        # (grey), never a failure.
-        required: false
-      CLOUDFLARE_ACCOUNT_ID:
-        # A secret, not a var, so it stays out of public logs.
-        required: false
+  # Dispatched by publish-npm.yml after a successful publish: release-it
+  # pushes the bump commit before npm `latest` moves, so the push-triggered
+  # run sees stale drift; the post-publish run flips the badge green.
   workflow_dispatch:
     inputs:
       packages:
@@ -65,15 +41,13 @@ env:
   HUSKY: 0
 
 # One refresh at a time, newest wins; every run targets main's current head.
-# Literal group: github.workflow evaluates to the CALLER's name on
-# workflow_call, which would split called refreshes from push refreshes.
 concurrency:
   group: release-signals
   # The scheduled sweep is the one run that must never cancel: a cron firing
-  # mid-publish would kill the post-publish workflow_call whose whole job is
+  # mid-publish would kill the post-publish dispatch whose whole job is
   # flipping the badges green. cancel-in-progress is read off the INCOMING
   # run, so a sweep queues behind whatever holds the group (and re-checks with
-  # fresh data when it starts), while any later push/call run still cancels
+  # fresh data when it starts), while any later push/dispatch run still cancels
   # the queued sweep and does the same work.
   cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
@@ -89,9 +63,8 @@ jobs:
       - name: 'Checkout code'
         uses: actions/checkout@v7
         with:
-          # Always main's head: workflow_call inherits the caller's context
-          # (a tag ref from publish-npm), and the badges query main —
-          # filter=latest supersedes stale same-name runs there.
+          # Always main's head: the badges query main — filter=latest
+          # supersedes stale same-name runs there.
           ref: main
           persist-credentials: false
       - name: Setup mise
@@ -103,9 +76,8 @@ jobs:
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:
-          # Empty on push, schedule, and workflow_call runs = full set (the
-          # inputs context is null off workflow_dispatch, so this renders as
-          # the empty string the tool already treats as "all").
+          # Empty on push, schedule, and post-publish runs = full set (the
+          # empty string the tool treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

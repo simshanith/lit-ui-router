@@ -182,7 +182,7 @@ for good, and test or canary publishes stay as evidence rather than cleanup.
 
 ### 5. Release signals (`release-signals.yml`)
 
-**Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+**Triggers:** Pushes to `main`; dispatched by Publish to NPM after a publish; manual dispatch
 
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
