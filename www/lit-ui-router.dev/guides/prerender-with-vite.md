@@ -49,13 +49,24 @@ import { mounts } from './src/routes.ts';
 export default defineConfig({
   plugins: [
     serverRouterPlugin(createServerRouter({ mounts }), {
-      prerender: { entry: './src/prerender.ts' },
+      prerender: {
+        entry: './src/prerender.ts',
+        preload: [
+          '@lit-labs/ssr/lib/install-global-dom-shim.js',
+          'lit-ui-router-ssr/register',
+        ],
+      },
     }),
   ],
 });
 ```
 
-`prerender: './src/prerender.ts'` is shorthand for the same option.
+`entry` names the prerender script. `preload` lists modules to load, in
+order, before it: here the DOM shim, then
+[`lit-ui-router-ssr/register`](/packages/ssr#a-prerendered-app), which
+defines the elements in the registry the shim installed. A relative path in
+either resolves against Vite's root. `prerender: './src/prerender.ts'` is
+shorthand for `{ entry: './src/prerender.ts' }`, with no preloads.
 
 `src/prerender.ts` is the prerender script.
 [`definePrerender`](/api/ui-router-server/vite/functions/definePrerender)
@@ -67,17 +78,13 @@ does. The plugin calls it with `site`:
 - `site.write`: writes a file, creating its directory.
 
 ```ts
-import '@lit-labs/ssr/lib/install-global-dom-shim.js';
-
+import { UIRouterLit } from 'lit-ui-router/pure';
+import { prerender, settle } from 'lit-ui-router-ssr';
+import { installServerLocation } from 'ui-router-server/location';
 import { definePrerender } from 'ui-router-server/vite';
 
-// Loaded once the DOM shim has installed, so the elements land in its registry.
-await import('lit-ui-router-ssr/register');
-const { UIRouterLit } = await import('lit-ui-router/pure');
-const { installServerLocation } = await import('ui-router-server/location');
-const { prerender, settle } = await import('lit-ui-router-ssr');
-const { mounts } = await import('./routes.ts');
-const { page, states } = await import('./app.ts');
+import { page, states } from './app.ts';
+import { mounts } from './routes.ts';
 
 const router = installServerLocation(new UIRouterLit());
 for (const state of states) router.stateRegistry.register(state);
@@ -106,8 +113,10 @@ the built `index.html`, where the app's container holds a marker:
 <div id="app"><!--app--></div>
 ```
 
-[`lit-ui-router-ssr`](/packages/ssr#a-prerendered-app) explains the import
-order: the shim must finish installing before anything defines an element.
+The shim must finish installing before anything defines an element, which
+is why it is a preload rather than an import here:
+[`lit-ui-router-ssr`](/packages/ssr#a-prerendered-app) explains the order a
+script that imports the shim itself has to follow.
 
 ## What `vite build` writes
 
@@ -130,8 +139,9 @@ router need to
 Four parties share one `vite build`. Vite runs the client build and owns
 `dist/`. `ui-router-server` owns the plugin and the verdicts, and never
 imports Lit. Your app owns the route table, the paths, the router and the
-page. `lit-ui-router-ssr` owns the Lit render. The
-<span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
+page. `lit-ui-router-ssr` owns the Lit render. Everything after the plugin
+runs in a worker thread, the solid outline, which ends once the result is
+back. The <span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
 lit-ui-router's part; the tinted files are the ones it adds to `dist/`.
 
 <!--@include: ../public/diagrams/prerender-with-vite-build-flow.svg-->
@@ -143,8 +153,9 @@ for each verdict and writes the files. The diagrams below follow each step.
 ### What the plugin hands the script
 
 The plugin runs once the client build has written `dist/`. It reads the
-built `index.html` as `shellHtml`, loads the prerender script and calls its
-default export with `site`. The script spreads `site` into `prerender()` and
+built `index.html` as `shellHtml` and starts a worker thread, which loads the
+preloads, then the prerender script, and calls its default export with
+`site`. The script spreads `site` into `prerender()` and
 returns the result unchanged: the pages, the `_redirects` lines, the
 warnings and the delegated paths. A non-empty `warnings` fails the build;
 otherwise the plugin logs a summary line.
@@ -188,10 +199,18 @@ error naming the path, and `vite build` fails.
 ## Details
 
 **Loading the script.** The plugin runs after every other plugin has finished
-the client build, and loads the prerender script through Vite's module runner
-with the project's root and mode but without the app's plugins. The app's own
-modules go through Vite; every dependency loads from `node_modules` as it
-would under `node src/prerender.ts`.
+the client build. It starts one
+[`worker_thread`](https://nodejs.org/api/worker_threads.html) per build,
+which loads the preloads and then the prerender script through a Vite module
+runner of its own, with the project's root and mode but without the app's
+plugins. The app's own modules go through Vite; every dependency loads from
+`node_modules` as it would under `node src/prerender.ts`, with the same
+`--conditions`. The result comes back to the plugin, and the thread ends with
+whatever the script and its preloads installed: the DOM shim's globals, the
+elements they defined, any loader hooks. Vite's own process never sees them,
+so a second build in the same process, as under `vite build --watch` or a
+test runner, loads the app fresh. An error the script or a preload throws
+fails the build with its own message.
 
 **`vite preview`.** The plugin's middleware still answers redirects and paths
 with no route, so `/legacy` answers 302. Every other path gets the file the
