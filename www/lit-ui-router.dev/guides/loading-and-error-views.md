@@ -78,6 +78,8 @@ region as updating for assistive technology from the moment the transition
 starts. The promise is handled on both sides because a failed transition
 rejects it, and the error is the `onError` hook's to report.
 
+<!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
+
 The recipe assumes LAZY resolves, the default. Core fetches an
 [EAGER](https://ui-router.github.io/core/docs/latest/interfaces/_resolve_interface_.resolvepolicy.html#when)
 resolve from its own `onStart` hook, which runs ahead of this one, so the
