@@ -16,7 +16,7 @@ import {
 } from '@uirouter/core';
 
 import { LitViewConfig } from './core.js';
-import type { ParentView, UiViewContextEvent } from './events.js';
+import type { UiViewContextEvent } from './events.js';
 import { uiViewContextEventName } from './events.js';
 import type { RoutedLitTemplate } from './interface.js';
 import { routedElementOf } from './routed-element.js';
@@ -98,7 +98,7 @@ export interface UiViewControllerOptions {
  *
  * @category controllers
  */
-export class UiViewController implements ReactiveController, ParentView {
+export class UiViewController implements ReactiveController {
   private readonly host: ReactiveControllerHost & HTMLElement;
 
   private readonly options: UiViewControllerOptions;
