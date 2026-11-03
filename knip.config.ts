@@ -220,9 +220,8 @@ const workspaces = {
   'www/lit-ui-router.dev': {
     // is-server.ts is the wrangler alias target for lit-html/is-server.js
     entry: ['.vitepress/vite.config.ts', 'worker/is-server.ts'],
-    // copied out of node_modules/<name>/dist by path in the vite config; cloudflare:workers is a workerd built-in
+    // copied out of node_modules/<name>/dist by path in the vite config
     ignoreDependencies: [
-      'cloudflare',
       'sample-app-lit-vanilla',
       'sample-app-lit-mobx',
       'sample-app-lit-effect',
@@ -234,10 +233,6 @@ const workspaces = {
   // knip has no cf plugin, and the config names its entrypoint as a string
   'www/release-diffs.lit-ui-router.dev': {
     entry: ['cloudflare.config.ts', 'worker/index.ts'],
-  },
-  // cloudflare:workers is a workerd built-in, not a package
-  'www/release-ledger.lit-ui-router.dev': {
-    ignoreDependencies: ['cloudflare'],
   },
 } satisfies Record<string, WorkspaceProjectConfig>;
 
