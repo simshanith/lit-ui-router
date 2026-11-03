@@ -133,24 +133,52 @@ function* importerNames(lock: Lock): Generator<string> {
   }
 }
 
+/**
+ * Versions each `*-floor` catalog alias pins, per target package. A floor
+ * splits from the workspace line by design, and links instead while the
+ * workspace sits at its version, so it never counts toward a split.
+ */
+export function floorPins(lock: Lock): Map<string, Set<string>> {
+  const pins = new Map<string, Set<string>>();
+
+  for (const catalog of Object.values(lock.catalogs ?? {})) {
+    for (const [alias, { specifier }] of Object.entries(catalog)) {
+      if (!alias.endsWith('-floor') || !specifier.startsWith('npm:')) continue;
+      const target = splitAt(specifier.slice(4));
+
+      if (!target) continue;
+      const [name, version] = target;
+      pins.set(name, (pins.get(name) ?? new Set()).add(version));
+    }
+  }
+
+  return pins;
+}
+
 const byVersion = (a: string, b: string) =>
   a.localeCompare(b, 'en', { numeric: true });
 
 /**
- * Controlled names resolved to more than one version. An exact pin beside a
- * newer caret has no common version, so `pnpm dedupe --check` passes it.
+ * Controlled names resolved to more than one version, less the versions a
+ * floor alias pins. An exact pin beside a newer caret has no common version,
+ * so `pnpm dedupe --check` passes it.
  */
 export function auditSplits(
   versions: ReadonlyMap<string, readonly string[]>,
   controlled: ReadonlySet<string>,
   allowances: readonly SplitAllowance[],
+  floors: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
 ): SplitAudit {
   const allowedNames = new Set(allowances.map(({ name }) => name));
   const failures: Split[] = [];
   const allowed: Split[] = [];
 
   for (const name of [...controlled].sort()) {
-    const resolved = versions.get(name) ?? [];
+    const pinned = floors.get(name);
+
+    const resolved = (versions.get(name) ?? []).filter(
+      (version) => pinned?.has(version) !== true,
+    );
 
     if (resolved.length < 2) continue;
     (allowedNames.has(name) ? allowed : failures).push({
