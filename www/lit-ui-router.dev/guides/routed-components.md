@@ -12,6 +12,8 @@ A routed component gets its inputs from `<ui-view>`, which renders it with
 reading its state's params, loading its own element module only when the state
 is entered, and how the page reaches the element a view rendered.
 
+<!--@include: ../public/diagrams/routed-components-anatomy.svg-->
+
 ## Reading params
 
 Declare the params the component needs as a resolve on its state. The resolve
