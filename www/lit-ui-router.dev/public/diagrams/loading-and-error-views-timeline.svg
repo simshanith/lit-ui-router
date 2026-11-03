@@ -1,5 +1,5 @@
-<svg viewBox="0 0 720 440" width="100%" style="max-width: 720px" role="img" aria-label="Two timelines of one transition. A: it succeeds. The transition starts in onStart and its resolves fetch; the old view stays mounted in ui-view. The pending indicator appears PENDING_DELAY_MS (150 ms) after the start and, once shown, stays at least MIN_SHOWN_MS (400 ms). When the resolve settles, onSuccess swaps the views and the new view renders on the next Lit update. B: it fails. The same start and the same indicator, but the resolve rejects: onError calls go(errorState, { failed }), a second transition whose error view replaces the old view. Not to scale." xmlns="http://www.w3.org/2000/svg">
-  <title>A pending indicator and an error view over one transition</title>
+<svg viewBox="0 0 720 624" width="100%" style="max-width: 720px" role="img" aria-label="Three timelines of a transition, each with rows for the transition, ui-view and the pending indicator. A: the resolve settles and the transition succeeds. The transition starts in onStart and its resolves fetch; the old view stays mounted. The pending indicator appears PENDING_DELAY_MS (150 ms) after the start and, once shown, stays at least MIN_SHOWN_MS (400 ms). On onSuccess the views swap and the new view renders on the next Lit update. B: a NOWAIT resolve starts with the transition, which succeeds without waiting for it; the new view renders with a skeleton while the promise in resolves is pending, then the data fills in. The transition settled before PENDING_DELAY_MS, so the indicator never shows. C: the resolve rejects and the transition fails. The same start and the same indicator, but onError calls go(errorState, { failed }), a second transition whose error view replaces the old view. Not to scale." xmlns="http://www.w3.org/2000/svg">
+  <title>A pending indicator, a skeleton and an error view over one transition</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
     @media (prefers-color-scheme: dark) {
@@ -51,34 +51,57 @@
     <text x="308" y="166" font-size="11" fill="var(--vp-c-brand-1, #006a9a)">shown</text>
     <line x1="300" y1="188" x2="600" y2="188" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
     <text x="450" y="202" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">&#8805; MIN_SHOWN_MS &#183; 400 ms</text>
-    <!-- B: fails -->
-    <text x="16" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">B &#8212; the resolve rejects: the transition fails</text>
+    <!-- B: NOWAIT -->
+    <text x="16" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">B &#8212; a NOWAIT resolve: the transition does not wait for it</text>
     <line x1="150" y1="246" x2="150" y2="386" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
-    <line x1="300" y1="246" x2="300" y2="386" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
-    <line x1="480" y1="246" x2="480" y2="386" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <line x1="260" y1="246" x2="260" y2="386" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
     <text x="16" y="268" font-size="11" fill="var(--vp-c-text-2, #67676c)">transition</text>
-    <rect x="150" y="252" width="330" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="150" y="252" width="110" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="158" y="268" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">onStart</text>
-    <text x="345" y="268" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">resolves fetch during the transition</text>
-    <rect x="484" y="252" width="88" height="24" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
-    <text x="528" y="268" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">onError</text>
-    <line x1="528" y1="276" x2="528" y2="302" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-timeline)" />
-    <text x="536" y="288" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">go(errorState, { failed })</text>
-    <text x="536" y="299" font-size="10" fill="var(--vp-c-text-2, #67676c)">a second transition renders it</text>
+    <rect x="264" y="252" width="88" height="24" rx="8" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
+    <text x="308" y="268" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">onSuccess</text>
+    <text x="360" y="262" font-size="10" fill="var(--vp-c-text-2, #67676c)">the NOWAIT resolve starts with the transition,</text>
+    <text x="360" y="273" font-size="10" fill="var(--vp-c-text-2, #67676c)">which succeeds without waiting for it</text>
+    <line x1="308" y1="276" x2="308" y2="302" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-timeline)" />
     <text x="16" y="322" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">&lt;ui-view&gt;</text>
-    <rect x="150" y="306" width="350" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="158" y="322" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">old view stays mounted</text>
-    <rect x="500" y="306" width="204" height="24" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
-    <text x="508" y="322" font-size="11" fill="var(--vp-c-red-1, #b8272c)">error view</text>
-    <text x="16" y="372" font-size="11" fill="var(--vp-c-text-2, #67676c)">pending indicator</text>
-    <text x="225" y="341" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">PENDING_DELAY_MS</text>
-    <text x="225" y="353" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">150 ms</text>
-    <line x1="150" y1="368" x2="300" y2="368" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
-    <rect x="300" y="356" width="300" height="24" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
-    <text x="308" y="372" font-size="11" fill="var(--vp-c-brand-1, #006a9a)">shown</text>
-    <line x1="300" y1="394" x2="600" y2="394" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
-    <text x="450" y="408" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">&#8805; MIN_SHOWN_MS &#183; 400 ms</text>
+    <rect x="150" y="306" width="130" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="158" y="322" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">old view</text>
+    <rect x="280" y="306" width="200" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <text x="288" y="322" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">new view with a skeleton</text>
+    <rect x="480" y="306" width="224" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="488" y="322" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">the data fills in</text>
+    <text x="280" y="346" font-size="10" fill="var(--vp-c-text-2, #67676c)"><tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">resolves</tspan> holds the promise; the skeleton paints until it settles</text>
+    <text x="16" y="384" font-size="11" fill="var(--vp-c-text-2, #67676c)">pending indicator</text>
+    <line x1="150" y1="380" x2="300" y2="380" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
+    <text x="312" y="384" font-size="11" fill="var(--vp-c-text-2, #67676c)">never shown: the transition settled before <tspan font-family="var(--vp-font-family-mono, ui-monospace, monospace)">PENDING_DELAY_MS</tspan></text>
+    <!-- C: fails -->
+    <text x="16" y="419" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">C &#8212; the resolve rejects: the transition fails</text>
+    <line x1="150" y1="430" x2="150" y2="570" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <line x1="300" y1="430" x2="300" y2="570" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <line x1="480" y1="430" x2="480" y2="570" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <text x="16" y="452" font-size="11" fill="var(--vp-c-text-2, #67676c)">transition</text>
+    <rect x="150" y="436" width="330" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="158" y="452" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">onStart</text>
+    <text x="345" y="452" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">resolves fetch during the transition</text>
+    <rect x="484" y="436" width="88" height="24" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
+    <text x="528" y="452" font-size="12" font-weight="600" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">onError</text>
+    <line x1="528" y1="460" x2="528" y2="486" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-timeline)" />
+    <text x="536" y="472" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">go(errorState, { failed })</text>
+    <text x="536" y="483" font-size="10" fill="var(--vp-c-text-2, #67676c)">a second transition renders it</text>
+    <text x="16" y="506" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)">&lt;ui-view&gt;</text>
+    <rect x="150" y="490" width="350" height="24" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="158" y="506" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">old view stays mounted</text>
+    <rect x="500" y="490" width="204" height="24" rx="8" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
+    <text x="508" y="506" font-size="11" fill="var(--vp-c-red-1, #b8272c)">error view</text>
+    <text x="16" y="556" font-size="11" fill="var(--vp-c-text-2, #67676c)">pending indicator</text>
+    <text x="225" y="525" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">PENDING_DELAY_MS</text>
+    <text x="225" y="537" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">150 ms</text>
+    <line x1="150" y1="552" x2="300" y2="552" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
+    <rect x="300" y="540" width="300" height="24" rx="8" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="308" y="556" font-size="11" fill="var(--vp-c-brand-1, #006a9a)">shown</text>
+    <line x1="300" y1="578" x2="600" y2="578" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-start="url(#arr-timeline)" marker-end="url(#arr-timeline)" />
+    <text x="450" y="592" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">&#8805; MIN_SHOWN_MS &#183; 400 ms</text>
     <!-- caption -->
-    <text x="16" y="430" font-size="10" fill="var(--vp-c-text-2, #67676c)">Not to scale. The indicator hides at the later of the transition settling and MIN_SHOWN_MS after it appeared.</text>
+    <text x="16" y="614" font-size="10" fill="var(--vp-c-text-2, #67676c)">Not to scale. The indicator hides at the later of the transition settling and MIN_SHOWN_MS after it appeared.</text>
   </g>
 </svg>

@@ -12,6 +12,8 @@ indicator while the transition runs, a skeleton for data the transition does
 not wait for, and an error view when it fails. [Route Guards](./route-guards)
 covers how hooks are registered and matched.
 
+<!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
+
 ## Pending indicator
 
 The view a transition leaves stays mounted while the transition runs: core
@@ -77,8 +79,6 @@ slow one from flickering it off as the view lands. `aria-busy` marks the
 region as updating for assistive technology from the moment the transition
 starts. The promise is handled on both sides because a failed transition
 rejects it, and the error is the `onError` hook's to report.
-
-<!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
 
 The recipe assumes LAZY resolves, the default. Core fetches an
 [EAGER](https://ui-router.github.io/core/docs/latest/interfaces/_resolve_interface_.resolvepolicy.html#when)
