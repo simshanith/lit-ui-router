@@ -175,6 +175,8 @@ change before the incoming element has rendered, so during the hold a
 `[routed]` rule styles the incoming element, not the outgoing one still on
 screen.
 
+<!--@include: ../public/diagrams/routed-components-hold.svg-->
+
 A template component can also swap its elements without the view updating,
 as `until()` does when its content replaces a placeholder. `routedElement`
 returns the new first element at once, and the `routed` attribute follows a
