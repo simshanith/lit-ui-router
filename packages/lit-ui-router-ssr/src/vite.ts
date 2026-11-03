@@ -15,20 +15,15 @@
 import { serverRouterPlugin as siteRouterPlugin } from 'ui-router-server/vite';
 import type {
   PrerenderBuild,
-  PrerenderEntry,
   ServerRouterPlugin,
   ServerRouterPluginOptions as SiteRouterPluginOptions,
 } from 'ui-router-server/vite';
 import type { ServerRouter } from 'ui-router-server';
 
-import type { PrerenderOptions } from './prerender.js';
+import type { PrerenderOptions, PrerenderResult } from './prerender.js';
 import { DOM_SHIM, litPreload } from './vite-preload.js';
 
-export type {
-  PrerenderBuild,
-  PrerenderEntry,
-  ServerRouterPlugin,
-} from 'ui-router-server/vite';
+export type { PrerenderBuild, ServerRouterPlugin } from 'ui-router-server/vite';
 
 /**
  * `ui-router-server/vite`'s plugin options, plus the DOM the prerender
@@ -58,6 +53,16 @@ export type PrerenderScriptOptions = Omit<
   Partial<Pick<PrerenderOptions, 'outDir' | 'write'>>;
 
 /**
+ * The default export {@link definePrerender} returns: it resolves to this
+ * package's {@link PrerenderResult} without `root`, so each page carries its
+ * `payload` report. It is assignable to `ui-router-server/vite`'s
+ * `PrerenderEntry`, which the build step calls.
+ */
+export type PrerenderEntry = (
+  build: PrerenderBuild,
+) => Promise<Omit<PrerenderResult, 'root'>>;
+
+/**
  * The callback {@link definePrerender} takes: handed the build's values,
  * such as `shellHtml` for a `document` hook, it returns the prerender
  * options.
@@ -76,7 +81,8 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  * package's `prerender()`, so the script never calls it itself.
  *
  * @param script - returns the prerender options; handed the build's values
- * @returns the default export for the prerender script
+ * @returns the default export for the prerender script, whose result's
+ * pages carry their `payload` report
  *
  * @example
  * ```ts
