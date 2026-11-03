@@ -359,22 +359,24 @@ The complete source — including the full ten-star catalog and the deep-space s
 
 ## The State Tree
 
-Here's how our states form a hierarchy:
+The four states form a tree, and their components nest `<ui-view>`s in the same shape. Each state's component renders into the `<ui-view>` of its parent state's component:
+
+<!--@include: ../public/diagrams/hellogalaxy-state-view-tree.svg-->
+
+`galaxy.stars` and `galaxy.astronaut` are siblings, so they take turns in the one `<ui-view>` inside `GalaxyShellComponent`.
+
+### One URL: `/galaxy/stars/sirius`
+
+Here is the screen at a single URL. Each child state's URL appends to its parent's, and the numbers follow the transition: the router enters each state from the root down, then the views render from the outside in:
 
 <!--@include: ../public/diagrams/hellogalaxy-nested-views.svg-->
 
-When navigating to `/galaxy/stars/sirius`:
-
-1. `galaxy` state is activated (if not already active)
-2. `GalaxyShellComponent` renders in the root `<ui-view>`
-3. `galaxy.stars` state is activated; its `stars` resolve fetches the catalog
-4. `StarsContainerComponent` renders in the shell's nested `<ui-view>`
-5. `galaxy.stars.star` state is activated; its `star` resolve finds Sirius in the inherited catalog
-6. `StarDetailComponent` renders in the nested `<ui-view>` inside `StarsContainerComponent`
-
-Side by side, the state tree and the view tree mirror each other:
-
-<!--@include: ../public/diagrams/hellogalaxy-state-view-tree.svg-->
+1. `galaxy` is entered (if not already active)
+2. `galaxy.stars` is entered; its `stars` resolve fetches the catalog
+3. `galaxy.stars.star` is entered; its `star` resolve finds Sirius in the inherited catalog
+4. The transition succeeds, and `GalaxyShellComponent` renders in the root `<ui-view>`
+5. `StarsContainerComponent` renders in the shell's nested `<ui-view>`
+6. `StarDetailComponent` renders in the `<ui-view>` inside `StarsContainerComponent`
 
 ---
 
