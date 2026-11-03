@@ -130,11 +130,11 @@ describe('failureMessage', () => {
     );
     assert.match(
       message,
-      /narrow publishedPeerSsr ui-router-server to "\^0\.8\.0" and repin ui-router-server-floor in peerFloorSsr to 0\.8\.0 in this release/,
+      /release ui-router-server@0\.8\.0 from a main without lit-ui-router-ssr's change that needs it/,
     );
     assert.match(
       message,
-      /land lit-ui-router-ssr's change after ui-router-server@0\.8\.0 is released/,
+      /narrow publishedPeerSsr ui-router-server to "\^0\.8\.0" and repin ui-router-server-floor in peerFloorSsr to 0\.8\.0 in a PR on main/,
     );
   });
 });

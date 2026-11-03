@@ -78,7 +78,7 @@ export function installArgs(dependents: readonly Dependent[]): string[] {
   ];
 }
 
-/** Why the release stops, and the two ways out, for each failed dependent. */
+/** Why the release stops, and the way through, for each failed dependent. */
 export function failureMessage(options: {
   packageName: string;
   version: string;
@@ -96,8 +96,8 @@ export function failureMessage(options: {
 
     return [
       `${dependent.name}: its ${packageName} ${dependent.kind} floor no longer proves "${range}" once the workspace moves to ${version}; it needs "${needs}".`,
-      `  - narrow ${rangeCatalog} ${packageName} to "${needs}" and repin ${packageName}-floor in ${floorCatalog} to ${version} in this release, or`,
-      `  - land ${dependent.name}'s change after ${packageName}@${version} is released.`,
+      `  - release ${packageName}@${version} from a main without ${dependent.name}'s change that needs it,`,
+      `  - then narrow ${rangeCatalog} ${packageName} to "${needs}" and repin ${packageName}-floor in ${floorCatalog} to ${version} in a PR on main.`,
     ].join('\n');
   });
 
