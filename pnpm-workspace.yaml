@@ -139,6 +139,7 @@ catalogs:
     signal-polyfill-floor: npm:signal-polyfill@0.2.0
   peerFloorEffect:
     lit-ui-router-floor: npm:lit-ui-router@1.16.0
+    ui-router-effect-floor: npm:ui-router-effect@0.3.0
   peerFloorEslintPlugin:
     eslint-floor: npm:eslint@9.0.0
   peerFloorMobx:

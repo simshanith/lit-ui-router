@@ -110,6 +110,7 @@ const workspaces = {
       'lit-2',
       'lit-ui-router-floor',
       '@uirouter/core-floor',
+      'ui-router-effect-floor',
     ],
     entry: ['test-d/*.test-d.ts'],
   },
