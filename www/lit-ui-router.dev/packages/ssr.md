@@ -30,11 +30,12 @@ npm install lit-ui-router-ssr
 ```
 
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`,
-`@uirouter/core` and `vite` are peer dependencies. `@lit-labs/ssr` is the
-server half and `@lit-labs/ssr-client` the client half, so a bundle takes one
-or the other, never both. `@lit-labs/ssr-client` is optional: install it when
-you import `lit-ui-router-ssr/client`. `vite` is optional too: install it when
-you import `lit-ui-router-ssr/vite`.
+and `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half
+and `@lit-labs/ssr-client` the client half, so a bundle takes one or the other,
+never both. `@lit-labs/ssr-client` is optional: install it when you import
+`lit-ui-router-ssr/client`. `lit-ui-router-ssr/vite` wraps
+`ui-router-server/vite`, so it takes `vite` through that package's optional
+peer.
 
 The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
 helper `<ui-view>` renders through, and the client hands a served class element

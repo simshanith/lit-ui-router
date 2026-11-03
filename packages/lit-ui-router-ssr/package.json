@@ -143,14 +143,10 @@
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeerSsr",
     "lit-ui-router": "catalog:publishedPeerSsr",
-    "ui-router-server": "catalog:publishedPeerSsr",
-    "vite": "catalog:publishedPeer"
+    "ui-router-server": "catalog:publishedPeerSsr"
   },
   "peerDependenciesMeta": {
     "@lit-labs/ssr-client": {
-      "optional": true
-    },
-    "vite": {
       "optional": true
     }
   },

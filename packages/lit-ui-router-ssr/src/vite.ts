@@ -1,7 +1,7 @@
 /**
  * The Vite plugin for a Lit app: `ui-router-server/vite`'s
  * `serverRouterPlugin`, with the prerender worker set up for Lit. It names
- * `@lit-labs/ssr`'s DOM shim and `lit-ui-router-ssr/register` as preloads, so
+ * a DOM shim (`@lit-labs/ssr`'s by default) and `lit-ui-router-ssr/register` as preloads, so
  * the prerender script imports the app, the router and this package
  * statically, and `definePrerender` calls this package's `prerender()` with
  * the options the script returns.
@@ -17,24 +17,33 @@ import type {
   PrerenderBuild,
   PrerenderEntry,
   ServerRouterPlugin,
-  ServerRouterPluginOptions,
+  ServerRouterPluginOptions as SiteRouterPluginOptions,
 } from 'ui-router-server/vite';
 import type { ServerRouter } from 'ui-router-server';
 
 import type { PrerenderOptions } from './prerender.js';
+import { DOM_SHIM, litPreload } from './vite-preload.js';
 
 export type {
   PrerenderBuild,
   PrerenderEntry,
   ServerRouterPlugin,
-  ServerRouterPluginOptions,
 } from 'ui-router-server/vite';
 
-// The shim first, then the served <ui-view>, defined in the registry the shim installed.
-const litPreload = [
-  '@lit-labs/ssr/lib/install-global-dom-shim.js',
-  'lit-ui-router-ssr/register',
-];
+/**
+ * `ui-router-server/vite`'s plugin options, plus the DOM the prerender
+ * worker installs for Lit.
+ */
+export interface ServerRouterPluginOptions extends SiteRouterPluginOptions {
+  /**
+   * Modules that install a DOM in the prerender worker, loaded in order
+   * before `lit-ui-router-ssr/register` and any `preload`. Defaults to
+   * `@lit-labs/ssr`'s DOM shim. List another DOM's setup to use it
+   * instead, or pass `[]` to install none: Lit's Node build still renders,
+   * but app code that reads `document` or `window` fails.
+   */
+  shim?: readonly string[];
+}
 
 /**
  * What a prerender script's callback returns: this package's
@@ -103,9 +112,9 @@ export function definePrerender(script: PrerenderScript): PrerenderEntry {
 /**
  * `ui-router-server/vite`'s `serverRouterPlugin`, set up for a Lit app: with
  * {@link ServerRouterPluginOptions.prerender | prerender}, the worker loads
- * `@lit-labs/ssr`'s DOM shim, then `lit-ui-router-ssr/register`, then any
- * `preload` passed here, before the prerender script, so the script imports
- * everything statically. Its default export
+ * the {@link ServerRouterPluginOptions.shim | shim}, then
+ * `lit-ui-router-ssr/register`, then any `preload` passed here, each once,
+ * before the prerender script, so the script imports everything statically. Its default export
  * comes from this module's {@link definePrerender}.
  *
  * `vite dev` and `vite preview` behave as under `ui-router-server/vite`.
@@ -133,16 +142,17 @@ export function serverRouterPlugin(
   router: ServerRouter,
   options: ServerRouterPluginOptions = {},
 ): ServerRouterPlugin {
-  const { prerender } = options;
+  const { shim = DOM_SHIM, ...siteOptions } = options;
+  const { prerender } = siteOptions;
 
-  if (prerender === undefined) return siteRouterPlugin(router, options);
+  if (prerender === undefined) return siteRouterPlugin(router, siteOptions);
 
   const { entry, preload = [] } =
     // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the option's own union: a string is shorthand for `{ entry }`
     typeof prerender === 'string' ? { entry: prerender } : prerender;
 
   return siteRouterPlugin(router, {
-    ...options,
-    prerender: { entry, preload: [...litPreload, ...preload] },
+    ...siteOptions,
+    prerender: { entry, preload: litPreload(shim, preload) },
   });
 }

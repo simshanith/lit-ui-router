@@ -62,7 +62,9 @@ loads `@lit-labs/ssr`'s DOM shim, then
 [`lit-ui-router-ssr/register`](/packages/ssr#a-prerendered-app), which
 defines the elements in the registry the shim installed. Modules of your own
 to load before the script go in `prerender: { entry, preload: [...] }`, and
-load after those two.
+load after those two; a module listed twice loads once. To use another DOM,
+list its setup modules in the plugin's `shim` option, which replaces
+`@lit-labs/ssr`'s shim; `shim: []` installs none.
 
 `src/prerender.ts` is the prerender script, and it imports everything
 statically. Its default export comes from
