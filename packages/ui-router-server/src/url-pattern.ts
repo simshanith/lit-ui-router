@@ -34,7 +34,11 @@ import type {
   UrlMatcher,
 } from '@uirouter/core';
 
+import { urlHooks } from './url-hooks.ts';
+import type { HookedUrl, UrlHooks } from './url-hooks.ts';
 import type { CompiledParam } from './url-matcher.ts';
+import type { InexpressibleRoute } from './route-trie.ts';
+import { compileRouteChain, requireUrlPattern } from './url-pattern-route.ts';
 
 /** URLPattern components; every one but `pathname` must be absent or `*`. */
 export interface UrlPatternComponents {
@@ -78,8 +82,9 @@ export type UrlPatternUrl = string & {
 /**
  * A {@link urlPattern} route chain compiled for the server strategies: the
  * platform `URLPattern` matches it, as {@link urlPatternPlugin} does on the
- * client, and the {@link matcher | matcher} tier's params type, decode and
- * format its groups.
+ * client, and the matcher tier's params type, decode and format its groups.
+ *
+ * @internal
  */
 export interface CompiledUrlPattern {
   /** The full pattern: the joined pathname, then `?` and the query names. */
@@ -100,6 +105,12 @@ export interface CompiledUrlPattern {
   readonly caseInsensitive: boolean;
   /** Whether matched values are percent-decoded. */
   readonly decodeParams: boolean;
+  /** Why the route trie can't express it, or null when it can. */
+  readonly inexpressible: Omit<InexpressibleRoute, 'route'> | null;
+  /** Matches a path: the typed params, or null when the engine or a param rejects it. */
+  readonly exec: (path: string) => RawParams | null;
+  /** Builds a url, or null when a value is invalid or the engine rejects the path. */
+  readonly format: (values?: RawParams) => string | null;
 }
 
 /** What a {@link urlPattern} url declares, as {@link urlPatternOf} reads it. */
@@ -143,18 +154,6 @@ const parsedUrls = new WeakMap<object, Parsed>();
  */
 export const parsedUrlPattern = (value: unknown): Parsed | undefined =>
   value instanceof Object ? parsedUrls.get(value) : undefined;
-
-/**
- * Throws unless the runtime has a global `URLPattern`, naming the polyfill.
- *
- * @internal
- */
-export function requireUrlPattern(): void {
-  if (!('URLPattern' in globalThis))
-    throw new Error(
-      "URLPattern routes need a global URLPattern, which this runtime lacks (node < 23.8, older browsers); load 'urlpattern-polyfill' before compiling them",
-    );
-}
 
 // ParamFactory, with the null url type core's own builder passes.
 interface NullableTypeParamFactory {
@@ -272,6 +271,13 @@ const pathnameOf = (input: string | UrlPatternComponents): string => {
   return input.pathname;
 };
 
+// Carried by every urlPattern() value, so only callers of urlPattern() load this module.
+const hooks: UrlHooks = {
+  compile: (chain, params, config, name) =>
+    compileRouteChain(chain, parsedUrlPattern, params, config, name),
+  plugin: urlPatternPlugin,
+};
+
 /**
  * Declares a state `url` in URLPattern syntax. `input` is a pathname
  * pattern, a URLPattern init, or a `URLPattern` itself (its unset components
@@ -300,9 +306,10 @@ export function urlPattern(
     if (!QUERY_NAME.test(name))
       throw new Error(`URLPattern '${pathname}': invalid query name '${name}'`);
 
-  const declaration: UrlPatternDeclaration = Object.freeze({
+  const declaration: UrlPatternDeclaration & HookedUrl = Object.freeze({
     pathname,
     query: Object.freeze(query),
+    [urlHooks]: hooks,
   });
 
   parsedUrls.set(declaration, {

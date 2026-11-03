@@ -70,6 +70,8 @@ import {
   compileRedirects,
   compileRoutes,
   evaluateRedirects,
+  execRoute,
+  formatRoute,
   matchRoute,
   type CompiledRoute,
   type RedirectTable,
@@ -457,6 +459,15 @@ export function patternRouter(router: UIRouter): UrlPatternDeclaration | null {
 export const patternRoutes: CompiledRoute[] = compileRoutes([
   { name: 'user', url: urlPattern('/user/:id') },
 ]);
+
+export const patternParams: RawParams | null = execRoute(
+  patternRoutes[0],
+  '/user/42',
+);
+
+export const patternHref: string | null = formatRoute(patternRoutes[0], {
+  id: 42,
+});
 
 const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
 
