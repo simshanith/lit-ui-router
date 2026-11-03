@@ -122,6 +122,36 @@ export function findProcessReads(
   );
 }
 
+const BARE_IMPORT = /^import\s*"([^"]+)";?$/gm;
+
+const bareImports = (code: string): Set<string> =>
+  new Set([...code.matchAll(BARE_IMPORT)].map(([, specifier]) => specifier));
+
+/**
+ * Bare imports a `dist/*.js` file carries that its `dist/development/*.js` twin
+ * does not: an import whose bindings the `DEV` fold left unused, which bundlers
+ * flag as `ignored-bare-import` against the package's `sideEffects`.
+ *
+ * @param production - each `dist/*.js` file name, with its code
+ * @param development - each `dist/development/*.js` file name, with its code
+ */
+export function findFoldedBareImports(
+  production: ReadonlyMap<string, string>,
+  development: ReadonlyMap<string, string>,
+): string[] {
+  return [...production].flatMap(([file, code]) => {
+    const twin = bareImports(development.get(file) ?? '');
+
+    return [...bareImports(code)].flatMap((specifier) =>
+      twin.has(specifier)
+        ? []
+        : [
+            `dist/${file} has a bare import "${specifier}" that dist/development/${file} lacks; the DEV fold left its bindings unused`,
+          ],
+    );
+  });
+}
+
 export type Report = { ok: boolean; text: string };
 
 /** Render the human-readable report. */
