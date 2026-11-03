@@ -322,7 +322,7 @@ function makeSidebar() {
           ],
         },
         {
-          text: 'Static Prerendering',
+          text: 'Server-Side Rendering (SSR)',
           link: '/packages/ssr',
           collapsed: true,
           items: [
