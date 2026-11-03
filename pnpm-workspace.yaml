@@ -45,8 +45,8 @@ catalog:
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
   '@vitest/browser': ^5.0.5
-  '@vitest/browser-playwright': ^5.0.5
-  '@vitest/coverage-v8': ^5.0.5
+  '@vitest/browser-playwright': ^5.1.0
+  '@vitest/coverage-v8': ^5.1.0
   cf: 1.0.0-beta.27
   cloudflare-effect-tracer: ^0.2.0
   concurrently: ^10.0.6
@@ -114,7 +114,7 @@ catalog:
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.21
   vitepress-plugin-llms: ^1.14.0
-  vitest: ^5.0.5
+  vitest: ^5.1.0
   vue: ^3.5.44
   vue-tsc: ^3.3.14
   wrangler: ^4.156.2
