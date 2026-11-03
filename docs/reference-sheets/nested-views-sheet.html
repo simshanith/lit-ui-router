@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nested Views · Structural Drawing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+/* Layout: one Apple-style dimensional drawing sheet (notes · section · plan · tables · details · layouts · title block), black on white, single light theme by design. */
+:root{--paper:#ececec;--sheet:#ffffff;--ink:#111;--ink2:#444;--ink3:#7a7a7a;--fill:#f3f3f3;--fill2:#e6e6e6;--f:'Arimo','Helvetica Neue',Helvetica,Arial,sans-serif;color-scheme:light}
+body{background:var(--paper);color:var(--ink);font-family:var(--f)}
+.wrap{max-width:1760px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scroll{overflow-x:auto;background:var(--sheet);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+svg{display:block;width:100%;min-width:1100px;height:auto}
+.tb{background:var(--sheet);border:1.5px solid var(--ink);display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;margin-bottom:24px}
+.tb>div{border-right:1px solid #d0d0d0;border-bottom:1px solid #d0d0d0;padding:10px 12px;min-width:0}
+.tb .big{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.tb h1{font-size:clamp(26px,4vw,40px);line-height:1;margin:0;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.lbl{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--ink3);font-weight:600}
+.tb .v{font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.tb .notes{grid-column:1/-1;border-right:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 24px;font-size:13px;color:var(--ink2)}
+.tb .notes ol{margin:4px 0 0;padding-left:18px}
+.tb .figs{grid-column:1/-1;border-right:0;border-bottom:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 18px}
+.tb .figs .v{font-size:17px}
+@media (max-width:640px){.tb{grid-template-columns:1fr 1fr}.tb .big{grid-column:1/-1;grid-row:auto}}
+.sheetwrap{margin-bottom:28px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);padding:10px 2px 0}
+.foot b{font-weight:600;color:var(--ink)}
+/* drawing */
+.u{font-family:var(--f);text-transform:uppercase;letter-spacing:.07em}
+.border{fill:none;stroke:var(--ink);stroke-width:1.2}
+.obj{fill:var(--sheet);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.well{fill:var(--fill);stroke:var(--ink);stroke-width:1}
+.slot{fill:none;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:4 3}
+.hug{fill:var(--fill2);stroke:var(--ink);stroke-width:1}
+.thin{fill:none;stroke:var(--ink);stroke-width:.8}
+.ph{fill:none;stroke:var(--ink3);stroke-width:.8;stroke-dasharray:14 3 3 3}
+.cl{fill:none;stroke:var(--ink3);stroke-width:.7;stroke-dasharray:16 3 2 3}
+.cut{stroke:var(--ink);stroke-width:2}
+.dl{stroke:var(--ink);stroke-width:.7;fill:none}
+.ext{stroke:var(--ink);stroke-width:.55;fill:none}
+.arrow{fill:var(--ink)}
+.hl{stroke:var(--ink2);stroke-width:.7}
+.hs{stroke:var(--ink);stroke-width:.8}
+.env{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:10 3 2 3}
+.dt{font:400 11px var(--f);fill:var(--ink);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.dts{font:400 9.5px var(--f);fill:var(--ink2);letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:var(--sheet);stroke-width:3px}
+.sl{font:400 9px var(--f);fill:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+.nt{font:400 11.5px var(--f);fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.nth{font:700 13px var(--f);fill:var(--ink);letter-spacing:.06em}
+.vt{font:400 12px var(--f);fill:var(--ink);letter-spacing:.1em;text-transform:uppercase}
+.vtb{font:400 20px var(--f);fill:var(--ink);letter-spacing:.06em}
+.nb{fill:var(--sheet);stroke:var(--ink);stroke-width:.9}
+.nbt{font:400 9.5px var(--f);fill:var(--ink)}
+.lead{stroke:var(--ink);stroke-width:.7;fill:none}
+.dot{fill:var(--ink)}
+.th{font:400 10.5px var(--f);fill:var(--ink);letter-spacing:.05em;text-transform:uppercase}
+.tc{font:400 10.5px var(--f);fill:var(--ink)}
+.tbk{font:400 7px var(--f);fill:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.tbt{font:700 15px var(--f);fill:var(--ink)}
+.tbv{font:400 17px var(--f);fill:var(--ink);letter-spacing:.06em}
+
+/* title block restyled to match the drawing sheet: thin black rules, plain caps lettering */
+.tb{border:1.2px solid var(--ink);border-radius:16px;overflow:hidden}
+.tb>div{border-right:.8px solid var(--ink);border-bottom:.8px solid var(--ink);padding:10px 14px}
+.tb>div:nth-child(4),.tb>div:nth-child(7){border-right:0}
+.tb .lbl{font-size:9.5px;font-weight:400;letter-spacing:.06em;color:var(--ink2)}
+.tb h1{font-weight:400;letter-spacing:.1em;font-size:clamp(28px,4vw,44px);margin-top:4px}
+.tb .v{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+.tb .big .v{font-size:11px;color:var(--ink2);line-height:1.6}
+.tb .notes{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);line-height:1.9}
+.tb .notes ol{padding-left:20px}
+.tb .nh{font-weight:700;font-size:13px;letter-spacing:.06em}
+.tb .nh span{font-weight:400;font-size:11.5px;margin-left:6px}
+.tb .figs>div{border-left:.8px solid var(--ink);padding-left:14px}
+.tb .figs>div:first-child{border-left:0;padding-left:0}
+.tb .figs .v{font-size:18px;letter-spacing:.06em;text-transform:none;margin-top:4px}
+.foot{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.foot b{font-weight:700}
+</style>
+<style>body{margin:0}
+.act{fill:var(--sheet);stroke:var(--ink);stroke-width:1}
+.brk{fill:none;stroke:var(--ink);stroke-width:.8}
+</style>
+<style>body{margin:0}
+.vp{fill:none;stroke:var(--ink);stroke-width:.9;stroke-dasharray:9 3 2 3}
+.cd{font:400 10px var(--f);fill:var(--ink2);letter-spacing:.02em}
+.cdb{font:400 11px var(--f);fill:var(--ink);letter-spacing:.02em}
+.fl{stroke:var(--ink);stroke-width:.8;fill:none}
+.ow{stroke:var(--ink2);stroke-width:.8;fill:none;stroke-dasharray:3 3}
+.tree{stroke:var(--ink3);stroke-width:.8;fill:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="tb">
+    <div class="big">
+      <div><div class="lbl">Router reference · structural drawing</div><h1>Nested Views</h1></div>
+      <div class="v" style="color:var(--ink2)">Architecture only: state tree, viewport tree, URL composition, view targeting, routed states. Content and styling are out of scope.</div>
+    </div>
+    <div><div class="lbl">Dwg no.</div><div class="v">UIR-NEST-001</div></div>
+    <div><div class="lbl">Rev</div><div class="v">A · 2026-10-31</div></div>
+    <div><div class="lbl">Sheets</div><div class="v">1</div></div>
+    <div><div class="lbl">Units</div><div class="v">Structure · no px</div></div>
+    <div><div class="lbl">Scale</div><div class="v">Not to scale · schematic</div></div>
+    <div><div class="lbl">Source</div><div class="v">examples/hellogalaxy main.ts · ui-view.ts · view-builder.ts · @uirouter/core 6.1.2</div></div>
+    <div class="notes">
+      <div><span class="nh">NOTES:<span>(UNLESS OTHERWISE SPECIFIED)</span></span><ol>
+        <li>Do not scale. Spans are schematic; codes measure composition, not distance.</li>
+        <li>Codes: S state · C component · V viewport (&lt;ui-view&gt;) · U URL segment · T view target · R resolve · P param · N, L sref · F fallback · D depth.</li>
+        <li>Chains add like widths: a URL segment spans its state's frame to its child's frame; the leaf spans its whole frame.</li></ol></div>
+      <div><span class="nh" aria-hidden="true">&nbsp;</span><ol start="4">
+        <li>Depth chain: each step crosses one &lt;ui-view&gt;. D(S) = D(parent) + 1, D(S0) = 0.</li>
+        <li>Slots are placeholders. Star data, copy and media are not part of the drawing.</li>
+        <li>Every value closes against source. Behavior the source leaves open is [TBD].</li>
+        <li>Grayscale by design. Styling, focus and motion are out of scope.</li></ol></div>
+    </div>
+    <div class="figs">
+      <div><div class="lbl">URL(S3)</div><div class="v">U1 + U2 + U3</div></div>
+      <div><div class="lbl">HREF(S)</div><div class="v">U0 + URL(S)</div></div>
+      <div><div class="lbl">D(S) · depth</div><div class="v">D(parent) + 1</div></div>
+      <div><div class="lbl">fqn(Vn)</div><div class="v">fqn(Vn−1).$default</div></div>
+      <div><div class="lbl">T(S) · target</div><div class="v">$default@parent(S)</div></div>
+      <div><div class="lbl">|V| · viewports</div><div class="v">1 + |{S1, S2}| = 3</div></div>
+      <div><div class="lbl">P1 · starId</div><div class="v">[^/]* · required</div></div>
+    </div>
+  </header>
+  <div class="sheetwrap"><div class="scroll"><svg id="sh1" viewBox="0 0 1700 1060" role="img" aria-label="Single sheet, nested views of the hellogalaxy example: plan view of nested viewports with URL and depth chains, state tree versus view tree section, exploded layer stack, routed states side by side, parameter detail, code tables"></svg></div>
+  <div class="foot"><span>2026-10-31 &nbsp;|&nbsp; Router reference</span><span><b>Nested views, hellogalaxy</b> &nbsp;|&nbsp; 1</span></div></div>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';let sv,A,HAT,uid=0;
+function mk(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e}
+function tx(x,y,s,c,a,p){const t=mk('text',Object.assign({x:x,y:y,class:c||'dt'},a||{}),p);t.textContent=s;return t}
+function begin(id){sv=document.getElementById(id);sv.innerHTML='';const n=uid++;const d=mk('defs',{});const m=mk('marker',{id:'ar'+n,viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},d);mk('path',{d:'M0,1.7 L10,5 L0,8.3 z',class:'arrow'},m);
+ const pt=mk('pattern',{id:'hat'+n,width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},d);mk('line',{x1:0,y1:0,x2:0,y2:5,class:'hl'},pt);A='url(#ar'+n+')';HAT='url(#hat'+n+')';rr(20,20,1660,1020,16,'border')}
+
+/* ---- kit ---- */
+function dimH(x1,x2,y,e1,e2,l,o){o=o||{};[[x1,e1],[x2,e2]].forEach(([x,e])=>{if(e==null)return;const s=Math.sign(y-e)||1;mk('line',{x1:x,y1:e+s*3,x2:x,y2:y+s*5,class:'ext'})});
+ if(x2-x1>=28)mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl','marker-start':A,'marker-end':A});else{mk('line',{x1:x1-13,y1:y,x2:x1,y2:y,class:'dl','marker-end':A});mk('line',{x1:x2+13,y1:y,x2:x2,y2:y,class:'dl','marker-end':A});mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'dl'})}
+ tx((x1+x2)/2+(o.dx||0),(o.below?y+13:y-4)+(o.dy||0),l,o.c||'dt',{'text-anchor':'middle'})}
+function dimV(y1,y2,x,e1,e2,l,o){o=o||{};[[y1,e1],[y2,e2]].forEach(([y,e])=>{if(e==null)return;const s=Math.sign(x-e)||1;mk('line',{x1:e+s*3,y1:y,x2:x+s*5,y2:y,class:'ext'})});
+ if(y2-y1>=28)mk('line',{x1:x,y1:y1,x2:x,y2:y2,class:'dl','marker-start':A,'marker-end':A});else{mk('line',{x1:x,y1:y1-13,x2:x,y2:y1,class:'dl','marker-end':A});mk('line',{x1:x,y1:y2+13,x2:x,y2:y2,class:'dl','marker-end':A});mk('line',{x1:x,y1:y1,x2:x,y2:y2,class:'dl'})}
+ const c=(y1+y2)/2+(o.dy||0);if(o.side){const r=o.side==='r';tx(r?x+6:x-6,c+4,l,o.c||'dt',{'text-anchor':r?'start':'end'})}else tx(x-5,c,l,o.c||'dt',{'text-anchor':'middle',transform:'rotate(-90 '+(x-5)+' '+c+')'})}
+function callout(px,py,ex,ey,l,dir,c){const s=dir||(ex>=px?1:-1);mk('circle',{cx:px,cy:py,r:1.8,class:'dot'});mk('polyline',{points:px+','+py+' '+ex+','+ey+' '+(ex+s*10)+','+ey,class:'lead'});tx(ex+s*14,ey+4,l,c||'dt',{'text-anchor':s>0?'start':'end'})}
+function rad(cx,cy,r,c,l,L){const sx=c.includes('l')?-1:1,sy=c.includes('t')?-1:1;const ox=cx-sx*r,oy=cy-sy*r;const px=ox+sx*r*Math.SQRT1_2,py=oy+sy*r*Math.SQRT1_2;callout(px,py,px+sx*L,py+sy*L,l,sx)}
+function nb(x,y,n){mk('rect',{x:x-6,y:y-6,width:12,height:12,class:'nb'});tx(x,y+3.5,String(n),'nbt',{'text-anchor':'middle'})}
+function rr(x,y,w,h,r,c){return mk('rect',{x:x,y:y,width:w,height:h,rx:r,class:c})}
+function slotLabel(x,y,w,h,l,al){tx(al==='l'?x+6:x+w/2,y+h/2+3.2,l,'sl',{'text-anchor':al==='l'?'start':'middle'})}
+function title(x,y,t,s){tx(x,y,t,'vt',{'text-anchor':'middle'});if(s)tx(x,y+14,s,'dts',{'text-anchor':'middle'})}
+function notes(list){const NX=50,NY=58;tx(NX,NY,'NOTES:','nth');tx(NX+62,NY,'(UNLESS OTHERWISE SPECIFIED)','nt');
+ list.forEach(([n,t],i)=>{const y=NY+28+i*23;if(n){nb(NX+6,y-4,n);tx(NX+22,y,t,'nt')}else tx(NX,y,t,'nt')})}
+function table(x,y,ttl,rows){const ws=[34,86,118],rh=17;tx(x,y-8,ttl,'vt');
+ const all=[['Code','Variable','Value']].concat(rows);all.forEach((r,i)=>{let cx2=x;r.forEach((c,j)=>{mk('rect',{x:cx2,y:y+i*rh,width:ws[j],height:rh,class:'thin'});tx(cx2+(j?ws[j]/2:5),y+i*rh+12,c,i?'tc':'th',{'text-anchor':j?'middle':'start'});cx2+=ws[j]})});return y+all.length*rh+34}
+function detailRef(cx,cy,r,lbl,lx,ly){mk('circle',{cx:cx,cy:cy,r:r,class:'ph'});const a=Math.atan2(ly-cy,lx-cx);mk('line',{x1:cx+r*Math.cos(a),y1:cy+r*Math.sin(a),x2:lx,y2:ly,class:'lead'});tx(lx+(lx<cx?-4:4),ly+4,lbl,'dts',{'text-anchor':lx<cx?'end':'start'})}
+function xbox(x,y,w,h){mk('rect',{x:x,y:y,width:w,height:h,class:'thin'});mk('path',{d:'M'+x+','+y+' L'+(x+w)+','+(y+h)+' M'+(x+w)+','+y+' L'+x+','+(y+h),class:'thin'})}
+function zig(x,y1,y2){const m=(y1+y2)/2;mk('polyline',{points:x+','+(y1-4)+' '+x+','+(m-5)+' '+(x+5)+','+(m-2)+' '+(x-5)+','+(m+2)+' '+x+','+(m+5)+' '+x+','+(y2+4),class:'brk'})}
+function zigH(y,x1,x2){const m=(x1+x2)/2;mk('polyline',{points:(x1-4)+','+y+' '+(m-5)+','+y+' '+(m-2)+','+(y-5)+' '+(m+2)+','+(y+5)+' '+(m+5)+','+y+' '+(x2+4)+','+y,class:'brk'})}
+function tbl(x,y,ttl,rows){const ws=[54,104,150],rh=16;tx(x,y-8,ttl,'vt');
+ const all=[['Code','Variable','Value']].concat(rows);all.forEach((r,i)=>{let cx2=x;r.forEach((c,j)=>{mk('rect',{x:cx2,y:y+i*rh,width:ws[j],height:rh,class:'thin'});tx(cx2+(j?ws[j]/2:5),y+i*rh+11.5,c,i?'tc':'th',{'text-anchor':j?'middle':'start'});cx2+=ws[j]})});return y+all.length*rh+30}
+function arr(x1,y1,x2,y2,c){return mk('line',{x1:x1,y1:y1,x2:x2,y2:y2,class:c||'fl','marker-end':A})}
+
+/* ---- structure geometry: schematic plan units, shared by plan, minis and exploded view ---- */
+const G={C0:[0,0,640,490],TI:[16,14,180,20],TG:[16,42,280,12],V1:[12,68,616,410],C1:[24,80,592,386],N1:[76,96,64,22],N2:[148,96,84,22],
+ PAN:[40,134,560,288],V2:[52,146,536,264],C2:[64,158,512,240],LH:[80,174,100,10],DET:[236,174,328,212],V3:[248,186,304,188],C3:[260,198,280,164],CR:[40,436,400,14]};
+const ROWS=[0,1,2,3,4].map(i=>[80,206+i*30,140,22]);
+
+function plan(ox,oy,k,o){o=Object.assign({mode:'B',lbl:true,codes:false},o||{});const X=v=>ox+v*k,Y=v=>oy+v*k;
+ const R=(r,cls,rx)=>mk('rect',{x:X(r[0]),y:Y(r[1]),width:r[2]*k,height:r[3]*k,rx:(rx||0)*k,class:cls});
+ const S=(r,cls,rx,s)=>{R(r,cls,rx);if(s&&o.lbl)slotLabel(X(r[0]),Y(r[1]),r[2]*k,r[3]*k,s)};
+ const code=(px,py,s)=>{if(o.codes)tx(X(px),Y(py)+3,s,'sl',{'text-anchor':'middle'})};
+ R(G.C0,'obj',10);S(G.TI,'slot',2,'Title slot');S(G.TG,'slot',2);
+ R(G.V1,'vp',8);R(G.C1,'obj',8);S(G.N1,'hug',11,'N1');S(G.N2,'hug',11,'N2');
+ R(G.PAN,'well',8);R(G.V2,'vp',6);S(G.CR,'slot',2,'Credit slot');code(560,107,'S1');
+ if(o.mode==='C'){R(G.C2,'obj',6);S([80,174,220,16],'slot',2,'Heading slot');S([80,198,200,10],'slot',2);S([80,218,480,140],'slot',4,'Model slot · fill');S([80,366,300,8],'slot',1);S([80,380,340,8],'slot',1);code(320,288,'S4');return {X,Y}}
+ R(G.C2,'obj',6);R(G.LH,'slot',1);if(o.lbl)ROWS.forEach((r,i)=>S(r,'hug',3,i?'':'L1 · sref'));else R([80,194,140,188],'slot',3);code(150,300,'S2');
+ R(G.DET,'well',6);R(G.V3,'vp',6);
+ if(o.mode==='A'){S([264,200,276,160],'slot',4,'F · fallback slot');code(400,280,'F');return {X,Y}}
+ R(G.C3,'obj',6);
+ if(o.mode==='D'){S([276,214,150,18],'slot',2,'Not-found slot');code(400,300,'S3');return {X,Y}}
+ if(!o.lbl){code(400,280,'S3');return {X,Y}}
+ S([276,214,160,18],'slot',2,'Heading slot');S([276,240,120,10],'slot',2);
+ [0,1,2].forEach(i=>{S([276,258+i*18,72,10],'slot',1);S([362,258+i*18,140,10],'slot',1)});
+ mk('line',{x1:X(276),y1:Y(312),x2:X(276),y2:Y(346),class:'thin'});S([284,312,240,34],'slot',2,'Fact slot');code(400,280,'S3');
+ return {X,Y}}
+
+/* =================== SHEET 1 =================== */
+begin('sh1');
+notes([[1,"EACH STATE FILLS ITS PARENT'S VIEW: T = $DEFAULT@^"],[2,'URL CHAIN, TOP EDGE: URL(S) = Σ U; HREF ADDS U0'],[3,'DEPTH CHAIN, LEFT EDGE: ONE STEP PER <UI-VIEW>'],[4,'V3 LIVES IN C2 AND SHOWS F UNTIL S3 ACTIVATES'],[5,'S2 ↔ S4 SWAP IN V2; S4 OPENS NO VIEW, V3 GOES'],[6,"L1 '.STAR' IS RELATIVE TO S2, ITS VIEW'S STATE"],[7,'P1 TAKES ANY SLUG; AN UNKNOWN ONE ENTERS S3'],[8,"'' AND U1 BOTH LAND ON S2 (INITIAL, REDIRECTTO)"],[0,'NO OTHERWISE RULE: AN UNMATCHED URL LEAVES V1 EMPTY']]);
+
+/* ---- plan view ---- */
+{const k=.8,OX=700,OY=170;const {X,Y}=plan(OX,OY,k,{});
+ tx(X(528),Y(30),'C0 · app-root · static host','sl',{'text-anchor':'end'});
+ tx(X(528),Y(111),'C1 · galaxy-shell · S1','sl',{'text-anchor':'end'});nb(X(330),Y(107),1);
+ tx(X(528),Y(169),'C2 · stars-container · S2','sl',{'text-anchor':'end'});
+ tx(X(532),Y(357),'C3 · star-detail · S3','sl',{'text-anchor':'end'});
+ nb(X(206),Y(179),6);
+ /* URL chain, top */
+ const t1=Y(-22),t2=Y(-52),t3=Y(-82);
+ dimH(X(0),X(24),t1,Y(0),Y(0),'U0',{dy:-11});dimH(X(24),X(64),t1,null,Y(80),'U1');dimH(X(64),X(260),t1,null,Y(158),'U2');dimH(X(260),X(540),t1,null,Y(198),'U3');
+ mk('line',{x1:X(24),y1:Y(80)-3,x2:X(24),y2:t1-5,class:'ext'});
+ dimH(X(24),X(540),t2,t1-2,t1-2,'URL(S3) = U1 + U2 + U3');nb(X(400),t2-8,2);
+ dimH(X(0),X(540),t3,t1-2,t2-2,'HREF(S3) = U0 + URL(S3)');
+ /* depth chain, left */
+ const lx=X(-24);dimV(Y(0),Y(80),lx,X(0),X(0),'V1 +1',{side:'l'});dimV(Y(80),Y(158),lx,null,X(24),'V2 +1',{side:'l'});dimV(Y(158),Y(198),lx,null,X(64),'V3 +1',{side:'l'});
+ mk('line',{x1:X(260)-3,y1:Y(198),x2:lx-5,y2:Y(198),class:'ext'});
+ dimV(Y(0),Y(198),X(-88),lx-2,lx-2,'D(S3) = 3');nb(X(-88),Y(216),3);
+ /* fqn chain, right */
+ const rx=X(660);dimV(Y(68),Y(146),rx,X(628),X(628),'V1',{side:'r'});dimV(Y(146),Y(186),rx,null,X(588),'V2',{side:'r'});dimV(Y(186),Y(374),rx,null,X(552),'V3',{side:'r'});
+ mk('line',{x1:X(552)+3,y1:Y(374),x2:rx+5,y2:Y(374),class:'ext'});
+ dimV(Y(68),Y(374),X(724),rx+20,rx+20,'fqn(V3) = V1.V2.V3');
+ /* section cut */
+ mk('line',{x1:X(300),y1:Y(-6),x2:X(300),y2:Y(500),class:'cl'});
+ [[Y(-6),-1],[Y(500),1]].forEach(([y])=>{mk('line',{x1:X(300),y1:y,x2:X(300)-18,y2:y,class:'cut'});arr(X(300)-6,y,X(300)-26,y);tx(X(300)-34,y+4,'A','dt',{'text-anchor':'end'})});
+ detailRef(X(150),Y(217),20,'DETAIL P',650,476);
+ title(X(320),Y(490)+44,'Plan view · state B','Schematic · S3 active · top URL chain · left depth chain · right fqn(V3) chain');}
+
+/* ---- section A–A: state tree vs view tree ---- */
+{const RX=300,VX=372,VW=92,H=22;
+ const ST=[['S0','(root)',0,352],['S1','galaxy',1,388],['S4','galaxy.astronaut',2,424],['S2','galaxy.stars',2,460],['S3','galaxy.stars.star',3,496]];
+ const TC={S1:'T1',S2:'T2',S3:'T3',S4:'T4'};const pos={};
+ ST.forEach(([c,n,d,y])=>{const lx=60+d*24;pos[c]=[lx,y];mk('rect',{x:lx,y:y-H/2,width:RX-lx,height:H,rx:3,class:c==='S0'?'well':'obj'});
+  tx(lx+8,y+3.5,c,'sl');tx(lx+30,y+3.5,n,'cd');if(TC[c])tx(RX-8,y+3.5,TC[c],'sl',{'text-anchor':'end'})});
+ [['S0','S1'],['S1','S4'],['S1','S2'],['S2','S3']].forEach(([p,c])=>{const [px,py]=pos[p],[cx,cy]=pos[c];mk('polyline',{points:(px+10)+','+(py+H/2)+' '+(px+10)+','+cy+' '+cx+','+cy,class:'tree'})});
+ const VV=[['V1',370,'S0',['S1']],['V2',442,'S1',['S4','S2']],['V3',514,'S2',['S3']]];
+ VV.forEach(([v,y,own,fill])=>{mk('rect',{x:VX,y:y-H/2,width:VW,height:H,rx:6,class:'vp'});tx(VX+VW/2,y+3.5,v+' · ctx '+own,'sl',{'text-anchor':'middle'});
+  mk('line',{x1:RX+2,y1:pos[own][1]+4,x2:VX-2,y2:y-4,class:'ow'});
+  fill.forEach((s,i)=>arr(RX+2,pos[s][1],VX-2,y+(fill.length>1?(i?6:1):3)))});
+ nb(VX+VW+16,442,5);nb(VX+VW+62,514,4);
+ tx(VX+VW+12,372,'IN C0','dts');tx(VX+VW+30,446,'IN C1','dts');tx(VX+VW+12,518,'IN C2','dts');
+ title(270,556,'Section A–A · state tree ↔ view tree','Arrow = T fills V · dashed = ctx(V), the state whose component creates V');}
+
+/* ---- exploded layer stack ---- */
+{const sc=.3,TX=330,TY=878,gap=76,a=.94*sc,b=.17*sc,c=-.34*sc,dd=.47*sc;
+ const P=(x,y,z)=>[TX+a*x+c*y,TY+b*x+dd*y-z];
+ const Gz=z=>mk('g',{transform:'matrix('+a+','+b+','+c+','+dd+','+TX+','+(TY-z)+')'});
+ const R2=(g,r,rx,cls,extra)=>mk('rect',Object.assign({x:r[0],y:r[1],width:r[2],height:r[3],rx:rx,class:cls,'vector-effect':'non-scaling-stroke'},extra||{}),g);
+ const proj=(r,z1,z2)=>[[r[0],r[1]],[r[0]+r[2],r[1]],[r[0]+r[2],r[1]+r[3]],[r[0],r[1]+r[3]]].forEach(([x,y])=>{const p1=P(x,y,z1),p2=P(x,y,z2);mk('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],class:'ph'})});
+ let g=Gz(0);R2(g,G.C0,10,'thin');R2(g,G.TI,2,'slot');R2(g,G.TG,2,'slot');R2(g,G.V1,8,'vp');
+ proj(G.V1,0,gap);
+ g=Gz(gap);R2(g,G.C1,8,'obj');R2(g,G.N1,11,'hug');R2(g,G.N2,11,'hug');R2(g,G.PAN,8,'well');R2(g,G.V2,6,'vp');R2(g,G.CR,2,'slot');
+ proj(G.V2,gap,gap*2);
+ g=Gz(gap*2);R2(g,G.C2,6,'obj');ROWS.forEach(r=>R2(g,r,3,'hug'));R2(g,G.DET,6,'well');R2(g,G.V3,6,'vp');
+ proj(G.V3,gap*2,gap*3);
+ g=Gz(gap*3);R2(g,G.C3,6,'obj');R2(g,[276,214,160,18],2,'slot');R2(g,[276,258,226,46],2,'slot');R2(g,[284,312,240,34],2,'slot');
+ const LX=226;
+ [[0,[0,490],'L0 · Host · C0','ui-router + app-root · creates V1'],[gap,[24,466],'L1 · S1 in V1','C1 · N1 N2 · creates V2'],[gap*2,[64,398],'L2 · S2 in V2','C2 · L1 · creates V3 · alt S4'],[gap*3,[260,362],'L3 · S3 in V3','C3 · leaf · creates no view']].forEach(([z,[x,y],t,st])=>{
+  const p1=P(x,y,z);mk('circle',{cx:p1[0],cy:p1[1],r:1.8,class:'dot'});mk('polyline',{points:p1[0]+','+p1[1]+' '+(LX+10)+','+p1[1]+' '+LX+','+p1[1],class:'lead'});
+  tx(LX-4,p1[1]-2,t,'vt',{'text-anchor':'end'});tx(LX-4,p1[1]+11,st,'dts',{'text-anchor':'end'})});
+ title(285,1008,'Exploded view','Axonometric · one layer per state · z gaps = one <ui-view> each');}
+
+/* ---- routed states side by side ---- */
+{const k=.2,Y0=684,XS=[612,792,972,1152];
+ const S=[['A','#/galaxy/stars','V1 S1 · V2 S2 · V3 F'],['B','#/galaxy/stars/:starId','V1 S1 · V2 S2 · V3 S3'],['C','#/galaxy/astronaut','V1 S1 · V2 S4 · no V3'],['D','#/galaxy/stars/<unknown>','V3 S3 · R2 undefined']];
+ S.forEach(([m,u,f],i)=>{const x=XS[i];plan(x,Y0,k,{mode:m,lbl:false,codes:true});
+  tx(x+64,Y0+98+18,'State '+m,'vt',{'text-anchor':'middle'});tx(x+64,Y0+98+32,u,'cd',{'text-anchor':'middle'});tx(x+64,Y0+98+45,f,'dts',{'text-anchor':'middle'})});
+ nb(XS[0]+128+10,Y0+98+14,4);nb(XS[2]+128+10,Y0+98+14,5);nb(XS[3]+128+10,Y0+98+14,7);
+ /* convergence onto A */
+ tx(XS[0],654,"'' · initial rule",'cd');tx(XS[0],668,'U1 · redirectTo','cd');
+ mk('polyline',{points:(XS[0]+88)+','+650+' '+(XS[0]+112)+','+650+' '+(XS[0]+112)+','+(Y0-3),class:'fl','marker-end':A});
+ mk('line',{x1:XS[0]+86,y1:664,x2:XS[0]+112,y2:664,class:'fl'});nb(XS[0]+128,657,8);
+ /* sibling swap */
+ const sy=Y0+40;mk('line',{x1:XS[1]+132,y1:sy,x2:XS[2]-4,y2:sy,class:'fl','marker-end':A,'marker-start':A});tx((XS[1]+128+XS[2])/2,sy-6,'S2 ↔ S4','dts',{'text-anchor':'middle'});tx((XS[1]+128+XS[2])/2,sy+14,'IN V2','dts',{'text-anchor':'middle'});}
+
+/* ---- Detail P · parameterized segment ---- */
+{const y=914,h=30;
+ rr(606,y,150,h,4,'hug');tx(681,y+19,"uiSref('.star', { starId })",'cd',{'text-anchor':'middle'});
+ arr(756,y+h/2,796,y+h/2);tx(776,y-12,'Encode','dts',{'text-anchor':'middle'});
+ rr(800,y-8,210,h+16,6,'obj');tx(817,y+h/2+5,'/','cdb',{'text-anchor':'middle'});mk('line',{x1:834,y1:y-8,x2:834,y2:y+h+8,class:'thin'});
+ mk('rect',{x:842,y:y,width:160,height:h,rx:2,class:'slot'});slotLabel(842,y,160,h,'P1 · :starId · hug');
+ const dy=y-28;dimH(800,834,dy,y-8,y-8,'/');dimH(834,1010,dy,null,y-8,'P1');dimH(800,1010,dy-26,dy-2,dy-2,'U3');
+ arr(1010,y+h/2,1054,y+h/2);tx(1032,y-12,'Match','dts',{'text-anchor':'middle'});tx(1032,y+h/2+16,'[^/]*','cd',{'text-anchor':'middle'});nb(1032,y+h+26,7);
+ rr(1058,y,140,h,4,'hug');tx(1128,y+19,'R2 = R1.find(starId)','cd',{'text-anchor':'middle'});
+ arr(1198,y+8,1226,y-4);arr(1198,y+h-8,1226,y+h+4);tx(1232,y,'star → B','cd');tx(1232,y+h+8,'undefined → D','cd');
+ title(910,1004,'Detail P · parameterized segment','Schematic · path type, encodeURIComponent · required: no default, no squash');}
+
+/* ---- tables ---- */
+{const T={
+ st:[['S0','(root)',"'' · D0"],['S1','galaxy','D1 · C1 galaxy-shell'],['S2','galaxy.stars','D2 · C2 stars-container'],['S3','galaxy.stars.star','D3 · C3 star-detail'],['S4','galaxy.astronaut','D2 · C4 astronaut-view'],['C0','app-root','static host, not a state'],['D(S)','depth','D(parent) + 1']],
+ url:[['U0','hash plugin','#'],['U1','S1.url','/galaxy'],['U2','S2.url','/stars'],['U3','S3.url','/:starId'],['U4','S4.url','/astronaut'],['URL(S2)','U1+U2','/galaxy/stars'],['URL(S3)','U1+U2+U3','/galaxy/stars/:starId'],['URL(S4)','U1+U4','/galaxy/astronaut'],['HREF(S)','U0+URL(S)','#/galaxy/…']],
+ vp:[['V1','in C0','name $default'],['V2','in C1','name $default'],['V3','in C2','name $default'],['fqn(Vn)','fqn(Vn−1).name','$default.$default.$default'],['ctx(Vn)','creationContext','S(n−1): S0 · S1 · S2'],['|V|','viewport count','1 + |{S1, S2}| = 3'],['F','V3 fallback','authored · shown in A']],
+ tg:[['T(S)','$default@^','$default@parent(S)'],['T1','S1 view','$default@ (S0)'],['T2','S2 view','$default@galaxy'],['T3','S3 view','$default@galaxy.stars'],['T4','S4 view','$default@galaxy'],['fills','match rule','anchor = ctx(V)']],
+ rs:[['R1','stars','S2 · getStars()'],['R2','star','S3 · $transition$, R1'],['P1','starId','path · [^/]* · required'],['N1','nav sref',"'galaxy.stars' · abs"],['N2','nav sref',"'galaxy.astronaut' · abs"],['L1','list sref',"'.star' · rel S2"],['R3','modelViewer','S4 · import()']]};
+ let y=tbl(1348,66,'States · components',T.st);y=tbl(1348,y,'URL segments',T.url);y=tbl(1348,y,'Viewports',T.vp);y=tbl(1348,y,'View targets',T.tg);tbl(1348,y,'Resolves · params · srefs',T.rs);}
+
+})();
+</script>
+
+</body>
+</html>
