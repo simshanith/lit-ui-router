@@ -145,6 +145,7 @@ catalogs:
     lit-ui-router-floor: npm:lit-ui-router@1.16.0
   peerFloorSignals:
     lit-ui-router-floor: npm:lit-ui-router@1.16.0
+    ui-router-signals-floor: npm:ui-router-signals@0.3.0
   peerFloorSsr:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.7
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
