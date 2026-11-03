@@ -68,10 +68,10 @@ the build output beside it).
 
 | Environment                                                                                             | Build                                        | Deploy                                               |
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
 
-Every other site appends its key to both commands (`cloudflare-build.sh <site>`,
+Every other site appends its key to both commands (`cloudflare-build.ts <site>`,
 `cloudflare-deploy.ts main <site>`), as its entry in
 [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
 records. The key resolves to `www/<site>/`, whose `package.json` must be named `@www/<site>`; an
@@ -80,22 +80,17 @@ commands stay bare because a trigger's command is shared by every branch it buil
 branches whose checkout predates the argument.
 
 Both commands are **repo scripts, not the steps themselves**
-([`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh),
+([`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts),
 [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
 command for every branch it matches, so inlining the steps means a branch cannot
 change them — and a package-manager change is exactly a branch that needs to. Pinning the
 path instead lets the script differ per branch while the declared value stays constant, so
 divergence never reads as drift and never needs an `--apply` to test.
 
-`cloudflare-build.sh` is a two-line shim over
-[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts), which holds the actual
-steps. The script runs **before** the install, so it cannot import a workspace package by
-name; its one non-builtin import is a relative reach into
-[`@tools/bootstrap`](../tools/bootstrap), whose own lint rule holds it to node builtins and
-its own files, so resolution never consults `node_modules`. The shim keeps the path still: the pinned value is the same for every branch
-at once, so renaming it would break the preview build of every branch whose checkout does not
-carry the new name. Once every open branch carries the `.ts`, `build_command` can name it
-directly and the shim can go.
+[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) runs **before** the
+install, so it cannot import a workspace package by name; its one non-builtin import is a relative
+reach into [`@tools/bootstrap`](../tools/bootstrap), whose own lint rule holds it to node builtins
+and its own files, so resolution never consults `node_modules`.
 
 That resolve-without-`node_modules` constraint is lint-enforced, not just documented:
 `.oxlintrc.json` scopes `no-restricted-imports` to `cloudflare-build.ts` and allows only node
@@ -179,6 +174,12 @@ Cloudflare's switch to Previews is one-way, and it replaces the Worker's preview
 Previews base config on the Worker itself, which `check:workers-builds` diffs and patches in the
 trigger's place. The switched command applies to every branch at once, so a branch whose checkout
 predates the `preview` mode fails its preview build until it is rebased.
+
+A branch's first push copies the base config into a per-branch trigger, which later applies never
+touch and `cf builds triggers list` does not return. Branches first pushed before 2026-11-03T18:21Z
+copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
+[`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
+until none of those branches remain.
 
 ### Adding a site
 
@@ -294,7 +295,7 @@ snapshots its environment when a build is enqueued, so pushing first spends one 
 old config.
 
 The trap is the other case. When the value being applied names a file in the repo — as `build_command` and
-`deploy_command` both do, pointing at [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh)
+`deploy_command` both do, pointing at [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts)
 and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
 But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
@@ -328,7 +329,7 @@ and leaves every other variable on the trigger untouched.
 **Declared** (plaintext, committed, `--apply` writes them):
 
 - `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to
-  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
+  `cloudflare-build.ts`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
 - `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs

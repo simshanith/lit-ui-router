@@ -109,7 +109,7 @@ const parseCommand = (command: string | undefined) => {
   return { path, args };
 };
 
-const BUILD_SCRIPT = './tools/workers-builds/cloudflare-build.sh';
+const BUILD_SCRIPT = './tools/workers-builds/cloudflare-build.ts';
 
 const DEPLOY_SCRIPT = './tools/workers-builds/cloudflare-deploy.ts';
 
@@ -233,12 +233,8 @@ describe('desiredStateFromConfig', () => {
     assert.equal(flagship.preview.build_command, BUILD_SCRIPT);
   });
 
-  // The .sh is a shim over the .ts, kept only because `build_command` is one
-  // dashboard value for every branch at once (see www/DEPLOY.md). Nothing else
-  // ties the pinned path to the steps above, so assert the hop exists: a shim
-  // that stopped exec-ing the script would leave the test above passing while
-  // every build ran nothing.
-  it('execs the TypeScript build script from the pinned shell path', async () => {
+  // Previews per-branch triggers created before the switch still run the shim.
+  it('keeps the shell shim exec-ing the TypeScript build script', async () => {
     const shim = await readFile(
       join(import.meta.dirname, 'cloudflare-build.sh'),
       'utf8',
@@ -246,7 +242,7 @@ describe('desiredStateFromConfig', () => {
 
     assert.match(
       shim,
-      /^exec \.\/tools\/workers-builds\/cloudflare-build\.ts\b/m,
+      /^exec \.\/tools\/workers-builds\/cloudflare-build\.ts "\$@"$/m,
     );
   });
 
