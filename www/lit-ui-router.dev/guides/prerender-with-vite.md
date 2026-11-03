@@ -21,8 +21,8 @@ Three terms carry the rest of this page:
 - A **verdict** is the route table's answer for one path: a page, a redirect,
   or no route at all.
 - The **prerender script** is the module the plugin runs after the client
-  build. Its default export receives the build's output and returns what it
-  wrote.
+  build. It returns the options for the render, and the plugin's side calls
+  `prerender()` with them.
 
 ## The two files
 
@@ -37,11 +37,12 @@ names and urls with their components, and `page(router)`, the template
 view.
 
 `vite.config.ts` adds one option to
-[`serverRouterPlugin`](/api/ui-router-server/vite/functions/serverRouterPlugin):
+[`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
+from `lit-ui-router-ssr/vite`:
 
 ```ts
+import { serverRouterPlugin } from 'lit-ui-router-ssr/vite';
 import { createServerRouter } from 'ui-router-server';
-import { serverRouterPlugin } from 'ui-router-server/vite';
 import { defineConfig } from 'vite';
 
 import { mounts } from './src/routes.ts';
@@ -49,29 +50,27 @@ import { mounts } from './src/routes.ts';
 export default defineConfig({
   plugins: [
     serverRouterPlugin(createServerRouter({ mounts }), {
-      prerender: {
-        entry: './src/prerender.ts',
-        preload: [
-          '@lit-labs/ssr/lib/install-global-dom-shim.js',
-          'lit-ui-router-ssr/register',
-        ],
-      },
+      prerender: './src/prerender.ts',
     }),
   ],
 });
 ```
 
-`entry` names the prerender script. `preload` lists modules to load, in
-order, before it: here the DOM shim, then
+`prerender` names the prerender script, resolved against Vite's root. The
+plugin is `ui-router-server/vite`'s, set up for Lit: before the script it
+loads `@lit-labs/ssr`'s DOM shim, then
 [`lit-ui-router-ssr/register`](/packages/ssr#a-prerendered-app), which
-defines the elements in the registry the shim installed. A relative path in
-either resolves against Vite's root. `prerender: './src/prerender.ts'` is
-shorthand for `{ entry: './src/prerender.ts' }`, with no preloads.
+defines the elements in the registry the shim installed. Modules of your own
+to load before the script go in `prerender: { entry, preload: [...] }`, and
+load after those two; a module listed twice loads once. To use another DOM,
+list its setup modules in the plugin's `shim` option, which replaces
+`@lit-labs/ssr`'s shim; `shim: []` installs none.
 
-`src/prerender.ts` is the prerender script.
-[`definePrerender`](/api/ui-router-server/vite/functions/definePrerender)
-types its default export and returns it unchanged, as Vite's `defineConfig`
-does. The plugin calls it with `site`:
+`src/prerender.ts` is the prerender script, and it imports everything
+statically. Its default export comes from
+[`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender),
+whose callback receives `site` and returns the options for
+[`lit-ui-router-ssr`'s `prerender()`](/api/lit-ui-router-ssr/index/functions/prerender):
 
 - `site.outDir`: Vite's output directory, absolute.
 - `site.shellHtml`: the built `index.html`, as a string.
@@ -79,9 +78,9 @@ does. The plugin calls it with `site`:
 
 ```ts
 import { UIRouterLit } from 'lit-ui-router/pure';
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { settle } from 'lit-ui-router-ssr';
+import { definePrerender } from 'lit-ui-router-ssr/vite';
 import { installServerLocation } from 'ui-router-server/location';
-import { definePrerender } from 'ui-router-server/vite';
 
 import { page, states } from './app.ts';
 import { mounts } from './routes.ts';
@@ -90,20 +89,20 @@ const router = installServerLocation(new UIRouterLit());
 for (const state of states) router.stateRegistry.register(state);
 router.urlService.rules.otherwise({ state: 'notFound' });
 
-export default definePrerender((site) =>
-  prerender({
-    ...site,
-    mounts,
-    router,
-    paths: ['/', '/about', '/legacy'],
-    renderShell: async (_verdict, { path }) => {
-      await settle(router, path);
-      return page(router);
-    },
-    document: (body) => site.shellHtml.replace('<!--app-->', body),
-  }),
-);
+export default definePrerender((site) => ({
+  mounts,
+  router,
+  paths: ['/', '/about', '/legacy'],
+  renderShell: async (_verdict, { path }) => {
+    await settle(router, path);
+    return page(router);
+  },
+  document: (body) => site.shellHtml.replace('<!--app-->', body),
+}));
 ```
+
+`definePrerender` spreads `site` under the options and calls `prerender()`,
+so an option the script returns, such as `outDir`, wins over the build's.
 
 `paths` lists every path to visit. `renderShell` moves the router to the path
 and returns the page's template, and `document` puts the rendered body into
@@ -114,9 +113,10 @@ the built `index.html`, where the app's container holds a marker:
 ```
 
 The shim must finish installing before anything defines an element, which
-is why it is a preload rather than an import here:
+is why the plugin preloads it rather than the script importing it:
 [`lit-ui-router-ssr`](/packages/ssr#a-prerendered-app) explains the order a
-script that imports the shim itself has to follow.
+script that imports the shim itself has to follow. A page whose `<ui-view>`
+leaves out `uiViewSlot()` renders that view empty, with no error.
 
 ## What `vite build` writes
 
@@ -138,10 +138,10 @@ router need to
 
 Four parties share one `vite build`. Vite runs the client build and owns
 `dist/`. `ui-router-server` owns the plugin and the verdicts, and never
-imports Lit. Your app owns the route table, the paths, the router and the
-page. `lit-ui-router-ssr` owns the Lit render. Everything after the plugin
-runs in a worker thread, the solid outline, which ends once the result is
-back. The <span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
+imports Lit. `lit-ui-router-ssr` wraps that plugin with the Lit preloads and
+owns the Lit render. Your app owns the route table, the paths, the router
+and the page. Everything after the plugin runs in a worker thread, the solid
+outline, which ends once the result is back. The <span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
 lit-ui-router's part; the tinted files are the ones it adds to `dist/`.
 
 <!--@include: ../public/diagrams/prerender-with-vite-build-flow.svg-->
@@ -155,10 +155,12 @@ for each verdict and writes the files. The diagrams below follow each step.
 The plugin runs once the client build has written `dist/`. It reads the
 built `index.html` as `shellHtml` and starts a worker thread, which loads the
 preloads, then the prerender script, and calls its default export with
-`site`. The script spreads `site` into `prerender()` and
-returns the result unchanged: the pages, the `_redirects` lines, the
-warnings and the delegated paths. A non-empty `warnings` fails the build;
-otherwise the plugin logs a summary line.
+`site`. That export, from `definePrerender`, hands `site` to your callback,
+spreads it under the options the callback returns, and calls
+`lit-ui-router-ssr`'s `prerender()`. The worker posts the result back to the
+plugin: the pages, the `_redirects` lines, the warnings and the delegated
+paths. A non-empty `warnings` fails the build; otherwise the plugin logs a
+summary line.
 
 <!--@include: ../public/diagrams/prerender-with-vite-seq-1-site.svg-->
 
@@ -220,11 +222,32 @@ to the plugin replaces this.
 
 <!--@include: ../public/diagrams/prerender-with-vite-seq-6-preview.svg-->
 
-**Other renderers.** The prerender script picks the `prerender()` it calls.
-For an app that does not render with Lit, call `prerender` from
+**Other renderers.** `serverRouterPlugin` and `definePrerender` from
+[`ui-router-server/vite`](/api/ui-router-server/vite/functions/serverRouterPlugin)
+are the same pair without Lit: the plugin preloads only what
+`prerender: { entry, preload }` lists, and the script's default export calls
+a `prerender()` itself and returns its result. For an app that does not
+render with Lit, call `prerender` from
 [`ui-router-server/prerender`](/packages/server#emitting-a-static-site) with a
 `render` of your own, which receives each page verdict and returns the file's
-text.
+text:
+
+```ts
+// vite.config.ts
+import { serverRouterPlugin } from 'ui-router-server/vite';
+
+serverRouterPlugin(createServerRouter({ mounts }), {
+  prerender: { entry: './src/prerender.ts', preload: ['./src/setup.ts'] },
+});
+
+// src/prerender.ts
+import { prerender } from 'ui-router-server/prerender';
+import { definePrerender } from 'ui-router-server/vite';
+
+export default definePrerender((site) =>
+  prerender({ ...site, mounts, paths, render }),
+);
+```
 
 **Delegating states on Workers.** A path that matches a
 [delegating state](/packages/server#delegating-states) gets no file, and the

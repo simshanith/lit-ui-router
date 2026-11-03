@@ -51,7 +51,8 @@ npm install lit-ui-router-ssr
 `lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and
 `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
 the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-client` is optional:
-install it when you import `lit-ui-router-ssr/client`.
+install it when you import `lit-ui-router-ssr/client`. `lit-ui-router-ssr/vite` wraps
+`ui-router-server/vite`, so it takes `vite` through that package's optional peer.
 
 The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the helper `<ui-view>`
 renders through, and the client hands a served class element to the view it wakes.
@@ -90,9 +91,11 @@ virtual fs instead.
 
 ## After `vite build`
 
-`ui-router-server/vite`'s `serverRouterPlugin` prerenders the built app after `vite build`. Call
-this package's `prerender` in the prerender script for Lit rendering;
-[Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows the script in full.
+`lit-ui-router-ssr/vite` prerenders the built app after `vite build`. Its `serverRouterPlugin` is
+`ui-router-server/vite`'s, with the DOM shim and `lit-ui-router-ssr/register` loaded before the
+prerender script, and its `definePrerender` calls this package's `prerender` with the options the
+script returns; [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows
+both files in full.
 
 ## Static hosts add a trailing slash
 
@@ -399,21 +402,31 @@ The build-time entry that calls `prerender()` needs the DOM shim installed befor
 an element. The shim module awaits at its top level, so a static import beside it evaluates first:
 lit's Node build installs a registry of its own, the elements are defined there, and the shim then
 replaces `globalThis.customElements` with an empty one. Load the shim and `lit-ui-router-ssr/register`
-before the entry starts. Under `serverRouterPlugin`, name them as preloads:
+before the entry starts. `serverRouterPlugin` from `lit-ui-router-ssr/vite` names both as preloads
+of its prerender worker, and its `definePrerender` calls `prerender()` with the options the entry
+returns:
 
 ```typescript
-serverRouterPlugin(
-  { mounts },
-  {
-    prerender: {
-      entry: './src/prerender.ts',
-      preload: [
-        '@lit-labs/ssr/lib/install-global-dom-shim.js',
-        'lit-ui-router-ssr/register',
-      ],
-    },
-  },
-);
+// vite.config.ts
+import { createServerRouter } from 'ui-router-server';
+import { serverRouterPlugin } from 'lit-ui-router-ssr/vite';
+
+plugins: [
+  serverRouterPlugin(createServerRouter({ mounts }), {
+    prerender: './src/prerender.ts',
+  }),
+];
+
+// src/prerender.ts
+import { definePrerender } from 'lit-ui-router-ssr/vite';
+
+export default definePrerender((site) => ({
+  mounts,
+  router,
+  paths,
+  renderShell,
+  document,
+}));
 ```
 
 The entry then uses plain static imports; see
