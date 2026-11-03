@@ -11,18 +11,22 @@ import type { RouteDeclaration } from '../src/redirects.ts';
 import { compileRouteTrie } from '../src/route-trie.ts';
 import { onceSettled } from '../src/simulate.ts';
 import {
-  isUrlPatternUrl,
-  matcherPath,
-  urlPattern,
+  urlPattern as url,
+  urlPatternOf,
   urlPatternPlugin,
 } from '../src/url-pattern.ts';
-import type { UrlPatternOptions } from '../src/url-pattern.ts';
 
-// Core types StateDeclaration.url as string; a urlPattern() value rides the same field.
-const url = (pathname: string, options?: UrlPatternOptions): string =>
-  // SAFETY: the plugin's builder and compileRoutes read a urlPattern() value back from core's string-typed url field.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- core's url field is string-typed; the plugin and compileRoutes read the value back
-  urlPattern(pathname, options) as unknown as string;
+// Runs `run` on a runtime with no global URLPattern.
+const withoutUrlPattern = (run: () => void): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'URLPattern')!;
+  Reflect.deleteProperty(globalThis, 'URLPattern');
+
+  try {
+    run();
+  } finally {
+    Object.defineProperty(globalThis, 'URLPattern', descriptor);
+  }
+};
 
 // One factory per router: core mutates registrations ($$state).
 const table = (): RouteDeclaration[] => [
@@ -67,35 +71,22 @@ const coreMatch = (
 };
 
 describe('urlPattern', () => {
-  it('accepts the formattable subset and translates it to matcher syntax', () => {
-    const declared = urlPattern('/files/:dir/:name.:ext', { query: ['q'] });
-    assert.ok(isUrlPatternUrl(declared));
-    assert.deepEqual(declared.query, ['q']);
-    assert.equal(
-      matcherPath(declared),
-      '/files/{dir:[^/]+?}/{name:[^/]+?}.{ext:[^/]+?}',
-    );
-    assert.equal(
-      matcherPath(urlPattern('/codes/:code([a-z]{3})')),
-      '/codes/{code:(?:[a-z]{3})}',
-    );
-    assert.equal(
-      matcherPath(urlPattern('/users/:id'), { id: { type: 'int' } }),
-      '/users/:id',
-    );
-  });
+  it('declares a state url with no cast, read back by urlPatternOf', () => {
+    const state: StateDeclaration = {
+      name: 'files',
+      url: url('/files/:dir/:name.:ext', { query: ['q'] }),
+    };
 
-  it('rejects a group with both a regexp and a declared type', () => {
-    assert.throws(
-      () =>
-        matcherPath(urlPattern('/users/:id(\\d+)'), { id: { type: 'int' } }),
-      /group ':id' takes a regexp or a declared type, not both/,
-    );
+    assert.deepEqual(urlPatternOf(state.url), {
+      pathname: '/files/:dir/:name.:ext',
+      query: ['q'],
+    });
+    assert.equal(urlPatternOf('/files/:dir'), null);
   });
 
   it('accepts a URLPattern whose other components are wildcards', () => {
-    const declared = urlPattern(new URLPattern({ pathname: '/users/:id' }));
-    assert.equal(declared.pathname, '/users/:id');
+    const declared = url(new URLPattern({ pathname: '/users/:id' }));
+    assert.equal(urlPatternOf(declared)?.pathname, '/users/:id');
   });
 
   for (const [pathname, reason] of [
@@ -104,25 +95,24 @@ describe('urlPattern', () => {
     ['/users/:id+', /modifier '\+'/],
     ['/users/(\\d+)', /'\(' at index 7/],
     ['/users{/:id}?', /'\{' at index 6/],
-    ['/users/\\:id', /literal '\/users\/:id' has no matcher spelling/],
   ] as const)
     it(`rejects ${pathname}`, () => {
-      assert.throws(() => urlPattern(pathname), reason);
+      assert.throws(() => url(pathname), reason);
     });
 
   it('rejects components other than pathname', () => {
     assert.throws(
-      () => urlPattern({ pathname: '/users', search: 'sort=:sort' }),
+      () => url({ pathname: '/users', search: 'sort=:sort' }),
       /component 'search' must be absent or '\*'/,
     );
     assert.throws(
-      () => urlPattern(new URLPattern({ pathname: '/a', hostname: 'x.test' })),
+      () => url(new URLPattern({ pathname: '/a', hostname: 'x.test' })),
       /component 'hostname'/,
     );
   });
 
   it('rejects relative pathnames', () => {
-    assert.throws(() => urlPattern('users'), /must start with '\/'/);
+    assert.throws(() => url('users'), /must start with '\/'/);
   });
 });
 
@@ -264,6 +254,12 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
     );
   });
 
+  it('names the polyfill when the runtime has no URLPattern', () => {
+    withoutUrlPattern(() =>
+      assert.throws(() => routerFor(), /load 'urlpattern-polyfill'/),
+    );
+  });
+
   it('names the state when the engine rejects the joined pattern', () => {
     assert.throws(
       () =>
@@ -277,45 +273,174 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
 });
 
 describe('server tiers over urlPattern routes', () => {
-  const paths: [string, RawParams?][] = [
-    ['/'],
-    ['/users'],
-    ['/users/42'],
-    ['/users/42/edit'],
-    ['/users/new'],
-    ['/users/abc'],
-    ['/files/docs/a.b.c'],
-    ['/codes/abc'],
-    ['/codes/abcd'],
-    ['/by/a%20b'],
-    ['/by/'],
-    ['/nope'],
+  // String states beside URLPattern states, in one table.
+  const mixedTable = (): RouteDeclaration[] => [
+    ...table(),
+    { name: 'legacy', url: '/legacy/{id:int}' },
+    { name: 'legacy.edit', url: '/edit' },
+    { name: 'shell', url: '' },
+    { name: 'shell.about', url: url('/about') },
+    { name: 'colon', url: url('/time/\\:now') },
   ];
 
-  it("the matcher strategy's compiled routes agree with the URLPattern engine", () => {
-    const router = routerFor();
-    const routes = compileRoutes(table());
+  const paths: string[] = [
+    '/',
+    '/users',
+    '/users/42',
+    '/users/42/edit',
+    '/users/new',
+    '/users/abc',
+    '/files/docs/a.b.c',
+    '/codes/abc',
+    '/codes/abcd',
+    '/by/a%20b',
+    '/by/',
+    '/legacy/3',
+    '/legacy/3/edit',
+    '/legacy/x',
+    '/about',
+    '/time/:now',
+    '/nope',
+  ];
+
+  it('scan, trie and a core router with the plugin agree on a mixed table', () => {
+    const router = routerFor(mixedTable());
+    const routes = compileRoutes(mixedTable());
     const trie = compileRouteTrie(routes);
     assert.deepEqual(trie.inexpressible, []);
 
-    for (const [path] of paths) {
+    for (const path of paths) {
       const engine = coreMatch(router, path);
-      const scanned = matchRoute(routes, path);
-      assert.deepEqual(scanned, engine, path);
+      assert.deepEqual(matchRoute(routes, path), engine, path);
       assert.deepEqual(trie.match(path), engine, path);
     }
+  });
+
+  it('agrees on non-strict and case-insensitive configs', () => {
+    for (const config of [{ strict: false }, { caseInsensitive: true }]) {
+      const router = new UIRouter();
+      router.plugin(servicesPlugin);
+      router.urlService.config.strictMode(config.strict ?? true);
+      router.urlService.config.caseInsensitive(config.caseInsensitive ?? false);
+      router.plugin(urlPatternPlugin);
+      mixedTable().forEach((state) => router.stateRegistry.register(state));
+      const routes = compileRoutes(mixedTable(), config);
+
+      for (const path of [...paths, '/users/42/', '/USERS/42', '/About/']) {
+        assert.deepEqual(
+          matchRoute(routes, path),
+          coreMatch(router, path),
+          `${JSON.stringify(config)} ${path}`,
+        );
+      }
+    }
+  });
+
+  it('keeps routes the trie would mis-prune out of it', () => {
+    const { inexpressible } = compileRouteTrie(
+      compileRoutes([
+        { name: 'any', url: url('/any/:rest(.*)') },
+        { name: 'cafe', url: url('/café') },
+      ]),
+    );
+
+    assert.deepEqual(
+      inexpressible.map(({ route, reason }) => [route.name, reason]),
+      [
+        ['any', 'slash-spanning-param'],
+        ['cafe', 'encoded-literal'],
+      ],
+    );
+  });
+
+  it('formats redirect targets through the engine', async () => {
+    const server = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [
+            ...table(),
+            { name: 'old', url: '/old/:id', redirectTo: 'users.detail' },
+            { name: 'bad', url: '/bad/:code', redirectTo: 'codes' },
+          ],
+        },
+      },
+    });
+
+    assert.deepEqual(await server.resolve('/app/old/7'), {
+      kind: 'redirect',
+      mount: '/app',
+      location: '/app/users/7',
+      status: 302,
+    });
+    assert.notEqual((await server.resolve('/app/bad/abcd')).kind, 'redirect');
+  });
+
+  it('rejects mixing the two url syntaxes in one chain', () => {
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', url: '/a' },
+          { name: 'a.b', url: url('/b') },
+        ]),
+      /Route 'a\.b': URLPattern url '\/b' can't extend string url '\/a'/,
+    );
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', url: url('/a') },
+          { name: 'a.b', url: '/b' },
+        ]),
+      /Route 'a\.b': string url '\/b' can't extend URLPattern url '\/a'/,
+    );
+  });
+
+  it('applies the subset rules at compile', () => {
+    assert.throws(
+      () =>
+        compileRoutes([
+          {
+            name: 'a',
+            url: url('/a/:id(\\d+)'),
+            params: { id: { type: 'int' } },
+          },
+        ]),
+      /Route 'a': URLPattern group ':id' takes a regexp or a declared type, not both/,
+    );
+    assert.throws(
+      () =>
+        compileRoutes([{ name: 'a', url: url('/a/:id'), params: { id: 'x' } }]),
+      /group ':id' is required, so it can't declare a default/,
+    );
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', url: url('/a/:id') },
+          { name: 'a.b', url: url('/b/:id') },
+        ]),
+      /^Error: Route 'a\.b': /,
+    );
+  });
+
+  it('names the polyfill when the runtime has no URLPattern', () => {
+    withoutUrlPattern(() => {
+      assert.throws(() => compileRoutes(table()), /load 'urlpattern-polyfill'/);
+      assert.equal(compileRoutes([{ name: 'plain', url: '/plain' }]).length, 1);
+    });
   });
 
   for (const strategy of ['matcher', 'simulate'] as const)
     it(`resolves verdicts with the ${strategy} strategy`, async () => {
       const server = createServerRouter({
-        mounts: { '/app': { routes: table(), strategy } },
+        mounts: { '/app': { routes: mixedTable(), strategy } },
       });
 
-      assert.deepEqual(await server.resolve('/app/users/42/edit'), {
-        kind: 'shell',
-        mount: '/app',
-      });
-      assert.equal((await server.resolve('/app/users/abc')).kind, 'notFound');
+      for (const [path, kind] of [
+        ['/app/users/42/edit', 'shell'],
+        ['/app/legacy/3/edit', 'shell'],
+        ['/app/about', 'shell'],
+        ['/app/users/abc', 'notFound'],
+        ['/app/codes/abcd', 'notFound'],
+      ] as const)
+        assert.equal((await server.resolve(path)).kind, kind, path);
     });
 });

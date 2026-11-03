@@ -4,9 +4,8 @@
 /**
  * URLPattern routes for state `url` declarations: {@link urlPattern} declares
  * a pathname in URLPattern syntax, {@link urlPatternPlugin} matches it with
- * the platform's `URLPattern` inside a `@uirouter/core` router, and the server
- * tiers compile the same declaration translated into
- * {@link matcher | ui-router-server/matcher} syntax.
+ * the platform's `URLPattern` inside a `@uirouter/core` router, and both
+ * server strategies match the same declaration with the same engine.
  *
  * The subset is the one both directions can serve, since URLPattern matches
  * but has no API to build a url back: literal text, `:name` groups and
@@ -15,6 +14,10 @@
  * rejected when declared. A group takes a regexp or a declared param `type`,
  * not both, and never a default or array mode. Query params are declared by
  * name, as ui-router's `?q&page`, and keep core's semantics.
+ *
+ * Runtimes: Node 24, deno, workerd and current browsers ship `URLPattern`.
+ * Node 22 and older browsers need `urlpattern-polyfill` loaded first;
+ * compiling a URLPattern state without a global `URLPattern` throws.
  *
  * Experimental: names and shape may change.
  */
@@ -30,6 +33,8 @@ import type {
   UIRouterPlugin,
   UrlMatcher,
 } from '@uirouter/core';
+
+import type { CompiledParam } from './url-matcher.ts';
 
 /** URLPattern components; every one but `pathname` must be absent or `*`. */
 export interface UrlPatternComponents {
@@ -57,25 +62,99 @@ export interface UrlPatternOptions {
   readonly query?: readonly string[];
 }
 
-/** A state `url` value built by {@link urlPattern}. */
-export interface UrlPatternUrl {
+declare const urlPatternBrand: unique symbol;
+
+/**
+ * A state `url` value built by {@link urlPattern}. Branded `string` so it
+ * fits core's string-typed `StateDeclaration.url`, but at runtime it is a
+ * frozen declaration object, never a string: read it with
+ * {@link urlPatternOf}, not string methods.
+ */
+export type UrlPatternUrl = string & {
+  /** Marks a {@link urlPattern} value; never present at runtime. */
+  readonly [urlPatternBrand]: true;
+};
+
+/**
+ * A {@link urlPattern} route chain compiled for the server strategies: the
+ * platform `URLPattern` matches it, as {@link urlPatternPlugin} does on the
+ * client, and the {@link matcher | matcher} tier's params type, decode and
+ * format its groups.
+ */
+export interface CompiledUrlPattern {
+  /** The full pattern: the joined pathname, then `?` and the query names. */
+  readonly pattern: string;
+  /** The pathname pattern the engine compiled, in URLPattern syntax. */
+  readonly urlPattern: string;
+  /** The literal text between path groups (length: path params + 1). */
+  readonly segments: readonly string[];
+  /** The path groups' params, in pattern order. */
+  readonly pathParams: readonly CompiledParam[];
+  /** The query params; they never affect path matching. */
+  readonly searchParams: readonly CompiledParam[];
+  /** Each path group's regexp, or null for URLPattern's segment wildcard. */
+  readonly groupPatterns: readonly (string | null)[];
+  /** False when the engine also accepts one trailing `/`. */
+  readonly strict: boolean;
+  /** Whether the engine ignores case. */
+  readonly caseInsensitive: boolean;
+  /** Whether matched values are percent-decoded. */
+  readonly decodeParams: boolean;
+}
+
+/** What a {@link urlPattern} url declares, as {@link urlPatternOf} reads it. */
+export interface UrlPatternDeclaration {
   /** The pathname pattern, in URLPattern syntax. */
   readonly pathname: string;
   /** The declared query param names. */
   readonly query: readonly string[];
 }
 
-type Token =
+/**
+ * One piece of a parsed pathname: literal text, or a named group.
+ *
+ * @internal
+ */
+export type UrlPatternToken =
   | { readonly kind: 'text'; readonly text: string }
   | { readonly kind: 'group'; readonly name: string; readonly regexp?: string };
 
-interface Parsed extends UrlPatternUrl {
-  readonly tokens: readonly Token[];
+/**
+ * A {@link urlPattern} declaration with its parsed pathname.
+ *
+ * @internal
+ */
+export interface ParsedUrlPattern extends UrlPatternDeclaration {
+  /** The pathname's tokens, in order. */
+  readonly tokens: readonly UrlPatternToken[];
 }
+
+type Token = UrlPatternToken;
+
+type Parsed = ParsedUrlPattern;
 
 const parsedUrls = new WeakMap<object, Parsed>();
 
-const parsedOf = (url: UrlPatternUrl): Parsed => parsedUrls.get(url)!;
+/**
+ * The parsed declaration behind a {@link urlPattern} url, or undefined for
+ * any other value (a string url included).
+ *
+ * @internal
+ */
+export const parsedUrlPattern = (value: unknown): Parsed | undefined =>
+  value instanceof Object ? parsedUrls.get(value) : undefined;
+
+/**
+ * Throws unless the runtime has a global `URLPattern`, naming the polyfill.
+ *
+ * @internal
+ */
+export function requireUrlPattern(): void {
+  if (!('URLPattern' in globalThis))
+    throw new Error(
+      "URLPattern routes need a global URLPattern, which this runtime lacks (node < 23.8, older browsers); load 'urlpattern-polyfill' before compiling them",
+    );
+}
 
 // ParamFactory, with the null url type core's own builder passes.
 interface NullableTypeParamFactory {
@@ -100,9 +179,6 @@ const OTHER_COMPONENTS = [
 const NAME = /[A-Za-z_]\w*/y;
 
 const QUERY_NAME = /^\w+([-.]+\w+)*$/;
-
-// Literal text the matcher syntax would read as a placeholder or search part.
-const MATCHER_SPECIAL = /[:*{}?\\]/;
 
 const closingParen = (pathname: string, open: number): number => {
   let depth = 0;
@@ -178,59 +254,7 @@ const parsePathname = (pathname: string): Token[] => {
   return tokens;
 };
 
-// oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- a state's params, as RouteDeclaration.params
-type StateParams = Readonly<Record<string, unknown>>;
-
-// A longhand declaration naming a `type`, as core's isShorthand reads it.
-const declaresType = (config: unknown): boolean =>
-  config instanceof Object && Object.hasOwn(config, 'type');
-
 const isString = (value: unknown): value is string => typeof value === 'string';
-
-const groupSpelling = (
-  pathname: string,
-  token: Extract<Token, { kind: 'group' }>,
-  params: StateParams,
-): string => {
-  const typed = declaresType(params[token.name]);
-
-  if (typed && token.regexp !== undefined)
-    throw new Error(
-      `URLPattern pathname '${pathname}': group ':${token.name}' takes a regexp or a declared type, not both`,
-    );
-
-  // A declared type's own pattern governs; core rejects a second inline one.
-  if (typed) return `:${token.name}`;
-
-  // URLPattern's segment wildcard is lazy: '/:name.:ext' splits 'a.b.c' at the first '.'.
-  return `{${token.name}:${token.regexp === undefined ? '[^/]+?' : `(?:${token.regexp})`}}`;
-};
-
-/**
- * A {@link urlPattern} url's path in {@link matcher | ui-router-server/matcher}
- * syntax, given the declaring state's `params`.
- *
- * @internal
- */
-export function matcherPath(
-  url: UrlPatternUrl,
-  params: StateParams = {},
-): string {
-  const { pathname, tokens } = parsedOf(url);
-
-  return tokens
-    .map((token) => {
-      if (token.kind === 'group') return groupSpelling(pathname, token, params);
-
-      if (MATCHER_SPECIAL.test(token.text))
-        throw new Error(
-          `URLPattern pathname '${pathname}': literal '${token.text}' has no matcher spelling`,
-        );
-
-      return token.text;
-    })
-    .join('');
-}
 
 const pathnameOf = (input: string | UrlPatternComponents): string => {
   // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the parameter's own union: a string is the pathname
@@ -252,10 +276,8 @@ const pathnameOf = (input: string | UrlPatternComponents): string => {
  * Declares a state `url` in URLPattern syntax. `input` is a pathname
  * pattern, a URLPattern init, or a `URLPattern` itself (its unset components
  * read `*`). Throws for anything outside the supported subset, so a pattern
- * that can't be formatted back into a url never registers.
- *
- * `StateDeclaration.url` is typed `string` in core, so the value needs a
- * cast where a state declares it.
+ * that can't be formatted back into a url never registers. The result is a
+ * {@link UrlPatternUrl}, so it sits on a state's `url` with no cast.
  *
  * @example
  * ```ts
@@ -278,20 +300,29 @@ export function urlPattern(
     if (!QUERY_NAME.test(name))
       throw new Error(`URLPattern '${pathname}': invalid query name '${name}'`);
 
-  const url: UrlPatternUrl = Object.freeze({
+  const declaration: UrlPatternDeclaration = Object.freeze({
     pathname,
     query: Object.freeze(query),
   });
 
-  parsedUrls.set(url, { ...url, tokens: parsePathname(pathname) });
-  matcherPath(url);
+  parsedUrls.set(declaration, {
+    ...declaration,
+    tokens: parsePathname(pathname),
+  });
 
-  return url;
+  // SAFETY: the runtime value is the frozen declaration object, not a string; urlPatternOf and the url builders read it back.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the brand's one cast, keeping declaration sites cast-free
+  return declaration as unknown as UrlPatternUrl;
 }
 
-/** True for a value {@link urlPattern} built. */
-export function isUrlPatternUrl(value: unknown): value is UrlPatternUrl {
-  return typeof value === 'object' && value !== null && parsedUrls.has(value);
+/**
+ * What a {@link urlPattern} url declares, or null for any other value (a
+ * string url included).
+ */
+export function urlPatternOf(value: unknown): UrlPatternDeclaration | null {
+  const parsed = parsedUrlPattern(value);
+
+  return parsed ? { pathname: parsed.pathname, query: parsed.query } : null;
 }
 
 interface Chain {
@@ -386,6 +417,7 @@ export class UrlPatternMatcher {
     this.#own = own;
     this.#parent = parent instanceof UrlPatternMatcher ? parent : null;
     this.#decodeParams = config.decodeParams;
+    requireUrlPattern();
     this.#engine = new URLPattern(
       { pathname: config.strict ? chain.pathname : `${chain.pathname}{/}?` },
       { ignoreCase: config.caseInsensitive },
@@ -577,15 +609,14 @@ const ownParams = (
 const buildMatcher = (
   router: UIRouter,
   state: StateObject,
-  url: UrlPatternUrl,
+  parsed: Parsed,
 ): UrlPatternMatcher => {
-  const parsed = parsedOf(url);
   const base = (state.parent?.navigable ?? router.stateRegistry.root()).url;
   const parent = patternMatcherOf(base);
 
   if (parent === null && String(base) !== '')
     throw new Error(
-      `State '${state.name}': URLPattern url '${url.pathname}' can't extend string url '${String(base)}'; declare the parent with urlPattern() too`,
+      `State '${state.name}': URLPattern url '${parsed.pathname}' can't extend string url '${String(base)}'; declare the parent with urlPattern() too`,
     );
 
   const chain: Chain = parent
@@ -619,7 +650,7 @@ const builtByCore = (state: StateObject, parent?: BuilderFunction): unknown =>
 
 /**
  * Teaches a router's state builder {@link urlPattern} urls: a `url` built by
- * {@link urlPattern} becomes a {@link UrlPatternMatcher}, every other `url`
+ * {@link urlPattern} becomes a duck-typed `UrlMatcher`, every other `url`
  * goes to core's builder. Apply it before registering states. A URLPattern
  * url extends a URLPattern parent's url or the root; a string url can't
  * extend a URLPattern one, nor the reverse.
@@ -633,16 +664,16 @@ const builtByCore = (state: StateObject, parent?: BuilderFunction): unknown =>
  * router.plugin(urlPatternPlugin);
  * router.stateRegistry.register({
  *   name: 'user',
- *   url: urlPattern('/users/:id') as unknown as string,
+ *   url: urlPattern('/users/:id'),
  * });
  * ```
  */
 export function urlPatternPlugin(router: UIRouter): UIRouterPlugin {
   const builder: BuilderFunction = (state, parent) => {
-    const declared: unknown = state.self.url;
+    const parsed = parsedUrlPattern(state.self.url);
 
-    return isUrlPatternUrl(declared)
-      ? buildMatcher(router, state, declared)
+    return parsed
+      ? buildMatcher(router, state, parsed)
       : builtByCore(state, parent);
   };
 

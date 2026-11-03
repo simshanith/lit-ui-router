@@ -100,9 +100,10 @@ import {
   type RouterUrlConfig,
 } from 'ui-router-server/url-config';
 import {
-  isUrlPatternUrl,
   urlPattern,
+  urlPatternOf,
   urlPatternPlugin,
+  type UrlPatternDeclaration,
   type UrlPatternOptions,
   type UrlPatternUrl,
 } from 'ui-router-server/url-pattern';
@@ -438,7 +439,7 @@ export function sharedUrlConfig(router: UIRouter): UIRouter {
   return applyUrlConfig(router, matcherConfig);
 }
 
-// URLPattern tier: a declared url rides core's string-typed url field.
+// URLPattern tier: the branded url fits core's string-typed url field.
 const patternOptions: UrlPatternOptions = { query: ['sort'] };
 
 const usersPattern: UrlPatternUrl = urlPattern(
@@ -446,17 +447,16 @@ const usersPattern: UrlPatternUrl = urlPattern(
   patternOptions,
 );
 
-export function patternRouter(router: UIRouter): boolean {
+export function patternRouter(router: UIRouter): UrlPatternDeclaration | null {
   router.plugin(urlPatternPlugin);
-  router.stateRegistry.register({
-    name: 'users',
-    // SAFETY: the plugin's builder and compileRoutes read a urlPattern() value back from core's string-typed url field.
-    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- core's url field is string-typed; the plugin reads the value back
-    url: usersPattern as unknown as string,
-  });
+  router.stateRegistry.register({ name: 'users', url: usersPattern });
 
-  return isUrlPatternUrl(usersPattern);
+  return urlPatternOf(usersPattern);
 }
+
+export const patternRoutes: CompiledRoute[] = compileRoutes([
+  { name: 'user', url: urlPattern('/user/:id') },
+]);
 
 const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
 

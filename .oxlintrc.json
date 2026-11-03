@@ -538,6 +538,7 @@
         "packages/ui-router-server/src/redirects.ts",
         "packages/ui-router-server/src/url-config.ts",
         "packages/ui-router-server/src/url-matcher.ts",
+        "packages/ui-router-server/src/url-pattern-route.ts",
         "packages/ui-router-server/src/url-pattern.ts"
       ],
       "rules": {

@@ -15,7 +15,7 @@ import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
 
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
-import { compileResolver, urlString } from './redirects.ts';
+import { compileResolver } from './redirects.ts';
 import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
 import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
@@ -631,7 +631,6 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   // them across concurrent resolutions is the hazard the copy prevents.
   const states: StateDeclaration[] = mount.config.routes.map((route) => ({
     ...route,
-    url: urlString(route),
   }));
 
   const router = simulate.createHeadlessRouter(states, mount.config.config);

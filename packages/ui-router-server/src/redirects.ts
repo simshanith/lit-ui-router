@@ -10,12 +10,23 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { isUrlPatternUrl, matcherPath } from './url-pattern.ts';
-import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
+import {
+  exec,
+  resolveCompilerConfig,
+  urlMatcherFactory,
+} from './url-matcher.ts';
 import type {
   CompiledMatcher,
   UrlMatcherCompilerConfig,
 } from './url-matcher.ts';
+import {
+  compareRoutes,
+  compileUrlPattern,
+  execRoute,
+  formatRoute,
+} from './url-pattern-route.ts';
+import { parsedUrlPattern } from './url-pattern.ts';
+import type { CompiledUrlPattern, ParsedUrlPattern } from './url-pattern.ts';
 
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
@@ -30,8 +41,10 @@ export interface RouteDeclaration {
   /**
    * Url segment appended to the ancestors' segments; a url-less state is
    * structural only (never matched, never a redirect target). A
-   * {@link url-pattern!urlPattern | urlPattern} value, cast as core's
-   * `StateDeclaration.url` needs, compiles translated into matcher syntax.
+   * {@link url-pattern!urlPattern | urlPattern} url compiles to a
+   * {@link url-pattern!CompiledUrlPattern | CompiledUrlPattern} the platform
+   * `URLPattern` matches; it extends only urlPattern() ancestors, and a
+   * string url can't extend it.
    */
   url?: string;
   /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
@@ -107,37 +120,11 @@ export interface CompiledRoute {
   name: string;
   /** The full pattern: this state's url appended to its ancestors'. */
   pattern: string;
-  /** The compiled pattern, for {@link matcher!exec | exec} and {@link matcher!format | format}. */
-  matcher: CompiledMatcher;
+  /** The compiled pattern: for a string url, a {@link matcher!CompiledMatcher | CompiledMatcher} for {@link matcher!exec | exec} and {@link matcher!format | format}. */
+  matcher: CompiledMatcher | CompiledUrlPattern;
   /** The state's declared redirect, carried through unresolved (see {@link RouteDeclaration.redirectTo}). */
   redirectTo?: string | RedirectTarget;
 }
-
-// A urlPattern() url's path in matcher syntax, and its query names; null for a string url.
-const urlPatternParts = (
-  route: RouteDeclaration,
-): { path: string; query: readonly string[] } | null => {
-  const declared: unknown = route.url;
-
-  return isUrlPatternUrl(declared)
-    ? { path: matcherPath(declared, route.params), query: declared.query }
-    : null;
-};
-
-/**
- * A declaration's url in matcher syntax.
- *
- * @internal
- */
-export const urlString = (route: RouteDeclaration): string | undefined => {
-  const parts = urlPatternParts(route);
-
-  if (!parts) return route.url;
-
-  return parts.query.length
-    ? `${parts.path}?${parts.query.join('&')}`
-    : parts.path;
-};
 
 // Core's StateBuilder.parentName: the `parent`, else the dotted prefix.
 const parentName = (route: RouteDeclaration): string => {
@@ -156,7 +143,28 @@ const parentName = (route: RouteDeclaration): string => {
 interface ChainPattern {
   readonly pattern: string;
   readonly params: NonNullable<RouteDeclaration['params']>;
+  /** The urlPattern() urls, root first, when the chain is made of them. */
+  readonly urlPatterns: readonly ParsedUrlPattern[];
 }
+
+// The url a route contributes to its descendants' patterns, if any.
+const contributes = (route: RouteDeclaration): boolean =>
+  parsedUrlPattern(route.url) !== undefined || Boolean(route.url);
+
+const mixedChain = (
+  child: RouteDeclaration,
+  parent: RouteDeclaration,
+): Error => {
+  const declared = parsedUrlPattern(child.url);
+
+  return declared
+    ? new Error(
+        `Route '${child.name}': URLPattern url '${declared.pathname}' can't extend string url '${parent.url}'; declare the parent with urlPattern() too`,
+      )
+    : new Error(
+        `Route '${child.name}': string url '${child.url}' can't extend URLPattern url '${parsedUrlPattern(parent.url)!.pathname}'; declare the child with urlPattern()`,
+      );
+};
 
 // The route's full pattern (ancestors' urls, root first) and its rootward-merged params.
 const chainPattern = (
@@ -164,34 +172,39 @@ const chainPattern = (
   chain: readonly RouteDeclaration[],
 ): ChainPattern => {
   let pattern = '';
-  // A urlPattern() url declares its query names apart, so they join after every path.
-  const query: string[] = [];
   const params: NonNullable<RouteDeclaration['params']> = {};
+  const urlPatterns: ParsedUrlPattern[] = [];
+  let nearest: RouteDeclaration | null = null;
 
   for (let depth = chain.length - 1; depth >= 0; depth--) {
     const ancestor = chain[depth];
-    const parts = urlPatternParts(ancestor);
-    const url = parts ? parts.path : ancestor.url;
+    const declared = parsedUrlPattern(ancestor.url);
 
-    if (parts) query.push(...parts.query);
+    // As the client plugin: the two url syntaxes never extend each other.
+    if (
+      nearest !== null &&
+      ancestor.url !== undefined &&
+      (declared !== undefined) !== (parsedUrlPattern(nearest.url) !== undefined)
+    )
+      throw mixedChain(ancestor, nearest);
 
-    if (url) {
+    if (declared) urlPatterns.push(declared);
+    else if (ancestor.url) {
       // Naive concatenation cannot splice a child into a parent's search
       // part (core's UrlMatcher.append can); fail rather than diverge.
       if (pattern.includes('?'))
         throw new Error(
           `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
         );
-      pattern += url;
+      pattern += ancestor.url;
     }
+
+    if (contributes(ancestor)) nearest = ancestor;
 
     if (ancestor.params) Object.assign(params, ancestor.params);
   }
 
-  if (query.length)
-    pattern += `${pattern.includes('?') ? '&' : '?'}${query.join('&')}`;
-
-  return { pattern, params };
+  return { pattern, params, urlPatterns };
 };
 
 /**
@@ -205,6 +218,7 @@ export function compileRoutes(
   config: UrlMatcherCompilerConfig = {},
 ): CompiledRoute[] {
   const { compile } = urlMatcherFactory(config);
+  const resolved = resolveCompilerConfig(config);
   const byName = new Map<string, RouteDeclaration>();
   const parents = new Map<RouteDeclaration, string>();
 
@@ -214,11 +228,14 @@ export function compileRoutes(
 
     // Naive appending turns '/parent' + 'edit' into '/parentedit'; a url
     // must contribute a path segment ('/...') or a search part ('?...').
-    const url = urlString(route);
-
-    if (url && !url.startsWith('/') && !url.startsWith('?'))
+    if (
+      parsedUrlPattern(route.url) === undefined &&
+      route.url &&
+      !route.url.startsWith('/') &&
+      !route.url.startsWith('?')
+    )
       throw new Error(
-        `Route '${route.name}': url '${url}' must start with '/' or '?'`,
+        `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
       );
     byName.set(route.name, route);
     parents.set(route, parentName(route));
@@ -256,12 +273,25 @@ export function compileRoutes(
 
   for (const route of routes) {
     if (route.url === undefined) continue;
-    const { pattern, params } = chainPattern(route, chainOf(route));
+
+    const { pattern, params, urlPatterns } = chainPattern(
+      route,
+      chainOf(route),
+    );
+
+    const matcher = urlPatterns.length
+      ? compileUrlPattern(
+          urlPatterns,
+          params,
+          resolved,
+          `Route '${route.name}'`,
+        )
+      : compile(pattern, { params });
 
     compiled.push({
       name: route.name,
-      pattern,
-      matcher: compile(pattern, { params }),
+      pattern: matcher.pattern,
+      matcher,
       redirectTo: route.redirectTo,
     });
   }
@@ -279,7 +309,7 @@ export interface RouteMatch {
 
 /**
  * Returns which route's pattern the pathname matched, with the extracted
- * params. The most specific match wins ({@link compare}); ties go to
+ * params. The most specific match wins ({@link matcher!compare | compare}); ties go to
  * declaration order.
  */
 export function matchRoute(
@@ -287,15 +317,15 @@ export function matchRoute(
   pathname: string,
 ): RouteMatch | null {
   let best: RouteMatch | null = null;
-  let bestMatcher: CompiledMatcher | null = null;
+  let bestMatcher: CompiledRoute['matcher'] | null = null;
 
   for (const { name, matcher } of routes) {
-    const params = exec(matcher, pathname);
+    const params = execRoute(matcher, pathname);
 
     if (params === null) continue;
 
     // Strict < keeps the earlier declaration on ties.
-    if (bestMatcher === null || compare(matcher, bestMatcher) < 0) {
+    if (bestMatcher === null || compareRoutes(matcher, bestMatcher) < 0) {
       best = { state: name, params };
       bestMatcher = matcher;
     }
@@ -420,7 +450,7 @@ export function compileResolver(
       state = byName.get(next.state)!;
     }
 
-    const path = format(state.matcher, carried);
+    const path = formatRoute(state.matcher, carried);
 
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;
