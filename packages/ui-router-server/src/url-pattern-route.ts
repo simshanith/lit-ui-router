@@ -91,10 +91,8 @@ export function compileUrlPattern(
       { ignoreCase: config.caseInsensitive },
     );
   } catch (error) {
-    throw new Error(
-      `${where}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
+    // SAFETY: the URLPattern constructor throws only TypeErrors.
+    throw new Error(`${where}: ${(error as Error).message}`, { cause: error });
   }
 
   const compiled: CompiledUrlPattern = Object.freeze({

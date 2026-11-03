@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { servicesPlugin, UIRouter } from '@uirouter/core';
-import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
+import type {
+  ParamType,
+  RawParams,
+  StateDeclaration,
+  StateRule,
+} from '@uirouter/core';
 
 import { createServerRouter } from '../src/index.ts';
 import { serverLocationPlugin } from '../src/location.ts';
@@ -10,6 +15,7 @@ import { compileRoutes, matchRoute } from '../src/redirects.ts';
 import type { RouteDeclaration } from '../src/redirects.ts';
 import { compileRouteTrie } from '../src/route-trie.ts';
 import { onceSettled } from '../src/simulate.ts';
+import { routeTrie } from '../src/route-trie.ts';
 import {
   urlPattern as url,
   urlPatternOf,
@@ -95,6 +101,8 @@ describe('urlPattern', () => {
     ['/users/:id+', /modifier '\+'/],
     ['/users/(\\d+)', /'\(' at index 7/],
     ['/users{/:id}?', /'\{' at index 6/],
+    ['/users/:id(\\d+', /unclosed '\('/],
+    ['/users/:', /a ':' without a \\w name at index 7/],
   ] as const)
     it(`rejects ${pathname}`, () => {
       assert.throws(() => url(pathname), reason);
@@ -260,6 +268,105 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
     );
   });
 
+  it('reads its params, inherited or own, and is never the root url', () => {
+    const { url: matcher } =
+      routerFor().stateRegistry.get('users.detail').$$state!();
+
+    assert.equal(matcher.isRoot(), false);
+    assert.equal(matcher.parameter('sort')?.id, 'sort');
+    assert.equal(matcher.parameter('sort', { inherit: false }), null);
+    assert.equal(matcher.parameter('id', { inherit: false })?.id, 'id');
+    assert.equal(matcher.parameter('nope'), null);
+  });
+
+  it('carries the hash through match and href', () => {
+    const router = routerFor();
+    assert.deepEqual(
+      router.urlService.match({ path: '/by/a', search: {}, hash: 'top' })
+        ?.match,
+      { slug: 'a', '#': 'top' },
+    );
+    assert.equal(
+      router.stateService.href('slug', { slug: 'a', '#': 'top' }),
+      '/by/a#top',
+    );
+  });
+
+  // A string type core leaves unencoded.
+  const rawRouter = (states: StateDeclaration[]): UIRouter => {
+    const router = new UIRouter();
+    const { config } = router.urlService;
+    // SAFETY: core types its type registry's getter as any; 'string' is a built-in ParamType.
+    const string = config.type('string') as ParamType;
+    config.type('raw', {
+      encode: (value: string) => value,
+      decode: (value: string) => value,
+      is: (value: string) => string.is(value),
+      equals: (a: string, b: string) => a === b,
+      pattern: string.pattern,
+      raw: true,
+    });
+    router.plugin(servicesPlugin);
+    router.plugin(serverLocationPlugin);
+    router.plugin(urlPatternPlugin);
+    states.forEach((state) => router.stateRegistry.register(state));
+
+    return router;
+  };
+
+  it('encodes query params as core does: replace, squash, arrays and raw', () => {
+    const router = rawRouter([
+      {
+        name: 'list',
+        url: url('/list', { query: ['sort', 'page', 'tag', 'raw'] }),
+        params: {
+          sort: { value: 'name', squash: true },
+          page: { value: '1' },
+          tag: { array: true },
+          raw: { type: 'raw' },
+        },
+      },
+    ]);
+
+    assert.deepEqual(
+      coreMatch(router, '/list', { sort: '', tag: ['a', 'b'] }),
+      {
+        state: 'list',
+        params: { sort: 'name', page: '1', tag: ['a', 'b'], raw: undefined },
+      },
+    );
+    assert.equal(
+      router.stateService.href('list', { tag: ['a b', 'c'], raw: 'x/y' }),
+      '/list?page=1&tag=a%20b&tag=c&raw=x/y',
+    );
+  });
+
+  it('decodes path groups only when the url config decodes params', () => {
+    const router = new UIRouter();
+    router.urlService.config._decodeParams = false;
+    router.plugin(urlPatternPlugin);
+    router.stateRegistry.register({ name: 'slug', url: url('/by/:slug') });
+    assert.deepEqual(coreMatch(router, '/by/a%20b')?.params, { slug: 'a%20b' });
+  });
+
+  it('formats raw path groups unencoded, and null for an empty group', () => {
+    const { stateService } = rawRouter([
+      { name: 'raw', url: url('/raw/:id'), params: { id: { type: 'raw' } } },
+      { name: 'slug', url: url('/by/:slug') },
+    ]);
+
+    assert.equal(stateService.href('raw', { id: 'a@b' }), '/raw/a@b');
+    assert.equal(stateService.href('slug', { slug: '' }), null);
+  });
+
+  it("hands urls back to core's builder once disposed", () => {
+    const router = new UIRouter();
+    router.plugin(urlPatternPlugin).dispose?.(router);
+    assert.throws(() =>
+      router.stateRegistry.register({ name: 'a', url: url('/a') }),
+    );
+  });
+
   it('names the state when the engine rejects the joined pattern', () => {
     assert.throws(
       () =>
@@ -353,6 +460,24 @@ describe('server tiers over urlPattern routes', () => {
     );
   });
 
+  it('names an encoded literal when routeTrie refuses it', () => {
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/app': {
+              routes: [{ name: 'cafe', url: url('/café') }],
+              routeIndex: routeTrie,
+            },
+          },
+        }),
+      {
+        message:
+          "Mount '/app': routeTrie can't express route 'cafe' ('/café'): its literal text holds a character URLPattern encodes",
+      },
+    );
+  });
+
   it('formats redirect targets through the engine', async () => {
     const server = createServerRouter({
       mounts: {
@@ -361,6 +486,7 @@ describe('server tiers over urlPattern routes', () => {
             ...table(),
             { name: 'old', url: '/old/:id', redirectTo: 'users.detail' },
             { name: 'bad', url: '/bad/:code', redirectTo: 'codes' },
+            { name: 'empty', url: '/empty/{slug:[a-z]*}', redirectTo: 'slug' },
           ],
         },
       },
@@ -373,6 +499,7 @@ describe('server tiers over urlPattern routes', () => {
       status: 302,
     });
     assert.notEqual((await server.resolve('/app/bad/abcd')).kind, 'redirect');
+    assert.notEqual((await server.resolve('/app/empty/')).kind, 'redirect');
   });
 
   it('rejects mixing the two url syntaxes in one chain', () => {

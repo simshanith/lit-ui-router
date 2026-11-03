@@ -637,10 +637,10 @@ const buildMatcher = (
       decodeParams: config._decodeParams,
     });
   } catch (error) {
-    throw new Error(
-      `State '${state.name}': ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
+    // SAFETY: requireUrlPattern and the URLPattern constructor throw only Errors.
+    throw new Error(`State '${state.name}': ${(error as Error).message}`, {
+      cause: error,
+    });
   }
 };
 
