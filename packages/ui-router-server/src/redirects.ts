@@ -10,6 +10,7 @@
 
 import type { RawParams } from '@uirouter/core';
 
+import { isUrlPatternUrl, matcherPath } from './url-pattern.ts';
 import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
 import type {
   CompiledMatcher,
@@ -26,7 +27,12 @@ export interface RouteDeclaration {
    * `parent` is rejected at compile, as core rejects it at registration.
    */
   parent?: string;
-  /** Url segment appended to the ancestors' segments; a url-less state is structural only (never matched, never a redirect target). */
+  /**
+   * Url segment appended to the ancestors' segments; a url-less state is
+   * structural only (never matched, never a redirect target). A
+   * {@link url-pattern!urlPattern | urlPattern} value, cast as core's
+   * `StateDeclaration.url` needs, compiles translated into matcher syntax.
+   */
   url?: string;
   /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
   // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- published; a shorthand default is any value, as core's state.params
@@ -107,6 +113,32 @@ export interface CompiledRoute {
   redirectTo?: string | RedirectTarget;
 }
 
+// A urlPattern() url's path in matcher syntax, and its query names; null for a string url.
+const urlPatternParts = (
+  route: RouteDeclaration,
+): { path: string; query: readonly string[] } | null => {
+  const declared: unknown = route.url;
+
+  return isUrlPatternUrl(declared)
+    ? { path: matcherPath(declared, route.params), query: declared.query }
+    : null;
+};
+
+/**
+ * A declaration's url in matcher syntax.
+ *
+ * @internal
+ */
+export const urlString = (route: RouteDeclaration): string | undefined => {
+  const parts = urlPatternParts(route);
+
+  if (!parts) return route.url;
+
+  return parts.query.length
+    ? `${parts.path}?${parts.query.join('&')}`
+    : parts.path;
+};
+
 // Core's StateBuilder.parentName: the `parent`, else the dotted prefix.
 const parentName = (route: RouteDeclaration): string => {
   const dot = route.name.lastIndexOf('.');
@@ -119,6 +151,47 @@ const parentName = (route: RouteDeclaration): string => {
     );
 
   return route.name.slice(0, dot);
+};
+
+interface ChainPattern {
+  readonly pattern: string;
+  readonly params: NonNullable<RouteDeclaration['params']>;
+}
+
+// The route's full pattern (ancestors' urls, root first) and its rootward-merged params.
+const chainPattern = (
+  route: RouteDeclaration,
+  chain: readonly RouteDeclaration[],
+): ChainPattern => {
+  let pattern = '';
+  // A urlPattern() url declares its query names apart, so they join after every path.
+  const query: string[] = [];
+  const params: NonNullable<RouteDeclaration['params']> = {};
+
+  for (let depth = chain.length - 1; depth >= 0; depth--) {
+    const ancestor = chain[depth];
+    const parts = urlPatternParts(ancestor);
+    const url = parts ? parts.path : ancestor.url;
+
+    if (parts) query.push(...parts.query);
+
+    if (url) {
+      // Naive concatenation cannot splice a child into a parent's search
+      // part (core's UrlMatcher.append can); fail rather than diverge.
+      if (pattern.includes('?'))
+        throw new Error(
+          `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
+        );
+      pattern += url;
+    }
+
+    if (ancestor.params) Object.assign(params, ancestor.params);
+  }
+
+  if (query.length)
+    pattern += `${pattern.includes('?') ? '&' : '?'}${query.join('&')}`;
+
+  return { pattern, params };
 };
 
 /**
@@ -141,9 +214,11 @@ export function compileRoutes(
 
     // Naive appending turns '/parent' + 'edit' into '/parentedit'; a url
     // must contribute a path segment ('/...') or a search part ('?...').
-    if (route.url && !route.url.startsWith('/') && !route.url.startsWith('?'))
+    const url = urlString(route);
+
+    if (url && !url.startsWith('/') && !url.startsWith('?'))
       throw new Error(
-        `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
+        `Route '${route.name}': url '${url}' must start with '/' or '?'`,
       );
     byName.set(route.name, route);
     parents.set(route, parentName(route));
@@ -181,25 +256,7 @@ export function compileRoutes(
 
   for (const route of routes) {
     if (route.url === undefined) continue;
-    const chain = chainOf(route);
-    let pattern = '';
-    const params: NonNullable<RouteDeclaration['params']> = {};
-
-    for (let depth = chain.length - 1; depth >= 0; depth--) {
-      const ancestor = chain[depth];
-
-      if (ancestor.url) {
-        // Naive concatenation cannot splice a child into a parent's search
-        // part (core's UrlMatcher.append can); fail rather than diverge.
-        if (pattern.includes('?'))
-          throw new Error(
-            `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
-          );
-        pattern += ancestor.url;
-      }
-
-      if (ancestor.params) Object.assign(params, ancestor.params);
-    }
+    const { pattern, params } = chainPattern(route, chainOf(route));
 
     compiled.push({
       name: route.name,

@@ -100,6 +100,13 @@ import {
   type RouterUrlConfig,
 } from 'ui-router-server/url-config';
 import {
+  isUrlPatternUrl,
+  urlPattern,
+  urlPatternPlugin,
+  type UrlPatternOptions,
+  type UrlPatternUrl,
+} from 'ui-router-server/url-pattern';
+import {
   serverRouterPlugin,
   type ServerRouterPlugin,
 } from 'ui-router-server/vite';
@@ -429,6 +436,26 @@ export async function adoptedWithTransport(
 // router comes back at the type it went in as.
 export function sharedUrlConfig(router: UIRouter): UIRouter {
   return applyUrlConfig(router, matcherConfig);
+}
+
+// URLPattern tier: a declared url rides core's string-typed url field.
+const patternOptions: UrlPatternOptions = { query: ['sort'] };
+
+const usersPattern: UrlPatternUrl = urlPattern(
+  { pathname: '/users/:id' },
+  patternOptions,
+);
+
+export function patternRouter(router: UIRouter): boolean {
+  router.plugin(urlPatternPlugin);
+  router.stateRegistry.register({
+    name: 'users',
+    // SAFETY: the plugin's builder and compileRoutes read a urlPattern() value back from core's string-typed url field.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- core's url field is string-typed; the plugin reads the value back
+    url: usersPattern as unknown as string,
+  });
+
+  return isUrlPatternUrl(usersPattern);
 }
 
 const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
