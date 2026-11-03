@@ -12,6 +12,8 @@ indicator while the transition runs, a skeleton for data the transition does
 not wait for, and an error view when it fails. [Route Guards](./route-guards)
 covers how hooks are registered and matched.
 
+<!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
+
 ## Pending indicator
 
 The view a transition leaves stays mounted while the transition runs: core
