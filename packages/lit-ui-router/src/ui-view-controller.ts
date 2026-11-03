@@ -100,7 +100,7 @@ class OutletDirective extends AsyncDirective {
     this.onPart = onPart;
     onPart(part, true);
 
-    return value;
+    return this.render(onPart, value);
   }
 
   protected override disconnected(): void {

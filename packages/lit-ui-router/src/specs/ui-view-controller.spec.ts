@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { html, LitElement, render } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import type { ActiveUIView, RawParams } from '@uirouter/core';
 
 import { UIRouterLit } from '../core.js';
@@ -10,6 +10,7 @@ import type {
   UiOnParamsChanged,
   UIViewInjectedProps,
 } from '../interface.js';
+import { TransitionController } from '../transition-controller.js';
 import { uiSref } from '../ui-sref.js';
 import { UiView } from '../ui-view.js';
 import '../ui-view.register.js';
@@ -17,6 +18,8 @@ import { UiViewController } from '../ui-view-controller.js';
 import { viewRendered } from '../view-rendered.js';
 import {
   createTestRouter,
+  defer,
+  type Deferred,
   mountElementInRouter,
   routerGo,
   tick,
@@ -79,6 +82,55 @@ class OwnRouterHost extends LitElement {
   }
 }
 
+@customElement('test-outlet-gated-host')
+class GatedOutletHost extends LitElement {
+  readonly view = new UiViewController(this);
+
+  gate?: Deferred<void>;
+
+  protected override async scheduleUpdate(): Promise<void> {
+    await this.gate?.promise;
+    await super.scheduleUpdate();
+  }
+
+  render() {
+    return html`<main>${this.view.outlet()}</main>`;
+  }
+}
+
+@customElement('test-outlet-own-router-observer')
+class OwnRouterObserver extends LitElement {
+  readonly view: UiViewController;
+
+  readonly transitions: TransitionController;
+
+  constructor(router: UIRouterLit) {
+    super();
+    this.view = new UiViewController(this, { router });
+    this.transitions = new TransitionController(this);
+  }
+
+  render() {
+    return html`${this.view.outlet()}`;
+  }
+}
+
+@customElement('test-outlet-movable-host')
+class MovableOutletHost extends LitElement {
+  readonly view = new UiViewController(this);
+
+  @property({ type: Boolean }) footed = false;
+
+  render() {
+    return this.footed
+      ? html`<section>
+          ${this.view.outlet()}
+          <footer></footer>
+        </section>`
+      : html`<main>${this.view.outlet()}</main>`;
+  }
+}
+
 @customElement('test-outlet-sibling-host')
 class SiblingOutletHost extends LitElement {
   readonly view = new UiViewController(this);
@@ -106,6 +158,9 @@ declare global {
     'test-outlet-detail': OutletDetail;
     'test-outlet-nested-host': NestedOutletHost;
     'test-outlet-own-router-host': OwnRouterHost;
+    'test-outlet-gated-host': GatedOutletHost;
+    'test-outlet-own-router-observer': OwnRouterObserver;
+    'test-outlet-movable-host': MovableOutletHost;
     'test-outlet-sibling-host': SiblingOutletHost;
     'test-outlet-class-shell': ClassShell;
   }
@@ -130,6 +185,11 @@ const states: LitStateDeclaration[] = [
           `item ${trans.params().id}`,
       },
     ],
+  },
+  {
+    name: 'detail.extra',
+    url: '/extra',
+    component: () => html`<p class="extra">Extra</p>`,
   },
   {
     name: 'shell',
@@ -274,6 +334,20 @@ describe('UiViewController', () => {
     expect(host.view.routedElement).toBe(detail);
   });
 
+  it('skips uiOnParamsChanged when a transition to a child state changes no params', async () => {
+    const host = await mount(document.createElement('test-outlet-host'));
+    const spy = vi.fn();
+    paramsChanged = spy;
+
+    await go('detail', { id: '1' });
+    const detail = host.view.routedElement;
+    await go('detail.extra');
+
+    expect(router.globals.current.name).toBe('detail.extra');
+    expect(spy).not.toHaveBeenCalled();
+    expect(host.view.routedElement).toBe(detail);
+  });
+
   it("lets the routed element's uiCanExit cancel a transition", async () => {
     await mount(document.createElement('test-outlet-host'));
 
@@ -412,5 +486,63 @@ describe('UiViewController', () => {
     await viewRendered(own);
 
     expect(host.shadowRoot!.querySelector('h1.home')).not.toBeNull();
+  });
+
+  it('throws when outlet() is bound outside child position', () => {
+    const host = document.createElement('test-outlet-host');
+    const container = document.createElement('div');
+
+    expect(() =>
+      render(html`<p class=${host.view.outlet()}></p>`, container),
+    ).toThrow('UiViewController.outlet() must be used in child position');
+  });
+
+  it("makes viewRendered wait for the host's update", async () => {
+    const host = await mount(document.createElement('test-outlet-gated-host'));
+    const gate = defer();
+    host.gate = gate;
+
+    await routerGo(router, 'home');
+    let rendered = false;
+
+    const done = viewRendered(router).then(() => {
+      rendered = true;
+    });
+
+    await tick();
+
+    expect(rendered).toBe(false);
+    expect(host.shadowRoot!.querySelector('h1.home')).toBeNull();
+
+    gate.resolve();
+    await done;
+
+    expect(host.shadowRoot!.querySelector('h1.home')).not.toBeNull();
+  });
+
+  it("leaves the host's own router requests to the provider above", async () => {
+    const host = await mount(new OwnRouterObserver(createTestRouter(states)));
+
+    expect(host.transitions.router).toBe(router);
+  });
+
+  it('stays the parent of views its output renders after the host moves the outlet', async () => {
+    const host = await mount(
+      document.createElement('test-outlet-movable-host'),
+    );
+
+    await go('shell.child');
+
+    host.footed = true;
+    await host.updateComplete;
+    await viewRendered(router);
+
+    const nested = host.shadowRoot!.querySelector<UiView>(
+      'section .shell ui-view',
+    )!;
+
+    expect(UiView.seekParentView(nested)).toBe(host.view);
+    expect(nested.querySelector('p.child')?.textContent).toBe('Child');
+    expect(host.shadowRoot!.querySelector('main')).toBeNull();
   });
 });
