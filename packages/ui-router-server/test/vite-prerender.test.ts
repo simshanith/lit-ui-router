@@ -13,6 +13,7 @@ import type { PreviewServer } from 'vite';
 
 import { createServerRouter } from '../src/index.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
+import { LOG_LINES } from './fixtures/vite-prerender/src/prerender-logs.ts';
 import { mounts } from './fixtures/vite-prerender/src/routes.ts';
 
 const execNode = promisify(execFile);
@@ -199,8 +200,9 @@ describe('serverRouterPlugin prerender, per environment', () => {
         './test/import-meta-env.ts',
         '--import',
         path.join(root, 'capture-prerender.ts'),
-        path.join(root, 'build-identity.ts'),
+        path.join(root, 'build-entry.ts'),
         outDir,
+        './src/prerender-identity.ts',
       ],
       {
         cwd: path.join(import.meta.dirname, '..'),
@@ -224,5 +226,43 @@ describe('serverRouterPlugin prerender, per environment', () => {
       await buildUnder(t, [], { NODE_OPTIONS: '--conditions=production' }),
       /one copy: true/,
     );
+  });
+});
+
+describe("serverRouterPlugin prerender, the worker's output", () => {
+  const expected = (stream: string) =>
+    Array.from(
+      { length: LOG_LINES },
+      (_, line) => `${stream} line ${String(line)}`,
+    );
+
+  const buildLogs = async (t: TestContext, entry: string) =>
+    execNode(
+      process.execPath,
+      [
+        '--import',
+        './test/import-meta-env.ts',
+        path.join(root, 'build-entry.ts'),
+        await tempDir(t),
+        entry,
+      ],
+      { cwd: path.join(import.meta.dirname, '..') },
+    );
+
+  it('reaches the parent whole before the worker is terminated', async (t) => {
+    const { stdout, stderr } = await buildLogs(t, './src/prerender-logs.ts');
+
+    const lines = (stream: string, output: string) =>
+      output.split('\n').filter((line) => line.startsWith(`${stream} line `));
+
+    assert.deepEqual(lines('stdout', stdout), expected('stdout'));
+    assert.deepEqual(lines('stderr', stderr), expected('stderr'));
+  });
+
+  it('reaches the parent whole when the entry throws', async (t) => {
+    await assert.rejects(buildLogs(t, './src/prerender-logs-throw.ts'), {
+      stdout: new RegExp(expected('stdout').join('\n')),
+      stderr: new RegExp(expected('stderr').join('\n')),
+    });
   });
 });

@@ -39,6 +39,8 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
+const NODE_PROCESS = 'node:process';
+
 // Typed structurally so src never pulls in @types/node or vite.
 interface NodeWorkerThreads {
   parentPort: { postMessage(value: PrerenderResult): void } | null;
@@ -51,6 +53,15 @@ interface NodeFsPromises {
     options: { recursive: boolean },
   ): Promise<string | undefined>;
   writeFile(path: string, data: string, encoding: string): Promise<void>;
+}
+
+interface OutputStream {
+  write(chunk: string, callback: () => void): boolean;
+}
+
+interface NodeProcess {
+  stdout: OutputStream;
+  stderr: OutputStream;
 }
 
 interface NodePath {
@@ -181,9 +192,21 @@ const runJob = async (job: PrerenderJob): Promise<PrerenderResult> => {
   }
 };
 
-// SAFETY: `NODE_WORKER_THREADS` names `node:worker_threads`; the plugin passes a PrerenderJob as workerData.
-const { parentPort, workerData } = (await import(
-  NODE_WORKER_THREADS
-)) as NodeWorkerThreads;
+// SAFETY: `NODE_WORKER_THREADS` and `NODE_PROCESS` name node's modules, whose members take these shapes; the plugin passes a PrerenderJob as workerData.
+const [{ parentPort, workerData }, { stdout, stderr }] = (await Promise.all([
+  import(NODE_WORKER_THREADS),
+  import(NODE_PROCESS),
+])) as [NodeWorkerThreads, NodeProcess];
 
-parentPort?.postMessage(await runJob(workerData));
+const drained = (stream: OutputStream): Promise<void> =>
+  new Promise((resolve) => stream.write('', () => resolve()));
+
+const flush = (): Promise<[void, void]> =>
+  Promise.all([drained(stdout), drained(stderr)]);
+
+const run = runJob(workerData);
+
+// The plugin terminates the thread on the result, so the parent must take every write first, on either outcome.
+await run.then(flush, flush);
+
+parentPort?.postMessage(await run);
