@@ -121,6 +121,7 @@ const workspaces = {
       'mobx-floor',
       'lit-ui-router-floor',
       '@uirouter/core-floor',
+      'ui-router-mobx-floor',
     ],
     entry: ['test-d/*.test-d.ts'],
   },
