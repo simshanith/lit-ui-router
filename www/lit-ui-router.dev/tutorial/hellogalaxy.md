@@ -372,6 +372,10 @@ When navigating to `/galaxy/stars/sirius`:
 5. `galaxy.stars.star` state is activated; its `star` resolve finds Sirius in the inherited catalog
 6. `StarDetailComponent` renders in the nested `<ui-view>` inside `StarsContainerComponent`
 
+Side by side, the state tree and the view tree mirror each other:
+
+<!--@include: ../public/diagrams/hellogalaxy-state-view-tree.svg-->
+
 ---
 
 ## Summary
