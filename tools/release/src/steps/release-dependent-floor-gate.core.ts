@@ -43,16 +43,15 @@ export function dependentsOf(
   }
 
   return members
-    .filter(isPublishable)
     .flatMap((member): Dependent[] => {
+      if (!isPublishable(member) || member.name === packageName) return [];
+
       const { manifest } = member;
       const peer = manifest.peerDependencies?.[packageName];
       const spec = peer ?? manifest.dependencies?.[packageName];
       const scripts = guardScripts(member);
 
-      if (member.name === packageName || spec === undefined) return [];
-
-      if (scripts.length === 0) return [];
+      if (spec === undefined || scripts.length === 0) return [];
 
       return [
         {
