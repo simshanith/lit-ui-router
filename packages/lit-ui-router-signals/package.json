@@ -80,6 +80,7 @@
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
     "ui-router-signals": "catalog:workspace",
+    "ui-router-signals-floor": "catalog:peerFloorSignals",
     "vitest": "catalog:"
   },
   "peerDependencies": {

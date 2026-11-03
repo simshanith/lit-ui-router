@@ -385,6 +385,9 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.16.0
       version: 1.16.0
+    ui-router-signals-floor:
+      specifier: npm:ui-router-signals@0.3.0
+      version: npm:ui-router-signals@0.3.0
   peerFloorSsr:
     '@lit-labs/ssr-client-floor':
       specifier: npm:@lit-labs/ssr-client@1.1.7
@@ -1529,6 +1532,9 @@ importers:
         version: typescript@7.0.2
       ui-router-signals:
         specifier: catalog:workspace
+        version: link:../ui-router-signals
+      ui-router-signals-floor:
+        specifier: catalog:peerFloorSignals
         version: link:../ui-router-signals
       vitest:
         specifier: 'catalog:'
