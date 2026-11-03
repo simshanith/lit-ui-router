@@ -124,7 +124,7 @@
     },
     "lint:oxlint": {
       // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
-      "dependsOn": ["^build:types", "types:worker"]
+      "dependsOn": ["^build:types", "types:worker", "@tools/lint-elements#test"]
     },
     "format:check:oxfmt": {
       // api/ is typedoc output: gitignored, so oxfmt skips it, but the root
