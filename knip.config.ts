@@ -146,6 +146,11 @@ const workspaces = {
       'lit-ui-router-floor',
       'ui-router-server-floor',
     ],
+    // vite builds the fixture app from these by path, in vite-build.spec.ts
+    entry: [
+      'src/specs/vite-build/main.ts',
+      'src/specs/vite-build/prerender*.ts',
+    ],
   },
   'packages/navigation-location-plugin': {
     ignoreDependencies: [

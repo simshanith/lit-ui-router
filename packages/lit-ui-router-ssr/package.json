@@ -69,6 +69,14 @@
       "deno": "./dist/testing.js",
       "node": "./dist/development/testing.js",
       "default": "./dist/testing.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "development": "./dist/development/vite.js",
+      "production": "./dist/vite.js",
+      "deno": "./dist/vite.js",
+      "node": "./dist/development/vite.js",
+      "default": "./dist/vite.js"
     }
   },
   "scripts": {
@@ -126,6 +134,7 @@
     "typescript-7": "catalog:",
     "ui-router-server": "catalog:workspace",
     "ui-router-server-floor": "catalog:peerFloorSsr",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
@@ -134,10 +143,14 @@
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeerSsr",
     "lit-ui-router": "catalog:publishedPeerSsr",
-    "ui-router-server": "catalog:publishedPeerSsr"
+    "ui-router-server": "catalog:publishedPeerSsr",
+    "vite": "catalog:publishedPeer"
   },
   "peerDependenciesMeta": {
     "@lit-labs/ssr-client": {
+      "optional": true
+    },
+    "vite": {
       "optional": true
     }
   },
@@ -179,6 +192,19 @@
         "lit",
         "lit-ui-router",
         "ui-router-server",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./vite": {
+      "free": [
+        "@lit-labs/ssr",
+        "@lit-labs/ssr-client",
+        "@uirouter/core",
+        "lit",
+        "lit-ui-router",
         "hono",
         "vite",
         "node:fs",

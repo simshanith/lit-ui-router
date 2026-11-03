@@ -4,6 +4,17 @@
   "tasks": {
     "docs:api": {
       "outputs": ["../../www/lit-ui-router.dev/api/lit-ui-router-ssr/**"]
+    },
+    // the vite-build spec's prerender worker loads this package by name, from its own dist
+    "test": {
+      "dependsOn": ["^build", "build:js"]
+    },
+    "test:coverage": {
+      "dependsOn": ["^build", "build:js"]
+    },
+    // the vite-build fixture imports this package by name, from its own dist
+    "typecheck:tsc": {
+      "dependsOn": ["^build:types", "build:types"]
     }
   }
 }
