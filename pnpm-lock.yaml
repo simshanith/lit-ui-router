@@ -41,11 +41,11 @@ catalogs:
       specifier: ^0.11.0
       version: 0.11.0
     '@effect/sql-d1':
-      specifier: ^4.1.0
-      version: 4.1.0
+      specifier: ^4.1.1
+      version: 4.1.1
     '@iconify-json/lucide':
-      specifier: ^1.2.149
-      version: 1.2.149
+      specifier: ^1.2.150
+      version: 1.2.150
     '@lit-labs/signals':
       specifier: ^0.3.0
       version: 0.3.0
@@ -143,8 +143,8 @@ catalogs:
       specifier: ^9.0.0
       version: 9.0.0
     effect:
-      specifier: ^4.1.0
-      version: 4.1.0
+      specifier: ^4.1.1
+      version: 4.1.1
     esbuild:
       specifier: ^0.28.2
       version: 0.28.2
@@ -170,8 +170,8 @@ catalogs:
       specifier: 1.90.0
       version: 1.90.0
     eslint-plugin-package-json:
-      specifier: ^1.12.0
-      version: 1.12.0
+      specifier: ^1.13.0
+      version: 1.13.0
     eslint-plugin-pnpm:
       specifier: ^1.9.1
       version: 1.9.1
@@ -185,20 +185,20 @@ catalogs:
       specifier: ^21.0.4
       version: 21.0.4
     hono:
-      specifier: ^4.13.14
-      version: 4.13.14
+      specifier: ^4.13.16
+      version: 4.13.16
     husky:
       specifier: ^9.1.7
       version: 9.1.7
     jose:
-      specifier: ^6.2.14
-      version: 6.2.14
+      specifier: ^6.2.15
+      version: 6.2.15
     jsonc-parser:
       specifier: ^3.3.1
       version: 3.3.1
     knip:
-      specifier: ^6.44.0
-      version: 6.44.0
+      specifier: ^6.44.1
+      version: 6.44.1
     lit:
       specifier: ^3.3.3
       version: 3.3.3
@@ -212,8 +212,8 @@ catalogs:
       specifier: ^4.18.1
       version: 4.18.1
     mobx:
-      specifier: ^7.1.3
-      version: 7.1.3
+      specifier: ^7.1.4
+      version: 7.1.4
     oxc-minify:
       specifier: 0.156.0
       version: 0.156.0
@@ -248,8 +248,8 @@ catalogs:
       specifier: ^0.3.25
       version: 0.3.25
     release-it:
-      specifier: ^21.1.1
-      version: 21.1.1
+      specifier: ^21.1.2
+      version: 21.1.2
     rimraf:
       specifier: ^6.1.3
       version: 6.1.3
@@ -275,8 +275,8 @@ catalogs:
       specifier: ^18.0.0
       version: 18.0.0
     tinybench:
-      specifier: ^6.2.2
-      version: 6.2.2
+      specifier: ^6.2.3
+      version: 6.2.3
     turbo:
       specifier: ^2.11.10
       version: 2.11.10
@@ -329,15 +329,15 @@ catalogs:
       specifier: ^3.3.14
       version: 3.3.14
     wrangler:
-      specifier: ^4.156.0
-      version: 4.156.0
+      specifier: ^4.156.1
+      version: 4.156.1
     yaml:
       specifier: ^2.9.0
       version: 2.9.1
   effect3-compat:
     effect-3:
-      specifier: npm:effect@^3.22.2
-      version: 3.22.2
+      specifier: npm:effect@^3.22.4
+      version: 3.22.4
   lit2-compat:
     lit-2:
       specifier: npm:lit@^2.8.0
@@ -643,7 +643,7 @@ importers:
         version: 1.90.0(oxlint@1.90.0(oxlint-tsgolint@7.0.2005))
       eslint-plugin-package-json:
         specifier: 'catalog:'
-        version: 1.12.0(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))
+        version: 1.13.0(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-pnpm:
         specifier: 'catalog:'
         version: 1.9.1(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))
@@ -655,7 +655,7 @@ importers:
         version: 9.1.7
       knip:
         specifier: 'catalog:'
-        version: 6.44.0
+        version: 6.44.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -688,7 +688,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.0(@types/node@24.19.2)
+        version: 4.156.1(@types/node@24.19.2)
 
   apps/sample-app-lit-e2e:
     dependencies:
@@ -737,7 +737,7 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -786,7 +786,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.0(@types/node@24.19.2)
+        version: 4.156.1(@types/node@24.19.2)
 
   apps/sample-app-lit-mobx:
     dependencies:
@@ -807,7 +807,7 @@ importers:
         version: 4.18.1
       mobx:
         specifier: 'catalog:'
-        version: 7.1.3
+        version: 7.1.4
       sample-app-shared:
         specifier: catalog:workspace
         version: link:../sample-app-shared
@@ -973,7 +973,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       tinybench:
         specifier: 'catalog:'
-        version: 6.2.2
+        version: 6.2.3
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1089,7 +1089,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:../../tools/compat-guards
@@ -1128,7 +1128,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1153,7 +1153,7 @@ importers:
         version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1219,7 +1219,7 @@ importers:
         version: 1.64.1
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1246,7 +1246,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1285,10 +1285,10 @@ importers:
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       effect-3:
         specifier: catalog:effect3-compat
-        version: effect@3.22.2
+        version: effect@3.22.4
       effect-floor:
         specifier: catalog:peerFloor
         version: effect@3.22.0
@@ -1315,7 +1315,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1345,7 +1345,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1399,7 +1399,7 @@ importers:
         version: lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3)
       mobx:
         specifier: 'catalog:'
-        version: 7.1.3
+        version: 7.1.4
       mobx-6:
         specifier: catalog:mobx6-compat
         version: mobx@6.16.1
@@ -1414,7 +1414,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1444,7 +1444,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1501,7 +1501,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1553,7 +1553,7 @@ importers:
         version: '@oxc-project/runtime@0.50.0'
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
@@ -1610,7 +1610,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1634,7 +1634,7 @@ importers:
         version: link:../ui-router-server
       ui-router-server-floor:
         specifier: catalog:peerFloorSsr
-        version: ui-router-server@0.7.0(@uirouter/core@6.1.2)(hono@4.13.14)
+        version: ui-router-server@0.7.0(@uirouter/core@6.1.2)(hono@4.13.16)
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(happy-dom@21.0.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -1643,7 +1643,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1697,7 +1697,7 @@ importers:
         version: 1.64.1
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1799,7 +1799,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
@@ -1838,10 +1838,10 @@ importers:
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       effect-3:
         specifier: catalog:effect3-compat
-        version: effect@3.22.2
+        version: effect@3.22.4
       effect-floor:
         specifier: catalog:peerFloor
         version: effect@3.22.0
@@ -1853,7 +1853,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1880,7 +1880,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/transition-status':
         specifier: catalog:workspace
         version: link:../shared/transition-status
@@ -1916,7 +1916,7 @@ importers:
         version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
       mobx:
         specifier: 'catalog:'
-        version: 7.1.3
+        version: 7.1.4
       mobx-6:
         specifier: catalog:mobx6-compat
         version: mobx@6.16.1
@@ -1931,7 +1931,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1958,7 +1958,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@tools/compat-guards':
         specifier: catalog:workspace
         version: link:../../tools/compat-guards
@@ -1982,7 +1982,7 @@ importers:
         version: '@uirouter/core@6.0.8'
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -1997,13 +1997,13 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
       tinybench:
         specifier: 'catalog:'
-        version: 6.2.2
+        version: 6.2.3
       typedoc:
         specifier: 'catalog:'
         version: 0.28.20(@typescript/typescript6@6.0.2)
@@ -2039,7 +2039,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
@@ -2078,7 +2078,7 @@ importers:
         version: '@uirouter/core@6.0.8'
       hono:
         specifier: 'catalog:'
-        version: 4.13.14
+        version: 4.13.16
       hono-floor:
         specifier: catalog:peerFloor
         version: hono@4.0.0
@@ -2090,13 +2090,13 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
       tinybench:
         specifier: 'catalog:'
-        version: 6.2.2
+        version: 6.2.3
       typedoc:
         specifier: 'catalog:'
         version: 0.28.20(@typescript/typescript6@6.0.2)
@@ -2123,7 +2123,7 @@ importers:
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
-        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/route-snapshot':
         specifier: catalog:workspace
         version: link:../shared/route-snapshot
@@ -2168,7 +2168,7 @@ importers:
         version: 1.90.0(oxlint-tsgolint@7.0.2005)
       release-it:
         specifier: 'catalog:'
-        version: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -2402,10 +2402,10 @@ importers:
         version: 6.1.2
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       hono:
         specifier: 'catalog:'
-        version: 4.13.14
+        version: 4.13.16
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -2429,7 +2429,7 @@ importers:
         version: link:../../packages/lit-ui-router-ssr
       mobx:
         specifier: 'catalog:'
-        version: 7.1.3
+        version: 7.1.4
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -2821,7 +2821,7 @@ importers:
         version: 3.3.1
       knip:
         specifier: 'catalog:'
-        version: 6.44.0
+        version: 6.44.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -3018,7 +3018,7 @@ importers:
     devDependencies:
       '@iconify-json/lucide':
         specifier: 'catalog:'
-        version: 1.2.149
+        version: 1.2.150
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test
@@ -3072,7 +3072,7 @@ importers:
         version: 1.14.0(supports-color@10.2.2)
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.0(@types/node@24.19.2)
+        version: 4.156.1(@types/node@24.19.2)
 
   www/release-diffs.lit-ui-router.dev:
     devDependencies:
@@ -3090,25 +3090,25 @@ importers:
         version: 7.0.2
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.0(@types/node@24.19.2)
+        version: 4.156.1(@types/node@24.19.2)
 
   www/release-ledger.lit-ui-router.dev:
     dependencies:
       '@effect/sql-d1':
         specifier: 'catalog:'
-        version: 4.1.0(effect@4.1.0)
+        version: 4.1.1(effect@4.1.1)
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
       cloudflare-effect-tracer:
         specifier: 'catalog:'
-        version: 0.2.0(effect@4.1.0)
+        version: 0.2.0(effect@4.1.1)
       effect:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       jose:
         specifier: 'catalog:'
-        version: 6.2.14
+        version: 6.2.15
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -3130,7 +3130,7 @@ importers:
         version: 7.0.2
       wrangler:
         specifier: 'catalog:'
-        version: 4.156.0(@types/node@24.19.2)
+        version: 4.156.1(@types/node@24.19.2)
 
 packages:
 
@@ -3270,8 +3270,20 @@ packages:
     cpu: [x64]
     os: [darwin]
 
+  '@cloudflare/workerd-darwin-64@1.20261101.1':
+    resolution: {integrity: sha512-9ByDS2X/lN1csRkU2qTsnogwVA/ghYGHybznujH/EStiv9qU+01XPKagm3Zrk8AN3yQrFTmjMy6BrZWzoa+B5Q==}
+    engines: {node: '>=16'}
+    cpu: [x64]
+    os: [darwin]
+
   '@cloudflare/workerd-darwin-arm64@1.20261023.1':
     resolution: {integrity: sha512-5e79fHgabdDD8EgmjOhJ1S+xMsf6DbC7fL7IgTBizMnzOp0P2isDn7pYmUxI9AJZE9FVQ4RUilH/I36YNg+GQQ==}
+    engines: {node: '>=16'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@cloudflare/workerd-darwin-arm64@1.20261101.1':
+    resolution: {integrity: sha512-XNgl773dDMFecMG0mOtDgw15AIeRVn3yqbbUAqMVH6vgEf64F/J6Ej3FugQyogt+1NSjOx3pgEofbX7Cd9m0ug==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
@@ -3282,14 +3294,32 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@cloudflare/workerd-linux-64@1.20261101.1':
+    resolution: {integrity: sha512-8C9vM51UVrmpavIC7z6anMsKPu8tjvJcwA2tCvzlwfL7odoX61ngBpN7pkYrmrwv5iS9aJ4xEzQc8QkZJKIulw==}
+    engines: {node: '>=16'}
+    cpu: [x64]
+    os: [linux]
+
   '@cloudflare/workerd-linux-arm64@1.20261023.1':
     resolution: {integrity: sha512-ilpRHzfDN8YFRM5CLRKuFw40x/LJBS89yVdhdQmxehlVDuBqjKpJB++zPFbTgKRRFaNupgnXc8RHktXAIhgCmQ==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
 
+  '@cloudflare/workerd-linux-arm64@1.20261101.1':
+    resolution: {integrity: sha512-7NdTrbzPubhEBNiC8ftD0U3J3M8fNR/ATD3Deon6C9Z5SFTmOhQbT3jJPMGPoUzvicdTaaD/YNCwRh+JEoWaeQ==}
+    engines: {node: '>=16'}
+    cpu: [arm64]
+    os: [linux]
+
   '@cloudflare/workerd-windows-64@1.20261023.1':
     resolution: {integrity: sha512-279WLVjNsMycAwr0EZNiNEf0l2SY6NUtsN80NwZzbTHzakmiN+WSx4w38muxPm+PAU0oSPPAPXKVD+H6Hya8xw==}
+    engines: {node: '>=16'}
+    cpu: [x64]
+    os: [win32]
+
+  '@cloudflare/workerd-windows-64@1.20261101.1':
+    resolution: {integrity: sha512-nDRpV9VRhzdrNpJOJNfe6rjOTq5LXFGC6WFCeGR/LA+cNnou1fwF0AQm//zmSDOELPNoQFi6SqjUcloZvy1sKw==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
@@ -3463,10 +3493,10 @@ packages:
   '@docsearch/sidepanel-js@4.7.1':
     resolution: {integrity: sha512-uyOKbC6rjHCZBVbLCSZVb1NDWzjbD27WqxTuRYnkTW717laEj2dX+W8Ho1fNHSyG4dqssIlPWlXdg+McGxxxxg==}
 
-  '@effect/sql-d1@4.1.0':
-    resolution: {integrity: sha512-Sg3UxQGc5yPc9LZ4WmiwHzVv+Wpqntue+4QRYx/XdLLyrZH4w+BkshPzifC7p7uQg9OaiaeQJPlsKZs6Bm9plw==}
+  '@effect/sql-d1@4.1.1':
+    resolution: {integrity: sha512-CQMOiw9bmj4ifsUA4KLwIgBJBMpPHaF3OYdXnA9oOxeEmD61+XDLkJUSA2mG7BWCIEZc7MquGxl3HuUVOeqtSA==}
     peerDependencies:
-      effect: ^4.1.0
+      effect: ^4.1.1
 
   '@emnapi/core@1.11.2':
     resolution: {integrity: sha512-TC8MkTuZUtcTSiFeuC0ksCh9QIJ5+F21MvZ4Wn4ORfYaFJ/0dsiudv5tVkejgwZlwQ39jL9WWDe2lz8x0WglOA==}
@@ -3733,8 +3763,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@iconify-json/lucide@1.2.149':
-    resolution: {integrity: sha512-5NG9YdbtRS03hG1A+EIE6nLhhdAYsf0mKu1ZRi6kLMlCG8DxmDsRM6DAhwlNMLiSiQKFbHpKTJ2VddZdwUkUyw==}
+  '@iconify-json/lucide@1.2.150':
+    resolution: {integrity: sha512-av3IH1CB8RuKrlKGDmBbt6dLYtZus1Vr89VOysxORLhKcTr4ARe4Dmp0gL7Q47sK9GMkyROn1a+h07tAYpSuEw==}
 
   '@iconify-json/simple-icons@1.2.101':
     resolution: {integrity: sha512-MXJkMZDancJ/9I+Bgdthi9kXvn3AwWStxoTHwEPwAFQ9kMLBASO1BSstg52fNtjXeizm1Wi91R+QnWxNGkWHPQ==}
@@ -6779,11 +6809,11 @@ packages:
   effect@3.22.0:
     resolution: {integrity: sha512-jhYFe0zTlIRqYFrKTS+6luhmS/Tm0f+JLo0K9KUxvtFab1SUGEszQi2ehOP6QzAZvy831lDmTwwzvVDZSPNz3g==}
 
-  effect@3.22.2:
-    resolution: {integrity: sha512-fm1CQXCs7GTMwpadZxwU5rnAb2bN6mbQpknq/pXBGCzSKkosNYb9k0wsoL0TfB10rSa5xOEZJjo77u/KLXSANg==}
+  effect@3.22.4:
+    resolution: {integrity: sha512-RNshu7AXVxxDh6aS4lothhJ+QoZ4xSykbWNaaVdvDN72RMyVwhCGdALkyl1TbEydgAmRIdD1eTyJqBUGwSBGDA==}
 
-  effect@4.1.0:
-    resolution: {integrity: sha512-lGx2MJJyrXA8RZb2UpQ/0Nkb5Utaimby7oD92+18noBxLPE85IFOvptdzau8dvcxAOwfwHo9iqapbKeFzqQM/Q==}
+  effect@4.1.1:
+    resolution: {integrity: sha512-XYu65BrcmNqu5i7PPvP4dqL+R5ma37zIsfuSPjcn78mog+6e5PkilNg7Xo+pBpjXJYlWEIpH4j91tMrfW05CMw==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -6937,8 +6967,8 @@ packages:
     peerDependencies:
       oxlint: ~1.90.0
 
-  eslint-plugin-package-json@1.12.0:
-    resolution: {integrity: sha512-hBHJu0yIFV67pMsb4VWj1t2Hf4bTzP1qO7w4nKp7xEXoP5ZPu17dY7/jASggGZq1mhkF2QL6f13K1Deix1rDAQ==}
+  eslint-plugin-package-json@1.13.0:
+    resolution: {integrity: sha512-eFERmDr6BwnZoF6gjywmlwAs02J44j+3wM4Pkw9Q34a6zr6n1RZUWAh/KjQ9hg7KQwuDESv3ut5+mM5buzxe3g==}
     engines: {node: ^22.22.2 || >=24.15.0}
     peerDependencies:
       '@eslint/json': '>=1.0.0'
@@ -7376,8 +7406,8 @@ packages:
     resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
     engines: {node: '>=16.0.0'}
 
-  hono@4.13.14:
-    resolution: {integrity: sha512-yhRLQ21U6qa9Hsu2N7Qcbh8tE+WKEcoErjIo56LeSGiGXGp9sA7UpE86Ui9uexb61KakiGwuHMn2QdV7w6i6kQ==}
+  hono@4.13.16:
+    resolution: {integrity: sha512-AOLOEhvrV+iH92xXCnFr/5+3KjPKcI3xP63XJtX5spAnkznPdHijlIsUTpi7/9EhWqrTCekw5c5zh1K+YsVw7A==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -7629,8 +7659,8 @@ packages:
     resolution: {integrity: sha512-mV9M4Llh4va3NT90p7KBtQhoZqjs8xLX7EWYE4y/GG3yLF6REbIBEHSUb0UX1JXRht2w5tiLSsvmpYc5akiqIw==}
     engines: {node: '>= 20'}
 
-  jose@6.2.14:
-    resolution: {integrity: sha512-3JasLuki1NRLQvY4wCoC37KZk4qxoBx2k2aFqLxT84IezqW0bkJKnNtxnZj/Fu1xsQivoc/lytxaRHJoGLjJ1A==}
+  jose@6.2.15:
+    resolution: {integrity: sha512-qdF6ewcZARtef63fJ9AKKZPgxw+t7USH6HLXYcD4CrdmSvDp79rpJSPFEKc90QBeGS63u1KQtN2MZQHC0yDIzA==}
 
   js-levenshtein-esm@2.0.0:
     resolution: {integrity: sha512-1n4LEPOL4wRXY8rOQcuA7Iuaphe5xCMayvufCzlLAi+hRsnBRDbSS6XPuV58CBVJxj5D9ApFLyjQ7KzFToyHBw==}
@@ -7719,8 +7749,8 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  knip@6.44.0:
-    resolution: {integrity: sha512-mT0fl71Mqrko91azUO2Jw/uhYKwldORKT4liRq6yV0ZAtt6G2eYusdnvx8eBSQJDjvhRGKkpKUUx+vUG6syV4w==}
+  knip@6.44.1:
+    resolution: {integrity: sha512-Hbd8nvkIsNgFfXgC7Jsb5LHv7jj6VwA3tmfHd53XPX2z9Vc9RnAZqV0BIiP4OrtYqKwCoLseFHQZerb1bNlbSw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -8125,6 +8155,10 @@ packages:
     resolution: {integrity: sha512-thdXzlktu5GE1o/BlmMAPeJ0Cu6Tu5LpMbRlyfRrpVvMRrhd6p52TMqcITCZZLVzt1UO92VGBkLDhLOpryUAyQ==}
     engines: {node: '>=22.0.0'}
 
+  miniflare@5.20261101.0-beta:
+    resolution: {integrity: sha512-31uZmP8PGue7S3fYMIRXNXxFGh5/SEmd4OGna/80RXcE1nngVub21h9GbcWajQ7625mEYBnexpI2ogGo9NUa6Q==}
+    engines: {node: '>=22.0.0'}
+
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
@@ -8176,8 +8210,8 @@ packages:
   mobx@6.16.1:
     resolution: {integrity: sha512-syNcDdX3KT+Jq3je6eGjBhuc24Z68td2VG0zNFqRswaE433D9SNH5VRy/xrGbJsUixfppLLccXhAW9JSf6n+SQ==}
 
-  mobx@7.1.3:
-    resolution: {integrity: sha512-H2NcS5ylMsqYn7v4WpSdzv5YWPmw5XTV6pG2NvY0qYbh95FXbswZJ7pn7wU0rOtUvRzk+3t4AOX2eircoN+vBg==}
+  mobx@7.1.4:
+    resolution: {integrity: sha512-2G9WcLqXGKe4e5usnMabjz06mqO5hQmad3qagY7/n5MmKS7t281+XtmYxnPYqVmSnCEGAKJkrdRfDhOjn3UNJg==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -8729,8 +8763,8 @@ packages:
   regex@6.1.0:
     resolution: {integrity: sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg==}
 
-  release-it@21.1.1:
-    resolution: {integrity: sha512-jOhoWMK3hm5UAYfxREcLW1BRlNzMhKfjN8m4sxjnOOPXDWk6b//mZIk2ABv9Cno/eH1M911iyGaCMtapnwS7Ng==}
+  release-it@21.1.2:
+    resolution: {integrity: sha512-5jy1qepCnvifzMjMV+Vj0redgjsK8uQF5VeUwP7xVJAadhxLLWAtzju+CUyEUUd/7Ru95LR+uuiQmScgl3l8BA==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     hasBin: true
 
@@ -9127,8 +9161,8 @@ packages:
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
 
-  tinybench@6.2.2:
-    resolution: {integrity: sha512-nIZ2N2dFpjBsg2hgitKu7mA+FvsIJuGJOwysRngmVRRmWgR/UyPjwJj8c/fT/dhm8EkHnF5EOogRf+0Z2qrimA==}
+  tinybench@6.2.3:
+    resolution: {integrity: sha512-Al01C2JIBnO2CXCAPbpAl6sUiOZHeThGtHYNTa51JRw9PyWOCdr+9Ong05R4qg/Sk3+H645E8ov1h2c58ityNw==}
     engines: {node: '>=20.0.0'}
 
   tinyexec@1.3.1:
@@ -9711,12 +9745,17 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.156.0:
-    resolution: {integrity: sha512-kVLAShuLiNgE3jcrmXcymDf/iPKDPrSxACe5ueugW/33HeNB9E9CkKYchudCeBwgmsnl4k+1zt4NO7vqb/fRuQ==}
+  workerd@1.20261101.1:
+    resolution: {integrity: sha512-qHUIS4cmvhpAE7k2TW0ZktXj9KGDeoUvvLuqi5cSalCM6el5Q6IPuaup9XAC6zQq/xJUPHMG29ML93HuSDY2RQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+
+  wrangler@4.156.1:
+    resolution: {integrity: sha512-aZngeNRosSVly6wgxpaJAtFPtEoyM3hD8mLMMcHNXTnofMq4ZN+RMXOdHETyttNP+//+mfiD1hb5E8YFtiMMRQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^5.20261023.1
+      '@cloudflare/workers-types': ^5.20261101.1
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -10010,25 +10049,40 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261023.1)':
+  '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261101.1)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
-      workerd: 1.20261023.1
+      workerd: 1.20261101.1
 
   '@cloudflare/workerd-darwin-64@1.20261023.1':
+    optional: true
+
+  '@cloudflare/workerd-darwin-64@1.20261101.1':
     optional: true
 
   '@cloudflare/workerd-darwin-arm64@1.20261023.1':
     optional: true
 
+  '@cloudflare/workerd-darwin-arm64@1.20261101.1':
+    optional: true
+
   '@cloudflare/workerd-linux-64@1.20261023.1':
+    optional: true
+
+  '@cloudflare/workerd-linux-64@1.20261101.1':
     optional: true
 
   '@cloudflare/workerd-linux-arm64@1.20261023.1':
     optional: true
 
+  '@cloudflare/workerd-linux-arm64@1.20261101.1':
+    optional: true
+
   '@cloudflare/workerd-windows-64@1.20261023.1':
+    optional: true
+
+  '@cloudflare/workerd-windows-64@1.20261101.1':
     optional: true
 
   '@cloudflare/workers-types@5.20261018.1': {}
@@ -10249,10 +10303,10 @@ snapshots:
 
   '@docsearch/sidepanel-js@4.7.1': {}
 
-  '@effect/sql-d1@4.1.0(effect@4.1.0)':
+  '@effect/sql-d1@4.1.1(effect@4.1.1)':
     dependencies:
       '@cloudflare/workers-types': 5.20261018.1
-      effect: 4.1.0
+      effect: 4.1.1
 
   '@emnapi/core@1.11.2':
     dependencies:
@@ -10466,7 +10520,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@iconify-json/lucide@1.2.149':
+  '@iconify-json/lucide@1.2.150':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -11469,7 +11523,7 @@ snapshots:
     dependencies:
       tinyexec: 1.3.1
 
-  '@release-it/conventional-changelog@12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))':
+  '@release-it/conventional-changelog@12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))':
     dependencies:
       '@conventional-changelog/git-client': 3.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)
       concat-stream: 2.0.0
@@ -11477,7 +11531,7 @@ snapshots:
       conventional-changelog-angular: 9.4.0
       conventional-changelog-conventionalcommits: 10.4.0
       conventional-recommended-bump: 12.1.0
-      release-it: 21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+      release-it: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
       semver: 7.8.5
     transitivePeerDependencies:
       - conventional-commits-filter
@@ -12702,9 +12756,9 @@ snapshots:
 
   clone@2.1.2: {}
 
-  cloudflare-effect-tracer@0.2.0(effect@4.1.0):
+  cloudflare-effect-tracer@0.2.0(effect@4.1.1):
     dependencies:
-      effect: 4.1.0
+      effect: 4.1.1
 
   color-convert@1.9.3:
     dependencies:
@@ -13075,12 +13129,12 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  effect@3.22.2:
+  effect@3.22.4:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  effect@4.1.0: {}
+  effect@4.1.1: {}
 
   emoji-regex@10.6.0: {}
 
@@ -13250,7 +13304,7 @@ snapshots:
       jsonc-parser: 3.3.1
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)
 
-  eslint-plugin-package-json@1.12.0(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1)):
+  eslint-plugin-package-json@1.13.0(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       '@altano/repository-tools': 2.0.3
       '@types/estree': 1.0.10
@@ -13846,7 +13900,7 @@ snapshots:
 
   hono@4.0.0: {}
 
-  hono@4.13.14: {}
+  hono@4.13.16: {}
 
   hookable@5.5.3: {}
 
@@ -14063,7 +14117,7 @@ snapshots:
       '@hapi/topo': 6.0.2
       '@standard-schema/spec': 1.1.0
 
-  jose@6.2.14: {}
+  jose@6.2.15: {}
 
   js-levenshtein-esm@2.0.0: {}
 
@@ -14136,7 +14190,7 @@ snapshots:
 
   kleur@4.1.5: {}
 
-  knip@6.44.0:
+  knip@6.44.1:
     dependencies:
       formatly: 0.11.4
       get-tsconfig: 4.14.3
@@ -14665,6 +14719,19 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  miniflare@5.20261101.0-beta(@types/node@24.19.2):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      sharp: 0.35.5(@types/node@24.19.2)
+      undici: 7.30.1
+      workerd: 1.20261101.1
+      ws: 8.21.0
+      youch: 4.1.0-beta.10
+    transitivePeerDependencies:
+      - '@types/node'
+      - bufferutil
+      - utf-8-validate
+
   minimatch@10.2.6:
     dependencies:
       brace-expansion: 5.0.12
@@ -14715,7 +14782,7 @@ snapshots:
 
   mobx@6.16.1: {}
 
-  mobx@7.1.3: {}
+  mobx@7.1.4: {}
 
   mri@1.2.0: {}
 
@@ -15389,7 +15456,7 @@ snapshots:
     dependencies:
       regex-utilities: 2.3.0
 
-  release-it@21.1.1(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2):
+  release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2):
     dependencies:
       '@inquirer/prompts': 8.7.3(@types/node@24.19.2)
       '@octokit/rest': 22.0.1
@@ -15948,7 +16015,7 @@ snapshots:
 
   tiny-invariant@1.3.3: {}
 
-  tinybench@6.2.2: {}
+  tinybench@6.2.3: {}
 
   tinyexec@1.3.1: {}
 
@@ -16095,10 +16162,10 @@ snapshots:
 
   uc.micro@2.1.0: {}
 
-  ui-router-server@0.7.0(@uirouter/core@6.1.2)(hono@4.13.14):
+  ui-router-server@0.7.0(@uirouter/core@6.1.2)(hono@4.13.16):
     optionalDependencies:
       '@uirouter/core': 6.1.2
-      hono: 4.13.14
+      hono: 4.13.16
 
   unbash@6.0.1: {}
 
@@ -16346,7 +16413,7 @@ snapshots:
       obug: 3.0.0
       picomatch: 4.0.7
       std-env: 4.3.0
-      tinybench: 6.2.2
+      tinybench: 6.2.3
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -16471,16 +16538,24 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20261023.1
       '@cloudflare/workerd-windows-64': 1.20261023.1
 
-  wrangler@4.156.0(@types/node@24.19.2):
+  workerd@1.20261101.1:
+    optionalDependencies:
+      '@cloudflare/workerd-darwin-64': 1.20261101.1
+      '@cloudflare/workerd-darwin-arm64': 1.20261101.1
+      '@cloudflare/workerd-linux-64': 1.20261101.1
+      '@cloudflare/workerd-linux-arm64': 1.20261101.1
+      '@cloudflare/workerd-windows-64': 1.20261101.1
+
+  wrangler@4.156.1(@types/node@24.19.2):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
-      '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261023.1)
+      '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261101.1)
       blake3-wasm: 2.1.5
       esbuild: 0.28.2
-      miniflare: 5.20261023.3-beta(@types/node@24.19.2)
+      miniflare: 5.20261101.0-beta(@types/node@24.19.2)
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
-      workerd: 1.20261023.1
+      workerd: 1.20261101.1
     optionalDependencies:
       fsevents: 2.3.3
     transitivePeerDependencies:
