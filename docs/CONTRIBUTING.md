@@ -138,10 +138,11 @@ run can't collide with a turbo task. Install the browsers with
 ### Reproducing a CI failure
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every
-`--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
-and reports only the tasks that failed. The ci graph and the e2e suites run with
-`--continue=dependencies-successful`, so one red run reports every independent
-failure, and a task whose dependency failed doesn't run. The docs build stops
+`--summarize` JSON the job wrote (the ci graph, the Codecov bundle upload, the
+docs build, the e2e suites) and reports only the tasks that failed. The ci graph
+and the e2e suites run with `--continue=dependencies-successful`, so one red run
+reports every independent failure, and a task whose dependency failed doesn't
+run. The docs build stops
 at the first failure, and turbo's stream also prints `ELIFECYCLE` for every task
 it cancelled. The headline is a run annotation, so `gh run view <run-id>` shows
 it:

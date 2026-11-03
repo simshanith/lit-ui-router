@@ -107,8 +107,8 @@ usage = '''
 flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
 '''
 run = [
-  "turbo run resolve:published",
-  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff',
+  "turbo run resolve:published --summarize --log-file",
+  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff --summarize --log-file',
 ]
 
 [tasks.publish_check_runs]

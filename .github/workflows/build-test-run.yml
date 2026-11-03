@@ -131,6 +131,27 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Upload Codecov bundle stats
+        # The build steps continue on error, so `success()` alone is true after a red build.
+        if: ${{ steps.build.outcome == 'success' || steps.build_main.outcome == 'success' }}
+        run: mise run codecov_bundle
+        env:
+          TURBO_OUTPUT_LOGS: errors-only
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload to Codecov
+        # Branch-head runs skip upload; merge-head/main covers the same SHA.
+        if: ${{ (steps.build.outcome == 'success' || steps.build_main.outcome == 'success') && (github.event_name != 'push' || github.ref == 'refs/heads/main') }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage/lcov.info,packages/lit-ui-router-effect/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage-effect3/lcov.info,packages/lit-ui-router-effect/coverage-effect3/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/lit-ui-router-signals/coverage/lcov.info,packages/lit-ui-router-signals/coverage/coverage-final.json,packages/lit-ui-router-ssr/coverage/lcov.info,packages/lit-ui-router-ssr/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-effect/coverage/lcov.info,packages/ui-router-effect/coverage/coverage-final.json,packages/ui-router-mobx/coverage/lcov.info,packages/ui-router-mobx/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info,packages/ui-router-signals/coverage/lcov.info,packages/ui-router-signals/coverage/coverage-final.json,packages/shared/dev-gate/coverage/lcov.info,packages/shared/dev-gate/coverage/coverage-final.json,packages/shared/route-snapshot/coverage/lcov.info,packages/shared/route-snapshot/coverage/coverage-final.json,packages/shared/transition-status/coverage/lcov.info,packages/shared/transition-status/coverage/coverage-final.json
+          disable_search: true
+          plugins: noop
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload turbo run summaries
         # Uploaded BEFORE the report so the report can link it: the report caps
         # every list it prints, and this is the uncapped copy to download when
@@ -201,7 +222,7 @@ jobs:
         # The summary step rewrites the same patch. Fails open, like the summary.
         if: ${{ !cancelled() && (steps.build.outcome == 'failure' || steps.build_main.outcome == 'failure') }}
         continue-on-error: true
-        run: mise run //tools/build_and_test:format_patch
+        run: mise run //tools/turbo-summary:format_patch
       - name: Upload format patch
         # Written only when a format check failed.
         id: format_patch
@@ -226,15 +247,14 @@ jobs:
         #
         # `!cancelled()` rather than `always()`: a cancelled job is exactly
         # when the artifact lies, since the tasks turbo killed are missing from
-        # it. Still placed before codecov_bundle: the session is bounded at its
-        # start, not its end, so a later `turbo run` would join it. It fails
-        # open, as before: a broken reporter
-        # warns, never adds a red step of its own.
+        # it. Last, after codecov_bundle: the session is bounded at its start,
+        # not its end, so that run joins the report. It fails open: a broken
+        # reporter warns, never adds a red step of its own.
         #
         # BUILD_OUTCOME: this step goes red after a failed build, so a red job
-        # opens here and the steps below see `failure()` as before.
+        # opens here.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ inputs.mainGraph && steps.build_main.outcome || steps.build.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).
@@ -246,27 +266,6 @@ jobs:
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
           # Empty unless a format check failed.
           FORMAT_PATCH_ARTIFACT_URL: ${{ steps.format_patch.outputs.artifact-url }}
-      - name: Upload Codecov bundle stats
-        # Implicit success(): the summary step above is red after a red build.
-        run: mise run codecov_bundle
-        env:
-          # Runs after the task-log upload, so a failing upload is the only output kept.
-          TURBO_OUTPUT_LOGS: errors-only
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-          TURBO_API: ${{ secrets.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload to Codecov
-        # Branch-head runs skip upload; merge-head/main covers the same SHA.
-        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
-        uses: codecov/codecov-action@v7
-        with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage/lcov.info,packages/lit-ui-router-effect/coverage/coverage-final.json,packages/lit-ui-router-effect/coverage-effect3/lcov.info,packages/lit-ui-router-effect/coverage-effect3/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/lit-ui-router-signals/coverage/lcov.info,packages/lit-ui-router-signals/coverage/coverage-final.json,packages/lit-ui-router-ssr/coverage/lcov.info,packages/lit-ui-router-ssr/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-effect/coverage/lcov.info,packages/ui-router-effect/coverage/coverage-final.json,packages/ui-router-mobx/coverage/lcov.info,packages/ui-router-mobx/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info,packages/ui-router-signals/coverage/lcov.info,packages/ui-router-signals/coverage/coverage-final.json,packages/shared/dev-gate/coverage/lcov.info,packages/shared/dev-gate/coverage/coverage-final.json,packages/shared/route-snapshot/coverage/lcov.info,packages/shared/route-snapshot/coverage/coverage-final.json,packages/shared/transition-status/coverage/lcov.info,packages/shared/transition-status/coverage/coverage-final.json
-          disable_search: true
-          plugins: noop
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   plan:
     # Groups the default suites (apps/sample-app-lit-e2e/scripts/suites.ts)
@@ -336,7 +335,7 @@ jobs:
         run: mise run //tools/build_and_test:xvfb
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
-        run: mise run //tools/build_and_test:mark_session
+        run: mise run //tools/turbo-summary:mark_session
       - name: E2E
         # The docs build is a remote-cache hit once any job of this commit has
         # uploaded it; on a cold commit every leg reaches it before `run` does.
@@ -405,7 +404,7 @@ jobs:
       - name: Turbo run summary
         # Goes red after a failed suite, so a red job opens on the report.
         if: ${{ !cancelled() }}
-        run: mise run //tools/build_and_test:turbo_summary
+        run: mise run //tools/turbo-summary:turbo_summary
         env:
           BUILD_OUTCOME: ${{ steps.e2e.outcome }}
           # Presence only: the remote is off by design without a token (Dependabot, forks).

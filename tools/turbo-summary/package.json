@@ -1,0 +1,25 @@
+{
+  "name": "@tools/turbo-summary",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Reports a CI session's turbo runs, formatting fixes and bench results to the step summary, for every workflow job that runs turbo",
+  "bin": {
+    "run-summary": "./src/run-summary.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "valibot": "catalog:"
+  }
+}
