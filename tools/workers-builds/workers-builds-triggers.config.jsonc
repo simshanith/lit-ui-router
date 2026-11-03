@@ -28,7 +28,7 @@
       // and the husky git hooks to a developer checkout. Both mirror what
       // `mise run setup` and the CI workflows already set.
       "production": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main",
         "environment_variables": {
           "SKIP_DEPENDENCY_INSTALL": "1",
@@ -37,7 +37,7 @@
         },
       },
       "preview": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch",
         "environment_variables": {
           "SKIP_DEPENDENCY_INSTALL": "1",
@@ -55,7 +55,7 @@
       "workerConfig": "www/release-ledger.lit-ui-router.dev/wrangler.jsonc",
       "productionBranch": "main",
       "production": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts release-ledger.lit-ui-router.dev",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main release-ledger.lit-ui-router.dev",
         "path_includes": [
           "www/release-ledger.lit-ui-router.dev/*",
@@ -70,7 +70,7 @@
         },
       },
       "preview": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh release-ledger.lit-ui-router.dev",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts release-ledger.lit-ui-router.dev",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-ledger.lit-ui-router.dev",
         "path_includes": [
           "www/release-ledger.lit-ui-router.dev/*",
@@ -92,7 +92,7 @@
       "workerConfig": "www/release-diffs.lit-ui-router.dev/cloudflare.config.ts",
       "productionBranch": "main",
       "production": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh release-diffs.lit-ui-router.dev",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts release-diffs.lit-ui-router.dev",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main release-diffs.lit-ui-router.dev",
         "path_includes": [
           "www/release-diffs.lit-ui-router.dev/*",
@@ -106,7 +106,7 @@
         },
       },
       "preview": {
-        "build_command": "./tools/workers-builds/cloudflare-build.sh release-diffs.lit-ui-router.dev",
+        "build_command": "./tools/workers-builds/cloudflare-build.ts release-diffs.lit-ui-router.dev",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-diffs.lit-ui-router.dev",
         "path_includes": [
           "www/release-diffs.lit-ui-router.dev/*",
@@ -131,7 +131,7 @@
     //   "workerConfig": "www/atlas.lit-ui-router.dev/wrangler.jsonc",
     //   "productionBranch": "main",
     //   "production": {
-    //     "build_command": "./tools/workers-builds/cloudflare-build.sh atlas.lit-ui-router.dev",
+    //     "build_command": "./tools/workers-builds/cloudflare-build.ts atlas.lit-ui-router.dev",
     //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main atlas.lit-ui-router.dev",
     //     "path_includes": ["www/atlas.lit-ui-router.dev/*"],
     //     "environment_variables": {
@@ -141,7 +141,7 @@
     //     },
     //   },
     //   "preview": {
-    //     "build_command": "./tools/workers-builds/cloudflare-build.sh atlas.lit-ui-router.dev",
+    //     "build_command": "./tools/workers-builds/cloudflare-build.ts atlas.lit-ui-router.dev",
     //     "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch atlas.lit-ui-router.dev",
     //     "path_includes": ["www/atlas.lit-ui-router.dev/*"],
     //     "environment_variables": {
