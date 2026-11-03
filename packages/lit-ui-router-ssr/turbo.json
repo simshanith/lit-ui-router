@@ -15,6 +15,9 @@
     // the vite-build fixture imports this package by name, from its own dist
     "typecheck:tsc": {
       "dependsOn": ["^build:types", "build:types"]
+    },
+    "lint:oxlint": {
+      "dependsOn": ["^build:types", "build:types", "@tools/lint-elements#test"]
     }
   }
 }
