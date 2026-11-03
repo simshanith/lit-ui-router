@@ -4,8 +4,11 @@ import type { ReactiveElement } from 'lit';
 type Updating = Element &
   Partial<Pick<ReactiveElement, 'isUpdatePending' | 'updateComplete'>>;
 
-/** The slice of a `<ui-view>` that {@link viewRendered} awaits. */
-interface ViewHost extends ReactiveElement {
+/** The slice of a `<ui-view>`, or a `UiViewController`, that {@link viewRendered} awaits. */
+interface ViewHost extends Pick<
+  ReactiveElement,
+  'isUpdatePending' | 'updateComplete'
+> {
   readonly routedElement: Updating | null;
 }
 
@@ -15,7 +18,7 @@ const viewHosts = new WeakMap<ActiveUIView, ViewHost>();
  * Records the element behind a view registration, so {@link viewRendered}
  * can await it.
  *
- * Not re-exported by `pure.ts`: `<ui-view>` calls it as it registers.
+ * Not re-exported by `pure.ts`: `<ui-view>` and `UiViewController` call it as they register.
  *
  * @internal
  */

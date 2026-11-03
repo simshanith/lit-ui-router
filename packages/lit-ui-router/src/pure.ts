@@ -33,6 +33,11 @@ export { UIRouterLitElement } from './ui-router.js';
 
 export { UiView } from './ui-view.js';
 
+export {
+  UiViewController,
+  type UiViewControllerOptions,
+} from './ui-view-controller.js';
+
 export { viewRendered } from './view-rendered.js';
 
 export {
