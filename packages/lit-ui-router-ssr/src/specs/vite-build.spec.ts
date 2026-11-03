@@ -49,6 +49,7 @@ describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
     const files = (await readdir(outDir, { recursive: true })).filter(
       (file) => !file.startsWith('assets'),
     );
+
     expect(files.sort()).toEqual([
       '404.html',
       '_redirects',
@@ -58,7 +59,7 @@ describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
     ]);
 
     expect(routedView(await page(outDir, 'index.html'))).toMatch(
-      /<h1>Home<\/h1>(<!--[^>]*-->)?<hello-card defer-hydration><\/hello-card>/,
+      /<h1>Home<\/h1>\s*(<!--[^>]*-->)?<hello-card defer-hydration><\/hello-card>/,
     );
     expect(routedView(await page(outDir, 'about/index.html'))).toMatch(
       /<h1>About<\/h1>/,

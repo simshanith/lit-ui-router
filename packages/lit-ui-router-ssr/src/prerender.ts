@@ -320,7 +320,7 @@ const warnUnregistered = (): void => {
   if (globalThis.customElements?.get('ui-view')) return;
   console.warn(
     'lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ' +
-      'The DOM shim replaces the registry when it finishes installing: load lit-ui-router-ssr/register by dynamic import after the shim, or preload the shim with node --import.',
+      'The DOM shim replaces the registry when it finishes installing: prerender through serverRouterPlugin from lit-ui-router-ssr/vite, which preloads both, load lit-ui-router-ssr/register by dynamic import after the shim, or preload the shim with node --import.',
   );
 };
 

@@ -2,6 +2,8 @@ import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
 import type { LitStateDeclaration, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
+// As the client imports it; in the prerender worker the plugin's preload has already run it.
+import 'lit-ui-router-ssr/register';
 
 /** A LitElement the home view holds, defined at import as an app's elements are. */
 export class HelloCard extends LitElement {
