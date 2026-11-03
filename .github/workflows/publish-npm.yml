@@ -64,6 +64,7 @@ jobs:
       contents: write # Required for creating GitHub releases
       attestations: write # Required for build provenance attestation
       artifact-metadata: write
+      actions: write # Dispatches Release signals after the publish
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -151,23 +152,11 @@ jobs:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           VERSION: ${{ steps.publish.outputs.version }}
           DRY_RUN: ${{ inputs.dryRun }}
-
-  release_signals:
-    # Refresh the per-package published-diff check runs now that `latest` has
-    # moved; deliberately unscoped — a full run avoids badge gaps on the fresh
-    # bump-commit head. A failure here should be visible; workflow_dispatch on
-    # Release signals is the re-nudge.
-    needs: publish_npm
-    permissions:
-      checks: write
-      contents: read
-    uses: ./.github/workflows/release-signals.yml
-    secrets:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-      TURBO_API: ${{ secrets.TURBO_API }}
-      # Secrets don't auto-propagate into a called workflow: without this the
-      # post-publish refresh would flip the workers-builds badge grey
-      # (unverifiable) after every release.
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Refresh release signals
+        # A dispatch, not a called job: the signals' newest-wins concurrency
+        # cancels across a multi-tag release, and a called job's cancel would
+        # mark this run cancelled. Manual dispatch on Release signals re-nudges.
+        continue-on-error: true
+        run: gh workflow run release-signals.yml --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -319,9 +319,6 @@ Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Pr
 tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale
 token shows up as the grey `workers-builds (triggers)` badge, not a red run.
 
-`publish-npm.yml` forwards both into its post-publish `workflow_call`; secrets do not auto-propagate, and
-without that the badge would go gray after every release.
-
 ### Build Environment Variables
 
 Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
