@@ -9,30 +9,19 @@ import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
   ResolveContext,
-  Transition,
   ViewConfig,
   StateDeclaration,
-  PathNode,
   trace,
   isFunction,
-  unnestR,
-  Param,
-  type RawParams,
-  filter,
   ViewContext,
   StateObject,
 } from '@uirouter/core';
 
-import {
-  RoutedLitTemplate,
-  UiOnExit,
-  UiOnParamsChanged,
-  NormalizedLitViewDeclaration,
-} from './interface.js';
-import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
-import { routedElementOf, routedLitElementRenderer } from './routed-element.js';
+import { RoutedLitTemplate } from './interface.js';
+import { LitViewConfig, UIRouterLit } from './core.js';
+import { routedElementOf } from './routed-element.js';
 import { routedViewTemplate } from './routed-view.js';
-import { warnForeignClass, warnMissingRouter } from './dev-warn.js';
+import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
   ParentView,
@@ -46,9 +35,13 @@ import {
 } from './context.js';
 import { RouterSubscribers, subscribeRouter } from './router-subscription.js';
 import { setViewHost } from './view-rendered.js';
-
-/** @internal */
-let viewIdCounter = 0;
+import {
+  createViewRegistration,
+  type DeregisterFn,
+  nextViewId,
+  registerView,
+  routedComponentOf,
+} from './view-registration.js';
 
 /**
  * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The type keeps
@@ -141,8 +134,6 @@ export type {
    */
   ViewAddress as UiViewAddress,
 };
-
-type deregisterFn = () => void;
 
 /** A view is its descendants' parent for its whole connected life. */
 const noParentViewUnsubscribe = () => {};
@@ -249,7 +240,7 @@ export class UiView extends LitElement {
     return this;
   }
 
-  private readonly viewId = viewIdCounter++;
+  private readonly viewId = nextViewId();
 
   private _uiViewData!: ActiveUIView;
 
@@ -287,17 +278,8 @@ export class UiView extends LitElement {
     }
 
     this.resolveContext = new ResolveContext(config.path);
-    // Past the identity gate, so the config genuinely changed: a fresh renderer
-    // here is what drops the old element.
-    // SAFETY: `litViewsBuilder` normalizes every view declaration of a lit state
-    const { component } = config.viewDecl as NormalizedLitViewDeclaration;
-
-    if (isRoutedLitElement(component)) {
-      this.component = routedLitElementRenderer(component);
-    } else {
-      warnForeignClass(component);
-      this.component = component;
-    }
+    // Past the identity gate, so the config genuinely changed: a fresh renderer here is what drops the old element.
+    this.component = routedComponentOf(config);
 
     this.requestUpdate();
   }
@@ -634,56 +616,28 @@ export class UiView extends LitElement {
     }
   }
 
-  private readonly disconnectedHandlers: deregisterFn[] = [];
+  private readonly disconnectedHandlers: DeregisterFn[] = [];
 
   private setupUiView() {
     this.seekRouter();
     this.seekParentView();
-    const { viewId, uiRouter: router, parentView } = this;
-    const name = this.name || '$default';
+    const { viewId: id, uiRouter: router, parentView, name } = this;
 
-    const parentFqn = parentView?.fqn;
-
-    const creationContext =
-      parentView?.viewContext || router?.stateRegistry.root();
-
-    const fqn = parentFqn ? parentFqn + '.' + name : name;
-
-    const registration: Omit<ActiveUIView, 'config'> & { config?: ViewConfig } =
-      {
-        $type: 'lit',
-        id: viewId,
-        name,
-        fqn,
-        creationContext,
-        configUpdated: this._viewConfigUpdated.bind(this),
-        config: undefined,
-      };
-
-    // SAFETY: ui-router calls `configUpdated` with a config before anything reads `config`
-    this._uiViewData = registration as ActiveUIView;
+    this._uiViewData = createViewRegistration({
+      id,
+      name,
+      parentView,
+      router,
+      configUpdated: this._viewConfigUpdated.bind(this),
+    });
     setViewHost(this._uiViewData, this);
 
     if (!router) {
       return;
     }
 
-    // SAFETY: hook registration returns its deregistration function
     this.disconnectedHandlers.push(
-      router.transitionService.onBefore({}, (trans) => {
-        return this._invokeUiCanExitHook(trans);
-      }) as deregisterFn,
-    );
-
-    // SAFETY: hook registration returns its deregistration function
-    this.disconnectedHandlers.push(
-      router.transitionService.onSuccess({}, (trans) =>
-        this._invokeUiOnParamsChangedHook(trans),
-      ) as deregisterFn,
-    );
-
-    this.disconnectedHandlers.push(
-      router.viewService.registerUIView(this._uiViewData),
+      ...registerView(router, this._uiViewData, this),
     );
     this.registeredRouter = router;
   }
@@ -705,30 +659,6 @@ export class UiView extends LitElement {
     this.providerSubscription = undefined;
     this.deregisterAll();
     this.templateObserver?.disconnect();
-  }
-
-  /**
-   * For each transition, checks the component loaded in the ui-view for:
-   *
-   * - has a uiCanExit() component hook
-   * - is being exited
-   *
-   * If both are true, adds the uiCanExit component function as a hook to that singular Transition.
-   */
-  private _invokeUiCanExitHook(trans: Transition) {
-    const instance: (Partial<UiOnExit> & Element) | null = this.routedElement;
-
-    const uiCanExitFn = instance?.uiCanExit;
-
-    if (isFunction(uiCanExitFn)) {
-      const state: StateDeclaration = this.state;
-
-      if (trans.exiting().includes(state)) {
-        trans.onStart({}, function () {
-          return uiCanExitFn.call(instance, trans);
-        });
-      }
-    }
   }
 
   /**
@@ -760,74 +690,6 @@ export class UiView extends LitElement {
 
     if (isFunction(instance?.requestUpdate)) {
       instance.requestUpdate();
-    }
-  }
-
-  /**
-   * For each transition, checks if any param values changed and notify component
-   */
-  private _invokeUiOnParamsChangedHook($transition$: Transition) {
-    // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
-    this.requestUpdate();
-
-    const instance: (Partial<UiOnParamsChanged> & Element) | null =
-      this.routedElement;
-
-    if (isFunction(instance?.uiOnParamsChanged)) {
-      const viewState = this.state;
-
-      const resolveContext: ResolveContext = new ResolveContext(
-        this._uiViewData.config.path,
-      );
-
-      const viewCreationTrans: unknown =
-        resolveContext.getResolvable('$transition$').data;
-
-      // Exit early if the $transition$ is the same as the view was created within.
-      // Exit early if the $transition$ will exit the state the view is for.
-      if (
-        $transition$ === viewCreationTrans ||
-        $transition$.exiting().includes(viewState)
-      )
-        return;
-
-      const toParams: RawParams = $transition$.params('to');
-
-      const fromParams: RawParams = $transition$.params('from');
-
-      const getNodeSchema = (node: PathNode) => node.paramSchema;
-
-      const toSchema: Param[] = $transition$
-        .treeChanges('to')
-        .map(getNodeSchema)
-        .reduce<Param[]>(unnestR, []);
-
-      const fromSchema: Param[] = $transition$
-        .treeChanges('from')
-        .map(getNodeSchema)
-        .reduce<Param[]>(unnestR, []);
-
-      // Find the to params that have different values than the from params
-      const changedToParams = toSchema.filter((param: Param) => {
-        const idx = fromSchema.indexOf(param);
-
-        return (
-          idx === -1 ||
-          !fromSchema[idx].type.equals(toParams[param.id], fromParams[param.id])
-        );
-      });
-
-      // Only trigger callback if a to param has changed or is new
-      if (changedToParams.length) {
-        const changedKeys: string[] = changedToParams.map((x) => x.id);
-
-        // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
-        const newValues = filter(toParams, (_, key) =>
-          changedKeys.includes(key!),
-        );
-
-        instance.uiOnParamsChanged(newValues, $transition$);
-      }
     }
   }
 
