@@ -21,6 +21,8 @@ updates:
       - dependency-name: '@oxc-project/runtime'
       # several catalogs pin typescript at different majors, so updates fail with NoChangeError — bump catalogs manually
       - dependency-name: 'typescript'
+      # cf pins it exactly, so it moves with cf; alone it splits and fails check:single-version
+      - dependency-name: '@cloudflare/config'
     commit-message:
       prefix: 'chore'
       include: 'scope'
