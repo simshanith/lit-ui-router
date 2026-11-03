@@ -80,7 +80,7 @@ catalog:
   lodash-es: ^4.18.1
   mobx: ^7.1.4
   oxc-minify: 0.156.0
-  oxc-parser: ^0.155.0
+  oxc-parser: 0.156.0
   oxc-transform: 0.156.0
   oxfmt: 0.75.0
   oxlint: 1.90.0
@@ -259,6 +259,7 @@ overrides:
   'get-uri>basic-ftp': ^6.2.1
   'ip-address@<10.5.1': ^10.5.1
   'js-yaml@>=4 <4.3.2': ^4.3.2
+  'knip>oxc-parser': 0.156.0
   'lit-dialog>lit': ^3.3.3
   'make-fetch-happen>http-cache-semantics': ^4.3.0
   'postcss@<8.5.26': ^8.5.26
