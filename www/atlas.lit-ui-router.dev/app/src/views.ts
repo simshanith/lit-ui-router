@@ -3,7 +3,7 @@
  * `sheets/atlas.css` — the drawing set's own chrome, lifted verbatim out of
  * www/atlas.lit-ui-router.dev/generator/chrome.mjs — styles the plates.
  */
-import type { UIRouter } from '@uirouter/core';
+import type { Rejection, Transition, UIRouter } from '@uirouter/core';
 import type { SubscriptionRef } from 'effect';
 import { LitElement, ReactiveElement, html, isServer, noChange, nothing, svg } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
@@ -14,7 +14,7 @@ import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { LightDomHydrating, lightSlot, uiViewSlot } from 'lit-ui-router-ssr/client';
 import { RefController } from 'lit-ui-router-effect';
-import { routeRef } from 'ui-router-effect';
+import { errorRef, pendingRef, routeRef } from 'ui-router-effect';
 import type { TypedRouteSnapshot } from 'ui-router-effect';
 import type { TypedStateService } from 'ui-router-registry';
 import type {
@@ -64,6 +64,7 @@ import { ARTIFACT } from './mode.ts';
 import { readPref, setTrace, setVisualizer } from './prefs.ts';
 import type { PrefName, PrefState } from './prefs.ts';
 import { href } from './routes.ts';
+import { titleFor } from './titles.ts';
 import { runtime } from './runtime.ts';
 import type { ThemeChoice } from './theme.ts';
 import { applyTheme, readTheme } from './theme.ts';
@@ -602,6 +603,89 @@ export class AtlasPrefs extends LightDomHydrating(LitElement) {
 }
 customElements.define('atlas-prefs', AtlasPrefs);
 
+// --- <atlas-status> — the transition in flight, and the last one that failed -
+
+/** What the shell says about the transition itself. */
+type RouteStatus =
+  | { kind: 'idle' }
+  | { kind: 'pending'; target: Transition }
+  | { kind: 'error'; error: Rejection; target: Transition | undefined };
+
+/** The page a transition heads for, lettered as the rail letters it. */
+const targetLabel = (transition: Transition): string => {
+  const name = transition.to().name ?? '';
+  if (name === 'atlas.sheet') return `SHEET ${String(transition.params().num)}`;
+  const title = titleFor(name).split(' — ')[0] ?? name;
+  return title.toUpperCase();
+};
+
+/**
+ * The shell's one line on the transition itself, from `ui-router-effect`'s
+ * two refs beside `routeRef`: `pendingRef` holds the transition in flight and
+ * `errorRef` the last resolve that threw, and one `RefController` over both
+ * forks on the page's runtime. Idle it renders nothing, so the served page and
+ * the boot match. While a plate's fragment is fetched it names the page coming;
+ * when a resolve throws the router stays on the page it had, so it names the
+ * page that did not load and links it again.
+ */
+export class AtlasStatus extends LightDomHydrating(LitElement) {
+  static override properties = { router: { attribute: false } };
+
+  declare router: UIRouter | undefined;
+  #status:
+    | RefController<
+        [
+          SubscriptionRef.SubscriptionRef<Transition | undefined>,
+          SubscriptionRef.SubscriptionRef<Rejection | undefined>,
+        ],
+        RouteStatus
+      >
+    | undefined;
+  // The newest transition that started: the one a rejection is about.
+  #last: Transition | undefined;
+
+  constructor() {
+    super();
+    this.router = undefined;
+  }
+
+  override willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    // The served render has no transition to follow; the boot's own is the first.
+    if (isServer || !this.router || this.#status) return;
+    const router = this.router;
+    this.#status = new RefController(
+      this,
+      [pendingRef(router), errorRef(router)],
+      (pending, error): RouteStatus => {
+        if (pending) this.#last = pending;
+        if (pending) return { kind: 'pending', target: pending };
+        if (error) return { kind: 'error', error, target: this.#last };
+        return { kind: 'idle' };
+      },
+      { runtime },
+    );
+  }
+
+  override render(): TemplateResult | typeof nothing {
+    const status = this.#status?.value ?? { kind: 'idle' };
+    if (status.kind === 'idle') return nothing;
+    if (status.kind === 'pending')
+      return html`<p class="route-status is-pending" aria-live="polite">LOADING ${targetLabel(status.target)}…</p>`;
+    const { error, target } = status;
+    // A hook that threw leaves its Error in `detail`; the rejection's own message otherwise.
+    const detail: unknown = error.detail;
+    const reason = detail instanceof Error ? detail.message : error.message;
+    const again = target && this.router ? this.router.stateService.href(target.to(), target.params()) : null;
+    return html`<p class="route-status is-error" role="alert">
+      ${target ? `${targetLabel(target)} DID NOT LOAD` : 'THE PAGE DID NOT LOAD'} — ${reason}${again
+        ? html` <a href=${again}>TRY AGAIN</a>`
+        : nothing}
+    </p>`;
+  }
+}
+customElements.define('atlas-status', AtlasStatus);
+
 const copyLink = (router: UIRouter | undefined): TemplateResult =>
   html`<atlas-copy-link .router=${router}>${lightSlot()}</atlas-copy-link>`;
 
@@ -889,7 +973,12 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
  * element's light DOM; on the client the same directive wakes the view. Same
  * rail, same sprite, same cover CSS either way: ONE template set, one hole.
  */
-export const shell = (manifest: Manifest | undefined, content: unknown, here: Here): TemplateResult => html`
+export const shell = (
+  manifest: Manifest | undefined,
+  content: unknown,
+  here: Here,
+  router: UIRouter | undefined,
+): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
   ${manifest ? unsafeHTML(`<style>${manifest.cover.css}</style>`) : nothing}
   <!-- The icon table, once a page (generator/icons.mjs): every card cell, index chip and lane glyph is a <use>. -->
@@ -897,6 +986,7 @@ export const shell = (manifest: Manifest | undefined, content: unknown, here: He
   <div class="app">
     ${rail(manifest, here)}
     <main class="content">${content}</main>
+    <atlas-status .router=${router}>${lightSlot()}</atlas-status>
   </div>
 `;
 
@@ -907,7 +997,7 @@ export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const params = globals ? globals.params : (props?.transition?.params() ?? {});
   const here: Here = (entry) =>
     entry.kind === 'sheet' ? name === 'atlas.sheet' && params.num === entry.row.num : name === sceneState(entry.row);
-  return shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`, here);
+  return shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`, here, props?.router);
 };
 
 /**

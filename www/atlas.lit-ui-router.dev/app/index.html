@@ -901,6 +901,43 @@
         color: var(--ink-faint);
         padding: 40px 4px;
       }
+      /* THE ROUTE STATUS: the transition in flight, or the last one that failed, pinned off the content's corner. */
+      .route-status {
+        position: fixed;
+        inset-block-end: max(12px, env(safe-area-inset-bottom, 0px));
+        inset-inline-end: max(12px, env(safe-area-inset-right, 0px));
+        z-index: 8;
+        max-width: min(420px, calc(100vw - 24px));
+        margin: 0;
+        padding: 6px 10px;
+        background: var(--paper);
+        border: 1px solid var(--edge);
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        line-height: 1.5;
+        color: var(--ink-soft);
+      }
+      /* A fetch that lands inside the delay shows nothing; a slow one is named. */
+      .route-status.is-pending {
+        animation: route-status-reveal 0s linear 250ms both;
+      }
+      @keyframes route-status-reveal {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .route-status.is-error {
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .route-status a {
+        color: inherit;
+        font-weight: 600;
+      }
       /* ---- the cover: a title sheet ---- */
       .cover-title {
         font-family: var(--display);

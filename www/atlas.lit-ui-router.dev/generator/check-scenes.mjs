@@ -571,6 +571,59 @@ try {
     }
   }
 
+  // ---- the route status: ui-router-effect's pendingRef and errorRef on the shell, a fragment slowed then refused ----
+  {
+    const manifest = JSON.parse(readFileSync(join(PUBLIC, 'manifest.json'), 'utf8'));
+    const row = manifest.sheets.find((sheet) => sheet.num === '7');
+    const target = `/sheet/${row.num}`;
+    // core's defaultErrorHandler logs the refused resolve; that line is the point, not a finding
+    const failing = async ({ theme = 'light', phone = false } = {}) => {
+      const page = await browser.newPage(phone
+        ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true }
+        : { viewport: { width: 1400, height: 1000 } });
+      page.on('pageerror', (e) => errors.push(`route status: ${e.message}`));
+      await page.emulateMedia({ colorScheme: theme });
+      await page.route((url) => url.pathname.endsWith(`/${row.file}`), async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        await route.fulfill({ status: 404, body: 'refused by the check' });
+      });
+      await page.goto(`${origin}/`, { waitUntil: 'load' });
+      await page.waitForFunction(() => document.documentElement.dataset.boot !== undefined);
+      await page.locator(`a.card-go[href="${target}"]`).first().click();
+      await page.waitForSelector('.route-status.is-pending');
+      const pending = await page.evaluate(() => document.querySelector('.route-status')?.textContent.trim());
+      await page.waitForSelector('.route-status.is-error');
+      const failed = await page.evaluate(() => ({
+        text: document.querySelector('.route-status')?.textContent.replace(/\s+/g, ' ').trim(),
+        again: document.querySelector('.route-status a')?.getAttribute('href'),
+        path: location.pathname,
+        cards: document.querySelectorAll('article.card').length,
+      }));
+      return { page, pending, failed };
+    };
+    const { page, pending, failed } = await failing();
+    check(pending === `LOADING SHEET ${row.num}…`, `a slow fragment names the page coming: ${pending}`);
+    check(failed.text.startsWith(`SHEET ${row.num} DID NOT LOAD — `) && failed.text.endsWith('TRY AGAIN')
+      && failed.again?.endsWith(`/sheet/${row.num}`) && failed.path === '/' && failed.cards > 0,
+      `a refused fragment names the page that did not load, links it again, and the gallery stays: ${failed.text}`, JSON.stringify(failed));
+    if (shots) await page.screenshot({ path: join(shots, 'status-error-light.png') });
+    await page.unroute(() => true);
+    await page.locator('.route-status a').click();
+    await page.waitForSelector('.route-status', { state: 'detached' });
+    await page.waitForSelector('.content .sheet');
+    const again = await page.evaluate(() => ({ head: document.querySelector('.sheet-head .shno')?.textContent.trim(), path: location.pathname }));
+    check(again.head?.includes(row.num) && again.path === target, `TRY AGAIN lands on ${target} and the line clears`, JSON.stringify(again));
+    await page.close();
+    if (shots) {
+      const dark = await failing({ theme: 'dark' });
+      await dark.page.screenshot({ path: join(shots, 'status-error-dark.png') });
+      await dark.page.close();
+      const phone = await failing({ phone: true });
+      await phone.page.screenshot({ path: join(shots, 'status-error-phone.png') });
+      await phone.page.close();
+    }
+  }
+
   // ---- the artifact: the gallery and the colophon offline, every plate a link to the live site ----
   if (artifact) {
     const file = join(OUT, 'app', 'dist-artifact', 'index.html');

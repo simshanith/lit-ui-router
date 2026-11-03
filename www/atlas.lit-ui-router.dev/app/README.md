@@ -156,10 +156,16 @@ manifest, read once per runtime, and any plate's fragment. Every `manifest` and 
 the notFound guard and the experimental layer read through it. The boot awaits the router's first
 successful transition (`main.ts`), and the shell, the gallery, the sheet and the keyboard walk read
 the settled route from `router.globals`, the same read on the server and in the browser.
-`<atlas-city>` holds the one route controller: `lit-ui-router-effect`'s `RefController` over
+`<atlas-city>` holds the route controller: `lit-ui-router-effect`'s `RefController` over
 `ui-router-effect`'s `routeRef(router)`, which derives the city's `focus` pin, calls back on each
 change and forks its subscription on the page's runtime, so the page holds one ref per router and
-the one place a derived route value drives a callback is the one place the ref is read. The prerender's
+the one place a derived route value drives a callback is the one place the ref is read. The shell's
+`<atlas-status>` holds the other: one `RefController` over `pendingRef(router)` and
+`errorRef(router)`, the transition in flight and the last resolve that threw. Idle it renders
+nothing, so the served page and the boot match; a slow fragment names the page coming after a
+250 ms reveal, and a refused one names the page that did not load and links it again, since the
+router stays on the page it had. `generator/check-scenes.mjs` slows then refuses sheet 7's fragment
+and reads both lines and the retry. The prerender's
 route-ref guard hands `RouterRefController` no router and reads the one `withRouterSync` scopes,
 so a served render exercises the same scoped-router path the sref directives take. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
 layer is meant to be liftable into `examples/` as-is.
