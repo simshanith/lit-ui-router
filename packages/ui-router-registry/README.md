@@ -150,4 +150,4 @@ A template written inline on the state declaration is inferred the same way, so 
 
 ## Dependencies
 
-`@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each needed only by its entry point. Install one copy of this package per app: two copies mean two registries, and the augmentations type only one.
+`@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` are optional peers, each needed only by its entry point. Install one copy of this package per app: two copies mean two registries, and the augmentations type only one.

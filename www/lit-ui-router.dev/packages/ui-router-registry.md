@@ -21,9 +21,9 @@ npm install --save-dev ui-router-registry
 ```
 
 `@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`,
-`ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each
-needed only by its entry point. Install one copy of this package per app: two
-copies mean two registries, and the augmentations type only one.
+`ui-router-effect` and `ui-router-mobx` are optional peers, each needed only by
+its entry point. Install one copy of this package per app: two copies mean two
+registries, and the augmentations type only one.
 
 ## Registering states
 
