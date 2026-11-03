@@ -18,6 +18,7 @@
   "dependencies": {
     "@ampproject/remapping": "catalog:",
     "oxc-minify": "catalog:",
+    "oxc-parser": "catalog:",
     "oxc-transform": "catalog:"
   },
   "devDependencies": {

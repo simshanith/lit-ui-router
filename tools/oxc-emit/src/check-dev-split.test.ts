@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   findDevSplitViolations,
+  findFoldedBareImports,
   findProcessReads,
   formatDevSplitReport,
   messagePrefix,
@@ -152,6 +153,47 @@ describe('findProcessReads', () => {
     assert.deepEqual(findProcessReads(files(), []), [
       'dist/shared/dev-gate.js mentions process, which only a package.json#imports node target may read',
     ]);
+  });
+});
+
+describe('findFoldedBareImports', () => {
+  const development = new Map([
+    [
+      'warn.js',
+      'import { devGate } from "#dev-gate";\nimport "lit-ui-router/ui-router.register";\n',
+    ],
+  ]);
+
+  it('passes a bare import the development twin shares', () => {
+    assert.deepEqual(
+      findFoldedBareImports(
+        new Map([['warn.js', 'import "lit-ui-router/ui-router.register";\n']]),
+        development,
+      ),
+      [],
+    );
+  });
+
+  it('fails a bare import the fold left behind', () => {
+    assert.deepEqual(
+      findFoldedBareImports(
+        new Map([['warn.js', 'import "#dev-gate";\n']]),
+        development,
+      ),
+      [
+        'dist/warn.js has a bare import "#dev-gate" that dist/development/warn.js lacks; the DEV fold left its bindings unused',
+      ],
+    );
+  });
+
+  it('ignores named imports', () => {
+    assert.deepEqual(
+      findFoldedBareImports(
+        new Map([['warn.js', 'import { devGate } from "#dev-gate";\n']]),
+        new Map(),
+      ),
+      [],
+    );
   });
 });
 
