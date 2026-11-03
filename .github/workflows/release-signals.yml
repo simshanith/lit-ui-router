@@ -99,6 +99,47 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Upload turbo run summaries
+        # Same fail-open uploads as build-test-run.yml; the report links both.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries-release-signals
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload turbo task logs
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs-release-signals
+          path: |
+            .turbo/turbo-*.log
+            .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Turbo run summary
+        # Reports the published_diff runs; no BUILD_OUTCOME, since that step goes red itself.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
+        env:
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
 
   # Separate from npm so a crash there never skips the Cloudflare signals.
   cloudflare:
