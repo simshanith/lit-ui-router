@@ -12,6 +12,8 @@ export type LogoutEvent = ReturnType<typeof logoutEvent>;
  * button, so Enter/Space toggle natively, Escape closes and restores focus,
  * and focus leaving the widget closes it. `:hover` still reveals the panel for
  * mouse users (see `.hoverdrop` in styles.css).
+ *
+ * @fires logout - The user clicked Log Out.
  */
 @customElement('sample-user-menu')
 export class UserMenu extends LitElement {
