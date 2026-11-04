@@ -3,6 +3,8 @@ import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { parse } from 'postcss';
+
 import {
   contrast,
   oklchLightness,
@@ -20,7 +22,45 @@ const themes: Theme[] = ['light', 'dark'];
 
 const site = join(import.meta.dirname, '../..');
 
-const css = readFileSync(join(site, '.vitepress/theme/custom.css'), 'utf8');
+const rules = parse(
+  readFileSync(join(site, '.vitepress/theme/custom.css'), 'utf8'),
+).nodes.filter((node) => node.type === 'rule');
+
+const SHARED = '.VPBadge:is(';
+
+const shared = rules
+  .map((rule) => rule.selector.replaceAll(/\s+/g, ''))
+  .find((selector) => selector.startsWith(SHARED));
+
+const sharedList = new Set(
+  shared?.slice(SHARED.length, shared.lastIndexOf(')')).split(','),
+);
+
+function badgeGaps(status: string): string[] {
+  const selector = `.VPBadge.status-${status}`;
+  const rule = rules.find((r) => r.selector === selector);
+
+  const values = new Map(
+    rule?.nodes
+      .filter((node) => node.type === 'decl')
+      .map(({ prop, value }) => [prop, value.replaceAll(/\s+/g, '')]),
+  );
+
+  const gaps = Object.entries({
+    '--status-fill': `var(--status-${status})`,
+    '--status-fill-ink': `var(--status-${status}-ink)`,
+  })
+    .filter(([prop, value]) => values.get(prop) !== value)
+    .map(
+      ([prop, value]) =>
+        `status-${status}: ${selector} lacks ${prop}: ${value}`,
+    );
+
+  if (!sharedList.has(`.status-${status}`))
+    gaps.push(`status-${status}: not in the shared ${SHARED}…) rule`);
+
+  return gaps;
+}
 
 const badgeTypes = globSync('**/*.md', {
   cwd: site,
@@ -45,13 +85,7 @@ describe('HTTP status colors', () => {
   });
 
   it('styles a status badge for every status', () => {
-    for (const status of fills.light.keys())
-      assert.ok(
-        css.includes(
-          `.VPBadge.status-${status} {\n  --status-fill: var(--status-${status});\n  --status-fill-ink: var(--status-${status}-ink);\n}`,
-        ),
-        status,
-      );
+    assert.deepEqual([...fills.light.keys()].flatMap(badgeGaps), []);
   });
 
   it('badges only defined statuses in the docs', () => {
