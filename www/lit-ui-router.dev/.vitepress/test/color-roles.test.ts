@@ -18,7 +18,15 @@ type Rgba = [number, number, number, number];
 
 const THEME_DIR = join(import.meta.dirname, '../theme');
 
+const tokensCss = readFileSync(join(THEME_DIR, 'tokens.css'), 'utf8');
+
+// Status colours stay beside the badge rules that use them.
 const customCss = readFileSync(join(THEME_DIR, 'custom.css'), 'utf8');
+
+const releasePagesCss = readFileSync(
+  join(import.meta.dirname, '../../worker/releases/release-pages.css'),
+  'utf8',
+);
 
 const varsCss = readFileSync(
   join(
@@ -62,7 +70,7 @@ function* topLevelRules(css: string): Generator<[string, string]> {
 function customProperties(theme: Theme): Map<string, string> {
   const props = new Map<string, string>();
 
-  for (const css of [varsCss, customCss]) {
+  for (const css of [varsCss, tokensCss, customCss]) {
     for (const [selector, body] of topLevelRules(css)) {
       if (!SCOPES[theme].includes(selector)) continue;
 
@@ -184,14 +192,16 @@ describe('colour roles', () => {
     }
   }
 
-  it('lists every --site-color-* property custom.css defines', () => {
+  it('lists every --site-color-* property the theme defines', () => {
     const listed = new Set<string>([
       ...ROLES.map((r) => r.property),
       ...Object.values(GROUNDS).map((g) => g.property),
     ]);
 
     const defined = new Set(
-      [...customCss.matchAll(/(--site-color-[\w-]+)\s*:/g)].map(([, p]) => p),
+      [tokensCss, customCss].flatMap((css) =>
+        [...css.matchAll(/(--site-color-[\w-]+)\s*:/g)].map(([, p]) => p),
+      ),
     );
 
     assert.deepEqual(
@@ -202,7 +212,9 @@ describe('colour roles', () => {
 
   it('reaches the brand scale only through the interaction roles', () => {
     const sources = [
+      tokensCss,
       customCss,
+      releasePagesCss,
       ...readdirSync(join(THEME_DIR, 'components'))
         .filter((f) => f.endsWith('.vue'))
         .map((f) => readFileSync(join(THEME_DIR, 'components', f), 'utf8')),
@@ -212,6 +224,14 @@ describe('colour roles', () => {
       .flatMap((s) => s.split('\n'))
       .filter((line) => line.includes('var(--vp-c-brand'))
       .filter((line) => !/^\s*--site-color-interaction[\w-]*:/.test(line));
+
+    assert.deepEqual(strays, []);
+  });
+
+  it('colours the release pages only through the site roles', () => {
+    const strays = releasePagesCss
+      .split('\n')
+      .filter((line) => line.includes('var(--vp-c-'));
 
     assert.deepEqual(strays, []);
   });

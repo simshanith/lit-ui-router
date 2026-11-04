@@ -2,6 +2,7 @@ import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
 import NotFound from 'vitepress/dist/client/theme-default/NotFound.vue';
 import { h } from 'vue';
+import './tokens.css';
 import './custom.css';
 import StackBlitzEmbed from './components/StackBlitzEmbed.vue';
 import ExampleEmbed from './components/ExampleEmbed.vue';

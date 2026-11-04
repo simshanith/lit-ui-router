@@ -1,5 +1,5 @@
 // The docs theme's colour roles: what each colour is for and which grounds it may sit on.
-// test/color-roles.test.ts resolves every pair from custom.css and VitePress's vars.css.
+// test/color-roles.test.ts resolves every pair from tokens.css, custom.css and VitePress's vars.css.
 
 /** A ground a role may sit on; `over` composites a translucent ground onto another. */
 export interface Ground {
