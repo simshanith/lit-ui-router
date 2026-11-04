@@ -8,7 +8,7 @@ own worker config; the pipeline that ships them is shared.
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`lit-ui-router.dev/`](./lit-ui-router.dev)                               | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                                                |
 | [`release-ledger.lit-ui-router.dev/`](./release-ledger.lit-ui-router.dev) | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release-ledger worker: `POST /claims` takes OIDC claims from GitHub Actions, and its queue folds them into D1 |
-| [`release-diffs.lit-ui-router.dev/`](./release-diffs.lit-ui-router.dev)   | No hostname — the release-diffs worker, reached through the docs worker's service binding and answering 404 until the release diffs land                                                         |
+| [`release-diffs.lit-ui-router.dev/`](./release-diffs.lit-ui-router.dev)   | No hostname — the release-diffs worker: each version pair's `npm diff`, built once by a `ReleaseDiff` Durable Object into R2, for the docs worker's service binding                              |
 
 ## Adding a site
 

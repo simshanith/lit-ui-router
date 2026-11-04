@@ -68,3 +68,49 @@ and other workers read the result.
 
 The ledger worker's bindings, queue settings and schedule are in its
 [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/wrangler.jsonc).
+
+## The release-diffs worker
+
+A third worker keeps the patch `npm diff` prints between two published
+versions of a package, built once per version pair.
+
+<DiagramEmbed src="/diagrams/about-this-site-release-diffs.svg">
+
+<!--@include: ./public/diagrams/about-this-site-release-diffs.svg-->
+
+</DiagramEmbed>
+
+1. **The release-diffs worker**
+   ([`worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/worker/index.ts))
+   answers three RPC methods: `index` lists a pair's files, `files` streams
+   the patch sections one file preset shows, and `patch` streams the whole
+   patch. Each reads the pair's entry from R2 first. It has no route and no
+   `workers.dev` or Preview URL, so the docs worker's service binding is the
+   only way in.
+2. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
+3. **npm** serves the packument and both tarballs a build diffs.
+4. **R2** holds one entry per pair under `v1/<pkg>/<from>...<to>/`: the
+   patch, each preset's sections, and `index.json`, written last, so an entry
+   with an index is complete. The object is its only writer; the worker only
+   reads it.
+
+The worker's bucket and Durable Object bindings are in its
+[`cloudflare.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/cloudflare.config.ts);
+a Preview writes its own bucket.
+
+### Building one diff
+
+<DiagramEmbed src="/diagrams/about-this-site-release-diff-build.svg">
+
+<!--@include: ./public/diagrams/about-this-site-release-diff-build.svg-->
+
+</DiagramEmbed>
+
+The worker addresses a pair's object by name, `<pkg>@<from>...<to>`, and its
+first call creates it. The object keeps nothing in storage: calls that arrive
+while a build runs share that build, and each build reads `index.json` again
+first, in case another just finished. A build fetches the packument and both
+tarballs, unpacks and diffs them in memory, then writes the patch and each
+preset's sections before `index.json`. A build that fails before the index
+lands leaves the pair without one, so the next miss builds it again. An idle
+object is evicted, with nothing to clean up.

@@ -1,0 +1,72 @@
+<svg viewBox="0 0 720 348" width="100%" role="img" aria-label="The release-diffs worker. 1, the release-diffs worker, answers index, files and patch by reading the pair's entry from 4, the R2 bucket. On a miss it asks 2, that pair's ReleaseDiff Durable Object, to build the entry and gets its index back. The object fetches the packument and both tarballs from 3, npm, reads R2 again, and is the only writer to it." xmlns="http://www.w3.org/2000/svg">
+  <title>The release-diffs worker: R2 first, a ReleaseDiff object on a miss</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-release-diffs" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- Cloudflare zone -->
+    <rect data-brand="cloudflare" x="24" y="24" width="456" height="284" rx="8" fill="#f6821f" fill-opacity="0.03" stroke="#f6821f" stroke-dasharray="5 4" />
+    <rect x="36" y="14" width="98" height="20" fill="var(--vp-c-bg, #ffffff)" />
+    <svg x="40" y="14" width="24" height="20" viewBox="0 2 24 20"><path data-brand="cloudflare" fill="#f6821f" d="M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727" /></svg>
+    <text x="68" y="29" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Cloudflare</text>
+    <!-- arrows -->
+    <path d="M208 84H292" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <text x="252" y="76" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">build</text>
+    <path d="M296 104H212" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <text x="252" y="118" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">index</text>
+    <path d="M552 94H452" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <text font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan x="516" y="72">packument,</tspan><tspan x="516" y="86">tarballs</tspan></text>
+    <path d="M132 208V128" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <path d="M362 124V204" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <path d="M382 208V128" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diffs)" />
+    <!-- 1 release-diffs worker -->
+    <rect data-brand="cloudflare" x="56" y="64" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="66" y="74" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg x="70" y="78" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
+    <text x="98" y="91" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Diffs worker</text>
+    <text x="66" y="114" font-size="11" fill="var(--vp-c-text-2, #67676c)">index · files · patch</text>
+    <circle cx="206" cy="66" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="206" y="69.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">1</text>
+    <!-- 2 ReleaseDiff object -->
+    <rect data-brand="cloudflare" x="296" y="64" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="306" y="74" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg data-brand="cloudflare" x="310" y="78" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7l8.7 5 8.7-5M12 22V12" /></svg>
+    <text x="338" y="91" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">ReleaseDiff</text>
+    <text x="306" y="114" font-size="11" fill="var(--vp-c-text-2, #67676c)">one per pair</text>
+    <circle cx="446" cy="66" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="446" y="69.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">2</text>
+    <!-- 3 npm -->
+    <rect x="552" y="64" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect data-brand="npm" x="562" y="74" width="24" height="24" rx="4" fill="#cb3837" fill-opacity="0.14" />
+    <svg x="566" y="78" width="16" height="16" viewBox="0 0 24 24"><path data-brand="npm" fill="#cb3837" d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z" /></svg>
+    <text x="594" y="91" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">npm</text>
+    <text x="562" y="114" font-size="11" fill="var(--vp-c-text-2, #67676c)">registry</text>
+    <circle cx="702" cy="66" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="702" y="69.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">3</text>
+    <!-- 4 R2 bucket -->
+    <rect data-brand="cloudflare" x="56" y="208" width="392" height="76" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="66" y="218" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg data-brand="cloudflare" x="70" y="222" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4" /></svg>
+    <text x="98" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">R2 bucket</text>
+    <text x="174" y="235" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">release-diffs</text>
+    <text font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)"><tspan x="66" y="258">v1/&lt;pkg&gt;/&lt;from&gt;...&lt;to&gt;/</tspan><tspan x="82" y="274">patch · files/&lt;preset&gt; · index.json</tspan></text>
+    <circle cx="446" cy="210" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="446" y="213.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">4</text>
+    <text x="24" y="338" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">release-diffs worker</text>
+  </g>
+</svg>
