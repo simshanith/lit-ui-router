@@ -12,7 +12,11 @@ indicator while the transition runs, a skeleton for data the transition does
 not wait for, and an error view when it fails. [Route Guards](./route-guards)
 covers how hooks are registered and matched.
 
+<DiagramEmbed src="/diagrams/loading-and-error-views-timeline.svg">
+
 <!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
+
+</DiagramEmbed>
 
 ## Pending indicator
 

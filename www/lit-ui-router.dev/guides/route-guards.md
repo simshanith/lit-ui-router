@@ -79,7 +79,11 @@ offers the full lifecycle — `onBefore`, `onStart`, `onEnter`, `onRetain`,
 `onExit`, `onFinish`, `onSuccess`, `onError` — and all of them accept the
 same criteria/callback shape.
 
+<DiagramEmbed src="/diagrams/route-guards-transition-lifecycle.svg">
+
 <!--@include: ../public/diagrams/route-guards-transition-lifecycle.svg-->
+
+</DiagramEmbed>
 
 ## Return the user after login
 

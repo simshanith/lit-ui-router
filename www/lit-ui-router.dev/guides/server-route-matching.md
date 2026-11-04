@@ -32,7 +32,11 @@ full-stack system where the same router executes on both sides. Each level
 is defined by what the app asks of its server; find yours, and what moving
 up would buy.
 
+<DiagramEmbed src="/diagrams/server-route-matching-spectrum.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-spectrum.svg-->
+
+</DiagramEmbed>
 
 **Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
 router with no address bar at all — tests, embedded widgets, headless
@@ -211,7 +215,11 @@ min+gzip by its own esbuild probe:
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
 
+<DiagramEmbed src="/diagrams/server-route-matching-package-tiers.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-package-tiers.svg-->
+
+</DiagramEmbed>
 
 The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
@@ -273,7 +281,11 @@ on the scan.
 
 ## The projection: routes as data
 
+<DiagramEmbed src="/diagrams/server-route-matching-projection.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-projection.svg-->
+
+</DiagramEmbed>
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
@@ -355,7 +367,11 @@ real package API.
 
 ## The verdict
 
+<DiagramEmbed src="/diagrams/server-route-matching-verdict-flow.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-verdict-flow.svg-->
+
+</DiagramEmbed>
 
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
@@ -453,43 +469,71 @@ Each diagram follows one request through the four lanes in production.
 
 Not a `run_worker_first` path, and the file exists. The worker never runs.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-1-static-page.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-1-static-page.svg-->
+
+</DiagramEmbed>
 
 #### Static miss <Badge type="status-not-found">404</Badge>
 
 Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-2-static-miss.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-2-static-miss.svg-->
+
+</DiagramEmbed>
 
 #### App deep link <Badge type="status-ok">200</Badge>
 
 A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-3-app-deep-link.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-3-app-deep-link.svg-->
+
+</DiagramEmbed>
 
 #### App redirect <Badge type="status-redirect">302</Badge>
 
 A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-4-app-redirect.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-4-app-redirect.svg-->
+
+</DiagramEmbed>
 
 #### Unknown path, mount with `otherwise` <Badge type="status-not-found">404</Badge>
 
 `/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg-->
+
+</DiagramEmbed>
 
 #### Unknown path, mount without `otherwise` <Badge type="status-not-found">404</Badge>
 
 The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg-->
+
+</DiagramEmbed>
 
 #### No mount <Badge type="status-as-served">as served</Badge>
 
 The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-7-no-mount.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-7-no-mount.svg-->
+
+</DiagramEmbed>
 
 `vitepress dev` sends the sample-app navigations through the same verdicts
 with the `ui-router-server/vite` plugin, Vite standing in for Cloudflare and

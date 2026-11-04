@@ -12,7 +12,11 @@ A routed component gets its inputs from `<ui-view>`, which renders it with
 reading its state's params, loading its own element module only when the state
 is entered, and how the page reaches the element a view rendered.
 
+<DiagramEmbed src="/diagrams/routed-components-anatomy.svg">
+
 <!--@include: ../public/diagrams/routed-components-anatomy.svg-->
+
+</DiagramEmbed>
 
 ## Reading params
 
@@ -177,7 +181,11 @@ change before the incoming element has rendered, so during the hold a
 `[routed]` rule styles the incoming element, not the outgoing one still on
 screen.
 
+<DiagramEmbed src="/diagrams/routed-components-hold.svg">
+
 <!--@include: ../public/diagrams/routed-components-hold.svg-->
+
+</DiagramEmbed>
 
 A template component can also swap its elements without the view updating,
 as `until()` does when its content replaces a placeholder. `routedElement`
