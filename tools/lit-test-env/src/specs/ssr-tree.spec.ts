@@ -10,6 +10,7 @@ import {
   outline,
   parseMarkup,
   shadowRoot,
+  shadowRootAttributes,
   outlineTree,
   text,
 } from '../ssr-tree.ts';
@@ -108,6 +109,34 @@ describe('the parse5 SSR tree helpers', () => {
     expect(litPart(served)).toEqual({ kind: 'close', prefix: 'served:' });
     expect(litPart(other)).toBeNull();
     expect(litPart(element(host(), 'p'))).toBeNull();
+  });
+
+  it('keeps every shadowroot* option, in the outline and through shadowRootAttributes', () => {
+    const optioned = parseMarkup(
+      '<x-a><template shadowroot="closed" shadowrootmode="closed" shadowrootserializable shadowrootdelegatesfocus shadowrootclonable shadowrootcustomelementregistry shadowrootreferencetarget="field"><input id="field"></template></x-a>',
+    );
+
+    expect(outlineTree(optioned)).toEqual([
+      '<x-a>',
+      '  #shadow closed serializable delegatesfocus clonable customelementregistry referencetarget=field',
+      '    <input id="field">',
+    ]);
+    expect(shadowRootAttributes(element(optioned, 'x-a'))).toEqual({
+      shadowroot: 'closed',
+      shadowrootmode: 'closed',
+      shadowrootserializable: '',
+      shadowrootdelegatesfocus: '',
+      shadowrootclonable: '',
+      shadowrootcustomelementregistry: '',
+      shadowrootreferencetarget: 'field',
+    });
+    expect(shadowRootAttributes(host())).toEqual({
+      shadowroot: 'open',
+      shadowrootmode: 'open',
+    });
+    expect(() => shadowRootAttributes(element(host(), 'p'))).toThrow(
+      '<p> has no shadow root',
+    );
   });
 
   it('writes any digest as `*` when asked to leave digests out', () => {

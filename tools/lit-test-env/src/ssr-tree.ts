@@ -34,14 +34,29 @@ const isShadowTemplate = (node: ChildNode): node is Template =>
 /** A node's own child nodes; a template has none, its contents are a separate fragment. */
 export const childNodes = (node: ParentNode): ChildNode[] => node.childNodes;
 
-/** The contents of `host`'s declarative shadow root, the `<template shadowrootmode>` among its children. */
-export const shadowRoot = (host: Element): DocumentFragment => {
+const shadowTemplate = (host: Element): Template => {
   const template = host.childNodes.find(isShadowTemplate);
 
   if (!template) throw new Error(`<${host.tagName}> has no shadow root`);
 
-  return template.content;
+  return template;
 };
+
+/** The contents of `host`'s declarative shadow root, the `<template shadowrootmode>` among its children. */
+export const shadowRoot = (host: Element): DocumentFragment =>
+  shadowTemplate(host).content;
+
+const SHADOW_ROOT_PREFIX = 'shadowroot';
+
+/** Every `shadowroot*` attribute on `host`'s declarative shadow root template, by full name; throws when it has none. */
+export const shadowRootAttributes = (
+  host: Element,
+): Readonly<Record<string, string>> =>
+  Object.fromEntries(
+    shadowTemplate(host)
+      .attrs.filter(({ name }) => name.startsWith(SHADOW_ROOT_PREFIX))
+      .map(({ name, value }) => [name, value]),
+  );
 
 /** `host`'s child nodes less its declarative shadow root. */
 export const lightChildren = (host: Element): ChildNode[] =>
@@ -145,6 +160,22 @@ const markerLabel = (
   return `${marker.prefix}{open ${digests ? marker.digest : '*'}}`;
 };
 
+// The mode, then every other shadowroot* attribute without its prefix; the legacy `shadowroot` only repeats the mode.
+const shadowLine = (template: Template): string => {
+  const options = template.attrs.flatMap(({ name, value }) => {
+    if (!name.startsWith(SHADOW_ROOT_PREFIX)) return [];
+    const option = name.slice(SHADOW_ROOT_PREFIX.length);
+
+    if (option === '' || option === 'mode') return [];
+
+    return [value === '' ? option : `${option}=${value}`];
+  });
+
+  return ['#shadow', getAttribute(template, 'shadowrootmode'), ...options].join(
+    ' ',
+  );
+};
+
 const tagLabel = (node: Element): string => {
   const attributes = node.attrs.map(({ name, value }) =>
     value === '' ? ` ${name}` : ` ${name}="${value}"`,
@@ -169,9 +200,7 @@ const treeLine = (
   node: ChildNode,
   options: OutlineTreeOptions,
 ): string | null => {
-  if (isShadowTemplate(node)) {
-    return `#shadow ${getAttribute(node, 'shadowrootmode') ?? ''}`;
-  }
+  if (isShadowTemplate(node)) return shadowLine(node);
 
   if (isElementNode(node)) return tagLabel(node);
 
@@ -207,7 +236,7 @@ function* treeLines(
 
 /**
  * An indented outline of `node`'s subtree, one line per node: tags with
- * their attributes, `#shadow <mode>` for a declarative shadow root, Lit
+ * their attributes, `#shadow <mode> [options]` for a declarative shadow root, Lit
  * markers as `{open digest}`, `{open}`, `{close}` and `{node n}` after any
  * prefix, and text trimmed and quoted, with whitespace-only text left out.
  */

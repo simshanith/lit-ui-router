@@ -38,6 +38,7 @@ host's light children.
 | `elements(root, tag, attrs?)`                      | every matching element, in document order                                 |
 | `shadowRoot(host)`                                 | the contents of `host`'s declarative shadow root; throws when it has none |
 | `lightChildren(host)`                              | `host`'s child nodes, less its shadow root                                |
+| `shadowRootAttributes(host)`                       | every `shadowroot*` attribute on the shadow root's template, by full name |
 | `childNodes(node)`                                 | a node's own child nodes; a template has none                             |
 | `getAttribute(el, name)`, `hasAttribute(el, name)` | an attribute's value, or whether it is set                                |
 | `text(node)`                                       | the text below `node`, comments skipped                                   |
@@ -59,7 +60,10 @@ before `lit-`, such as `served:`.
 `outlineTree` writes one line per node, indented two spaces per level:
 
 - tags with their attributes;
-- `#shadow <mode>` for a declarative shadow root;
+- `#shadow <mode>` for a declarative shadow root, then each other
+  `shadowroot*` option without its prefix, bare when valueless and
+  `name=value` otherwise: `#shadow open delegatesfocus referencetarget=field`.
+  The legacy `shadowroot` attribute only repeats the mode, so it is left out;
 - markers as `{open digest}`, `{open}`, `{close}` and `{node n}`, after any
   prefix;
 - text trimmed and quoted;
