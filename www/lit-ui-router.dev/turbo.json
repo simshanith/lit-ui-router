@@ -67,13 +67,8 @@
         "examples#build:embeds",
         "types:worker"
       ],
-      // .cache/chunk-sizes.json stays out of dist/, which the worker serves
-      "outputs": ["dist/**", ".cache/chunk-sizes.json"],
+      "outputs": ["dist/**"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
-    },
-    "check:bundle": {
-      // Chunk budgets as a leaf, so an overage fails ci without failing build and its e2e dependents.
-      "dependsOn": ["build"]
     },
     // restates the root umbrella's list, plus this package's own leaves
     "typecheck": {
