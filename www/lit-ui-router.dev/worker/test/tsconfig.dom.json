@@ -4,6 +4,6 @@
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["dom.ts", "releases.test.ts"],
+  "include": ["releases.test.ts"],
   "exclude": []
 }

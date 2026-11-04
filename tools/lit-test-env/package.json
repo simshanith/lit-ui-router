@@ -21,12 +21,12 @@
   },
   "dependencies": {
     "@tools/happy-dom": "catalog:workspace",
+    "happy-dom": "catalog:",
     "parse5": "catalog:"
   },
   "devDependencies": {
     "@testing-library/dom": "catalog:",
     "@types/node": "catalog:",
-    "happy-dom": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:",

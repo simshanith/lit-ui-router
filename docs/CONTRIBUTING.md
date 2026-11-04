@@ -149,11 +149,16 @@ the test checks:
 Regexes and substrings over HTML don't belong in the first two rows. CSS is
 parsed with postcss and postcss-html.
 
-[`worker/test/dom.ts`](../www/lit-ui-router.dev/worker/test/dom.ts) is the
-first row's example: it parses a page into a document whose `defaultView`
-answers testing-library's style lookups. lib.dom and the workers runtime types
-clash, so the docs worker's DOM tests typecheck under their own
-[`tsconfig.dom.json`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json).
+`@tools/lit-test-env` holds the helpers for the first two rows.
+[`parse-html.ts`](../tools/lit-test-env/src/parse-html.ts) parses a page into
+a document whose `defaultView` answers testing-library's style lookups.
+[`ssr-tree.ts`](../tools/lit-test-env/src/ssr-tree.ts) parses SSR markup with
+parse5 and outlines, finds and reads its nodes. testing-library's types need
+lib.dom, so a node test that queries a parsed page typechecks under its own
+`tsconfig.dom.json`, as the docs worker's
+[`worker/test`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json) and
+`ui-router-server`'s
+[`test`](../packages/ui-router-server/test/tsconfig.dom.json) do.
 
 ### Reproducing a CI failure
 

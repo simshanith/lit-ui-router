@@ -9,6 +9,7 @@ import {
   getByText,
   within,
 } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 
 import '../dom-shim.ts';
 import { releaseDocument, STYLESHEET } from '../releases/document.ts';
@@ -21,7 +22,6 @@ import {
 } from '../releases/ledger.ts';
 import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { serveReleases } from '../releases/serve.ts';
-import { parse } from './dom.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 
@@ -139,7 +139,7 @@ describe('the /releases verdicts', () => {
 
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
-    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+    getByRole(parseHtml((await response?.text()) ?? '').body, 'heading', {
       level: 1,
       name: 'Releases are unavailable',
     });
@@ -259,7 +259,7 @@ describe('the /gh verdicts', () => {
   it('renders the 404 page for a path GitHub already answers', async () => {
     const response = await serve('/gh/releases/');
 
-    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+    getByRole(parseHtml((await response?.text()) ?? '').body, 'heading', {
       level: 1,
       name: 'Not found',
     });
@@ -481,7 +481,7 @@ describe('the /gh edge cache', () => {
 
 describe('the /releases pages', () => {
   const page = async (path: string) =>
-    parse((await (await serve(path))?.text()) ?? '');
+    parseHtml((await (await serve(path))?.text()) ?? '');
 
   const hrefOf = (container: HTMLElement, name: string) =>
     getByRole(container, 'link', { name }).getAttribute('href');
@@ -535,7 +535,7 @@ describe('the /releases pages', () => {
   it('renders the 404 page for a version the ledger lacks', async () => {
     const response = await serve('/releases/lit-ui-router/9.9.9/');
 
-    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+    getByRole(parseHtml((await response?.text()) ?? '').body, 'heading', {
       level: 1,
       name: 'Not found',
     });
@@ -560,7 +560,7 @@ describe('the /releases pages', () => {
     // A raw `</title>` would end the title early; `<b>` alone parses as title text either way.
     const title = 'a </title><b> & "c"';
 
-    const doc = parse(
+    const doc = parseHtml(
       await releaseDocument(body, { title, description: 'd <e> & "f"' }),
     );
 
@@ -572,7 +572,7 @@ describe('the /releases pages', () => {
     );
     assert.ok(
       getByRole(doc.body, 'main').firstElementChild?.isEqualNode(
-        parse(`<div>${body}</div>`).body.firstElementChild,
+        parseHtml(`<div>${body}</div>`).body.firstElementChild,
       ),
     );
     assert.equal(doc.doctype?.name, 'html');

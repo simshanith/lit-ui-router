@@ -2693,6 +2693,9 @@ importers:
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../happy-dom
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
       parse5:
         specifier: 'catalog:'
         version: 8.0.1
@@ -2703,9 +2706,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
-      happy-dom:
-        specifier: 'catalog:'
-        version: 21.0.4
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -3104,6 +3104,9 @@ importers:
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
@@ -3119,9 +3122,6 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
-      happy-dom:
-        specifier: 'catalog:'
-        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
