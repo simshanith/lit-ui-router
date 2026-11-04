@@ -8,6 +8,11 @@
     "types": ["cypress", "node"],
     "noEmit": true
   },
-  "include": ["src/**/*", "scripts/**/*", "cypress*.config.ts"],
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    "cypress*.config.ts",
+    "playwright.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

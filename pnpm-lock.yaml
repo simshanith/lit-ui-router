@@ -64,6 +64,9 @@ catalogs:
     '@oxlint/plugins':
       specifier: 1.90.0
       version: 1.90.0
+    '@playwright/test':
+      specifier: ^1.64.1
+      version: 1.64.1
     '@pnpm/logger':
       specifier: 1100.0.0
       version: 1100.0.0
@@ -715,6 +718,9 @@ importers:
         specifier: catalog:workspace
         version: link:../../www/lit-ui-router.dev
     devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.64.1
       '@tools/a11y':
         specifier: catalog:workspace
         version: link:../../tools/a11y
@@ -5109,6 +5115,11 @@ packages:
   '@phun-ky/typeof@2.0.3':
     resolution: {integrity: sha512-oeQJs1aa8Ghke8JIK9yuq/+KjMiaYeDZ38jx7MhkXncXlUKjqQ3wEm2X3qCKyjo+ZZofZj+WsEEiqkTtRuE2xQ==}
     engines: {node: ^20.9.0 || >=22.0.0, npm: '>=10.8.2'}
+
+  '@playwright/test@1.64.1':
+    resolution: {integrity: sha512-IaYGml/nSOiZWROfPtuIL7neuu9qDOZ3TNvNljUIrhDMxiGTgPjzj/g9p9RxpS2tSepPDRY+UwAaEeiKtUvIAg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@pnpm/cli.meta@1100.1.4':
     resolution: {integrity: sha512-Y3T9G2Fsl9DnN7gKw0uom7aPUClpYoRtl+JJgRsHOcxdvHRt1nO4QxNL2YU/q9hCCMg5TU2VhIEb4hPvrxx20g==}
@@ -11475,6 +11486,10 @@ snapshots:
       parse5: 7.3.0
 
   '@phun-ky/typeof@2.0.3': {}
+
+  '@playwright/test@1.64.1':
+    dependencies:
+      playwright: 1.64.1
 
   '@pnpm/cli.meta@1100.1.4':
     dependencies:
