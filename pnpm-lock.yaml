@@ -244,6 +244,9 @@ catalogs:
     playwright:
       specifier: ^1.64.1
       version: 1.64.1
+    postcss:
+      specifier: ^8.5.31
+      version: 8.5.31
     postcss-html:
       specifier: ^2.0.0
       version: 2.0.0
@@ -3101,6 +3104,9 @@ importers:
       playwright:
         specifier: 'catalog:'
         version: 1.64.1
+      postcss:
+        specifier: 'catalog:'
+        version: 8.5.31
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

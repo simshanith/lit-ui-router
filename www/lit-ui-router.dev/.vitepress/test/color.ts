@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { parse, type Declaration, type Root, type Rule } from 'postcss';
+
 export type Theme = 'light' | 'dark';
 
 export interface StatusColors {
@@ -11,32 +13,83 @@ export interface StatusColors {
 
 const CSS = join(import.meta.dirname, '../theme/custom.css');
 
-const BLOCK =
-  /\/\* === HTTP status colors[\s\S]*?\/\* === end HTTP status colors === \*\//;
+const START = '=== HTTP status colors';
 
-const RULE = /(html(?:\.dark)?)\s*\{([^{}]*)\}/g;
+const END = '=== end HTTP status colors ===';
 
-const FILL = /--status-([a-z-]+?):\s*(#[0-9a-f]{6});/g;
+const FILL = /^--status-([a-z-]+)$/;
+
+const HEX = /^#[0-9a-f]{6}$/;
 
 const INK =
-  /--status-([a-z-]+)-ink:\s*oklch\(\s*from var\(--status-\1\) clamp\(0, \(([\d.]+) - l\) \* 1000, 1\) 0 0\s*\);/g;
+  /^oklch\(\s*from var\(--status-([a-z-]+)\) clamp\(0, \(([\d.]+) - l\) \* 1000, 1\) 0 0\s*\)$/;
+
+// The rules between the block's opening and closing comments, at any depth.
+function blockRules(root: Root): Rule[] {
+  const start = root.nodes.findIndex(
+    (node) => node.type === 'comment' && node.text.startsWith(START),
+  );
+
+  const end = root.nodes.findIndex(
+    (node) => node.type === 'comment' && node.text === END,
+  );
+
+  if (start < 0 || end < start)
+    throw new Error('custom.css has no HTTP status colors block');
+
+  const rules: Rule[] = [];
+
+  for (const node of root.nodes.slice(start + 1, end)) {
+    if (node.type === 'rule') rules.push(node);
+
+    if (node.type === 'atrule')
+      node.walkRules((rule) => {
+        rules.push(rule);
+      });
+  }
+
+  return rules;
+}
+
+function declarations(rule: Rule): Declaration[] {
+  return rule.nodes.filter((node) => node.type === 'decl');
+}
+
+function readFills(rules: Rule[]): StatusColors['fills'] {
+  const fills: StatusColors['fills'] = { light: new Map(), dark: new Map() };
+
+  for (const rule of rules) {
+    if (rule.selector !== 'html' && rule.selector !== 'html.dark') continue;
+
+    const theme: Theme = rule.selector === 'html.dark' ? 'dark' : 'light';
+
+    for (const { prop, value } of declarations(rule)) {
+      const name = FILL.exec(prop)?.[1];
+
+      if (name && HEX.test(value)) fills[theme].set(name, value);
+    }
+  }
+
+  return fills;
+}
+
+function readInkRules(rules: Rule[]): Map<string, number> {
+  const inkRules = new Map<string, number>();
+
+  for (const { prop, value } of rules.flatMap(declarations)) {
+    const [, name, t] = INK.exec(value.replaceAll(/\s+/g, ' ')) ?? [];
+
+    if (name && prop === `--status-${name}-ink`) inkRules.set(name, Number(t));
+  }
+
+  return inkRules;
+}
 
 export function readStatusColors(
   css = readFileSync(CSS, 'utf8'),
 ): StatusColors {
-  const block = BLOCK.exec(css)?.[0];
-
-  if (!block) throw new Error('custom.css has no HTTP status colors block');
-
-  const fills: StatusColors['fills'] = { light: new Map(), dark: new Map() };
-
-  for (const [, selector, body] of block.matchAll(RULE)) {
-    const theme: Theme = selector === 'html.dark' ? 'dark' : 'light';
-
-    for (const [, name, hex] of body.matchAll(FILL))
-      fills[theme].set(name, hex);
-  }
-
+  const rules = blockRules(parse(css));
+  const fills = readFills(rules);
   const light = fills.light.get('ink');
   const dark = fills.dark.get('ink');
 
@@ -45,11 +98,7 @@ export function readStatusColors(
   fills.light.delete('ink');
   fills.dark.delete('ink');
 
-  const inkRules = new Map(
-    [...block.matchAll(INK)].map(([, name, t]) => [name, Number(t)]),
-  );
-
-  return { fills, ink: { light, dark }, inkRules };
+  return { fills, ink: { light, dark }, inkRules: readInkRules(rules) };
 }
 
 function linear(channel: number): number {
