@@ -1,0 +1,67 @@
+<svg viewBox="0 0 720 508" width="100%" style="max-width: 720px" role="img" aria-label="Building one release diff. The diffs worker reads the pair's index.json from R2 and misses, so it calls build on the pair's ReleaseDiff object, which its name creates on first call and which runs one build at a time. The object reads index.json from R2 again and misses, fetches the packument and both tarballs from npm, unpacks and diffs them in memory, puts the patch and each preset's files in R2, then index.json last, and returns the index to the worker. Idle, it is evicted; it stores nothing." xmlns="http://www.w3.org/2000/svg">
+  <title>Building one release diff: the ReleaseDiff object on a miss</title>
+  <!-- dark palette applies only when this file is the document root -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      svg:root {
+        color-scheme: dark;
+        --vp-c-bg: #1b1b1f;
+        --vp-c-bg-soft: #202127;
+        --vp-c-divider: #2e2e32;
+        --vp-c-text-1: #dfdfd6;
+        --vp-c-text-2: #98989f;
+        --vp-c-brand-1: #29abe6;
+        --vp-c-brand-soft: rgba(0, 152, 220, 0.16);
+      }
+    }
+  </style>
+  <defs>
+    <marker id="arr-release-diff-build" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-2, #67676c)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <line x1="90" y1="32" x2="90" y2="504" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect data-brand="cloudflare" x="28" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="90" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">Diffs worker</text>
+    <line x1="270" y1="32" x2="270" y2="504" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect data-brand="cloudflare" x="208" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="270" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">ReleaseDiff</text>
+    <line x1="450" y1="32" x2="450" y2="504" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="388" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="450" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">npm</text>
+    <line x1="630" y1="32" x2="630" y2="504" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect data-brand="cloudflare" x="568" y="6" width="124" height="26" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" />
+    <text x="630" y="23" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">R2</text>
+    <line x1="90" y1="62" x2="627" y2="62" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="56" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">get index.json</text>
+    <line x1="630" y1="92" x2="93" y2="92" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="86" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">miss</text>
+    <line x1="90" y1="122" x2="267" y2="122" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="180" y="116" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">build(pair)</text>
+    <rect x="170" y="136" width="200" height="22" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="270" y="151" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">created by name; one build</text>
+    <line x1="270" y1="182" x2="627" y2="182" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="450" y="176" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">get index.json</text>
+    <line x1="630" y1="212" x2="273" y2="212" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-release-diff-build)" />
+    <text x="450" y="206" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">miss</text>
+    <line x1="270" y1="242" x2="447" y2="242" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="236" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">packument</text>
+    <line x1="450" y1="272" x2="273" y2="272" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="266" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">tarball urls</text>
+    <line x1="270" y1="302" x2="447" y2="302" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="296" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">both tarballs</text>
+    <line x1="450" y1="332" x2="273" y2="332" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-release-diff-build)" />
+    <text x="360" y="326" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">.tgz × 2</text>
+    <rect x="170" y="346" width="200" height="22" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="270" y="361" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">gunzip · untar · diff</text>
+    <line x1="270" y1="392" x2="627" y2="392" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="450" y="386" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">put patch, files/&lt;preset&gt;</text>
+    <line x1="270" y1="422" x2="627" y2="422" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-release-diff-build)" />
+    <text x="450" y="416" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">put index.json, last</text>
+    <line x1="270" y1="452" x2="93" y2="452" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" stroke-dasharray="5 4" marker-end="url(#arr-release-diff-build)" />
+    <text x="180" y="446" font-size="11" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle" stroke="var(--vp-c-bg, #ffffff)" stroke-width="4" stroke-linejoin="round" paint-order="stroke">index</text>
+    <rect x="170" y="466" width="200" height="22" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" stroke="var(--vp-c-brand-1, #006a9a)" />
+    <text x="270" y="481" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #006a9a)" text-anchor="middle">idle: evicted, stores nothing</text>
+  </g>
+</svg>
