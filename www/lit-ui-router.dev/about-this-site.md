@@ -74,7 +74,11 @@ The ledger worker's bindings, queue settings and schedule are in its
 A third worker keeps the patch `npm diff` prints between two published
 versions of a package, built once per version pair.
 
+<DiagramEmbed src="/diagrams/about-this-site-release-diffs.svg">
+
 <!--@include: ./public/diagrams/about-this-site-release-diffs.svg-->
+
+</DiagramEmbed>
 
 1. **The release-diffs worker**
    ([`worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/worker/index.ts))
@@ -96,7 +100,11 @@ a Preview writes its own bucket.
 
 ### Building one diff
 
+<DiagramEmbed src="/diagrams/about-this-site-release-diff-build.svg">
+
 <!--@include: ./public/diagrams/about-this-site-release-diff-build.svg-->
+
+</DiagramEmbed>
 
 The worker addresses a pair's object by name, `<pkg>@<from>...<to>`, and its
 first call creates it. The object keeps nothing in storage: calls that arrive

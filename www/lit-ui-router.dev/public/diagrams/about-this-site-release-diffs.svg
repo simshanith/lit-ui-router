@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 348" width="100%" style="max-width: 720px" role="img" aria-label="The release-diffs worker. 1, the release-diffs worker, answers index, files and patch by reading the pair's entry from 4, the R2 bucket. On a miss it asks 2, that pair's ReleaseDiff Durable Object, to build the entry and gets its index back. The object fetches the packument and both tarballs from 3, npm, reads R2 again, and is the only writer to it." xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 348" width="100%" role="img" aria-label="The release-diffs worker. 1, the release-diffs worker, answers index, files and patch by reading the pair's entry from 4, the R2 bucket. On a miss it asks 2, that pair's ReleaseDiff Durable Object, to build the entry and gets its index back. The object fetches the packument and both tarballs from 3, npm, reads R2 again, and is the only writer to it." xmlns="http://www.w3.org/2000/svg">
   <title>The release-diffs worker: R2 first, a ReleaseDiff object on a miss</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
