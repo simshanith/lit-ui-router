@@ -144,7 +144,11 @@ and the page. Everything after the plugin runs in a worker thread, the solid
 outline, which ends once the result is back. The <span style="color: var(--vp-c-brand-1)">tinted</span> boxes are
 lit-ui-router's part; the tinted files are the ones it adds to `dist/`.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-build-flow.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-build-flow.svg-->
+
+</DiagramEmbed>
 
 `lit-ui-router-ssr`'s `prerender()` supplies the Lit render and hands the
 rest to `ui-router-server`'s, which visits the paths, asks the route table
@@ -162,7 +166,11 @@ plugin: the pages, the `_redirects` lines, the warnings and the delegated
 paths. A non-empty `warnings` fails the build; otherwise the plugin logs a
 summary line.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-1-site.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-1-site.svg-->
+
+</DiagramEmbed>
 
 ### A page
 
@@ -172,14 +180,22 @@ settles the router on the path and returns the page's template, Lit renders
 it to html, and your `document` puts that body into `shellHtml` in place of
 the marker. The finished document is written as `about/index.html`.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-2-page.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-2-page.svg-->
+
+</DiagramEmbed>
 
 ### A redirect
 
 `/legacy` never reaches Lit. Its verdict is a redirect, so it becomes a line
 in `_redirects`, plus the same line for `/legacy/`, and no page is written.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-3-redirect.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-3-redirect.svg-->
+
+</DiagramEmbed>
 
 ### The 404 page
 
@@ -188,7 +204,11 @@ no route claims under the mount. The `otherwise` rule answers with the
 `notFound` page carrying status 404, which renders like any other page and
 is written once, as `404.html`.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-4-not-found.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-4-not-found.svg-->
+
+</DiagramEmbed>
 
 ### A path with no route
 
@@ -196,7 +216,11 @@ A path in `paths` that matches no route, with no `otherwise` rule to fall
 back on, gets no file and lands in `warnings`. The plugin turns that into an
 error naming the path, and `vite build` fails.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-5-no-route.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-5-no-route.svg-->
+
+</DiagramEmbed>
 
 ## Details
 
@@ -220,7 +244,11 @@ build wrote for it, `404.html` for a path the `otherwise` rule catches, and
 `index.html` for a path the build wrote no page for. A `serveShell` passed
 to the plugin replaces this.
 
+<DiagramEmbed src="/diagrams/prerender-with-vite-seq-6-preview.svg">
+
 <!--@include: ../public/diagrams/prerender-with-vite-seq-6-preview.svg-->
+
+</DiagramEmbed>
 
 **Other renderers.** `serverRouterPlugin` and `definePrerender` from
 [`ui-router-server/vite`](/api/ui-router-server/vite/functions/serverRouterPlugin)

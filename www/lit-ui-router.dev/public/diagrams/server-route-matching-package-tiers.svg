@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 300" width="100%" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>

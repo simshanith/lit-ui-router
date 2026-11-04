@@ -12,7 +12,11 @@ second worker that keeps the release ledger.
 [Server-Side Routing](./guides/server-route-matching#one-request-at-a-time)
 follows a single request through the docs worker.
 
+<DiagramEmbed src="/diagrams/about-this-site-architecture.svg">
+
 <!--@include: ./public/diagrams/about-this-site-architecture.svg-->
+
+</DiagramEmbed>
 
 1. **Readers** load `lit-ui-router.dev`: the docs, the sample apps, the
    `/releases` pages and the `/gh` redirects the README badges link to.
@@ -42,7 +46,11 @@ records what the git tag, npm and GitHub say about each release. Claims come
 in, a queue consumer checks them against the sources and writes the outcome,
 and other workers read the result.
 
+<DiagramEmbed src="/diagrams/about-this-site-ledger.svg">
+
 <!--@include: ./public/diagrams/about-this-site-ledger.svg-->
+
+</DiagramEmbed>
 
 1. **GitHub** runs `publish-npm.yml`, which sends a claim with an Actions
    OIDC token after each npm publish. Its tags and releases are one of the

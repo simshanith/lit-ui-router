@@ -71,6 +71,48 @@
   font-size: var(--site-icon-sm);
 }
 
+/* === Expand dialogs: an embed is its own <dialog>, inline while closed, filling the window under showModal() (expand-dialog.ts) === */
+.site-expand:not([open]) {
+  display: block;
+}
+
+.site-expand {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.site-expand:modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--example-actions-gap);
+  box-sizing: border-box;
+  inline-size: 100dvw;
+  block-size: 100dvh;
+  margin: 0;
+  padding: var(--site-space-4);
+  background: var(--site-color-surface);
+}
+
+.site-expand::backdrop {
+  background: var(--site-color-surface);
+}
+
+html:has(.site-expand:modal) {
+  overflow: hidden;
+}
+
+/* === end expand dialogs === */
+
 /* Style links in the homepage tagline */
 .VPHero .tagline a {
   color: var(--site-color-interaction);

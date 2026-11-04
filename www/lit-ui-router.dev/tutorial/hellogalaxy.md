@@ -361,7 +361,11 @@ The complete source — including the full ten-star catalog and the deep-space s
 
 The four states form a tree, and their components nest `<ui-view>`s in the same shape. Each state's component renders into the `<ui-view>` of its parent state's component:
 
+<DiagramEmbed src="/diagrams/hellogalaxy-state-view-tree.svg">
+
 <!--@include: ../public/diagrams/hellogalaxy-state-view-tree.svg-->
+
+</DiagramEmbed>
 
 `galaxy.stars` and `galaxy.astronaut` are siblings, so they take turns in the one `<ui-view>` inside `GalaxyShellComponent`.
 
@@ -369,7 +373,11 @@ The four states form a tree, and their components nest `<ui-view>`s in the same 
 
 Here is the screen at a single URL. Each child state's URL appends to its parent's, and the numbers follow the transition: the router enters each state from the root down, then the views render from the outside in:
 
+<DiagramEmbed src="/diagrams/hellogalaxy-nested-views.svg">
+
 <!--@include: ../public/diagrams/hellogalaxy-nested-views.svg-->
+
+</DiagramEmbed>
 
 1. `galaxy` is entered (if not already active)
 2. `galaxy.stars` is entered; its `stars` resolve fetches the catalog

@@ -1,12 +1,12 @@
 # Diagram spec
 
-The docs diagrams are hand-written SVG files in [`www/lit-ui-router.dev/public/diagrams/`](../www/lit-ui-router.dev/public/diagrams/). Pages inline them with `<!--@include: …-->`, so they take their colors from the site theme. [`.vitepress/test/diagram-spec.test.ts`](../www/lit-ui-router.dev/.vitepress/test/diagram-spec.test.ts) fails any diagram that breaks a rule below. Each rule names its section.
+The docs diagrams are hand-written SVG files in [`www/lit-ui-router.dev/public/diagrams/`](../www/lit-ui-router.dev/public/diagrams/). Pages inline them with `<!--@include: …-->`, so they take their colors from the site theme. Each include sits alone in a [`<DiagramEmbed src="/diagrams/<name>.svg">`](../www/lit-ui-router.dev/.vitepress/theme/components/DiagramEmbed.vue), which adds an Expand button that fits the diagram to the window and an "Open full size" link to the standalone file; [`.vitepress/test/diagram-embed.test.ts`](../www/lit-ui-router.dev/.vitepress/test/diagram-embed.test.ts) fails an include outside one. [`.vitepress/test/diagram-spec.test.ts`](../www/lit-ui-router.dev/.vitepress/test/diagram-spec.test.ts) fails any diagram that breaks a rule below. Each rule names its section.
 
 The rules follow the 1976 NASA Graphics Standards Manual (NHB 1430.2): every diagram sits in an outline box (§5.8), and labels away from what they name hang on leaders (§7.8). Dark mode keeps the same line language in the theme's grays.
 
 ## Canvas
 
-- The root is `<svg viewBox="0 0 720 H" width="100%" style="max-width: 720px" role="img" aria-label="…">`. The canvas is always 720 wide, and the height fits the drawing.
+- The root is `<svg viewBox="0 0 720 H" width="100%" role="img" aria-label="…">`, with no `style`: the page sizes it (`DiagramEmbed` caps it at 720px inline and fits it to the window expanded), and opened on its own it fills the window width. The canvas is always 720 wide, and the height fits the drawing.
 - `<title>` comes first. `aria-label` reads the whole diagram as prose.
 - One `<g>` sets the base font family for the drawing.
 

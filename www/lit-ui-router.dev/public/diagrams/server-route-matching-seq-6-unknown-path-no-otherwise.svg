@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 236" width="100%" style="max-width: 720px" role="img" aria-label="Unknown path in a mount without otherwise, 404: the browser requests /app/nope; Cloudflare runs the worker first; the worker resolves notFound in the /app mount, fetches /app/404.html from static assets, which answer 200, and returns that page at 404." xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 236" width="100%" role="img" aria-label="Unknown path in a mount without otherwise, 404: the browser requests /app/nope; Cloudflare runs the worker first; the worker resolves notFound in the /app mount, fetches /app/404.html from static assets, which answer 200, and returns that page at 404." xmlns="http://www.w3.org/2000/svg">
   <title>Unknown path, mount without otherwise: 404</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
