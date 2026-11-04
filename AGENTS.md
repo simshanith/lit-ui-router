@@ -76,6 +76,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Re-render specs build templates from one factory; two `html` literals are two templates and rebuild the element.
 - e2e serves on port 8787 by default, shared across checkouts; see the e2e README to move one. `wrangler dev` crashes are a known flake; rerun first.
 - Test effort goes to `packages/*` before the docs site.
+- Tests of rendered HTML parse it before asserting: [CONTRIBUTING: Testing HTML output](docs/CONTRIBUTING.md#testing-html-output).
 - Codecov failures: [CONTRIBUTING: Reproducing a Codecov failure](docs/CONTRIBUTING.md#reproducing-a-codecov-failure).
 
 ## lit runtime traps

@@ -21,7 +21,7 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check www/lit-ui-router.dev/tsconfig.vue.json",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
-    "typecheck:worker:tests": "tsc -p worker/test/tsconfig.json --noEmit",
+    "typecheck:worker:tests": "tsc -p worker/test/tsconfig.json --noEmit && tsc -p worker/test/tsconfig.dom.json --noEmit",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "wrangler:dev": "node ./scripts/wrangler-dev.ts"
   },
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "catalog:",
+    "@testing-library/dom": "catalog:",
     "@tools/build_and_test": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
     "@tools/release-ledger": "catalog:workspace",
@@ -52,6 +53,7 @@
     "@tools/vue-check": "catalog:workspace",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
+    "happy-dom": "catalog:",
     "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

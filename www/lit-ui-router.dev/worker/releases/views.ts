@@ -32,9 +32,8 @@ const githubRelease = (row: LedgerVersion): TemplateResult | string => {
 
   return url
     ? html`<a href=${url}
-        >GitHub release<span class="visually-hidden">
-          for ${row.name}@${row.version}</span
-        ></a
+        >GitHub release
+        <span class="visually-hidden">for ${row.name}@${row.version}</span></a
       >`
     : 'None recorded';
 };
