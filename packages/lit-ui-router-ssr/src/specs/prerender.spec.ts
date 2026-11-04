@@ -8,9 +8,9 @@ import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import {
   element,
   elements,
-  hasAttribute,
   outline,
   parseMarkup,
+  shadowRoot,
   text,
 } from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
@@ -585,13 +585,13 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    // the span sits in the probe's declarative shadow root, which only parse5 reads as a tree
+    // happy-dom's DOMParser leaves a declarative shadow root unattached, so parse5 reads it
     const probe = element(
       parseMarkup(files.get('dist/index.html')!),
       'router-probe',
     );
 
-    expect(text(element(element(probe, 'template'), 'span'))).toBe('/sheet/7B');
+    expect(text(element(shadowRoot(probe), 'span'))).toBe('/sheet/7B');
   });
 
   it('defaults to the light-DOM renderers, so no element gets a shadow root it never asked for', async () => {
@@ -667,13 +667,7 @@ describe('the default element renderers', () => {
     const label = element(card, 'p');
     expect(label.attrs).toEqual([{ name: 'class', value: 'default-card' }]);
     expect(text(label)).toBe('drawn');
-    expect(
-      elements(tree, 'template').filter(
-        (template) =>
-          hasAttribute(template, 'shadowroot') ||
-          hasAttribute(template, 'shadowrootmode'),
-      ),
-    ).toEqual([]);
+    expect(elements(tree, 'template')).toEqual([]);
   });
 
   it('serves an unbranded element empty', async () => {
@@ -1056,7 +1050,7 @@ describe('the render root', () => {
       'router-probe',
     );
 
-    expect(text(element(element(probe, 'template'), 'span'))).toBe('/sheet/7B');
+    expect(text(element(shadowRoot(probe), 'span'))).toBe('/sheet/7B');
     expect(result.root).toBe(root);
     expect(requestRouter(root!)).toBeUndefined();
   });

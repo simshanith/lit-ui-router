@@ -6,9 +6,13 @@ import {
   comments,
   element,
   elements,
+  getAttribute,
   hasAttribute,
+  lightChildren,
   outline,
   parseMarkup,
+  shadowRoot,
+  outlineTree,
   text,
 } from '@tools/lit-test-env/ssr-tree.ts';
 import type {
@@ -108,13 +112,6 @@ const commentsFrom = (tree: DocumentFragment, first: string): string[] => {
   return all.slice(all.indexOf(first));
 };
 
-const shadowRoots = (tree: DocumentFragment): Element[] =>
-  elements(tree, 'template').filter(
-    (template) =>
-      hasAttribute(template, 'shadowrootmode') ||
-      hasAttribute(template, 'shadowroot'),
-  );
-
 const deferred = [{ name: 'defer-hydration', value: '' }];
 
 describe('UiViewRenderer', () => {
@@ -159,27 +156,27 @@ describe('UiViewRenderer', () => {
   });
 
   it('fills the nested view from the child state', async () => {
-    const tree = parseMarkup(await at('/shell/detail'));
-    const views = elements(tree, 'ui-view');
+    const view = element(parseMarkup(await at('/shell/detail')), 'ui-view');
 
-    expect(text(tree)).toContain('leaf');
-    // outer view, then the inner one the shell template opened
-    expect(views).toHaveLength(2);
-    const [, inner] = views;
     // the nested view's own pair and node marker belong to the parent's run, so they carry the prefix until the parent wakes
-    expect(around(inner)[0]).toBe('<!--served:lit-node 0-->');
-    expect(inner.attrs).toEqual(deferred);
-    expect(outline(inner)).toEqual([
-      '<!--served:lit-part DJeWKgE7tTI=-->',
-      '<p>',
-      '<!--served:/lit-part-->',
-    ]);
-    const detail = element(inner, 'p', { class: 'detail' });
-    expect(elements(tree, 'p', { class: 'detail' })).toEqual([detail]);
-    expect(outline(detail)).toEqual([
-      '<!--served:lit-part-->',
-      'leaf',
-      '<!--served:/lit-part-->',
+    expect(outlineTree(view)).toEqual([
+      '{open HRwFDUbdJU8=}',
+      '<h1>',
+      '  "shell"',
+      '  served:{open}',
+      '  "hello"',
+      '  served:{close}',
+      'served:{open R3pk4ojRUyo=}',
+      'served:{node 0}',
+      '<ui-view defer-hydration>',
+      '  served:{open DJeWKgE7tTI=}',
+      '  <p class="detail">',
+      '    served:{open}',
+      '    "leaf"',
+      '    served:{close}',
+      '  served:{close}',
+      'served:{close}',
+      '{close}',
     ]);
   });
 
@@ -260,39 +257,39 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
   };
 
   it('writes the element into the first of the two slots core renders a class into', async () => {
-    const tree = await classAt('/card');
-    const view = element(tree, 'ui-view');
+    const view = element(await classAt('/card'), 'ui-view');
 
     expect(view.attrs).toEqual(deferred);
     // `BRUAAAUVAAA=` digests any all-empty strings, so the part count is what matches core's `${slots[0]}${slots[1]}`
-    expect(outline(view)).toEqual([
-      '<!--lit-part BRUAAAUVAAA=-->',
-      '<!--served:lit-part-->',
-      '<routed-card>',
-      '<!--served:/lit-part-->',
-      '<!--served:lit-part-->',
-      '<!--served:/lit-part-->',
+    expect(outlineTree(view)).toEqual([
+      '{open BRUAAAUVAAA=}',
+      'served:{open}',
+      '<routed-card defer-hydration>',
+      '  #shadow open',
+      '    served:{open ZE6GZYxmlAk=}',
+      '    <p class="card">',
+      '      served:{open}',
+      '      "card leaf"',
+      '      served:{close}',
+      '    served:{close}',
+      'served:{close}',
+      'served:{open}',
+      'served:{close}',
       '<!--?-->',
-      '<!--/lit-part-->',
+      '{close}',
     ]);
-    expect(element(view, 'routed-card').attrs).toEqual(deferred);
   });
 
   it('renders the element’s shadow root from the props core assigned', async () => {
     const tree = await classAt('/card');
     const card = element(tree, 'routed-card');
 
-    expect(outline(card)[0]).toBe('<template>');
-    const root = element(card, 'template');
-    expect(root.attrs).toEqual([
-      { name: 'shadowroot', value: 'open' },
-      { name: 'shadowrootmode', value: 'open' },
-    ]);
-    expect(outline(element(root, 'p', { class: 'card' }))).toEqual([
-      '<!--served:lit-part-->',
+    expect(lightChildren(card)).toEqual([]);
+    expect(text(element(shadowRoot(card), 'p', { class: 'card' }))).toBe(
       'card leaf',
-      '<!--served:/lit-part-->',
-    ]);
+    );
+    // lit also writes the pre-standard attribute beside shadowrootmode
+    expect(getAttribute(element(card, 'template'), 'shadowroot')).toBe('open');
     expect(elements(tree, 'span', { class: 'unrouted' })).toEqual([]);
   });
 
@@ -331,7 +328,8 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
       '<!--served:lit-part-->',
       '<!--served:/lit-part-->',
     ]);
-    expect(shadowRoots(tree)).toEqual([]);
+    expect(() => shadowRoot(card)).toThrow('has no shadow root');
+    expect(elements(tree, 'template')).toEqual([]);
   });
 
   it('leaves the view service as it found it', async () => {

@@ -25,17 +25,35 @@ export const hasAttribute = (node: Element, name: string): boolean =>
 export const parseMarkup = (markup: string): DocumentFragment =>
   parseFragment(markup);
 
-const isTemplate = (node: ParentNode): node is Template => 'content' in node;
+const isTemplate = (node: ChildNode): node is Template =>
+  isElementNode(node) && 'content' in node;
 
-/** A node's children; a template's are its content's. */
-export const childNodes = (node: ParentNode): ChildNode[] =>
-  isTemplate(node) ? node.content.childNodes : node.childNodes;
+const isShadowTemplate = (node: ChildNode): node is Template =>
+  isTemplate(node) && hasAttribute(node, 'shadowrootmode');
 
+/** A node's own child nodes; a template has none, its contents are a separate fragment. */
+export const childNodes = (node: ParentNode): ChildNode[] => node.childNodes;
+
+/** The contents of `host`'s declarative shadow root, the `<template shadowrootmode>` among its children. */
+export const shadowRoot = (host: Element): DocumentFragment => {
+  const template = host.childNodes.find(isShadowTemplate);
+
+  if (!template) throw new Error(`<${host.tagName}> has no shadow root`);
+
+  return template.content;
+};
+
+/** `host`'s child nodes less its declarative shadow root. */
+export const lightChildren = (host: Element): ChildNode[] =>
+  host.childNodes.filter((child) => !isShadowTemplate(child));
+
+/** Every node below `node` in document order, template contents included. */
 function* descendants(node: ParentNode): Generator<ChildNode> {
-  for (const child of childNodes(node)) {
+  for (const child of node.childNodes) {
     yield child;
 
-    if (isElementNode(child)) yield* descendants(child);
+    if (isTemplate(child)) yield* descendants(child.content);
+    else if (isElementNode(child)) yield* descendants(child);
   }
 }
 
@@ -81,11 +99,60 @@ export const text = (node: ParentNode): string =>
     .flatMap((child) => (isTextNode(child) ? [child.value] : []))
     .join('');
 
-/** The data of every comment below `node`, in document order. */
+/** The data of every comment below `node`, in document order, template contents included. */
 export const comments = (node: ParentNode): string[] =>
   [...descendants(node)].flatMap((child) =>
     isCommentNode(child) ? [child.data] : [],
   );
+
+/** A Lit SSR marker comment; `prefix` is whatever precedes `lit-`, such as a served-marker prefix. */
+export type LitMarker =
+  | { kind: 'open'; digest: string | null; prefix: string }
+  | { kind: 'close'; prefix: string }
+  | { kind: 'node'; index: number; prefix: string };
+
+const MARKER = /^(.*?)(?:(\/)lit-part|lit-part(?: (\S+))?|lit-node (\d+))$/;
+
+/** Reads a comment as a Lit marker: `lit-part [digest]`, `/lit-part` or `lit-node <n>`; null for any other node. */
+export const litPart = (node: ChildNode): LitMarker | null => {
+  const match = isCommentNode(node) ? MARKER.exec(node.data) : null;
+
+  if (!match) return null;
+  const [, prefix = '', close, digest, index] = match;
+
+  if (close) return { kind: 'close', prefix };
+
+  if (index !== undefined)
+    return { kind: 'node', index: Number(index), prefix };
+
+  return { kind: 'open', digest: digest ?? null, prefix };
+};
+
+export interface OutlineTreeOptions {
+  /** Print each open marker's digest; `false` writes `{open *}` for any digest, so a template edit elsewhere doesn't churn the outline. */
+  digests?: boolean;
+}
+
+const markerLabel = (
+  marker: LitMarker,
+  { digests = true }: OutlineTreeOptions,
+): string => {
+  if (marker.kind === 'node') return `${marker.prefix}{node ${marker.index}}`;
+
+  if (marker.kind === 'close') return `${marker.prefix}{close}`;
+
+  if (marker.digest === null) return `${marker.prefix}{open}`;
+
+  return `${marker.prefix}{open ${digests ? marker.digest : '*'}}`;
+};
+
+const tagLabel = (node: Element): string => {
+  const attributes = node.attrs.map(({ name, value }) =>
+    value === '' ? ` ${name}` : ` ${name}="${value}"`,
+  );
+
+  return `<${node.tagName}${attributes.join('')}>`;
+};
 
 const label = (node: ChildNode): string => {
   if (isElementNode(node)) return `<${node.tagName}>`;
@@ -98,3 +165,54 @@ const label = (node: ChildNode): string => {
 /** One label per child node: `<tag>` for an element, `<!--data-->` for a comment, the value for text. */
 export const outline = (node: ParentNode): string[] =>
   childNodes(node).map(label);
+
+const treeLine = (
+  node: ChildNode,
+  options: OutlineTreeOptions,
+): string | null => {
+  if (isShadowTemplate(node)) {
+    return `#shadow ${getAttribute(node, 'shadowrootmode') ?? ''}`;
+  }
+
+  if (isElementNode(node)) return tagLabel(node);
+
+  if (isTextNode(node)) {
+    const trimmed = node.value.trim();
+
+    return trimmed === '' ? null : JSON.stringify(trimmed);
+  }
+
+  const marker = litPart(node);
+
+  if (marker) return markerLabel(marker, options);
+
+  return isCommentNode(node) ? `<!--${node.data}-->` : node.nodeName;
+};
+
+function* treeLines(
+  node: ParentNode,
+  depth: number,
+  options: OutlineTreeOptions,
+): Generator<string> {
+  const indent = '  '.repeat(depth);
+
+  for (const child of node.childNodes) {
+    const line = treeLine(child, options);
+
+    if (line !== null) yield `${indent}${line}`;
+
+    if (isTemplate(child)) yield* treeLines(child.content, depth + 1, options);
+    else if (isElementNode(child)) yield* treeLines(child, depth + 1, options);
+  }
+}
+
+/**
+ * An indented outline of `node`'s subtree, one line per node: tags with
+ * their attributes, `#shadow <mode>` for a declarative shadow root, Lit
+ * markers as `{open digest}`, `{open}`, `{close}` and `{node n}` after any
+ * prefix, and text trimmed and quoted, with whitespace-only text left out.
+ */
+export const outlineTree = (
+  node: ParentNode,
+  options: OutlineTreeOptions = {},
+): string[] => [...treeLines(node, 0, options)];

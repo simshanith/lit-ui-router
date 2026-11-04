@@ -5,13 +5,10 @@ import { getByText } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import {
   element,
-  elements,
   getAttribute,
-  outline,
   parseMarkup,
-  text,
+  outlineTree,
 } from '@tools/lit-test-env/ssr-tree.ts';
-import type { Element } from '@tools/lit-test-env/ssr-tree.ts';
 import { html } from 'lit';
 import type { TemplateResult } from 'lit';
 
@@ -19,16 +16,6 @@ import '../register.js';
 import { srefActiveClass, srefAriaCurrent } from '../sref-active.js';
 
 const emit = (template: TemplateResult) => collectResultSync(render(template));
-
-/** The open declarative shadow root `host` leads with. */
-const shadowRoot = (host: Element): Element => {
-  expect(outline(host)[0]).toBe('<template>');
-  const root = element(host, 'template');
-  expect(getAttribute(root, 'shadowroot')).toBe('open');
-  expect(getAttribute(root, 'shadowrootmode')).toBe('open');
-
-  return root;
-};
 
 describe('@lit-labs/ssr emit', () => {
   it('leaves the sref status attributes as authored without a router', () => {
@@ -47,27 +34,37 @@ describe('@lit-labs/ssr emit', () => {
   });
 
   it('should render <ui-router> as a slotted declarative shadow root', () => {
-    const router = element(
-      parseMarkup(emit(html`<ui-router><p>light</p></ui-router>`)),
-      'ui-router',
-    );
+    const tree = parseMarkup(emit(html`<ui-router><p>light</p></ui-router>`));
 
-    expect(outline(router)).toEqual(['<template>', '<p>']);
-    expect(elements(shadowRoot(router), 'slot')).toHaveLength(1);
-    expect(text(element(router, 'p'))).toBe('light');
+    expect(outlineTree(tree, { digests: false })).toEqual([
+      '{open *}',
+      '<ui-router>',
+      '  #shadow open',
+      '    {open *}',
+      '    <slot>',
+      '    {close}',
+      '  <p>',
+      '    "light"',
+      '{close}',
+    ]);
+    // lit also writes the pre-standard attribute beside shadowrootmode
+    expect(getAttribute(element(tree, 'template'), 'shadowroot')).toBe('open');
   });
 
   it('should render <ui-view> with its fallback kept in the light DOM (#803)', () => {
-    const view = element(
-      parseMarkup(emit(html`<ui-view><p>fallback</p></ui-view>`)),
-      'ui-view',
-    );
+    const tree = parseMarkup(emit(html`<ui-view><p>fallback</p></ui-view>`));
 
-    expect(outline(view)).toEqual(['<template>', '<p>']);
-    const [marker, slot] = outline(shadowRoot(view));
-    expect(marker).toMatch(/^<!--lit-part /);
-    expect(slot).toBe('<slot>');
-    expect(text(element(view, 'p'))).toBe('fallback');
+    expect(outlineTree(tree, { digests: false })).toEqual([
+      '{open *}',
+      '<ui-view>',
+      '  #shadow open',
+      '    {open *}',
+      '    <slot>',
+      '    {close}',
+      '  <p>',
+      '    "fallback"',
+      '{close}',
+    ]);
   });
 
   it('should render a shell of nested views without an empty shadow root', () => {
@@ -79,11 +76,24 @@ describe('@lit-labs/ssr emit', () => {
       ),
     );
 
-    const views = elements(tree, 'ui-view');
-    expect(views).toHaveLength(2);
-
-    for (const view of views) {
-      expect(outline(shadowRoot(view))).toContain('<slot>');
-    }
+    expect(outlineTree(tree, { digests: false })).toEqual([
+      '{open *}',
+      '<ui-router>',
+      '  #shadow open',
+      '    {open *}',
+      '    <slot>',
+      '    {close}',
+      '  <ui-view name="rail">',
+      '    #shadow open',
+      '      {open *}',
+      '      <slot>',
+      '      {close}',
+      '    <ui-view>',
+      '      #shadow open',
+      '        {open *}',
+      '        <slot>',
+      '        {close}',
+      '{close}',
+    ]);
   });
 });
