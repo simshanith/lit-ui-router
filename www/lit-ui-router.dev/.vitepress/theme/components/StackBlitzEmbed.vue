@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, computed, onMounted, onUnmounted } from 'vue';
-import screenfull from 'screenfull';
+import { useTemplateRef, ref, computed, onMounted } from 'vue';
 import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
+import { useExpandDialog } from './expand-dialog';
 import { webContainersSupported } from './webcontainers';
 
 const props = defineProps<{
@@ -23,22 +23,9 @@ const openUrl = computed(() => {
   return url.toString();
 });
 
-const container = useTemplateRef('container');
+const dialog = useTemplateRef('dialog');
 
-// Unknown until mounted; the button renders either way so the row never reflows.
-const isFullscreenSupported = ref<boolean>();
-
-const isFullscreen = ref(false);
-
-const toggleFullscreen = () => {
-  if (screenfull.isEnabled && container.value) {
-    screenfull.toggle(container.value);
-  }
-};
-
-const handleFullscreenChange = () => {
-  isFullscreen.value = screenfull.isFullscreen;
-};
+const { expanded, toggle, onClose } = useExpandDialog(dialog);
 
 const iframe = useTemplateRef('iframe');
 
@@ -48,19 +35,8 @@ function refreshIframe() {
   if (el) el.src += '';
 }
 
-onMounted(async () => {
+onMounted(() => {
   embedSupported.value = webContainersSupported();
-  isFullscreenSupported.value = screenfull.isEnabled;
-
-  if (screenfull.isEnabled) {
-    screenfull.on('change', handleFullscreenChange);
-  }
-});
-
-onUnmounted(() => {
-  if (screenfull.isEnabled) {
-    screenfull.off('change', handleFullscreenChange);
-  }
 });
 </script>
 
@@ -96,11 +72,12 @@ onUnmounted(() => {
       Open in StackBlitz
     </a>
   </div>
-  <div
+  <dialog
     v-else
-    ref="container"
-    class="stackblitz-embed"
-    :class="{ fullscreen: isFullscreen }"
+    ref="dialog"
+    class="stackblitz-embed site-expand"
+    :aria-label="title"
+    @close="onClose"
   >
     <iframe
       :src="src"
@@ -113,29 +90,19 @@ onUnmounted(() => {
     <div class="stackblitz-embed-actions">
       <button
         type="button"
-        class="fullscreen-btn site-button"
-        :disabled="isFullscreenSupported === false"
-        :title="
-          isFullscreenSupported === false
-            ? 'Fullscreen is not supported in this browser'
-            : undefined
-        "
-        @click="toggleFullscreen"
+        class="site-expand-button site-button"
+        @click="toggle"
       >
         <!-- Both render: the build only ships CSS for icons in the server render. -->
         <span class="site-button-icon">
           <VPIcon
-            v-show="!isFullscreen"
+            v-show="!expanded"
             icon="lucide:maximize"
             aria-hidden="true"
           />
-          <VPIcon
-            v-show="isFullscreen"
-            icon="lucide:minimize"
-            aria-hidden="true"
-          />
+          <VPIcon v-show="expanded" icon="lucide:minimize" aria-hidden="true" />
         </span>
-        {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
+        {{ expanded ? 'Close' : 'Expand' }}
       </button>
       <button
         @click="refreshIframe"
@@ -149,7 +116,7 @@ onUnmounted(() => {
       </button>
       <slot></slot>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -174,62 +141,17 @@ onUnmounted(() => {
   margin: auto;
 }
 
-/* The frame flexes into whatever the padding, gap and a wrapped action row leave. */
-.stackblitz-embed:fullscreen,
-.stackblitz-embed:-webkit-full-screen {
-  display: flex;
-  flex-direction: column;
-  gap: var(--example-actions-gap);
-  background: var(--site-color-surface);
-  padding: var(--site-space-4);
-}
-
-.stackblitz-embed:fullscreen iframe,
-.stackblitz-embed:-webkit-full-screen iframe {
+/* Expanded, the frame flexes into whatever the padding, gap and a wrapped action row leave. */
+.stackblitz-embed:modal iframe {
   flex: 1 1 0;
   min-height: 0;
   max-height: none;
   height: auto;
   aspect-ratio: auto;
-  width: 88%;
 }
 
-.stackblitz-embed:fullscreen .stackblitz-embed-actions,
-.stackblitz-embed:-webkit-full-screen .stackblitz-embed-actions {
+.stackblitz-embed:modal .stackblitz-embed-actions {
   margin-block-start: 0;
-}
-
-.stackblitz-embed.fullscreen:fullscreen iframe,
-.stackblitz-embed.fullscreen:-webkit-full-screen iframe {
-  width: 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .stackblitz-embed {
-    transition:
-      padding var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
-
-  .stackblitz-embed iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
-
-  .stackblitz-embed:fullscreen iframe,
-  .stackblitz-embed:-webkit-full-screen iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width 0s;
-  }
-
-  .stackblitz-embed.fullscreen:fullscreen iframe,
-  .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
 }
 
 .stackblitz-embed-actions {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
-import screenfull from 'screenfull';
+import { useTemplateRef } from 'vue';
 import { VPIcon } from 'vitepress/theme';
+import { useExpandDialog } from './expand-dialog';
 
 // Same-origin iframe embed for the tutorial examples served at
 // /examples/<name>/ — no StackBlitz boot, just the built app.
@@ -14,22 +14,9 @@ const props = withDefaults(
   { height: '420px' },
 );
 
-const container = useTemplateRef('container');
+const dialog = useTemplateRef('dialog');
 
-// Unknown until mounted; the button renders either way so the row never reflows.
-const isFullscreenSupported = ref<boolean>();
-
-const isFullscreen = ref(false);
-
-const toggleFullscreen = () => {
-  if (screenfull.isEnabled && container.value) {
-    screenfull.toggle(container.value);
-  }
-};
-
-const handleFullscreenChange = () => {
-  isFullscreen.value = screenfull.isFullscreen;
-};
+const { expanded, toggle, onClose } = useExpandDialog(dialog);
 
 const iframe = useTemplateRef('iframe');
 
@@ -38,27 +25,14 @@ function restartIframe() {
 
   if (el) el.src += '';
 }
-
-onMounted(async () => {
-  isFullscreenSupported.value = screenfull.isEnabled;
-
-  if (screenfull.isEnabled) {
-    screenfull.on('change', handleFullscreenChange);
-  }
-});
-
-onUnmounted(() => {
-  if (screenfull.isEnabled) {
-    screenfull.off('change', handleFullscreenChange);
-  }
-});
 </script>
 
 <template>
-  <div
-    ref="container"
-    class="example-embed"
-    :class="{ fullscreen: isFullscreen }"
+  <dialog
+    ref="dialog"
+    class="example-embed site-expand"
+    :aria-label="title"
+    @close="onClose"
   >
     <iframe
       :src="src"
@@ -70,29 +44,19 @@ onUnmounted(() => {
     <div class="example-embed-actions">
       <button
         type="button"
-        class="fullscreen-btn site-button"
-        :disabled="isFullscreenSupported === false"
-        :title="
-          isFullscreenSupported === false
-            ? 'Fullscreen is not supported in this browser'
-            : undefined
-        "
-        @click="toggleFullscreen"
+        class="site-expand-button site-button"
+        @click="toggle"
       >
         <!-- Both render: the build only ships CSS for icons in the server render. -->
         <span class="site-button-icon">
           <VPIcon
-            v-show="!isFullscreen"
+            v-show="!expanded"
             icon="lucide:maximize"
             aria-hidden="true"
           />
-          <VPIcon
-            v-show="isFullscreen"
-            icon="lucide:minimize"
-            aria-hidden="true"
-          />
+          <VPIcon v-show="expanded" icon="lucide:minimize" aria-hidden="true" />
         </span>
-        {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
+        {{ expanded ? 'Close' : 'Expand' }}
       </button>
       <button
         @click="restartIframe"
@@ -117,7 +81,7 @@ onUnmounted(() => {
       </a>
       <slot></slot>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -139,60 +103,15 @@ onUnmounted(() => {
   margin: auto;
 }
 
-/* The frame flexes into whatever the padding, gap and a wrapped action row leave. */
-.example-embed:fullscreen,
-.example-embed:-webkit-full-screen {
-  display: flex;
-  flex-direction: column;
-  gap: var(--example-actions-gap);
-  background: var(--site-color-surface);
-  padding: var(--site-space-4);
-}
-
-.example-embed:fullscreen iframe,
-.example-embed:-webkit-full-screen iframe {
+/* Expanded, the frame flexes into whatever the padding, gap and a wrapped action row leave. */
+.example-embed:modal iframe {
   flex: 1 1 0;
   min-height: 0;
   height: auto;
-  width: 88%;
 }
 
-.example-embed:fullscreen .example-embed-actions,
-.example-embed:-webkit-full-screen .example-embed-actions {
+.example-embed:modal .example-embed-actions {
   margin-block-start: 0;
-}
-
-.example-embed.fullscreen:fullscreen iframe,
-.example-embed.fullscreen:-webkit-full-screen iframe {
-  width: 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .example-embed {
-    transition:
-      padding var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
-
-  .example-embed iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
-
-  .example-embed:fullscreen iframe,
-  .example-embed:-webkit-full-screen iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width 0s;
-  }
-
-  .example-embed.fullscreen:fullscreen iframe,
-  .example-embed.fullscreen:-webkit-full-screen iframe {
-    transition:
-      height var(--site-duration-slow) var(--ease-out),
-      width var(--site-duration-slow) var(--ease-out);
-  }
 }
 
 .example-embed-actions {
