@@ -49,7 +49,11 @@ onMounted(() => {
       <slot></slot>
     </div>
     <div class="diagram-embed-actions">
-      <button type="button" class="site-button" @click="toggle">
+      <button
+        type="button"
+        class="diagram-embed-expand site-button"
+        @click="toggle"
+      >
         <!-- Both render: the build only ships CSS for icons in the server render. -->
         <span class="site-button-icon">
           <VPIcon
@@ -105,7 +109,18 @@ onMounted(() => {
   margin-block-start: var(--example-actions-gap);
 }
 
-/* Fills the window; the canvas flexes into what the action row leaves and pans when the diagram can't fit at its drawn size. */
+/* In viewports below VitePress's 768px breakpoint, Open full size is the way to read a diagram large: the standalone file pinch-zooms. */
+.diagram-embed .diagram-embed-actions .diagram-embed-expand {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .diagram-embed .diagram-embed-actions .diagram-embed-expand {
+    display: inline-flex;
+  }
+}
+
+/* Fills the window; the canvas flexes into what the action row leaves. */
 .diagram-embed:modal {
   position: fixed;
   inset: 0;
@@ -129,18 +144,16 @@ onMounted(() => {
   flex: 1 1 0;
   min-block-size: 0;
   container-type: size;
-  overflow: auto;
-  overscroll-behavior: contain;
 }
 
 .diagram-embed:modal .diagram-embed-actions {
   margin-block-start: 0;
 }
 
-/* Fits the canvas but never below the drawn 720 wide; auto margins centre without clipping an overflow. */
+/* Fits the canvas at the viewBox aspect, centred. */
 .vp-doc .diagram-embed:modal svg[role='img'] {
   flex: none;
-  inline-size: max(720px, min(100cqi, 100cqb * var(--diagram-ratio)));
+  inline-size: min(100cqi, 100cqb * var(--diagram-ratio));
   /* !important outranks the svg's inline max-width. */
   max-inline-size: none !important;
   block-size: auto;
