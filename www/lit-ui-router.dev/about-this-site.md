@@ -40,27 +40,23 @@ The ledger worker
 ([`release-ledger`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/README.md))
 records what the git tag, npm and GitHub say about each release. Claims come
 in, a queue consumer checks them against the sources and writes the outcome,
-and other workers read the result. Badges 2, 3, 5 and 8 are the worker's own
-entry points.
+and other workers read the result.
 
 <!--@include: ./public/diagrams/about-this-site-ledger.svg-->
 
-1. **GitHub Actions** sends a claim after each npm publish, from the
-   `publish-npm.yml` workflow with an Actions OIDC token.
-2. **`POST /claims`** verifies the token and enqueues the claim. It answers
-   202 and writes nothing to D1.
-3. **The sweep**, a daily Cron Trigger, lists the repository's release tags
-   and enqueues a claim for each, so the ledger heals without an Actions run.
+1. **GitHub** runs `publish-npm.yml`, which sends a claim with an Actions
+   OIDC token after each npm publish. Its tags and releases are one of the
+   sources the ledger observes.
+2. **npm** is the other source: versions and dist-tags.
+3. **The ledger worker** verifies each claim at `POST /claims`, enqueues it
+   and answers 202 without touching D1. A daily sweep, run by a Cron Trigger,
+   lists the repository's release tags and enqueues a claim for each, so the
+   ledger heals without an Actions run. The queue consumer observes each
+   claim's release on GitHub and npm and is the only thing that writes D1.
 4. **Queues** hold claims until the consumer takes them, one at a time, with a
    dead-letter queue for claims that run out of retries.
-5. **The consumer** observes each claim's release, folds the observation and
-   is the only thing that writes to D1.
-6. **GitHub and npm** are the sources it observes: tags, releases, versions
-   and dist-tags.
-7. **D1** stores the release ledger.
-8. **`LedgerReader`** is the worker's read-only RPC entry point.
-9. **The docs worker** renders the release pages and `/gh` redirects from the
-   rows it reads.
+5. **D1** stores the release ledger. Other workers read it over RPC through
+   `LedgerReader`; the docs worker does, as the site diagram shows.
 
 The ledger worker's bindings, queue settings and schedule are in its
 [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/wrangler.jsonc).

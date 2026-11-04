@@ -1,5 +1,5 @@
-<svg viewBox="0 0 720 504" width="100%" style="max-width: 720px" role="img" aria-label="The release ledger. 1, GitHub Actions, posts a claim with an OIDC token after each npm publish to 2, the ledger worker's /claims endpoint, which enqueues it on 4, Queues. 3, a daily sweep, lists the release tags on 6, GitHub, and enqueues a claim for each. 5, the queue consumer, takes claims one at a time, observes GitHub and npm, and is the only writer to 7, D1. 8, LedgerReader, reads D1 for 9, the docs worker, over RPC." xmlns="http://www.w3.org/2000/svg">
-  <title>The release ledger: claims, the queue consumer, D1 and LedgerReader</title>
+<svg viewBox="0 0 720 396" width="100%" style="max-width: 720px" role="img" aria-label="The release ledger. 1, GitHub, sends a claim with an Actions OIDC token after each npm publish to 3, the ledger worker, which also sweeps the release tags daily. It enqueues each claim on 4, Queues, takes claims back one at a time, observes GitHub and 2, npm, and is the only writer to 5, D1." xmlns="http://www.w3.org/2000/svg">
+  <title>The release ledger: claims, Queues and D1</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
     @media (prefers-color-scheme: dark) {
@@ -21,104 +21,62 @@
   </defs>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- Cloudflare zone -->
-    <rect data-brand="cloudflare" x="40" y="112" width="640" height="352" rx="8" fill="#f6821f" fill-opacity="0.03" stroke="#f6821f" stroke-dasharray="5 4" />
-    <rect x="52" y="102" width="98" height="20" fill="var(--vp-c-bg, #ffffff)" />
-    <svg x="56" y="102" width="24" height="20" viewBox="0 2 24 20"><path data-brand="cloudflare" fill="#f6821f" d="M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727" /></svg>
-    <text x="84" y="117" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Cloudflare</text>
+    <rect data-brand="cloudflare" x="136" y="112" width="448" height="244" rx="8" fill="#f6821f" fill-opacity="0.03" stroke="#f6821f" stroke-dasharray="5 4" />
+    <rect x="148" y="102" width="98" height="20" fill="var(--vp-c-bg, #ffffff)" />
+    <svg x="152" y="102" width="24" height="20" viewBox="0 2 24 20"><path data-brand="cloudflare" fill="#f6821f" d="M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727" /></svg>
+    <text x="180" y="117" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Cloudflare</text>
     <!-- arrows -->
-    <path d="M184 76V136" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="192" y="98" font-size="11" fill="var(--vp-c-text-2, #67676c)">claim · OIDC token</text>
-    <path d="M216 170H280" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="250" y="162" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">enqueue</text>
-    <path d="M504 170H440" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="472" y="162" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">enqueue</text>
-    <path d="M560 140V80" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="568" y="100" font-size="11" fill="var(--vp-c-text-2, #67676c)">list tags</text>
-    <path d="M360 200V256" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="368" y="232" font-size="11" fill="var(--vp-c-text-2, #67676c)">deliver</text>
-    <path d="M436 290H664V80" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="572" y="282" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">observe</text>
-    <path d="M284 290H220" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="252" y="282" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">write</text>
-    <path d="M140 380V324" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="148" y="356" font-size="11" fill="var(--vp-c-text-2, #67676c)">read</text>
-    <path d="M284 410H220" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
-    <text x="252" y="402" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">RPC</text>
-    <!-- 1 GitHub Actions -->
-    <rect x="64" y="16" width="176" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="74" y="26" width="24" height="24" rx="4" fill="var(--vp-c-default-soft, rgba(142,150,170,0.14))" />
-    <svg x="78" y="30" width="16" height="16" viewBox="0 0 24 24"><path fill="var(--vp-c-text-1, #3c3c43)" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
-    <text x="106" y="43" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">GitHub Actions</text>
-    <text x="74" y="66" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">publish-npm.yml</text>
-    <circle cx="238" cy="18" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="238" y="21.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">1</text>
-    <!-- 2 claims endpoint -->
-    <rect data-brand="cloudflare" x="64" y="140" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="74" y="150" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="78" y="154" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="106" y="167" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Claims</text>
-    <text x="74" y="190" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">POST /claims</text>
-    <circle cx="214" cy="142" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="214" y="145.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">2</text>
-    <!-- 3 sweep -->
-    <rect data-brand="cloudflare" x="504" y="140" width="136" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="514" y="150" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="518" y="154" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="546" y="167" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Sweep</text>
-    <text x="514" y="190" font-size="11" fill="var(--vp-c-text-2, #67676c)">daily Cron Trigger</text>
-    <circle cx="638" cy="142" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="638" y="145.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">3</text>
+    <path d="M300 76V144" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <text x="292" y="96" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">claim · OIDC token</text>
+    <path d="M324 148V80" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <path d="M420 148V80" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <text x="372" y="96" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">observe</text>
+    <path d="M300 208V264" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <text x="292" y="240" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">enqueue</text>
+    <path d="M324 268V212" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <text x="332" y="240" font-size="11" fill="var(--vp-c-text-2, #67676c)">deliver</text>
+    <path d="M420 208V264" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-ledger)" />
+    <text x="428" y="240" font-size="11" fill="var(--vp-c-text-2, #67676c)">write</text>
+    <!-- 1 GitHub -->
+    <rect x="184" y="16" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="194" y="26" width="24" height="24" rx="4" fill="var(--vp-c-default-soft, rgba(142,150,170,0.14))" />
+    <svg x="198" y="30" width="16" height="16" viewBox="0 0 24 24"><path fill="var(--vp-c-text-1, #3c3c43)" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+    <text x="226" y="43" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">GitHub</text>
+    <text x="194" y="66" font-size="11" fill="var(--vp-c-text-2, #67676c)">Actions · tags · releases</text>
+    <circle cx="334" cy="18" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="334" y="21.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">1</text>
+    <!-- 2 npm -->
+    <rect x="384" y="16" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect data-brand="npm" x="394" y="26" width="24" height="24" rx="4" fill="#cb3837" fill-opacity="0.14" />
+    <svg x="398" y="30" width="16" height="16" viewBox="0 0 24 24"><path data-brand="npm" fill="#cb3837" d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z" /></svg>
+    <text x="426" y="43" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">npm</text>
+    <text x="394" y="66" font-size="11" fill="var(--vp-c-text-2, #67676c)">versions · dist-tags</text>
+    <circle cx="534" cy="18" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="534" y="21.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">2</text>
+    <!-- 3 ledger worker -->
+    <rect data-brand="cloudflare" x="284" y="148" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="294" y="158" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg x="298" y="162" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
+    <text x="326" y="175" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Ledger worker</text>
+    <text x="294" y="198" font-size="11" fill="var(--vp-c-text-2, #67676c)">claims · sweep · consumer</text>
+    <circle cx="434" cy="150" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="434" y="153.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">3</text>
     <!-- 4 queues -->
-    <rect data-brand="cloudflare" x="284" y="140" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="294" y="150" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg data-brand="cloudflare" x="298" y="154" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="5" height="10" rx="4" /><rect x="9.5" y="7" width="5" height="10" rx="4" /><path d="M17 12h5m-2.5-2.5L22 12l-2.5 2.5" /></svg>
-    <text x="326" y="167" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Queues</text>
-    <text x="294" y="190" font-size="11" fill="var(--vp-c-text-2, #67676c)">claims · dead letter</text>
-    <circle cx="434" cy="142" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="434" y="145.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">4</text>
-    <!-- 5 consumer -->
-    <rect data-brand="cloudflare" x="284" y="260" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="294" y="270" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="298" y="274" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="326" y="287" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Consumer</text>
-    <text x="294" y="310" font-size="11" fill="var(--vp-c-text-2, #67676c)">the only D1 writer</text>
-    <circle cx="434" cy="262" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="434" y="265.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">5</text>
-    <!-- 6 GitHub and npm -->
-    <rect x="472" y="16" width="208" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <rect x="482" y="26" width="24" height="24" rx="4" fill="var(--vp-c-default-soft, rgba(142,150,170,0.14))" />
-    <svg x="486" y="30" width="16" height="16" viewBox="0 0 24 24"><path fill="var(--vp-c-text-1, #3c3c43)" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
-    <rect data-brand="npm" x="510" y="26" width="24" height="24" rx="4" fill="#cb3837" fill-opacity="0.14" />
-    <svg x="514" y="30" width="16" height="16" viewBox="0 0 24 24"><path data-brand="npm" fill="#cb3837" d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z" /></svg>
-    <text x="542" y="43" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">GitHub · npm</text>
-    <text x="482" y="66" font-size="11" fill="var(--vp-c-text-2, #67676c)">tags · releases · dist-tags</text>
-    <circle cx="678" cy="18" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="678" y="21.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">6</text>
-    <!-- 7 D1 -->
-    <rect data-brand="cloudflare" x="64" y="260" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="74" y="270" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg data-brand="cloudflare" x="78" y="274" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0" /></svg>
-    <text x="106" y="287" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">D1</text>
-    <text x="74" y="310" font-size="11" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
-    <circle cx="214" cy="262" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="214" y="265.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">7</text>
-    <!-- 8 LedgerReader -->
-    <rect data-brand="cloudflare" x="64" y="380" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="74" y="390" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="78" y="394" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="106" y="407" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">LedgerReader</text>
-    <text x="74" y="430" font-size="11" fill="var(--vp-c-text-2, #67676c)">read-only RPC</text>
-    <circle cx="214" cy="382" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="214" y="385.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">8</text>
-    <!-- 9 docs worker -->
-    <rect data-brand="cloudflare" x="284" y="380" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="294" y="390" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="298" y="394" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="326" y="407" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Docs worker</text>
-    <text x="294" y="430" font-size="11" fill="var(--vp-c-text-2, #67676c)">/releases · /gh</text>
-    <circle cx="434" cy="382" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="434" y="385.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">9</text>
-    <text x="40" y="494" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
+    <rect data-brand="cloudflare" x="184" y="268" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="194" y="278" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg data-brand="cloudflare" x="198" y="282" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="5" height="10" rx="4" /><rect x="9.5" y="7" width="5" height="10" rx="4" /><path d="M17 12h5m-2.5-2.5L22 12l-2.5 2.5" /></svg>
+    <text x="226" y="295" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Queues</text>
+    <text x="194" y="318" font-size="11" fill="var(--vp-c-text-2, #67676c)">claims · dead letter</text>
+    <circle cx="334" cy="270" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="334" y="273.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">4</text>
+    <!-- 5 D1 -->
+    <rect data-brand="cloudflare" x="384" y="268" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="394" y="278" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg data-brand="cloudflare" x="398" y="282" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f6821f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0" /></svg>
+    <text x="426" y="295" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">D1</text>
+    <text x="394" y="318" font-size="11" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
+    <circle cx="534" cy="270" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="534" y="273.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">5</text>
+    <text x="40" y="386" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
   </g>
 </svg>
-
