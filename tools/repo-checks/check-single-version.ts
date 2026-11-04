@@ -43,7 +43,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'parse5',
-    why: "the catalog pins @lit-labs/ssr's 7.x so specs parse SSR output with the parser that wrote it; lit-analyzer, eslint-plugin-lit and eslint-plugin-lit-a11y (via dom5) pin their own",
+    why: 'the catalog takes 8, as eslint-plugin-lit does; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, lit-analyzer 5, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
   },
   {
     name: 'typescript',

@@ -64,9 +64,6 @@ catalogs:
     '@oxlint/plugins':
       specifier: 1.90.0
       version: 1.90.0
-    '@parse5/tools':
-      specifier: ^0.3.0
-      version: 0.3.0
     '@pnpm/logger':
       specifier: 1100.0.0
       version: 1100.0.0
@@ -248,8 +245,8 @@ catalogs:
       specifier: ^22.0.1
       version: 22.0.1
     parse5:
-      specifier: ^7.3.0
-      version: 7.3.0
+      specifier: ^8.0.1
+      version: 8.0.1
     playwright:
       specifier: ^1.64.1
       version: 1.64.1
@@ -2693,15 +2690,12 @@ importers:
 
   tools/lit-test-env:
     dependencies:
-      '@parse5/tools':
-        specifier: 'catalog:'
-        version: 0.3.0
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../happy-dom
       parse5:
         specifier: 'catalog:'
-        version: 7.3.0
+        version: 8.0.1
     devDependencies:
       '@testing-library/dom':
         specifier: 'catalog:'

@@ -20,7 +20,6 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@parse5/tools": "catalog:",
     "@tools/happy-dom": "catalog:workspace",
     "parse5": "catalog:"
   },

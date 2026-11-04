@@ -1,37 +1,41 @@
-import {
-  getAttribute,
-  hasAttribute,
-  isCommentNode,
-  isElementNode,
-  isParentNode,
-  isTemplateNode,
-  isTextNode,
-} from '@parse5/tools';
-import type {
-  ChildNode,
-  DocumentFragment,
-  Element,
-  ParentNode,
-} from '@parse5/tools';
-import { parseFragment } from 'parse5';
+import { defaultTreeAdapter, parseFragment } from 'parse5';
+import type { DefaultTreeAdapterTypes } from 'parse5';
 
-export { getAttribute, hasAttribute };
+export type ChildNode = DefaultTreeAdapterTypes.ChildNode;
 
-export type { ChildNode, DocumentFragment, Element, ParentNode };
+export type DocumentFragment = DefaultTreeAdapterTypes.DocumentFragment;
+
+export type Element = DefaultTreeAdapterTypes.Element;
+
+export type ParentNode = DefaultTreeAdapterTypes.ParentNode;
+
+type Template = DefaultTreeAdapterTypes.Template;
+
+const { isCommentNode, isElementNode, isTextNode } = defaultTreeAdapter;
+
+/** The value of attribute `name` on `node`, or null when it is absent. */
+export const getAttribute = (node: Element, name: string): string | null =>
+  node.attrs.find((attr) => attr.name === name)?.value ?? null;
+
+/** Whether `node` carries attribute `name`. */
+export const hasAttribute = (node: Element, name: string): boolean =>
+  node.attrs.some((attr) => attr.name === name);
 
 /** Parses server-rendered markup as the HTML spec does, keeping comments and template contents. */
 export const parseMarkup = (markup: string): DocumentFragment =>
   parseFragment(markup);
 
+const isTemplate = (node: ParentNode): node is Template => 'content' in node;
+
 /** A node's children; a template's are its content's. */
 export const childNodes = (node: ParentNode): ChildNode[] =>
-  isTemplateNode(node) ? node.content.childNodes : node.childNodes;
+  isTemplate(node) ? node.content.childNodes : node.childNodes;
 
 function* descendants(node: ParentNode): Generator<ChildNode> {
   for (const child of childNodes(node)) {
     yield child;
 
-    if (isParentNode(child)) yield* descendants(child);
+    if (isElementNode(child)) yield* descendants(child);
   }
 }
 
