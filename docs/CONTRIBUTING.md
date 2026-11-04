@@ -135,6 +135,26 @@ config keys its Vite cache directory by it; pick a port no script uses so the
 run can't collide with a turbo task. Install the browsers with
 `mise run '//tools/build_and_test:playwright'` if they are missing.
 
+### Testing HTML output
+
+A test of rendered HTML parses it before asserting. Pick the parser by what
+the test checks:
+
+| What the test checks                                                                                    | Parse with                                                                                                                    | Assert with                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What a page means (links, headings, forms, text): release pages, prerendered apps, rendered links       | happy-dom's `DOMParser` (no global registration)                                                                              | `@testing-library/dom` role and accessible-name queries, plus `node:assert` or `expect`. `querySelector` only as a fallback, with a one-line reason. |
+| The format of Lit SSR output (`<!--lit-part-->` markers, declarative-shadow-DOM templates, child order) | parse5, the spec-reference parser that `@lit-labs/ssr` uses. Its tree keeps comments, template contents and source locations. | small tree walks                                                                                                                                     |
+| Exact bytes (stub passthroughs, generated Markdown)                                                     | none                                                                                                                          | string equality                                                                                                                                      |
+
+Regexes and substrings over HTML don't belong in the first two rows. CSS is
+parsed with postcss and postcss-html.
+
+[`worker/test/dom.ts`](../www/lit-ui-router.dev/worker/test/dom.ts) is the
+first row's example: it parses a page into a document whose `defaultView`
+answers testing-library's style lookups. lib.dom and the workers runtime types
+clash, so the docs worker's DOM tests typecheck under their own
+[`tsconfig.dom.json`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json).
+
 ### Reproducing a CI failure
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every

@@ -4,6 +4,16 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import postcss, {
+  AtRule,
+  parse,
+  Rule,
+  type Declaration,
+  type Document,
+  type Root,
+} from 'postcss';
+import postcssHtml from 'postcss-html';
+
 import { contrast } from './color.ts';
 import {
   GROUNDS,
@@ -36,46 +46,68 @@ const varsCss = readFileSync(
   'utf8',
 );
 
+interface Source {
+  file: string;
+  root: Root | Document;
+}
+
+// postcss-html yields one root per <style> block and per style="…" attribute.
+const components: Source[] = readdirSync(join(THEME_DIR, 'components'))
+  .filter((file) => file.endsWith('.vue'))
+  .map((file) => ({
+    file,
+    root: postcss().process(
+      readFileSync(join(THEME_DIR, 'components', file), 'utf8'),
+      { from: file, syntax: postcssHtml },
+    ).root,
+  }));
+
+function uses(text: string, prefix: string): boolean {
+  return text.replaceAll(/\s+/g, '').includes(`var(${prefix}`);
+}
+
+function where({ parent }: Declaration): string {
+  if (parent instanceof Rule) return parent.selector;
+
+  return parent instanceof AtRule
+    ? `@${parent.name} ${parent.params}`
+    : 'style attribute';
+}
+
+function straysIn(
+  sources: Source[],
+  stray: (decl: Declaration) => boolean,
+): string[] {
+  const found: string[] = [];
+
+  for (const { file, root } of sources)
+    root.walkDecls((decl) => {
+      if (stray(decl))
+        found.push(
+          `${file}: ${where(decl)} { ${decl.prop}: ${decl.value.replaceAll(/\s+/g, ' ')} }`,
+        );
+    });
+
+  return found;
+}
+
 const SCOPES: Record<Theme, readonly string[]> = {
   light: [':root', 'html', ':root:not(.dark)'],
   dark: [':root', 'html', '.dark', 'html.dark', ':root.dark'],
 };
 
-// Top-level rules only: at-rule blocks (@media, @supports) are progressive overrides, not the base value.
-function* topLevelRules(css: string): Generator<[string, string]> {
-  const text = css.replaceAll(/\/\*[\s\S]*?\*\//g, '');
-  let depth = 0;
-  let start = 0;
-  let prelude = '';
-
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === '{') {
-      if (depth === 0) {
-        prelude = text.slice(start, i).trim();
-        start = i + 1;
-      }
-
-      depth++;
-    } else if (text[i] === '}') {
-      depth--;
-
-      if (depth === 0) {
-        if (!prelude.startsWith('@')) yield [prelude, text.slice(start, i)];
-        start = i + 1;
-      }
-    }
-  }
-}
-
 function customProperties(theme: Theme): Map<string, string> {
   const props = new Map<string, string>();
 
   for (const css of [varsCss, tokensCss, customCss]) {
-    for (const [selector, body] of topLevelRules(css)) {
-      if (!SCOPES[theme].includes(selector)) continue;
+    // Top-level rules only: at-rule blocks (@media, @supports) are progressive overrides, not the base value.
+    for (const rule of parse(css).nodes) {
+      if (rule.type !== 'rule' || !SCOPES[theme].includes(rule.selector))
+        continue;
 
-      for (const [, name, value] of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g))
-        props.set(name, value.trim());
+      for (const decl of rule.nodes)
+        if (decl.type === 'decl' && decl.prop.startsWith('--'))
+          props.set(decl.prop, decl.value);
     }
   }
 
@@ -198,11 +230,12 @@ describe('colour roles', () => {
       ...Object.values(GROUNDS).map((g) => g.property),
     ]);
 
-    const defined = new Set(
-      [tokensCss, customCss].flatMap((css) =>
-        [...css.matchAll(/(--site-color-[\w-]+)\s*:/g)].map(([, p]) => p),
-      ),
-    );
+    const defined = new Set<string>();
+
+    for (const css of [tokensCss, customCss])
+      parse(css).walkDecls(/^--site-color-/, ({ prop }) => {
+        defined.add(prop);
+      });
 
     assert.deepEqual(
       [...defined].filter((p) => !listed.has(p)),
@@ -211,27 +244,28 @@ describe('colour roles', () => {
   });
 
   it('reaches the brand scale only through the interaction roles', () => {
-    const sources = [
-      tokensCss,
-      customCss,
-      releasePagesCss,
-      ...readdirSync(join(THEME_DIR, 'components'))
-        .filter((f) => f.endsWith('.vue'))
-        .map((f) => readFileSync(join(THEME_DIR, 'components', f), 'utf8')),
+    const sources: Source[] = [
+      { file: 'tokens.css', root: parse(tokensCss) },
+      { file: 'custom.css', root: parse(customCss) },
+      { file: 'release-pages.css', root: parse(releasePagesCss) },
+      ...components,
     ];
 
-    const strays = sources
-      .flatMap((s) => s.split('\n'))
-      .filter((line) => line.includes('var(--vp-c-brand'))
-      .filter((line) => !/^\s*--site-color-interaction[\w-]*:/.test(line));
+    const strays = straysIn(
+      sources,
+      (decl) =>
+        uses(decl.value, '--vp-c-brand') &&
+        !decl.prop.startsWith('--site-color-interaction'),
+    );
 
     assert.deepEqual(strays, []);
   });
 
   it('colours the release pages only through the site roles', () => {
-    const strays = releasePagesCss
-      .split('\n')
-      .filter((line) => line.includes('var(--vp-c-'));
+    const strays = straysIn(
+      [{ file: 'release-pages.css', root: parse(releasePagesCss) }],
+      (decl) => uses(decl.value, '--vp-c-'),
+    );
 
     assert.deepEqual(strays, []);
   });
