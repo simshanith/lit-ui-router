@@ -1,3 +1,4 @@
 cypress/
 a11y-screenshots/
 attempt-*.log
+test-results/

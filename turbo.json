@@ -526,6 +526,7 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/coverage-effect3/**",
+        "!**/test-results/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",

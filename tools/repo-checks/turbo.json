@@ -107,6 +107,7 @@
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
         "!$TURBO_ROOT$/**/coverage-effect3/**",
+        "!$TURBO_ROOT$/**/test-results/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
