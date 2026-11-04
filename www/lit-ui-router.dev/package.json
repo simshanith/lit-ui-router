@@ -39,7 +39,6 @@
     "sample-app-lit-signals": "catalog:workspace",
     "sample-app-lit-vanilla": "catalog:workspace",
     "sample-app-routes": "catalog:workspace",
-    "screenfull": "catalog:",
     "semver": "catalog:",
     "ui-router-server": "catalog:workspace",
     "vue": "catalog:"

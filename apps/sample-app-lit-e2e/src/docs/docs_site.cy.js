@@ -58,6 +58,34 @@ describe('docs site', () => {
     cy.get('.restart-btn .vpi-lucide-rotate-cw').should('be.visible');
   });
 
+  it('expands an ExampleEmbed in place without reloading its iframe', () => {
+    cy.visit('/tutorial/live-examples');
+    cy.get('#app').its('0.__vue_app__').should('exist');
+    // A marker set in the loaded example survives only if the frame never reloads.
+    cy.get('dialog.example-embed iframe')
+      .first()
+      .scrollIntoView()
+      .should(([frame]) => {
+        expect(frame.contentDocument?.readyState).to.eq('complete');
+        expect(frame.contentWindow.location.pathname).to.match(/^\/examples\//);
+      })
+      .then(([frame]) => {
+        frame.contentWindow.embedMarker = 42;
+      });
+    cy.get('dialog.example-embed').first().contains('button', 'Expand').click();
+    cy.get('dialog.example-embed').first().should('match', ':modal');
+    cy.get('dialog.example-embed iframe')
+      .first()
+      .its('0.contentWindow.embedMarker')
+      .should('eq', 42);
+    cy.get('dialog.example-embed').first().contains('button', 'Close').click();
+    cy.get('dialog.example-embed').first().should('not.have.attr', 'open');
+    cy.get('dialog.example-embed iframe')
+      .first()
+      .its('0.contentWindow.embedMarker')
+      .should('eq', 42);
+  });
+
   it('serves the embedded example apps same-origin', () => {
     // Built-asset coverage, not worker logic: only embed-unique content
     // proves the asset deployed, not a fallback.
