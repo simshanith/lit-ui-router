@@ -57,6 +57,7 @@
     "oxlint": "catalog:",
     "playwright": "catalog:",
     "postcss": "catalog:",
+    "postcss-html": "catalog:",
     "typescript": "catalog:",
     "valibot": "catalog:",
     "vite": "catalog:",

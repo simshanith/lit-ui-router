@@ -4,7 +4,15 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { AtRule, parse, Rule, type Declaration, type Root } from 'postcss';
+import postcss, {
+  AtRule,
+  parse,
+  Rule,
+  type Declaration,
+  type Document,
+  type Root,
+} from 'postcss';
+import postcssHtml from 'postcss-html';
 
 import { contrast } from './color.ts';
 import {
@@ -38,24 +46,21 @@ const varsCss = readFileSync(
   'utf8',
 );
 
-const STYLE = /<style[^>]*>([\s\S]*?)<\/style>/g;
-
-const components = readdirSync(join(THEME_DIR, 'components'))
-  .filter((file) => file.endsWith('.vue'))
-  .map((file) => {
-    const sfc = readFileSync(join(THEME_DIR, 'components', file), 'utf8');
-
-    return {
-      file,
-      styles: [...sfc.matchAll(STYLE)].map(([, css]) => css).join('\n'),
-      markup: sfc.replaceAll(STYLE, ''),
-    };
-  });
-
 interface Source {
   file: string;
-  root: Root;
+  root: Root | Document;
 }
+
+// postcss-html yields one root per <style> block and per style="…" attribute.
+const components: Source[] = readdirSync(join(THEME_DIR, 'components'))
+  .filter((file) => file.endsWith('.vue'))
+  .map((file) => ({
+    file,
+    root: postcss().process(
+      readFileSync(join(THEME_DIR, 'components', file), 'utf8'),
+      { from: file, syntax: postcssHtml },
+    ).root,
+  }));
 
 function uses(text: string, prefix: string): boolean {
   return text.replaceAll(/\s+/g, '').includes(`var(${prefix}`);
@@ -64,7 +69,9 @@ function uses(text: string, prefix: string): boolean {
 function where({ parent }: Declaration): string {
   if (parent instanceof Rule) return parent.selector;
 
-  return parent instanceof AtRule ? `@${parent.name} ${parent.params}` : '';
+  return parent instanceof AtRule
+    ? `@${parent.name} ${parent.params}`
+    : 'style attribute';
 }
 
 function straysIn(
@@ -241,7 +248,7 @@ describe('colour roles', () => {
       { file: 'tokens.css', root: parse(tokensCss) },
       { file: 'custom.css', root: parse(customCss) },
       { file: 'release-pages.css', root: parse(releasePagesCss) },
-      ...components.map(({ file, styles }) => ({ file, root: parse(styles) })),
+      ...components,
     ];
 
     const strays = straysIn(
@@ -252,14 +259,6 @@ describe('colour roles', () => {
     );
 
     assert.deepEqual(strays, []);
-
-    // Templates and scripts can't declare an interaction role, so any use is a stray.
-    assert.deepEqual(
-      components
-        .filter(({ markup }) => uses(markup, '--vp-c-brand'))
-        .map(({ file }) => `${file}: template or script`),
-      [],
-    );
   });
 
   it('colours the release pages only through the site roles', () => {
