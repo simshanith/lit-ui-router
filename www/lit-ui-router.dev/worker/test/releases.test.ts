@@ -3,6 +3,13 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import {
+  getAllByRole,
+  getByRole,
+  getByText,
+  within,
+} from '@testing-library/dom';
+
 import '../dom-shim.ts';
 import { releaseDocument, STYLESHEET } from '../releases/document.ts';
 import {
@@ -14,6 +21,7 @@ import {
 } from '../releases/ledger.ts';
 import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { serveReleases } from '../releases/serve.ts';
+import { parse } from './dom.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 
@@ -131,7 +139,10 @@ describe('the /releases verdicts', () => {
 
     assert.equal(response?.status, 503);
     assert.equal(response?.headers.get('Cache-Control'), 'no-store');
-    assert.match((await response?.text()) ?? '', /Releases are unavailable/);
+    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+      level: 1,
+      name: 'Releases are unavailable',
+    });
   });
 });
 
@@ -248,7 +259,10 @@ describe('the /gh verdicts', () => {
   it('renders the 404 page for a path GitHub already answers', async () => {
     const response = await serve('/gh/releases/');
 
-    assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
+    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+      level: 1,
+      name: 'Not found',
+    });
     assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
   });
 
@@ -466,90 +480,118 @@ describe('the /gh edge cache', () => {
 });
 
 describe('the /releases pages', () => {
-  const page = async (path: string) => (await serve(path))?.text() ?? '';
+  const page = async (path: string) =>
+    parse((await (await serve(path))?.text()) ?? '');
+
+  const hrefOf = (container: HTMLElement, name: string | RegExp) =>
+    getByRole(container, 'link', { name }).getAttribute('href');
 
   it('lists every package with its latest release', async () => {
-    const html = await page('/releases/');
+    const doc = await page('/releases/');
 
     for (const { name } of await fixtureLedger.packages())
-      assert.ok(html.includes(`href="/releases/${name}/"`), name);
-    assert.ok(html.includes('href="/releases/lit-ui-router/1.10.0/"'));
-    assert.match(html, /<title>Releases \| Lit UI Router<\/title>/);
+      assert.equal(hrefOf(doc.body, name), `/releases/${name}/`);
+    assert.equal(
+      hrefOf(doc.body, 'lit-ui-router@1.10.0'),
+      '/releases/lit-ui-router/1.10.0/',
+    );
+    assert.equal(doc.title, 'Releases | Lit UI Router');
   });
 
   it("lists a package's versions, each linking to its GitHub release", async () => {
-    const html = await page('/releases/lit-ui-router/');
+    const doc = await page('/releases/lit-ui-router/');
 
-    const order = ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map((version) =>
-      html.indexOf(`href="/releases/lit-ui-router/${version}/"`),
-    );
-
-    assert.ok(
-      order.every((at, i) => at > 0 && (i === 0 || at > (order[i - 1] ?? 0))),
-    );
-    assert.ok(
-      html.includes(
-        'href="https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0"',
+    assert.deepEqual(
+      getAllByRole(getByRole(doc.body, 'table'), 'rowheader').map((header) =>
+        within(header).getByRole('link').getAttribute('href'),
+      ),
+      ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map(
+        (version) => `/releases/lit-ui-router/${version}/`,
       ),
     );
-    assert.match(html, /prerelease/);
+    assert.equal(
+      // dom-accessibility-api trims the space that opens the hidden span.
+      hrefOf(doc.body, /^GitHub release ?for lit-ui-router@1\.10\.0$/),
+      'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
+    );
+    getByRole(doc.body, 'rowheader', { name: '1.11.0-rc.0 prerelease' });
   });
 
   it("shows one version's facts and links out", async () => {
-    const html = await page('/releases/lit-ui-router/1.9.0/');
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
 
-    assert.match(html, /<h1>.*lit-ui-router.*@.*1\.9\.0.*<\/h1>/);
-    assert.match(html, /Deprecated/);
-    assert.match(html, /use 2\.0/);
-    assert.ok(
-      html.includes(
-        'href="https://github.com/simshanith/lit-ui-router/tree/lit-ui-router%401.9.0"',
-      ),
+    getByRole(doc.body, 'heading', { level: 1, name: 'lit-ui-router@1.9.0' });
+    // A term takes no accessible name from its content, so its text finds it.
+    assert.equal(
+      getByText(doc.body, 'Deprecated', { selector: 'dt' }).nextElementSibling
+        ?.textContent,
+      'use 2.0',
+    );
+    assert.equal(
+      hrefOf(doc.body, 'lit-ui-router@1.9.0'),
+      'https://github.com/simshanith/lit-ui-router/tree/lit-ui-router%401.9.0',
     );
   });
 
   it('renders the 404 page for a version the ledger lacks', async () => {
     const response = await serve('/releases/lit-ui-router/9.9.9/');
 
-    assert.match((await response?.text()) ?? '', /<h1>Not found<\/h1>/);
+    getByRole(parse((await response?.text()) ?? '').body, 'heading', {
+      level: 1,
+      name: 'Not found',
+    });
   });
 
   it('links the stylesheet the docs build emits', async () => {
-    const html = await page('/releases/');
+    const doc = await page('/releases/');
 
-    assert.ok(html.includes(`<link rel="stylesheet" href="${STYLESHEET}">`));
+    // A link element has no role.
+    assert.deepEqual(
+      [...doc.querySelectorAll('link[rel="stylesheet"]')].map((link) =>
+        link.getAttribute('href'),
+      ),
+      [STYLESHEET],
+    );
     assert.ok(existsSync(join(import.meta.dirname, '../releases', STYLESHEET)));
   });
 
   it('escapes the head and keeps the body as rendered', async () => {
     const body = '<ui-view defer-hydration><p>a &amp; b</p></ui-view>';
 
-    const html = await releaseDocument(body, {
-      title: 'a <b> & "c"',
-      description: 'd <e> & "f"',
-    });
+    // A raw `</title>` would end the title early; `<b>` alone parses as title text either way.
+    const title = 'a </title><b> & "c"';
 
-    assert.match(
-      html,
-      /<title>a &lt;b&gt; &amp; &quot;c&quot; \| Lit UI Router<\/title>/,
+    const doc = parse(
+      await releaseDocument(body, { title, description: 'd <e> & "f"' }),
+    );
+
+    assert.equal(doc.title, `${title} | Lit UI Router`);
+    // A meta element has no role.
+    assert.equal(
+      doc.querySelector('meta[name="description"]')?.getAttribute('content'),
+      'd <e> & "f"',
     );
     assert.ok(
-      html.includes(
-        '<meta name="description" content="d &lt;e&gt; &amp; &quot;f&quot;">',
+      getByRole(doc.body, 'main').firstElementChild?.isEqualNode(
+        parse(`<div>${body}</div>`).body.firstElementChild,
       ),
     );
-    assert.ok(
-      html.includes(`<main class="content-grid"><div>${body}</div></main>`),
-    );
-    assert.ok(html.startsWith('<!doctype html>\n<html lang="en">'));
+    assert.equal(doc.doctype?.name, 'html');
+    assert.equal(doc.documentElement.lang, 'en');
   });
 
   it('ships only the appearance check as client script', async () => {
-    const html = await page('/releases/lit-ui-router/');
+    const doc = await page('/releases/lit-ui-router/');
 
+    // A script has no role.
     assert.deepEqual(
-      html.match(/<script(?![^>]*type="application\/json")[^>]*>/g),
-      ['<script id="check-dark-mode">'],
+      [...doc.querySelectorAll('script:not([type="application/json"])')].map(
+        (script) =>
+          script
+            .getAttributeNames()
+            .map((name) => `${name}=${script.getAttribute(name)}`),
+      ),
+      [['id=check-dark-mode']],
     );
   });
 });
