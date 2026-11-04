@@ -290,7 +290,9 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
     );
     // lit also writes the pre-standard attribute beside shadowrootmode
     expect(getAttribute(element(card, 'template'), 'shadowroot')).toBe('open');
-    expect(elements(tree, 'span', { class: 'unrouted' })).toEqual([]);
+    expect(elements(shadowRoot(card), 'span', { class: 'unrouted' })).toEqual(
+      [],
+    );
   });
 
   it('writes no node marker inside the slot, since the client reads the element as a leaf value', async () => {
@@ -313,9 +315,13 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
     const card = element(tree, 'sticky-card');
 
     expect(card.attrs).toEqual(deferred);
-    expect(text(card)).toContain('sticky leaf');
-    expect(text(tree)).not.toContain('<');
-    expect(text(tree)).not.toContain('[object');
+    const rendered = text(shadowRoot(card));
+    expect(rendered).toContain('sticky leaf');
+
+    for (const written of [text(tree), rendered]) {
+      expect(written).not.toContain('<');
+      expect(written).not.toContain('[object');
+    }
   });
 
   it('writes a light-DOM class as its bare element, with no shadow root to hide its render', async () => {

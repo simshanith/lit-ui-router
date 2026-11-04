@@ -47,13 +47,12 @@ export const shadowRoot = (host: Element): DocumentFragment => {
 export const lightChildren = (host: Element): ChildNode[] =>
   host.childNodes.filter((child) => !isShadowTemplate(child));
 
-/** Every node below `node` in document order, template contents included. */
+// Like querySelectorAll and textContent, the walk stops at every template: a shadow root is entered through shadowRoot().
 function* descendants(node: ParentNode): Generator<ChildNode> {
   for (const child of node.childNodes) {
     yield child;
 
-    if (isTemplate(child)) yield* descendants(child.content);
-    else if (isElementNode(child)) yield* descendants(child);
+    if (isElementNode(child)) yield* descendants(child);
   }
 }
 
@@ -66,7 +65,7 @@ const matches = (node: ChildNode, tag: string, attributes: Attributes) =>
     ([name, value]) => getAttribute(node, name) === value,
   );
 
-/** Every element named `tag` with these attribute values below `root`, in document order, template contents included. */
+/** Every element named `tag` with these attribute values below `root`, in document order. */
 export const elements = (
   root: ParentNode,
   tag: string,
@@ -93,13 +92,13 @@ export const element = (
   return found;
 };
 
-/** The text below `node`, template contents included and comments skipped. */
+/** The text below `node`, comments skipped. */
 export const text = (node: ParentNode): string =>
   [...descendants(node)]
     .flatMap((child) => (isTextNode(child) ? [child.value] : []))
     .join('');
 
-/** The data of every comment below `node`, in document order, template contents included. */
+/** The data of every comment below `node`, in document order. */
 export const comments = (node: ParentNode): string[] =>
   [...descendants(node)].flatMap((child) =>
     isCommentNode(child) ? [child.data] : [],

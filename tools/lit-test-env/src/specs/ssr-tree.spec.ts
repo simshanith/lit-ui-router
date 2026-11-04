@@ -49,10 +49,24 @@ describe('the parse5 SSR tree helpers', () => {
     ).toThrow('<x-a> has no shadow root');
   });
 
-  it('finds elements by tag and attribute values, inside shadow roots too', () => {
+  it('stops every search at a shadow root, as querySelector does, until shadowRoot enters it', () => {
     const tree = parseMarkup(markup);
 
-    expect(elements(tree, 'slot')).toHaveLength(1);
+    expect(elements(tree, 'slot')).toEqual([]);
+    expect(elements(shadowRoot(host()), 'slot')).toHaveLength(1);
+    expect(comments(shadowRoot(host()))).toEqual(['lit-part a=', '/lit-part']);
+  });
+
+  it('stops at a plain template too, as querySelector does', () => {
+    const tree = parseMarkup('<x-a><template><b>inert</b></template></x-a>');
+
+    expect(elements(tree, 'b')).toEqual([]);
+    expect(text(tree)).toBe('');
+  });
+
+  it('finds elements by tag and attribute values', () => {
+    const tree = parseMarkup(markup);
+
     expect(elements(tree, 'p', { class: 'light' })).toHaveLength(1);
     expect(elements(tree, 'p', { class: 'dark' })).toHaveLength(0);
     expect(() => element(tree, 'p', { class: 'dark' })).toThrow(
@@ -67,8 +81,6 @@ describe('the parse5 SSR tree helpers', () => {
     expect(getAttribute(element(tree, 'p'), 'class')).toBe('light');
     expect(text(tree)).toBe('light');
     expect(comments(tree)).toEqual([
-      'lit-part a=',
-      '/lit-part',
       'served:lit-part',
       'served:/lit-part',
       '?',

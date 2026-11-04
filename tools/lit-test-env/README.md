@@ -46,8 +46,10 @@ host's light children.
 | `outline(node)`                                    | one label per child: `<tag>`, `<!--data-->` or the text                   |
 | `outlineTree(node, { digests? })`                  | an indented outline of the whole subtree                                  |
 
-Lookups (`element`, `elements`, `text` and `comments`) search shadow roots
-too.
+A shadow root is a boundary: as with the DOM's `querySelector` and
+`textContent`, lookups (`element`, `elements`, `text` and `comments`) stop
+at every `<template>`, and `shadowRoot(host)` is the way in. `outlineTree`
+shows the whole tree, the way DevTools does, with `#shadow` at each boundary.
 
 `litPart` reads `lit-part <digest>` and `lit-part` as
 `{ kind: 'open', digest }`, `/lit-part` as `{ kind: 'close' }` and

@@ -691,6 +691,8 @@ describe('the default element renderers', () => {
 
     const tree = parseMarkup(files.get('dist/index.html')!);
 
+    // no shadow root either, so the light-DOM checks below see the whole render
+    expect(elements(tree, 'template')).toEqual([]);
     expect(elements(tree, 'p', { class: 'default-card' })).toEqual([]);
     expect(text(tree)).not.toContain('drawn');
   });
