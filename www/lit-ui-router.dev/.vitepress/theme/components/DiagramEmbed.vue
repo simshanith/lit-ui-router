@@ -114,6 +114,11 @@ onMounted(() => {
   display: none;
 }
 
+/* Open, it stays at any width: a window narrowed mid-view has no other visible way out. */
+.diagram-embed[open] .diagram-embed-actions .diagram-embed-expand {
+  display: inline-flex;
+}
+
 @media (min-width: 768px) {
   .diagram-embed .diagram-embed-actions .diagram-embed-expand {
     display: inline-flex;
