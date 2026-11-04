@@ -1,31 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from 'vue';
 import { VPIcon } from 'vitepress/theme';
+import { useExpandDialog } from './expand-dialog';
 
 // Wraps one inlined diagram; the slot is the `<!--@include: …svg-->`, src the same file served standalone.
 defineProps<{ src: string }>();
 
 const dialog = useTemplateRef('dialog');
 
-const expanded = ref(false);
+const { expanded, toggle, onClose } = useExpandDialog(dialog);
 
 // The diagram's <title> and viewBox aspect, read once the slot is in the DOM.
 const title = ref('');
 
 const ratio = ref<number>();
-
-function toggle() {
-  const el = dialog.value;
-
-  if (!el) return;
-
-  if (el.open) {
-    el.close();
-  } else {
-    el.showModal();
-    expanded.value = true;
-  }
-}
 
 onMounted(() => {
   const svg = dialog.value?.querySelector('svg');
@@ -37,13 +25,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- One node both ways: closed it shows inline, showModal() lifts it to the top layer. -->
   <dialog
     ref="dialog"
-    class="diagram-embed"
+    class="diagram-embed site-expand"
     :aria-label="title || undefined"
     :style="ratio ? { '--diagram-ratio': ratio } : undefined"
-    @close="expanded = false"
+    @close="onClose"
   >
     <div class="diagram-embed-canvas">
       <slot></slot>
@@ -51,7 +38,7 @@ onMounted(() => {
     <div class="diagram-embed-actions">
       <button
         type="button"
-        class="diagram-embed-expand site-button"
+        class="site-expand-button site-button"
         @click="toggle"
       >
         <!-- Both render: the build only ships CSS for icons in the server render. -->
@@ -79,22 +66,8 @@ onMounted(() => {
 
 <!-- Unscoped: the slotted svg carries the page's scope id, not this component's. -->
 <style>
-.diagram-embed:not([open]) {
-  display: block;
-}
-
-.diagram-embed {
-  position: static;
-  inline-size: auto;
-  block-size: auto;
-  max-inline-size: none;
-  max-block-size: none;
-  margin: 0;
+.diagram-embed:not(:modal) {
   margin-block: var(--site-space-4);
-  padding: 0;
-  border: 0;
-  color: inherit;
-  background: transparent;
 }
 
 /* Inline, no wider than the drawn canvas. */
@@ -111,41 +84,7 @@ onMounted(() => {
   margin-block-start: var(--example-actions-gap);
 }
 
-/* In viewports below VitePress's 768px breakpoint, Open full size is the way to read a diagram large: the standalone file pinch-zooms. */
-.diagram-embed .diagram-embed-actions .diagram-embed-expand {
-  display: none;
-}
-
-/* Open, it stays at any width: a window narrowed mid-view has no other visible way out. */
-.diagram-embed[open] .diagram-embed-actions .diagram-embed-expand {
-  display: inline-flex;
-}
-
-@media (min-width: 768px) {
-  .diagram-embed .diagram-embed-actions .diagram-embed-expand {
-    display: inline-flex;
-  }
-}
-
-/* Fills the window; the canvas flexes into what the action row leaves. */
-.diagram-embed:modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--example-actions-gap);
-  box-sizing: border-box;
-  inline-size: 100dvw;
-  block-size: 100dvh;
-  margin: 0;
-  padding: var(--site-space-4);
-  background: var(--site-color-surface);
-}
-
-.diagram-embed::backdrop {
-  background: var(--site-color-surface);
-}
-
+/* The canvas flexes into what the action row leaves. */
 .diagram-embed:modal .diagram-embed-canvas {
   display: flex;
   flex: 1 1 0;
@@ -166,9 +105,5 @@ onMounted(() => {
   margin: auto;
   padding: 0;
   border: 0;
-}
-
-html:has(.diagram-embed:modal) {
-  overflow: hidden;
 }
 </style>
