@@ -111,20 +111,6 @@ html:has(.site-expand:modal) {
   overflow: hidden;
 }
 
-/* A diagram's Expand hides below VitePress's 768px breakpoint, where Open full size reads better; it stays while open, since a window narrowed mid-view has no other visible way out. */
-dialog.diagram-embed .site-expand-button {
-  display: none;
-}
-
-dialog.diagram-embed[open] .site-expand-button {
-  display: inline-flex;
-}
-
-@media (min-width: 768px) {
-  dialog.diagram-embed .site-expand-button {
-    display: inline-flex;
-  }
-}
 /* === end expand dialogs === */
 
 /* Style links in the homepage tagline */
