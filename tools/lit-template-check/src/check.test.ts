@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { basename, join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { API } from 'typescript/sync';
+import { API } from 'typescript-7.1/sync';
 
 import { lowerAll, parseFiles, programFilesOf } from './check.ts';
 

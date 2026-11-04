@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-// Spike: type-checks lit `html` templates over the //#lint:templates file set
+// Type-checks lit `html` templates over the //#lint:templates file set
 // by overlaying each file with its lowered type-check block (see ./lower.ts)
-// and asking the TypeScript 7 API for that file's diagnostics in its own
+// and asking the TypeScript 7.1 API for that file's diagnostics in its own
 // project. Usage: lit-template-check [--stats] [--dump=<dir>]
 import { globSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
-import { createFileSystemLayer } from 'typescript/fs';
+import { createFileSystemLayer } from 'typescript-7.1/fs';
 import {
   API,
   DiagnosticCategory,
   type Diagnostic,
   ModuleKind,
-} from 'typescript/sync';
+} from 'typescript-7.1/sync';
 
 import {
   type LowerStats,

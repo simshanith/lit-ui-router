@@ -2,7 +2,7 @@
   "name": "@tools/lit-template-check",
   "version": "0.0.1",
   "private": true,
-  "description": "Spike: type-checks Lit html templates by lowering them to TypeScript and checking through the TypeScript 7 API",
+  "description": "Type-checks Lit html templates by lowering them to TypeScript and checking through the TypeScript 7.1 API",
   "bin": {
     "lit-template-check": "./src/check.ts"
   },
@@ -22,6 +22,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "parse5": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "typescript-7.1": "catalog:"
   }
 }

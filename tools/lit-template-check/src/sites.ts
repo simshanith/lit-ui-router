@@ -22,7 +22,7 @@ import {
   type SourceFile,
   SyntaxKind,
   type TaggedTemplateExpression,
-} from 'typescript/ast';
+} from 'typescript-7.1/ast';
 
 import type { Span, TemplateSite } from './lower.ts';
 

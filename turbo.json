@@ -264,6 +264,36 @@
         "pnpm-workspace.yaml"
       ]
     },
+    // advisory and outside the lint umbrella: the acceptance (templates-ts) job runs it
+    "//#lint:templates:ts": {
+      "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
+        "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
+        "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
+        "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "examples/*/src/**",
+        "examples/*/package-lock.json",
+        "tools/lit-template-check/src/**",
+        "tools/shared/src/**",
+        // each file is checked in its own tsconfig project
+        "{packages,apps,examples}/*/tsconfig*.json",
+        "tsconfig*.json",
+        "pnpm-workspace.yaml"
+      ]
+    },
     // stylelint over .css, .vue <style> and lit `css` blocks;
     // stylelint.config.mjs maps each to its syntax and owns the ignores.
     "//#lint:css": {
