@@ -76,18 +76,19 @@ versions of a package, built once per version pair.
 
 <!--@include: ./public/diagrams/about-this-site-release-diffs.svg-->
 
-1. **npm** serves the packument and both tarballs a build diffs.
-2. **The release-diffs worker**
+1. **The release-diffs worker**
    ([`worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/worker/index.ts))
    answers three RPC methods: `index` lists a pair's files, `files` streams
    the patch sections one file preset shows, and `patch` streams the whole
    patch. Each reads the pair's entry from R2 first. It has no route and no
    `workers.dev` or Preview URL, so the docs worker's service binding is the
    only way in.
-3. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
+2. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
+3. **npm** serves the packument and both tarballs a build diffs.
 4. **R2** holds one entry per pair under `v1/<pkg>/<from>...<to>/`: the
    patch, each preset's sections, and `index.json`, written last, so an entry
-   with an index is complete.
+   with an index is complete. The object is its only writer; the worker only
+   reads it.
 
 The worker's bucket and Durable Object bindings are in its
 [`cloudflare.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/cloudflare.config.ts);
