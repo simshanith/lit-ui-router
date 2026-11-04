@@ -46,7 +46,7 @@
     <rect data-brand="cloudflare" x="178" y="158" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
     <svg x="182" y="162" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
     <text x="210" y="175" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Diffs worker</text>
-    <text x="178" y="198" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">index · files · patch</text>
+    <text x="178" y="198" font-size="11" fill="var(--vp-c-text-2, #67676c)">index · files · patch</text>
     <circle cx="318" cy="150" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
     <text x="318" y="153.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">2</text>
     <!-- 3 ReleaseDiff object -->
