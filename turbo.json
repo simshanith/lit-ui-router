@@ -521,7 +521,7 @@
       // oxfmt skips gitignored files but this glob does not, so the generated
       // trees have to come off by hand (same set as `lint:oxlint` above)
       "inputs": [
-        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue,css}",
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
