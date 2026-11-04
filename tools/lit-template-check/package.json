@@ -19,6 +19,8 @@
     "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "@vscode/web-custom-data": "catalog:",
+    "lit": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "parse5": "catalog:",

@@ -219,6 +219,8 @@ const workspaces = {
   'tools/lit-template-check': {
     // checked by path in check.test.ts, never imported
     entry: ['src/fixtures/**/*.ts'],
+    // reached via createRequire(), which knip does not follow
+    ignoreDependencies: ['@vscode/web-custom-data'],
   },
   'tools/oxc-emit': {
     // reached via createRequire(), which knip does not follow

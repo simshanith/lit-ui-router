@@ -74,7 +74,39 @@ declare namespace ${PRELUDE_NAMESPACE} {
   function el<T extends string>(): Html<T> & { readonly __ltcTag?: T };
   function svgEl<T extends string>(): Svg<T>;
   function attr<E>(el: E, name: NoInfer<AttributeName<E>>): void;
-  function value(value: string | number | bigint | boolean | Special): void;
+  // attribute value types follow lit-analyzer's string coercion: a boolean must
+  // fit as "true"/"false", a number as its digits, a numeric string as a number
+  type IsAny<T> = 0 extends 1 & T ? true : false;
+  interface Tokens<U extends string> { readonly __ltcTokens: U }
+  type Split<S extends string> = S extends \`\${infer Head} \${infer Tail}\` ? Head | Split<Tail> : S;
+  type Plain<A, V> = [V] extends [A] ? true : false;
+  type Coerced<A, V> = [A] extends [Tokens<infer U>] ? (V extends string ? (string extends V ? false : Plain<U, Exclude<Split<V>, ''>>) : false)
+    : V extends boolean ? Plain<A, \`\${V}\`>
+    : V extends number ? (number extends V ? (string extends A ? true : Plain<A, V>) : Plain<A, \`\${V}\`> extends true ? true : Plain<A, V>)
+    : V extends '' ? (true extends A ? true : 0 extends A ? true : Plain<A, V>)
+    : V extends \`\${infer N extends number}\` ? (Plain<A, N> extends true ? true : Plain<A, V>)
+    : Plain<A, V>;
+  type Fits<A, V> = IsAny<V> extends true ? true : IsAny<A> extends true ? true : unknown extends A ? true : V extends null | undefined | Special ? true : V extends object ? true : Coerced<A, V>;
+  type Check<A, V> = false extends Fits<A, V> ? { expected: A; got: V } : true;
+  type OwnAttributes<E> = { [K in Extract<Exclude<keyof E, keyof HTMLElement | '__ltcTag'>, string> as Lowercase<K> | Kebab<K>]: E[K] };
+  // a custom element's own property types its attribute, as lit-analyzer reads @property
+  type Target<E, N extends string, F> = TagOf<E> extends \`\${string}-\${string}\` ? (OwnAttributes<E> extends infer O ? (N extends keyof O ? O[N] : F) : F) : F;
+  function as<T>(): T;
+  const text: string;
+  function primitive(value: string | number | bigint | boolean | Special): void;
+  function value<E, N extends string, V extends string | number | bigint | boolean | Special, F = unknown>(el: E, name: N, value: V, ok: NoInfer<Check<Target<E, N, F>, V>>, fallback?: F): void;
+  function valueOf<E, N extends string, V, F = unknown>(el: E, name: N, value: V, ok: NoInfer<Check<Target<E, N, F>, V>>, fallback?: F): void;
+  function present<E, N extends string, F = unknown>(el: E, name: N, ok: NoInfer<IsAny<Target<E, N, F>> extends true ? true : unknown extends Target<E, N, F> ? true : Plain<Target<E, N, F>, true> extends true ? true : { expected: Target<E, N, F>; got: true }>, fallback?: F): void;
+  function live<V>(value: V, ok: [V] extends [string] ? true : "If you use the 'live' directive in an attribute binding, make sure that only strings are passed in, or the binding will update every render"): void;
+  function report<M extends string>(ok: M): void;
+  type KindOf<T> = ([T] extends [string] ? 'String' : never) | ([T] extends [number] ? 'Number' : never) | ([T] extends [boolean] ? 'Boolean' : never) | ([T] extends [readonly unknown[]] ? 'Array' : [T] extends [(...args: never) => unknown] ? never : [T] extends [object] ? 'Object' : never);
+  type Missing<K extends string> = \`'{type: \${K}}'\${K extends 'Array' | 'Object' ? " or '{attribute: false}'" : ''}\`;
+  type PropertyCheck<K extends string, N extends string, T> = IsAny<T> extends true ? true : [T] extends [never] ? true
+    : K extends 'none' ? ([T] extends [string] ? true : [KindOf<T>] extends [never] ? \`The built in converter doesn't handle the type of '\${N}'. Add '{attribute: false}' to its @property decorator\` : \`Missing \${Missing<KindOf<T>>} on @property decorator for '\${N}'\`)
+    : K extends KindOf<T> ? true
+    : [KindOf<T>] extends [never] ? (K extends 'Object' ? true : \`@property type '\${K}' is not assignable to the type of '\${N}'\`)
+    : \`@property type should be '\${KindOf<T>}' instead of '\${K}'\`;
+  function propertyType<K extends string, N extends string, T>(kind: K, name: N, value: T, ok: NoInfer<PropertyCheck<K, N, NonNullable<T>>>): void;
   function bool<E>(el: E, name: NoInfer<AttributeName<E>>, value: boolean | null | undefined | Special): void;
   function prop<E, K extends keyof E>(el: E, name: K, value: E[K] | Special): void;
   type TagOf<E> = E extends { readonly __ltcTag?: infer T } ? Extract<T, string> : never;

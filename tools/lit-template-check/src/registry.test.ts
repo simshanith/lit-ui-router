@@ -10,7 +10,9 @@ const definition = (overrides: Partial<Definition>): Definition => ({
   exported: true,
   topLevel: true,
   start: 0,
+  tagStart: 0,
   events: [],
+  slots: [],
   ...overrides,
 });
 
@@ -59,7 +61,23 @@ describe('registryFor', () => {
       events: [],
       unnameable: [],
       duplicates: [],
+      slots: new Map(),
     });
+  });
+
+  it('collects the slots of the visible definition', () => {
+    const { slots } = registryFor(
+      '/r/a/src/a.ts',
+      [
+        {
+          path: '/r/a/src/a.ts',
+          definitions: [definition({ slots: ['', 'header'] })],
+        },
+      ],
+      new Set(),
+    );
+
+    assert.deepEqual([...slots], [['x-el', ['', 'header']]]);
   });
 
   it('keeps the tag and events of a class no type can name', () => {

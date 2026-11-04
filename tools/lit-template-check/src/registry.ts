@@ -27,6 +27,8 @@ export interface Registry {
   /** `path#tag` of definitions in the program whose class a type cannot reach. */
   unnameable: string[];
   duplicates: DuplicateTag[];
+  /** `@slot` names of each tag whose class declares any. */
+  slots: Map<string, string[]>;
 }
 
 interface Located {
@@ -89,6 +91,7 @@ export function registryFor(
     events: [],
     unnameable: [],
     duplicates: [],
+    slots: new Map(),
   };
 
   const byTag = new Map<string, Located[]>();
@@ -110,6 +113,9 @@ export function registryFor(
     const names = new Set(shown.flatMap(({ definition }) => definition.events));
 
     if (names.size > 0) registry.events.push({ tag, names: [...names] });
+    const slots = new Set(shown.flatMap(({ definition }) => definition.slots));
+
+    if (slots.size > 0) registry.slots.set(tag, [...slots]);
 
     for (const located of shown) {
       const { definition } = located;

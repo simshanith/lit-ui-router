@@ -118,6 +118,9 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^5.1.0
       version: 5.1.0
+    '@vscode/web-custom-data':
+      specifier: ^0.6.3
+      version: 0.6.3
     binary-extensions:
       specifier: ^3.1.0
       version: 3.2.0
@@ -2669,6 +2672,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@vscode/web-custom-data':
+        specifier: 'catalog:'
+        version: 0.6.3
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -6184,6 +6193,9 @@ packages:
 
   '@vscode/web-custom-data@0.4.13':
     resolution: {integrity: sha512-2ZUIRfhofZ/npLlf872EBnPmn27Kt4M2UssmQIfnJvgGgMYZJ5fvtHEDnttBBf2hnVtBgNCqZMVHJA+wsFVqTA==}
+
+  '@vscode/web-custom-data@0.6.3':
+    resolution: {integrity: sha512-3pDUAPGVkra1KjR2L5m3b7BgzLTlWdep4ijsRoqeLcrp+e7cJcyjnae8IkAdF/xS6Zo3B1YZSmIBIhRAEYBIog==}
 
   '@vue/compiler-core@3.5.44':
     resolution: {integrity: sha512-k34nCytbK8PQ1gR2mGROYOw6Pnv/mumqIdrZ3x2tbyXZDWm7ViKGLTfdB+DRrWqEQsLgGJvn0WN9jBif5zCTLQ==}
@@ -12551,6 +12563,8 @@ snapshots:
     optional: true
 
   '@vscode/web-custom-data@0.4.13': {}
+
+  '@vscode/web-custom-data@0.6.3': {}
 
   '@vue/compiler-core@3.5.44':
     dependencies:
