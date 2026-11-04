@@ -33,7 +33,7 @@
     <text x="268" y="150" font-size="11" fill="var(--vp-c-text-2, #67676c)">other paths</text>
     <text font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan x="268" y="218">worker-first:</tspan><tspan x="268" y="232">sample apps,</tspan><tspan x="268" y="246">/releases, /gh</tspan></text>
     <path d="M440 168V128" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
-    <text font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan x="448" y="144">shells, 404,</tspan><tspan x="448" y="158">pass-through</tspan></text>
+    <text font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end"><tspan x="432" y="144">shells, 404,</tspan><tspan x="432" y="158">pass-through</tspan></text>
     <path d="M440 228V268" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
     <text x="448" y="252" font-size="11" fill="var(--vp-c-text-2, #67676c)">RPC</text>
     <!-- 1 readers -->
