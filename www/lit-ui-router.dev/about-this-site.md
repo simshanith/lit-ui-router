@@ -68,3 +68,31 @@ and other workers read the result.
 
 The ledger worker's bindings, queue settings and schedule are in its
 [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/wrangler.jsonc).
+
+## The release-diffs worker
+
+A third worker keeps the patch `npm diff` prints between two published
+versions of a package, built once per version pair.
+
+<!--@include: ./public/diagrams/about-this-site-release-diffs.svg-->
+
+1. **The docs worker** is the caller it is built for. The release-diffs worker
+   has no route and no `workers.dev` or Preview URL, so a service binding is
+   the only way in.
+2. **The release-diffs worker**
+   ([`worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/worker/index.ts))
+   answers three RPC methods: `index` lists a pair's files, `files` streams
+   the patch sections one file preset shows, and `patch` streams the whole
+   patch. Each reads the pair's entry from R2 first.
+3. **R2** holds one entry per pair under `v1/<pkg>/<from>...<to>/`: the
+   patch, each preset's sections, and `index.json`, written last, so an entry
+   with an index is complete. Pairs are immutable, so an entry is never
+   rewritten.
+4. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
+   Concurrent misses for a pair share its one build; the object stores
+   nothing itself.
+5. **npm** serves the packument and both tarballs the object diffs.
+
+The worker's bucket and Durable Object bindings are in its
+[`cloudflare.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/cloudflare.config.ts);
+a Preview writes its own bucket.
