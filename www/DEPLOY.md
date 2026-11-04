@@ -167,8 +167,8 @@ block `wrangler preview` requires, and a Preview binds only what that block name
 reaches none of the ledger's production data, while each Preview gets Durable Object namespaces of
 its own. `cf previews deploy` evaluates the release diffs' `cloudflare.config.ts` with `isPreview`
 set, so that config, not a `previews` block, decides what its Previews bind: the
-`release-diffs-preview` R2 bucket in place of `release-diffs`, so only production code writes
-production's diffs. Its `ReleaseDiff` Durable Object class is declared in the config's `exports`
+`release-diffs-preview` R2 bucket in place of `release-diffs`, so a branch's builds land apart
+from production's. Its `ReleaseDiff` Durable Object class is declared in the config's `exports`
 map, which takes the place of wrangler's `migrations` list. The
 ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
 versions.
