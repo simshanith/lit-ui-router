@@ -142,7 +142,7 @@ html:has(.site-expand:modal) {
   }
 }
 
-.VPHero .tagline a.library>img {
+.VPHero .tagline a.library > img {
   display: inline;
   block-size: 1em;
   inline-size: auto;
@@ -150,7 +150,7 @@ html:has(.site-expand:modal) {
   vertical-align: -0.125em;
 }
 
-.vp-doc .badges a.badge>img {
+.vp-doc .badges a.badge > img {
   display: inline-block;
   border-radius: var(--site-radius-control-inner);
   box-shadow: 0 0 0 0 currentColor;
@@ -158,7 +158,7 @@ html:has(.site-expand:modal) {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .vp-doc .badges a.badge:hover>img {
+  .vp-doc .badges a.badge:hover > img {
     box-shadow: 0 0 var(--site-space-3) 0 currentColor;
   }
 }
@@ -250,20 +250,20 @@ html:has(.site-expand:modal) {
 
 /* Shields badges: pin a legible height so the wide release badge doesn't
    scale down to fit a table column (it wraps to the next line instead). */
-.vp-doc img[src*="img.shields.io"] {
+.vp-doc img[src*='img.shields.io'] {
   height: 20px;
   width: auto;
   max-width: none;
   vertical-align: middle;
 }
 
-.VPHero  .tagline {
-    max-width: 292px;
+.VPHero .tagline {
+  max-width: 292px;
 }
 
 @media (min-width: 960px) {
-  .VPHero  .tagline {
-      max-width: 720px;
+  .VPHero .tagline {
+    max-width: 720px;
   }
 }
 
@@ -316,9 +316,9 @@ html:has(.site-expand:modal) {
 }
 
 @media (min-width: 768px) {
-    .VPHero.has-image .image-container {
-      --hero-logo-size: calc((100cqi - 1rem) / 2);
-    }
+  .VPHero.has-image .image-container {
+    --hero-logo-size: calc((100cqi - 1rem) / 2);
+  }
 }
 
 /* The blend also makes the logo a stacking context, so it paints over the filtered glow. */
@@ -330,34 +330,34 @@ html:has(.site-expand:modal) {
   mix-blend-mode: plus-lighter;
 }
 
-.box>.VPImage {
+.box > .VPImage {
   background-color: var(--site-color-surface);
   border-radius: var(--site-radius-control);
 }
 
 @media (min-width: 960px) {
-    /* The feature cards' three columns and 1rem gutter (VPFeatures' rem gutter, not a theme token): text spans two, the logo fills the third. */
-    .VPHero.has-image .container {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      column-gap: 1rem;
-    }
+  /* The feature cards' three columns and 1rem gutter (VPFeatures' rem gutter, not a theme token): text spans two, the logo fills the third. */
+  .VPHero.has-image .container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
 
-    .VPHero.has-image .main.main {
-      grid-column: span 2;
-      inline-size: auto;
-      max-inline-size: none;
-    }
+  .VPHero.has-image .main.main {
+    grid-column: span 2;
+    inline-size: auto;
+    max-inline-size: none;
+  }
 
-    .VPHero.has-image .image {
-      margin: 0;
-    }
+  .VPHero.has-image .image {
+    margin: 0;
+  }
 
-    .VPHero.has-image .image-container {
-      --hero-logo-size: 100cqi;
-      place-items: center end;
-      block-size: 100%;
-    }
+  .VPHero.has-image .image-container {
+    --hero-logo-size: 100cqi;
+    place-items: center end;
+    block-size: 100%;
+  }
 }
 
 /* === HTTP status colors: one fill per status for the chips and diagrams === */
@@ -384,10 +384,18 @@ html.dark {
 /* Ink is white on a fill darker than the threshold lightness and black on one lighter. */
 @supports (color: oklch(from red l c h)) {
   html {
-    --status-ok-ink: oklch(from var(--status-ok) clamp(0, (0.6 - l) * 1000, 1) 0 0);
-    --status-redirect-ink: oklch(from var(--status-redirect) clamp(0, (0.6 - l) * 1000, 1) 0 0);
-    --status-not-found-ink: oklch(from var(--status-not-found) clamp(0, (0.6 - l) * 1000, 1) 0 0);
-    --status-as-served-ink: oklch(from var(--status-as-served) clamp(0, (0.6 - l) * 1000, 1) 0 0);
+    --status-ok-ink: oklch(
+      from var(--status-ok) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-redirect-ink: oklch(
+      from var(--status-redirect) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-not-found-ink: oklch(
+      from var(--status-not-found) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-as-served-ink: oklch(
+      from var(--status-as-served) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
   }
 }
 
@@ -412,7 +420,12 @@ html.dark {
   --status-fill-ink: var(--status-as-served-ink);
 }
 
-.VPBadge:is(.status-ok, .status-redirect, .status-not-found, .status-as-served) {
+.VPBadge:is(
+  .status-ok,
+  .status-redirect,
+  .status-not-found,
+  .status-as-served
+) {
   margin-inline-start: 6px;
   border-radius: 4px;
   padding-inline: 6px;
@@ -424,7 +437,7 @@ html.dark {
 /* === end HTTP status colors === */
 
 /* === Diagrams: the outline box every inlined diagram sits in (docs/DIAGRAMS.md) === */
-.vp-doc svg[role="img"][viewBox^="0 0 720 "] {
+.vp-doc svg[role='img'][viewBox^='0 0 720 '] {
   display: block;
   box-sizing: border-box;
   margin-block: 16px;
@@ -433,4 +446,3 @@ html.dark {
   padding: 12px;
 }
 /* === end diagrams === */
-

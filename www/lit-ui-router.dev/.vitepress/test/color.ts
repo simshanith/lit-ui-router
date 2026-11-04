@@ -19,7 +19,7 @@ const RULE = /(html(?:\.dark)?)\s*\{([^{}]*)\}/g;
 const FILL = /--status-([a-z-]+?):\s*(#[0-9a-f]{6});/g;
 
 const INK =
-  /--status-([a-z-]+)-ink:\s*oklch\(from var\(--status-\1\) clamp\(0, \(([\d.]+) - l\) \* 1000, 1\) 0 0\);/g;
+  /--status-([a-z-]+)-ink:\s*oklch\(\s*from var\(--status-\1\) clamp\(0, \(([\d.]+) - l\) \* 1000, 1\) 0 0\s*\);/g;
 
 export function readStatusColors(
   css = readFileSync(CSS, 'utf8'),
