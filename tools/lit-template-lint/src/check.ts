@@ -2,7 +2,7 @@
 // Type-checks lit `html` templates over the //#lint:templates file set
 // by overlaying each file with its lowered type-check block (see ./lower.ts)
 // and asking the TypeScript 7.1 API for that file's diagnostics in its own
-// project. Usage: lit-template-check [--stats] [--dump=<dir>]
+// project. Usage: lint-templates [--stats] [--dump=<dir>]
 import { globSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 

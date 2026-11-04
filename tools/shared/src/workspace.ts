@@ -105,13 +105,6 @@ export async function selectCatalogs(
   return { default: manifest?.catalog ?? {}, ...manifest?.catalogs };
 }
 
-/** packageExtensions from the manifest: package name -> injected fields. */
-export async function selectPackageExtensions(
-  source: WorkspaceManifestSource,
-): Promise<Record<string, { dependencies?: Record<string, string> }>> {
-  return (await source)?.packageExtensions ?? {};
-}
-
 /** patchedDependencies from the manifest: package name -> patch path. */
 export async function selectPatchedDependencies(
   source: WorkspaceManifestSource,

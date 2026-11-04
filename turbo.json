@@ -221,17 +221,14 @@
       // turns on github-formatter annotations, which the turbo_summary step re-emits
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
-    // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
-    // tag registry is global to the run, so cross-package `<ui-view>` usage
-    // only resolves when everything is analyzed together).
+    // @tools/lit-template-lint over every tracked src .ts: each file's
+    // templates are lowered to TypeScript and checked in its own tsconfig project.
     "//#lint:templates": {
       // Cross-package element types come from the published d.ts, not src:
-      // with dist absent `<ui-view>` resolves to nothing, so a
-      // type-incompatible binding against it goes unreported (the run only
-      // fails on unrelated no-missing-import noise). Root has
-      // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason (check:graph-edges
-      // holds the list to every publishable package with a build:types script).
+      // with dist absent `<ui-view>` is an unknown tag. Root has no workspace
+      // dep on the packages, so `^build:types` cannot reach them; these are
+      // package-qualified for that reason (check:graph-edges holds the list to
+      // every publishable package with a build:types script).
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
@@ -254,39 +251,9 @@
         "apps/*/src/**",
         "examples/*/src/**",
         // examples resolve a published lit-ui-router, so a lockfile bump can
-        // change what the analyzer sees without any src change
+        // change what the checker sees without any src change
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
-        "tools/compat-guards/src/**",
-        "tools/shared/src/**",
-        // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
-        "tsconfig.json",
-        "pnpm-workspace.yaml"
-      ]
-    },
-    // advisory and outside the lint umbrella: the acceptance (templates-ts) job runs it
-    "//#lint:templates:ts": {
-      "dependsOn": [
-        "eslint-plugin-lit-ui-router#build:types",
-        "lit-ui-router#build:types",
-        "lit-ui-router-effect#build:types",
-        "lit-ui-router-mobx#build:types",
-        "lit-ui-router-signals#build:types",
-        "lit-ui-router-ssr#build:types",
-        "ui-router-effect#build:types",
-        "ui-router-mobx#build:types",
-        "ui-router-navigation-location-plugin#build:types",
-        "ui-router-registry#build:types",
-        "ui-router-server#build:types",
-        "ui-router-signals#build:types"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "packages/*/src/**",
-        "apps/*/src/**",
-        "examples/*/src/**",
-        "examples/*/package-lock.json",
-        "tools/lit-template-check/src/**",
         "tools/shared/src/**",
         // each file is checked in its own tsconfig project
         "{packages,apps,examples}/*/tsconfig*.json",

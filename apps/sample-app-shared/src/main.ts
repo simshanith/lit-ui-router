@@ -1,8 +1,6 @@
 import './styles.css';
 import { ContextEvent } from '@lit/context';
 import { html, render } from 'lit';
-// type-only: keeps <api-docs> known to lit-analyzer, emits no runtime import
-import type {} from '@api-viewer/docs';
 // defines <ui-router> before render, so its connectedCallback mints the router synchronously
 import 'lit-ui-router';
 import type { UIRouterLit } from 'lit-ui-router';

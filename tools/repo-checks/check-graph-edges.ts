@@ -45,13 +45,13 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
     select: isPublishable,
     why: 'check:pack, check:exports and check:published-diff hash packed packages through this edge, so an unlisted publishable package gets stale cached verdicts; add the line to tools/release/turbo.json',
   },
-  ...['//#lint:templates', '//#lint:templates:ts'].map((consumer) => ({
-    consumer,
+  {
+    consumer: '//#lint:templates',
     producerTask: 'build:types',
-    select: (member: Member) =>
+    select: (member) =>
       isPublishable(member) && hasScript('build:types')(member),
-    why: 'both template checkers resolve cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
-  })),
+    why: 'the template checker resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
+  },
 ];
 
 const main = async (): Promise<void> => {

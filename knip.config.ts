@@ -216,7 +216,7 @@ const workspaces = {
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },
-  'tools/lit-template-check': {
+  'tools/lit-template-lint': {
     // checked by path in check.test.ts, never imported
     entry: ['src/fixtures/**/*.ts'],
     // reached via createRequire(), which knip does not follow

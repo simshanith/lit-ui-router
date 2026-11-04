@@ -77,7 +77,6 @@ catalog:
   jsonc-parser: ^3.3.1
   knip: ^6.44.1
   lit: ^3.3.3
-  lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
   mobx: ^7.1.4
@@ -206,7 +205,6 @@ catalogs:
     '@tools/happy-dom': workspace:*
     '@tools/lcov-rebase': workspace:*
     '@tools/lint-elements': workspace:*
-    '@tools/lit-template-check': workspace:*
     '@tools/lit-template-lint': workspace:*
     '@tools/lit-test-env': workspace:*
     '@tools/oxc-emit': workspace:*
@@ -282,12 +280,6 @@ packageExtensions:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1
   eslint-doc-generator:
-    dependencies:
-      typescript: npm:@typescript/typescript6@^6.0.2
-  lit-analyzer:
-    dependencies:
-      typescript: npm:@typescript/typescript6@^6.0.2
-  ts-simple-type:
     dependencies:
       typescript: npm:@typescript/typescript6@^6.0.2
 

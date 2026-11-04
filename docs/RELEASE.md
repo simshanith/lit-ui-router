@@ -255,9 +255,6 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 - `acceptance (npm-diff)`: the patch the release-diffs worker stores against
   `npm diff`, byte for byte, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.
-- `acceptance (templates-ts)`: `@tools/lit-template-check`, which type-checks
-  Lit templates on the TypeScript 7.1 beta API (`mise run lint_templates_ts`).
-  lit-analyzer's `//#lint:templates` stays the gate.
 
 A red check is a real failure on that commit, unlike a release signal, but it
 gates nothing: Tag & push needs only `build_and_test`. The README badges read

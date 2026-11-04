@@ -22,10 +22,6 @@ const CHECK = 'check-single-version';
 // Splits the workspace asks for. A row that stops splitting fails as stale.
 const ALLOWED: SplitAllowance[] = [
   {
-    name: '@vscode/web-custom-data',
-    why: '@tools/lit-template-check reads the current html data; lit-analyzer pins 0.4.x',
-  },
-  {
     name: 'binary-extensions',
     why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; the release-diffs worker's npm diff follows libnpmdiff's ^3 list",
   },
@@ -43,7 +39,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'parse5',
-    why: "@tools/lit-template-check takes eslint-plugin-lit's 8.x line; lit-analyzer, eslint-plugin-lit-a11y (and its dom5) and @lit-labs/ssr pin their own",
+    why: "@tools/lit-template-lint takes eslint-plugin-lit's 8.x line; eslint-plugin-lit-a11y (and its dom5) and @lit-labs/ssr pin their own",
   },
   {
     name: 'vite',
@@ -51,7 +47,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'typescript',
-    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/lit-template-check takes the typescript-7.1 beta alias; attw, the cem analyzer and web-component-analyzer pin their own',
+    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/lit-template-lint takes the typescript-7.1 beta alias; attw and the cem analyzer pin their own',
   },
 ];
 
