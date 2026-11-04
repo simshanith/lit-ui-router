@@ -97,7 +97,9 @@ onMounted(() => {
   background: transparent;
 }
 
+/* Inline, no wider than the drawn canvas. */
 .vp-doc .diagram-embed svg[role='img'] {
+  max-inline-size: 720px;
   margin-block: 0;
 }
 
@@ -159,8 +161,7 @@ onMounted(() => {
 .vp-doc .diagram-embed:modal svg[role='img'] {
   flex: none;
   inline-size: min(100cqi, 100cqb * var(--diagram-ratio));
-  /* !important outranks the svg's inline max-width. */
-  max-inline-size: none !important;
+  max-inline-size: none;
   block-size: auto;
   margin: auto;
   padding: 0;

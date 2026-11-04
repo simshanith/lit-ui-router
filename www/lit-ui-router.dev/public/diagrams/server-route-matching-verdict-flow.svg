@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 292" width="100%" style="max-width: 720px" role="img" aria-label="Verdict flow: an incoming request pathname goes through createServerRouter's resolve, which returns one of three verdicts - shell, redirect, or notFound - and the worker turns each into HTTP: 200, 302, or 404" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 292" width="100%" role="img" aria-label="Verdict flow: an incoming request pathname goes through createServerRouter's resolve, which returns one of three verdicts - shell, redirect, or notFound - and the worker turns each into HTTP: 200, 302, or 404" xmlns="http://www.w3.org/2000/svg">
   <title>Request to verdict to HTTP</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>

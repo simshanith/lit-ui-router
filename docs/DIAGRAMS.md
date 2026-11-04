@@ -6,7 +6,7 @@ The rules follow the 1976 NASA Graphics Standards Manual (NHB 1430.2): every dia
 
 ## Canvas
 
-- The root is `<svg viewBox="0 0 720 H" width="100%" style="max-width: 720px" role="img" aria-label="…">`. The canvas is always 720 wide, and the height fits the drawing.
+- The root is `<svg viewBox="0 0 720 H" width="100%" role="img" aria-label="…">`, with no `style`: the page sizes it (`DiagramEmbed` caps it at 720px inline and fits it to the window expanded), and opened on its own it fills the window width. The canvas is always 720 wide, and the height fits the drawing.
 - `<title>` comes first. `aria-label` reads the whole diagram as prose.
 - One `<g>` sets the base font family for the drawing.
 

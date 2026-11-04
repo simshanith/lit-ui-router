@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 196" width="100%" style="max-width: 720px" role="img" aria-label="A redirect, /legacy: ui-router-server's prerender asks the route table for the verdict, which is a redirect to /about with status 302. The path becomes a _redirects line, /legacy /about 302, and the same line for /legacy/. Nothing is rendered and no page is written, so lit-ui-router-ssr and your app are never called." xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 196" width="100%" role="img" aria-label="A redirect, /legacy: ui-router-server's prerender asks the route table for the verdict, which is a redirect to /about with status 302. The path becomes a _redirects line, /legacy /about 302, and the same line for /legacy/. Nothing is rendered and no page is written, so lit-ui-router-ssr and your app are never called." xmlns="http://www.w3.org/2000/svg">
   <title>A redirect: /legacy</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>

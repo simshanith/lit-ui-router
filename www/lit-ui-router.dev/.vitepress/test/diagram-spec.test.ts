@@ -106,7 +106,7 @@ for (const file of files) {
       assert.equal(root.name, 'svg');
       assert.match(root.attrs.get('viewBox') ?? '', /^0 0 720 \d+$/);
       assert.equal(root.attrs.get('width'), '100%');
-      assert.equal(root.attrs.get('style'), 'max-width: 720px');
+      assert.equal(root.attrs.has('style'), false);
       assert.equal(root.attrs.get('role'), 'img');
       assert.ok(root.attrs.get('aria-label'));
       assert.equal(drawn[0]?.name, 'title');

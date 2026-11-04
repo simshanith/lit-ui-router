@@ -1,4 +1,4 @@
-<svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="The 404 page, written once after the listed paths: ui-router-server's prerender asks the route table for the verdict of a path no route claims under the / mount. The otherwise rule answers with a page, the notFound state, carrying status 404. It renders like any page: lit-ui-router-ssr calls your renderShell and document, and ui-router-server writes the result as 404.html." xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 300" width="100%" role="img" aria-label="The 404 page, written once after the listed paths: ui-router-server's prerender asks the route table for the verdict of a path no route claims under the / mount. The otherwise rule answers with a page, the notFound state, carrying status 404. It renders like any page: lit-ui-router-ssr calls your renderShell and document, and ui-router-server writes the result as 404.html." xmlns="http://www.w3.org/2000/svg">
   <title>The 404 page, once</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
