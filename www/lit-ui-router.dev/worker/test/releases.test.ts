@@ -483,7 +483,7 @@ describe('the /releases pages', () => {
   const page = async (path: string) =>
     parse((await (await serve(path))?.text()) ?? '');
 
-  const hrefOf = (container: HTMLElement, name: string | RegExp) =>
+  const hrefOf = (container: HTMLElement, name: string) =>
     getByRole(container, 'link', { name }).getAttribute('href');
 
   it('lists every package with its latest release', async () => {
@@ -510,8 +510,7 @@ describe('the /releases pages', () => {
       ),
     );
     assert.equal(
-      // dom-accessibility-api trims the space that opens the hidden span.
-      hrefOf(doc.body, /^GitHub release ?for lit-ui-router@1\.10\.0$/),
+      hrefOf(doc.body, 'GitHub release for lit-ui-router@1.10.0'),
       'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
     );
     getByRole(doc.body, 'rowheader', { name: '1.11.0-rc.0 prerelease' });
