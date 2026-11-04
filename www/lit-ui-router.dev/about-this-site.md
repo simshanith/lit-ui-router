@@ -28,20 +28,39 @@ follows a single request through the docs worker.
    [`ui-router-server` verdicts](./guides/server-route-matching#the-verdict):
    a redirect, a 404, or the app's shell, fetched back from static assets
    like its 404 pages and any path it doesn't route. It also renders the
-   release pages and `/gh` redirects from ledger rows it reads over RPC,
-   through the `LEDGER` service binding. It has no database of its own.
-4. **The ledger worker**
-   ([`release-ledger`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/README.md))
-   takes release claims at `POST /claims`, consumes them from the queue, and
-   is the only thing that writes to D1. A daily Cron Trigger enqueues a claim
-   for every release tag.
-5. **Queues** hold claims until the consumer takes them, one at a time, with a
+   release pages and `/gh` redirects from ledger rows it reads over RPC. It
+   has no database of its own.
+4. **The ledger worker** keeps the release ledger; the docs worker reads it
+   through the `LEDGER` service binding.
+   [The release ledger](#the-release-ledger) below draws what is behind it.
+
+## The release ledger
+
+The ledger worker
+([`release-ledger`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/README.md))
+records what the git tag, npm and GitHub say about each release. Claims come
+in, a queue consumer checks them against the sources and writes the outcome,
+and other workers read the result. Badges 2, 3, 5 and 8 are the worker's own
+entry points.
+
+<!--@include: ./public/diagrams/about-this-site-ledger.svg-->
+
+1. **GitHub Actions** sends a claim after each npm publish, from the
+   `publish-npm.yml` workflow with an Actions OIDC token.
+2. **`POST /claims`** verifies the token and enqueues the claim. It answers
+   202 and writes nothing to D1.
+3. **The sweep**, a daily Cron Trigger, lists the repository's release tags
+   and enqueues a claim for each, so the ledger heals without an Actions run.
+4. **Queues** hold claims until the consumer takes them, one at a time, with a
    dead-letter queue for claims that run out of retries.
-6. **D1** stores the release ledger.
-7. **GitHub** sends a claim after each npm publish, from the `publish-npm.yml`
-   workflow with an Actions OIDC token. The consumer reads its tags and
-   releases.
-8. **npm** versions and dist-tags, read by the consumer.
+5. **The consumer** observes each claim's release, folds the observation and
+   is the only thing that writes to D1.
+6. **GitHub and npm** are the sources it observes: tags, releases, versions
+   and dist-tags.
+7. **D1** stores the release ledger.
+8. **`LedgerReader`** is the worker's read-only RPC entry point.
+9. **The docs worker** renders the release pages and `/gh` redirects from the
+   rows it reads.
 
 The ledger worker's bindings, queue settings and schedule are in its
 [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-ledger.lit-ui-router.dev/wrangler.jsonc).

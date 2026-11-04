@@ -6,6 +6,8 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
 [#1430](https://github.com/simshanith/lit-ui-router/issues/1430); the model it
 stores, its regions and the fold, is
 [`@tools/release-ledger`](../../tools/release-ledger/README.md).
+[How this site runs](https://lit-ui-router.dev/about-this-site#the-release-ledger)
+draws the worker, its queue and its readers.
 
 - [`migrations/`](./migrations): the D1 schema. A `versions` row stores facts,
   never a state; the `version_states` view derives each region's state and an
