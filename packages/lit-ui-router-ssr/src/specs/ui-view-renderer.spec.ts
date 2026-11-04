@@ -1,6 +1,20 @@
 import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import {
+  childNodes,
+  comments,
+  element,
+  elements,
+  hasAttribute,
+  outline,
+  parseMarkup,
+  text,
+} from '@tools/lit-test-env/ssr-tree.ts';
+import type {
+  DocumentFragment,
+  Element,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
@@ -74,81 +88,121 @@ const pendingRouter = (): UIRouterLit => {
   return router;
 };
 
+/** The labels of the nodes either side of `node`, as {@link outline} writes them. */
+const around = (node: Element): (string | undefined)[] => {
+  const parent = node.parentNode;
+
+  if (!parent) return [];
+  const labels = outline(parent);
+  const at = childNodes(parent).indexOf(node);
+
+  return [labels[at - 1], labels[at + 1]];
+};
+
+/** Comment data from the comment `first` on, in document order. */
+const commentsFrom = (tree: DocumentFragment, first: string): string[] => {
+  const all = comments(tree);
+
+  expect(all).toContain(first);
+
+  return all.slice(all.indexOf(first));
+};
+
+const shadowRoots = (tree: DocumentFragment): Element[] =>
+  elements(tree, 'template').filter(
+    (template) =>
+      hasAttribute(template, 'shadowrootmode') ||
+      hasAttribute(template, 'shadowroot'),
+  );
+
+const deferred = [{ name: 'defer-hydration', value: '' }];
+
 describe('UiViewRenderer', () => {
   it('writes the routed component into the light DOM, never a shadow root', async () => {
-    const markup = await at('/shell');
+    const tree = parseMarkup(await at('/shell'));
 
-    expect(markup).not.toContain('shadowrootmode');
-    expect(markup).not.toContain('<template');
+    expect(elements(tree, 'template')).toEqual([]);
     // the resolve arrives as its own child part inside the component's markup, prefixed with the rest of the interior
-    expect(markup).toContain(
-      '<h1>shell <!--served:lit-part-->hello<!--served:/lit-part--></h1>',
-    );
-  });
-
-  it('wraps the component in the part markers its client render hydrates against', async () => {
-    const markup = await at('/shell');
-
-    // one plain `lit-part <digest>` opens inside `<ui-view>`, and it closes before the tag does
-    expect(markup).toMatch(/<ui-view[^>]*><!--lit-part [^-]+-->/);
-    expect(markup).toContain('<!--/lit-part--></ui-view>');
-  });
-
-  it('prefixes every marker between that pair, and only those', async () => {
-    const markup = await at('/shell/detail');
-
-    const interior = markup.slice(
-      markup.indexOf('<!--lit-part HRwFDUbdJU8=-->'),
-    );
-
-    // the pair itself is the only plain marker left in the view's own run
-    expect(interior.match(/<!--\/?lit-(part|node)/g)).toEqual([
-      '<!--lit-part',
-      '<!--/lit-part',
-      '<!--/lit-part',
-      '<!--/lit-part',
+    expect(outline(element(tree, 'h1'))).toEqual([
+      'shell ',
+      '<!--served:lit-part-->',
+      'hello',
+      '<!--served:/lit-part-->',
     ]);
   });
 
-  it('defers hydration of the view it filled', async () => {
-    const markup = await at('/shell');
+  it('wraps the component in the part markers its client render hydrates against', async () => {
+    const view = element(parseMarkup(await at('/shell')), 'ui-view');
+    const children = outline(view);
 
-    expect(markup).toMatch(/<ui-view[^>]*\sdefer-hydration[^>]*>/);
+    // one plain `lit-part <digest>` opens inside `<ui-view>`, and it closes before the tag does
+    expect(children[0]).toMatch(/^<!--lit-part [^-]+-->$/);
+    expect(children.at(-1)).toBe('<!--/lit-part-->');
+  });
+
+  it('prefixes every marker between that pair, and only those', async () => {
+    const interior = commentsFrom(
+      parseMarkup(await at('/shell/detail')),
+      'lit-part HRwFDUbdJU8=',
+    );
+
+    // the pair itself is the only plain marker left in the view's own run
+    expect(interior.filter((data) => /^\/?lit-(part|node)/.test(data))).toEqual(
+      ['lit-part HRwFDUbdJU8=', '/lit-part', '/lit-part', '/lit-part'],
+    );
+  });
+
+  it('defers hydration of the view it filled', async () => {
+    const view = element(parseMarkup(await at('/shell')), 'ui-view');
+
+    expect(hasAttribute(view, 'defer-hydration')).toBe(true);
   });
 
   it('fills the nested view from the child state', async () => {
-    const markup = await at('/shell/detail');
+    const tree = parseMarkup(await at('/shell/detail'));
+    const views = elements(tree, 'ui-view');
 
-    expect(markup).toContain('class="detail"');
-    expect(markup).toContain('leaf');
+    expect(text(tree)).toContain('leaf');
     // outer view, then the inner one the shell template opened
-    expect(markup.match(/<ui-view/g)).toHaveLength(2);
+    expect(views).toHaveLength(2);
+    const [, inner] = views;
     // the nested view's own pair and node marker belong to the parent's run, so they carry the prefix until the parent wakes
-    expect(markup).toContain(
-      '<!--served:lit-node 0--><ui-view defer-hydration>' +
-        '<!--served:lit-part DJeWKgE7tTI=-->' +
-        '<p class="detail"><!--served:lit-part-->leaf<!--served:/lit-part--></p>' +
-        '<!--served:/lit-part--></ui-view>',
-    );
+    expect(around(inner)[0]).toBe('<!--served:lit-node 0-->');
+    expect(inner.attrs).toEqual(deferred);
+    expect(outline(inner)).toEqual([
+      '<!--served:lit-part DJeWKgE7tTI=-->',
+      '<p>',
+      '<!--served:/lit-part-->',
+    ]);
+    const detail = element(inner, 'p', { class: 'detail' });
+    expect(elements(tree, 'p', { class: 'detail' })).toEqual([detail]);
+    expect(outline(detail)).toEqual([
+      '<!--served:lit-part-->',
+      'leaf',
+      '<!--served:/lit-part-->',
+    ]);
   });
 
   it('leaves the nested view empty while only the parent state is active', async () => {
-    const markup = await at('/shell');
+    const tree = parseMarkup(await at('/shell'));
+    const [, inner] = elements(tree, 'ui-view');
 
-    expect(markup).not.toContain('class="detail"');
-    expect(markup).toContain(
-      '<ui-view defer-hydration><!--served:lit-part--><!--served:/lit-part--></ui-view>',
-    );
+    expect(elements(tree, 'p', { class: 'detail' })).toEqual([]);
+    expect(inner.attrs).toEqual(deferred);
+    expect(outline(inner)).toEqual([
+      '<!--served:lit-part-->',
+      '<!--served:/lit-part-->',
+    ]);
   });
 
   it('renders nothing between the markers for an address no state routes', async () => {
-    const markup = await at('/bare');
+    const tree = parseMarkup(await at('/bare'));
+    const view = element(tree, 'ui-view');
 
     // a top-level view: nothing prefixed it, so the empty pair is plain
-    expect(markup).toContain(
-      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
-    );
-    expect(markup).not.toContain('<h1>');
+    expect(view.attrs).toEqual(deferred);
+    expect(outline(view)).toEqual(['<!--lit-part-->', '<!--/lit-part-->']);
+    expect(elements(tree, 'h1')).toEqual([]);
   });
 
   it('leaves the view service as it found it', async () => {
@@ -168,7 +222,11 @@ describe('UiViewRenderer', () => {
       ),
     );
 
-    expect(markup).toContain('name="detail"');
+    expect(element(parseMarkup(markup), 'ui-view').attrs).toEqual([
+      { name: 'name', value: 'detail' },
+      { name: 'data-note', value: 'Tom & "Jerry"' },
+    ]);
+    // escaping is a property of the bytes, which the parsed value above can't show
     expect(markup).toContain('data-note="Tom &amp; &quot;Jerry&quot;"');
     // negative control: the raw, unescaped value never reaches the markup
     expect(markup).not.toContain('data-note="Tom & "Jerry""');
@@ -187,52 +245,61 @@ describe('UiViewRenderer', () => {
     const router = pendingRouter();
     await settle(router, '/pending');
 
-    const markup = draw(router);
+    const slow = element(parseMarkup(draw(router)), 'p', { class: 'slow' });
 
-    expect(markup).toContain('promise');
-    expect(markup).not.toContain('missing');
+    expect(text(slow).trim()).toBe('promise');
   });
 });
 
 describe('UiViewRenderer, for a routed LitElement class', () => {
-  const classAt = async (path: string): Promise<string> => {
+  const classAt = async (path: string): Promise<DocumentFragment> => {
     const router = makeClassRouter();
     await settle(router, path);
 
-    return draw(router);
+    return parseMarkup(draw(router));
   };
 
   it('writes the element into the first of the two slots core renders a class into', async () => {
-    const markup = await classAt('/card');
+    const tree = await classAt('/card');
+    const view = element(tree, 'ui-view');
 
+    expect(view.attrs).toEqual(deferred);
     // `BRUAAAUVAAA=` digests any all-empty strings, so the part count is what matches core's `${slots[0]}${slots[1]}`
-    expect(markup).toContain(
-      '<ui-view defer-hydration><!--lit-part BRUAAAUVAAA=-->' +
-        '<!--served:lit-part--><routed-card defer-hydration>',
-    );
-    expect(markup).toContain(
-      '</routed-card><!--served:/lit-part-->' +
-        '<!--served:lit-part--><!--served:/lit-part--><?><!--/lit-part--></ui-view>',
-    );
+    expect(outline(view)).toEqual([
+      '<!--lit-part BRUAAAUVAAA=-->',
+      '<!--served:lit-part-->',
+      '<routed-card>',
+      '<!--served:/lit-part-->',
+      '<!--served:lit-part-->',
+      '<!--served:/lit-part-->',
+      '<!--?-->',
+      '<!--/lit-part-->',
+    ]);
+    expect(element(view, 'routed-card').attrs).toEqual(deferred);
   });
 
   it('renders the element’s shadow root from the props core assigned', async () => {
-    const markup = await classAt('/card');
+    const tree = await classAt('/card');
+    const card = element(tree, 'routed-card');
 
-    expect(markup).toContain(
-      '<template shadowroot="open" shadowrootmode="open">',
-    );
-    expect(markup).toContain(
-      '<p class="card"><!--served:lit-part-->card leaf<!--served:/lit-part--></p>',
-    );
-    expect(markup).not.toContain('unrouted');
+    expect(outline(card)[0]).toBe('<template>');
+    const root = element(card, 'template');
+    expect(root.attrs).toEqual([
+      { name: 'shadowroot', value: 'open' },
+      { name: 'shadowrootmode', value: 'open' },
+    ]);
+    expect(outline(element(root, 'p', { class: 'card' }))).toEqual([
+      '<!--served:lit-part-->',
+      'card leaf',
+      '<!--served:/lit-part-->',
+    ]);
+    expect(elements(tree, 'span', { class: 'unrouted' })).toEqual([]);
   });
 
   it('writes no node marker inside the slot, since the client reads the element as a leaf value', async () => {
-    const markup = await classAt('/card');
-    const slot = markup.slice(markup.indexOf('BRUAAAUVAAA='));
+    const slot = commentsFrom(await classAt('/card'), 'lit-part BRUAAAUVAAA=');
 
-    expect(slot).not.toMatch(/lit-node/);
+    expect(slot.filter((data) => data.includes('lit-node'))).toEqual([]);
   });
 
   it('builds the element through core, props in the constructor', async () => {
@@ -245,21 +312,26 @@ describe('UiViewRenderer, for a routed LitElement class', () => {
   });
 
   it('writes a sticky class as its element rather than as text', async () => {
-    const markup = await classAt('/sticky');
+    const tree = await classAt('/sticky');
+    const card = element(tree, 'sticky-card');
 
-    expect(markup).toContain('<sticky-card defer-hydration>');
-    expect(markup).toContain('sticky leaf');
-    expect(markup).not.toContain('&lt;');
-    expect(markup).not.toContain('[object');
+    expect(card.attrs).toEqual(deferred);
+    expect(text(card)).toContain('sticky leaf');
+    expect(text(tree)).not.toContain('<');
+    expect(text(tree)).not.toContain('[object');
   });
 
   it('writes a light-DOM class as its bare element, with no shadow root to hide its render', async () => {
-    const markup = await classAt('/light');
+    const tree = await classAt('/light');
+    const card = element(tree, 'light-class-card');
 
-    expect(markup).toContain(
-      '<!--served:lit-part--><light-class-card defer-hydration></light-class-card><!--served:/lit-part-->',
-    );
-    expect(markup).not.toContain('shadowroot');
+    expect(card.attrs).toEqual(deferred);
+    expect(outline(card)).toEqual([]);
+    expect(around(card)).toEqual([
+      '<!--served:lit-part-->',
+      '<!--served:/lit-part-->',
+    ]);
+    expect(shadowRoots(tree)).toEqual([]);
   });
 
   it('leaves the view service as it found it', async () => {

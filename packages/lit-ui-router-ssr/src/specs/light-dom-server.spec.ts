@@ -1,3 +1,16 @@
+import {
+  childNodes,
+  element,
+  elements,
+  hasAttribute,
+  outline,
+  parseMarkup,
+  text,
+} from '@tools/lit-test-env/ssr-tree.ts';
+import type {
+  DocumentFragment,
+  Element,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { describe, expect, it } from 'vitest';
 
 import { rootTemplate } from './fixture.js';
@@ -10,79 +23,97 @@ import {
   plainPage,
 } from './light-dom-fixture.js';
 
-/** The markup between `<tag id="id" …>` and its close tag. */
-const inside = (markup: string, tag: string, id: string): string => {
-  const open = new RegExp(`<${tag}\\s[^>]*id="${id}"[^>]*>`).exec(markup);
-
-  if (!open) throw new Error(`no <${tag} id="${id}"> in the markup`);
-  const from = open.index + open[0].length;
-
-  return markup.slice(from, markup.lastIndexOf(`</${tag}`));
-};
+const shadowRoots = (tree: DocumentFragment): Element[] =>
+  elements(tree, 'template').filter(
+    (template) =>
+      hasAttribute(template, 'shadowrootmode') ||
+      hasAttribute(template, 'shadowroot'),
+  );
 
 describe('the server render of a light-DOM element', () => {
   // The elements carry no `isServer` branch; their render reaches the page through the renderer alone.
   it('draws an opted-in element’s render into its light DOM, from its bound property', async () => {
-    const markup = await drawLight(cardPage('served'), '/bare');
-    const card = inside(markup, 'light-card', 'top');
+    const tree = parseMarkup(await drawLight(cardPage('served'), '/bare'));
+    const card = element(tree, 'light-card', { id: 'top' });
 
-    expect(card).toMatch(/<p class="card-label">(<!--[^>]*-->)*served/);
-    expect(card).toContain('class="card-button"');
-    expect(markup).not.toContain('shadowroot');
+    expect(text(element(card, 'p', { class: 'card-label' }))).toBe('served');
+    expect(elements(card, 'button', { class: 'card-button' })).toHaveLength(1);
+    expect(shadowRoots(tree)).toEqual([]);
   });
 
   it('writes an element that did not opt in as today: tag and attributes, nothing inside', async () => {
-    const markup = await drawLight(plainPage, '/bare');
+    const tree = parseMarkup(await drawLight(plainPage, '/bare'));
+    const plain = element(tree, 'plain-light-card', { id: 'plain' });
 
-    expect(inside(markup, 'plain-light-card', 'plain')).toBe('');
-    expect(markup).toMatch(/<plain-light-card\s+id="plain" defer-hydration>/);
+    expect(outline(plain)).toEqual([]);
+    expect(plain.attrs).toEqual([
+      { name: 'id', value: 'plain' },
+      { name: 'defer-hydration', value: '' },
+    ]);
   });
 
   it('draws the element’s render after the children its use site wrote', async () => {
-    const markup = await drawLight(panelPage, '/bare');
-    const panel = inside(markup, 'light-panel', 'panel');
+    const tree = parseMarkup(await drawLight(panelPage, '/bare'));
+    const panel = element(tree, 'light-panel', { id: 'panel' });
+    const children = childNodes(panel);
 
-    expect(panel.indexOf('class="authored"')).toBeGreaterThanOrEqual(0);
-    expect(panel.indexOf('class="panel-heading"')).toBeGreaterThan(
-      panel.indexOf('class="authored"'),
+    const authored = children.indexOf(
+      element(panel, 'p', { class: 'authored' }),
     );
-    expect(panel.match(/class="authored"/g)).toHaveLength(1);
+
+    expect(authored).toBeGreaterThanOrEqual(0);
+    expect(
+      children.indexOf(element(panel, 'h2', { class: 'panel-heading' })),
+    ).toBeGreaterThan(authored);
+    expect(elements(panel, 'p', { class: 'authored' })).toHaveLength(1);
   });
 
   it('draws a light-DOM element a routed view holds', async () => {
-    const markup = await drawLight(rootTemplate, '/card');
+    const tree = parseMarkup(await drawLight(rootTemplate, '/card'));
 
-    expect(inside(markup, 'light-card', 'routed')).toContain('routed');
-    expect(markup).not.toContain('shadowroot');
+    expect(text(element(tree, 'light-card', { id: 'routed' }))).toContain(
+      'routed',
+    );
+    expect(shadowRoots(tree)).toEqual([]);
   });
 
   it('draws a <ui-view> and its routed content inside a light-DOM element’s own render', async () => {
-    const markup = await drawLight(framePage, '/card');
-    const frame = inside(markup, 'light-frame', 'frame');
+    const tree = parseMarkup(await drawLight(framePage, '/card'));
+    const frame = element(tree, 'light-frame', { id: 'frame' });
 
-    expect(frame).toContain('class="frame-heading"');
-    expect(frame).toContain('<ui-view');
-    expect(inside(markup, 'light-card', 'routed')).toContain('routed');
+    expect(elements(frame, 'h2', { class: 'frame-heading' })).toHaveLength(1);
+    expect(elements(frame, 'ui-view')).toHaveLength(1);
+    expect(text(element(tree, 'light-card', { id: 'routed' }))).toContain(
+      'routed',
+    );
   });
 
   it('draws two levels of light-DOM elements, each from its bound property', async () => {
-    const markup = await drawLight(outerPage, '/bare');
+    const tree = parseMarkup(await drawLight(outerPage, '/bare'));
+    const outer = element(tree, 'light-outer', { id: 'outer' });
 
-    expect(inside(markup, 'light-outer', 'outer')).toContain(
-      'class="outer-heading"',
+    expect(elements(outer, 'h2', { class: 'outer-heading' })).toHaveLength(1);
+    expect(text(element(outer, 'light-card', { id: 'inner' }))).toContain(
+      'Outer inner',
     );
-    expect(inside(markup, 'light-card', 'inner')).toContain('Outer inner');
-    expect(markup).not.toContain('shadowroot');
+    expect(shadowRoots(tree)).toEqual([]);
   });
 
   it('prerenders a LightDomHydrating routed class into its light DOM, not a shadow root', async () => {
-    const markup = await drawLight(rootTemplate, '/routed-class');
+    const tree = parseMarkup(await drawLight(rootTemplate, '/routed-class'));
+    const card = element(tree, 'routed-light-card');
 
-    expect(markup).toMatch(
-      // The node marker before `<p>` is what the element's hydrate binds `data-label` against.
-      /<routed-light-card\s+defer-hydration><!--served:lit-part [^>]*--><!--served:lit-node 0--><p class="routed-light" data-label="routed class">/,
-    );
-    expect(markup).toContain('routed class');
-    expect(markup).not.toContain('shadowroot');
+    expect(card.attrs).toEqual([{ name: 'defer-hydration', value: '' }]);
+    const [part, node, label] = outline(card);
+    expect(part).toMatch(/^<!--served:lit-part /);
+    // The node marker before `<p>` is what the element's hydrate binds `data-label` against.
+    expect(node).toBe('<!--served:lit-node 0-->');
+    expect(label).toBe('<p>');
+    expect(element(card, 'p').attrs).toEqual([
+      { name: 'class', value: 'routed-light' },
+      { name: 'data-label', value: 'routed class' },
+    ]);
+    expect(text(card)).toContain('routed class');
+    expect(shadowRoots(tree)).toEqual([]);
   });
 });

@@ -3,6 +3,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
+import { getByRole, getByText } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import {
+  element,
+  elements,
+  hasAttribute,
+  outline,
+  parseMarkup,
+  text,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
@@ -483,9 +493,13 @@ describe('renderShell return values', () => {
       renderShell: (): TemplateResult => html`<p>from a template</p>`,
     });
 
-    expect(templated.files.get('dist/index.html')).toContain(
-      '<p>from a template</p>',
-    );
+    expect(
+      getByText(
+        parseHtml(templated.files.get('dist/index.html')!).body,
+        'from a template',
+        { selector: 'p' },
+      ),
+    ).toBeDefined();
 
     const verbatim = await run({
       paths: ['/'],
@@ -505,10 +519,13 @@ describe('renderShell return values', () => {
         `<!doctype html><title>${context.path}</title><div id="root">${body}</div>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('<title>/</title>');
-    expect(written).toContain('<div id="root">');
-    expect(written).toContain('<p>body</p>');
+    const written = parseHtml(files.get('dist/index.html')!);
+    expect(written.title).toBe('/');
+    // the mount point has no role, so it's found by id
+    const root = written.querySelector('#root');
+    expect(
+      getByText(written.body, 'body', { selector: 'p' }).parentElement,
+    ).toBe(root);
   });
 
   it('propagates a renderShell rejection and writes no rules file', async () => {
@@ -552,7 +569,11 @@ describe('the render composition', () => {
         html`<a href=${srefHref('sheet', { num: '7B' })}>7B</a>`,
     });
 
-    expect(files.get('dist/index.html')).toContain('href="/sheet/7B"');
+    expect(
+      getByRole(parseHtml(files.get('dist/index.html')!).body, 'link', {
+        name: '7B',
+      }).getAttribute('href'),
+    ).toBe('/sheet/7B');
   });
 
   it('answers a context-request that reaches the render root', async () => {
@@ -564,9 +585,13 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('/sheet/7B');
-    expect(written).not.toContain('no-router');
+    // the span sits in the probe's declarative shadow root, which only parse5 reads as a tree
+    const probe = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'router-probe',
+    );
+
+    expect(text(element(element(probe, 'template'), 'span'))).toBe('/sheet/7B');
   });
 
   it('defaults to the light-DOM renderers, so no element gets a shadow root it never asked for', async () => {
@@ -588,7 +613,9 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<ui-view></ui-view>`,
     });
 
-    expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+    expect(
+      element(parseMarkup(files.get('dist/index.html')!), 'ui-view').attrs,
+    ).toEqual([{ name: 'defer-hydration', value: '' }]);
   });
 });
 
@@ -627,20 +654,38 @@ describe('the default element renderers', () => {
 
   it('draws a branded light-DOM element into its light DOM', async () => {
     const { files } = await run({ notFound: false, renderShell: cards });
-    const written = files.get('dist/index.html')!;
+    const tree = parseMarkup(files.get('dist/index.html')!);
+    const card = element(tree, 'default-card');
 
-    expect(written).toMatch(
-      /<default-card[^>]*>(<!--[^>]*-->)*<p class="default-card">(<!--[^>]*-->)*drawn/,
-    );
-    expect(written).not.toContain('shadowroot');
+    // only markers come before the card's paragraph
+    const children = outline(card);
+    const at = children.indexOf('<p>');
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(
+      children.slice(0, at).filter((label) => !label.startsWith('<!--')),
+    ).toEqual([]);
+    const label = element(card, 'p');
+    expect(label.attrs).toEqual([{ name: 'class', value: 'default-card' }]);
+    expect(text(label)).toBe('drawn');
+    expect(
+      elements(tree, 'template').filter(
+        (template) =>
+          hasAttribute(template, 'shadowroot') ||
+          hasAttribute(template, 'shadowrootmode'),
+      ),
+    ).toEqual([]);
   });
 
   it('serves an unbranded element empty', async () => {
     const { files } = await run({ notFound: false, renderShell: cards });
 
-    expect(files.get('dist/index.html')).toMatch(
-      /<plain-card\s+defer-hydration><!--lit-part--><!--\/lit-part--><\/plain-card>/,
+    const card = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'plain-card',
     );
+
+    expect(card.attrs).toEqual([{ name: 'defer-hydration', value: '' }]);
+    expect(outline(card)).toEqual(['<!--lit-part-->', '<!--/lit-part-->']);
   });
 
   it('gives way to an explicit elementRenderers list', async () => {
@@ -650,10 +695,10 @@ describe('the default element renderers', () => {
       elementRenderers: [UiViewRenderer],
     });
 
-    const written = files.get('dist/index.html')!;
+    const tree = parseMarkup(files.get('dist/index.html')!);
 
-    expect(written).not.toContain('default-card"');
-    expect(written).not.toContain('drawn');
+    expect(elements(tree, 'p', { class: 'default-card' })).toEqual([]);
+    expect(text(tree)).not.toContain('drawn');
   });
 });
 
@@ -689,7 +734,9 @@ describe('the hydration signature', () => {
       state: 'sheet',
       params: { num: '7B' },
     });
-    expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
+    expect(outline(parseMarkup(withoutSignature(page)))[0]).toMatch(
+      /^<!--lit-part /,
+    );
   });
 
   it('reads the version from the manifest', () => {
@@ -1004,9 +1051,12 @@ describe('the render root', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('/sheet/7B');
-    expect(written).not.toContain('no-router');
+    const probe = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'router-probe',
+    );
+
+    expect(text(element(element(probe, 'template'), 'span'))).toBe('/sheet/7B');
     expect(result.root).toBe(root);
     expect(requestRouter(root!)).toBeUndefined();
   });

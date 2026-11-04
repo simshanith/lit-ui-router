@@ -8,6 +8,8 @@ import type { TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
+import { getByText } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { build, createBuilder, preview } from 'vite';
 import type { PreviewServer } from 'vite';
 
@@ -19,6 +21,10 @@ import { mounts } from './fixtures/vite-prerender/src/routes.ts';
 const execNode = promisify(execFile);
 
 const root = path.join(import.meta.dirname, 'fixtures/vite-prerender');
+
+/** The `<p>` whose whole text is `line`; throws unless there is exactly one. */
+const paragraph = (page: string, line: string): HTMLElement =>
+  getByText(parseHtml(page).body, line, { selector: 'p' });
 
 const plugin = () =>
   serverRouterPlugin(createServerRouter({ mounts }), {
@@ -55,11 +61,20 @@ describe('serverRouterPlugin prerender, end to end', () => {
     );
 
     const about = await readFile(path.join(outDir, 'about/index.html'), 'utf8');
-    assert.match(about, /<div id="root"><p>\/about 200<\/p><\/div>/);
-    assert.match(about, /<script type="module" crossorigin src="\/assets\//);
+    const line = paragraph(about, '/about 200');
+    // the mount point and the module script have no role, so they're found by id and attribute
+    const root = line.ownerDocument.querySelector('#root');
+    assert.ok(root);
+    assert.equal(root.childNodes.length, 1);
+    assert.equal(root.firstChild, line);
+    const script = line.ownerDocument.querySelector('script[src]');
+    assert.ok(script);
+    assert.equal(script.getAttribute('type'), 'module');
+    assert.ok(script.hasAttribute('crossorigin'));
+    assert.match(script.getAttribute('src') ?? '', /^\/assets\//);
 
     const notFound = await readFile(path.join(outDir, '404.html'), 'utf8');
-    assert.match(notFound, /<p>\/__ui-router-server-probe__ 404<\/p>/);
+    assert.ok(paragraph(notFound, '/__ui-router-server-probe__ 404'));
 
     assert.equal(
       await readFile(path.join(outDir, '_redirects'), 'utf8'),
@@ -87,11 +102,13 @@ describe('serverRouterPlugin prerender, end to end', () => {
 
     const about = await page('/about');
     assert.equal(about.status, 200);
-    assert.match(await about.text(), /<p>\/about 200<\/p>/);
+    assert.ok(paragraph(await about.text(), '/about 200'));
 
     const missing = await page('/nowhere');
     assert.equal(missing.status, 404);
-    assert.match(await missing.text(), /<p>\/__ui-router-server-probe__ 404/);
+    assert.ok(
+      paragraph(await missing.text(), '/__ui-router-server-probe__ 404'),
+    );
 
     const legacy = await page('/legacy');
     assert.equal(legacy.status, 302);
@@ -182,7 +199,7 @@ describe('serverRouterPlugin prerender, per environment', () => {
     await builder.buildApp();
 
     const about = await readFile(path.join(outDir, 'about/index.html'), 'utf8');
-    assert.match(about, /<p>\/about 200<\/p>/);
+    assert.ok(paragraph(about, '/about 200'));
     assert.ok(!(await readdir(ssrOutDir)).includes('_redirects'));
   });
 
@@ -215,16 +232,20 @@ describe('serverRouterPlugin prerender, per environment', () => {
 
   // This package's `node` export is its development build, so `production` is the condition that splits it.
   it("loads the entry's dependencies under the process's --conditions", async (t) => {
-    assert.match(
-      await buildUnder(t, ['--conditions', 'production']),
-      /one copy: true/,
+    assert.ok(
+      paragraph(
+        await buildUnder(t, ['--conditions', 'production']),
+        'one copy: true',
+      ),
     );
   });
 
   it('reads --conditions from NODE_OPTIONS too', async (t) => {
-    assert.match(
-      await buildUnder(t, [], { NODE_OPTIONS: '--conditions=production' }),
-      /one copy: true/,
+    assert.ok(
+      paragraph(
+        await buildUnder(t, [], { NODE_OPTIONS: '--conditions=production' }),
+        'one copy: true',
+      ),
     );
   });
 });
