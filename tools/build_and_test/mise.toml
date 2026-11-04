@@ -76,4 +76,6 @@ run = "playwright install-deps firefox webkit"
 # Verify up front so the concurrent vanilla/mobx Cypress runs skip the
 # "first time using Cypress" verification banner.
 description = "Install and verify the Cypress binary"
+# A runner's first Electron launch can take 20 s or more before the 30 s default fires (#1858).
+env = { CYPRESS_VERIFY_TIMEOUT = "60000" }
 run = ["cypress install", "cypress verify"]
