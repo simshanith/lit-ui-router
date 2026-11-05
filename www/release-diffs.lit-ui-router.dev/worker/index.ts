@@ -4,6 +4,7 @@ import * as v from 'valibot';
 
 import type { DiffIndex } from '../src/diff-index.ts';
 import { FILE_FILTERS, type FileFilter } from '../src/file-filter.ts';
+import { LAYOUT } from '../src/layout.ts';
 import {
   DiffEntry,
   type DiffPair,
@@ -27,10 +28,11 @@ export class ReleaseDiff extends DurableObject<Env> {
   }
 }
 
-/** The RPC surface the docs worker's service binding calls; each method builds the pair on a miss. */
+/** The RPC surface the docs worker's service binding calls; each method builds the pair on a miss and rejects a layout other than this build's. */
 export default class ReleaseDiffs extends WorkerEntrypoint<Env> {
   /** The pair's files, in patch order, with their kinds, line counts, byte ranges and presets. */
-  async index(pair: DiffPair): Promise<DiffIndex> {
+  async index(pair: DiffPair, layout: string): Promise<DiffIndex> {
+    v.parse(v.literal(LAYOUT), layout);
     const valid = v.parse(DiffPairSchema, pair);
 
     return (
@@ -43,17 +45,21 @@ export default class ReleaseDiffs extends WorkerEntrypoint<Env> {
   async files(
     pair: DiffPair,
     filter: FileFilter,
+    layout: string,
   ): Promise<ReadableStream<Uint8Array>> {
     const preset = v.parse(v.picklist(FILE_FILTERS), filter);
 
-    await this.index(pair);
+    await this.index(pair, layout);
 
     return readStored(this.env.DIFFS, filesKey(pair, preset));
   }
 
   /** The whole patch `npm diff` prints. */
-  async patch(pair: DiffPair): Promise<ReadableStream<Uint8Array>> {
-    await this.index(pair);
+  async patch(
+    pair: DiffPair,
+    layout: string,
+  ): Promise<ReadableStream<Uint8Array>> {
+    await this.index(pair, layout);
 
     return readStored(this.env.DIFFS, patchKey(pair));
   }

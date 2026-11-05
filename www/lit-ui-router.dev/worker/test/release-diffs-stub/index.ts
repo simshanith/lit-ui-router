@@ -19,6 +19,7 @@ const streamOf = (text: string): ReadableStream<Uint8Array> =>
     },
   });
 
+/** Answers every pair, whatever the layout; the real worker's own tests cover its layout check. */
 export default class extends WorkerEntrypoint implements ReleaseDiffs {
   index(pair: DiffPair): Promise<DiffIndex> {
     const bytes = new TextEncoder().encode(patchOf(pair)).length;

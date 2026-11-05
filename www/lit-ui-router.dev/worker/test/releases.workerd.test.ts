@@ -14,6 +14,7 @@ import {
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
 import { createTestHarness } from 'wrangler';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 // The docs worker's bundle in workerd, its LEDGER and RELEASE_DIFFS bindings served by stub workers over RPC.
 const SITE = join(import.meta.dirname, '../..');
@@ -118,7 +119,7 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
   });
 
   it('serves a diff index and a preset over RPC', async () => {
-    const diff = '/releases/lit-ui-router/diff/1.9.0...1.10.0';
+    const diff = `/releases/lit-ui-router/diff/1.9.0...1.10.0/${LAYOUT}`;
     const index = await server.fetch(`${diff}/index.json`);
 
     assert.equal(index.status, 200);

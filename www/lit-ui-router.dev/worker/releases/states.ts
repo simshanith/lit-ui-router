@@ -4,6 +4,7 @@ import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import type { ResponseHandlers } from 'lit-ui-router-ssr';
 import { mergeSearch } from 'ui-router-server';
 import type { ResponseState } from 'ui-router-server';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import type { DiffIndex, DiffPair, ReleaseDiffs } from './diff-data.ts';
 import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
@@ -155,6 +156,19 @@ const diffPairOf = ({ from, to }: PublishedPair): DiffPair => ({
   to: to.version,
 });
 
+// SAFETY: the url sets the layout param, a string.
+const layoutParamOf = (trans: Transition) =>
+  (trans.params() as { layout: string }).layout;
+
+/** The R2 layout the url names, or a `NotInLedger` rejection for one this build doesn't serve; the release-diffs worker checks it again. */
+const layoutOf = (trans: Transition): string => {
+  const layout = layoutParamOf(trans);
+
+  if (layout !== LAYOUT) throw new NotInLedger(`no ${layout} layout`);
+
+  return layout;
+};
+
 // SAFETY: the url sets the preset param, a string.
 const presetParamOf = (trans: Transition) =>
   (trans.params() as { preset: string }).preset;
@@ -211,32 +225,37 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
   },
   'releases.package.compare.index': {
     resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
       {
         token: 'index',
-        deps: ['pair'],
-        resolveFn: (pair: PublishedPair) => diffs.index(diffPairOf(pair)),
+        deps: ['pair', 'layout'],
+        resolveFn: (pair: PublishedPair, layout: string) =>
+          diffs.index(diffPairOf(pair), layout),
       },
     ],
     cacheKey: urlKey,
   },
   'releases.package.compare.files': {
     resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
       { token: 'preset', deps: ['$transition$'], resolveFn: presetOf },
       {
         token: 'files',
-        deps: ['pair', 'preset'],
-        resolveFn: (pair: PublishedPair, preset: FileFilter) =>
-          diffs.files(diffPairOf(pair), preset),
+        deps: ['pair', 'preset', 'layout'],
+        resolveFn: (pair: PublishedPair, preset: FileFilter, layout: string) =>
+          diffs.files(diffPairOf(pair), preset, layout),
       },
     ],
     cacheKey: urlKey,
   },
   'releases.package.compare.patch': {
     resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
       {
         token: 'patch',
-        deps: ['pair'],
-        resolveFn: (pair: PublishedPair) => diffs.patch(diffPairOf(pair)),
+        deps: ['pair', 'layout'],
+        resolveFn: (pair: PublishedPair, layout: string) =>
+          diffs.patch(diffPairOf(pair), layout),
       },
     ],
     cacheKey: urlKey,

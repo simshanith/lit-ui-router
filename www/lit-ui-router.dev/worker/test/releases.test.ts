@@ -12,6 +12,7 @@ import {
   within,
 } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
@@ -379,6 +380,14 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
     assert.deepEqual(
       getAllByRole(shell, 'status').map((status) => status.textContent),
       ['Loading the diff…', ''],
+    );
+
+    // A parsed document runs no script, so <noscript> holds markup.
+    assert.equal(
+      getByRole(shell, 'link', { name: 'Download the patch' }).getAttribute(
+        'href',
+      ),
+      `${LAYOUT}/patch`,
     );
 
     // Both start hidden, and a hidden element computes no accessible name.

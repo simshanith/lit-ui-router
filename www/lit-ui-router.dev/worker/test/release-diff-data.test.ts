@@ -6,12 +6,16 @@ import type { DiffIndex, ReleaseDiffs } from '../releases/diff-data.ts';
 import type { EdgeCache } from '../releases/edge-cache.ts';
 import type { FileFilter } from '../releases/npm-diff/file-filter.ts';
 import { serveReleases } from '../releases/serve.ts';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
 
 const PAGE = '/releases/lit-ui-router/diff/1.9.0...1.10.0';
+
+/** The page's data routes, under the layout this build serves. */
+const DATA = `${PAGE}/${LAYOUT}`;
 
 const INDEX: DiffIndex = {
   files: [
@@ -51,13 +55,14 @@ const stubDiffs = ({ fail = false } = {}) => {
   };
 
   const diffs: ReleaseDiffs = {
-    index: (pair) => call(`index ${pair.from}...${pair.to}`, () => INDEX),
-    files: (pair, filter: FileFilter) =>
-      call(`files ${pair.from}...${pair.to} ${filter}`, () =>
+    index: (pair, layout) =>
+      call(`index ${pair.from}...${pair.to} ${layout}`, () => INDEX),
+    files: (pair, filter: FileFilter, layout) =>
+      call(`files ${pair.from}...${pair.to} ${filter} ${layout}`, () =>
         streamOf(`${filter}:${PATCH}`),
       ),
-    patch: (pair) =>
-      call(`patch ${pair.from}...${pair.to}`, () => streamOf(PATCH)),
+    patch: (pair, layout) =>
+      call(`patch ${pair.from}...${pair.to} ${layout}`, () => streamOf(PATCH)),
   };
 
   return { diffs, calls };
@@ -81,18 +86,18 @@ const IMMUTABLE = 'public, max-age=31536000, immutable';
 describe('the diff page data routes', () => {
   it('serves the index as immutable json', async () => {
     const { diffs, calls } = stubDiffs();
-    const response = await serve(`${PAGE}/index.json`, diffs);
+    const response = await serve(`${DATA}/index.json`, diffs);
 
     assert.equal(response?.status, 200);
     assert.equal(response?.headers.get('Content-Type'), 'application/json');
     assert.equal(response?.headers.get('Cache-Control'), IMMUTABLE);
     assert.deepEqual(await response?.json(), INDEX);
-    assert.deepEqual(calls, ['index 1.9.0...1.10.0']);
+    assert.deepEqual(calls, [`index 1.9.0...1.10.0 ${LAYOUT}`]);
   });
 
   it("serves a preset's files from the binding", async () => {
     const { diffs, calls } = stubDiffs();
-    const response = await serve(`${PAGE}/files/types`, diffs);
+    const response = await serve(`${DATA}/files/types`, diffs);
 
     assert.equal(response?.status, 200);
     assert.equal(
@@ -101,12 +106,12 @@ describe('the diff page data routes', () => {
     );
     assert.equal(response?.headers.get('Cache-Control'), IMMUTABLE);
     assert.equal(await response?.text(), `types:${PATCH}`);
-    assert.deepEqual(calls, ['files 1.9.0...1.10.0 types']);
+    assert.deepEqual(calls, [`files 1.9.0...1.10.0 types ${LAYOUT}`]);
   });
 
   it('serves the whole patch as a download', async () => {
     const { diffs, calls } = stubDiffs();
-    const response = await serve(`${PAGE}/patch`, diffs);
+    const response = await serve(`${DATA}/patch`, diffs);
 
     assert.equal(response?.status, 200);
     assert.equal(
@@ -114,24 +119,24 @@ describe('the diff page data routes', () => {
       'attachment; filename="lit-ui-router-1.9.0...1.10.0.patch"',
     );
     assert.equal(await response?.text(), PATCH);
-    assert.deepEqual(calls, ['patch 1.9.0...1.10.0']);
+    assert.deepEqual(calls, [`patch 1.9.0...1.10.0 ${LAYOUT}`]);
   });
 
   it('asks for a reversed pair as written', async () => {
     const { diffs, calls } = stubDiffs();
 
     await serve(
-      '/releases/lit-ui-router/diff/1.10.0...1.9.0/index.json',
+      `/releases/lit-ui-router/diff/1.10.0...1.9.0/${LAYOUT}/index.json`,
       diffs,
     );
 
-    assert.deepEqual(calls, ['index 1.10.0...1.9.0']);
+    assert.deepEqual(calls, [`index 1.10.0...1.9.0 ${LAYOUT}`]);
   });
 
   it('answers HEAD without a body', async () => {
     const { diffs } = stubDiffs();
 
-    const response = await serve(`${PAGE}/index.json`, diffs, {
+    const response = await serve(`${DATA}/index.json`, diffs, {
       method: 'HEAD',
     });
 
@@ -140,10 +145,14 @@ describe('the diff page data routes', () => {
   });
 
   const unknown = [
-    '/releases/lit-ui-router/diff/1.9.0...9.9.9/index.json',
-    '/releases/lit-ui-router/diff/9.9.9...1.10.0/patch',
-    '/releases/not-a-package/diff/1.9.0...1.10.0/index.json',
-    `${PAGE}/files/everything`,
+    `/releases/lit-ui-router/diff/1.9.0...9.9.9/${LAYOUT}/index.json`,
+    `/releases/lit-ui-router/diff/9.9.9...1.10.0/${LAYOUT}/patch`,
+    `/releases/not-a-package/diff/1.9.0...1.10.0/${LAYOUT}/index.json`,
+    `${DATA}/files/everything`,
+    `${PAGE}/v0/index.json`,
+    `${PAGE}/v0/files/src`,
+    `${PAGE}/v0/patch`,
+    `${PAGE}/index.json`,
   ];
 
   for (const path of unknown) {
@@ -160,7 +169,7 @@ describe('the diff page data routes', () => {
     const { diffs, calls } = stubDiffs();
 
     const response = await serveReleases(
-      new Request(`${ORIGIN}${PAGE}/index.json`),
+      new Request(`${ORIGIN}${DATA}/index.json`),
       {
         ...fixtureLedger,
         versions: async (name) =>
@@ -179,7 +188,7 @@ describe('the diff page data routes', () => {
     it(`answers ${route} with an uncached 503 when the binding fails`, async () => {
       const { diffs } = stubDiffs({ fail: true });
       const memory = memoryEdge();
-      const response = await serve(`${PAGE}/${route}`, diffs, {}, memory.edge);
+      const response = await serve(`${DATA}/${route}`, diffs, {}, memory.edge);
       await memory.settled();
 
       assert.equal(response?.status, 503);
@@ -190,13 +199,13 @@ describe('the diff page data routes', () => {
 });
 
 describe('the diff page data routes at the edge', () => {
-  const KEY = `${ORIGIN}${PAGE}/files/src`;
+  const KEY = `${ORIGIN}${DATA}/files/src`;
 
   it('stores an answer under the GET url and serves it without the ledger or the binding', async () => {
     const memory = memoryEdge();
     const first = stubDiffs();
 
-    const miss = await serve(`${PAGE}/files/src`, first.diffs, {}, memory.edge);
+    const miss = await serve(`${DATA}/files/src`, first.diffs, {}, memory.edge);
     assert.equal(await miss?.text(), `src:${PATCH}`);
     await memory.settled();
 
@@ -231,11 +240,11 @@ describe('the diff page data routes at the edge', () => {
     const memory = memoryEdge();
     const { diffs, calls } = stubDiffs();
 
-    await serve(`${PAGE}/index.json`, diffs, {}, memory.edge);
+    await serve(`${DATA}/index.json`, diffs, {}, memory.edge);
     await memory.settled();
 
     const head = await serve(
-      `${PAGE}/index.json`,
+      `${DATA}/index.json`,
       diffs,
       { method: 'HEAD' },
       memory.edge,
@@ -243,6 +252,6 @@ describe('the diff page data routes at the edge', () => {
 
     assert.equal(head?.status, 200);
     assert.equal(head?.body, null);
-    assert.deepEqual(calls, ['index 1.9.0...1.10.0']);
+    assert.deepEqual(calls, [`index 1.9.0...1.10.0 ${LAYOUT}`]);
   });
 });

@@ -98,7 +98,7 @@ versions of a package, built once per version pair.
    only way in.
 2. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
 3. **npm** serves the packument and both tarballs a build diffs.
-4. **R2** holds one entry per pair under `v1/<pkg>/<from>...<to>/`: the
+4. **R2** holds one entry per pair under `<layout>/<pkg>/<from>...<to>/`: the
    patch, each preset's sections, and `index.json`, written last, so an entry
    with an index is complete. The object is its only writer; the worker only
    reads it.

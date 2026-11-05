@@ -23,6 +23,7 @@ import {
   urlWithFilter,
 } from './npm-diff/file-filter.ts';
 import { LANGUAGES } from './npm-diff/languages.ts';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 const THEME = {
   light: 'github-light-high-contrast',
@@ -66,8 +67,9 @@ const summary = (files: readonly DiffFile[]): string => {
   return `${count(files.length, 'file')} changed, ${count(added, 'line')} added, ${count(removed, 'line')} removed.`;
 };
 
-/** The page's data routes sit below its own, slashed url. */
-const dataUrl = (path: string): URL => new URL(path, location.href);
+/** The page's data routes sit below its own, slashed url, under the R2 layout, so a layout bump changes every url the edge and browsers cache. */
+const dataUrl = (path: string): URL =>
+  new URL(`${LAYOUT}/${path}`, location.href);
 
 const fetched = async (url: URL): Promise<Response> => {
   const response = await fetch(url);

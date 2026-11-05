@@ -523,6 +523,9 @@ catalogs:
     '@www/lit-ui-router.dev':
       specifier: workspace:*
       version: workspace:*
+    '@www/release-diffs.lit-ui-router.dev':
+      specifier: workspace:*
+      version: workspace:*
     eslint-plugin-lit-ui-router:
       specifier: workspace:*
       version: workspace:*
@@ -3046,6 +3049,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@www/release-diffs.lit-ui-router.dev':
+        specifier: catalog:workspace
+        version: link:../release-diffs.lit-ui-router.dev
       examples:
         specifier: catalog:workspace
         version: link:../../examples

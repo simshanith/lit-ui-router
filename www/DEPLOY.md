@@ -399,8 +399,9 @@ emits that script from
 in a Vite build of its own (`.vitepress/vite.config.ts`).
 
 The browser never fetches a tarball. The script reads the page's data routes,
-`index.json`, `files/<preset>` and `patch`, which the worker answers only for a
-pair the ledger validates. Each calls the method of the same name on the
+`<layout>/index.json`, `<layout>/files/<preset>` and `<layout>/patch`, which the
+worker answers only for a pair the ledger validates and the layout this build
+imports from the release-diffs package. Each calls the method of the same name on the
 `RELEASE_DIFFS` service binding, the
 [release-diffs worker](release-diffs.lit-ui-router.dev/README.md)'s default
 entrypoint, which builds a pair once and keeps it in R2. The index lists the

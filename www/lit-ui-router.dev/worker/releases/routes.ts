@@ -21,15 +21,19 @@ export const releaseRoutes = [
   { name: 'releases.package.compare', url: '/diff/{from}...{to}' },
   {
     name: 'releases.package.compare.index',
-    url: '/index.json',
+    url: '/{layout}/index.json',
     response: true,
   },
   {
     name: 'releases.package.compare.files',
-    url: '/files/{preset}',
+    url: '/{layout}/files/{preset}',
     response: true,
   },
-  { name: 'releases.package.compare.patch', url: '/patch', response: true },
+  {
+    name: 'releases.package.compare.patch',
+    url: '/{layout}/patch',
+    response: true,
+  },
   { name: 'releases.package.version', url: '/{version}' },
   { name: 'notFound' },
 ] as const satisfies readonly RouteDeclaration[];

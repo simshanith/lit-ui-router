@@ -26,12 +26,13 @@ export interface DiffIndex {
   bytes: number;
 }
 
-/** The release-diffs worker's default entrypoint; each method builds the pair on a miss and rejects when it can't. */
+/** The release-diffs worker's default entrypoint; each method builds the pair on a miss and rejects when it can't, or when `layout` isn't its own. */
 export interface ReleaseDiffs {
-  index(pair: DiffPair): Promise<DiffIndex>;
+  index(pair: DiffPair, layout: string): Promise<DiffIndex>;
   files(
     pair: DiffPair,
     filter: FileFilter,
+    layout: string,
   ): Promise<ReadableStream<Uint8Array>>;
-  patch(pair: DiffPair): Promise<ReadableStream<Uint8Array>>;
+  patch(pair: DiffPair, layout: string): Promise<ReadableStream<Uint8Array>>;
 }

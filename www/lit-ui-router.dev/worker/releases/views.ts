@@ -1,9 +1,11 @@
 // The routed views; each parent draws its own page at its own url and its child's view below it.
 import type { UIRouter } from '@uirouter/core';
 import { html, nothing } from 'lit';
+import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
@@ -368,6 +370,15 @@ export const VersionView: RoutedLitTemplate<{
 `;
 
 /** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
+/** The patch link without JavaScript; a binding can't sit inside raw-text <noscript>, so the layout is baked into the template. */
+const noscriptDownload = staticHtml`<noscript
+  ><p>
+    The diff renders with JavaScript.
+    <a href="${unsafeStatic(LAYOUT)}/patch" download>Download the patch</a>
+    instead.
+  </p></noscript
+>`;
+
 export const CompareView: RoutedLitTemplate<{
   pair: PublishedPair;
 }> = ({ router, resolves: { pair } }) => {
@@ -404,12 +415,7 @@ export const CompareView: RoutedLitTemplate<{
       aria-label="Changed files"
     >
       <p class="diff-status" role="status">Loading the diff…</p>
-      <noscript
-        ><p>
-          The diff renders with JavaScript.
-          <a href="patch" download>Download the patch</a> instead.
-        </p></noscript
-      >
+      ${noscriptDownload}
       <fieldset class="diff-filter" hidden>
         <legend>Show</legend>
       </fieldset>
