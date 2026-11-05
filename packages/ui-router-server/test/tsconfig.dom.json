@@ -1,0 +1,9 @@
+{
+  // The tests that query a parsed page: testing-library's types need lib.dom.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["vite-prerender.test.ts", "../src/**/*.d.ts"],
+  "exclude": []
+}

@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { memoryLocationPlugin } from '@uirouter/core';
+import { getByRole, getByText, queryByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { html } from 'lit';
 import type { TemplateResult } from 'lit';
 
@@ -17,6 +19,8 @@ const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
 
 const emit = (template: TemplateResult): string =>
   collectResultSync(render(template));
+
+const body = (out: string): HTMLElement => parseHtml(out).body;
 
 // Core's memory location is hash-shaped; path-shaped hrefs are lit-ui-router-ssr's to assert.
 const sheetRouter = (): UIRouterLit => {
@@ -65,7 +69,9 @@ describe('srefHref on the server', () => {
   it('emits the href from the render-scoped router slot', () => {
     const out = withRouterSync(sheetRouter(), () => emit(sheetLink()));
 
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(
+      getByRole(body(out), 'link', { name: '7B' }).getAttribute('href'),
+    ).toBe('#/sheet/7B');
   });
 
   it('ignores a provider on the render root: the directive reads the scope, not the tree', () => {
@@ -75,7 +81,8 @@ describe('srefHref on the server', () => {
     const out = emit(sheetLink());
     uninstall();
 
-    expect(out).not.toContain('href=');
+    expect(queryByRole(body(out), 'link')).toBeNull();
+    expect(getByText(body(out), '7B').hasAttribute('href')).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
@@ -85,7 +92,8 @@ describe('srefHref on the server', () => {
 
     const out = emit(sheetLink());
 
-    expect(out).not.toContain('href=');
+    expect(queryByRole(body(out), 'link')).toBeNull();
+    expect(getByText(body(out), '7B').hasAttribute('href')).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
@@ -128,7 +136,9 @@ describe('async resolves ahead of the sync render', () => {
     );
 
     expect(router.globals.current.name).toBe('sheet');
-    expect(out).toContain('Sheet 7B');
+    expect(
+      queryByRole(body(out), 'heading', { name: 'Sheet 7B' }),
+    ).not.toBeNull();
   });
 });
 
@@ -140,9 +150,8 @@ describe('the sref status directives on the server', () => {
       emit(navLink('sheet', { num: '7B' })),
     );
 
-    expect(out).toContain('active');
-    expect(out).toContain('exact');
-    expect(out).toContain('aria-current="page"');
+    const link = getByRole(body(out), 'link', { name: '7B', current: 'page' });
+    expect([...link.classList]).toEqual(['nav', 'active', 'exact']);
   });
 
   it('leaves an inactive state unmarked', async () => {
@@ -150,9 +159,9 @@ describe('the sref status directives on the server', () => {
 
     const out = withRouterSync(router, () => emit(navLink('index', {})));
 
-    expect(out).toContain('class="nav');
-    expect(out).not.toContain('active');
-    expect(out).not.toContain('aria-current');
+    const link = getByRole(body(out), 'link', { name: '7B' });
+    expect([...link.classList]).toEqual(['nav']);
+    expect(link.hasAttribute('aria-current')).toBe(false);
   });
 
   it('ignores a provider on the render root: the directives read the scope, not the tree', async () => {
@@ -162,8 +171,10 @@ describe('the sref status directives on the server', () => {
     const out = emit(navLink('sheet', { num: '7B' }));
     uninstall();
 
-    expect(out).toContain('class="nav "');
-    expect(out).not.toContain('aria-current');
+    // no router, so no href and no link role
+    const link = getByText(body(out), '7B');
+    expect(link.getAttribute('class')).toBe('nav ');
+    expect(link.hasAttribute('aria-current')).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
@@ -173,8 +184,10 @@ describe('the sref status directives on the server', () => {
 
     const out = emit(navLink('sheet', { num: '7B' }));
 
-    expect(out).toContain('class="nav "');
-    expect(out).not.toContain('aria-current');
+    // no router, so no href and no link role
+    const link = getByText(body(out), '7B');
+    expect(link.getAttribute('class')).toBe('nav ');
+    expect(link.hasAttribute('aria-current')).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });

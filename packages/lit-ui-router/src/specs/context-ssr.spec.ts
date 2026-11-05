@@ -2,6 +2,8 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import { getByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { html } from 'lit';
 import { Directive, directive } from 'lit/directive.js';
 
@@ -41,6 +43,9 @@ const routerProbe = directive(RouterProbeDirective);
 const emit = (): string =>
   collectResultSync(render(html`<a href=${routerProbe()}>7B</a>`));
 
+const href = (out: string): string | null =>
+  getByRole(parseHtml(out).body, 'link', { name: '7B' }).getAttribute('href');
+
 describe('requestRouter without a DOM', () => {
   it('answers from a provider on a plain EventTarget', () => {
     const root = new EventTarget();
@@ -72,7 +77,7 @@ describe('requestRouter without a DOM', () => {
 
 describe('the router hand-off under @lit-labs/ssr', () => {
   it('emits nothing routed with neither slot nor provider', () => {
-    expect(emit()).toContain('no-router');
+    expect(href(emit())).toBe('no-router');
   });
 
   it('is visible to a directive render() inside withRouterSync', () => {
@@ -80,7 +85,7 @@ describe('the router hand-off under @lit-labs/ssr', () => {
 
     const out = withRouterSync(router, emit);
 
-    expect(out).toContain('href="/sheet/:num"');
+    expect(href(out)).toBe('/sheet/:num');
     expect(getScopedRouter()).toBeUndefined();
   });
 
@@ -91,7 +96,7 @@ describe('the router hand-off under @lit-labs/ssr', () => {
     const out = emit();
 
     uninstall();
-    expect(out).toContain('href="/sheet/:num"');
+    expect(href(out)).toBe('/sheet/:num');
   });
 
   it('renders from a plain @uirouter/core router in the slot', () => {
@@ -102,7 +107,7 @@ describe('the router hand-off under @lit-labs/ssr', () => {
 
     const out = withRouterSync(router, emit);
 
-    expect(out).toContain('href="/sheet/:num"');
+    expect(href(out)).toBe('/sheet/:num');
     expect(getScopedRouter()).toBeUndefined();
   });
 

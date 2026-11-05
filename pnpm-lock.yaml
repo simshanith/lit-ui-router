@@ -244,6 +244,9 @@ catalogs:
     pacote:
       specifier: ^22.0.1
       version: 22.0.1
+    parse5:
+      specifier: ^8.0.1
+      version: 8.0.1
     playwright:
       specifier: ^1.64.1
       version: 1.64.1
@@ -1173,6 +1176,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1585,6 +1591,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -2074,6 +2083,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -2083,6 +2095,9 @@ importers:
       '@tools/lcov-rebase':
         specifier: catalog:workspace
         version: link:../../tools/lcov-rebase
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
@@ -2678,13 +2693,19 @@ importers:
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../happy-dom
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.19.2
       happy-dom:
         specifier: 'catalog:'
         version: 21.0.4
+      parse5:
+        specifier: 'catalog:'
+        version: 8.0.1
+    devDependencies:
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -3083,6 +3104,9 @@ importers:
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
@@ -3098,9 +3122,6 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
-      happy-dom:
-        specifier: 'catalog:'
-        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1

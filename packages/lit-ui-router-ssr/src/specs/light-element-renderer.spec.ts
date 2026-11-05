@@ -1,6 +1,13 @@
 import { render } from '@lit-labs/ssr';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import {
+  comments,
+  element,
+  elements,
+  parseMarkup,
+  text,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
@@ -35,9 +42,14 @@ describe('LightElementRenderer (smoke)', () => {
       }),
     );
 
-    expect(markup).not.toContain('<template shadowroot');
-    expect(markup).toContain('<p>');
-    expect(markup).toContain('hi');
-    expect(markup).toContain(`<!--${servedMarkerPrefix}lit-part`);
+    const card = element(parseMarkup(markup), 'smoke-card');
+
+    expect(elements(card, 'template')).toEqual([]);
+    expect(text(element(card, 'p'))).toBe('hi');
+    expect(
+      comments(card).filter((data) =>
+        data.startsWith(`${servedMarkerPrefix}lit-part`),
+      ),
+    ).not.toEqual([]);
   });
 });

@@ -42,6 +42,10 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the vite-7 alias (catalogs.vite7-compat) runs test:vite7-compat beside the vite 8 line',
   },
   {
+    name: 'parse5',
+    why: 'the catalog takes 8, as eslint-plugin-lit does; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, lit-analyzer 5, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
+  },
+  {
     name: 'typescript',
     why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
   },
