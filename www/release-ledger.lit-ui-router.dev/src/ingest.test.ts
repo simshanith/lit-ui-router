@@ -179,7 +179,10 @@ describe('POST /claims', () => {
   it('answers 401 without a bearer token', async () => {
     const { env, sent } = envWith();
 
-    assert.equal((await ingest(post(undefined), env, keys)).status, 401);
+    const response = await ingest(post(undefined), env, keys);
+
+    assert.equal(response.status, 401);
+    assert.equal(response.headers.get('WWW-Authenticate'), 'Bearer');
     assert.equal(sent.length, 0);
   });
 
