@@ -149,9 +149,8 @@ export interface PrerenderTally {
   /** Shell verdicts written as `<subpath>/index.html`. */
   shell: number;
   /**
-   * Redirect verdicts, and shell verdicts whose render answered a
-   * {@link RenderedRedirect}, counted once each however many rules lines
-   * they produced.
+   * Redirect verdicts, and shell verdicts whose render answered a redirect,
+   * counted once each however many rules lines they produced.
    */
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
