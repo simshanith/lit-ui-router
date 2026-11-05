@@ -3167,6 +3167,9 @@ importers:
       diff:
         specifier: 'catalog:'
         version: 9.0.0
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
@@ -3180,6 +3183,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       cf:
         specifier: 'catalog:'
         version: 1.0.0-beta.27(@types/node@24.19.2)

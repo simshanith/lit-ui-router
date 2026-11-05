@@ -186,6 +186,23 @@ describe('the RPC surface', { timeout: 120_000 }, () => {
     );
   });
 
+  it('refuses a reversed or repeated pair, before reading anything', async () => {
+    await assert.rejects(
+      async () => api.index({ ...STUB, from: '1.1.0', to: '1.0.0' }, LAYOUT),
+      /ValiError/,
+    );
+    await assert.rejects(
+      async () => api.index({ ...STUB, from: '1.0.0', to: '1.0.0' }, LAYOUT),
+      /ValiError/,
+    );
+    await assert.rejects(
+      async () =>
+        api.patch({ ...STUB, from: '1.0.0', to: '1.0.0-rc.0' }, LAYOUT),
+      /ValiError/,
+    );
+    assert.deepEqual(await api.registryReads(), []);
+  });
+
   it('refuses an unknown preset', async () => {
     await assert.rejects(
       // SAFETY: an RPC caller's argument is untyped at runtime.
