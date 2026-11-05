@@ -7,6 +7,7 @@ import type {
 } from '@tools/release-ledger';
 import compare from 'semver/functions/compare.js';
 import prerelease from 'semver/functions/prerelease.js';
+import valid from 'semver/functions/valid.js';
 import rcompare from 'semver/functions/rcompare.js';
 
 /** A `versions` row with the states the ledger's `version_states` view derives. */
@@ -92,6 +93,10 @@ export const ordered = <Row extends { version: string }>(
 
   return order < 0 ? { from: a, to: b } : { from: b, to: a };
 };
+
+/** Whether two version strings are both valid semver and `from` is the newer. */
+export const isReversed = (from: string, to: string): boolean =>
+  valid(from) !== null && valid(to) !== null && compare(from, to) > 0;
 
 /** Every package the ledger has recorded, with its npm `latest` row. */
 export const packagesOf =

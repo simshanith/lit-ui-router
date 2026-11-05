@@ -13,6 +13,7 @@ import {
   type LedgerReader,
   type LedgerVersion,
   latestOf,
+  isReversed,
   NotInLedger,
   ordered,
   packagesOf,
@@ -218,6 +219,13 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
   },
   'releases.package.compare': {
     component: CompareView,
+    redirectTo: (trans: Transition) => {
+      const { from, to } = diffParamsOf(trans);
+
+      return isReversed(from, to)
+        ? trans.targetState().withParams({ from: to, to: from })
+        : undefined;
+    },
     resolve: [
       {
         token: 'pair',
