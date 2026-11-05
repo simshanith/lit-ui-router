@@ -16,6 +16,14 @@ import type {
   UrlMatcherCompilerConfig,
 } from './url-matcher.ts';
 
+/**
+ * The status a redirect answers with: temporary (`302`, `303`, `307`) or
+ * permanent (`301`, `308`).
+ */
+export type RedirectStatusCode = 301 | 302 | 303 | 307 | 308;
+
+const REDIRECT_STATUS_CODES: readonly number[] = [301, 302, 303, 307, 308];
+
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
   /** The state name; dotted names nest under their parent, as in ui-router. */
@@ -39,6 +47,15 @@ export interface RouteDeclaration {
    * cycles are rejected at compile.
    */
   redirectTo?: string | RedirectTarget;
+  /**
+   * The status this state's `redirectTo` answers with, data or function,
+   * when a url lands on it: in the verdict for a data `redirectTo`, and in
+   * {@link ssr!redirectedTo | `redirectedTo`} after `settle`. Defaults to
+   * `302`, since a permanent redirect is cached by browsers with no expiry;
+   * a redirect that never changes declares `308`. A pattern rule's redirect
+   * stays `302`.
+   */
+  redirectStatusCode?: RedirectStatusCode;
   /**
    * Names the host handler that answers this state's url, for any method and
    * any Accept: the verdict is `delegate` instead of `shell`. The state tree
@@ -105,6 +122,8 @@ export interface CompiledRoute {
   matcher: CompiledMatcher;
   /** The state's declared redirect, carried through unresolved (see {@link RouteDeclaration.redirectTo}). */
   redirectTo?: string | RedirectTarget;
+  /** The state's declared redirect status (see {@link RouteDeclaration.redirectStatusCode}). */
+  redirectStatusCode?: RedirectStatusCode;
 }
 
 // Core's StateBuilder.parentName: the `parent`, else the dotted prefix.
@@ -144,6 +163,14 @@ export function compileRoutes(
     if (route.url && !route.url.startsWith('/') && !route.url.startsWith('?'))
       throw new Error(
         `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
+      );
+
+    if (
+      route.redirectStatusCode !== undefined &&
+      !REDIRECT_STATUS_CODES.includes(route.redirectStatusCode)
+    )
+      throw new Error(
+        `Route '${route.name}': redirectStatusCode must be one of ${REDIRECT_STATUS_CODES.join(', ')}`,
       );
     byName.set(route.name, route);
     parents.set(route, parentName(route));
@@ -206,6 +233,7 @@ export function compileRoutes(
       pattern,
       matcher: compile(pattern, { params }),
       redirectTo: route.redirectTo,
+      redirectStatusCode: route.redirectStatusCode,
     });
   }
 
@@ -278,6 +306,8 @@ const isPathPattern = (pattern: string | RegExp): pattern is string =>
 export interface RedirectResolution {
   /** The redirected path, or null (see {@link compileRedirects}). */
   redirect: string | null;
+  /** The matched state's declared redirect status; absent for a pattern rule's redirect. */
+  status?: RedirectStatusCode;
   /** The route match; absent when a when()-rule decided before route matching ran. */
   match?: RouteMatch | null;
 }
@@ -403,6 +433,7 @@ export function compileResolver(
     return {
       redirect: follow(target.state, target.params ?? matched.params, pathname),
       match: matched,
+      status: route.redirectStatusCode,
     };
   };
 

@@ -37,6 +37,17 @@ export interface RedirectLine {
   status: number;
 }
 
+/**
+ * A render's answer in place of a page: the path redirects, written as a
+ * rules line like a redirect verdict's.
+ */
+export interface RenderedRedirect {
+  /** Target path, host-absolute, or an absolute url. */
+  location: string;
+  /** Status the host answers with. */
+  status: number;
+}
+
 /** What a render hook is handed besides the verdict. */
 export interface RenderContext {
   /** The requested path. */
@@ -65,13 +76,16 @@ export interface PrerenderOptions {
   /** Directory the files are written under. */
   outDir: string;
   /**
-   * Renders one shell verdict to the file's full text, document included.
-   * Renders run one at a time, in enumeration order, then the 404 document.
+   * Renders one shell verdict to the file's full text, document included, or
+   * answers a {@link RenderedRedirect} for a page whose render found it
+   * redirects, such as a `redirectTo` function `settle` followed: the path
+   * gets a rules line and no page. Renders run one at a time, in enumeration
+   * order, then the 404 document, which must render a page.
    */
   render: (
     verdict: Extract<Verdict, { kind: 'shell' }>,
     context: RenderContext,
-  ) => string | Promise<string>;
+  ) => string | RenderedRedirect | Promise<string | RenderedRedirect>;
   /**
    * Answers one response verdict: settle the state and run the handler bound
    * to its name. A 2xx answer's body, read as text, is written to the path
@@ -134,7 +148,10 @@ export interface PrerenderOptions {
 export interface PrerenderTally {
   /** Shell verdicts written as `<subpath>/index.html`. */
   shell: number;
-  /** Redirect verdicts, counted once each however many rules lines they produced. */
+  /**
+   * Redirect verdicts, and shell verdicts whose render answered a redirect,
+   * counted once each however many rules lines they produced.
+   */
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
   notFound: number;
@@ -169,6 +186,9 @@ type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 
 const DEFAULT_NOT_FOUND_FILE = '404.html';
+
+const isPage = (rendered: string | RenderedRedirect): rendered is string =>
+  typeof rendered === 'string';
 
 // A path no route claims, appended to a mount base for the otherwise probe.
 const PROBE_SEGMENT = '__ui-router-server-probe__';
@@ -272,7 +292,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html` holding whatever `render` returns, a response
+ * `<subpath>/index.html` holding whatever `render` returns, or a rules line
+ * when `render` answers a {@link RenderedRedirect}, a response
  * state becomes the body or rules line its `respond` answer carries, a
  * redirect becomes a rules line and no page, a delegating state is listed in
  * `delegated` and skipped, and the `otherwise` projection becomes the 404
@@ -288,6 +309,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
+ * @throws an `Error` when the 404 document's render answers a redirect
  * @throws an `Error` when a path matches a response state and no `respond` is supplied, or its answer is neither a 2xx nor a 3xx with a `Location`
  *
  * @example
@@ -345,13 +367,20 @@ export async function prerender(
   const warnings: string[] = [];
   const delegated: string[] = [];
 
+  // Whether the render wrote a page or answered a redirect.
   const emit = async (
     verdict: ShellVerdict,
     path: string,
     subpath: string,
     file: string,
-  ): Promise<void> => {
+  ): Promise<'shell' | 'redirect'> => {
     const html = await render(verdict, { path, subpath, file });
+
+    if (!isPage(html)) {
+      generated.push(...redirectLines(path, html, trailingSlash));
+
+      return 'redirect';
+    }
 
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({
@@ -360,6 +389,8 @@ export async function prerender(
       verdict,
       bytes: new TextEncoder().encode(html).length,
     });
+
+    return 'shell';
   };
 
   const answer = async (
@@ -410,7 +441,6 @@ export async function prerender(
 
     if (verdict.kind === 'shell') {
       const subpath = subpathIn(verdict.mount, path);
-      tally.shell += 1;
 
       if (
         import.meta.env?.DEV &&
@@ -422,7 +452,7 @@ export async function prerender(
         await warnStrictSlash(resolver, path);
       }
 
-      await emit(verdict, path, subpath, fileFor(subpath));
+      tally[await emit(verdict, path, subpath, fileFor(subpath))] += 1;
 
       return;
     }
@@ -465,7 +495,14 @@ export async function prerender(
   if (page) {
     tally.document += 1;
     const { verdict, probe, file } = page;
-    await emit(verdict, probe, subpathIn(verdict.mount, probe), file);
+
+    if (
+      (await emit(verdict, probe, subpathIn(verdict.mount, probe), file)) !==
+      'shell'
+    )
+      throw new Error(
+        `prerender: the 404 document's render for '${probe}' answered a redirect; it must render a page`,
+      );
   }
 
   const lines = [...extraRules, ...generated];
