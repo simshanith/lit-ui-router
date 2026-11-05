@@ -10,6 +10,9 @@ integrations on top of it — each is published and versioned independently and
 depends on the core only as a peer, so you add exactly the ones you need and
 nothing you don't.
 
+The <a href="/releases/" target="_self">release pages</a> list every
+release of the core and these packages, with links to their release notes.
+
 ## Published
 
 | Package                                                                 | Version                                                                                                                                                                                                                                                                                                                                                                   | What it is                                                                                                                                                                                                               |
