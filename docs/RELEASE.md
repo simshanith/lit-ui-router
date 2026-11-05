@@ -253,7 +253,7 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
   (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
   so it goes red only when a bench crashes.
 - `acceptance (npm-diff)`: the patch the release-diffs worker stores against
-  `npm diff`, byte for byte, for a few published version pairs (`mise run npm_diff_parity`).
+  `npm diff`, byte for byte but for a final blank context line npm trims, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.
 
 A red check is a real failure on that commit, unlike a release signal, but it

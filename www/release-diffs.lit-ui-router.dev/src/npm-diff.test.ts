@@ -156,6 +156,17 @@ describe('formatDiff', () => {
     );
   });
 
+  it('keeps a blank context line that ends the patch, where libnpmdiff trims it', () => {
+    assert.equal(
+      formatDiff({
+        a: files(['index.js', 'one\n\n']),
+        b: files(['index.js', 'ONE\n\n']),
+        versions,
+      }),
+      'diff --git a/index.js b/index.js\nindex v1.0.0..v1.0.1 100644\n--- a/index.js\n+++ b/index.js\n@@ -1,2 +1,2 @@\n-one\n+ONE\n ',
+    );
+  });
+
   it('prints an empty file gaining content, and nothing for unchanged files', () => {
     assert.equal(
       formatDiff({

@@ -20,7 +20,8 @@ takes a domain-shaped name because every `www/` package is keyed by one (see
 - [`src/`](./src): the build engine, run by the worker and by node's test
   runner. [`registry.ts`](./src/registry.ts) reads both tarballs from the npm
   registry, [`format-diff.ts`](./src/format-diff.ts) prints the patch the way
-  libnpmdiff does, [`file-filter.ts`](./src/file-filter.ts) holds the Source,
+  libnpmdiff does, but keeps a blank context line that ends the patch, which
+  libnpmdiff trims, [`file-filter.ts`](./src/file-filter.ts) holds the Source,
   Published JS, Types and All presets, and [`store.ts`](./src/store.ts) the R2
   layout.
 
@@ -33,8 +34,8 @@ prefix.
 `test` runs the engine's suites and the worker in workerd through wrangler's
 test harness, under the config `cloudflare.config.ts` gives production, with
 [`worker/test/registry-stub.ts`](./worker/test/registry-stub.ts) answering the
-registry. `test:npm-diff` checks the patch against the npm CLI's, byte for byte,
-in the `acceptance (npm-diff)` job.
+registry. `test:npm-diff` checks the patch against the npm CLI's, byte for byte
+but for that line, in the `acceptance (npm-diff)` job.
 
 It deploys through Workers Builds like every site in [`www/`](../README.md),
 with its branches built as Workers Previews, but through `cf` rather than
