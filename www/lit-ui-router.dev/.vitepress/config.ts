@@ -177,6 +177,7 @@ function makeSidebar() {
         },
       ],
     },
+    { text: 'Releases', link: '/releases/', target: '_self', items: [] },
     {
       text: 'Companion Packages',
       items: [
