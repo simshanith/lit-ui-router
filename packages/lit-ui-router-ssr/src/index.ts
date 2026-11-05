@@ -15,11 +15,14 @@ export {
   type PrerenderTally,
   type RedirectLine,
   type RenderContext,
+  type RenderedRedirect,
 } from './prerender.js';
 
 export {
+  redirectedTo,
   type ResolvePayload,
   settle,
+  type SettledRedirect,
   type SettleOptions,
 } from 'ui-router-server/ssr';
 

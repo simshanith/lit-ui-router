@@ -301,6 +301,37 @@ describe('prerender', () => {
     });
   });
 
+  it('writes a render that answers a redirect as a rules line and no page, counted as a redirect', async () => {
+    const { files, result } = await run({
+      paths: ['/', '/sheet/7B'],
+      notFound: false,
+      render: (_verdict, { path }) =>
+        path === '/sheet/7B' ? { location: '/sheet/7', status: 308 } : '<p/>',
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/index.html', 'dist/_redirects']);
+    assert.equal(
+      files.get('dist/_redirects'),
+      '/sheet/7B /sheet/7 308\n/sheet/7B/ /sheet/7 308\n',
+    );
+    assert.deepEqual(
+      result.pages.map((page) => page.path),
+      ['/'],
+    );
+    assert.equal(result.tally.shell, 1);
+    assert.equal(result.tally.redirect, 1);
+  });
+
+  it('throws when the 404 document’s render answers a redirect', async () => {
+    await assert.rejects(
+      run({
+        paths: [],
+        render: () => ({ location: '/', status: 302 }),
+      }),
+      /the 404 document's render for '\/__ui-router-server-probe__' answered a redirect/,
+    );
+  });
+
   it('throws for a verdict kind it does not know instead of counting it', async () => {
     const kind: string = 'forbidden';
 

@@ -101,7 +101,11 @@ marker; the host binds a handler to the state's name, typed with `ResponseHandle
 A handler receives `{ resolves, request }`. The verdict is `response`, decided by url matching
 alone, so a host tells it from a page before rendering. A response state needs a url and no
 `redirectTo`, and can't also delegate; `createServerRouter` throws for each, and `as const` routes
-make a row with both markers a compile error. The fetch and Hono adapters pass a GET or HEAD of any
+make a row with both markers a compile error. A url whose pattern is sometimes a page and sometimes a
+redirect needs a `redirectTo` function instead, answered after `settle` with `redirectedTo(router,
+transition)` from `ui-router-server/ssr` at the state's `redirectStatusCode` (`302` by default),
+which a data `redirectTo`'s verdict honors too; see
+[which decides when](https://lit-ui-router.dev/packages/ssr#page-response-state-or-redirect-which-decides-when). The fetch and Hono adapters pass a GET or HEAD of any
 `Accept` that matches one to `serveResponse(verdict, request, ...args)` and answer other methods
 with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `prerender()` hands a
 response state to its `respond` hook and writes a 2xx body at the path its url spells

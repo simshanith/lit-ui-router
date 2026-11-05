@@ -261,9 +261,10 @@ type Verdict =
   the request's validators so the asset fetch returns a body to relabel.
 - **`redirect`** — `location` is the mount-joined target path and may already
   carry a query string, so preserve the request's search with the exported
-  `mergeSearch(location, incoming)` rather than concatenating. Verdicts fix
-  `status: 302`: a redirect table is configuration that changes with the next
-  deploy, and browsers cache 301s past it.
+  `mergeSearch(location, incoming)` rather than concatenating. `status` is
+  `302` unless the matched state declares `redirectStatusCode`: a redirect
+  table is configuration that changes with the next deploy, and browsers
+  cache a permanent redirect past it. A pattern rule's redirect is `302`.
 - **`delegate`** — the path matched a state that names a host handler by key
   ([delegating states](#delegating-states)); the handler answers the request.
 - **`response`** — the path matched a [response state](#response-states); the
@@ -579,7 +580,9 @@ and its second parameter types each handler's resolves by state name.
 - A response state needs a url and no `redirectTo`, can't also delegate, and
   its children don't inherit the marker. `createServerRouter` throws for each,
   and `as const` routes make a row with both markers a compile error. A
-  redirect may target a response state.
+  redirect may target a response state. A url whose pattern is sometimes a
+  page and sometimes a redirect needs a `redirectTo` function instead:
+  [which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
   `<img>` reaches its badge, and answer other methods with a 405.
@@ -588,7 +591,7 @@ and its second parameter types each handler's resolves by state name.
   `serveResponse` at compile time, and construction throws without it.
 - The Connect adapter throws for response states unless `responses: 'next'`.
 - `ui-router-server` augments core's `StateDeclaration` with
-  `response?: true`, as it does with `delegate`.
+  `response?: true`, as it does with `delegate` and `redirectStatusCode`.
 
 ## Server-side hrefs
 
@@ -653,6 +656,15 @@ transition, and past its
 imports `@uirouter/core` and no renderer, so it runs under any renderer.
 [`lit-ui-router-ssr`](/packages/ssr) builds its
 prerender on the same step.
+
+A `redirectTo` chain settles on its final state.
+[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+then returns `{ url, status }` for a transition a redirect moved, a `redirectTo`
+function's included: the mount-relative url it landed on, query included, and
+the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
+of the state the url matched, `302` by default. It returns `undefined` for any
+other transition, so a host answers a redirect found at settle as a 30x; see
+[which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 
 ### Handing resolves to the client
 
