@@ -18,12 +18,16 @@
     "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "@types/webidl2": "catalog:",
     "@vscode/web-custom-data": "catalog:",
+    "@webref/elements": "catalog:",
+    "@webref/idl": "catalog:",
     "lit": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "parse5": "catalog:",
     "typescript": "catalog:",
-    "typescript-7.1": "catalog:"
+    "typescript-7.1": "catalog:",
+    "webidl2": "catalog:"
   }
 }

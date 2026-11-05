@@ -97,6 +97,9 @@ catalogs:
     '@types/semver':
       specifier: ^7.8.0
       version: 7.8.0
+    '@types/webidl2':
+      specifier: ^24.4.4
+      version: 24.4.4
     '@typescript-eslint/parser':
       specifier: ^8.72.1
       version: 8.72.1
@@ -124,6 +127,12 @@ catalogs:
     '@vscode/web-custom-data':
       specifier: ^0.6.3
       version: 0.6.3
+    '@webref/elements':
+      specifier: ^2.9.2
+      version: 2.9.2
+    '@webref/idl':
+      specifier: ^3.86.0
+      version: 3.86.0
     binary-extensions:
       specifier: ^3.1.0
       version: 3.2.0
@@ -343,6 +352,9 @@ catalogs:
     vue-tsc:
       specifier: ^3.3.14
       version: 3.3.14
+    webidl2:
+      specifier: ^24.5.0
+      version: 24.5.0
     wrangler:
       specifier: ^4.156.2
       version: 4.156.2
@@ -2666,9 +2678,18 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/webidl2':
+        specifier: 'catalog:'
+        version: 24.4.4
       '@vscode/web-custom-data':
         specifier: 'catalog:'
         version: 0.6.3
+      '@webref/elements':
+        specifier: 'catalog:'
+        version: 2.9.2
+      '@webref/idl':
+        specifier: 'catalog:'
+        version: 3.86.0(webidl2@24.5.0)
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -2687,6 +2708,9 @@ importers:
       typescript-7.1:
         specifier: 'catalog:'
         version: typescript@7.1.0-beta
+      webidl2:
+        specifier: 'catalog:'
+        version: 24.5.0
 
   tools/lit-test-env:
     dependencies:
@@ -5743,6 +5767,9 @@ packages:
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
 
+  '@types/webidl2@24.4.4':
+    resolution: {integrity: sha512-V1MjhR7JkQNzvsvaBVOzkKwR29YCQZgTPUtJaMQH6IP7wrvJWB7ZjmtVVNnFQyp2AdvNY+CTptMA9uHVLDOksA==}
+
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
 
@@ -6287,6 +6314,14 @@ packages:
   '@web/config-loader@0.1.3':
     resolution: {integrity: sha512-XVKH79pk4d3EHRhofete8eAnqto1e8mCRAqPV00KLNFzCWSe8sWmLnqKCqkPNARC6nksMaGrATnA5sPDRllMpQ==}
     engines: {node: '>=10.0.0'}
+
+  '@webref/elements@2.9.2':
+    resolution: {integrity: sha512-NjGr2/UMDsHc4yBYTLoXOxmt+hQW1YcsBZTX+w1SrEKA0fHJtapqMoFXWYrE4MhtZOjh7PjwKNgE+7w9qVxA9Q==}
+
+  '@webref/idl@3.86.0':
+    resolution: {integrity: sha512-cfBKahe5RlvgVnOII8XxoPJ/rZ8B9bYaVaewOt9L9IwbDmJOQ7dSNAA5AXM7BQaiQ+/FbqqrE1bGVUm3HBUFYw==}
+    peerDependencies:
+      webidl2: ^24.5.0
 
   '@xn-sakina/rml-darwin-arm64@2.8.0':
     resolution: {integrity: sha512-B8XpWn/t3vALCePi8DnbHQWVQnmKybwPIKbfzL1L75w2V/ELXn0OguFayujf2eZdmCIBPC+Drqxztn6fDV08Ww==}
@@ -9888,6 +9923,10 @@ packages:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
 
+  webidl2@24.5.0:
+    resolution: {integrity: sha512-fxOigKkIem1iAgQ9t4cFOP+kWEA8y6Be/uh50FpJh0FijoeeT/VMrOyJzNLUgjy0rGMEcHeReKDCqj0g9dIe9A==}
+    engines: {node: '>= 18'}
+
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -12121,6 +12160,8 @@ snapshots:
 
   '@types/web-bluetooth@0.0.21': {}
 
+  '@types/webidl2@24.4.4': {}
+
   '@types/whatwg-mimetype@3.0.2': {}
 
   '@types/ws@8.18.1':
@@ -12615,6 +12656,12 @@ snapshots:
   '@web/config-loader@0.1.3':
     dependencies:
       semver: 7.8.6
+
+  '@webref/elements@2.9.2': {}
+
+  '@webref/idl@3.86.0(webidl2@24.5.0)':
+    dependencies:
+      webidl2: 24.5.0
 
   '@xn-sakina/rml-darwin-arm64@2.8.0':
     optional: true
@@ -16721,6 +16768,8 @@ snapshots:
   walk-up-path@4.0.0: {}
 
   web-streams-polyfill@3.3.3: {}
+
+  webidl2@24.5.0: {}
 
   webpack-virtual-modules@0.6.2: {}
 

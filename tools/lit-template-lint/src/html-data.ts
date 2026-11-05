@@ -1,9 +1,10 @@
-// Built-in attribute value types as lit-analyzer derives them: the
-// @vscode/web-custom-data value sets, with its own table laid over them.
+// Built-in attribute value types: an enumerated attribute's keywords from the
+// @vscode/web-custom-data value sets, else the type of the IDL attribute that
+// reflects it (./reflected.ts).
 import { createRequire } from 'node:module';
 
-import { ATTRIBUTE_TYPES } from './attribute-types.ts';
 import { PRELUDE_NAMESPACE as NS } from './prelude.ts';
+import { reflectedType } from './reflected.ts';
 
 interface DataAttribute {
   name: string;
@@ -22,41 +23,11 @@ const data = createRequire(import.meta.url)(
   '@vscode/web-custom-data/data/browsers.html-data.json',
 ) as HtmlData;
 
-// lit-analyzer's additions to the vscode data
-const EXTRA_TAG_ATTRIBUTES = new Map<string, DataAttribute[]>([
-  ['audio', [{ name: 'controlslist' }]],
-  [
-    'video',
-    [
-      { name: 'controlslist' },
-      { name: 'disablepictureinpicture', valueSet: 'v' },
-      { name: 'playsinline', valueSet: 'v' },
-    ],
-  ],
-]);
-
-const EXTRA_GLOBAL_ATTRIBUTES = [
-  'tabindex',
-  'slot',
-  'part',
-  'theme',
-  'exportparts',
-];
+// a valid navigable target name or keyword: the set lists only the keywords
+const OPEN_VALUE_SETS = new Set(['target']);
 
 const union = (values: readonly string[]) =>
   values.map((value) => JSON.stringify(value)).join(' | ');
-
-function tableType(name: string): string | undefined {
-  const spec = ATTRIBUTE_TYPES.get(name);
-
-  if (spec === undefined) return undefined;
-
-  if ('type' in spec) return spec.type.split('|').join(' | ');
-
-  return 'tokens' in spec
-    ? `${NS}.Tokens<${union(spec.tokens)}>`
-    : union(spec.values);
-}
 
 const valueSets = new Map<string, string>(
   data.valueSets.map(({ name, values }) => [
@@ -70,46 +41,52 @@ const valueSets = new Map<string, string>(
 
 valueSets.set('v', 'boolean');
 
-// a table entry wins; an attribute the data leaves untyped takes the table's
-function typeOf({ name, valueSet, values }: DataAttribute): string | undefined {
-  const fromData =
-    valueSet === undefined
-      ? values && union(values.map((value) => value.name))
-      : valueSets.get(valueSet);
-
-  return tableType(name) ?? fromData;
-}
-
-const typesOf = (attributes: DataAttribute[]) => {
-  const types = new Map<string, string>();
-
-  for (const attribute of attributes) {
-    const type = typeOf(attribute);
-
-    if (type !== undefined && !types.has(attribute.name)) {
-      types.set(attribute.name, type);
-    }
+const keywordsOf = ({
+  valueSet,
+  values,
+}: DataAttribute): string | undefined => {
+  if (valueSet === undefined) {
+    return values && union(values.map((value) => value.name));
   }
 
-  return types;
+  return OPEN_VALUE_SETS.has(valueSet) ? undefined : valueSets.get(valueSet);
 };
 
-const globalTypes = typesOf([
-  ...data.globalAttributes,
-  ...EXTRA_GLOBAL_ATTRIBUTES.map((name) => ({ name })),
-]);
+const byName = (attributes: DataAttribute[]) =>
+  new Map(
+    attributes.flatMap((attribute) => {
+      const keywords = keywordsOf(attribute);
 
-const tagTypes = new Map(
-  data.tags.map((tag) => [
-    tag.name,
-    typesOf([...tag.attributes, ...(EXTRA_TAG_ATTRIBUTES.get(tag.name) ?? [])]),
-  ]),
+      return keywords === undefined
+        ? []
+        : [[attribute.name, keywords] as const];
+    }),
+  );
+
+const globalKeywords = byName(data.globalAttributes);
+
+const tagKeywords = new Map(
+  data.tags.map((tag) => [tag.name, byName(tag.attributes)]),
 );
 
+// WAI-ARIA: role takes a space-separated list of tokens, the first valid one applies
+const ROLE = `${NS}.Tokens<${valueSets.get('roles')}>`;
+
+// HTML: download may have a value, a default file name
+const DOWNLOAD = 'boolean | string';
+
 /** Tags the html data describes. */
-export const BUILT_IN_TAGS: ReadonlySet<string> = new Set(tagTypes.keys());
+export const BUILT_IN_TAGS: ReadonlySet<string> = new Set(tagKeywords.keys());
 
 /** The type an attribute value must fit, as TypeScript type text, if the data has one. */
 export function attributeType(tag: string, name: string): string | undefined {
-  return tagTypes.get(tag)?.get(name) ?? globalTypes.get(name);
+  if (name === 'role') return ROLE;
+
+  if (name === 'download' && reflectedType(tag, name)) return DOWNLOAD;
+
+  return (
+    tagKeywords.get(tag)?.get(name) ??
+    globalKeywords.get(name) ??
+    reflectedType(tag, name)
+  );
 }

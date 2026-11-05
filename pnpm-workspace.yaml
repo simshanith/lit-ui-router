@@ -41,6 +41,7 @@ catalog:
   '@types/pacote': ^11.1.8
   '@typescript-eslint/parser': ^8.72.1
   '@types/semver': ^7.8.0
+  '@types/webidl2': ^24.4.4
   '@uirouter/core': ^6.1.2
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
@@ -49,6 +50,8 @@ catalog:
   '@vitest/browser-playwright': ^5.1.0
   '@vitest/coverage-v8': ^5.1.0
   '@vscode/web-custom-data': ^0.6.3
+  '@webref/elements': ^2.9.2
+  '@webref/idl': ^3.86.0
   binary-extensions: ^3.1.0
   cf: 1.0.0-beta.27
   cloudflare-effect-tracer: ^0.2.0
@@ -121,6 +124,7 @@ catalog:
   vitest: ^5.1.0
   vue: ^3.5.44
   vue-tsc: ^3.3.14
+  webidl2: ^24.5.0
   wrangler: ^4.156.2
   yaml: ^2.9.0
 
