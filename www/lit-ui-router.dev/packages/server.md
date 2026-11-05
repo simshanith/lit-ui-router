@@ -585,8 +585,8 @@ and its second parameter types each handler's resolves by state name.
   its children don't inherit the marker. `createServerRouter` throws for each,
   and `as const` routes make a row with both markers a compile error. A
   redirect may target a response state. A url whose pattern is sometimes a
-  page and sometimes a redirect needs a `redirectTo` function instead,
-  answered after [settle](#settling-a-server-router).
+  page and sometimes a redirect needs a `redirectTo` function instead:
+  [which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
   `<img>` reaches its badge, and answer other methods with a 405.
@@ -715,7 +715,8 @@ then returns `{ url, status }` for a transition a redirect moved, a `redirectTo`
 function's included: the mount-relative url it landed on, query included, and
 the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
 of the state the url matched, `302` by default. It returns `undefined` for any
-other transition, so a host answers a redirect found at settle as a 30x.
+other transition, so a host answers a redirect found at settle as a 30x; see
+[which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 
 ### Handing resolves to the client
 
