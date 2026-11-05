@@ -15,12 +15,8 @@ import type {
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
-  RenderedRedirect,
 } from 'ui-router-server/prerender';
-import {
-  dehydrate as dehydrateLanded,
-  redirectedTo,
-} from 'ui-router-server/ssr';
+import { dehydrate as dehydrateLanded } from 'ui-router-server/ssr';
 import type {
   DehydrateOptions,
   DehydrateResult,
@@ -39,7 +35,6 @@ export type {
   FileWriter,
   PrerenderTally,
   RedirectLine,
-  RenderedRedirect,
 } from 'ui-router-server/prerender';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
@@ -97,11 +92,7 @@ export interface PrerenderOptions extends Omit<
    * Renders one shell verdict. Return a template and this package renders it,
    * behind the hydration signature; return a string and it is written as-is.
    * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
-   * path before it returns. When the transition the router lands on during
-   * the hook was redirected, by a `redirectTo` function for one, the path
-   * gets a rules line to where it landed, at the redirecting state's
-   * `redirectStatusCode`, and no page: `redirectedTo` from
-   * `ui-router-server/ssr` reports it.
+   * path before it returns.
    */
   renderShell: (
     verdict: ShellVerdict,
@@ -335,8 +326,7 @@ const warnUnregistered = (): void => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, or a rules line when the transition its
- * `renderShell` landed was redirected, a response state becomes the body or rules line its
+ * `<subpath>/index.html`, a response state becomes the body or rules line its
  * handler in {@link PrerenderOptions.responses | responses} answers, a
  * redirect becomes a rules line and no page, and the `otherwise` projection
  * becomes the 404 document. The loop is
@@ -420,34 +410,15 @@ export async function prerender(
     return { payload: payload?.(transition, context) };
   };
 
-  // `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
-  const lastLanded = (): Transition | undefined =>
-    router.globals.successfulTransitions.peekTail();
-
   const drawLanded = (context: RenderContext): Partial<DehydrateResult> => {
     if (!dehydrateOptions && !payload) return {};
-    const landed = lastLanded();
+
+    // SAFETY: `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
+    const landed = router.globals.successfulTransitions.peekTail() as
+      | Transition
+      | undefined;
 
     return landed ? draw(landed, context) : {};
-  };
-
-  // A transition this render landed, not one an earlier page left the router on.
-  const redirectOf = (
-    verdict: ShellVerdict,
-    before: Transition | undefined,
-  ): RenderedRedirect | undefined => {
-    const landed = lastLanded();
-
-    const redirect =
-      landed && landed !== before ? redirectedTo(router, landed) : undefined;
-
-    if (!redirect) return undefined;
-    const { mount } = verdict;
-
-    return {
-      location: mount === '/' ? redirect.url || '/' : mount + redirect.url,
-      status: redirect.status,
-    };
   };
 
   const reports = new Map<string, PagePayload>();
@@ -473,13 +444,9 @@ export async function prerender(
   const renderLit = async (
     verdict: ShellVerdict,
     siteContext: SiteRenderContext,
-  ): Promise<string | RenderedRedirect> => {
+  ): Promise<string> => {
     const context: RenderContext = { ...siteContext, root };
-    const before = lastLanded();
     const body = await renderShell(verdict, context);
-    const redirect = redirectOf(verdict, before);
-
-    if (redirect) return redirect;
 
     const markup = isString(body) ? body : renderTemplate(body, context);
 

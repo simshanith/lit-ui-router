@@ -124,7 +124,7 @@ A server render reads the router only once its transition has landed, resolves i
 `settle(router, path)`, the `ui-router-server/ssr` step this package re-exports, sets the url, syncs
 the router to it, and resolves with the transition that landed, so the synchronous render after it
 reads every resolve. A `redirectTo` chain settles on its final state, and a path the router already
-stands on resolves at once. `redirectedTo` reports where a redirected transition landed.
+stands on resolves at once.
 
 A page fails to land in four ways, and each rejects rather than hangs:
 
@@ -139,49 +139,6 @@ A page fails to land in four ways, and each rejects rather than hangs:
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
-
-## Page, response state or redirect: which decides when
-
-A url's answer is decided at one of two points:
-
-- **The verdict**, from the url alone, before any of the app's code runs. A pattern rule or a data
-  `redirectTo` answers a redirect, a state marked `response: true` a response state, a `delegate` a
-  host handler, and any other state a page.
-- **Settle**, once the page's transition runs its resolves, hooks and `redirectTo` functions. They
-  can change only a page's answer: a `redirectTo` function can move the transition elsewhere, and a
-  resolve that rejects fails `settle`, which the host maps to an error page.
-
-A response state suits a url whose pattern alone says it is not a page. When urls of one pattern
-are sometimes a page and sometimes a redirect, such as a compare page whose reversed pair redirects
-to the forward one, only a `redirectTo` function tells them apart.
-
-The state whose `redirectTo` fires, data or function, declares the status in `redirectStatusCode`:
-`301`, `302`, `303`, `307` or `308`, `302` by default. A redirect function often depends on data,
-and browsers cache a permanent redirect with no expiry, so a redirect that never changes opts into
-`308`. A pattern rule's redirect answers `302`.
-
-After `settle`, `redirectedTo(router, transition)` returns `{ url, status }` for a transition a
-redirect moved, a change of params alone included: the url it landed on, relative to the mount,
-query included, and the redirecting state's `redirectStatusCode`. A live host answers with it:
-
-```ts
-import { redirectedTo, settle } from 'lit-ui-router-ssr';
-
-// A shell verdict under /releases, on a router built for this request.
-const redirect = redirectedTo(router, await settle(router, subpath));
-
-if (redirect)
-  return new Response(null, {
-    status: redirect.status,
-    headers: { Location: `/releases${redirect.url}` },
-  });
-```
-
-`prerender` does the same after each `renderShell`: when the transition the hook landed was
-redirected, the path gets a rules line in place of a page, counted in `tally.redirect`. A url rule
-that rewrites the url, `when('/old', '/new')`, starts a new transition rather than redirecting one,
-so `redirectedTo` reports nothing for it; declare it in the mount's `redirects`. See
-[page, response state or redirect](https://lit-ui-router.dev/packages/ssr#page-response-state-or-redirect-which-decides-when).
 
 ## Response states
 

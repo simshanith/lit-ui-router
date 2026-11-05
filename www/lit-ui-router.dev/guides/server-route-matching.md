@@ -255,8 +255,6 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
-  Until then a page's render reaches them after `settle`
-  ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
   A simulate mount's `prewarm` count builds idle routers once core loads, so
   its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
@@ -562,11 +560,9 @@ The redirect table takes two kinds of entry, both pure data:
 
 That is the boundary: redirects expressible as **data** belong in the table.
 Anything that needs **code** to decide — hooks, resolves, `redirectTo`
-functions, injected services — is out of the verdict's reach. A server render
-reaches it after `settle`: `redirectedTo` reports a `redirectTo` function's
-redirect, which the host answers as a 30x or `prerender` writes as a rules
-line ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)). The sample apps keep those
-decisions client-side, since they render no page on the server.
+functions, injected services — is where the simulate tier is headed (a planned
+`MountConfig` widening; not yet reachable in the verdict API), and the sample
+apps deliberately keep those decisions client-side today.
 
 Contracts worth internalizing:
 
@@ -577,11 +573,11 @@ package's `mergeSearch`: target params win, remaining request params append.
 `/app/?flag=1` 302s to `/app/welcome?flag=1`. The matcher tier resolves
 pathnames only — incoming search values never flow into redirect params.
 
-**302 unless declared.** The redirect table is configuration that changes
-with the next deploy, and browsers cache 301s so aggressively that a
-mis-shipped permanent redirect outlives the config that produced it. Verdicts
-answer `302` unless the matched state declares `redirectStatusCode`, such as
-`308` for a move that never changes; a pattern rule's redirect stays `302`.
+**302, not 301.** The redirect table is configuration that changes with the
+next deploy, and browsers cache 301s so aggressively that a mis-shipped
+permanent redirect outlives the config that produced it. Verdicts fix
+`status: 302`; a per-rule 301 for genuinely legacy moves would be a table
+extension.
 
 **Mount-root rules are for path-mode entries.** Server redirects rewrite
 the path, and a hash-location client keeps its route state where the server
@@ -645,12 +641,9 @@ is a transition that settled on the `notFound` state. The cost is the full
 core chunk plus per-request router construction, and it is small: measured
 under `wrangler dev` (workerd), the first simulate request took 12.4 ms
 total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The level
-earns its keep the day a redirect must be decided before render by hooks,
-resolves, or a `redirectTo` function; a page rendered on the server already
-reaches them after `settle`
-([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
-Until then the flagships stay on the matcher tier and the switch remains one
-word of config.
+earns its keep the day a redirect needs hooks, resolves, or a `redirectTo`
+function — until then the flagships stay on the matcher tier and the switch
+remains one word of config.
 
 ## Real 404s, per mount
 
