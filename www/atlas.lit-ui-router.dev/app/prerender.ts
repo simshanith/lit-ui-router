@@ -45,7 +45,7 @@ import { withRouterSync } from 'lit-ui-router/context';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import { RouterRefController } from 'lit-ui-router-effect';
 import { settle } from 'lit-ui-router-ssr';
-import type { PrerenderedPage, RedirectLine } from 'lit-ui-router-ssr';
+import type { RedirectLine } from 'lit-ui-router-ssr';
 import { definePrerender } from 'lit-ui-router-ssr/vite';
 import type { PrerenderEntry } from 'lit-ui-router-ssr/vite';
 import { createServerRouter, diagnoseMounts } from 'ui-router-server';
@@ -339,8 +339,7 @@ const site = definePrerender(({ shellHtml }) => {
 /** The atlas's checks on what the loop emitted; the plugin itself fails a path with no route. */
 const entry: PrerenderEntry = async (build) => {
   const result = await site(build);
-  // `definePrerender` types `pages` as the server's; the lit prerender's carry `payload`.
-  const pages = result.pages as PrerenderedPage[];
+  const { pages } = result;
 
   console.log(
     `prerendered ${String(result.tally.shell)} pages + ` +
@@ -376,8 +375,6 @@ const entry: PrerenderEntry = async (build) => {
       if (!EXPECTED_UNSERIALIZABLE.has(token)) unexpected.push(`${path}: ${token}`);
   }
   if (unexpected.length > 0) throw new Error(`prerender: unserializable resolve ${unexpected.join('; ')}`);
-  // The worker is terminated on the result; its stdout is a port to the parent, so the lines above wait to be taken.
-  await new Promise<void>((resolve) => process.stdout.write('', () => resolve()));
   return result;
 };
 

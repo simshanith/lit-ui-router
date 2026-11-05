@@ -839,3 +839,11 @@ awaited a write's drain before returning. And the wrapper's `definePrerender`
 returns `ui-router-server/vite`'s `PrerenderEntry`, whose `pages` are the
 server's `EmittedPage`, so a script that reads the lit result's `payload`
 casts the pages.
+
+**Update, 2026-11-04.** The atlas is on `ui-router-server@0.8.1` and
+`lit-ui-router-ssr@0.8.1`, the releases that took both edges of the previous
+update: the worker flushes its output before it posts the result, and
+`definePrerender`'s entry is typed over the lit prerender's own result. The
+drain await and the pages cast are gone from `prerender.ts`; every report
+line reaches the build log, 75 pages and the 404, 76 of 76 renders on a
+scoped router, 114 check-scenes checks holding.

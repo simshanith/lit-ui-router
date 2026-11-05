@@ -319,9 +319,8 @@ imports; and `manifest`, the 146 KB index every page shares, which the shell's
 browser keeps in its cache between pages. `viewer` resolves `undefined` and `dehydrate()` lists it
 as unserializable. The build reads each page's `payload` off `prerender()`'s result, prints its
 size and the resolves that re-run on the client, and throws on an unserializable resolve other than
-`viewer`. The script runs in the plugin's worker, whose stdout is a port to the parent, so it waits
-for a write to drain before it returns; the parent terminates the worker on the result. The bare plate pages carry
-none.
+`viewer`. The script runs in the plugin's worker, which flushes its output before it posts the
+result. The bare plate pages carry none.
 
 **The boot (`src/main.ts`).** One `bootstrap(router, root, page(router), { onAdopt })` from
 `lit-ui-router-ssr/client` seeds the boot transition with the signature's resolves, starts the
