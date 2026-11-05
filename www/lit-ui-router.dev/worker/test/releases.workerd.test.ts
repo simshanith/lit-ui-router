@@ -4,6 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 
+import { getByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import {
+  element,
+  hasAttribute,
+  parseMarkup,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
 import { createTestHarness } from 'wrangler';
@@ -100,18 +107,20 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
     const body = await response.text();
 
     assert.equal(response.status, 200, body);
-    assert.match(
-      body,
-      /<title>lit-ui-router@1\.10\.0 \| Lit UI Router<\/title>/,
+    assert.equal(parseHtml(body).title, 'lit-ui-router@1.10.0 | Lit UI Router');
+    assert.ok(
+      hasAttribute(element(parseMarkup(body), 'ui-view'), 'defer-hydration'),
     );
-    assert.match(body, /<ui-view defer-hydration>/);
   });
 
   it('answers 404 for a version the ledger lacks', async () => {
     const response = await server.fetch('/releases/lit-ui-router/9.9.9/');
 
     assert.equal(response.status, 404);
-    assert.match(await response.text(), /<h1>Not found<\/h1>/);
+    getByRole(parseHtml(await response.text()).body, 'heading', {
+      level: 1,
+      name: 'Not found',
+    });
   });
 
   it('redirects latest to the newest stable version', async () => {
@@ -143,6 +152,9 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
     const response = await server.fetch('/gh/releases/');
 
     assert.equal(response.status, 404);
-    assert.match(await response.text(), /<h1>Not found<\/h1>/);
+    getByRole(parseHtml(await response.text()).body, 'heading', {
+      level: 1,
+      name: 'Not found',
+    });
   });
 });
