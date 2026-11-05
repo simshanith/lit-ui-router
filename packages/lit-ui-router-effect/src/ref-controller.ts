@@ -69,7 +69,7 @@ export interface RefControllerOptions<T> {
 }
 
 /** Any tuple of `SubscriptionRef`s; `any` because the ref's type is invariant. */
-// oxlint-disable-next-line typescript/no-explicit-any
+// oxlint-disable-next-line typescript/no-explicit-any -- SubscriptionRef is invariant in its value type
 export type SubscriptionRefs = readonly SubscriptionRef.SubscriptionRef<any>[];
 
 /** The value tuple a tuple of `SubscriptionRef`s holds. */

@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest';
 class ParserConnectProbe extends HTMLElement {
   childCountAtConnect = -1;
   connectedCallback() {
-    // eslint-disable-next-line wc/no-child-traversal-in-connectedcallback
+    // eslint-disable-next-line wc/no-child-traversal-in-connectedcallback -- the probe records the children the parser has inserted at connect
     this.childCountAtConnect = this.childNodes.length;
   }
 }
