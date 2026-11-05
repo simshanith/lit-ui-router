@@ -1,14 +1,15 @@
 ---
 title: How this site runs
-description: lit-ui-router.dev on Cloudflare — static assets, the docs worker that routes the sample apps and release pages, and the release-ledger worker behind them
+description: lit-ui-router.dev on Cloudflare — static assets, the docs worker that routes the sample apps and release pages, and the release-ledger and release-diffs workers behind them
 ---
 
 # How this site runs
 
 lit-ui-router.dev is a Cloudflare Worker with static assets. The docs are
 plain files; a worker answers only the paths that need a routing decision —
-the sample apps, through `ui-router-server`, and the release pages, from a
-second worker that keeps the release ledger.
+the sample apps, through `ui-router-server`, and the release pages, from two
+workers behind it: one keeps the release ledger, the other builds release
+diffs.
 [Server-Side Routing](./guides/server-route-matching#one-request-at-a-time)
 follows a single request through the docs worker.
 
@@ -33,9 +34,16 @@ follows a single request through the docs worker.
    [`ui-router-server` verdicts](./guides/server-route-matching#the-verdict):
    a redirect, a 404, or the app's shell, fetched back from static assets
    like its 404 pages and any path it doesn't route. It also renders the
-   release pages and `/gh` redirects from ledger rows it reads over RPC. It
-   has no database of its own.
-4. **The ledger worker** keeps the release ledger; the docs worker reads it
+   release pages and `/gh` redirects from ledger rows it reads over RPC, and
+   the release diff pages from diffs it fetches over RPC. It has no database
+   or bucket of its own.
+4. **The diffs worker**
+   ([`release-diffs`](https://github.com/simshanith/lit-ui-router/blob/main/www/release-diffs.lit-ui-router.dev/README.md))
+   builds each pair of releases' npm diff once and serves it from R2; the
+   docs worker calls it through the `RELEASE_DIFFS` service binding.
+   [The release-diffs worker](#the-release-diffs-worker) below draws what is
+   behind it.
+5. **The ledger worker** keeps the release ledger; the docs worker reads it
    through the `LEDGER` service binding.
    [The release ledger](#the-release-ledger) below draws what is behind it.
 
@@ -90,7 +98,7 @@ versions of a package, built once per version pair.
    only way in.
 2. **A `ReleaseDiff` Durable Object**, one per pair, builds a missing entry.
 3. **npm** serves the packument and both tarballs a build diffs.
-4. **R2** holds one entry per pair under `v1/<pkg>/<from>...<to>/`: the
+4. **R2** holds one entry per pair under `<layout>/<pkg>/<from>...<to>/`: the
    patch, each preset's sections, and `index.json`, written last, so an entry
    with an index is complete. The object is its only writer; the worker only
    reads it.

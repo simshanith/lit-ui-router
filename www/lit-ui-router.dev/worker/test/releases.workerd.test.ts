@@ -14,8 +14,9 @@ import {
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 import * as v from 'valibot';
 import { createTestHarness } from 'wrangler';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
-// The docs worker's bundle in workerd, its LEDGER binding served by the stub ledger worker over RPC.
+// The docs worker's bundle in workerd, its LEDGER and RELEASE_DIFFS bindings served by stub workers over RPC.
 const SITE = join(import.meta.dirname, '../..');
 
 // wrangler writes its bundles under <root>/.wrangler; keep them out of the tree turbo hashes.
@@ -32,6 +33,7 @@ const WranglerConfig = v.object({
       service: v.string(),
       entrypoint: v.string(),
     }),
+    v.object({ binding: v.string(), service: v.string() }),
   ]),
 });
 
@@ -55,7 +57,7 @@ const readSite = () => {
 
 const site = readSite();
 
-const [ledger] = site.services;
+const [ledger, diffs] = site.services;
 
 const server = createTestHarness({
   root: SCRATCH,
@@ -73,13 +75,20 @@ const server = createTestHarness({
             join(SITE, to),
           ]),
         ),
-        services: [ledger],
+        services: [ledger, diffs],
       },
     },
     {
       config: {
         name: ledger.service,
         main: join(SITE, 'worker/test/ledger-stub/index.ts'),
+        compatibility_date: site.compatibility_date,
+      },
+    },
+    {
+      config: {
+        name: diffs.service,
+        main: join(SITE, 'worker/test/release-diffs-stub/index.ts'),
         compatibility_date: site.compatibility_date,
       },
     },
@@ -100,6 +109,32 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
       service: 'release-ledger',
       entrypoint: 'LedgerReader',
     });
+  });
+
+  it("binds the release diffs through their worker's default entrypoint", () => {
+    assert.deepEqual(diffs, {
+      binding: 'RELEASE_DIFFS',
+      service: 'release-diffs',
+    });
+  });
+
+  it('serves a diff index and a preset over RPC', async () => {
+    const diff = `/releases/lit-ui-router/diff/1.9.0...1.10.0/${LAYOUT}`;
+    const index = await server.fetch(`${diff}/index.json`);
+
+    assert.equal(index.status, 200);
+    assert.equal(
+      v.parse(
+        v.object({ files: v.array(v.object({ path: v.string() })) }),
+        await index.json(),
+      ).files[0]?.path,
+      'package.json',
+    );
+
+    const files = await server.fetch(`${diff}/files/src`);
+
+    assert.equal(files.status, 200);
+    assert.match(await files.text(), /^diff --git a\/package\.json/);
   });
 
   it('renders a known version at 200', async () => {

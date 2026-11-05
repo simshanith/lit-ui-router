@@ -91,6 +91,16 @@ onMounted(async () => {
         spellcheck="false"
       />
     </label>
+    <fieldset>
+      <legend>Diff</legend>
+      <label
+        ><input type="radio" name="via" value="diffshub" checked /> Git source
+        on DiffsHub</label
+      >
+      <label
+        ><input type="radio" name="via" value="files" /> Published files</label
+      >
+    </fieldset>
     <button type="submit">
       Compare <span class="visually-hidden">(opens in a new tab)</span>
     </button>
@@ -111,9 +121,38 @@ onMounted(async () => {
   gap: 0.25rem;
 }
 
-.compare > label {
+.compare > label,
+.compare legend {
   color: var(--site-color-text-muted);
   font-size: 0.875rem;
+}
+
+.compare fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.compare legend {
+  padding: 0;
+  margin-block-end: 0.25rem;
+}
+
+.compare fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-block-size: 2.5rem;
+  color: var(--site-color-text);
+  font-size: 1rem;
+}
+
+.compare input[type='radio'] {
+  accent-color: var(--site-color-interaction);
+  margin: 0;
 }
 
 .compare select,

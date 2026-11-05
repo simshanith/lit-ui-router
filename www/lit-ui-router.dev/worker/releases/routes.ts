@@ -18,6 +18,22 @@ export const releaseRoutes = [
     params: { via: { value: 'diffshub', squash: true } },
     response: true,
   },
+  { name: 'releases.package.compare', url: '/diff/{from}...{to}' },
+  {
+    name: 'releases.package.compare.index',
+    url: '/{layout}/index.json',
+    response: true,
+  },
+  {
+    name: 'releases.package.compare.files',
+    url: '/{layout}/files/{preset}',
+    response: true,
+  },
+  {
+    name: 'releases.package.compare.patch',
+    url: '/{layout}/patch',
+    response: true,
+  },
   { name: 'releases.package.version', url: '/{version}' },
   { name: 'notFound' },
 ] as const satisfies readonly RouteDeclaration[];

@@ -4,6 +4,9 @@
   "private": true,
   "description": "The release-diffs worker: each version pair's npm diff, built once by a ReleaseDiff Durable Object into R2",
   "type": "module",
+  "exports": {
+    "./layout": "./src/layout.ts"
+  },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,jsonc,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,json,jsonc,md}\"",

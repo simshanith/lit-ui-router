@@ -25,11 +25,16 @@ takes a domain-shaped name because every `www/` package is keyed by one (see
   Published JS, Types and All presets, and [`store.ts`](./src/store.ts) the R2
   layout.
 
-A pair's entry sits under `v1/<pkg>/<from>...<to>/`: `patch`, one
+A pair's entry sits under `<layout>/<pkg>/<from>...<to>/`: `patch`, one
 `files/<preset>` per preset holding that preset's sections of the patch, and
 `index.json`, written last, so an entry with an index is complete. Pairs are
-immutable, so an entry is never rewritten; a format change bumps the `v1`
-prefix.
+immutable, so an entry is never rewritten. `<layout>` is `LAYOUT` in
+[`layout.ts`](./src/layout.ts), which the package exports as `./layout`. A change
+to any stored bytes, the patch text included, bumps it: every pair rebuilds
+under the new prefix, and the old one can be deleted. The docs worker builds
+its diff pages' data urls from the same constant and passes it on every call,
+and the worker rejects a layout other than its own, so a bump also changes
+every url the edge and browsers cache.
 
 `test` runs the engine's suites and the worker in workerd through wrangler's
 test harness, under the config `cloudflare.config.ts` gives production, with

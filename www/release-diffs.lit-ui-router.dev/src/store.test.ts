@@ -94,9 +94,9 @@ const gatedBuild = () => {
 
 describe('the R2 layout', () => {
   it('keys a pair under its layout version, package and range', () => {
-    assert.equal(patchKey(PAIR), 'v1/@scope/pkg/1.0.0...2.0.0/patch');
-    assert.equal(filesKey(PAIR, 'js'), 'v1/@scope/pkg/1.0.0...2.0.0/files/js');
-    assert.equal(indexKey(PAIR), 'v1/@scope/pkg/1.0.0...2.0.0/index.json');
+    assert.equal(patchKey(PAIR), 'v2/@scope/pkg/1.0.0...2.0.0/patch');
+    assert.equal(filesKey(PAIR, 'js'), 'v2/@scope/pkg/1.0.0...2.0.0/files/js');
+    assert.equal(indexKey(PAIR), 'v2/@scope/pkg/1.0.0...2.0.0/index.json');
     assert.equal(objectName(PAIR), '@scope/pkg@1.0.0...2.0.0');
     assert.notEqual(
       objectName({ ...PAIR, from: PAIR.to, to: PAIR.from }),

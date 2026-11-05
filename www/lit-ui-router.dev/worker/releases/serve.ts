@@ -7,7 +7,8 @@ import { createServerRouter, mergeSearch } from 'ui-router-server';
 import type { ServerRouter, Verdict } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 
-import { type PageHead, releaseDocument } from './document.ts';
+import type { ReleaseDiffs } from './diff-data.ts';
+import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
 import { mounts, urlConfig } from './routes.ts';
@@ -30,6 +31,16 @@ const headOf = (router: UIRouterLit): PageHead => {
   const { current, params } = router.globals;
   const pkg = String(params.pkg);
   const version = String(params.version);
+
+  if (current.name === 'releases.package.compare') {
+    const [from, to] = [String(params.from), String(params.to)];
+
+    return {
+      title: `${pkg} ${from}...${to}`,
+      description: `What changed in the files ${pkg} published to npm between ${from} and ${to}.`,
+      script: DIFF_SCRIPT,
+    };
+  }
 
   if (current.name === 'releases.package.version')
     return {
@@ -70,7 +81,11 @@ const UNAVAILABLE: PageHead = {
 };
 
 /** One request's page router at `mount`, and its states by name. */
-const routerFor = (mount: string, ledger: LedgerReader) => {
+const routerFor = (
+  mount: string,
+  ledger: LedgerReader,
+  diffs: ReleaseDiffs,
+) => {
   const router = installServerLocation(new UIRouterLit(), {
     baseHref: `${mount}/`,
     urlConfig,
@@ -78,7 +93,7 @@ const routerFor = (mount: string, ledger: LedgerReader) => {
 
   const states = new Map<string, ReleaseState>();
 
-  for (const state of releaseStates(mount, ledger)) {
+  for (const state of releaseStates(mount, ledger, diffs)) {
     router.stateRegistry.register(state);
     states.set(state.name, state);
   }
@@ -233,6 +248,7 @@ const cacheKeyOf = (
 export const serveReleases = async (
   request: Request,
   ledger: LedgerReader,
+  diffs: ReleaseDiffs,
   edge?: EdgeCache,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
@@ -252,7 +268,7 @@ export const serveReleases = async (
 
   if (wantsSlash(verdict, url)) return redirect(`${url.pathname}/`, 308, url);
 
-  const pageRouter = routerFor(mount, ledger);
+  const pageRouter = routerFor(mount, ledger, diffs);
   const fresh = () => answer(request, pageRouter, verdict);
 
   const key = cacheKeyOf(pageRouter, verdict, request);

@@ -12,9 +12,15 @@ import {
   within,
 } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import '../dom-shim.ts';
-import { releaseDocument, STYLESHEET } from '../releases/document.ts';
+import type { ReleaseDiffs } from '../releases/diff-data.ts';
+import {
+  DIFF_SCRIPT,
+  releaseDocument,
+  STYLESHEET,
+} from '../releases/document.ts';
 import {
   type LedgerReader,
   latestOf,
@@ -31,8 +37,18 @@ import { memoryEdge } from './memory-cache.ts';
 
 const ORIGIN = 'http://docs.test';
 
+// The pages never read a diff; the data routes have their own suite.
+const unread = (pair: { name: string; from: string; to: string }) =>
+  Promise.reject(new Error(`read ${pair.name}@${pair.from}...${pair.to}`));
+
+const NO_DIFFS: ReleaseDiffs = {
+  index: unread,
+  files: unread,
+  patch: unread,
+};
+
 const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
-  serveReleases(new Request(`${ORIGIN}${path}`, init), ledger);
+  serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, NO_DIFFS);
 
 const DOWN: LedgerReader = {
   packages: () => Promise.reject(new Error('ledger down')),
@@ -128,6 +144,8 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router/releases/tag';
 
 const DIFFS = 'https://diffshub.com/simshanith/lit-ui-router/compare';
 
+const FILES = '/releases/lit-ui-router/diff';
+
 describe('the /releases verdicts', () => {
   const cases = [
     ['/releases', 308, '/releases/'],
@@ -211,7 +229,18 @@ describe('the /releases/<pkg>/diff redirects', () => {
       302,
       `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
     ],
+    [
+      `${diff}?from=1.10.0&to=1.11.0-rc.0&via=files`,
+      302,
+      `${FILES}/1.10.0...1.11.0-rc.0/`,
+    ],
+    [
+      `${diff}/?from=1.10.0&to=1.9.0&via=files`,
+      302,
+      `${FILES}/1.10.0...1.9.0/`,
+    ],
     [`${diff}?from=1.9.0&to=9.9.9`, 404, null],
+    [`${diff}?from=9.9.9&to=1.10.0&via=files`, 404, null],
     [`${diff}?from=1.9.0`, 404, null],
     [diff, 404, null],
     [`${diff}?from=1.9.0&to=1.10.0&via=github`, 404, null],
@@ -238,19 +267,36 @@ describe('the /releases/<pkg>/diff redirects', () => {
     assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
   });
 
+  const without = (field: 'git_sha' | 'npm_integrity'): LedgerReader => ({
+    ...fixtureLedger,
+    versions: async (name) =>
+      (await fixtureLedger.versions(name)).map((row) =>
+        row.version === '1.9.0' ? { ...row, [field]: null } : row,
+      ),
+  });
+
   it('answers 404 for a DiffsHub compare whose tag the ledger lacks', async () => {
-    const ledger: LedgerReader = {
-      ...fixtureLedger,
-      versions: async (name) =>
-        (await fixtureLedger.versions(name)).map((row) =>
-          row.version === '1.9.0' ? { ...row, git_sha: null } : row,
-        ),
-    };
+    const ledger = without('git_sha');
 
     assert.equal(
       (await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger))?.status,
       404,
     );
+    assert.equal(
+      (await serve(`${diff}?from=1.9.0&to=1.10.0&via=files`, {}, ledger))
+        ?.status,
+      302,
+    );
+  });
+
+  it('answers 404 for a published-files diff of a version npm lacks', async () => {
+    const response = await serve(
+      `${diff}?from=1.9.0&to=1.10.0&via=files`,
+      {},
+      without('npm_integrity'),
+    );
+
+    assert.equal(response?.status, 404);
   });
 
   it('reads the versions once', async () => {
@@ -282,6 +328,149 @@ describe('the /releases/<pkg>/diff redirects', () => {
 
     assert.equal(response?.status, 302);
     assert.equal(response?.body, null);
+  });
+});
+
+describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
+  const cases = [
+    [`${FILES}/1.9.0...1.10.0/`, 200, null],
+    [`${FILES}/1.9.0...1.10.0/?files=js`, 200, null],
+    [`${FILES}/1.10.0...1.11.0-rc.0/`, 200, null],
+    [`${FILES}/1.10.0...1.2.0/`, 200, null],
+    [`${FILES}/1.9.0...1.10.0`, 308, `${FILES}/1.9.0...1.10.0/`],
+    [`${FILES}/1.9.0...1.10.0?ref=x`, 308, `${FILES}/1.9.0...1.10.0/?ref=x`],
+    [`${FILES}/1.9.0...9.9.9/`, 404, null],
+    [`${FILES}/9.9.9...1.10.0/`, 404, null],
+    [`${FILES}/1.9.0..1.10.0/`, 404, null],
+    [`${FILES}/1.9.0.../`, 404, null],
+    ['/releases/not-a-package/diff/1.9.0...1.10.0/', 404, null],
+  ] as const;
+
+  for (const [path, status, location] of cases) {
+    it(`answers ${path} with ${status}`, async () => {
+      const response = await serve(path);
+
+      assert.equal(response?.status, status);
+      assert.equal(response?.headers.get('Location'), location);
+    });
+  }
+
+  it('renders a shell the diff script fills in', async () => {
+    const response = await serve(`${FILES}/1.9.0...1.10.0/`);
+    const doc = parseHtml((await response?.text()) ?? '');
+
+    assert.equal(
+      response?.headers.get('Content-Type'),
+      'text/html; charset=utf-8',
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(doc.title, 'lit-ui-router 1.9.0...1.10.0 | Lit UI Router');
+
+    const shell = getByRole(doc.body, 'region', { name: 'Changed files' });
+
+    // The script finds its host and controls by class and data attributes, which carry no role.
+    assert.ok(shell.classList.contains('npm-diff'));
+    assert.ok(shell.hasAttribute('data-npm-diff'));
+    assert.deepEqual(
+      ['data-package', 'data-from', 'data-to'].map((name) =>
+        shell.getAttribute(name),
+      ),
+      ['lit-ui-router', '1.9.0', '1.10.0'],
+    );
+    assert.deepEqual(
+      getAllByRole(shell, 'status').map((status) => status.textContent),
+      ['Loading the diff…', ''],
+    );
+
+    // A parsed document runs no script, so <noscript> holds markup.
+    assert.equal(
+      getByRole(shell, 'link', { name: 'Download the patch' }).getAttribute(
+        'href',
+      ),
+      `${LAYOUT}/patch`,
+    );
+
+    // Both start hidden, and a hidden element computes no accessible name.
+    assert.equal(queryByRole(shell, 'group'), null);
+    assert.equal(queryByRole(shell, 'navigation'), null);
+
+    const filter = getByRole(shell, 'group', { hidden: true });
+    assert.ok(filter.hidden);
+    assert.ok(filter.classList.contains('diff-filter'));
+    getByText(filter, 'Show', { selector: 'legend' });
+
+    const nav = getByRole(shell, 'navigation', { hidden: true });
+    assert.ok(nav.hidden);
+    assert.ok(nav.classList.contains('diff-nav'));
+    assert.equal(nav.getAttribute('aria-label'), 'Files');
+
+    assert.equal(
+      getByRole(doc.body, 'link', { name: 'on DiffsHub' }).getAttribute('href'),
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    );
+    assert.equal(
+      within(getByRole(doc.body, 'navigation', { name: 'Breadcrumb' }))
+        .getByRole('link', { name: 'lit-ui-router' })
+        .getAttribute('href'),
+      '/releases/lit-ui-router/',
+    );
+  });
+
+  it('links no DiffsHub compare without both tags', async () => {
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: async (name) =>
+        (await fixtureLedger.versions(name)).map((row) =>
+          row.version === '1.9.0' ? { ...row, git_sha: null } : row,
+        ),
+    };
+
+    const response = await serve(`${FILES}/1.9.0...1.10.0/`, {}, ledger);
+
+    assert.equal(response?.status, 200);
+    assert.deepEqual(
+      getAllByRole(parseHtml((await response?.text()) ?? '').body, 'link')
+        .map((link) => link.getAttribute('href'))
+        .filter((href) => href?.startsWith('https://diffshub.com/')),
+      [],
+    );
+  });
+
+  it('answers 404 for a version npm lacks', async () => {
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: async (name) =>
+        (await fixtureLedger.versions(name)).map((row) =>
+          row.version === '1.9.0' ? { ...row, npm_integrity: null } : row,
+        ),
+    };
+
+    const response = await serve(`${FILES}/1.9.0...1.10.0/`, {}, ledger);
+
+    assert.equal(response?.status, 404);
+    getByRole(parseHtml((await response?.text()) ?? '').body, 'heading', {
+      level: 1,
+      name: 'Not found',
+    });
+  });
+
+  it('answers HEAD with headers and no body', async () => {
+    const response = await serve(`${FILES}/1.9.0...1.10.0/`, {
+      method: 'HEAD',
+    });
+
+    assert.equal(response?.status, 200);
+    assert.equal(response?.body, null);
+    assert.equal(
+      (await serve(`${FILES}/1.9.0...9.9.9/`, { method: 'HEAD' }))?.status,
+      404,
+    );
+  });
+
+  it('answers 503 while the ledger cannot be read', async () => {
+    const response = await serve(`${FILES}/1.9.0...1.10.0/`, {}, DOWN);
+
+    assert.equal(response?.status, 503);
   });
 });
 
@@ -461,7 +650,12 @@ describe('the /gh edge cache', () => {
     ledger: LedgerReader,
     init?: RequestInit,
   ) =>
-    serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, memory.edge);
+    serveReleases(
+      new Request(`${ORIGIN}${path}`, init),
+      ledger,
+      NO_DIFFS,
+      memory.edge,
+    );
 
   it('writes a miss to the cache for a day, while the client keeps it 60 s', async () => {
     const memory = memoryEdge();
@@ -699,6 +893,21 @@ describe('the /releases pages', () => {
     getByRole(form, 'button', { name: 'Compare (opens in a new tab)' });
     assert.equal(form.getAttribute('target'), '_blank');
     assert.equal(form.getAttribute('rel'), 'noopener');
+
+    const via = getByRole(form, 'group', { name: 'Diff' });
+
+    assert.deepEqual(
+      getAllByRole(via, 'radio').map((radio) => [
+        radio.getAttribute('name'),
+        radio.getAttribute('value'),
+      ]),
+      [
+        ['via', 'diffshub'],
+        ['via', 'files'],
+      ],
+    );
+    getByRole(via, 'radio', { name: 'Git source on DiffsHub', checked: true });
+    getByRole(via, 'radio', { name: 'Published files', checked: false });
   });
 
   it('offers no diff form for a package with one version', async () => {
@@ -727,6 +936,18 @@ describe('the /releases pages', () => {
       hrefOf(diff, 'Diff from 1.2.0 to 1.9.0'),
       `${DIFFS}/lit-ui-router%401.2.0...lit-ui-router%401.9.0`,
     );
+
+    // A definition takes no accessible name from its content, so its term finds it.
+    const files = getByText(doc.body, 'Published files', {
+      selector: 'dt',
+    }).nextElementSibling;
+
+    assert.ok(files);
+    assert.equal(
+      // SAFETY: a dt's sibling in a parsed page is an HTML element.
+      hrefOf(files as HTMLElement, 'Diff from 1.2.0 to 1.9.0'),
+      `${FILES}/1.2.0...1.9.0/`,
+    );
   });
 
   it('reads the versions once for a version page and its diff', async () => {
@@ -751,6 +972,10 @@ describe('the /releases pages', () => {
 
     assert.equal(queryByRole(doc.body, 'link', { name: /^Diff from / }), null);
     assert.equal(queryByText(doc.body, 'Diff', { selector: 'dt' }), null);
+    assert.equal(
+      queryByText(doc.body, 'Published files', { selector: 'dt' }),
+      null,
+    );
   });
 
   it('renders the 404 page for a version the ledger lacks', async () => {
@@ -798,6 +1023,27 @@ describe('the /releases pages', () => {
     );
     assert.equal(doc.doctype?.name, 'html');
     assert.equal(doc.documentElement.lang, 'en');
+  });
+
+  it('loads the diff script the docs build emits on the diff page alone', async () => {
+    const doc = await page(`${FILES}/1.9.0...1.10.0/`);
+
+    // A script has no role.
+    assert.deepEqual(
+      [...doc.querySelectorAll('script[type="module"]')].map((script) =>
+        script.getAttribute('src'),
+      ),
+      [DIFF_SCRIPT],
+    );
+    assert.ok(
+      existsSync(
+        join(
+          import.meta.dirname,
+          '../releases',
+          DIFF_SCRIPT.replace(/\.js$/, '.ts'),
+        ),
+      ),
+    );
   });
 
   it('ships only the appearance check as client script', async () => {

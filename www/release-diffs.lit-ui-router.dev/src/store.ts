@@ -3,6 +3,7 @@ import * as v from 'valibot';
 
 import { type DiffIndex, indexPatch } from './diff-index.ts';
 import { FILE_FILTERS, type FileFilter } from './file-filter.ts';
+import { LAYOUT } from './layout.ts';
 import { npmDiff } from './registry.ts';
 
 const PACKAGE_NAME = /^(?:@[a-z0-9][\w.~-]*\/)?[a-z0-9][\w.~-]*$/;
@@ -33,9 +34,6 @@ export interface DiffBucket {
     options?: { httpMetadata?: { contentType?: string } },
   ): Promise<object | null>;
 }
-
-/** Bump to rebuild every entry under a new prefix when the stored format changes. */
-export const LAYOUT = 'v1';
 
 /** The key prefix of a pair's entry. */
 export const entryPrefix = ({ name, from, to }: DiffPair): string =>
