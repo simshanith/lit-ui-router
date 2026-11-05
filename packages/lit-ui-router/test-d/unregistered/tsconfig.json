@@ -1,0 +1,12 @@
+{
+  // its own program: no file in it augments `Register`
+  "extends": "../../tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "isolatedDeclarations": false,
+    "types": []
+  },
+  "include": ["*.ts"],
+  "exclude": []
+}
