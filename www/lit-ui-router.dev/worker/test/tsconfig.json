@@ -11,5 +11,5 @@
   },
   "include": ["*.ts", "../index.ts", "../worker-configuration.d.ts"],
   // lib.dom and the workers runtime types clash; tsconfig.dom.json checks these.
-  "exclude": ["releases.test.ts"]
+  "exclude": ["releases.test.ts", "releases.workerd.test.ts"]
 }
