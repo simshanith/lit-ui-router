@@ -15,6 +15,8 @@ import {
   type Diagnostic,
   ModuleKind,
   type Program,
+  type Project,
+  SymbolFlags,
 } from 'typescript-7.1/sync';
 
 import {
@@ -55,9 +57,6 @@ const ERROR: number = DiagnosticCategory.Error;
 
 const SCANNED =
   /\b(html|svg|mathml)`|customElement|@property|@internalProperty|observedAttributes/;
-
-// keys of an `HTMLElementTagNameMap` augmentation that name custom elements
-const TAG_MAP_KEY = /['"]([a-z][\w.]*-[\w.-]*)['"]\??\s*:/g;
 
 const addCounts = (
   into: Record<string, number>,
@@ -104,6 +103,23 @@ export function parseFiles(api: API, files: string[]): ParsedFile[] {
   return parsed;
 }
 
+const NODE_MODULES = '/node_modules/';
+
+/** The installed package directory a node_modules file belongs to. */
+const packageRoot = (file: string): string | undefined => {
+  const at = file.lastIndexOf(NODE_MODULES);
+
+  if (at < 0) return undefined;
+  const start = at + NODE_MODULES.length;
+  const segments = file.slice(start).split('/');
+
+  const name = segments[0].startsWith('@')
+    ? segments.slice(0, 2).join('/')
+    : segments[0];
+
+  return `${file.slice(0, start)}${name}/`;
+};
+
 type ModuleFacts = Pick<FileSites, 'runtimeSpecifiers' | 'facade'>;
 
 /**
@@ -115,7 +131,6 @@ class ImportGraph {
   readonly #api: API;
   readonly #facts = new Map<string, ModuleFacts>();
   readonly #edges = new Map<string, string[]>();
-  readonly #tags = new Map<string, string[]>();
 
   constructor(api: API, parsed: ParsedFile[]) {
     this.#api = api;
@@ -123,14 +138,21 @@ class ImportGraph {
     for (const file of parsed) this.#facts.set(file.path, file);
   }
 
-  facts(path: string): ModuleFacts {
+  facts(program: Program, path: string): ModuleFacts {
     let facts = this.#facts.get(path);
 
     if (!facts) {
-      const retained = this.#api.createSourceFileFromFile(path);
+      const sourceFile = program.getSourceFile(path);
 
-      facts = findSites(retained.sourceFile);
-      retained.dispose();
+      if (sourceFile) {
+        facts = findSites(sourceFile);
+      } else {
+        const retained = this.#api.createSourceFileFromFile(path);
+
+        facts = findSites(retained.sourceFile);
+        retained.dispose();
+      }
+
       this.#facts.set(path, facts);
     }
 
@@ -142,68 +164,111 @@ class ImportGraph {
     let edges = this.#edges.get(key);
 
     if (!edges) {
-      edges = this.facts(path).runtimeSpecifiers.flatMap((specifier) => {
-        const resolved = program.getResolvedModule(
-          path,
-          specifier,
-          ModuleKind.ESNext,
-        );
+      edges = this.facts(program, path).runtimeSpecifiers.flatMap(
+        (specifier) => {
+          const resolved = program.getResolvedModule(
+            path,
+            specifier,
+            ModuleKind.ESNext,
+          );
 
-        return resolved ? [resolved.resolvedFileName] : [];
-      });
+          return resolved ? [resolved.resolvedFileName] : [];
+        },
+      );
       this.#edges.set(key, edges);
     }
 
     return edges;
   }
 
-  reachable(project: string, program: Program, root: string): Set<string> {
-    const seen = new Set<string>();
+  /**
+   * Whether `root` loads any of the files, walking only until it finds one. A
+   * node_modules module that isn't a facade is loaded but not followed, so the
+   * walk needs no depth and may visit in any order: workspace modules and the
+   * targets' own packages go first.
+   */
+  loader(
+    project: string,
+    program: Program,
+    root: string,
+  ): (files: string[]) => boolean {
+    const seen = new Set([root]);
+    const pending = [root];
 
-    const visit = (path: string, depth: number): void => {
-      if (seen.has(path)) return;
-      seen.add(path);
-      const external = path.includes('/node_modules/');
+    return (files) => {
+      const packages = files.flatMap((file) => packageRoot(file) ?? []);
 
-      if (external && depth >= 1) return;
+      const near = (path: string) => {
+        const pkg = packageRoot(path);
 
-      for (const child of this.edges(project, program, path)) {
-        const entering = !external && child.includes('/node_modules/');
-        const next = entering ? 1 : depth + 1;
+        return pkg === undefined || packages.includes(pkg);
+      };
 
-        visit(child, this.facts(child).facade ? next - 1 : next);
+      while (!files.some((file) => seen.has(file)) && pending.length > 0) {
+        const index = Math.max(pending.findIndex(near), 0);
+        const [path] = pending.splice(index, 1);
+
+        if (
+          path !== root &&
+          path.includes(NODE_MODULES) &&
+          !this.facts(program, path).facade
+        ) {
+          continue;
+        }
+
+        for (const child of this.edges(project, program, path)) {
+          if (seen.has(child)) continue;
+          seen.add(child);
+          pending.push(child);
+        }
       }
+
+      return files.some((file) => seen.has(file));
     };
+  }
+}
 
-    visit(root, 0);
+/** Files whose `HTMLElementTagNameMap` members declare each custom tag in the project. */
+function tagDeclarers(
+  api: API,
+  project: Project,
+  files: Set<string>,
+): Map<string, string[]> {
+  const declarers = new Map<string, string[]>();
 
-    return seen;
+  const tagMap = project.checker.resolveName(
+    'HTMLElementTagNameMap',
+    SymbolFlags.Interface,
+  );
+
+  if (!tagMap) return declarers;
+
+  const names = new Map(
+    [...files].map((file) => [api.getCanonicalFileName(file), file]),
+  );
+
+  for (const [tag, member] of tagMap.getMembers()) {
+    if (!String(tag).includes('-')) continue;
+
+    const declaring = member.declarations.flatMap(
+      ({ path }) => names.get(path) ?? [],
+    );
+
+    declarers.set(String(tag), [...new Set(declaring)]);
   }
 
-  /** Custom tags a file's `HTMLElementTagNameMap` augmentations declare. */
-  declaredTags(path: string): string[] {
-    let tags = this.#tags.get(path);
-
-    if (!tags) {
-      const text = readFileSync(path, 'utf8');
-
-      tags = text.includes('HTMLElementTagNameMap')
-        ? [...text.matchAll(TAG_MAP_KEY)].map(([, tag]) => tag)
-        : [];
-      this.#tags.set(path, tags);
-    }
-
-    return tags;
-  }
+  return declarers;
 }
 
 export interface Visibility {
   programFiles: Map<string, Set<string>>;
   imports: Map<string, Set<string>>;
-  /** Files each open file loads at runtime, itself included. */
-  reachable: Map<string, Set<string>>;
-  /** Files of each open file's program that declare a custom tag's type. */
-  declarers: Map<string, Map<string, string[]>>;
+  /** Whether each open file loads any of the given files at runtime, itself included. */
+  loads: Map<string, (files: string[]) => boolean>;
+  /** Files of every open file's program that declare a custom tag's type. */
+  declarers: Map<string, string[]>;
+  /** Releases the snapshot that `loads` walks lazily. */
+  dispose(): void;
 }
 
 // the unlowered programs, to learn which definitions each file can see
@@ -212,15 +277,18 @@ export function programFilesOf(
   open: ParsedFile[],
   all: ParsedFile[] = open,
 ): Visibility {
+  const graph = new ImportGraph(api, all);
+  const base = api.createSnapshot({ openFiles: open.map((file) => file.path) });
+
   const visibility: Visibility = {
     programFiles: new Map(),
     imports: new Map(),
-    reachable: new Map(),
+    loads: new Map(),
     declarers: new Map(),
+    dispose: () => base.dispose(),
   };
 
-  const graph = new ImportGraph(api, all);
-  const base = api.createSnapshot({ openFiles: open.map((file) => file.path) });
+  const scanned = new Set<string>();
 
   try {
     for (const { path, specifiers } of open) {
@@ -245,22 +313,26 @@ export function programFilesOf(
       );
 
       if (!project || !program) continue;
-      visibility.reachable.set(
+      visibility.loads.set(
         path,
-        graph.reachable(String(project.id), program, path),
+        graph.loader(String(project.id), program, path),
       );
-      const declarers = new Map<string, string[]>();
 
-      for (const file of files) {
-        for (const tag of graph.declaredTags(file)) {
-          declarers.set(tag, [...(declarers.get(tag) ?? []), file]);
-        }
+      if (scanned.has(String(project.id))) continue;
+      scanned.add(String(project.id));
+
+      for (const [tag, declaring] of tagDeclarers(api, project, files)) {
+        const known = visibility.declarers.get(tag) ?? [];
+
+        visibility.declarers.set(tag, [
+          ...known,
+          ...declaring.filter((file) => !known.includes(file)),
+        ]);
       }
-
-      visibility.declarers.set(path, declarers);
     }
-  } finally {
+  } catch (error) {
     base.dispose();
+    throw error;
   }
 
   return visibility;
@@ -270,17 +342,16 @@ export function programFilesOf(
 function missingImportFor(
   path: string,
   defining: ParsedFile[],
-  { programFiles, reachable, declarers }: Visibility,
+  { programFiles, loads, declarers }: Visibility,
 ) {
   const files = programFiles.get(path) ?? new Set();
-  const loaded = reachable.get(path);
-  const declared = declarers.get(path) ?? new Map<string, string[]>();
+  const load = loads.get(path);
 
   return (tag: string): boolean => {
-    if (!loaded) return false;
+    if (!load) return false;
 
     const definers = [
-      ...(declared.get(tag) ?? []),
+      ...(declarers.get(tag) ?? []).filter((file) => files.has(file)),
       ...defining.flatMap((file) =>
         (file.path === path || files.has(file.path)) &&
         file.definitions.some((definition) => definition.tag === tag)
@@ -289,7 +360,7 @@ function missingImportFor(
       ),
     ];
 
-    return definers.length > 0 && !definers.some((file) => loaded.has(file));
+    return definers.length > 0 && !load(definers);
   };
 }
 
@@ -470,7 +541,14 @@ export function checkFiles(
     parsed,
   );
 
-  const lowering = lowerAll(parsed, visibility);
+  let lowering: ReturnType<typeof lowerAll>;
+
+  try {
+    lowering = lowerAll(parsed, visibility);
+  } finally {
+    visibility.dispose();
+  }
+
   const lowerMs = performance.now() - started;
 
   if (dumpDir) dump(dumpDir, lowering.lowered);
