@@ -213,6 +213,46 @@ time {
 .hash {
   overflow-wrap: anywhere;
 }
+.compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem 1.25rem;
+  margin-block: 1.5rem;
+}
+.compare label {
+  display: grid;
+  gap: 0.25rem;
+}
+.compare > label {
+  color: var(--site-color-text-muted);
+  font-size: 0.875rem;
+}
+.compare select,
+.compare button {
+  font: inherit;
+  min-block-size: 2.5rem;
+  padding-inline: 0.75rem;
+  border-radius: var(--site-radius-control);
+  touch-action: manipulation;
+}
+.compare select {
+  color: var(--site-color-text);
+  appearance: none;
+  padding-inline-end: 2.25rem;
+  background-color: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  font-variant-numeric: tabular-nums;
+}
+.compare button {
+  color: var(--vp-button-brand-text);
+  background: var(--vp-button-brand-bg);
+  border: var(--site-border-width) solid var(--vp-button-brand-border);
+  font-weight: 600;
+}
+.compare button:active {
+  background: var(--vp-button-brand-active-bg);
+}
 .visually-hidden {
   position: absolute;
   inline-size: 1px;
@@ -240,4 +280,24 @@ ui-view {
   a:hover {
     text-decoration-thickness: 2px;
   }
+  .compare button:hover {
+    background: var(--vp-button-brand-hover-bg);
+  }
+}
+
+.compare .select {
+  position: relative;
+  display: inline-grid;
+  /* Inherited, not set on the svg, so forced colors replace it. */
+  color: var(--site-color-text-muted);
+}
+
+.compare .select svg {
+  position: absolute;
+  inset-inline-end: 0.75rem;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  inline-size: 1rem;
+  block-size: 1rem;
+  pointer-events: none;
 }

@@ -5,7 +5,7 @@ import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
-import { isStable, previousIn } from './ledger.ts';
+import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
@@ -38,6 +38,19 @@ export const diffUrl = (
   from.git_sha === null || to.git_sha === null
     ? null
     : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
+
+// Lucide's chevron-down: a <select> takes no pseudo-element, so the caret is a sibling.
+const caret = html`<svg
+  aria-hidden="true"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 9 6 6 6-6" />
+</svg>`;
 
 const diff = (
   versions: readonly LedgerVersion[],
@@ -142,6 +155,57 @@ export const ReleasesView: RoutedLitTemplate<{
 }> = ({ router, resolves }) =>
   isLeaf(router, 'releases') ? indexPage(router, resolves.packages) : uiView();
 
+const versionOptions = (
+  versions: readonly LedgerVersion[],
+  selected: LedgerVersion | undefined,
+): TemplateResult[] =>
+  versions.map(
+    ({ version }) =>
+      html`<option value=${version} ?selected=${version === selected?.version}>
+        ${version}
+      </option>`,
+  );
+
+/** The form `releases.package.diff` answers, starting on `pickerPair`. */
+const compareForm = (
+  router: UIRouter,
+  pkg: string,
+  versions: readonly LedgerVersion[],
+): TemplateResult | typeof nothing => {
+  const { from, to } = pickerPair(versions);
+
+  return versions.length < 2
+    ? nothing
+    : html`<form
+        class="compare"
+        method="get"
+        action=${router.stateService.href('releases.package.diff', { pkg })}
+        aria-label="Compare two versions"
+        target="_blank"
+        rel="noopener"
+      >
+        <label
+          >From
+          <span class="select"
+            ><select name="from">
+              ${versionOptions(versions, from)}</select
+            >${caret}</span
+          ></label
+        >
+        <label
+          >To
+          <span class="select"
+            ><select name="to">
+              ${versionOptions(versions, to)}</select
+            >${caret}</span
+          ></label
+        >
+        <button type="submit">
+          Compare <span class="visually-hidden">(opens in a new tab)</span>
+        </button>
+      </form>`;
+};
+
 const packagePage = (
   router: UIRouter,
   pkg: string,
@@ -154,6 +218,7 @@ const packagePage = (
     first. Its npm page is
     <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
   </p>
+  ${compareForm(router, pkg, versions)}
   <div class="table">
     <table>
       <thead>

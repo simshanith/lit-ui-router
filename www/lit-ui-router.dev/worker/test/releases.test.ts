@@ -197,6 +197,94 @@ describe('the /releases verdicts', () => {
   });
 });
 
+describe('the /releases/<pkg>/diff redirects', () => {
+  const diff = '/releases/lit-ui-router/diff';
+
+  const cases = [
+    [
+      `${diff}?from=1.9.0&to=1.10.0`,
+      302,
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    ],
+    [
+      `${diff}/?from=1.9.0&to=1.10.0&via=diffshub`,
+      302,
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    ],
+    [`${diff}?from=1.9.0&to=9.9.9`, 404, null],
+    [`${diff}?from=1.9.0`, 404, null],
+    [diff, 404, null],
+    [`${diff}?from=1.9.0&to=1.10.0&via=github`, 404, null],
+    [`${diff}?from=1.9.0&from=1.2.0&to=1.10.0`, 404, null],
+    ['/releases/not-a-package/diff?from=1.9.0&to=1.10.0', 404, null],
+  ] as const;
+
+  for (const [path, status, location] of cases) {
+    it(`answers ${path} with ${status}`, async () => {
+      const response = await serve(path);
+
+      assert.equal(response?.status, status);
+      assert.equal(response?.headers.get('Location'), location);
+    });
+  }
+
+  it('drops the request search and caches like the pages', async () => {
+    const response = await serve(`${diff}?from=1.9.0&to=1.10.0&ref=form`);
+
+    assert.equal(
+      response?.headers.get('Location'),
+      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+  });
+
+  it('answers 404 for a DiffsHub compare whose tag the ledger lacks', async () => {
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: async (name) =>
+        (await fixtureLedger.versions(name)).map((row) =>
+          row.version === '1.9.0' ? { ...row, git_sha: null } : row,
+        ),
+    };
+
+    assert.equal(
+      (await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger))?.status,
+      404,
+    );
+  });
+
+  it('reads the versions once', async () => {
+    const reads: string[] = [];
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      tagged: (name, tag) => {
+        reads.push('tagged');
+
+        return fixtureLedger.tagged(name, tag);
+      },
+      versions: (name) => {
+        reads.push('versions');
+
+        return fixtureLedger.versions(name);
+      },
+    };
+
+    await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger);
+
+    assert.deepEqual(reads, ['versions']);
+  });
+
+  it('answers HEAD with the redirect and no body', async () => {
+    const response = await serve(`${diff}?from=1.9.0&to=1.10.0`, {
+      method: 'HEAD',
+    });
+
+    assert.equal(response?.status, 302);
+    assert.equal(response?.body, null);
+  });
+});
+
 describe('the /gh verdicts', () => {
   const cases = [
     [
@@ -577,6 +665,46 @@ describe('the /releases pages', () => {
       getAllByRole(doc.body, 'link', { name: /^Diff from / }).length,
       3,
     );
+  });
+
+  it('picks a diff with a form that needs no script', async () => {
+    const doc = await page('/releases/lit-ui-router/');
+    const form = getByRole(doc.body, 'form', { name: 'Compare two versions' });
+
+    assert.equal(form.getAttribute('method'), 'get');
+    assert.equal(form.getAttribute('action'), '/releases/lit-ui-router/diff');
+    assert.deepEqual(
+      getAllByRole(form, 'combobox').map((select) =>
+        select.getAttribute('name'),
+      ),
+      ['from', 'to'],
+    );
+
+    // happy-dom's parsed selectedness leaks across selects, so read the served `selected` attribute.
+    const picked = (name: string) =>
+      within(getByRole(form, 'combobox', { name }))
+        .getAllByRole('option')
+        .filter((option) => option.hasAttribute('selected'))
+        .map((option) => option.getAttribute('value'));
+
+    assert.deepEqual(picked('From'), ['1.9.0']);
+    assert.deepEqual(picked('To'), ['1.10.0']);
+
+    for (const name of ['From', 'To'])
+      assert.equal(
+        within(getByRole(form, 'combobox', { name })).getAllByRole('option')
+          .length,
+        4,
+      );
+    getByRole(form, 'button', { name: 'Compare (opens in a new tab)' });
+    assert.equal(form.getAttribute('target'), '_blank');
+    assert.equal(form.getAttribute('rel'), 'noopener');
+  });
+
+  it('offers no diff form for a package with one version', async () => {
+    const doc = await page('/releases/ui-router-server/');
+
+    assert.equal(queryByRole(doc.body, 'form'), null);
   });
 
   it("shows one version's facts and links out", async () => {

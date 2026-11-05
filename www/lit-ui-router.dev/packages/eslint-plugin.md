@@ -213,6 +213,10 @@ candidates, where a widening cost nobody a major; the remaining roadmap (a
 state-aware tier) is the same trajectory, so expect majors rather than silent
 tightening, and pin accordingly.
 
+## Releases
+
+<ReleaseDiffPicker name="eslint-plugin-lit-ui-router" />
+
 ## Further reading
 
 - [Design System Links](/guides/design-system-links) — what `uiSref` does to

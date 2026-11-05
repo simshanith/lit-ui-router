@@ -118,6 +118,10 @@ const stop = watchSelection(
 );
 ```
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-signals" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-signals/)
