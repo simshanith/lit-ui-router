@@ -69,7 +69,7 @@ export interface RefControllerOptions<T> {
 }
 
 /** Any tuple of `SubscriptionRef`s; `any` because the ref's type is invariant. */
-// oxlint-disable-next-line typescript/no-explicit-any
+// oxlint-disable-next-line typescript/no-explicit-any -- SubscriptionRef is invariant in its value type
 export type SubscriptionRefs = readonly SubscriptionRef.SubscriptionRef<any>[];
 
 /** The value tuple a tuple of `SubscriptionRef`s holds. */
@@ -228,14 +228,14 @@ function changesOf<A>(
   ref: SubscriptionRef.SubscriptionRef<A>,
 ): Stream.Stream<A> {
   // SAFETY: an effect 3 ref carries `changes`; on effect 4 the member is absent.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   const own = (ref as unknown as Effect3Ref<A>).changes;
 
   if (own) return own;
 
   // Effect 4's own `SubscriptionRef.changes` body; reading that export makes effect 3 bundlers warn IMPORT_IS_UNDEFINED.
   // SAFETY: an effect 4 ref carries `pubsub`; effect 3 returned above.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   return Stream.fromPubSub((ref as unknown as Effect4Ref<A>).pubsub);
 }
 
@@ -251,7 +251,7 @@ function microtaskScheduler(): Scheduler.Scheduler | undefined {
   }
 
   // SAFETY: only effect 4's MixedScheduler has `makeDispatcher`, and its constructor takes an execution mode.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's constructor, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's constructor, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   const Mixed = Scheduler.MixedScheduler as unknown as Effect4MixedScheduler;
 
   return new Mixed('sync');
@@ -270,7 +270,7 @@ interface Effect4Fiber {
 
 function interruptFiber(fiber: Fiber.Fiber<unknown, unknown>): void {
   // SAFETY: every runtime fiber has one of the two interrupts; `in` picks it below.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   const live = fiber as unknown as Effect3Fiber<object> | Effect4Fiber;
 
   if ('interruptUnsafe' in live) live.interruptUnsafe();

@@ -71,7 +71,7 @@ export type FetchHandler<Args extends unknown[] = []> = (
  * }
  * ```
  */
-// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- registries augment it
+// oxlint-disable-next-line typescript/no-empty-object-type -- registries augment it
 export interface DelegateSeam {}
 
 /** The params of state `N`: `DelegateSeam['params'][N]` once a registry augments the seam, core's RawParams otherwise. */

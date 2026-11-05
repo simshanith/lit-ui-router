@@ -169,7 +169,7 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
-  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand
+  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand until #1907 removes it
   const { strictMode, urlConfig } = options;
 
   // First, so the ordering guard throws before the plugin or url changes.

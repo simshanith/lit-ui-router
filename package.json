@@ -50,7 +50,6 @@
     "@tools/bootstrap": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/eslint": "catalog:workspace",
-    "@tools/lint-elements": "catalog:workspace",
     "@tools/lit-template-lint": "catalog:workspace",
     "@tools/oxlint-anti-slop": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
