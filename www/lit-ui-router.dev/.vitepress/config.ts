@@ -177,6 +177,7 @@ function makeSidebar() {
         },
       ],
     },
+    { text: 'Releases', link: '/releases/', target: '_self', items: [] },
     {
       text: 'Companion Packages',
       items: [
@@ -415,6 +416,7 @@ const config = {
           { text: 'Introduction', link: '/introduction' },
           { text: 'Tutorial', link: '/tutorial/helloworld' },
           { text: 'Guides', link: '/guides/' },
+          { text: 'Releases', link: '/releases/', target: '_self' },
           { text: 'Companion Packages', link: '/packages/' },
           { text: 'API', link: '/api/' },
         ],

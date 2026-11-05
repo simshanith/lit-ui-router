@@ -19,7 +19,8 @@ follows a single request through the docs worker.
 </DiagramEmbed>
 
 1. **Readers** load `lit-ui-router.dev`: the docs, the sample apps, the
-   `/releases` pages and the `/gh` redirects the README badges link to.
+   <a href="/releases/" target="_self">release pages</a> and the `/gh`
+   redirects the README badges link to.
 2. **Static assets** answer every path outside `run_worker_first` in the
    site's
    [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/wrangler.jsonc),
