@@ -20,12 +20,14 @@
   "dependencies": {
     "binary-extensions": "catalog:",
     "diff": "catalog:",
+    "semver": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/config": "catalog:",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "cf": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

@@ -73,6 +73,8 @@ type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 interface Page {
   status: number;
   head: PageHead;
+  /** The path a state's `redirectTo` sent the transition to, relative to the mount. */
+  redirected?: string;
 }
 
 const UNAVAILABLE: PageHead = {
@@ -132,7 +134,17 @@ const render = async (
     renderShell: async (_verdict, { subpath }) => {
       try {
         if (failure) throw failure;
-        await settle(router, subpath);
+        const landed = await settle(router, subpath);
+
+        if (landed.redirectedFrom()) {
+          page = {
+            status: 308,
+            head: headOf(router),
+            redirected: router.urlService.path(),
+          };
+
+          return '';
+        }
       } catch (error) {
         if (!(error instanceof Error && isNotInLedger(error))) {
           page = { status: 503, head: UNAVAILABLE };
@@ -197,6 +209,19 @@ const htmlAnswer = async (
   failure?: Error,
 ): Promise<Answer> => {
   const { page, html } = await render(request, pageRouter, verdict, failure);
+
+  if (page.redirected !== undefined) {
+    const response = redirect(
+      slashed(`${verdict.mount}${page.redirected}`),
+      308,
+      new URL(request.url),
+    );
+
+    response.headers.set('Cache-Control', cacheControl(page.status));
+
+    return { response, cacheable: false };
+  }
+
   const headers = new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
   headers.set('Cache-Control', cacheControl(page.status));
 

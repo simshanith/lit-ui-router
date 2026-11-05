@@ -122,17 +122,6 @@ describe('the diff page data routes', () => {
     assert.deepEqual(calls, [`patch 1.9.0...1.10.0 ${LAYOUT}`]);
   });
 
-  it('asks for a reversed pair as written', async () => {
-    const { diffs, calls } = stubDiffs();
-
-    await serve(
-      `/releases/lit-ui-router/diff/1.10.0...1.9.0/${LAYOUT}/index.json`,
-      diffs,
-    );
-
-    assert.deepEqual(calls, [`index 1.10.0...1.9.0 ${LAYOUT}`]);
-  });
-
   it('answers HEAD without a body', async () => {
     const { diffs } = stubDiffs();
 
@@ -153,6 +142,9 @@ describe('the diff page data routes', () => {
     `${PAGE}/v0/files/src`,
     `${PAGE}/v0/patch`,
     `${PAGE}/index.json`,
+    `/releases/lit-ui-router/diff/1.10.0...1.9.0/${LAYOUT}/index.json`,
+    `/releases/lit-ui-router/diff/1.10.0...1.9.0/${LAYOUT}/patch`,
+    `/releases/lit-ui-router/diff/1.10.0...1.10.0/${LAYOUT}/files/all`,
   ];
 
   for (const path of unknown) {

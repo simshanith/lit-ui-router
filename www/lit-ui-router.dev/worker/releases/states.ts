@@ -13,7 +13,9 @@ import {
   type LedgerReader,
   type LedgerVersion,
   latestOf,
+  isReversed,
   NotInLedger,
+  ordered,
   packagesOf,
   type PublishedPair,
   versionIn,
@@ -86,30 +88,33 @@ const COMPARES = new Map([
   ['files', filesDiffPath],
 ]);
 
-/** The url `via` compares `from` with `to` at, or a `NotInLedger` rejection when either is unknown or lacks what `via` needs. */
+/** The url `via` compares the older of `from` and `to` with the newer at, or a `NotInLedger` rejection when either is unknown, they are one version, or either lacks what `via` needs. */
 const compareIn = (
   versions: readonly LedgerVersion[],
   { pkg, from, to, via }: ReturnType<typeof diffParamsOf>,
 ): string => {
-  const url = COMPARES.get(via)?.(
+  const pair = ordered(
     versionIn(versions, { pkg, version: from }),
     versionIn(versions, { pkg, version: to }),
   );
+
+  const url = pair && COMPARES.get(via)?.(pair.from, pair.to);
 
   if (!url) throw new NotInLedger(`${pkg}@${from}...${to} via ${via}`);
 
   return url;
 };
 
-/** Both versions' rows, or a `NotInLedger` rejection when either is unknown or never reached npm. */
+/** Both versions' rows, or a `NotInLedger` rejection when either is unknown or never reached npm, or `from` doesn't precede `to`. */
 const publishedPairIn = (
   versions: readonly LedgerVersion[],
   { pkg, from, to }: ReturnType<typeof diffParamsOf>,
 ): PublishedPair => {
-  const pair: PublishedPair = {
-    from: versionIn(versions, { pkg, version: from }),
-    to: versionIn(versions, { pkg, version: to }),
-  };
+  const fromRow = versionIn(versions, { pkg, version: from });
+  const pair = ordered(fromRow, versionIn(versions, { pkg, version: to }));
+
+  if (pair?.from !== fromRow)
+    throw new NotInLedger(`${pkg}@${from}...${to} older first`);
 
   if (filesDiffPath(pair.from, pair.to) === null)
     throw new NotInLedger(`${pkg}@${from}...${to} on npm`);
@@ -214,6 +219,13 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
   },
   'releases.package.compare': {
     component: CompareView,
+    redirectTo: (trans: Transition) => {
+      const { from, to } = diffParamsOf(trans);
+
+      return isReversed(from, to)
+        ? trans.targetState().withParams({ from: to, to: from })
+        : undefined;
+    },
     resolve: [
       {
         token: 'pair',
