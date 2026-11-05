@@ -122,6 +122,21 @@ describe('sectionsOf', () => {
   it('keeps the whole patch under All', () => {
     assert.deepEqual(sectionsOf(PATCH, index, 'all'), PATCH);
   });
+
+  it("keeps a blank context line that ends the last file's section", () => {
+    const patch = encoder.encode(
+      `${formatDiff({
+        a: files(['dist/a.js', 'a\n'], ['src/a.ts', 'a\n\n']),
+        b: files(['dist/a.js', 'A\n'], ['src/a.ts', 'A\n\n']),
+        versions: { a: PAIR.from, b: PAIR.to },
+      })}\n`,
+    );
+
+    assert.match(
+      decoder.decode(sectionsOf(patch, indexPatch(patch), 'src')),
+      /\n@@ -1,2 \+1,2 @@\n-a\n\+A\n \n$/,
+    );
+  });
 });
 
 describe('DiffEntry', () => {
