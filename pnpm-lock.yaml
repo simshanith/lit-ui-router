@@ -481,9 +481,6 @@ catalogs:
     '@tools/lcov-rebase':
       specifier: workspace:*
       version: workspace:*
-    '@tools/lint-elements':
-      specifier: workspace:*
-      version: workspace:*
     '@tools/lit-template-lint':
       specifier: workspace:*
       version: workspace:*
@@ -620,9 +617,6 @@ importers:
       '@tools/eslint':
         specifier: catalog:workspace
         version: link:tools/eslint
-      '@tools/lint-elements':
-        specifier: catalog:workspace
-        version: link:tools/lint-elements
       '@tools/lit-template-lint':
         specifier: catalog:workspace
         version: link:tools/lit-template-lint
@@ -793,9 +787,6 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.156.2(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   apps/sample-app-lit-mobx:
     dependencies:

@@ -4,8 +4,9 @@ import {
 } from './catalog-commits.js';
 
 // The one release-it config for every publishable package. Each package keeps a
-// one-line .release-it.js re-export so release-it's cwd-based config lookup (and
-// `pnpm exec release-it` run inside a package) still resolves.
+// .release-it.js that imports and re-exports it so release-it's cwd-based config
+// lookup (and `pnpm exec release-it` run inside a package) still resolves; knip
+// skips a bare `export { default } from` config, so the import is load-bearing.
 //
 // JS, not JSON, because conventional-changelog-writer 9 takes template partials
 // as functions rather than handlebars strings.
