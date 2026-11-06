@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build:embeds": "node build-embeds.ts",
+    "example:install:css-module-scripts": "npm ci --prefix css-module-scripts",
+    "example:install:css-modules": "npm ci --prefix css-modules",
     "example:install:design-system-links": "npm ci --prefix design-system-links",
     "example:install:hellogalaxy": "npm ci --prefix hellogalaxy",
     "example:install:hellogalaxy-effect": "npm ci --prefix hellogalaxy-effect",
@@ -20,6 +22,7 @@
     "example:install:lint-eslint": "npm ci --prefix lint-eslint",
     "example:install:loading-and-error-views": "npm ci --prefix loading-and-error-views",
     "example:install:navigation-api": "npm ci --prefix navigation-api",
+    "example:install:sly": "npm ci --prefix sly",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "concurrently --restart-tries 1 \"npm:example:install:*\"",
@@ -27,6 +30,8 @@
     "lint:examples": "concurrently --prefix-colors auto \"npm:lint:example:*\"",
     "lint:oxlint": "oxlint .",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
+    "typecheck:example:css-module-scripts": "tsc -p css-module-scripts",
+    "typecheck:example:css-modules": "tsc -p css-modules",
     "typecheck:example:design-system-links": "tsc -p design-system-links",
     "typecheck:example:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:example:hellogalaxy-effect": "tsc -p hellogalaxy-effect",
@@ -39,6 +44,7 @@
     "typecheck:example:lint-eslint": "tsc -p lint-eslint",
     "typecheck:example:loading-and-error-views": "tsc -p loading-and-error-views",
     "typecheck:example:navigation-api": "tsc -p navigation-api",
+    "typecheck:example:sly": "tsc -p sly",
     "typecheck:tsc": "concurrently --prefix-colors auto \"npm:typecheck:example:*\""
   },
   "devDependencies": {

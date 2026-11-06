@@ -1,0 +1,45 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) 1fr;
+  gap: 24px;
+}
+
+.list {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.item:hover {
+  background: light-dark(#0000000d, #ffffff14);
+}
+
+.selected {
+  outline: 2px solid currentcolor;
+}
+
+.chip {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--swatch);
+}
+
+@media (max-width: 480px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,23 @@
+.card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid light-dark(#0000001f, #ffffff29);
+}
+
+.plate {
+  height: 8rem;
+  border-radius: 8px;
+  background: var(--swatch);
+}
+
+.title {
+  margin: 0;
+}
+
+.code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  opacity: 0.8;
+}

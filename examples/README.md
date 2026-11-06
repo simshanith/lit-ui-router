@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **helloworld-buildless** is the first rung again in plain JavaScript, loaded by the browser as written through an import map, with no build step. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellosolarsystem-signals**: it is the solar-system rung with app state and router state joined through [TC39 Signals](https://lit-ui-router.dev/packages/signals), and handed to routed views through [`@lit/context`](https://lit.dev/docs/data/context/). Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect), with the resolve-and-scope plugin it also needs inlined as a spike that neither Effect package ships. Nor is **hellogalaxy-signals**: it is the galaxy rung with both Lit signal bindings, `@lit-labs/signals` and [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), on one signal graph. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own. Nor is **loading-and-error-views**: it is the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views)'s recipes in one app, built on transition hooks and state `data`.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **helloworld-buildless** is the first rung again in plain JavaScript, loaded by the browser as written through an import map, with no build step. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellosolarsystem-signals**: it is the solar-system rung with app state and router state joined through [TC39 Signals](https://lit-ui-router.dev/packages/signals), and handed to routed views through [`@lit/context`](https://lit.dev/docs/data/context/). Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website) and the [Effect bindings](https://lit-ui-router.dev/packages/lit-ui-router-effect), with the resolve-and-scope plugin it also needs inlined as a spike that neither Effect package ships. Nor is **hellogalaxy-signals**: it is the galaxy rung with both Lit signal bindings, `@lit-labs/signals` and [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), on one signal graph. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page. Nor is **navigation-api**: it is the escape hatch documented on the [Navigation API plugin page](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router), a `navigate` listener for the one navigation the router does not own. Nor is **loading-and-error-views**: it is the [Loading and Error Views guide](https://lit-ui-router.dev/guides/loading-and-error-views)'s recipes in one app, built on transition hooks and state `data`. Nor are **css-modules**, **css-module-scripts** and **sly**: they style the same small swatch app three ways, to see how each styling approach meets routed views.
 
 ## StackBlitz Integration
 
@@ -28,6 +28,9 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 | **lint-eslint**              | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)              |
 | **navigation-api**           | `ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app     | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/navigation-api)           |
 | **loading-and-error-views**  | Per-route pending and error views from transition hooks and inherited `data`, a NOWAIT resolve, and retry    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/loading-and-error-views)  |
+| **css-modules**              | Vite CSS Modules on light-DOM routed views, with hashed class names passed to `uiSrefActive`                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/css-modules)              |
+| **css-module-scripts**       | Native `import … with { type: 'css' }` sheets adopted by Lit shadow roots, with no build step                | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/css-module-scripts)       |
+| **sly**                      | Routed views built as [sly](https://github.com/e280/sly) shadow views, sharing a strata signal               | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/sly)                      |
 
 ## What Each Example Teaches
 
@@ -161,6 +164,35 @@ Three pages behind a simulated server, with a _Fail requests_ checkbox that make
 - **Inherited `data`.** `account` names a skeleton and an `account.error` state in its `data`; `account.profile` and `account.activity` inherit both, while the top-level `report` falls back to the shell's spinner and the `error` state
 - **Error views.** An `onError` hook sends a transition whose resolve rejected to the error state its target inherits, with the failed `TargetState` as a param and `{ location: false }`. The error view's Retry is a new transition to that target
 - **NOWAIT.** `account.activity`'s resolve does not hold the transition: the view renders the promise with `until()`, shows a skeleton, and retries a rejection in place with `stateService.reload`
+
+### css-modules
+
+Styling with [CSS Modules](https://github.com/css-modules/css-modules), which Vite supports out of the box. No shadow DOM: the shell renders with `render()`, and routed views render into `<ui-view>`'s light DOM.
+
+- Each `*.module.css` import returns a map of scoped class names, applied with `class=${styles.card}`
+- `uiSrefActive({ activeClasses: [list.selected] })` takes the hashed name, so active styling can't collide with another `.selected`
+- `activeClasses` takes single class tokens. A class built with `composes:` maps to several space-separated names, so it can't be passed as one entry
+- `<hex-badge>` is the one shadow-DOM element. Its root already scopes its styles, so it imports plain CSS with `?inline` and adopts it through `unsafeCSS`. Vite hashes `x.module.css` and `x.module.css?inline` differently, so one module can't supply both the class map and a shadow root's sheet
+
+### css-module-scripts
+
+Styling with native [CSS module scripts](https://web.dev/articles/css-module-scripts), in plain JavaScript with no build step, like **helloworld-buildless**.
+
+- `import sheet from './pill.css' with { type: 'css' }` gives a `CSSStyleSheet`. `static styles = [pill, swatchList]` adopts it, and so does `document.adoptedStyleSheets`
+- One parsed sheet is shared by every shadow root that lists it
+- A child state renders into the `<ui-view>` inside its parent's shadow root, so the parent's sheet styles it
+- Safari has no CSS module scripts yet, and Vite can't build them, so the page loads [es-module-shims](https://github.com/guybedford/es-module-shims) with `polyfillEnable: ["css-modules"]`. Browsers with native support skip it
+- `css-module-scripts.d.ts` types `*.css` imports as `CSSStyleSheet` for the editor
+
+### sly
+
+Routed views built as [sly](https://github.com/e280/sly) shadow views: hooks functions, each rendered into its own `<sly-shadow>` host and shadow root, with styles attached by `useCss`.
+
+- A routed component must return a `TemplateResult`, so each view is wrapped: `` component: () => html`${SwatchList()}` ``
+- Resolved data reaches a view as an ordinary argument: `SwatchDetail(resolves.swatch)`
+- `uiSref` and `uiSrefActive` work inside sly shadow roots, relative state names (`.swatch`) included
+- A [strata](https://github.com/e280/strata) signal holds the starred swatches; the nav, the list and the detail view all re-render when it changes
+- sly ships its own hash router. This example doesn't use it: lit-ui-router owns the URL
 
 ## Running Locally
 

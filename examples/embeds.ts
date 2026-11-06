@@ -75,6 +75,21 @@ export const EXAMPLES = {
     height: '410px',
     file: 'src/main.ts',
   },
+  'css-modules': {
+    title: 'CSS Modules',
+    height: '430px',
+    file: 'src/main.ts',
+  },
+  'css-module-scripts': {
+    title: 'CSS Module Scripts (No Build)',
+    height: '420px',
+    file: 'public/main.js',
+  },
+  sly: {
+    title: 'sly Shadow Views',
+    height: '450px',
+    file: 'src/main.ts',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;

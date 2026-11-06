@@ -1,0 +1,21 @@
+nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+a {
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  background: light-dark(#0000000d, #ffffff14);
+}
+
+a.active {
+  font-weight: 600;
+  background: light-dark(#0000001a, #ffffff26);
+}

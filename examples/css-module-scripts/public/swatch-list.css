@@ -1,0 +1,49 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) 1fr;
+  gap: 24px;
+}
+
+ul {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.chip {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--swatch);
+}
+
+/* The child state renders into this shadow root's <ui-view>, so these rules reach it. */
+article {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid light-dark(#0000001f, #ffffff29);
+}
+
+.plate {
+  height: 8rem;
+  border-radius: 8px;
+  background: var(--swatch);
+}
+
+@media (max-width: 480px) {
+  :host {
+    grid-template-columns: 1fr;
+  }
+}
