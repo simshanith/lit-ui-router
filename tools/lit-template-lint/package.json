@@ -26,6 +26,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "parse5": "catalog:",
+    "stylelint": "catalog:",
     "typescript": "catalog:",
     "typescript-7.1": "catalog:",
     "webidl2": "catalog:"
