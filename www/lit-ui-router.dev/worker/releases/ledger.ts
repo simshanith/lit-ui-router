@@ -5,7 +5,10 @@ import type {
   Status,
   VersionRow,
 } from '@tools/release-ledger';
-import { prerelease, rcompare } from 'semver';
+import compare from 'semver/functions/compare.js';
+import prerelease from 'semver/functions/prerelease.js';
+import valid from 'semver/functions/valid.js';
+import rcompare from 'semver/functions/rcompare.js';
 
 /** A `versions` row with the states the ledger's `version_states` view derives. */
 export interface LedgerVersion extends VersionRow {
@@ -36,6 +39,64 @@ export class NotInLedger extends Error {
 /** Whether a version is stable: no prerelease identifiers. */
 export const isStable = (version: string): boolean =>
   prerelease(version) === null;
+
+/**
+ * The version `row` follows in `versions` (newest first): the next older stable for a stable
+ * version, the next older of any kind for a prerelease, or null for the first.
+ */
+export const previousIn = <Row extends { version: string }>(
+  versions: readonly Row[],
+  row: Row,
+): Row | null => {
+  const at = versions.findIndex(({ version }) => version === row.version);
+
+  if (at === -1) return null;
+
+  const older = versions.slice(at + 1);
+
+  return (
+    (isStable(row.version)
+      ? older.find(({ version }) => isStable(version))
+      : older[0]) ?? null
+  );
+};
+
+/** Two versions to compare, older first; either is absent for a package with no versions. */
+export interface VersionPair<Row> {
+  from: Row | undefined;
+  to: Row | undefined;
+}
+
+/** Two versions the ledger records as published to npm, older first. */
+export interface PublishedPair {
+  from: LedgerVersion;
+  to: LedgerVersion;
+}
+
+/** The pair a diff picker starts on: the newest stable version, or the newest, and the version before it, or the oldest. */
+export const pickerPair = <Row extends { version: string }>(
+  versions: readonly Row[],
+): VersionPair<Row> => {
+  const to = versions.find(({ version }) => isStable(version)) ?? versions[0];
+
+  return { from: (to && previousIn(versions, to)) ?? versions.at(-1), to };
+};
+
+/** Two different versions, older first by semver precedence, or null for one version twice. */
+export const ordered = <Row extends { version: string }>(
+  a: Row,
+  b: Row,
+): { from: Row; to: Row } | null => {
+  const order = compare(a.version, b.version);
+
+  if (order === 0) return null;
+
+  return order < 0 ? { from: a, to: b } : { from: b, to: a };
+};
+
+/** Whether two version strings are both valid semver and `from` is the newer. */
+export const isReversed = (from: string, to: string): boolean =>
+  valid(from) !== null && valid(to) !== null && compare(from, to) > 0;
 
 /** Every package the ledger has recorded, with its npm `latest` row. */
 export const packagesOf =

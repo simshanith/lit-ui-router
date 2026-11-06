@@ -140,20 +140,22 @@ run can't collide with a turbo task. Install the browsers with
 A test of rendered HTML parses it before asserting. Pick the parser by what
 the test checks:
 
-| What the test checks                                                                                    | Parse with                                                                                                                    | Assert with                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| What a page means (links, headings, forms, text): release pages, prerendered apps, rendered links       | happy-dom's `DOMParser` (no global registration)                                                                              | `@testing-library/dom` role and accessible-name queries, plus `node:assert` or `expect`. `querySelector` only as a fallback, with a one-line reason. |
-| The format of Lit SSR output (`<!--lit-part-->` markers, declarative-shadow-DOM templates, child order) | parse5, the spec-reference parser that `@lit-labs/ssr` uses. Its tree keeps comments, template contents and source locations. | small tree walks                                                                                                                                     |
-| Exact bytes (stub passthroughs, generated Markdown)                                                     | none                                                                                                                          | string equality                                                                                                                                      |
+| What the test checks                                                                              | Parse with                                                                                                                                             | Assert with                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What a page means (links, headings, forms, text): release pages, prerendered apps, rendered links | [`parseHtml`](../tools/lit-test-env/README.md#parse-htmlts-what-a-page-means): happy-dom's `DOMParser`, with no global registration                    | `@testing-library/dom` role and accessible-name queries, plus `node:assert` or `expect`. `querySelector` only as a fallback, with a one-line reason. |
+| The format of Lit SSR output (`<!--lit-part-->` markers, declarative shadow roots, child order)   | [`ssr-tree`](../tools/lit-test-env/README.md#ssr-treets-the-format-of-lit-ssr-output): parse5, which keeps comments, template contents and child order | `outlineTree`, `litPart`, `shadowRoot`, `lightChildren` and the lookups                                                                              |
+| Exact bytes (stub passthroughs, generated Markdown)                                               | none                                                                                                                                                   | string equality                                                                                                                                      |
 
 Regexes and substrings over HTML don't belong in the first two rows. CSS is
 parsed with postcss and postcss-html.
 
-[`worker/test/dom.ts`](../www/lit-ui-router.dev/worker/test/dom.ts) is the
-first row's example: it parses a page into a document whose `defaultView`
-answers testing-library's style lookups. lib.dom and the workers runtime types
-clash, so the docs worker's DOM tests typecheck under their own
-[`tsconfig.dom.json`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json).
+Both helpers live in `@tools/lit-test-env`; its
+[README](../tools/lit-test-env/README.md#testing-html-output) lists their API.
+testing-library's types need lib.dom, so a node test that queries a parsed page
+typechecks under its own `tsconfig.dom.json`, as the docs worker's
+[`worker/test`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json) and
+`ui-router-server`'s
+[`test`](../packages/ui-router-server/test/tsconfig.dom.json) do.
 
 ### Reproducing a CI failure
 

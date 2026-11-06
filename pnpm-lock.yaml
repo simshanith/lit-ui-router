@@ -64,6 +64,12 @@ catalogs:
     '@oxlint/plugins':
       specifier: 1.90.0
       version: 1.90.0
+    '@pierre/diffs':
+      specifier: 1.6.4
+      version: 1.6.4
+    '@pierre/trees':
+      specifier: ^1.0.0-beta.6
+      version: 1.0.0-beta.6
     '@pnpm/logger':
       specifier: 1100.0.0
       version: 1100.0.0
@@ -496,9 +502,6 @@ catalogs:
     '@tools/lcov-rebase':
       specifier: workspace:*
       version: workspace:*
-    '@tools/lint-elements':
-      specifier: workspace:*
-      version: workspace:*
     '@tools/lit-template-lint':
       specifier: workspace:*
       version: workspace:*
@@ -533,6 +536,9 @@ catalogs:
       specifier: workspace:*
       version: workspace:*
     '@www/lit-ui-router.dev':
+      specifier: workspace:*
+      version: workspace:*
+    '@www/release-diffs.lit-ui-router.dev':
       specifier: workspace:*
       version: workspace:*
     eslint-plugin-lit-ui-router:
@@ -598,26 +604,14 @@ overrides:
   '@api-viewer/docs>lit': ^3.3.3
   '@cloudflare/config>zod': ^4.6.7
   '@codecov/bundler-plugin-core>zod': ^4.6.7
-  brace-expansion@>=5 <5.0.9: ^5.0.9
-  cypress>systeminformation: ^5.33.16
+  '@pierre/trees>@pierre/theming': ^1.0.2
   d3-color@<3.1.0: ^3.1.0
-  dompurify@<3.4.13: ^3.4.13
-  fast-uri@<3.1.7: ^3.1.7
+  dompurify@<3.4.17: ^3.4.17
   get-uri>basic-ftp: ^6.2.1
-  ip-address@<10.5.1: ^10.5.1
-  js-yaml@>=4 <4.3.2: ^4.3.2
   knip>oxc-parser: 0.156.0
   lit-dialog>lit: ^3.3.3
-  make-fetch-happen>http-cache-semantics: ^4.3.0
-  postcss@<8.5.26: ^8.5.26
-  qs@<6.16.1: ^6.16.1
-  tar@<7.5.22: ^7.5.22
-  undici@>=6 <6.29.1: ^6.29.1
-  undici@>=7 <7.30.1: ^7.30.1
-  undici@>=8 <8.12.2: ^8.12.2
-  wrangler>esbuild: 0.28.2
 
-packageExtensionsChecksum: sha256-hyTI2G/KjyYz096s6zPKy65t9AOI6DWcuXlDSmH3TmI=
+packageExtensionsChecksum: sha256-ctxSB3VGJoNbxuCrcgOUHgPXFV8hlUBqG/8XcmRiBcE=
 
 patchedDependencies:
   '@api-viewer/docs': c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098
@@ -645,9 +639,6 @@ importers:
       '@tools/eslint':
         specifier: catalog:workspace
         version: link:tools/eslint
-      '@tools/lint-elements':
-        specifier: catalog:workspace
-        version: link:tools/lint-elements
       '@tools/lit-template-lint':
         specifier: catalog:workspace
         version: link:tools/lit-template-lint
@@ -818,9 +809,6 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.156.2(@cloudflare/workers-types@5.20261102.1)(@types/node@24.19.2)
 
   apps/sample-app-lit-mobx:
     dependencies:
@@ -1188,6 +1176,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -1600,6 +1591,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -2089,6 +2083,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
       '@tools/bundle-probe':
         specifier: catalog:workspace
         version: link:../../tools/bundle-probe
@@ -2098,6 +2095,9 @@ importers:
       '@tools/lcov-rebase':
         specifier: catalog:workspace
         version: link:../../tools/lcov-rebase
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
@@ -2717,13 +2717,19 @@ importers:
       '@tools/happy-dom':
         specifier: catalog:workspace
         version: link:../happy-dom
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.19.2
       happy-dom:
         specifier: 'catalog:'
         version: 21.0.4
+      parse5:
+        specifier: 'catalog:'
+        version: 8.0.1
+    devDependencies:
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       oxfmt:
         specifier: 'catalog:'
         version: 0.75.0
@@ -3070,9 +3076,18 @@ importers:
       '@lit-labs/ssr-dom-shim':
         specifier: 'catalog:'
         version: 1.6.0
+      '@pierre/diffs':
+        specifier: 'catalog:'
+        version: 1.6.4(@shikijs/themes@4.5.0)
+      '@pierre/trees':
+        specifier: 'catalog:'
+        version: 1.0.0-beta.6(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@www/release-diffs.lit-ui-router.dev':
+        specifier: catalog:workspace
+        version: link:../release-diffs.lit-ui-router.dev
       examples:
         specifier: catalog:workspace
         version: link:../../examples
@@ -3122,6 +3137,9 @@ importers:
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
@@ -3137,9 +3155,6 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
-      happy-dom:
-        specifier: 'catalog:'
-        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -3188,6 +3203,9 @@ importers:
       diff:
         specifier: 'catalog:'
         version: 9.0.0
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
@@ -3201,6 +3219,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       cf:
         specifier: 'catalog:'
         version: 1.0.0-beta.27(@types/node@24.19.2)
@@ -5148,6 +5169,55 @@ packages:
   '@phun-ky/typeof@2.0.3':
     resolution: {integrity: sha512-oeQJs1aa8Ghke8JIK9yuq/+KjMiaYeDZ38jx7MhkXncXlUKjqQ3wEm2X3qCKyjo+ZZofZj+WsEEiqkTtRuE2xQ==}
     engines: {node: ^20.9.0 || >=22.0.0, npm: '>=10.8.2'}
+
+  '@pierre/diffs@1.6.4':
+    resolution: {integrity: sha512-RsKoruCOp50qaDM3a7BQan5K77xMkGWT1NF01fiYP1PfT3v4CvIjwytNk5WjZG0BesBkMOP2UbrBIDigB1k0ug==}
+    peerDependencies:
+      react: ^18.3.1 || ^19.0.0
+      react-dom: ^18.3.1 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@pierre/highlights@0.4.0':
+    resolution: {integrity: sha512-2a38H7ep3KweGi1fGQpJk+Krod2OMpDIXagKPlqBd1Y9P460T7zQmc66Wm2JAH1SpIG93wCyyhZVrkc5dnAJVQ==}
+
+  '@pierre/theme@2.0.0':
+    resolution: {integrity: sha512-yNDd9GYLQl1mEUJR8AneJ5e4ohLIHQd/wZLWr4fagt78vS2RwwZNW530vVgHqXFAyFVcFlRmGUD5ramXH46OXw==}
+    engines: {vscode: ^1.0.0}
+
+  '@pierre/theming@1.0.2':
+    resolution: {integrity: sha512-RmXLLqtx31UGcR8kZyO5hGAQ1EXz6loT1Cu0BFAGsbnBboIxp2BlomkLfWyvdT4WZXnBGyu25onL1gKpFQuSUw==}
+    peerDependencies:
+      '@pierre/theme': ^1.1.0 || ^2.0.0
+      '@shikijs/themes': ^3.0.0 || ^4.0.0
+      react: ^18.3.1 || ^19.0.0
+      react-dom: ^18.3.1 || ^19.0.0
+      shiki: ^3.0.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@pierre/theme':
+        optional: true
+      '@shikijs/themes':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      shiki:
+        optional: true
+
+  '@pierre/trees@1.0.0-beta.6':
+    resolution: {integrity: sha512-zxeuSFM9TveM7b5XofweJALCtm/tGYV9HZzdbf7Uf+kBxIlUyz24/EHaGRjB0dsmmfDQl2ETz7AWwJ15lhSnpw==}
+    peerDependencies:
+      react: ^18.3.1 || ^19.0.0
+      react-dom: ^18.3.1 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   '@pnpm/cli.meta@1100.1.4':
     resolution: {integrity: sha512-Y3T9G2Fsl9DnN7gKw0uom7aPUClpYoRtl+JJgRsHOcxdvHRt1nO4QxNL2YU/q9hCCMg5TU2VhIEb4hPvrxx20g==}
@@ -8204,6 +8274,9 @@ packages:
     resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
     engines: {node: '>=12'}
 
+  lru_map@0.4.1:
+    resolution: {integrity: sha512-I+lBvqMMFfqaV8CJCISjI3wbjmwVu/VyOoU7+qtu9d7ioW5klMgsTTiUOUp+DJvfTTzKXoPbyC6YfgkNcyPSOg==}
+
   lunr@2.3.9:
     resolution: {integrity: sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==}
 
@@ -8822,19 +8895,19 @@ packages:
     resolution: {integrity: sha512-f2Rvw5FCollEfVj3wfN7JdQb7n2rNIthW+epw2EByio7M6P7RH0BTj8a/ODHrUXd0cmO7ychb6YniymV93182Q==}
     engines: {node: ^22.12 || >=24}
     peerDependencies:
-      postcss: ^8.5.26
+      postcss: ^8.5.0
 
   postcss-lit@1.4.1:
     resolution: {integrity: sha512-n3eVDvF7uyMEcxDVVBrOisB7MhkE1btqfQRALZZCeCFURn7sRoElzQa7/KfHeLhoSrkwBPLmZx0mCnoxHDI9lA==}
     peerDependencies:
-      postcss: ^8.5.26
+      postcss: ^8.3.11
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
     engines: {node: '>= 18'}
     peerDependencies:
       jiti: '>=1.21.0'
-      postcss: ^8.5.26
+      postcss: '>=8.0.9'
       tsx: ^4.8.1
       yaml: ^2.4.2
     peerDependenciesMeta:
@@ -8851,7 +8924,7 @@ packages:
     resolution: {integrity: sha512-1WzZxRLaAFwEh6Do+zyGpjWV3nGJNxxhuh7Ubu/q1ICImMgZJnLwhoaEpRbG4pJppp2Y1ncL9ffA2f+LhrefQg==}
     engines: {node: '>=18.0'}
     peerDependencies:
-      postcss: ^8.5.26
+      postcss: ^8.4.31
 
   postcss-selector-parser@7.1.7:
     resolution: {integrity: sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==}
@@ -8872,8 +8945,16 @@ packages:
     resolution: {integrity: sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==}
     engines: {node: '>=20'}
 
+  preact-render-to-string@6.6.5:
+    resolution: {integrity: sha512-O6MHzYNIKYaiSX3bOw0gGZfEbOmlIDtDfWwN1JJdc/T3ihzRT6tGGSEWE088dWrEDGa1u7101q+6fzQnO9XCPA==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
+
   preact@10.4.8:
     resolution: {integrity: sha512-uVLeEAyRsCkUEFhVHlOu17OxcrwC7+hTGZ08kBoLBiGHiZooUZuibQnphgMKftw/rqYntNMyhVCPqQhcyAGHag==}
+
+  preact@11.0.0-beta.0:
+    resolution: {integrity: sha512-IcODoASASYwJ9kxz7+MJeiJhvLriwSb4y4mHIyxdgaRZp6kPUud7xytrk/6GZw8U3y6EFJaRb5wi9SrEK+8+lg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -9832,7 +9913,7 @@ packages:
     hasBin: true
     peerDependencies:
       markdown-it-mathjax3: ^4
-      postcss: ^8.5.26
+      postcss: ^8
     peerDependenciesMeta:
       markdown-it-mathjax3:
         optional: true
@@ -11589,6 +11670,38 @@ snapshots:
       parse5: 7.3.0
 
   '@phun-ky/typeof@2.0.3': {}
+
+  '@pierre/diffs@1.6.4(@shikijs/themes@4.5.0)':
+    dependencies:
+      '@pierre/highlights': 0.4.0
+      '@pierre/theme': 2.0.0
+      '@pierre/theming': 1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
+      diff: 9.0.0
+      hast-util-to-html: 9.0.5
+      lru_map: 0.4.1
+      shiki: 4.5.0
+    transitivePeerDependencies:
+      - '@shikijs/themes'
+
+  '@pierre/highlights@0.4.0': {}
+
+  '@pierre/theme@2.0.0': {}
+
+  '@pierre/theming@1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)':
+    optionalDependencies:
+      '@pierre/theme': 2.0.0
+      '@shikijs/themes': 4.5.0
+      shiki: 4.5.0
+
+  '@pierre/trees@1.0.0-beta.6(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)':
+    dependencies:
+      '@pierre/theming': 1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
+      preact: 11.0.0-beta.0
+      preact-render-to-string: 6.6.5(preact@11.0.0-beta.0)
+    transitivePeerDependencies:
+      - '@pierre/theme'
+      - '@shikijs/themes'
+      - shiki
 
   '@pnpm/cli.meta@1100.1.4':
     dependencies:
@@ -14672,6 +14785,8 @@ snapshots:
 
   lru-cache@7.18.3: {}
 
+  lru_map@0.4.1: {}
+
   lunr@2.3.9: {}
 
   lz-string@1.5.0: {}
@@ -15605,7 +15720,13 @@ snapshots:
 
   powershell-utils@0.2.1: {}
 
+  preact-render-to-string@6.6.5(preact@11.0.0-beta.0):
+    dependencies:
+      preact: 11.0.0-beta.0
+
   preact@10.4.8: {}
+
+  preact@11.0.0-beta.0: {}
 
   prelude-ls@1.2.1: {}
 

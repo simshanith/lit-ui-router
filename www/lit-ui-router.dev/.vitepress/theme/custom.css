@@ -189,6 +189,11 @@ html:has(.site-expand:modal) {
   inline-size: 100%;
 }
 
+/* A sidebar heading that is itself a link has no items, so it takes a collapsed group's spacing. */
+.VPSidebar .VPSidebarItem.level-0.is-link {
+  padding-block-end: 0.625rem;
+}
+
 /* Version badges on package pages */
 .vp-doc .badges {
   display: flex;

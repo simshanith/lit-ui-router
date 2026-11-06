@@ -94,9 +94,9 @@ const gatedBuild = () => {
 
 describe('the R2 layout', () => {
   it('keys a pair under its layout version, package and range', () => {
-    assert.equal(patchKey(PAIR), 'v1/@scope/pkg/1.0.0...2.0.0/patch');
-    assert.equal(filesKey(PAIR, 'js'), 'v1/@scope/pkg/1.0.0...2.0.0/files/js');
-    assert.equal(indexKey(PAIR), 'v1/@scope/pkg/1.0.0...2.0.0/index.json');
+    assert.equal(patchKey(PAIR), 'v2/@scope/pkg/1.0.0...2.0.0/patch');
+    assert.equal(filesKey(PAIR, 'js'), 'v2/@scope/pkg/1.0.0...2.0.0/files/js');
+    assert.equal(indexKey(PAIR), 'v2/@scope/pkg/1.0.0...2.0.0/index.json');
     assert.equal(objectName(PAIR), '@scope/pkg@1.0.0...2.0.0');
     assert.notEqual(
       objectName({ ...PAIR, from: PAIR.to, to: PAIR.from }),
@@ -121,6 +121,21 @@ describe('sectionsOf', () => {
 
   it('keeps the whole patch under All', () => {
     assert.deepEqual(sectionsOf(PATCH, index, 'all'), PATCH);
+  });
+
+  it("keeps a blank context line that ends the last file's section", () => {
+    const patch = encoder.encode(
+      `${formatDiff({
+        a: files(['dist/a.js', 'a\n'], ['src/a.ts', 'a\n\n']),
+        b: files(['dist/a.js', 'A\n'], ['src/a.ts', 'A\n\n']),
+        versions: { a: PAIR.from, b: PAIR.to },
+      })}\n`,
+    );
+
+    assert.match(
+      decoder.decode(sectionsOf(patch, indexPatch(patch), 'src')),
+      /\n@@ -1,2 \+1,2 @@\n-a\n\+A\n \n$/,
+    );
   });
 });
 

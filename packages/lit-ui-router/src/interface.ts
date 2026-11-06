@@ -113,7 +113,7 @@ export interface UiOnExit {
  * @see {@link UIViewResolves}
  * @category types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
 export type DefaultResolvesType = Record<string, any>;
 
 /**
@@ -128,7 +128,7 @@ export type DefaultResolvesType = Record<string, any>;
  * @category types
  */
 export type UIViewResolves<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = T;
 
@@ -215,7 +215,7 @@ export interface UIViewInjectedProps<
  * @category types
  */
 export type RoutedLitTemplate<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = (props: UIViewInjectedProps<T>) => TemplateResult;
 
@@ -228,7 +228,7 @@ export type RoutedLitTemplate<
  * @category types
  */
 export type LitViewDeclarationTemplate<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = RoutedLitTemplate<T> & _ViewDeclaration;
 
@@ -305,7 +305,7 @@ export interface RoutedLitElement<
  * @category types
  */
 export type RoutedLitComponent<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = RoutedLitTemplate<T> | RoutedLitElement<T>;
 
@@ -342,7 +342,7 @@ export interface LitViewDeclarationObject<
  * @category types
  */
 export type LitViewDeclaration<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | LitViewDeclarationObject<T>
@@ -436,7 +436,7 @@ export interface LitStateDeclaration<
  * @category types
  */
 export type TypedLitViewComponent<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | ((props: UIViewInjectedProps<T>) => void)
@@ -461,7 +461,7 @@ export type TypedLitViewComponent<
  * @category types
  */
 export type TypedLitViewDeclaration<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | (TypedLitViewComponent<T> & _ViewDeclaration)

@@ -3,6 +3,8 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+import { element, outline, parseMarkup } from '@tools/lit-test-env/ssr-tree.ts';
+import type { Element } from '@tools/lit-test-env/ssr-tree.ts';
 import { build } from 'vite';
 import { createServerRouter } from 'ui-router-server';
 
@@ -39,8 +41,12 @@ const buildSite = async (entry: string): Promise<string> => {
 const page = (outDir: string, file: string): Promise<string> =>
   readFile(path.join(outDir, file), 'utf8');
 
-const routedView = (html: string): string | undefined =>
-  /<ui-view[^>]*>(.*?)<\/ui-view>/s.exec(html)?.[1];
+const routedView = async (outDir: string, file: string): Promise<Element> =>
+  element(parseMarkup(await page(outDir, file)), 'ui-view');
+
+/** The outline of `node`, whitespace-only text left out. */
+const labels = (node: Element): string[] =>
+  outline(node).filter((label) => label.trim() !== '');
 
 describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
   it('prerenders each routed <ui-view> from a script with static imports', async () => {
@@ -58,15 +64,24 @@ describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
       'index.html',
     ]);
 
-    expect(routedView(await page(outDir, 'index.html'))).toMatch(
-      /<h1>Home<\/h1>\s*(<!--[^>]*-->)?<hello-card defer-hydration><\/hello-card>/,
-    );
-    expect(routedView(await page(outDir, 'about/index.html'))).toMatch(
-      /<h1>About<\/h1>/,
-    );
-    expect(routedView(await page(outDir, '404.html'))).toMatch(
-      /<h1>Not found<\/h1>/,
-    );
+    const home = await routedView(outDir, 'index.html');
+    expect(labels(home)).toEqual([
+      expect.stringMatching(/^<!--lit-part /),
+      '<h1>',
+      '<!--served:lit-node 1-->',
+      '<hello-card>',
+      '<!--/lit-part-->',
+    ]);
+    expect(outline(element(home, 'h1'))).toEqual(['Home']);
+    const card = element(home, 'hello-card');
+    expect(card.attrs).toEqual([{ name: 'defer-hydration', value: '' }]);
+    expect(outline(card)).toEqual([]);
+    expect(
+      outline(element(await routedView(outDir, 'about/index.html'), 'h1')),
+    ).toEqual(['About']);
+    expect(
+      outline(element(await routedView(outDir, '404.html'), 'h1')),
+    ).toEqual(['Not found']);
     expect(await page(outDir, '_redirects')).toBe(
       '/legacy /about 302\n/legacy/ /about 302\n',
     );
@@ -90,6 +105,6 @@ describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
   it('renders an empty <ui-view> when the page leaves out uiViewSlot()', async () => {
     const outDir = await buildSite('./prerender-slotless.ts');
 
-    expect(routedView(await page(outDir, 'index.html'))).toBe('');
+    expect(outline(await routedView(outDir, 'index.html'))).toEqual([]);
   });
 });

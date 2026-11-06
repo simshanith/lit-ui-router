@@ -118,7 +118,7 @@ const filePatch = (
   return header + formatHunks(names, patch);
 };
 
-/** `npm diff --diff=<a> --diff=<b>` with its default options, without the trailing newline npm prints. */
+/** `npm diff --diff=<a> --diff=<b>` with its default options, without the trailing newline npm prints; a blank context line that ends the patch stays. */
 export const formatDiff = ({
   a,
   b,
@@ -133,4 +133,5 @@ export const formatDiff = ({
       filePatch(filename, a.get(filename), b.get(filename), versions),
     )
     .join('')
-    .trim();
+    // libnpmdiff trims here, which also drops a final blank context line from its hunk.
+    .replace(/\n$/, '');

@@ -25,7 +25,7 @@ import type { RawParams, StateDeclaration, StateOrName } from '@uirouter/core';
  *
  * @category types
  */
-// oxlint-disable-next-line typescript/no-empty-interface, typescript/no-empty-object-type -- filled in by module augmentation
+// oxlint-disable-next-line typescript/no-empty-object-type -- filled in by module augmentation
 export interface RouteTypes {}
 
 /**

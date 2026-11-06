@@ -5,7 +5,7 @@ const PHRASING =
   'a, abbr, b, code, em, i, kbd, small, span, strong, time { display: inline }';
 
 /** Parses a page into a document whose `defaultView` answers testing-library's style lookups. */
-export const parse = (html: string): Document => {
+export const parseHtml = (html: string): Document => {
   const parsed = new new Window().DOMParser().parseFromString(
     html,
     'text/html',

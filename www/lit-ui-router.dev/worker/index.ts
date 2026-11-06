@@ -4,6 +4,7 @@ import { mounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
 
+import type { ReleaseDiffs } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
 import { serveReleases } from './releases/serve.ts';
 
@@ -60,7 +61,11 @@ export default {
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
     const ledger = env.LEDGER as unknown as LedgerReader;
 
-    const releases = await serveReleases(request, ledger, {
+    // SAFETY: wrangler types the binding as an untyped Service; ReleaseDiffs names the release-diffs entrypoint's methods.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
+    const diffs = env.RELEASE_DIFFS as unknown as ReleaseDiffs;
+
+    const releases = await serveReleases(request, ledger, diffs, {
       cache: caches.default,
       waitUntil: (promise) => ctx.waitUntil(promise),
       now: Date.now,

@@ -19,7 +19,7 @@ interface Effect3Cause {
 /** `Context.Service` in effect 4, `Context.GenericTag` in effect 3. */
 export function serviceKey<Api>(key: string): Context.Service<Api, Api> {
   // SAFETY: effect 3 exports `GenericTag`; on effect 4 the member is absent.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   const v3 = Context as unknown as Effect3Context;
 
   return v3.GenericTag ? v3.GenericTag<Api>(key) : Context.Service<Api>(key);
@@ -30,7 +30,7 @@ export function isInterrupted(exit: Exit.Exit<unknown, unknown>): boolean {
   if (!Exit.isFailure(exit)) return false;
 
   // SAFETY: effect 3 exports `isInterruptedOnly`; on effect 4 the member is absent.
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- each major's types omit the other's member, so no single assertion reaches it until effect 3 leaves the peer (#1534)
   const v3 = Cause as unknown as Effect3Cause;
 
   return v3.isInterruptedOnly

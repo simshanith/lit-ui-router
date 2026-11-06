@@ -12,6 +12,28 @@ export const releaseRoutes = [
   { name: 'releases', url: '' },
   { name: 'releases.package', url: '/{pkg}' },
   { name: 'releases.package.latest', url: '/latest', response: true },
+  {
+    name: 'releases.package.diff',
+    url: '/diff?from&to&via',
+    params: { via: { value: 'diffshub', squash: true } },
+    response: true,
+  },
+  { name: 'releases.package.compare', url: '/diff/{from}...{to}' },
+  {
+    name: 'releases.package.compare.index',
+    url: '/{layout}/index.json',
+    response: true,
+  },
+  {
+    name: 'releases.package.compare.files',
+    url: '/{layout}/files/{preset}',
+    response: true,
+  },
+  {
+    name: 'releases.package.compare.patch',
+    url: '/{layout}/patch',
+    response: true,
+  },
   { name: 'releases.package.version', url: '/{version}' },
   { name: 'notFound' },
 ] as const satisfies readonly RouteDeclaration[];

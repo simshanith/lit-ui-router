@@ -9,7 +9,7 @@ export class Dialog extends LitDialog {
     return dialogService.renderContent();
   }
 
-  /* eslint-disable wc/no-self-class, wc/no-child-traversal-in-connectedcallback -- deliberate host+subtree class aliasing onto a third-party element (see below); the timing is under review in the a11y/lifecycle follow-up, not here */
+  /* eslint-disable wc/no-self-class, wc/no-child-traversal-in-connectedcallback -- deliberate host+subtree class aliasing onto a third-party element (see below); lit-dialog goes in #1901 */
   connectedCallback() {
     super.connectedCallback();
     // lit-dialog renders Bootstrap 3 modal markup; alias it with the class

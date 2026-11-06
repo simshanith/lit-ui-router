@@ -103,6 +103,10 @@ behaviorally identical to the <a href="/app" target="_self">vanilla sample app</
 [four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the Signals idiom changes.
 
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-signals" />
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-signals/)

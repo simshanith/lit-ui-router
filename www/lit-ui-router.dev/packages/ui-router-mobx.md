@@ -111,6 +111,10 @@ declare module 'ui-router-mobx' {
 }
 ```
 
+## Releases
+
+<ReleaseDiffPicker name="ui-router-mobx" />
+
 ## Further reading
 
 - [API reference](/api/ui-router-mobx/)

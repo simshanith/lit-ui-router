@@ -108,6 +108,7 @@
     "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@repo/dev-gate": "catalog:workspace",
+    "@testing-library/dom": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/crap": "catalog:workspace",

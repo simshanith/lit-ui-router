@@ -1,4 +1,4 @@
-// The patch the release diff store keeps against the real `npm diff`, byte for byte; it reads the npm registry, so it runs as `acceptance (npm-diff)`.
+// The patch the release diff store keeps against the real `npm diff`, byte for byte but for the blank context lines npm's final trim drops; it reads the npm registry, so it runs as `acceptance (npm-diff)`.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -44,7 +44,11 @@ describe('npm diff parity', () => {
       ]);
 
       assert.ok(theirs.length > 0, 'npm diff printed nothing');
-      assert.deepEqual(patch, new TextEncoder().encode(theirs));
+      const ours = new TextDecoder().decode(patch);
+      const kept = theirs.trimEnd();
+
+      assert.equal(ours.slice(0, kept.length), kept);
+      assert.match(ours.slice(kept.length), /^\n(?: [ \t]*\n)*$/);
 
       // The All preset's sections, joined by their index entries, rebuild the patch.
       assert.deepEqual(sectionsOf(patch, indexPatch(patch), 'all'), patch);

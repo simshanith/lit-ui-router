@@ -20,21 +20,27 @@ takes a domain-shaped name because every `www/` package is keyed by one (see
 - [`src/`](./src): the build engine, run by the worker and by node's test
   runner. [`registry.ts`](./src/registry.ts) reads both tarballs from the npm
   registry, [`format-diff.ts`](./src/format-diff.ts) prints the patch the way
-  libnpmdiff does, [`file-filter.ts`](./src/file-filter.ts) holds the Source,
+  libnpmdiff does, but keeps a blank context line that ends the patch, which
+  libnpmdiff trims, [`file-filter.ts`](./src/file-filter.ts) holds the Source,
   Published JS, Types and All presets, and [`store.ts`](./src/store.ts) the R2
   layout.
 
-A pair's entry sits under `v1/<pkg>/<from>...<to>/`: `patch`, one
+A pair's entry sits under `<layout>/<pkg>/<from>...<to>/`: `patch`, one
 `files/<preset>` per preset holding that preset's sections of the patch, and
 `index.json`, written last, so an entry with an index is complete. Pairs are
-immutable, so an entry is never rewritten; a format change bumps the `v1`
-prefix.
+immutable, so an entry is never rewritten. `<layout>` is `LAYOUT` in
+[`layout.ts`](./src/layout.ts), which the package exports as `./layout`. A change
+to any stored bytes, the patch text included, bumps it: every pair rebuilds
+under the new prefix, and the old one can be deleted. The docs worker builds
+its diff pages' data urls from the same constant and passes it on every call,
+and the worker rejects a layout other than its own, so a bump also changes
+every url the edge and browsers cache.
 
 `test` runs the engine's suites and the worker in workerd through wrangler's
 test harness, under the config `cloudflare.config.ts` gives production, with
 [`worker/test/registry-stub.ts`](./worker/test/registry-stub.ts) answering the
-registry. `test:npm-diff` checks the patch against the npm CLI's, byte for byte,
-in the `acceptance (npm-diff)` job.
+registry. `test:npm-diff` checks the patch against the npm CLI's, byte for byte
+but for that line, in the `acceptance (npm-diff)` job.
 
 It deploys through Workers Builds like every site in [`www/`](../README.md),
 with its branches built as Workers Previews, but through `cf` rather than

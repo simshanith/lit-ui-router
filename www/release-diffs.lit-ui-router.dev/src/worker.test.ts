@@ -15,6 +15,7 @@ import { createTestHarness, type Unstable_RawConfig } from 'wrangler';
 import type { DiffIndex } from './diff-index.ts';
 import type { FileFilter } from './file-filter.ts';
 import { formatDiff } from './format-diff.ts';
+import { LAYOUT } from './layout.ts';
 import { files } from './npm-diff-fixtures.ts';
 import {
   type DiffBucket,
@@ -56,12 +57,13 @@ const server = createTestHarness({
 
 /** The default entrypoint's RPC methods, as the docs worker's service binding sees them, and the stub's. */
 interface ReleaseDiffs {
-  index(pair: DiffPair): Promise<DiffIndex>;
+  index(pair: DiffPair, layout: string): Promise<DiffIndex>;
   files(
     pair: DiffPair,
     filter: FileFilter,
+    layout: string,
   ): Promise<ReadableStream<Uint8Array>>;
-  patch(pair: DiffPair): Promise<ReadableStream<Uint8Array>>;
+  patch(pair: DiffPair, layout: string): Promise<ReadableStream<Uint8Array>>;
   registryReads(): Promise<string[]>;
 }
 
@@ -109,7 +111,7 @@ describe('a pair R2 holds', { timeout: 120_000 }, () => {
   before(() => writeEntry(bucket, pair, patch));
 
   it('answers from R2 without reaching the registry', async () => {
-    const index = await api.index(pair);
+    const index = await api.index(pair, LAYOUT);
 
     assert.deepEqual(
       index.files.map(({ path, filters }) => [path, filters]),
@@ -119,11 +121,11 @@ describe('a pair R2 holds', { timeout: 120_000 }, () => {
       ],
     );
     assert.match(
-      await text(await api.files(pair, 'types')),
+      await text(await api.files(pair, 'types', LAYOUT)),
       /^diff --git a\/dist\/a\.d\.ts /,
     );
     assert.equal(
-      await text(await api.patch(pair)),
+      await text(await api.patch(pair, LAYOUT)),
       new TextDecoder().decode(patch),
     );
     assert.deepEqual(await api.registryReads(), []);
@@ -133,7 +135,7 @@ describe('a pair R2 holds', { timeout: 120_000 }, () => {
 describe('a pair R2 lacks', { timeout: 120_000 }, () => {
   // The harness proxy's calls block node, so they can't race here; store.test.ts covers the single flight.
   it('builds it in its ReleaseDiff object, stores every key, then serves R2', async () => {
-    const index = await api.index(STUB);
+    const index = await api.index(STUB, LAYOUT);
 
     // One packument read and one read per tarball.
     assert.equal((await api.registryReads()).length, 3);
@@ -160,11 +162,11 @@ describe('a pair R2 lacks', { timeout: 120_000 }, () => {
       assert.ok(keys.includes(key), key);
 
     assert.equal(
-      await text(await api.files(STUB, 'all')),
-      await text(await api.patch(STUB)),
+      await text(await api.files(STUB, 'all', LAYOUT)),
+      await text(await api.patch(STUB, LAYOUT)),
     );
     assert.match(
-      await text(await api.files(STUB, 'js')),
+      await text(await api.files(STUB, 'js', LAYOUT)),
       /^diff --git a\/dist\/index\.js b\/dist\/index\.js\n/,
     );
     assert.deepEqual(await api.registryReads(), []);
@@ -174,28 +176,53 @@ describe('a pair R2 lacks', { timeout: 120_000 }, () => {
 describe('the RPC surface', { timeout: 120_000 }, () => {
   it('refuses a pair that could not name an R2 prefix', async () => {
     await assert.rejects(
-      async () => api.index({ name: '../escape', from: '1.0.0', to: '1.1.0' }),
+      async () =>
+        api.index({ name: '../escape', from: '1.0.0', to: '1.1.0' }, LAYOUT),
       /ValiError/,
     );
     await assert.rejects(
-      async () => api.index({ ...STUB, from: '1.0.0/..' }),
+      async () => api.index({ ...STUB, from: '1.0.0/..' }, LAYOUT),
       /ValiError/,
     );
+  });
+
+  it('refuses a reversed or repeated pair, before reading anything', async () => {
+    await assert.rejects(
+      async () => api.index({ ...STUB, from: '1.1.0', to: '1.0.0' }, LAYOUT),
+      /ValiError/,
+    );
+    await assert.rejects(
+      async () => api.index({ ...STUB, from: '1.0.0', to: '1.0.0' }, LAYOUT),
+      /ValiError/,
+    );
+    await assert.rejects(
+      async () =>
+        api.patch({ ...STUB, from: '1.0.0', to: '1.0.0-rc.0' }, LAYOUT),
+      /ValiError/,
+    );
+    assert.deepEqual(await api.registryReads(), []);
   });
 
   it('refuses an unknown preset', async () => {
     await assert.rejects(
       // SAFETY: an RPC caller's argument is untyped at runtime.
-      async () => api.files(STUB, 'everything' as FileFilter),
+      async () => api.files(STUB, 'everything' as FileFilter, LAYOUT),
       /ValiError/,
     );
+  });
+
+  it('refuses a layout other than its own, before reading anything', async () => {
+    await assert.rejects(async () => api.index(STUB, 'v0'), /ValiError/);
+    await assert.rejects(async () => api.files(STUB, 'all', 'v0'), /ValiError/);
+    await assert.rejects(async () => api.patch(STUB, 'v0'), /ValiError/);
+    assert.deepEqual(await api.registryReads(), []);
   });
 
   it('fails a version the registry lacks, storing nothing', async () => {
     const pair = { ...STUB, to: '9.9.9' };
 
     await assert.rejects(
-      async () => api.index(pair),
+      async () => api.index(pair, LAYOUT),
       /NotPublished: stub-pkg@9\.9\.9/,
     );
     assert.equal(

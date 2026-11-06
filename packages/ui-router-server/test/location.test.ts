@@ -181,7 +181,7 @@ describe('installServerLocation', () => {
     it('wins over strictMode where both set strict', () => {
       const router = installServerLocation(bareRouter(), {
         urlConfig: { strict: true },
-        // eslint-disable-next-line typescript/no-deprecated -- the precedence under test
+        // eslint-disable-next-line typescript/no-deprecated -- the precedence under test, until #1907
         strictMode: false,
       });
 
@@ -192,7 +192,7 @@ describe('installServerLocation', () => {
 
     it('leaves strictMode in force where it is absent', () => {
       const router = installServerLocation(bareRouter(), {
-        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test
+        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
         strictMode: false,
       });
 
@@ -204,7 +204,7 @@ describe('installServerLocation', () => {
     it('leaves strictMode in force where it sets no strict', () => {
       const router = installServerLocation(bareRouter(), {
         urlConfig: { caseInsensitive: true },
-        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test
+        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
         strictMode: false,
       });
 
@@ -244,7 +244,7 @@ describe('installServerLocation', () => {
           installServerLocation(router, {
             url: '/sheet/7B/',
             baseHref: '/app/',
-            // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test
+            // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
             strictMode: false,
           }),
         {

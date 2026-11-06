@@ -1,5 +1,5 @@
-<svg viewBox="0 0 720 396" width="100%" role="img" aria-label="Architecture of lit-ui-router.dev. 1, readers, reach Cloudflare. 2, static assets, answer every path that is not worker-first. 3, the docs worker gets the worker-first paths: the sample apps, /releases and /gh; it fetches shells, 404 pages and pass-through requests from static assets, and reads the release ledger over RPC from 4, the ledger worker." xmlns="http://www.w3.org/2000/svg">
-  <title>lit-ui-router.dev: static assets, the docs worker and the ledger worker</title>
+<svg viewBox="0 0 720 396" width="100%" role="img" aria-label="Architecture of lit-ui-router.dev. 1, readers, reach Cloudflare. 2, static assets, answer every path that is not worker-first. 3, the docs worker gets the worker-first paths: the sample apps, /releases and /gh; it fetches shells, 404 pages and pass-through requests from static assets, and calls two workers over RPC: 4, the diffs worker, for release diffs, and 5, the ledger worker, for the release ledger." xmlns="http://www.w3.org/2000/svg">
+  <title>lit-ui-router.dev: static assets, the docs worker, the diffs worker and the ledger worker</title>
   <!-- dark palette applies only when this file is the document root -->
   <style>
     @media (prefers-color-scheme: dark) {
@@ -34,8 +34,9 @@
     <text font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan x="268" y="218">worker-first:</tspan><tspan x="268" y="232">sample apps,</tspan><tspan x="268" y="246">/releases, /gh</tspan></text>
     <path d="M440 168V128" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
     <text font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="end"><tspan x="432" y="144">shells, 404,</tspan><tspan x="432" y="158">pass-through</tspan></text>
-    <path d="M440 228V268" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
-    <text x="448" y="252" font-size="11" fill="var(--vp-c-text-2, #67676c)">RPC</text>
+    <path d="M394 228V268" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
+    <path d="M486 228V268" fill="none" stroke="var(--vp-c-text-2, #67676c)" stroke-width="1.25" marker-end="url(#arr-site)" />
+    <text x="440" y="252" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">RPC</text>
     <!-- 1 readers -->
     <rect x="24" y="168" width="128" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <rect x="34" y="178" width="24" height="24" rx="4" fill="var(--vp-c-brand-soft, rgba(0,152,220,0.14))" />
@@ -60,14 +61,22 @@
     <text x="374" y="218" font-size="11" fill="var(--vp-c-text-2, #67676c)">verdicts · releases</text>
     <circle cx="514" cy="170" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
     <text x="514" y="173.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">3</text>
-    <!-- 4 ledger worker -->
-    <rect data-brand="cloudflare" x="364" y="272" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
-    <rect data-brand="cloudflare" x="374" y="282" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
-    <svg x="378" y="286" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
-    <text x="406" y="299" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Ledger worker</text>
-    <text x="374" y="322" font-size="11" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
-    <circle cx="514" cy="274" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
-    <text x="514" y="277.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">4</text>
+    <!-- 4 diffs worker -->
+    <rect data-brand="cloudflare" x="272" y="272" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="282" y="282" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg x="286" y="286" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
+    <text x="314" y="299" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Diffs worker</text>
+    <text x="282" y="322" font-size="11" fill="var(--vp-c-text-2, #67676c)">release-diffs</text>
+    <circle cx="422" cy="274" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="422" y="277.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">4</text>
+    <!-- 5 ledger worker -->
+    <rect data-brand="cloudflare" x="456" y="272" width="152" height="60" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="#f6821f" stroke-opacity="0.5" />
+    <rect data-brand="cloudflare" x="466" y="282" width="24" height="24" rx="4" fill="#f6821f" fill-opacity="0.14" />
+    <svg x="470" y="286" width="16" height="16" viewBox="0 0 24 24"><path data-brand="cloudflare" fill="#f6821f" d="m8.213.063 8.879 12.136-8.67 11.739h2.476l8.665-11.735-8.89-12.14Zm4.728 0 9.02 11.992-9.018 11.883h2.496L24 12.656v-1.199L15.434.063ZM7.178 2.02.01 11.398l-.01 1.2 7.203 9.644 1.238-1.676-6.396-8.556 6.361-8.313Z" /></svg>
+    <text x="498" y="299" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Ledger worker</text>
+    <text x="466" y="322" font-size="11" fill="var(--vp-c-text-2, #67676c)">release-ledger</text>
+    <circle cx="606" cy="274" r="9" fill="var(--vp-c-text-1, #3c3c43)" />
+    <text x="606" y="277.5" font-size="10" font-weight="600" fill="var(--vp-c-bg, #ffffff)" text-anchor="middle">5</text>
     <text x="24" y="386" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)">lit-ui-router.dev</text>
   </g>
 </svg>

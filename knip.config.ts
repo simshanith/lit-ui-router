@@ -63,13 +63,17 @@ function typeTestEntries(dir: string): string[] {
 const workspaces = {
   '.': {
     ignoreDependencies: [
-      // nothing scripts these; kept so `pnpm wrangler` and `pnpm cf` work at the repo root
+      // run ad hoc at the repo root; cf sites declare their own
       'cf',
+      // Workers Builds runs `npx wrangler` from the repo root (tools/workers-builds/cloudflare-deploy.ts)
       'wrangler',
       // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
       'eslint-formatter-tap',
-      // .oxlintrc.json extends its config by path, which knip does not follow
-      '@tools/lint-elements',
+      // knip applies root ignores to every workspace
+      // floor-guard and check:bundle find <dep>-floor aliases by name; tsconfig paths read them by node_modules path
+      /-floor$/,
+      // compat lanes swap in <dep>-<major> through vitest aliases, tsconfig paths or a resolve hook, which knip doesn't count
+      /^(?:lit-2|effect-3|mobx-6|vite-7)$/,
     ],
   },
   examples: {
@@ -93,117 +97,24 @@ const workspaces = {
       '@oxc-project/runtime',
       // exact-pin alias pnpm dedupes the wide range onto (#454)
       'oxc-project-runtime',
-      // release-it plugin, named in @tools/release-config's config
-      '@release-it/conventional-changelog',
-      // vitest alias target for the lit 2 compat lane
-      'lit-2',
-      // peer and dependency floor installs, bundled by check:bundle's peer lines
-      '@uirouter/core-floor',
-      '@oxc-project/runtime-floor',
     ],
   },
-  'packages/lit-ui-router-effect': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      'effect-3',
-      'effect-floor',
-      'lit-2',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-      'ui-router-effect-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
-  'packages/lit-ui-router-mobx': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      'lit-2',
-      'mobx-6',
-      'mobx-floor',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-      'ui-router-mobx-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
-  'packages/lit-ui-router-signals': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the lit 2 compat lane
-      'lit-2',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-      'ui-router-signals-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
+  'packages/lit-ui-router-effect': { entry: ['test-d/*.test-d.ts'] },
+  'packages/lit-ui-router-mobx': { entry: ['test-d/*.test-d.ts'] },
+  'packages/lit-ui-router-signals': { entry: ['test-d/*.test-d.ts'] },
   'packages/lit-ui-router-ssr': {
-    ignoreDependencies: [
-      // imported by the emitted dist, not by src
-      '@oxc-project/runtime',
-      '@release-it/conventional-changelog',
-      '@lit-labs/ssr-floor',
-      '@lit-labs/ssr-client-floor',
-      '@oxc-project/runtime-floor',
-      '@uirouter/core-floor',
-      'lit-ui-router-floor',
-      'ui-router-server-floor',
-    ],
+    // imported by the emitted dist, not by src
+    ignoreDependencies: ['@oxc-project/runtime'],
     // vite builds the fixture app from these by path, in vite-build.spec.ts
     entry: [
       'src/specs/vite-build/main.ts',
       'src/specs/vite-build/prerender*.ts',
     ],
   },
-  'packages/navigation-location-plugin': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-    ],
-  },
-  'packages/ui-router-effect': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the effect 3 compat lane
-      'effect-3',
-      'effect-floor',
-      '@uirouter/core-floor',
-    ],
-  },
-  'packages/ui-router-mobx': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the mobx 6 compat lane
-      'mobx-6',
-      'mobx-floor',
-      '@uirouter/core-floor',
-    ],
-  },
   'packages/ui-router-registry': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-    ],
     entry: ['src/specs/*.test-d.ts', 'test-d/**/*.test-d.ts'],
   },
-  'packages/ui-router-signals': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-      'signal-polyfill-floor',
-    ],
-  },
-  'packages/ui-router-server': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-      'hono-floor',
-      // node resolve-hook target for the vite 7 compat lane
-      'vite-7',
-    ],
-  },
   'packages/eslint-plugin-lit-ui-router': {
-    ignoreDependencies: ['@release-it/conventional-changelog'],
     // oxlint fixture inputs, never imported
     ignore: ['test/oxlint/**/*.js'],
   },

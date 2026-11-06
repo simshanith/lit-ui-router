@@ -1,20 +1,30 @@
 // Built release diffs in R2: one entry per version pair, its patch, each preset's sections and then its index, never rewritten.
+import lt from 'semver/functions/lt.js';
+import valid from 'semver/functions/valid.js';
 import * as v from 'valibot';
 
 import { type DiffIndex, indexPatch } from './diff-index.ts';
 import { FILE_FILTERS, type FileFilter } from './file-filter.ts';
+import { LAYOUT } from './layout.ts';
 import { npmDiff } from './registry.ts';
 
 const PACKAGE_NAME = /^(?:@[a-z0-9][\w.~-]*\/)?[a-z0-9][\w.~-]*$/;
 
 const VERSION = /^\d+\.\d+\.\d+(?:-[\da-z.-]+)?(?:\+[\da-z.-]+)?$/i;
 
-/** Two versions of one package, in the order `npm diff` compares them; each pair names an object and an R2 prefix, so its fields are checked. */
-export const DiffPairSchema = v.strictObject({
-  name: v.pipe(v.string(), v.regex(PACKAGE_NAME)),
-  from: v.pipe(v.string(), v.regex(VERSION)),
-  to: v.pipe(v.string(), v.regex(VERSION)),
-});
+/** Two versions of one package, older first by semver; each pair names an object and an R2 prefix, so its fields are checked. */
+export const DiffPairSchema = v.pipe(
+  v.strictObject({
+    name: v.pipe(v.string(), v.regex(PACKAGE_NAME)),
+    from: v.pipe(v.string(), v.regex(VERSION)),
+    to: v.pipe(v.string(), v.regex(VERSION)),
+  }),
+  // The check runs after a field's regex fails; that field's issue already rejects it.
+  v.check(
+    ({ from, to }) => !valid(from) || !valid(to) || lt(from, to),
+    'from must precede to',
+  ),
+);
 
 export type DiffPair = v.InferOutput<typeof DiffPairSchema>;
 
@@ -34,9 +44,6 @@ export interface DiffBucket {
   ): Promise<object | null>;
 }
 
-/** Bump to rebuild every entry under a new prefix when the stored format changes. */
-export const LAYOUT = 'v1';
-
 /** The key prefix of a pair's entry. */
 export const entryPrefix = ({ name, from, to }: DiffPair): string =>
   `${LAYOUT}/${name}/${from}...${to}/`;
@@ -49,7 +56,7 @@ export const filesKey = (pair: DiffPair, filter: FileFilter): string =>
 export const indexKey = (pair: DiffPair): string =>
   `${entryPrefix(pair)}index.json`;
 
-/** The name of the one object that builds a pair's entry; a reversed pair is another entry. */
+/** The name of the one object that builds a pair's entry. */
 export const objectName = ({ name, from, to }: DiffPair): string =>
   `${name}@${from}...${to}`;
 

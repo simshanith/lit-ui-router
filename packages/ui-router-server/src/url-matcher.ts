@@ -71,7 +71,7 @@ const typeEncode = (
   type.encode ? type.encode(val) : (val as string | null | undefined);
 
 const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
-  // eslint-disable-next-line eqeqeq -- core's default equals coerces (null/undefined/'' and string/number pairs compare loosely)
+  // core's default equals coerces (null/undefined/'' and string/number pairs compare loosely)
   type.equals ? type.equals(a, b) : a == b;
 
 const isString = <T>(val: T): val is T & string => typeof val === 'string';
