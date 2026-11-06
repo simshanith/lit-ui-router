@@ -258,6 +258,8 @@
         // each file is checked in its own tsconfig project
         "{packages,apps,examples}/*/tsconfig*.json",
         "tsconfig*.json",
+        // <style> contents in html templates go through stylelint
+        "stylelint.config.mjs",
         "pnpm-workspace.yaml"
       ]
     },

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { basename, join } from 'node:path';
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 
 import { readFileSync } from 'node:fs';
 
@@ -63,26 +63,28 @@ describe('a tag two files define', () => {
 
 const rules = join(import.meta.dirname, 'fixtures/rules');
 
-const RULE_FILES = ['card.ts', 'templates.ts', 'unimported.ts'];
+const RULE_FILES = ['card.ts', 'styles.ts', 'templates.ts', 'unimported.ts'];
 
-/** `file:line rule` for each `// expect a, b` comment, on the line after it. */
+/** `file:line rule` for each `// expect a, b` comment, or its CSS comment form, on the line after it. */
 function expected(name: string): string[] {
   const lines = readFileSync(join(rules, name), 'utf8').split('\n');
 
   return lines.flatMap((line, i) => {
-    const match = /\/\/ expect (.+)$/.exec(line);
+    const match = /(?:\/\/ expect (.+)|\/\* expect (.+) \*\/)$/.exec(line);
 
     return match
-      ? match[1].split(', ').map((rule) => `${name}:${i + 2} ${rule}`)
+      ? (match[1] ?? match[2])
+          .split(', ')
+          .map((rule) => `${name}:${i + 2} ${rule}`)
       : [];
   });
 }
 
-function checkRules() {
+async function checkRules() {
   const api = new API({ cwd: rules });
 
   try {
-    return checkFiles(
+    return await checkFiles(
       api,
       RULE_FILES.map((name) => join(rules, name)),
     );
@@ -92,7 +94,11 @@ function checkRules() {
 }
 
 describe('the ported lit-analyzer rules', () => {
-  const result = checkRules();
+  let result: Awaited<ReturnType<typeof checkRules>>;
+
+  before(async () => {
+    result = await checkRules();
+  });
 
   const lineOf = (path: string, offset: number) =>
     readFileSync(path, 'utf8').slice(0, offset).split('\n').length;
@@ -122,5 +128,6 @@ describe('the ported lit-analyzer rules', () => {
       ),
     );
     assert.ok(texts.has('Missing import for <rule-card>'));
+    assert.ok(texts.has('Unknown property "colr" (property-no-unknown)'));
   });
 });
