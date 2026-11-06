@@ -38,16 +38,12 @@ const ALLOWED: SplitAllowance[] = [
     why: 'the mobx-6 alias (catalogs.mobx6-compat) runs test:mobx6-compat beside the mobx 7 line',
   },
   {
-    name: 'parse5',
-    why: "@tools/lit-template-lint takes eslint-plugin-lit's 8.x line; eslint-plugin-lit-a11y (and its dom5) and @lit-labs/ssr pin their own",
-  },
-  {
     name: 'vite',
     why: 'the vite-7 alias (catalogs.vite7-compat) runs test:vite7-compat beside the vite 8 line',
   },
   {
     name: 'parse5',
-    why: 'the catalog takes 8, as eslint-plugin-lit does; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, lit-analyzer 5, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
+    why: 'the catalog takes 8, as @tools/lit-template-lint and eslint-plugin-lit do; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
   },
   {
     name: 'typescript',
