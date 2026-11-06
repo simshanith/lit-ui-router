@@ -35,6 +35,11 @@ export const EXAMPLES = {
     height: '810px',
     file: 'src/main.ts',
   },
+  'hellosolarsystem-eleventy': {
+    title: 'Hello Solar System (Eleventy SSR)',
+    height: '800px',
+    file: 'src/prerender.ts',
+  },
   hellogalaxy: {
     title: 'Hello Galaxy',
     height: '920px',
