@@ -75,6 +75,22 @@ const ROLE = `${NS}.Tokens<${valueSets.get('roles')}>`;
 // HTML: download may have a value, a default file name
 const DOWNLOAD = 'boolean | string';
 
+// HTML keywords and value types the data misses, keyed by tag or `*` for any element
+const SPEC_TYPES = new Map<string, string>([
+  // translate: the empty string is a keyword, the yes state
+  ['*\0translate', union(['yes', 'no', ''])],
+  // autocapitalize: an enumerated attribute with no vscode value set
+  [
+    '*\0autocapitalize',
+    union(['off', 'none', 'on', 'sentences', 'words', 'characters']),
+  ],
+  // id: at least one character, so a valueless id is invalid
+  ['*\0id', 'string'],
+  // canvas width and height: valid non-negative integers; the IDL doesn't mark them [Reflect]
+  ['canvas\0width', 'number'],
+  ['canvas\0height', 'number'],
+]);
+
 /** Tags the html data describes. */
 export const BUILT_IN_TAGS: ReadonlySet<string> = new Set(tagKeywords.keys());
 
@@ -85,6 +101,8 @@ export function attributeType(tag: string, name: string): string | undefined {
   if (name === 'download' && reflectedType(tag, name)) return DOWNLOAD;
 
   return (
+    SPEC_TYPES.get(`${tag}\0${name}`) ??
+    SPEC_TYPES.get(`*\0${name}`) ??
     tagKeywords.get(tag)?.get(name) ??
     globalKeywords.get(name) ??
     reflectedType(tag, name)

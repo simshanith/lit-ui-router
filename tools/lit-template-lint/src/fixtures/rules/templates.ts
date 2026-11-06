@@ -23,6 +23,8 @@ export const templates = (s: string, n: number, b: boolean, fn: () => void) => [
   </ul>`,
   html`<p>${s}</p>
     <br /><svg><path d="M0 0" /></svg>`,
+  html`<div class slot translate="" autocapitalize="words" id="a"></div>`,
+  html`<canvas width="300" height=${n}></canvas>`,
   // expect unknown-slot
   html`<rule-card><b slot="footer"></b></rule-card>`,
   // expect unknown-slot
@@ -51,6 +53,14 @@ export const templates = (s: string, n: number, b: boolean, fn: () => void) => [
   html`<div role="button nonsense"></div>`,
   // expect attribute-value
   html`<div title></div>`,
+  // expect attribute-value
+  html`<div id></div>`,
+  // expect attribute-value
+  html`<div translate="maybe"></div>`,
+  // expect attribute-value
+  html`<div autocapitalize="shout"></div>`,
+  // expect attribute-value
+  html`<canvas width="wide"></canvas>`,
   // expect attribute-value
   html`<div dir="${'ltr'}x"></div>`,
   // expect boolean-binding
