@@ -54,6 +54,7 @@ export type Rule =
   | 'unknown-slot'
   | 'missing-import'
   | 'property-type'
+  | 'invalid-css'
   | 'directive';
 
 /**
@@ -109,6 +110,8 @@ export interface LowerContext {
   /** Whether a custom tag is defined in the program but not imported by the file. */
   missingImport?: (tag: string) => boolean;
   insertions?: Insertion[];
+  /** stylelint's findings in each `<style>` element, keyed by its tag offset. */
+  styles?: ReadonlyMap<number, readonly { at: number; text: string }[]>;
 }
 
 const MARKER = /\$ltc(\d+)\$/g;
@@ -135,7 +138,7 @@ const bump = (record: Record<string, number>, key: string) => {
 };
 
 // lit's own template element context: table parts and the like parse in place
-const TEMPLATE_CONTEXT = defaultTreeAdapter.createElement(
+export const TEMPLATE_CONTEXT = defaultTreeAdapter.createElement(
   'template',
   parse5Html.NS.HTML,
   [],
@@ -179,7 +182,7 @@ interface Chunk {
 }
 
 /** One template's markup, with the way back from markup offsets to source. */
-class Markup {
+export class Markup {
   readonly text: string;
   readonly #chunks: Chunk[] = [];
 
@@ -514,6 +517,10 @@ class FileLowerer {
     this.tag(node, svg, tagAt);
 
     if (!/\$ltc\d+\$/.test(tag)) this.structure(node, tagAt, parent);
+
+    for (const { at, text } of this.context.styles?.get(tagAt) ?? []) {
+      this.report(at, 'invalid-css', text);
+    }
 
     for (const { name, value } of node.attrs) {
       const attrLocation = this.attributeLocation(node, name);

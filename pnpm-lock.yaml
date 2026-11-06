@@ -2711,6 +2711,9 @@ importers:
       parse5:
         specifier: 'catalog:'
         version: 8.1.1
+      stylelint:
+        specifier: 'catalog:'
+        version: 18.0.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

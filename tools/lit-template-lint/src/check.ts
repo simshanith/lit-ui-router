@@ -30,6 +30,7 @@ import {
 import { classFindings, propertyInsertions } from './members.ts';
 import { type DuplicateTag, registryFor } from './registry.ts';
 import { type FileSites, findSites } from './sites.ts';
+import { lintStyles, type StyleFinding, styleElements } from './styles.ts';
 
 export type ParsedFile = FileSites & { path: string; source: string };
 
@@ -367,7 +368,24 @@ function missingImportFor(
   };
 }
 
-export function lowerAll(parsed: ParsedFile[], visibility: Visibility) {
+/** stylelint's findings in every `<style>` element of the files' templates. */
+export function checkStyles(
+  parsed: ParsedFile[],
+): Promise<Map<string, Map<number, StyleFinding[]>>> {
+  return lintStyles(
+    parsed.flatMap(({ path, source, sites }) => {
+      const styles = styleElements(source, sites);
+
+      return styles.length > 0 ? [{ path, source, styles }] : [];
+    }),
+  );
+}
+
+export function lowerAll(
+  parsed: ParsedFile[],
+  visibility: Visibility,
+  styles: Map<string, Map<number, StyleFinding[]>> = new Map(),
+) {
   const { programFiles, imports } = visibility;
 
   const totals: LowerStats = {
@@ -404,6 +422,7 @@ export function lowerAll(parsed: ParsedFile[], visibility: Visibility) {
       ...registry,
       missingImport: missingImportFor(path, defining, visibility),
       insertions,
+      styles: styles.get(path),
     });
 
     totals.templates += result.stats.templates;
@@ -551,13 +570,14 @@ function dump(dir: string, lowered: LoweredFile[]) {
 }
 
 /** Every finding over `files`, with the lowering that produced them. */
-export function checkFiles(
+export async function checkFiles(
   api: API,
   files: string[],
   { dumpDir }: { dumpDir?: string } = {},
 ) {
   const started = performance.now();
   const parsed = parseFiles(api, files);
+  const styles = await checkStyles(parsed);
 
   const visibility = programFilesOf(
     api,
@@ -568,7 +588,7 @@ export function checkFiles(
   let lowering: ReturnType<typeof lowerAll>;
 
   try {
-    lowering = lowerAll(parsed, visibility);
+    lowering = lowerAll(parsed, visibility, styles);
   } finally {
     visibility.dispose();
   }
@@ -603,7 +623,7 @@ export function checkFiles(
   return { parsed, lowering, checked, findings, lowerMs };
 }
 
-const main = (): void => {
+const main = async (): Promise<void> => {
   const showStats = process.argv.includes('--stats');
 
   const dumpDir = process.argv
@@ -624,10 +644,10 @@ const main = (): void => {
   }
 
   const api = new API({ cwd: workspaceRoot });
-  let result: ReturnType<typeof checkFiles>;
+  let result: Awaited<ReturnType<typeof checkFiles>>;
 
   try {
-    result = checkFiles(api, files, { dumpDir });
+    result = await checkFiles(api, files, { dumpDir });
   } finally {
     api.close();
   }
@@ -670,4 +690,4 @@ const main = (): void => {
   if (findings.length > 0 || internal.length > 0) process.exitCode = 1;
 };
 
-if (import.meta.main) main();
+if (import.meta.main) await main();
