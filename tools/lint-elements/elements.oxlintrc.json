@@ -17,8 +17,8 @@
       // (@tools/shared). oxlint cannot extend plugin configs, so this spells
       // out lit flat/recommended, wc flat/best-practice and lit-a11y
       // recommended, plus lit/lifecycle-super and lit/no-legacy-imports, minus
-      // lit/attribute-names and lit/no-native-attributes (lit-analyzer owns
-      // them), lit-a11y/anchor-is-valid (lit-ui-router/anchor-is-valid), and
+      // lit/attribute-names and lit/no-native-attributes (//#lint:templates
+      // owns them), lit-a11y/anchor-is-valid (lit-ui-router/anchor-is-valid), and
       // the declined wc/guard-super-call, wc/no-constructor-params and
       // wc/no-exports-with-element.
       "files": [

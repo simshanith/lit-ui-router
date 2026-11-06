@@ -60,6 +60,8 @@ export class EslintHtmlView extends ReportView {
       border: 1px solid light-dark(#d0d0d0, #30363d);
       border-radius: 0 6px 6px 6px;
       background: #fff;
+      /* ESLint's html formatter emits a light-only page with no background */
+      color-scheme: light;
     }
   `;
 
@@ -113,12 +115,8 @@ export class EslintHtmlView extends ReportView {
   }
 
   render() {
-    // ESLint's html formatter emits a light-only document with no background
-    // of its own, so pin the frame light instead of letting a dark canvas show
-    // through under its hardcoded dark text. Inline because lit-analyzer's
-    // no-invalid-css does not know `color-scheme` in a css block.
     return html`<iframe
-      style="color-scheme: light; height: ${this.frameHeight}px"
+      style="height: ${this.frameHeight}px"
       title="ESLint html formatter"
       srcdoc=${reportHtml}
       @load=${this.fitFrame}

@@ -676,7 +676,7 @@ describe('uiSref directive', () => {
 
     it('should navigate on a button carrying target="_top"', async () => {
       // target means nothing on a button, so it must not suppress the click.
-      // set imperatively: it is invalid markup, which lit-analyzer rejects
+      // set imperatively: it is invalid markup, which //#lint:templates rejects
       const wrapper = await setupWithTemplate(
         [{ name: 'home', url: '/home' }],
         html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,

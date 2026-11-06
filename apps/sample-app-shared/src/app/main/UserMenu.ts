@@ -12,6 +12,8 @@ export type LogoutEvent = ReturnType<typeof logoutEvent>;
  * button, so Enter/Space toggle natively, Escape closes and restores focus,
  * and focus leaving the widget closes it. `:hover` still reveals the panel for
  * mouse users (see `.hoverdrop` in styles.css).
+ *
+ * @fires logout - The user clicked Log Out.
  */
 @customElement('sample-user-menu')
 export class UserMenu extends LitElement {
@@ -30,20 +32,6 @@ export class UserMenu extends LitElement {
 
   @query('.disclosure-toggle')
   private readonly toggleButton?: HTMLButtonElement | null;
-
-  // Both listeners are bound here rather than in the template: lit-analyzer's
-  // no-unknown-event doesn't know `focusout`, and the rule is a repo-wide error.
-  connectedCallback() {
-    super.connectedCallback();
-    this.addEventListener('keydown', this.handleKeydown);
-    this.addEventListener('focusout', this.handleFocusout);
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener('keydown', this.handleKeydown);
-    this.removeEventListener('focusout', this.handleFocusout);
-    super.disconnectedCallback();
-  }
 
   private readonly handleToggle = () => {
     this.open = !this.open;
@@ -78,10 +66,17 @@ export class UserMenu extends LitElement {
         aria-expanded=${this.open ? 'true' : 'false'}
         aria-controls="logged-in-user-menu"
         @click=${this.handleToggle}
+        @keydown=${this.handleKeydown}
+        @focusout=${this.handleFocusout}
       >
         ${this.emailAddress} <i class="fa ${chevron}"></i>
       </button>
-      <div class="hoverdrop" id="logged-in-user-menu">
+      <div
+        class="hoverdrop"
+        id="logged-in-user-menu"
+        @keydown=${this.handleKeydown}
+        @focusout=${this.handleFocusout}
+      >
         <button class="btn btn-primary" @click=${this.handleLogout}>
           Log Out
         </button>
