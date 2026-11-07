@@ -26,8 +26,9 @@ import type {
   RouteDeclaration,
   RouteIndex,
   RouteMatch,
+  RouteTableConfig,
 } from './redirects.ts';
-import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
@@ -35,7 +36,10 @@ export type {
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
+  RouteTableConfig,
 } from './redirects.ts';
+
+export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
 
 export { routeTrie } from './route-trie.ts';
 
@@ -77,12 +81,14 @@ export interface MountConfig<
    */
   strategy?: 'matcher' | 'simulate';
   /**
-   * Matcher compiler options (defaults: strict, case-sensitive, no squash);
-   * 'simulate' mounts apply all but decodeParams. Hand the same object to
-   * {@link url-config!applyUrlConfig | `applyUrlConfig`} on the client router
-   * so both sides compile urls alike.
+   * Url options (defaults: strict, case-sensitive, no squash, slashes as
+   * requested); 'simulate' mounts apply all but decodeParams. Hand the same
+   * object to {@link url-config!applyUrlConfig | `applyUrlConfig`} on the
+   * client router so both sides compile and format urls alike. Under a
+   * `trailingSlash` policy, a url matching a state in the other spelling
+   * verdicts as a `308` redirect to the canonical one.
    */
-  config?: UrlMatcherCompilerConfig;
+  config?: RouteTableConfig;
   /**
    * How a 'matcher' mount looks up the route a pathname matches. Default: a
    * linear scan that tries every route. {@link routeTrie} walks a segment
@@ -768,7 +774,25 @@ const otherwiseVerdict = (mount: Mount): Verdict => ({
 
 // --- Per-strategy resolution -----------------------------------------------
 
-const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
+// The 308 to the canonical spelling of the matched state's url, or null when the request already used it.
+const respelledVerdict = (
+  mount: Mount,
+  subpath: string,
+  state: string,
+): Verdict | null => {
+  const canonical = respell(subpath, mount.compiled.slashOf(state));
+
+  return join(mount.base, canonical) === join(mount.base, subpath)
+    ? null
+    : redirectVerdict(mount, canonical, 308);
+};
+
+// Navigations only are respelled; a marked state answers a non-navigation at either spelling.
+const matcherVerdict = (
+  mount: Mount,
+  subpath: string,
+  respelled = true,
+): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
   if (resolution.redirect !== null)
@@ -780,7 +804,11 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
       ? mount.compiled.match(subpath)
       : resolution.match;
 
-  if (match !== null) return routeVerdict(mount, subpath, match);
+  if (match !== null)
+    return (
+      (respelled ? respelledVerdict(mount, subpath, match.state) : null) ??
+      routeVerdict(mount, subpath, match)
+    );
 
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
@@ -884,6 +912,9 @@ const replayVerdict = async (
   const { router } = pooled;
   const decided = matchedVerdict(router, mount, subpath);
 
+  if (decided?.kind === 'response' || decided?.kind === 'delegate')
+    return respelledVerdict(mount, subpath, decided.state) ?? decided;
+
   if (decided !== null) return decided;
   const settled = pooled.nextSettled();
   router.urlService.url(subpath);
@@ -899,7 +930,8 @@ const replayVerdict = async (
   const landed = router.urlService.url();
 
   return landed === subpath
-    ? shellVerdict(mount)
+    ? (respelledVerdict(mount, subpath, router.globals.$current.name) ??
+        shellVerdict(mount))
     : redirectVerdict(mount, landed, matchedStatus(router, subpath));
 };
 
@@ -1033,7 +1065,7 @@ export function createServerRouter<
 
         if (mount.strategy === 'simulate')
           return simulateMarked(await loadSimulate(), mount, subpath);
-        const verdict = matcherVerdict(mount, subpath);
+        const verdict = matcherVerdict(mount, subpath, false);
 
         return verdict.kind === 'delegate' || verdict.kind === 'response'
           ? verdict

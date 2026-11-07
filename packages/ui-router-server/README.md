@@ -141,6 +141,31 @@ response state to its `respond` hook and writes a 2xx body at the path its url s
 (`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
 [response states](https://lit-ui-router.dev/packages/server#response-states).
 
+## Trailing slashes
+
+A mount's `config` can name the canonical spelling of a trailing slash per kind of state, so the
+route table spells no slash and both sides agree on it:
+
+```ts
+const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} satisfies RouterUrlConfig;
+```
+
+`pages` covers states answered with a page and `responses` covers response states, each
+`'always'`, `'never'` or `'as-requested'` (the default). A delegating state's url belongs to its
+host handler and keeps the spelling requested. A navigation in the other spelling verdicts as a
+`308` redirect to the canonical one, a data `redirectTo` lands in its target's canonical spelling,
+and a non-navigation request to a response state or delegate is answered at either spelling. The
+policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
+`compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a
+`stateRegistry` url decorator, so `href()` and the urls a transition pushes come out canonical on a
+client router and on a server one built with `installServerLocation(router, { urlConfig })`. A
+Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'always' }`, and
+`drop-trailing-slash` to `{ pages: 'never' }`. See
+[trailing slashes](https://lit-ui-router.dev/packages/server#trailing-slashes).
+
 ## Values beyond plain JSON
 
 `dehydrate` from `ui-router-server/ssr` and `seed` from `ui-router-server/ssr/client` take a
