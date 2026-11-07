@@ -233,6 +233,74 @@
       "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
       "outputs": []
     },
+    "test:e2e:pwmeasure-all": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+      ],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "outputs": []
+    },
+    "test:e2e:pwmeasure-all-w4": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+      ],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "outputs": []
+    },
+    "test:e2e:pwmeasure-shard1": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+      ],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "outputs": []
+    },
+    "test:e2e:pwmeasure-shard2": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+      ],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "outputs": []
+    },
     "test:e2e:pushstate": {
       "dependsOn": ["build"],
       "inputs": [
