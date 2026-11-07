@@ -21,6 +21,7 @@ import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
   RedirectRule,
+  RedirectStatusCode,
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
@@ -30,6 +31,7 @@ import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
 export type {
   RedirectRule,
+  RedirectStatusCode,
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
@@ -43,6 +45,8 @@ declare module '@uirouter/core' {
     delegate?: string;
     /** Marks a response state, answered by the handler bound to its name (see {@link RouteDeclaration.response}). */
     response?: true;
+    /** The status this state's `redirectTo` answers with, `302` by default (see {@link RouteDeclaration.redirectStatusCode}). */
+    redirectStatusCode?: RedirectStatusCode;
   }
 }
 
@@ -189,7 +193,7 @@ export type Verdict =
       mount: string;
       /** The mount-joined target path; merge the request's search with {@link mergeSearch}. */
       location: string;
-      /** Redirect status to answer with (302 today). */
+      /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
       status: number;
     }
   /**
@@ -693,11 +697,15 @@ const shellVerdict = (mount: Mount): Verdict => ({
   mount: mount.base,
 });
 
-const redirectVerdict = (mount: Mount, path: string): Verdict => ({
+const redirectVerdict = (
+  mount: Mount,
+  path: string,
+  status: RedirectStatusCode = 302,
+): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
   location: join(mount.base, path),
-  status: 302,
+  status,
 });
 
 const notFoundVerdict = (mount: Mount): Verdict => ({
@@ -767,7 +775,7 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
   if (resolution.redirect !== null)
-    return redirectVerdict(mount, resolution.redirect);
+    return redirectVerdict(mount, resolution.redirect, resolution.status);
 
   // A when()-rule that lands where it started never reached route matching.
   const match =
@@ -830,6 +838,23 @@ const ruleState = (rule: { type: string }): string | undefined =>
   // SAFETY: core tags a state's url rule 'STATE', and only StateRule carries that tag.
   rule.type === 'STATE' ? (rule as StateRule).state.name : undefined;
 
+// The url's own state's redirect status, as the matcher reads it; a pattern rule's match has none.
+const matchedStatus = (
+  router: PooledRouter['router'],
+  subpath: string,
+): RedirectStatusCode | undefined => {
+  const matched = router.urlService.match({
+    path: subpath,
+    search: {},
+    hash: '',
+  });
+
+  // SAFETY: core tags a state's url rule 'STATE', and only StateRule carries that tag.
+  return matched?.rule.type === 'STATE'
+    ? (matched.rule as StateRule).state.self.redirectStatusCode
+    : undefined;
+};
+
 // Verdicts decided by url matching alone; a marked state never transitions here, so its resolves never block the verdict.
 const matchedVerdict = (
   router: PooledRouter['router'],
@@ -878,7 +903,7 @@ const replayVerdict = async (
 
   return landed === subpath
     ? shellVerdict(mount)
-    : redirectVerdict(mount, landed);
+    : redirectVerdict(mount, landed, matchedStatus(router, subpath));
 };
 
 const simulateVerdict = async (
