@@ -40,6 +40,9 @@ catalogs:
     '@custom-elements-manifest/analyzer':
       specifier: ^0.11.0
       version: 0.11.0
+    '@distilled.cloud/cloudflare':
+      specifier: 1.0.0-rc.18
+      version: 1.0.0-rc.18
     '@effect/sql-d1':
       specifier: ^4.1.2
       version: 4.1.2
@@ -3204,6 +3207,9 @@ importers:
 
   www/release-ledger.lit-ui-router.dev:
     dependencies:
+      '@distilled.cloud/cloudflare':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18(effect@4.1.2)
       '@effect/sql-d1':
         specifier: 'catalog:'
         version: 4.1.2(effect@4.1.2)
@@ -3593,6 +3599,16 @@ packages:
 
   '@cypress/xvfb@1.2.4':
     resolution: {integrity: sha512-skbBzPggOVYCbnGgV+0dmBdW/s77ZkAOXIC1knS8NagwDjBrNC1LuXtQJeiN6l+m7lzmHtaoUw/ctJKdqkG57Q==}
+
+  '@distilled.cloud/cloudflare@1.0.0-rc.18':
+    resolution: {integrity: sha512-UJB7pitkg7msm7BGTuAE8yYx4GzKdPLRtiOm3G3XHw07xLUlqEiEr4xpSf0CeziWzDygjI53FSkpC2qyVZr49g==}
+    peerDependencies:
+      effect: ^4.0.5
+
+  '@distilled.cloud/core@1.0.0-rc.18':
+    resolution: {integrity: sha512-Iui60+sNl1CwUu7NKGLuFf3VC4H9xYzfm0Fc8ZQvd87qwf1sDMB3EAWZrq/QFgrwzSY16z2mJ0PNHaBUnGet8A==}
+    peerDependencies:
+      effect: ^4.0.5
 
   '@docsearch/css@4.7.1':
     resolution: {integrity: sha512-AsMPnbNmVLDNjhtgfq4ZRskNvWR8vuK6riEegHp3kjBFtxbmTWPzZ5s1FJ04SGr2D0ZXglueUNISsV2sDgV6Jw==}
@@ -10490,6 +10506,15 @@ snapshots:
       lodash.once: 4.1.1
     transitivePeerDependencies:
       - supports-color
+
+  '@distilled.cloud/cloudflare@1.0.0-rc.18(effect@4.1.2)':
+    dependencies:
+      '@distilled.cloud/core': 1.0.0-rc.18(effect@4.1.2)
+      effect: 4.1.2
+
+  '@distilled.cloud/core@1.0.0-rc.18(effect@4.1.2)':
+    dependencies:
+      effect: 4.1.2
 
   '@docsearch/css@4.7.1': {}
 
