@@ -368,7 +368,8 @@ body:has(.npm-diff) > .content-grid {
   display: grid;
   gap: 1rem 1.5rem;
 }
-.diff-nav-toggle {
+.diff-nav-toggle,
+.diff-fold-all {
   font: inherit;
   display: inline-flex;
   align-items: center;
@@ -380,6 +381,12 @@ body:has(.npm-diff) > .content-grid {
   border: var(--site-border-width) solid var(--site-color-line);
   border-radius: var(--site-radius-control);
   touch-action: manipulation;
+}
+.diff-fold-all {
+  margin-block-start: 0.75rem;
+}
+.diff-fold-all[hidden] {
+  display: none;
 }
 .diff-nav-toggle::before {
   content: '';
