@@ -3,10 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 import { e2eUrl } from './scripts/base-url.ts';
 import type { LocationPlugin } from './src/playwright/app/fixtures.ts';
 
-// the runner image's Chrome, the one the Cypress suites drive: the e2e job installs no Playwright browsers
+// the runner image's Chrome: the e2e job installs no Playwright browsers
 const chrome = { ...devices['Desktop Chrome'], channel: 'chrome' };
 
-// One project per Cypress suite; each runs every app spec against its mount and location plugin.
+// One project per app suite; each runs every app spec against its mount and location plugin.
 const apps = {
   vanilla: { path: 'app/', locationPlugin: '' },
   pushstate: { path: 'app/', locationPlugin: 'pushState' },
@@ -16,6 +16,7 @@ const apps = {
   signals: { path: 'app-signals/', locationPlugin: '' },
 } satisfies Record<string, { path: string; locationPlugin: LocationPlugin }>;
 
+// a run empties its projects' outputDir, so each suite keeps its own beside the others it runs with
 export default defineConfig<{ locationPlugin: LocationPlugin }>({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -28,11 +29,13 @@ export default defineConfig<{ locationPlugin: LocationPlugin }>({
     ...Object.entries(apps).map(([name, { path, locationPlugin }]) => ({
       name,
       testDir: './src/playwright/app',
+      outputDir: `test-results/${name}`,
       use: { ...chrome, baseURL: e2eUrl(path), locationPlugin },
     })),
     {
       name: 'docs',
       testDir: './src/playwright/docs',
+      outputDir: 'test-results/docs',
       use: { ...chrome, baseURL: e2eUrl('') },
     },
   ],

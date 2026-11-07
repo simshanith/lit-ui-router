@@ -15,20 +15,11 @@
 # invoking a task standalone.
 
 [env]
-# This package's own devDep binaries (playwright, cypress) for the tasks
+# This package's own devDep binaries (playwright) for the tasks
 # below. Absolute via config_root (this directory); the root config's
 # {{cwd}} entry only covers shells already cd'd in here, not `mise run`
 # from elsewhere. For cd'd shells this is a harmless duplicate.
 _.path = ["{{config_root}}/node_modules/.bin"]
-
-[tasks.xvfb]
-# env: GITHUB_ENV (DISPLAY export target; prints-only when unset).
-# XVFB_* overrides serve the unit tests and local reproduction.
-# The `start-xvfb` package.json bin is an executable (shebang + 0755), so it
-# runs directly — pnpm never self-links a package's own bin onto its own
-# PATH, so a bare `start-xvfb` wouldn't resolve here.
-description = "Start the shared CI Xvfb display and export DISPLAY"
-run = "./src/start-xvfb.ts"
 
 [tasks.branch_ci_gate]
 # env: GITHUB_REF_NAME, GH_TOKEN, BRANCH_CREATED (`github.event.created`;
@@ -39,19 +30,13 @@ description = "Decide whether this branch-head push needs its own CI run"
 run = "./src/branch-ci-gate.ts"
 
 [tasks.playwright_version]
-# env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
-# cache step derives its key alone.
+# env: GITHUB_OUTPUT (step-output target).
 # The runner image rides along because Playwright ships per-Ubuntu-release browser builds.
 description = "Emit the installed playwright version and runner image to GITHUB_OUTPUT"
 run = [
   "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\"",
   "echo \"image=${ImageOS:-unknown}\" >> \"$GITHUB_OUTPUT\"",
 ]
-
-[tasks.cypress_version]
-# env: GITHUB_OUTPUT (step-output target).
-description = "Emit the installed cypress version to GITHUB_OUTPUT"
-run = "node -p \"'cypress=' + require('cypress/package.json').version\" >> \"$GITHUB_OUTPUT\""
 
 [tasks.playwright]
 # The vitest browser legs need the Playwright browsers + system deps; the
@@ -67,15 +52,6 @@ run = "playwright install-deps"
 
 [tasks.playwright_deps_engines]
 # Scoped hit-path deps: firefox+webkit are the only engines whose apt libs
-# the runner image lacks; chromium and the Cypress Electron binary ride the
-# preinstalled set (proven empirically — see the PR that added this).
+# the runner image lacks; chromium rides the preinstalled set (proven empirically — see the PR that added this).
 description = "Install the Playwright system dependencies for firefox and webkit"
 run = "playwright install-deps firefox webkit"
-
-[tasks.cypress]
-# Verify up front so the concurrent vanilla/mobx Cypress runs skip the
-# "first time using Cypress" verification banner.
-description = "Install and verify the Cypress binary"
-# A runner's first Electron launch can take 20 s or more before the 30 s default fires (#1858).
-env = { CYPRESS_VERIFY_TIMEOUT = "60000" }
-run = ["cypress install", "cypress verify"]

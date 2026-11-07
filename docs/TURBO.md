@@ -125,7 +125,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached. `@www/lit-ui-router.dev` has none: its build logs the search index's size and warns on any other client chunk over 500 kB, without failing.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the Acceptance workflow names it).
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is Playwright's UI mode, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Playwright suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the Acceptance workflow names it).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -161,7 +161,7 @@ override **replaces** the root's `dependsOn`, so each one restates the root
 umbrella's list before its own leaves.
 
 `with` is only for persistent sidecars: `e2e` keeps `wrangler:dev` running
-beside `cypress open`. turbo stops a `with` sidecar when its parent
+beside Playwright's UI mode. turbo stops a `with` sidecar when its parent
 exits and does not count that as a failure, so on a finite task a sidecar that
 outlives its parent is cut short and the run still reports green.
 `check:graph-edges` fails on `with` under any non-persistent task.
@@ -184,7 +184,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | `apps/sample-app-lit-mobx`                                                       | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
 | `apps/sample-app-lit-effect`                                                     | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
 | `apps/sample-app-lit-signals`                                                    | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
-| `apps/sample-app-lit-e2e`                                                        | One `test:e2e:*` task per suite (Cypress suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                        |
+| `apps/sample-app-lit-e2e`                                                        | One `test:e2e:*` task per suite (Playwright suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server)                                                                                                                           |
 | `apps/sample-app-routes`, `apps/sample-app-shared`                               | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface); sample-app-routes' `bench` adds `^build` (it resolves through `ui-router-server`'s dist)                                                                                                                 |
 | `@www/lit-ui-router.dev`                                                         | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                                                    |
 | `examples`                                                                       | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                                               |
@@ -270,12 +270,12 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
-3. **Install browsers** - Playwright for the vitest browser specs (`run` job) and Cypress for the e2e suites (`e2e` jobs), restored from `actions/cache` keyed on the installed package versions
+3. **Install browsers** - Playwright for the vitest browser specs (`run` job), restored from `actions/cache` keyed on the installed package version; the e2e suites (`e2e` jobs) drive the runner image's Chrome
 4. **Build and Test** - the `run` job runs the turbo graph: PRs and branch pushes run `mise run ci_graph` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main_graph` (turbo `ci:main`, adding the main-only guards). In parallel, a `plan` job groups the default e2e suites (`mise run e2e_plan`) and one `e2e (<suites>)` job per group runs `mise run test_e2e <suites>`. The `suitesPerJob` input sets the group size: PRs and main use 1, so each suite reports as `e2e (<suite>)`; the branch lane uses the `E2E_SUITES_PER_JOB_BRANCH` repo variable, or 3 when it is unset. On every lane, the `e2e result` job is green only when the plan and every group are. Locally, `mise run ci` and `mise run ci_main` run the graph and then every suite
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
-Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
+Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch.
 
 ### Smoke-testing the main graph before merge
 
@@ -429,7 +429,7 @@ E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
 
 Run these separately from cached tasks.
 
-`e2e` here is `cypress open`, the interactive lane. The headless suites are the
+`e2e` here is Playwright's UI mode, the interactive lane. The headless suites are the
 `test:e2e:*` tasks — not persistent, cached except the `a11y` axe pass, and reached through the
 `//:test_e2e` mise task, which owns the dev server because turbo has no
 lifecycle for one. If those hang, look at the server or the suite, not at a

@@ -36,7 +36,6 @@ import {
   remoteCacheAnomaly,
   repoRelativeFile,
   savedClause,
-  screenshotsLink,
   sessionFailureMarkdown,
   sessionHeadline,
   sessionLines,
@@ -1084,43 +1083,6 @@ describe('the attachments link in the overview', () => {
   });
 });
 
-describe('screenshotsLink', () => {
-  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/5';
-
-  it('links the Cypress screenshots on both lanes', () => {
-    const link = screenshotsLink({ screenshotsUrl: URL });
-    assert.ok(link?.markdown.includes(`(<${URL}>)`));
-    assert.equal(link?.line, `   cypress screenshots: ${URL}`);
-  });
-
-  it('stays absent when nothing was uploaded', () => {
-    assert.equal(screenshotsLink({}), undefined);
-    assert.equal(screenshotsLink({ screenshotsUrl: '' }), undefined);
-  });
-
-  it('refuses anything but a plain https URL', () => {
-    assert.equal(
-      screenshotsLink({ screenshotsUrl: 'javascript:alert(1)' }),
-      undefined,
-    );
-  });
-
-  it('follows the vitest attachments in the stdout footer', () => {
-    const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
-
-    const lines = overviewLines(run, {
-      attachmentsUrl: 'https://x/a',
-      screenshotsUrl: URL,
-    });
-
-    assert.deepEqual(lines.slice(-3), [
-      '',
-      '   vitest attachments: https://x/a',
-      `   cypress screenshots: ${URL}`,
-    ]);
-  });
-});
-
 describe('tracesLink', () => {
   const URL = 'https://github.com/o/r/actions/runs/1/artifacts/7';
 
@@ -1135,17 +1097,21 @@ describe('tracesLink', () => {
     assert.equal(tracesLink({ tracesUrl: '' }), undefined);
   });
 
-  it('follows the Cypress screenshots in the stdout footer', () => {
+  it('refuses anything but a plain https URL', () => {
+    assert.equal(tracesLink({ tracesUrl: 'javascript:alert(1)' }), undefined);
+  });
+
+  it('follows the vitest attachments in the stdout footer', () => {
     const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
 
     const lines = overviewLines(run, {
-      screenshotsUrl: 'https://x/c',
+      attachmentsUrl: 'https://x/a',
       tracesUrl: URL,
     });
 
     assert.deepEqual(lines.slice(-3), [
       '',
-      '   cypress screenshots: https://x/c',
+      '   vitest attachments: https://x/a',
       `   playwright traces: ${URL}`,
     ]);
   });
@@ -1165,17 +1131,17 @@ describe('a11yScreenshotsLink', () => {
     assert.equal(a11yScreenshotsLink({ a11yScreenshotsUrl: '' }), undefined);
   });
 
-  it('follows the Cypress screenshots in the stdout footer', () => {
+  it('follows the Playwright traces in the stdout footer', () => {
     const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
 
     const lines = overviewLines(run, {
-      screenshotsUrl: 'https://x/c',
+      tracesUrl: 'https://x/t',
       a11yScreenshotsUrl: URL,
     });
 
     assert.deepEqual(lines.slice(-3), [
       '',
-      '   cypress screenshots: https://x/c',
+      '   playwright traces: https://x/t',
       `   axe screenshots: ${URL}`,
     ]);
   });

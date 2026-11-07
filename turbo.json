@@ -32,20 +32,12 @@
         "$TURBO_DEFAULT$",
         "src/**/*.ts",
         "vitest.config.ts",
-        "vitest.setup.ts",
-        "cypress.config.ts"
+        "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      // CYPRESS_video: CI disables Cypress recording (build-test.yml);
-      // strict env mode would scrub the override before it reaches Cypress.
       // CI, GITHUB_ACTIONS: they only pick reporters, so the artifact is
       // identical either way — hashing them would wall laptops off from CI's cache.
-      "passThroughEnv": [
-        "WRANGLER_LOG",
-        "CYPRESS_video",
-        "CI",
-        "GITHUB_ACTIONS"
-      ]
+      "passThroughEnv": ["WRANGLER_LOG", "CI", "GITHUB_ACTIONS"]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -563,8 +555,8 @@
       "dependsOn": ["^build"],
       "with": ["@www/lit-ui-router.dev#wrangler:dev"],
       // Override of the default in www/lit-ui-router.dev/dev-port.ts; both the
-      // server and the Cypress config read it, so it must reach both.
-      // E2E_BASE_URL points the Cypress config at another origin instead.
+      // server and the Playwright config read it, so it must reach both.
+      // E2E_BASE_URL points the Playwright config at another origin instead.
       "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL"],
       "cache": false,
       "persistent": true

@@ -1,5 +1,5 @@
 # CI pipeline for pull requests, main pushes and dispatches.
-# Runs build, tests (Vitest + Playwright + Cypress), and Codecov upload.
+# Runs build, tests (Vitest + Playwright), and Codecov upload.
 #
 # Branch-head pushes are handled by build-test-branch.yml instead. Splitting by
 # trigger keeps each event from instantiating the other's jobs, and it is what
@@ -26,10 +26,6 @@ on:
         description: 'Run the ci:main superset (main-only guards included); combine with force to deflake the full main graph'
         type: boolean
         default: false
-      cypressVideo:
-        description: 'Record Cypress videos and upload them as a run artifact (e2e debugging)'
-        type: boolean
-        default: false
 
 # Cancel superseded runs per event per ref; never cancel main runs.
 concurrency:
@@ -54,7 +50,6 @@ jobs:
       # Main pushes build the superset; the dispatch input asks for it against
       # any ref. `inputs` is null on pull_request, so PRs get the PR graph.
       mainGraph: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
-      cypressVideo: ${{ inputs.cypressVideo || false }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

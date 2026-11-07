@@ -113,7 +113,6 @@ run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE}'
 
 [tasks.setup.env]
 RELEASE_CLOSURE = "{{vars.release_closure}}"
-CYPRESS_INSTALL_BINARY = "0"
 # npm config for the examples/*
 NPM_CONFIG_AUDIT = "false"
 NPM_CONFIG_FUND = "false"
@@ -295,7 +294,7 @@ run = [
 ]
 
 [tasks.test_e2e]
-# The e2e umbrella: turbo runs and caches the Cypress suites,
+# The e2e umbrella: turbo runs and caches the Playwright suites,
 # start-server-and-test owns the dev server they share (turbo has no lifecycle
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
@@ -310,8 +309,7 @@ run = [
 # than displace it.
 #
 # WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
-# resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
-# passThroughEnv.
+# resolves. WRANGLER_LOG reaches the suites through the tasks' passThroughEnv.
 #
 # --base-url (E2E_BASE_URL) runs the suites against an already-served origin and
 # starts no server; build_www stays, since the suites' build edge reaches the
@@ -322,7 +320,7 @@ run = [
 # task invoked from a package directory gets a silently narrowed plan.
 depends = ["build_www", "turbo_force_guard"]
 dir = "{{config_root}}"
-description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+description = "Run the Playwright e2e suites via turbo, around one shared dev server"
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"

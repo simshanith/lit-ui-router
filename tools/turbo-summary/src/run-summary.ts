@@ -28,8 +28,6 @@
 //      the uncapped copy of the capped lists this prints),
 //      VITEST_ATTACHMENTS_ARTIFACT_URL (the uploaded `.vitest/` dirs, linked
 //      when a failing spec wrote a screenshot or attachment),
-//      CYPRESS_SCREENSHOTS_ARTIFACT_URL (the uploaded Cypress screenshots,
-//      linked when an e2e suite failed),
 //      PLAYWRIGHT_TRACES_ARTIFACT_URL (the uploaded Playwright traces, linked
 //      when an e2e suite failed),
 //      A11Y_SCREENSHOTS_ARTIFACT_URL (the uploaded axe screenshots, linked
@@ -202,7 +200,6 @@ async function main(): Promise<void> {
       artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
       fileNames: runs.map((run) => run.fileName ?? ''),
       attachmentsUrl: process.env.VITEST_ATTACHMENTS_ARTIFACT_URL,
-      screenshotsUrl: process.env.CYPRESS_SCREENSHOTS_ARTIFACT_URL,
       tracesUrl: process.env.PLAYWRIGHT_TRACES_ARTIFACT_URL,
       a11yScreenshotsUrl: process.env.A11Y_SCREENSHOTS_ARTIFACT_URL,
       logsUrl: process.env.TURBO_LOGS_ARTIFACT_URL,

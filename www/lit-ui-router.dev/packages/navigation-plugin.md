@@ -23,7 +23,7 @@ The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where
 navigations actually commit and events actually fire — run on Chromium on every
 pull request via `test`/`test:coverage`, and on Firefox and WebKit on every
 push to `main` via `test:engines` (on demand through a `ci-main/` branch or the
-`mainGraph` dispatch). The Cypress end-to-end suite runs in Chrome only.
+`mainGraph` dispatch). The Playwright end-to-end suite runs in Chrome only.
 
 ## How location plugins fit in
 
@@ -272,7 +272,7 @@ router.transitionService.onSuccess({}, () => {
 The <a href="/app" target="_self">sample app</a> boots this plugin by default,
 so it is running the rule live: see
 [`ga.js`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/util/ga.js),
-whose Cypress suite asserts the resulting `page_view` counts separately under
+whose e2e suite asserts the resulting `page_view` counts separately under
 each location plugin.
 
 ## Reaching past the router
