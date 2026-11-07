@@ -9,6 +9,7 @@ import {
 } from '@pierre/diffs';
 import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
 import DiffsWorker from '@pierre/diffs/worker/worker.js?worker';
+import { html, render as renderTemplate, type TemplateResult } from 'lit';
 
 import type { DiffFile, DiffIndex } from './diff-data.ts';
 import type { DiffTree, TreeFile } from './release-diff-tree.ts';
@@ -186,6 +187,20 @@ const listItems = (
     }),
   );
 
+/** The header button that folds a file's diff down to its header; it reads as the file's path plus its expanded state. */
+const foldToggle = (
+  path: string,
+  collapsed: boolean,
+  onClick: () => void,
+): TemplateResult =>
+  html`<button
+    type="button"
+    class="diff-file-toggle"
+    aria-label=${path}
+    aria-expanded=${String(!collapsed)}
+    @click=${onClick}
+  ></button>`;
+
 /** Renders a file's diff into its item, the first time it's asked to. */
 const diffRenderer = (
   items: ReadonlyMap<string, HTMLLIElement>,
@@ -207,20 +222,42 @@ const diffRenderer = (
   return (file) => {
     if (rendered.has(file.name)) return;
     rendered.add(file.name);
-    new FileDiff(
+
+    const item = items.get(file.name);
+
+    const diff = new FileDiff(
       {
         theme: THEME,
         themeType,
         diffStyle: 'unified',
         overflow: 'scroll',
         hunkSeparators: 'line-info',
+        stickyHeader: true,
         unsafeCSS: CONTRAST_CSS,
         onPostRender: focusScrollers,
       },
       pool,
-    ).render({
+    );
+
+    const prefix = document.createElement('span');
+    let collapsed = false;
+
+    const fold = (): void => {
+      collapsed = !collapsed;
+      renderTemplate(foldToggle(file.name, collapsed, fold), prefix);
+      diff.setOptions({ ...diff.options, collapsed });
+      diff.rerender();
+
+      // Folded from its sticky header, a file would leave the reader past its end.
+      if (item && item.getBoundingClientRect().top < 0)
+        item.scrollIntoView({ block: 'start' });
+    };
+
+    renderTemplate(foldToggle(file.name, collapsed, fold), prefix);
+    diff.setOptions({ ...diff.options, renderHeaderPrefix: () => prefix });
+    diff.render({
       fileDiff: setLanguageOverride(file, languageOf(file)),
-      containerWrapper: items.get(file.name),
+      containerWrapper: item,
     });
   };
 };

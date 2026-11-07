@@ -418,6 +418,36 @@ body:has(.npm-diff) > .content-grid {
 .diff-files > li {
   scroll-margin-block-start: 1rem;
 }
+.diff-file-toggle {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  margin-inline-end: 0.25rem;
+  color: var(--site-color-text-muted);
+  background: none;
+  border: 0;
+  border-radius: var(--site-radius-control);
+  touch-action: manipulation;
+}
+.diff-file-toggle::before {
+  content: '';
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-block-end: 2px solid;
+  border-inline-end: 2px solid;
+  rotate: 45deg;
+  translate: 0 -0.1rem;
+}
+.diff-file-toggle[aria-expanded='false']::before {
+  rotate: -45deg;
+  translate: -0.1rem 0;
+}
+.diff-file-toggle:focus-visible {
+  outline: 2px solid var(--site-color-interaction);
+  outline-offset: 1px;
+}
 @media (min-width: 60rem) {
   .diff-layout {
     grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
@@ -438,8 +468,11 @@ body:has(.npm-diff) > .content-grid {
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .diff-nav-toggle::before {
-    transition: rotate 200ms var(--ease-out);
+  .diff-nav-toggle::before,
+  .diff-file-toggle::before {
+    transition:
+      rotate 200ms var(--ease-out),
+      translate 200ms var(--ease-out);
   }
 }
 .visually-hidden {
@@ -471,6 +504,10 @@ ui-view {
   }
   .compare button:hover {
     background: var(--vp-button-brand-hover-bg);
+  }
+  .diff-file-toggle:hover {
+    color: var(--site-color-text);
+    background: var(--site-color-surface-soft);
   }
 }
 
