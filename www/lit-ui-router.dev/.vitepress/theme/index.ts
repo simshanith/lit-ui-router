@@ -12,12 +12,15 @@ import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
 import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
+import VersionBanner from './components/VersionBanner.vue';
+import VersionMenu from './components/VersionMenu.vue';
 
 export default {
   extends: DefaultTheme,
   // The 404 layout renders no <main>; its not-found slot wraps the stock page in one.
   Layout: () =>
     h(DefaultTheme.Layout, null, {
+      'layout-top': () => h(VersionBanner),
       'not-found': () => h('main', h(NotFound)),
       'home-hero-actions-before-actions': () => h(HeroInstall),
     }),
@@ -29,5 +32,6 @@ export default {
     app.component('FrameworkSpectrum', FrameworkSpectrum);
     app.component('FrameworkCards', FrameworkCards);
     app.component('ReleaseDiffPicker', ReleaseDiffPicker);
+    app.component('VersionMenu', VersionMenu);
   },
 } satisfies Theme;
