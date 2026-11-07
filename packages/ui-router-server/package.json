@@ -37,6 +37,11 @@
       "node": "./dist/node-conditions.node.js",
       "default": "./dist/node-conditions.js"
     },
+    "#node-output": {
+      "types": "./src/node-output.ts",
+      "node": "./dist/node-output.node.js",
+      "default": "./dist/node-output.js"
+    },
     "#prerender-thread": {
       "node": "./dist/prerender-thread.js"
     }
