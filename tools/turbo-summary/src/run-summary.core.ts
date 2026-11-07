@@ -1069,7 +1069,7 @@ export function tracesLink(
   if (url === undefined) return undefined;
 
   return {
-    markdown: `[Playwright traces](<${url}>) — DOM, console and network for each failing e2e test, downloadable from this run's artifacts; open one with \`playwright show-trace\`.`,
+    markdown: `[Playwright traces](<${url}>) — a screenshot and a trace (DOM, console, network) for each failing e2e test, downloadable from this run's artifacts; open a trace with \`playwright show-trace\`.`,
     line: `   playwright traces: ${url}`,
   };
 }
