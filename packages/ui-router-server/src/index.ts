@@ -11,7 +11,7 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
-import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
+import type { RawParams, StateRule } from '@uirouter/core';
 
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
@@ -631,13 +631,10 @@ const makeSimulateLoader = (): (() => Promise<SimulateModule>) => {
 };
 
 const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
-  // Fresh declarations per call: core mutates registrations, so sharing
-  // them across concurrent resolutions is the hazard the copy prevents.
-  const states: StateDeclaration[] = mount.config.routes.map((route) => ({
-    ...route,
-  }));
-
-  const router = simulate.createHeadlessRouter(states, mount.config.config);
+  const router = simulate.createHeadlessRouter(
+    mount.config.routes,
+    mount.config.config,
+  );
 
   // The real rule, replayed: otherwise() only fires when no other rule
   // matches, and the url-less target leaves the memory location unmoved.
