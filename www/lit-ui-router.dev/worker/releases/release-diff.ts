@@ -186,6 +186,27 @@ const listItems = (
     }),
   );
 
+/** The header button that folds a file's diff down to its header; it reads as the file's path plus its expanded state. */
+const collapseToggle = (
+  path: string,
+  onToggle: (collapsed: boolean) => void,
+): HTMLButtonElement => {
+  const button = document.createElement('button');
+
+  button.type = 'button';
+  button.className = 'diff-file-toggle';
+  button.setAttribute('aria-expanded', 'true');
+  button.setAttribute('aria-label', path);
+  button.addEventListener('click', () => {
+    const collapsed = button.getAttribute('aria-expanded') === 'true';
+
+    button.setAttribute('aria-expanded', String(!collapsed));
+    onToggle(collapsed);
+  });
+
+  return button;
+};
+
 /** Renders a file's diff into its item, the first time it's asked to. */
 const diffRenderer = (
   items: ReadonlyMap<string, HTMLLIElement>,
@@ -207,20 +228,36 @@ const diffRenderer = (
   return (file) => {
     if (rendered.has(file.name)) return;
     rendered.add(file.name);
-    new FileDiff(
+
+    const item = items.get(file.name);
+
+    const diff = new FileDiff(
       {
         theme: THEME,
         themeType,
         diffStyle: 'unified',
         overflow: 'scroll',
         hunkSeparators: 'line-info',
+        stickyHeader: true,
         unsafeCSS: CONTRAST_CSS,
         onPostRender: focusScrollers,
       },
       pool,
-    ).render({
+    );
+
+    const toggle = collapseToggle(file.name, (collapsed) => {
+      diff.setOptions({ ...diff.options, collapsed });
+      diff.rerender();
+
+      // Folding a file read past its top leaves the reader where it was.
+      if (item && item.getBoundingClientRect().top < 0)
+        item.scrollIntoView({ block: 'start' });
+    });
+
+    diff.setOptions({ ...diff.options, renderHeaderPrefix: () => toggle });
+    diff.render({
       fileDiff: setLanguageOverride(file, languageOf(file)),
-      containerWrapper: items.get(file.name),
+      containerWrapper: item,
     });
   };
 };
