@@ -4,9 +4,8 @@ import { describe, it } from 'node:test';
 import {
   comparePaths,
   filterCounts,
-  filterOf,
+  filterNamed,
   shows,
-  urlWithFilter,
 } from '../releases/npm-diff/file-filter.ts';
 
 // Index entries as the release-diffs worker lists their presets.
@@ -31,20 +30,10 @@ describe('the diff page file presets', () => {
     assert.deepEqual(filterCounts(FILES), { src: 2, js: 1, types: 1, all: 5 });
   });
 
-  it('reads the preset from the search, defaulting to Source', () => {
-    assert.equal(filterOf(''), 'src');
-    assert.equal(filterOf('?files=types'), 'types');
-    assert.equal(filterOf('?files=nope'), 'src');
-  });
-
-  it('names a preset other than the default in the url', () => {
-    const base = 'https://lit-ui-router.dev/releases/x/diff/1.0.0...1.1.0/';
-
-    assert.equal(urlWithFilter(`${base}#top`, 'js'), `${base}?files=js#top`);
-    assert.equal(
-      urlWithFilter(`${base}?files=js&ref=a`, 'src'),
-      `${base}?ref=a`,
-    );
+  it('reads the preset a param names, defaulting to Source', () => {
+    assert.equal(filterNamed(undefined), 'src');
+    assert.equal(filterNamed('types'), 'types');
+    assert.equal(filterNamed('nope'), 'src');
   });
 
   it('orders paths as the tree lists them: directories first, then natural order', () => {
