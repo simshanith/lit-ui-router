@@ -22,7 +22,7 @@ import {
   CLAIMS_QUEUE,
   consume,
   DEAD_LETTER_QUEUE,
-  DIST_TAG_READS,
+  PUBLISH_READS,
   type LedgerBatch,
   type LedgerMessage,
   QUEUE_BACKOFF,
@@ -455,7 +455,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
   });
 
   it('records npm and GitHub for a version whose tag is gone', async () => {
-    const message = messageOf(claimOf(), DIST_TAG_READS);
+    const message = messageOf(claimOf(), PUBLISH_READS);
 
     await deliver([message], sees({ ...RELEASED, tag: null, distTags: {} }));
 
@@ -473,7 +473,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       )
       .bind(NAME, VERSION)
       .run();
-    const message = messageOf(claimOf(), DIST_TAG_READS);
+    const message = messageOf(claimOf(), PUBLISH_READS);
 
     await deliver([message], sees({ ...RELEASED, distTags: {} }));
 
@@ -574,7 +574,11 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
   it('records a conflict when npm reports a recorded version absent', async () => {
     await seed(ROWS.released);
-    const message = messageOf(claimOf('2026-10-01T00:00:00.000Z'));
+
+    const message = messageOf(
+      claimOf('2026-10-01T00:00:00.000Z'),
+      PUBLISH_READS,
+    );
 
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
@@ -599,8 +603,17 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.deepEqual(await all('claims'), []);
   });
 
+  it('retries a publish that npm serves no version for yet', async () => {
+    const message = messageOf(claimOf());
+
+    await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
+
+    retriedOnce(message);
+    assert.deepEqual(await all('claims'), []);
+  });
+
   it('records a publish untagged once its dist-tags reads run out', async () => {
-    const message = messageOf(claimOf(), DIST_TAG_READS);
+    const message = messageOf(claimOf(), PUBLISH_READS);
 
     await deliver(
       [message],
@@ -648,8 +661,8 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     );
   });
 
-  it('folds a GitHub release that is ahead of npm', async () => {
-    const message = messageOf(claimOf());
+  it('folds a GitHub release that is ahead of npm once its reads run out', async () => {
+    const message = messageOf(claimOf(), PUBLISH_READS);
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
     assert.equal(message.acks, 1);

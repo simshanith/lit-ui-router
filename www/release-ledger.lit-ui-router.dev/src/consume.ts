@@ -167,21 +167,25 @@ const distTagChanges = (
     return outcomes;
   });
 
-/** Deliveries a publish run's claim waits for npm to point a dist-tag at its version. */
-export const DIST_TAG_READS = 5;
+/** Deliveries a publish run's claim waits for npm to serve its version and point a dist-tag at it. */
+export const PUBLISH_READS = 5;
 
-/** A publish run's dist-tags read that names no tag for its published version is `stale` until the reads run out. */
-export function distTagRead(
+/** A publish run's read that misses its version or every tag for it is `stale` until the reads run out; a dist-tags 404 proves nothing. */
+export function publishRead(
   origin: Claim['origin']['kind'],
   version: string,
   { npm, distTags }: Pick<Sources, 'npm' | 'distTags'>,
   attempts: number,
-): 'confirmed' | 'stale' | 'unconfirmed' {
-  if (origin !== 'run' || npm === null || distTags === null) return 'confirmed';
+): 'visible' | 'stale' | 'unconfirmed' {
+  if (origin !== 'run') return 'visible';
 
-  if (Object.values(distTags).includes(version)) return 'confirmed';
+  const missing =
+    npm === null ||
+    (distTags !== null && !Object.values(distTags).includes(version));
 
-  return attempts < DIST_TAG_READS ? 'stale' : 'unconfirmed';
+  if (!missing) return 'visible';
+
+  return attempts < PUBLISH_READS ? 'stale' : 'unconfirmed';
 }
 
 const handleClaim = (message: LedgerMessage, claim: Claim) =>
@@ -202,15 +206,16 @@ const handleClaim = (message: LedgerMessage, claim: Claim) =>
     const sources = yield* (yield* Observer).observe(claim.name, claim.version);
     const { tag, npm, gh } = sources;
 
-    const read = distTagRead(
+    const read = publishRead(
       claim.origin.kind,
       claim.version,
       sources,
       message.attempts,
     );
 
-    if (read !== 'confirmed') {
-      const seen = `npm dist-tags name no tag for ${claim.name}@${claim.version} (read ${message.attempts} of ${DIST_TAG_READS})`;
+    if (read !== 'visible') {
+      const missing = npm === null ? 'serves no' : 'dist-tags name no tag for';
+      const seen = `npm ${missing} ${claim.name}@${claim.version} (read ${message.attempts} of ${PUBLISH_READS})`;
 
       if (read === 'stale') {
         yield* Effect.logInfo(`${seen}; retrying`);
@@ -218,7 +223,7 @@ const handleClaim = (message: LedgerMessage, claim: Claim) =>
         return RETRY;
       }
 
-      yield* Effect.logWarning(`${seen}; recording it untagged`);
+      yield* Effect.logWarning(`${seen}; recording what npm answered`);
     }
 
     const envelope = envelopeOf(claim);

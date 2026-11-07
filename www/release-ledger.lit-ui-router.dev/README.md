@@ -39,9 +39,9 @@ draws the worker, its queue and its readers.
   the redelivery delay instead ([`src/observe.ts`](./src/observe.ts)).
   Redeliveries back off exponentially with jitter.
   A 404 for the package's dist-tags leaves the recorded dist-tags untouched.
-  npm's dist-tags can lag a publish, so a publish run's claim whose dist-tags
-  name no tag for its version is redelivered, up to `DIST_TAG_READS`
-  deliveries, before it is recorded as read.
+  npm can lag a publish, so a publish run's claim that npm serves no version
+  for, or whose dist-tags name no tag for its version, is redelivered, up to
+  `PUBLISH_READS` deliveries, before it is recorded as read.
   A message that is not a claim is recorded `undecodable` without retries. The
   dead-letter queue's consumer records a claim whose retries ran out as
   `exhausted`, unless its message already has a row.
