@@ -14,17 +14,23 @@ That production-like flow builds the docs site (which embeds every app's
 build), serves it with wrangler on port 8787, and runs the Cypress suites in
 parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`):
 
-| Suite        | Target          | Covers                                                                                                                                                             |
-| ------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `vanilla`    | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                                           |
-| `mobx`       | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                                              |
-| `effect`     | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                                            |
-| `signals`    | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                                           |
-| `docs`       | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                                                |
-| `hash`       | `/app/`         | vanilla app under the `hash` location plugin                                                                                                                       |
-| `a11y`       | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount                         |
-| `pushState`  | `/app/`         | vanilla app under the `pushState` fallback                                                                                                                         |
-| `playwright` | `/app/`         | vanilla app, default routing, under Playwright Test (`playwright.config.ts`): `sample_app.cy.js` ported, screenshots and traces kept on failure in `test-results/` |
+| Suite                  | Target          | Covers                                                                                                                                          |
+| ---------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`              | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                        |
+| `mobx`                 | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                           |
+| `effect`               | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                         |
+| `signals`              | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                        |
+| `docs`                 | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                             |
+| `hash`                 | `/app-hash/`    | vanilla app under the `hash` location plugin                                                                                                    |
+| `a11y`                 | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount      |
+| `pushstate`            | `/app/`         | vanilla app under the `pushState` fallback                                                                                                      |
+| `playwright-vanilla`   | `/app/`         | `vanilla` under Playwright Test: the `vanilla` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`     |
+| `playwright-mobx`      | `/app-mobx/`    | `mobx` under Playwright Test: the `mobx` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
+| `playwright-effect`    | `/app-effect/`  | `effect` under Playwright Test: the `effect` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`       |
+| `playwright-signals`   | `/app-signals/` | `signals` under Playwright Test: the `signals` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`     |
+| `playwright-docs`      | site + mounts   | `docs` under Playwright Test: the `docs` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
+| `playwright-hash`      | `/app-hash/`    | `hash` under Playwright Test: the `hash` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
+| `playwright-pushstate` | `/app/`         | `pushstate` under Playwright Test: the `pushstate` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/` |
 
 Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
@@ -165,7 +171,10 @@ The support file seeds the app's `featureFlags` session storage in
 `cy.visit`'s `onBeforeLoad` — hash routing never rewrites `location.search`,
 so a `?feature-location-plugin` URL param would pin the flag as
 URL-overridden for the whole session. Explicit per-spec `features` passed to
-`visitWithFeatures` still go through the URL param.
+`visitWithFeatures` still go through the URL param. The Playwright projects carry the
+plugin as the `locationPlugin` option in `playwright.config.ts`, and the `page`
+fixture in `src/playwright/app/fixtures.ts` seeds the same key through
+`addInitScript`.
 
 The `vanilla` and `mobx` suites seed nothing, so they exercise the app's own
 resolution — the Navigation API, with pushState only where the browser lacks
