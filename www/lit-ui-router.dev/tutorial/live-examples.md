@@ -9,7 +9,8 @@ Every tutorial example in one place. The Preview tab runs the built app served
 by this site; the Edit in StackBlitz tab boots an editable workspace installed
 from the published npm packages. Each example routes with
 `hashLocationPlugin`, so navigation stays inside the frame — open one in its
-own tab to watch the URL change.
+own tab to watch the URL change. The Eleventy example is the exception: it is a
+prerendered static site with real paths.
 
 ## Hello World
 
@@ -59,6 +60,17 @@ view's light-travel clock ticks only while something watches it, and the tab
 title tracks the route with no component at all.
 
 <LiveExample name="hellosolarsystem-signals" />
+
+## Hello Solar System (Eleventy SSR)
+
+The same states and resolves, prerendered to static pages by
+[Eleventy](https://www.11ty.dev) and
+[`lit-ui-router-ssr`](/packages/ssr). One `prerender()` decides what each path
+is and renders it; Eleventy writes the pages, the 404 page and the redirect
+rules. The client adopts the served page instead of rendering it again.
+Walkthrough: [Prerender with Eleventy](/guides/prerender-with-eleventy).
+
+<LiveExample name="hellosolarsystem-eleventy" />
 
 ## Hello Galaxy
 

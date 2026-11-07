@@ -95,7 +95,8 @@ virtual fs instead.
 `ui-router-server/vite`'s, with the DOM shim and `lit-ui-router-ssr/register` loaded before the
 prerender script, and its `definePrerender` calls this package's `prerender` with the options the
 script returns; [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows
-both files in full.
+both files in full. [Prerender with Eleventy](https://lit-ui-router.dev/guides/prerender-with-eleventy)
+calls `prerender` from an Eleventy data file instead, and lets Eleventy write the pages.
 
 ## Static hosts add a trailing slash
 

@@ -27,6 +27,9 @@ client deployed across every point on the server-support spectrum.
   option and a prerender script turn `vite build` into one HTML page per
   route, a `404.html` and a `_redirects` file, decided by the app's own route
   table
+- [Prerender with Eleventy](./prerender-with-eleventy) — Eleventy writes the
+  pages, the layout and the host rules; `prerender()` decides what each path
+  is and renders it, and the client adopts the served page
 
 ## Transitions & Guards
 
