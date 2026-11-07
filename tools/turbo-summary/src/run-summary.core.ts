@@ -986,6 +986,11 @@ export interface OverviewContext {
    */
   screenshotsUrl?: string;
   /**
+   * The uploaded Playwright Test `test-results/` dir. Uploaded only by a
+   * failed e2e suite, so a URL here always has something behind it.
+   */
+  tracesUrl?: string;
+  /**
    * The uploaded check-a11y `a11y-screenshots/` dir. Uploaded only by a failed
    * axe pass, so a URL here always has something behind it.
    */
@@ -1052,6 +1057,20 @@ export function screenshotsLink(
   return {
     markdown: `[Cypress screenshots](<${url}>) — the page as each failing e2e test left it, downloadable from this run's artifacts.`,
     line: `   cypress screenshots: ${url}`,
+  };
+}
+
+/** Link to the traces Playwright Test kept for each failing e2e test. */
+export function tracesLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const url = safeArtifactUrl(context.tracesUrl);
+
+  if (url === undefined) return undefined;
+
+  return {
+    markdown: `[Playwright traces](<${url}>) — DOM, console and network for each failing e2e test, downloadable from this run's artifacts; open one with \`playwright show-trace\`.`,
+    line: `   playwright traces: ${url}`,
   };
 }
 
@@ -1224,6 +1243,7 @@ function footerMarkdown(context: OverviewContext): string[] {
   for (const link of [
     attachmentsLink(context),
     screenshotsLink(context),
+    tracesLink(context),
     a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),
@@ -1370,6 +1390,7 @@ function footerLines(context: OverviewContext): string[] {
   const links = [
     attachmentsLink(context),
     screenshotsLink(context),
+    tracesLink(context),
     a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),
