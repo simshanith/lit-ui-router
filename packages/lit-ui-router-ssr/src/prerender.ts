@@ -28,7 +28,7 @@ import { LightElementRenderer } from './light-element-renderer.js';
 import { responder } from './respond.js';
 import type { BoundResponses } from './respond.js';
 import { packageVersion, routeOf, signatureAttribute } from './signature.js';
-import { UiViewRenderer } from './ui-view-renderer.js';
+import { collectDrawnViews, UiViewRenderer } from './ui-view-renderer.js';
 
 export type {
   EmittedPage,
@@ -242,6 +242,7 @@ interface WrittenSignature {
   readonly version: string;
   readonly state: string;
   readonly params: Readonly<Record<string, string | string[]>>;
+  readonly views?: readonly string[];
   readonly resolves?: ResolvePayload['resolves'];
   readonly transported?: ResolvePayload['transported'];
 }
@@ -249,13 +250,17 @@ interface WrittenSignature {
 /** What a page's signature carries of its resolve payload. */
 type DrawnResolves = Pick<ResolvePayload, 'resolves' | 'transported'>;
 
-/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the payload's `resolves` and `transported` when given. */
+/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the views drawn and the payload's `resolves` and `transported` when given. */
 export const signatureOf = (
   router: UIRouterLit,
   drawn?: DrawnResolves,
+  views?: readonly string[],
 ): WrittenSignature => {
   const [state, params] = routeOf(router.globals);
-  const signature = { version: packageVersion, state, params };
+
+  const signature = views
+    ? { version: packageVersion, state, params, views }
+    : { version: packageVersion, state, params };
 
   if (!drawn) return signature;
 
@@ -289,7 +294,8 @@ const payloadBytes = (router: UIRouterLit, drawn: DrawnResolves): number =>
 
 /**
  * Renders one page: the signature first, then the render, so the client reads
- * the one before it hydrates the other.
+ * the one before it hydrates the other. The signature names every `<ui-view>`
+ * the render drew a routed component into, so it is written after the render.
  *
  * @internal
  */
@@ -299,19 +305,23 @@ export const renderPage = (
   root: EventTarget,
   elementRenderers: RenderInfo['elementRenderers'],
   drawn?: DrawnResolves,
-): string =>
-  signatureBlock(signatureOf(router, drawn)) +
-  withRouterSync(router, () =>
-    collectResultSync(
-      render(body, {
-        // a fresh array per render: @lit-labs/ssr mutates the stack
-        eventTargetStack: rootedStack(root),
-        elementRenderers,
-        // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
-        deferHydration: true,
-      }),
+): string => {
+  const [markup, views] = collectDrawnViews(() =>
+    withRouterSync(router, () =>
+      collectResultSync(
+        render(body, {
+          // a fresh array per render: @lit-labs/ssr mutates the stack
+          eventTargetStack: rootedStack(root),
+          elementRenderers,
+          // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
+          deferHydration: true,
+        }),
+      ),
     ),
   );
+
+  return signatureBlock(signatureOf(router, drawn, views)) + markup;
+};
 
 const warnUnregistered = (): void => {
   // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
@@ -340,8 +350,10 @@ const warnUnregistered = (): void => {
  *
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
- * package's version and the state and parameter values the router stood on,
- * which `hydrateRoot()` reads before it touches the document.
+ * package's version, the state and parameter values the router stood on, and
+ * the fully qualified name of each `<ui-view>` it drew a routed component
+ * into, which `hydrateRoot()` reads before it touches the document and
+ * `bootstrap()` reports each view's outcome against.
  * {@link PrerenderOptions.dehydrate | `dehydrate`}, or a
  * {@link PrerenderOptions.payload | `payload`} hook, adds the resolved values
  * the page was drawn with, which `bootstrap()` adopts; the page's entry in

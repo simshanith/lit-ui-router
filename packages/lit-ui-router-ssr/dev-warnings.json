@@ -5,6 +5,7 @@
     "lit-ui-router-ssr: this light-DOM element could not adopt the server render, so it rendered over it instead. Its server and client render() disagree, or a child its use site wrote beside lightSlot() carries bindings of its own.",
     "lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: boot with bootstrap(), or call router.start(), await its first successful transition, then hydrateRoot().",
     "lit-ui-router-ssr: this document was drawn for another state than the one the client booted into, so bootstrap() rendered the views that differ cold and adopted the rest.",
+    "lit-ui-router-ssr: this document booted into the state it was drawn for, but none of the views it was drawn with adopted the served render, so the page shows a client render.",
     "lit-ui-router-ssr: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.",
     "lit-ui-router-ssr: this light-DOM element woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Hydrate the page with hydrateRoot() or bootstrap() from lit-ui-router-ssr/client.",
     "lit-ui-router-ssr: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. ",

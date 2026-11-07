@@ -712,7 +712,7 @@ describe('the hydration signature', () => {
     });
   };
 
-  it('opens a rendered page on the version, the state and its params', async () => {
+  it('opens a rendered page on the version, the state, its params and the views drawn', async () => {
     const { files } = await settled(['/sheet/7B']);
     const page = files.get('dist/sheet/7B/index.html')!;
 
@@ -720,6 +720,7 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
     });
     expect(outline(parseMarkup(withoutSignature(page)))[0]).toMatch(
       /^<!--lit-part /,
@@ -778,6 +779,7 @@ describe('the hydration signature', () => {
       version,
       state: 'configured',
       params: { q: '1' },
+      views: [],
     });
   });
 
@@ -808,6 +810,7 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
       resolves: { sheet: { title: '</script> 7B' } },
     });
   });

@@ -186,11 +186,36 @@ describe('bootstrap', () => {
     expect(result).toEqual({
       outcome: 'adopted',
       signature: 'matched',
+      views: new Map([
+        ['$default', { outcome: 'adopted', view: views(container)[0] }],
+        [
+          '$default.$default',
+          { outcome: 'adopted', view: views(container)[1] },
+        ],
+      ]),
       router: result.router,
     });
     expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('names a named view alike on both sides', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/split/both'));
+
+    const result = await bootAt(container, rootTemplate, '/split/both');
+
+    const drawn = readHydrationSignature(container)?.views;
+    expect(drawn).toEqual(['$default', '$default.$default', '$default.aside']);
+    expect([...result.views.keys()]).toEqual(drawn);
+    expect([...result.views.values()].map(({ outcome }) => outcome)).toEqual([
+      'adopted',
+      'adopted',
+      'adopted',
+    ]);
+    expect(container.querySelector('.other')?.textContent).toBe('other');
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -634,6 +659,87 @@ describe('bootstrap', () => {
     await expect(
       bootstrap(router, container, rootTemplate(router)),
     ).rejects.toThrow('start() called multiple times');
+  });
+
+  describe('over a document whose served view was emptied before boot', () => {
+    const noneAdopted = (warn: { mock: { calls: unknown[][] } }): unknown[][] =>
+      warn.mock.calls.filter(([message]) =>
+        String(message).includes('none of the views it was drawn with'),
+      );
+
+    /** The drawn document, with everything between the outer view's served pair dropped, as a re-render that wrote an empty view leaves it. */
+    const emptied = async (): Promise<HTMLElement> => {
+      const { container } = serve(await drawShell('/shell/detail'));
+      const [outer] = views(container);
+
+      const pair = [...outer.childNodes].filter(
+        (node) => node.nodeType === Node.COMMENT_NODE,
+      );
+
+      outer.replaceChildren(pair[0], pair.at(-1)!);
+
+      return container;
+    };
+
+    it('says in the result that no drawn view adopted', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const container = await emptied();
+
+      const result = await bootAt(container, rootTemplate, '/shell/detail');
+
+      const [outer] = views(container);
+      expect(result.outcome).toBe('adopted');
+      expect(Object.fromEntries(result.views)).toEqual({
+        $default: { outcome: 'none', view: outer },
+        '$default.$default': { outcome: 'pending' },
+      });
+      expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    });
+
+    it('warns once in development', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await bootAt(await emptied(), rootTemplate, '/shell/detail');
+
+      expect(noneAdopted(warn)).toHaveLength(1);
+    });
+
+    it('says nothing in production, where the warning is folded away', async () => {
+      vi.stubEnv('DEV', false);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        await bootAt(await emptied(), rootTemplate, '/shell/detail');
+      } finally {
+        vi.unstubAllEnvs();
+      }
+
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  it('keeps the asleep warning quiet through a boot transition slower than a task', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    const slow = makeRouter(
+      () =>
+        new Promise<string>((resolve) => {
+          setTimeout(() => resolve('leaf'), 20);
+        }),
+    );
+
+    const result = await bootAt(
+      container,
+      rootTemplate,
+      '/shell/detail',
+      {},
+      slow,
+    );
+
+    expect(result.outcome).toBe('adopted');
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(warn).not.toHaveBeenCalled();
   });
 });
 
@@ -1501,13 +1607,14 @@ describe('the hydration signature', () => {
     vi.unstubAllEnvs();
   });
 
-  it('reads the version, the state and its params off the drawn document', async () => {
+  it('reads the version, the state, its params and the views drawn off the drawn document', async () => {
     const { container } = serve(await drawShell('/shell/detail'));
 
     expect(readHydrationSignature(container)).toEqual({
       version,
       state: 'shell.detail',
       params: {},
+      views: ['$default', '$default.$default'],
     });
   });
 

@@ -571,18 +571,29 @@ router, waits for the boot transition to land, then calls
 [`hydrateRoot`](/api/lit-ui-router-ssr/client/functions/hydrateRoot), which provides
 an adopter under the container with core's
 [`provideContext`](/api/reference/core/provideContext) and runs one
-`hydrate()` walk over it. It resolves once every awake view has updated:
+`hydrate()` walk over it. It resolves once the views that woke have updated:
 
 ```ts
 import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const { outcome, signature } = await bootstrap(router, root, page(router));
+const { outcome, signature, views } = await bootstrap(
+  router,
+  root,
+  page(router),
+);
 ```
 
-`signature` is a
+`outcome` is what the root hydrate came to, `adopted` or `cold`. `signature` is a
 [`BootstrapSignature`](/api/lit-ui-router-ssr/client/type-aliases/BootstrapSignature):
 `matched`, `elsewhere` or `absent`, comparing the state the boot landed on with
-the one the document was drawn for.
+the one the document was drawn for. `views` is a read-only map from each view's
+fully qualified name, such as `$default.$default`, to a
+[`BootstrapViewReport`](/api/lit-ui-router-ssr/client/interfaces/BootstrapViewReport):
+the view's `AdoptOutcome`, or `pending` for a view the document was drawn with
+that had not woken yet. Views are tracked by what they report to the adopter,
+so a view in a shadow root counts like any other, and the adopter stays
+installed until every drawn view has reported. A document that booted where it
+was drawn and adopted none of its drawn views warns once in development.
 
 The cold path is the same call: a container with nothing to adopt, a boot
 transition that fails, and a walk that throws all end in a cold render. The
@@ -593,13 +604,14 @@ whose state or url parameters differ from the drawn ones renders cold.
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
 version, the name of the state the router stood on, that state's url
-parameter values, and the resolved values
+parameter values, the fully qualified name of each `<ui-view>` it drew, and the
+resolved values
 [`dehydrate` or the `payload` hook](#adopting-the-resolves-on-boot) draws.
 It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<script type="application/json" data-lit-ui-router-ssr>{"version":"0.2.0","state":"sheet","params":{"num":"7B"}}</script>
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.9.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`
@@ -649,7 +661,8 @@ or a lost pair dropped them for a cold render, with the cause in `error`, and
 `none` when there was nothing to adopt. The
 [`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option of
 `bootstrap` and `hydrateRoot` receives the same reports for every view the walk
-reaches, so a consumer needs no listener:
+reaches, and for a view in a shadow root its host hydrates after the walk, so a
+consumer needs no listener:
 
 ```ts
 await bootstrap(router, root, page(router), {

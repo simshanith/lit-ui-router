@@ -8,14 +8,14 @@
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
-import { isFunction, RejectType } from '@uirouter/core';
+import { isFunction, isString, RejectType } from '@uirouter/core';
 import type { StateObject, Transition } from '@uirouter/core';
 import { noChange, render } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
-import { provideContext } from 'lit-ui-router/context';
+import { provideContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { seed } from 'ui-router-server/ssr/client';
@@ -23,6 +23,7 @@ import type { ResolvePayload, SeedOptions } from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
+import { bootPendingContext } from './boot-pending.js';
 import { isLightDomElement } from './light-dom-brand.js';
 import { servedMarkerPrefix } from './served-markers.js';
 import {
@@ -225,8 +226,8 @@ interface AdoptPolicy {
   readonly drawn?: (view: AdoptableView) => boolean;
 }
 
-/** The policy of the walk in progress, which the pins it sets carry. */
-let walkPolicy: AdoptPolicy = {};
+/** The policy of the walk in progress, which the pins it sets carry; none outside one, as when a host hydrates its own shadow root. */
+let walkPolicy: AdoptPolicy | undefined;
 
 /** Runs `walk` with `policy` as the one the pins it sets carry. */
 const walkWith = (policy: AdoptPolicy, walk: () => void): void => {
@@ -553,9 +554,13 @@ const pinned = new WeakSet<Element>();
  * garbage collector. A descendant view whose request passes through on its way
  * out is adopted too, and leaves the pin armed for the view it belongs to.
  * The pin carries the policy of the walk that set it, so the view reports to
- * its `onAdopt` wherever and whenever it wakes.
+ * its `onAdopt` wherever and whenever it wakes. A pin set outside any walk —
+ * by a host hydrating its own shadow root after the root walk — asks the
+ * adopter above the view first, so a view in a shadow root reports to the
+ * `onAdopt` of the container it sits in, and adopts on its own only when
+ * nothing above answers.
  */
-const pinAdopter = (view: Element, policy: AdoptPolicy): void => {
+const pinAdopter = (view: Element, policy: AdoptPolicy | undefined): void => {
   if (pinned.has(view)) return;
   pinned.add(view);
   let release = (): void => {};
@@ -563,7 +568,15 @@ const pinAdopter = (view: Element, policy: AdoptPolicy): void => {
   release = provideContext(view, adoptUiViewContext, (woken) => {
     // A descendant's request passes through this element and is answered; only this view's own spends the pin.
     if (woken === view) release();
-    adopt(woken, policy);
+
+    if (policy) return adopt(woken, policy);
+
+    const above = view.parentNode
+      ? requestContext(view.parentNode, adoptUiViewContext)
+      : undefined;
+
+    if (above) return above(woken);
+    adopt(woken, {});
   });
 };
 
@@ -864,16 +877,46 @@ export type BootstrapOutcome = 'adopted' | 'cold';
  */
 export type BootstrapSignature = 'matched' | 'elsewhere' | 'absent';
 
+/**
+ * What one view came to, as {@link BootstrapResult.views} reports it: its
+ * {@link AdoptOutcome}, or `pending` for a view the document was drawn with
+ * that had not woken when {@link bootstrap} resolved.
+ */
+export type BootstrapViewOutcome = AdoptOutcome | 'pending';
+
+/** One view's entry in {@link BootstrapResult.views}. */
+export interface BootstrapViewReport {
+  /** What the view came to; see {@link BootstrapViewOutcome}. */
+  readonly outcome: BootstrapViewOutcome;
+  /** The view that reported; absent on a `pending` one. */
+  readonly view?: Element;
+  /** What `hydrate()` threw, or why the view did not adopt; present only on `fell-back`. */
+  readonly error?: unknown;
+}
+
 /** What {@link bootstrap} resolves with. */
 export interface BootstrapResult {
   /**
-   * `adopted`: the served document was hydrated, and each served view reported
-   * its own {@link AdoptOutcome}. `cold`: the container was emptied and the
-   * template rendered into it.
+   * What the root hydrate came to, not each view. `adopted`: the served
+   * document was hydrated, and each served view reported its own {@link
+   * AdoptOutcome}, which {@link BootstrapResult.views} collects; a document
+   * whose views all rendered cold still reports `adopted` here. `cold`: the
+   * container was emptied and the template rendered into it.
    */
   readonly outcome: BootstrapOutcome;
   /** How the boot compares with the document's hydration signature; see {@link BootstrapSignature}. */
   readonly signature: BootstrapSignature;
+  /**
+   * Each served view's outcome, keyed by the view's fully qualified name
+   * (`$default`, `$default.$default`, `$default.aside`): every view the
+   * signature says the document was drawn with, in the order it lists them,
+   * then any other view that woke and requested the adopter, such as one that
+   * woke with no served render. A drawn view not yet woken is `pending`; the
+   * first view to report under a name holds it. A snapshot taken as the call
+   * resolves: a view that adopts later still reports to `onAdopt` and its
+   * {@link UiViewAdoptEvent}. Empty on a cold boot.
+   */
+  readonly views: ReadonlyMap<string, BootstrapViewReport>;
   /**
    * The boot transition's `Rejection`, or what the root `hydrate()` threw;
    * present only on a cold boot that one of them caused.
@@ -998,24 +1041,146 @@ const warnBootElsewhere = (
   );
 };
 
-/** Resolves once every awake, connected `<ui-view>` under `container` has updated, including those an update woke; a view that cannot update is not waited for. */
-const settleViews = async (container: HTMLElement): Promise<void> => {
-  const settled = new Set<Element>();
+const warnNoneAdopted = (
+  views: ReadonlyMap<string, BootstrapViewReport>,
+): void => {
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return;
+  console.warn(
+    'lit-ui-router-ssr: this document booted into the state it was drawn for, but none of the views it was drawn with adopted the served render, so the page shows a client render. A build step that renders the finished page again, or a script that replaces the served views before boot, leaves this. Each view, by name:',
+    Object.fromEntries(
+      [...views].map(([name, { outcome }]) => [name, outcome]),
+    ),
+  );
+};
 
-  for (;;) {
-    const awake = [...container.querySelectorAll('*')].filter(
-      (element): element is UiView =>
-        element instanceof UiView &&
-        element.isConnected &&
-        !element.hasAttribute(DEFER) &&
-        !settled.has(element),
-    );
+/** Whether no view the document was drawn with adopted, among those that reported. */
+const noneAdopted = (
+  views: ReadonlyMap<string, BootstrapViewReport>,
+): boolean => ![...views.values()].some(({ outcome }) => outcome === 'adopted');
 
-    if (awake.length === 0) return;
+/**
+ * Warns once in development when no drawn view adopted: at resolve, once one
+ * has reported; with every drawn view still pending, once they all have.
+ */
+const checkSomeAdopted = (
+  tracker: ViewTracker,
+  views: ReadonlyMap<string, BootstrapViewReport>,
+): void => {
+  const reports = [...views.values()];
 
-    for (const view of awake) settled.add(view);
-    await Promise.all(awake.map((view) => view.updateComplete));
+  if (reports.length === 0 || !noneAdopted(views)) return;
+
+  if (reports.some(({ outcome }) => outcome !== 'pending'))
+    return warnNoneAdopted(views);
+
+  tracker.whenDrawnReported(() => {
+    const late = tracker.snapshot();
+
+    if (noneAdopted(late)) warnNoneAdopted(late);
+  });
+};
+
+/** The view names a signature lists, or none when it lists none. */
+const drawnViewsOf = (signature: HydrationSignature): readonly string[] =>
+  Array.isArray(signature.views) ? signature.views.filter(isString) : [];
+
+/** Collects what each view reports to a boot's adopter, against the views its document was drawn with. */
+interface ViewTracker {
+  /** Records a report, then hands it on. */
+  readonly reporter: AdoptReporter;
+  /** Every view that has reported, so awake: one that sleeps never reports. */
+  readonly awake: () => readonly UiView[];
+  /** Each view's report so far, drawn views first, the pending ones included. */
+  readonly snapshot: () => ReadonlyMap<string, BootstrapViewReport>;
+  /** Runs `done` once every drawn view has reported, at once when they have. */
+  readonly whenDrawnReported: (done: () => void) => void;
+}
+
+const trackViews = (
+  drawn: readonly string[],
+  onward: AdoptReporter,
+): ViewTracker => {
+  const reports = new Map<string, BootstrapViewReport>();
+  const waiting = new Set(drawn);
+  const awake: UiView[] = [];
+  const done: (() => void)[] = [];
+
+  const settle = (): void => {
+    if (waiting.size > 0) return;
+
+    for (const run of done.splice(0)) run();
+  };
+
+  const reporter: AdoptReporter = (view, outcome, error) => {
+    if (view instanceof UiView) awake.push(view);
+    const name = view instanceof UiView ? view.fqn : undefined;
+
+    if (name !== undefined && !reports.has(name)) {
+      reports.set(
+        name,
+        outcome === 'fell-back' ? { outcome, view, error } : { outcome, view },
+      );
+      waiting.delete(name);
+      settle();
+    }
+
+    onward(view, outcome, error);
+  };
+
+  return {
+    reporter,
+    awake: () => awake,
+    snapshot: () =>
+      new Map<string, BootstrapViewReport>([
+        ...drawn.map((name): [string, BootstrapViewReport] => [
+          name,
+          reports.get(name) ?? { outcome: 'pending' },
+        ]),
+        ...reports,
+      ]),
+    whenDrawnReported: (run) => {
+      done.push(run);
+      settle();
+    },
+  };
+};
+
+const nextTask = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+/**
+ * Resolves once the views awake under the boot have settled: a task, so every
+ * wake an update chains has run, then the update of every view that reported,
+ * again until a round brings no new report. Only a view that reported is
+ * awaited, so a view whose host never wakes it is not.
+ */
+const settleReports = async (tracker: ViewTracker): Promise<void> => {
+  for (let seen = -1; seen !== tracker.awake().length;) {
+    seen = tracker.awake().length;
+    await nextTask();
+    await Promise.all(tracker.awake().map((view) => view.updateComplete));
   }
+};
+
+/** Holds back a sleeping view's development warning until the boot's walk has settled; the returned function re-arms the checks it held. */
+const holdAsleepWarnings = (container: HTMLElement): (() => void) => {
+  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
+  if (!import.meta.env.DEV || !devGate()) return () => {};
+
+  const held: (() => void)[] = [];
+
+  const uninstall = provideContext(container, bootPendingContext, (recheck) => {
+    held.push(recheck);
+  });
+
+  return () => {
+    uninstall();
+
+    for (const recheck of held.splice(0)) recheck();
+  };
 };
 
 /** Empties the container and renders `value` into it. */
@@ -1063,9 +1228,21 @@ const renderCold = (
  *   mutated document, does the same. The call resolves rather than rejects.
  *
  * Every served view still reports its own {@link AdoptOutcome}, as a {@link
- * UiViewAdoptEvent} and to `options.onAdopt`. The call waits for each awake
- * `<ui-view>` to finish updating, nested views included, then releases the
- * adopter `hydrateRoot()` provided; a view the app detached keeps its pin.
+ * UiViewAdoptEvent} and to `options.onAdopt`, and the result collects them in
+ * {@link BootstrapResult.views}. Views are tracked by what they report to the
+ * adopter, whose request is a composed event, so a view in a shadow root is
+ * reported like any other; nothing queries the document for views. The call
+ * waits until the views awake under the boot have
+ * updated, nested views and views in shadow roots their hosts hydrated
+ * included, and resolves then, reporting a view the signature lists that has
+ * not woken as `pending`. The adopter stays installed on `container` until
+ * every view the signature lists has reported, so a view whose host hydrates
+ * later still adopts and still reaches `onAdopt`; a view the app detached
+ * keeps its pin. A signed document that booted where it was drawn and adopted
+ * none of the views it was drawn with warns once in development.
+ *
+ * In development a sleeping view's "still asleep" warning stands down while
+ * the boot transition runs, and is checked again once the walk has settled.
  *
  * @example
  * ```ts
@@ -1078,7 +1255,7 @@ const renderCold = (
  * @param container - the element the server's markup was written into, or an empty one
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, `onAdopt`, and the boot transition's `payload` and `transport`
- * @returns what the boot came to, once every awake view has updated
+ * @returns what the boot came to, and what each view came to, once the awake views have updated
  * @throws what `router.start()` throws, as on a router already started
  * @throws the `TypeError` `seed` throws on a payload with no `resolves`, before the router starts
  */
@@ -1098,33 +1275,74 @@ export async function bootstrap(
     renderCold(container, value, renderOptions);
     const landing = await startBoot(router);
     disarm();
-    await settleViews(container);
+    await nextTask();
 
     return {
       outcome: 'cold',
       signature: compareSignature(served, landing, router),
+      views: new Map(),
       ...pickError(landing),
     };
   }
 
+  const rearm = holdAsleepWarnings(container);
+
+  try {
+    return await bootServed(router, container, value, signature, {
+      onAdopt,
+      renderOptions,
+      disarm,
+    });
+  } finally {
+    rearm();
+  }
+}
+
+/** {@link bootstrap} over a document it adopts: the boot transition, then the walk, then the views it woke. */
+const bootServed = async (
+  router: UIRouterLit,
+  container: HTMLElement,
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- any value lit renders, as lit's render() and hydrate() take it
+  value: unknown,
+  signature: HydrationSignature,
+  {
+    onAdopt,
+    renderOptions,
+    disarm,
+  }: {
+    readonly onAdopt?: AdoptReporter;
+    readonly renderOptions: RenderOptions;
+    readonly disarm: () => void;
+  },
+): Promise<BootstrapResult> => {
   const landing = await startBoot(router);
   disarm();
 
   if (!('transition' in landing)) {
     renderCold(container, value, renderOptions);
-    await settleViews(container);
+    await nextTask();
 
-    return { outcome: 'cold', signature: 'elsewhere', ...pickError(landing) };
+    return {
+      outcome: 'cold',
+      signature: 'elsewhere',
+      views: new Map(),
+      ...pickError(landing),
+    };
   }
 
   const compared = compareSignature(signature, landing, router);
   const drawn = compared === 'matched';
   let fellBack = 0;
 
-  const reporter: AdoptReporter = (view, outcome, error) => {
-    if (outcome === 'fell-back') fellBack += 1;
-    onAdopt?.(view, outcome, error);
-  };
+  const tracker = trackViews(
+    drawnViewsOf(signature),
+    (view, outcome, error) => {
+      if (outcome === 'fell-back') fellBack += 1;
+      onAdopt?.(view, outcome, error);
+    },
+  );
+
+  const { reporter } = tracker;
 
   let release: () => void;
 
@@ -1139,20 +1357,24 @@ export async function bootstrap(
     );
   } catch (error) {
     render(value, container, renderOptions);
-    await settleViews(container);
+    await nextTask();
 
-    return { outcome: 'cold', signature: compared, error };
+    return { outcome: 'cold', signature: compared, views: new Map(), error };
   }
 
-  await settleViews(container);
-  release();
+  await settleReports(tracker);
+  // A drawn view still asleep, as in a shadow root whose host has yet to hydrate, adopts through the provider when it wakes.
+  tracker.whenDrawnReported(release);
+  const views = tracker.snapshot();
 
   // Other url parameters for the same state are a shared shell's normal case, and stay silent.
   if (fellBack > 0 && signature.state !== router.globals.current.name)
     warnBootElsewhere(signature, router, fellBack);
 
-  return { outcome: 'adopted', signature: compared };
-}
+  if (drawn) checkSomeAdopted(tracker, views);
+
+  return { outcome: 'adopted', signature: compared, views };
+};
 
 /** How the boot that came to `landing` compares with the document's signature, `null` when it carried none. */
 const compareSignature = (
