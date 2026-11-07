@@ -801,6 +801,44 @@ a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
 
+### Hosts without redirect rules
+
+`rules` decides what happens to the redirect lines: `'_redirects'` (the
+default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
+them in `result.rules`, and a function receives them with the run's `write`,
+`outDir` and written `pages`. A host with no redirect rules, such as GitHub
+Pages or a plain bucket, takes
+[`redirectPages()`](/api/ui-router-server/prerender/functions/redirectPages):
+each line becomes a page at `<from>/index.html` that sends the browser to its
+`to`.
+
+```ts
+import { prerender, redirectPages } from 'ui-router-server/prerender';
+
+await prerender({
+  mounts,
+  outDir: 'dist',
+  paths,
+  render,
+  write,
+  rules: redirectPages(),
+});
+```
+
+- **What the page holds.** A `location.replace` that carries the request's
+  query and fragment into a target with none of its own, a meta refresh and a
+  plain link for browsers without script, a canonical link to the target, and
+  `noindex`. The target is HTML-escaped.
+- **No status.** The page answers 200, so the line's 301, 302 or 308 never
+  reaches the host. The canonical link tells search engines the content moved.
+- **Collisions.** A line whose page would replace one the run wrote throws.
+  The first line for a page wins, as in `_redirects`, so a path's two
+  spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
+  throws.
+- **Options.** `base` is the url path `outDir` is served at, `/` by default.
+  `redirectsFile: true` also writes `_redirects`, for a site deployed to both
+  kinds of host.
+
 ### After `vite build`
 
 `serverRouterPlugin` prerenders the built app after `vite build`, through a

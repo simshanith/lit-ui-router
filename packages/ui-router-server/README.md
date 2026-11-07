@@ -69,6 +69,21 @@ serverRouterPlugin(router, {
 [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) walks through the
 plugin option and the script.
 
+## Hosts without redirect rules
+
+`prerender()` hands redirects to the host as rules lines, and `rules` decides what happens to them:
+`'_redirects'` (the default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
+them in `result.rules`, and a function receives them with the run's `write`, `outDir` and written
+`pages`. A host with no redirect rules, such as GitHub Pages or a plain bucket, takes
+`redirectPages()` from `ui-router-server/prerender`: each line becomes a page at
+`<from>/index.html` holding a `location.replace` that keeps the request's query and fragment when
+the target has none, a meta refresh, a plain link, a canonical link to the target, and `noindex`.
+The page answers 200, so the line's status never reaches the host; the canonical link tells search
+engines the content moved. A line whose page would replace one the run wrote throws, as does a
+pattern line; the first line for a page wins. `base` is the url path `outDir` is served at, and
+`redirectsFile: true` also writes `_redirects`. See
+[hosts without redirect rules](https://lit-ui-router.dev/packages/server#hosts-without-redirect-rules).
+
 ## Delegating states
 
 A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,

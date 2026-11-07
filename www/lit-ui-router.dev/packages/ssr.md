@@ -308,7 +308,9 @@ or a virtual fs instead — it receives `outDir` already joined on.
 The rules file follows the same seam: `rules: '_redirects'` (the default)
 writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
-your host reads.
+your host reads, such as
+[`redirectPages()`](/packages/server#hosts-without-redirect-rules) for a host
+with no redirect rules.
 
 ## After `vite build`
 
