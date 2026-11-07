@@ -249,7 +249,7 @@ const diffRenderer = (
       diff.setOptions({ ...diff.options, collapsed });
       diff.rerender();
 
-      // Folding a file read past its top leaves the reader where it was.
+      // Folded from its sticky header, a file would leave the reader past its end.
       if (item && item.getBoundingClientRect().top < 0)
         item.scrollIntoView({ block: 'start' });
     });
