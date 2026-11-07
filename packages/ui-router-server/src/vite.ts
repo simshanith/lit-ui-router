@@ -20,6 +20,7 @@
  */
 
 import { nodeConditions } from '#node-conditions';
+import { drainOutput } from '#node-output';
 
 import { createConnectMiddleware } from './connect.ts';
 import type {
@@ -172,8 +173,6 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
-const NODE_PROCESS = 'node:process';
-
 const NODE_STREAM_PROMISES = 'node:stream/promises';
 
 const NODE_URL = 'node:url';
@@ -194,26 +193,14 @@ interface NodePath {
   resolve(...paths: string[]): string;
 }
 
-interface OutputStream {
-  write(chunk: string, callback: () => void): boolean;
-}
-
-interface NodeProcess {
-  stdout: OutputStream;
-  stderr: OutputStream;
-}
-
-interface WorkerOutput {
-  readonly readableEnded: boolean;
-}
-
 interface NodeStreamPromises {
-  finished(stream: WorkerOutput): Promise<void>;
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- node's own finished() takes any stream; the plugin hands it the worker's stdio untouched
+  finished(stream: unknown): Promise<void>;
 }
 
 interface PrerenderWorker {
-  stdout: WorkerOutput;
-  stderr: WorkerOutput;
+  stdout: unknown;
+  stderr: unknown;
   on(event: 'message', listener: (result: PrerenderResult) => void): void;
   on(event: 'error', listener: (error: Error) => void): void;
   on(event: 'exit', listener: (code: number) => void): void;
@@ -294,17 +281,12 @@ const nodeWorker = async () =>
   (await Promise.all([
     import(NODE_WORKER_THREADS),
     import(NODE_URL),
-    import(NODE_PROCESS),
     import(NODE_STREAM_PROMISES),
-  ])) as [NodeWorkerThreads, NodeUrl, NodeProcess, NodeStreamPromises];
-
-const drained = (stream: OutputStream): Promise<void> =>
-  new Promise((resolve) => stream.write('', () => resolve()));
+  ])) as [NodeWorkerThreads, NodeUrl, NodeStreamPromises];
 
 // One thread per build: globals, registries and loader hooks the entry installs die with it.
 const runInWorker = async (job: PrerenderJob): Promise<PrerenderResult> => {
-  const [{ Worker }, { fileURLToPath }, { stdout, stderr }, { finished }] =
-    await nodeWorker();
+  const [{ Worker }, { fileURLToPath }, { finished }] = await nodeWorker();
 
   // A path, not a URL: under happy-dom the global URL is not node's.
   const worker = new Worker(fileURLToPath(resolveHere(PRERENDER_THREAD)), {
@@ -317,7 +299,7 @@ const runInWorker = async (job: PrerenderJob): Promise<PrerenderResult> => {
       finished(worker.stdout),
       finished(worker.stderr),
     ]);
-    await Promise.all([drained(stdout), drained(stderr)]);
+    await drainOutput();
   };
 
   return new Promise<PrerenderResult>((resolve, reject) => {

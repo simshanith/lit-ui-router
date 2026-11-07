@@ -1,4 +1,4 @@
-// The vite plugin's one `process` read: #node-conditions reaches this file under the `node` condition only.
+// A vite plugin `process` read: #node-conditions reaches this file under the `node` condition only.
 declare const process: {
   readonly execArgv: readonly string[];
   readonly env: { readonly NODE_OPTIONS?: string };
