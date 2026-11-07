@@ -611,7 +611,14 @@ installServerLocation(router, {
   baseHref: '/app/',
   urlConfig: { strict: false },
 });
+states.forEach((state) => router.stateRegistry.register({ ...state }));
 ```
+
+Register a copy of each declaration, or build them in a function that runs per
+request: core stamps the object it registers with a `$$state` pointer to that
+router's state, so a declaration shared by concurrent routers points at
+whichever registered last. `createHeadlessRouter` and simulate mounts copy
+their declarations already.
 
 `baseHref` is the mount prefix: it is added to every href, and `url` is
 passed without it, exactly as a `<base href>` client matches. `urlConfig`

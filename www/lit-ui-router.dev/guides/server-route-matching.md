@@ -800,7 +800,8 @@ installServerLocation(router, {
   url: pathname + search,
   urlConfig: { strict: false },
 });
-states.forEach((state) => router.stateRegistry.register(state));
+// core stamps each registered declaration with $$state, so register a copy per router
+states.forEach((state) => router.stateRegistry.register({ ...state }));
 router.start();
 
 const uninstall = provideRouter(globalThis.litServerRoot, router);
@@ -811,6 +812,12 @@ try {
   uninstall();
 }
 ```
+
+Each request registers `{ ...state }`, not the shared declaration: core
+stamps the object it registers with a `$$state` pointer to that router's
+state, so a declaration shared by concurrent routers points at whichever
+registered last. Building the declarations in a function that runs per
+request works too.
 
 `withRouterSync(router, run)` is a synchronous slot, not an async context: it
 sets a module-level variable, runs `run`, and restores the previous value in a

@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { StateDeclaration } from '@uirouter/core';
+
 import { createHeadlessRouter, onceSettled } from '../src/simulate.ts';
 
 // Drives a fresh router through one url-sourced transition and reports where
 // the memory location landed — the worker-side replay in miniature.
 async function settleUrl(path: string): Promise<string | null> {
-  // Fresh declarations per router: core mutates registrations ($$state).
   const router = createHeadlessRouter([
     { name: 'a', url: '/a', redirectTo: 'b' },
     { name: 'b', url: '/b' },
@@ -78,5 +79,45 @@ describe('per-call state declarations', () => {
     ]);
 
     assert.deepEqual(results, ['/b', '/plain', '/b']);
+  });
+});
+
+describe('shared state declarations', () => {
+  // Core stamps $$state on what it registers; a later router must not repoint the first router's lazy resolves.
+  it('isolates routers built concurrently from one array', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+
+    const states: StateDeclaration[] = [
+      { name: 'home', url: '/' },
+      {
+        name: 'parent',
+        url: '/parent',
+        resolve: [{ token: 'gate', resolveFn: () => gate }],
+      },
+      {
+        name: 'parent.child',
+        url: '/child',
+        resolve: [{ token: 'leaf', resolveFn: () => 'leaf' }],
+      },
+    ];
+
+    const first = createHeadlessRouter(states);
+    const firstSettled = onceSettled(first);
+    first.urlService.url('/parent/child');
+    first.urlService.sync();
+
+    const second = createHeadlessRouter(states);
+    const secondSettled = onceSettled(second);
+    second.urlService.url('/parent/child');
+    second.urlService.sync();
+    release();
+
+    assert.deepEqual(await Promise.all([firstSettled, secondSettled]), [
+      true,
+      true,
+    ]);
+    assert.equal(first.globals.current.name, 'parent.child');
+    assert.equal(second.globals.current.name, 'parent.child');
   });
 });
