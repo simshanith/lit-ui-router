@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { listQueues } from '@distilled.cloud/cloudflare/queues';
 import { Schema } from 'effect';
 
 import { Claim } from './claim.ts';
@@ -119,7 +120,7 @@ describe('batchesOf', () => {
 
     const messages = batches.flatMap((batch) => batch.messages);
 
-    assert.ok(messages.every(({ content_type }) => content_type === 'json'));
+    assert.ok(messages.every(({ contentType }) => contentType === 'json'));
     assert.deepEqual(
       messages.map(({ body }) =>
         Schema.decodeUnknownSync(Claim)(JSON.parse(JSON.stringify(body))),
@@ -138,7 +139,25 @@ const QUEUES = [
 type ApiResult = typeof QUEUES | Record<string, never>;
 
 const envelope = (result: ApiResult, init?: ResponseInit) =>
-  Response.json({ success: true, errors: null, messages: null, result }, init);
+  Response.json(
+    {
+      success: true,
+      errors: null,
+      messages: null,
+      result,
+      ...(Array.isArray(result) && { result_info: pageOf(result.length) }),
+    },
+    init,
+  );
+
+/** The `result_info` of a listing that fits on one page. */
+const pageOf = (count: number) => ({
+  page: 1,
+  per_page: 100,
+  count,
+  total_count: count,
+  total_pages: 1,
+});
 
 /** An API whose fetch answers in turn and records each request. */
 function apiAnswering(...answers: (() => Response)[]) {
@@ -177,7 +196,7 @@ describe('resolveQueueId', () => {
     });
     assert.equal(
       requests[0]?.url,
-      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/queues`,
+      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/queues?page=1`,
     );
     assert.equal(requests[0]?.headers.get('authorization'), 'Bearer secret');
   });
@@ -203,10 +222,22 @@ describe('call', () => {
       () => envelope([]),
     );
 
-    assert.deepEqual(await call(api, '/queues', Schema.Array(Schema.String)), {
-      ok: true,
-      result: [],
-    });
+    assert.deepEqual(
+      await call(api, 'GET /queues', listQueues({ accountId: ACCOUNT })),
+      {
+        ok: true,
+        result: {
+          result: [],
+          resultInfo: {
+            page: 1,
+            perPage: 100,
+            count: 0,
+            totalCount: 0,
+            totalPages: 1,
+          },
+        },
+      },
+    );
     assert.deepEqual(sleeps, [2000, 2000]);
   });
 
@@ -221,25 +252,41 @@ describe('call', () => {
       ),
     );
 
-    const called = await call(api, '/queues/q/messages/batch', Schema.Unknown, {
-      messages: [],
-    });
+    const called = await publish(
+      api,
+      'q',
+      manualClaims(tagsOf(1), REPOSITORY, 'me', AT),
+      () => {},
+    );
 
     assert.deepEqual(called, {
       ok: false,
       error:
-        'Cloudflare API POST /{account_id}/queues/q/messages/batch failed (HTTP 403) — 10000: Authentication error',
+        'Cloudflare API POST /{account_id}/queues/q/messages/batch failed — Unauthorized: Authentication error',
     });
+  });
+
+  it("redacts the account id and the token from the SDK's transport errors", async () => {
+    const { api } = apiAnswering(() => {
+      throw new TypeError(`fetch failed for ${ACCOUNT} with secret`);
+    });
+
+    const called = await resolveQueueId(api, 'release-ledger-claims');
+
+    assert.ok(!called.ok);
+    assert.match(called.error, /HttpClientError/);
+    assert.ok(!called.error.includes(ACCOUNT), called.error);
+    assert.ok(!called.error.includes('secret'), called.error);
   });
 
   it('gives up after four 429s', async () => {
     const limited = () => new Response('{}', { status: 429 });
     const { api, requests } = apiAnswering(limited, limited, limited, limited);
 
-    const called = await call(api, '/queues', Schema.Unknown);
+    const called = await resolveQueueId(api, 'release-ledger-claims');
 
     assert.ok(!called.ok);
-    assert.match(called.error, /HTTP 429/);
+    assert.match(called.error, /TooManyRequests/);
     assert.equal(requests.length, 4);
   });
 });
@@ -273,7 +320,17 @@ describe('publish', () => {
     const [first] = requests;
     const body: unknown = await first?.json();
 
-    assert.deepEqual(body, JSON.parse(JSON.stringify(batchesOf(claims)[0])));
+    assert.deepEqual(
+      body,
+      JSON.parse(
+        JSON.stringify({
+          messages: batchesOf(claims)[0]?.messages.map(({ body }) => ({
+            body,
+            content_type: 'json',
+          })),
+        }),
+      ),
+    );
     assert.deepEqual(lines, [
       'batch 1/2: sent 100 (100/150)',
       'batch 2/2: sent 50 (150/150)',
@@ -290,7 +347,7 @@ describe('publish', () => {
     const published = await publish(api, 'q-claims', claims, () => {});
 
     assert.ok(!published.ok);
-    assert.match(published.error, /HTTP 500/);
+    assert.match(published.error, /InternalServerError/);
     assert.equal(requests.length, 1);
   });
 });
