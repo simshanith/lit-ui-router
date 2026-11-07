@@ -172,6 +172,10 @@ const NODE_FS = 'node:fs/promises';
 
 const NODE_PATH = 'node:path';
 
+const NODE_PROCESS = 'node:process';
+
+const NODE_STREAM_PROMISES = 'node:stream/promises';
+
 const NODE_URL = 'node:url';
 
 const NODE_WORKER_THREADS = 'node:worker_threads';
@@ -190,7 +194,26 @@ interface NodePath {
   resolve(...paths: string[]): string;
 }
 
+interface OutputStream {
+  write(chunk: string, callback: () => void): boolean;
+}
+
+interface NodeProcess {
+  stdout: OutputStream;
+  stderr: OutputStream;
+}
+
+interface WorkerOutput {
+  readonly readableEnded: boolean;
+}
+
+interface NodeStreamPromises {
+  finished(stream: WorkerOutput): Promise<void>;
+}
+
 interface PrerenderWorker {
+  stdout: WorkerOutput;
+  stderr: WorkerOutput;
   on(event: 'message', listener: (result: PrerenderResult) => void): void;
   on(event: 'error', listener: (error: Error) => void): void;
   on(event: 'exit', listener: (code: number) => void): void;
@@ -266,41 +289,60 @@ const previewShell =
     }, next);
   };
 
-// SAFETY: `NODE_WORKER_THREADS` and `NODE_URL` name node's modules, whose members take these shapes.
+// SAFETY: these specifiers name node's modules, whose members take these shapes.
 const nodeWorker = async () =>
-  (await Promise.all([import(NODE_WORKER_THREADS), import(NODE_URL)])) as [
-    NodeWorkerThreads,
-    NodeUrl,
-  ];
+  (await Promise.all([
+    import(NODE_WORKER_THREADS),
+    import(NODE_URL),
+    import(NODE_PROCESS),
+    import(NODE_STREAM_PROMISES),
+  ])) as [NodeWorkerThreads, NodeUrl, NodeProcess, NodeStreamPromises];
+
+const drained = (stream: OutputStream): Promise<void> =>
+  new Promise((resolve) => stream.write('', () => resolve()));
 
 // One thread per build: globals, registries and loader hooks the entry installs die with it.
 const runInWorker = async (job: PrerenderJob): Promise<PrerenderResult> => {
-  const [{ Worker }, { fileURLToPath }] = await nodeWorker();
+  const [{ Worker }, { fileURLToPath }, { stdout, stderr }, { finished }] =
+    await nodeWorker();
 
   // A path, not a URL: under happy-dom the global URL is not node's.
   const worker = new Worker(fileURLToPath(resolveHere(PRERENDER_THREAD)), {
     workerData: job,
   });
 
+  // A failed build can exit the process before its own pipes take the worker's last output.
+  const flushed = async (): Promise<void> => {
+    await Promise.allSettled([
+      finished(worker.stdout),
+      finished(worker.stderr),
+    ]);
+    await Promise.all([drained(stdout), drained(stderr)]);
+  };
+
   return new Promise<PrerenderResult>((resolve, reject) => {
+    let failure: Error | undefined;
+
     worker.on('message', (result) => {
       resolve(result);
       void worker.terminate();
     });
     // The worker's error arrives as a structured clone; `cause` carries it whole.
     worker.on('error', (error) => {
-      reject(
-        new Error(`serverRouterPlugin: prerender failed: ${error.message}`, {
-          cause: error,
-        }),
+      failure = new Error(
+        `serverRouterPlugin: prerender failed: ${error.message}`,
+        { cause: error },
       );
     });
     worker.on('exit', (code) => {
-      reject(
-        new Error(
-          `serverRouterPlugin: prerender worker exited with code ${String(code)} before it returned`,
-        ),
-      );
+      void flushed().then(() => {
+        reject(
+          failure ??
+            new Error(
+              `serverRouterPlugin: prerender worker exited with code ${String(code)} before it returned`,
+            ),
+        );
+      });
     });
   });
 };
