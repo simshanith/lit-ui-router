@@ -5,16 +5,33 @@
 //
 // Usage: enqueue.ts (--all | <name>@<version>...) --actor <label> [--dry-run]
 import { readFileSync } from 'node:fs';
-import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
-import { Effect, Option, Schema } from 'effect';
-import { FetchHttpClient, Headers } from 'effect/http';
+import {
+  type Credentials,
+  fromApiToken,
+} from '@distilled.cloud/cloudflare/Credentials';
+import {
+  bulkPushMessages,
+  listQueues,
+} from '@distilled.cloud/cloudflare/queues';
+import * as Retry from '@distilled.cloud/cloudflare/Retry';
+import {
+  Clock,
+  Duration,
+  Effect,
+  identity,
+  Layer,
+  Redacted,
+  Schema,
+  Stream,
+} from 'effect';
+import { FetchHttpClient, type HttpClient } from 'effect/http';
 import { parse } from 'jsonc-parser';
 
 import { Claim } from './claim.ts';
 import { CLAIMS_QUEUE } from './consume.ts';
-import { listTags, requestedWait } from './observe.ts';
+import { listTags } from './observe.ts';
 import { type ReleaseTag, releaseTags, SEND_BATCH_LIMIT } from './sweep.ts';
 
 const USAGE =
@@ -108,11 +125,11 @@ export const manualClaims = (
     origin: { kind: 'manual', repository, sha, actor },
   }));
 
-/** A request body for the batch endpoint. */
+/** One request to the batch endpoint, in the SDK's camelCase. */
 export interface QueueBatch {
-  readonly messages: readonly {
+  readonly messages: {
     readonly body: typeof Claim.Encoded;
-    readonly content_type: 'json';
+    readonly contentType: 'json';
   }[];
 }
 
@@ -125,7 +142,7 @@ export function batchesOf(claims: readonly Claim[]): QueueBatch[] {
     batches.push({
       messages: claims
         .slice(start, start + SEND_BATCH_LIMIT)
-        .map((claim) => ({ body: encode(claim), content_type: 'json' })),
+        .map((claim) => ({ body: encode(claim), contentType: 'json' })),
     });
   }
 
@@ -139,99 +156,78 @@ export interface CloudflareApi {
   readonly sleep?: (ms: number) => Promise<void>;
 }
 
-const API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
-
-/** Attempts per call; only a 429 retries, since nothing was accepted. */
+/** Attempts per call; only throttling retries, since nothing was accepted. */
 const MAX_ATTEMPTS = 4;
 
-// the Queues API answers `errors: null` on success
-const Envelope = Schema.Struct({
-  success: Schema.optionalKey(Schema.Boolean),
-  errors: Schema.optionalKey(
-    Schema.NullOr(
-      Schema.Array(
-        Schema.Struct({
-          code: Schema.optionalKey(Schema.Number),
-          message: Schema.optionalKey(Schema.String),
-        }),
-      ),
-    ),
-  ),
-  result: Schema.optionalKey(Schema.Unknown),
-});
-
-const decodeEnvelope = Schema.decodeUnknownOption(Envelope);
+// Retry-After wins (capped at 60 s by the SDK); otherwise 1 s, 2 s, 4 s
+const ONLY_THROTTLING: Retry.Policy = {
+  while: Retry.throttlingOptions.while,
+  backoff: {
+    baseMs: 1000,
+    factor: 2,
+    capMs: 8000,
+    maxRetries: MAX_ATTEMPTS - 1,
+    serverHint: true,
+  },
+};
 
 type CallResult<T> =
   | { readonly ok: true; readonly result: T }
   | { readonly ok: false; readonly error: string };
 
-/** One call under /accounts/{account_id}, retried on 429 with Retry-After or exponential waits. */
-export async function call<T>(
+/** The live clock, its sleeps handed to `sleep`. */
+const sleepingWith = (sleep: (ms: number) => Promise<void>) => {
+  const live = Clock.Clock.defaultValue();
+
+  return Effect.provideService(Clock.Clock, {
+    currentTimeMillisUnsafe: () => live.currentTimeMillisUnsafe(),
+    currentTimeMillis: live.currentTimeMillis,
+    currentTimeNanosUnsafe: () => live.currentTimeNanosUnsafe(),
+    currentTimeNanos: live.currentTimeNanos,
+    monotonicTimeNanosUnsafe: () => live.monotonicTimeNanosUnsafe(),
+    monotonicTimeNanos: live.monotonicTimeNanos,
+    sleep: (duration) =>
+      Effect.promise(() => sleep(Duration.toMillis(duration))),
+  });
+};
+
+/** One SDK call, retried on throttling only, its error redacted of the account id and token. */
+export async function call<
+  T,
+  E extends { readonly _tag: string; readonly message: string },
+>(
   api: CloudflareApi,
-  path: string,
-  result: Schema.Decoder<T>,
-  body?: QueueBatch,
+  shown: string,
+  operation: Effect.Effect<T, E, Credentials | HttpClient.HttpClient>,
 ): Promise<CallResult<T>> {
-  const method = body === undefined ? 'GET' : 'POST';
-  const shown = `${method} /{account_id}${path}`;
+  const redact = (text: string): string =>
+    text
+      .replaceAll(api.accountId, '{account_id}')
+      .replaceAll(api.token, '{token}');
 
-  for (let attempt = 1; ; attempt += 1) {
-    let response: Response;
-
-    try {
-      response = await api.fetch(`${API_BASE}/${api.accountId}${path}`, {
-        method,
-        headers: {
-          authorization: `Bearer ${api.token}`,
-          ...(body !== undefined && { 'content-type': 'application/json' }),
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
-    } catch (error) {
-      return { ok: false, error: `${shown}: ${String(error)}` };
-    }
-
-    if (response.status === 429 && attempt < MAX_ATTEMPTS) {
-      const wait =
-        requestedWait(
-          { headers: Headers.fromInput(response.headers) },
-          Date.now(),
-        ) ?? 2 ** (attempt - 1);
-
-      await (api.sleep ?? sleep)(wait * 1000);
-      continue;
-    }
-
-    const parsed = Option.getOrElse(
-      decodeEnvelope(await response.json().catch(() => null)),
-      (): typeof Envelope.Type => ({}),
-    );
-
-    if (!response.ok || parsed.success !== true) {
-      const details = (parsed.errors ?? [])
-        .map((error) => `${error.code ?? '?'}: ${error.message ?? '?'}`)
-        .join('; ');
-
-      return {
-        ok: false,
-        error: `Cloudflare API ${shown} failed (HTTP ${response.status})${details ? ` — ${details}` : ''}`,
-      };
-    }
-
-    const decoded = Schema.decodeUnknownOption(result)(parsed.result);
-
-    if (Option.isNone(decoded)) {
-      return { ok: false, error: `${shown} answered an unexpected result` };
-    }
-
-    return { ok: true, result: decoded.value };
-  }
+  return Effect.runPromise(
+    operation.pipe(
+      Retry.policy(ONLY_THROTTLING),
+      Effect.map((result): CallResult<T> => ({ ok: true, result })),
+      Effect.catch((error) =>
+        Effect.succeed<CallResult<T>>({
+          ok: false,
+          error: redact(
+            `Cloudflare API ${shown} failed — ${error._tag}: ${error.message}`,
+          ),
+        }),
+      ),
+      Effect.provide(
+        Layer.mergeAll(
+          fromApiToken({ apiToken: Redacted.make(api.token) }),
+          FetchHttpClient.layer,
+        ),
+      ),
+      Effect.provideService(FetchHttpClient.Fetch, api.fetch),
+      api.sleep === undefined ? identity : sleepingWith(api.sleep),
+    ),
+  );
 }
-
-const Queues = Schema.Array(
-  Schema.Struct({ queue_id: Schema.String, queue_name: Schema.String }),
-);
 
 export async function resolveQueueId(
   api: CloudflareApi,
@@ -240,14 +236,18 @@ export async function resolveQueueId(
   | { readonly ok: true; readonly queueId: string }
   | { readonly ok: false; readonly error: string }
 > {
-  const listed = await call(api, '/queues', Queues);
+  const listed = await call(
+    api,
+    'GET /{account_id}/queues',
+    listQueues.items({ accountId: api.accountId }).pipe(Stream.runCollect),
+  );
 
   if (!listed.ok) return listed;
 
-  const queue = listed.result.find((entry) => entry.queue_name === name);
+  const queue = listed.result.find((entry) => entry.queueName === name);
 
-  return queue
-    ? { ok: true, queueId: queue.queue_id }
+  return queue?.queueId
+    ? { ok: true, queueId: queue.queueId }
     : { ok: false, error: `no queue named ${name} in the account` };
 }
 
@@ -266,9 +266,8 @@ export async function publish(
   for (const [index, batch] of batches.entries()) {
     const pushed = await call(
       api,
-      `/queues/${queueId}/messages/batch`,
-      Schema.Unknown,
-      batch,
+      `POST /{account_id}/queues/${queueId}/messages/batch`,
+      bulkPushMessages({ accountId: api.accountId, queueId, ...batch }),
     );
 
     if (!pushed.ok) return pushed;
