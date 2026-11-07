@@ -9,6 +9,7 @@ import {
 } from '@pierre/diffs';
 import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
 import DiffsWorker from '@pierre/diffs/worker/worker.js?worker';
+import { html, render as renderTemplate, type TemplateResult } from 'lit';
 
 import type { DiffFile, DiffIndex } from './diff-data.ts';
 import type { DiffTree, TreeFile } from './release-diff-tree.ts';
@@ -187,25 +188,18 @@ const listItems = (
   );
 
 /** The header button that folds a file's diff down to its header; it reads as the file's path plus its expanded state. */
-const collapseToggle = (
+const foldToggle = (
   path: string,
-  onToggle: (collapsed: boolean) => void,
-): HTMLButtonElement => {
-  const button = document.createElement('button');
-
-  button.type = 'button';
-  button.className = 'diff-file-toggle';
-  button.setAttribute('aria-expanded', 'true');
-  button.setAttribute('aria-label', path);
-  button.addEventListener('click', () => {
-    const collapsed = button.getAttribute('aria-expanded') === 'true';
-
-    button.setAttribute('aria-expanded', String(!collapsed));
-    onToggle(collapsed);
-  });
-
-  return button;
-};
+  collapsed: boolean,
+  onClick: () => void,
+): TemplateResult =>
+  html`<button
+    type="button"
+    class="diff-file-toggle"
+    aria-label=${path}
+    aria-expanded=${String(!collapsed)}
+    @click=${onClick}
+  ></button>`;
 
 /** Renders a file's diff into its item, the first time it's asked to. */
 const diffRenderer = (
@@ -245,16 +239,22 @@ const diffRenderer = (
       pool,
     );
 
-    const toggle = collapseToggle(file.name, (collapsed) => {
+    const prefix = document.createElement('span');
+    let collapsed = false;
+
+    const fold = (): void => {
+      collapsed = !collapsed;
+      renderTemplate(foldToggle(file.name, collapsed, fold), prefix);
       diff.setOptions({ ...diff.options, collapsed });
       diff.rerender();
 
       // Folded from its sticky header, a file would leave the reader past its end.
       if (item && item.getBoundingClientRect().top < 0)
         item.scrollIntoView({ block: 'start' });
-    });
+    };
 
-    diff.setOptions({ ...diff.options, renderHeaderPrefix: () => toggle });
+    renderTemplate(foldToggle(file.name, collapsed, fold), prefix);
+    diff.setOptions({ ...diff.options, renderHeaderPrefix: () => prefix });
     diff.render({
       fileDiff: setLanguageOverride(file, languageOf(file)),
       containerWrapper: item,
