@@ -406,7 +406,7 @@ export class AppRoot extends LitElement {
   render() {
     return html`
       <h2>Hello Solar System</h2>
-      <nav aria-label="Hello Solar System">
+      <nav aria-label="Hello Solar System (Eleventy SSR)">
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('planets')}
           >Planets</a
         >
