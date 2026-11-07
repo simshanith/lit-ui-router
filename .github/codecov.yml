@@ -66,6 +66,10 @@ component_management:
       name: ui-router-signals
       paths:
         - packages/ui-router-signals/src/**
+    - component_id: postcss-lit-html
+      name: postcss-lit-html
+      paths:
+        - packages/postcss-lit-html/src/**
     - component_id: dev-gate
       name: dev-gate
       paths:

@@ -267,6 +267,8 @@
     // stylelint over .css, .vue <style> and lit `css` blocks;
     // stylelint.config.mjs maps each to its syntax and owns the ignores.
     "//#lint:css": {
+      // stylelint loads the postcss-lit-html syntax from its dist
+      "dependsOn": ["postcss-lit-html#build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         // not gitignore-pruned, so the generated trees come off by hand
