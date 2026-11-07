@@ -29,7 +29,8 @@
     // dev-port.ts and its launcher: both sides of the suite resolve the port
     // from them, and neither rides the build edge.
     // WWW_DEV_PORT is an override of the code default, so it is transport, not
-    // env — a different port is the same suite.
+    // env — a different port is the same suite. E2E_WORKERS sizes the worker
+    // pool, transport too.
     // E2E_BASE_URL is env, not transport: it swaps the served site for another
     // origin's, so a remote run and a local one never share a cache entry.
     // WWW_WORKER_BUILD and WRANGLER_BUILD_CONDITIONS are env too: they pick the
@@ -57,7 +58,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:effect": {
@@ -74,7 +75,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:hash": {
@@ -91,7 +92,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:mobx": {
@@ -108,7 +109,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:pushstate": {
@@ -125,7 +126,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:signals": {
@@ -142,7 +143,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     },
     "test:e2e:vanilla": {
@@ -159,7 +160,7 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
       "outputs": []
     }
   }

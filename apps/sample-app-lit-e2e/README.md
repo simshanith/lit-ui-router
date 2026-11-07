@@ -36,6 +36,11 @@ mise run test_e2e hash mobx     # an arbitrary set
 mise run test_e2e --help        # the suites this checkout has
 ```
 
+Suites that run together split Playwright's default worker pool, half the
+cores, between them: `scripts/run-e2e.ts` sets `E2E_WORKERS` unless it is
+already set. Without the split, a full local run starts a pool per suite and
+its page loads time out.
+
 The suite list is derived from this package's `test:e2e:*` scripts by
 `scripts/run-e2e.ts`, so a new suite is one `package.json` entry plus its
 `turbo.json` task — nothing to add to `.config/mise/config.toml`, and no way

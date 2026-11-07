@@ -20,6 +20,10 @@ const apps = {
 export default defineConfig<{ locationPlugin: LocationPlugin }>({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // set by scripts/run-e2e.ts when suites share the host; undefined keeps Playwright's default
+  workers: process.env.E2E_WORKERS
+    ? Number(process.env.E2E_WORKERS)
+    : undefined,
   reporter: 'list',
   use: {
     trace: 'retain-on-failure',
