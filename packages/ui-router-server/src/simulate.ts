@@ -10,10 +10,12 @@ import type { RouterUrlConfig } from './url-config.ts';
  * need no DOM, so per-request instantiation is workerd-safe.
  *
  * Registers a shallow copy of each declaration, so one array can back many
- * concurrent routers.
+ * concurrent routers. Inside a declaration's own functions (`redirectTo`,
+ * resolves, hooks), `transition.to()` and `state.self` are the copy, not the
+ * caller's object; compare states by `name`.
  */
 export function createHeadlessRouter(
-  states: StateDeclaration[],
+  states: readonly StateDeclaration[],
   config?: RouterUrlConfig,
 ): UIRouter {
   const router = new UIRouter();

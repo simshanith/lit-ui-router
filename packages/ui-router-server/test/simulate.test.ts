@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { StateDeclaration } from '@uirouter/core';
+import type { StateDeclaration, Transition } from '@uirouter/core';
 
 import { createHeadlessRouter, onceSettled } from '../src/simulate.ts';
 
@@ -119,5 +119,41 @@ describe('shared state declarations', () => {
     ]);
     assert.equal(first.globals.current.name, 'parent.child');
     assert.equal(second.globals.current.name, 'parent.child');
+  });
+});
+
+describe('registered copies of the caller declarations', () => {
+  it('registers a copy, since core stamps $$state on it, so declaration functions compare states by name', async () => {
+    const resolveFn = () => 'value';
+
+    const redirectTo = (transition: Transition) =>
+      transition.to().name === 'old' ? 'new' : undefined;
+
+    const states: StateDeclaration[] = [
+      { name: 'old', url: '/old', redirectTo },
+      {
+        name: 'new',
+        url: '/new',
+        resolve: [{ token: 'value', resolveFn }],
+      },
+    ];
+
+    const router = createHeadlessRouter(states);
+    const [old, fresh] = states;
+    const registeredOld = router.stateRegistry.get('old');
+    const registeredNew = router.stateRegistry.get('new');
+
+    assert.notEqual(registeredOld, old);
+    assert.notEqual(registeredNew, fresh);
+    assert.equal(registeredOld.redirectTo, redirectTo);
+    assert.deepEqual(registeredNew.resolve, [{ token: 'value', resolveFn }]);
+
+    const settled = onceSettled(router);
+    router.urlService.url('/old');
+    router.urlService.sync();
+
+    assert.equal(await settled, true);
+    assert.equal(router.globals.current.name, 'new');
+    assert.equal(router.urlService.url(), '/new');
   });
 });

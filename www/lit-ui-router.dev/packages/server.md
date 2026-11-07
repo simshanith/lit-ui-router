@@ -143,7 +143,11 @@ Picking one:
   actual rules. Both strategies consume the same declaration data and produce
   identical verdicts today (the package tests assert parity), so `strategy`
   is a pure cost knob. A simulate mount's `prewarm` count builds idle routers
-  once core loads, so its first requests skip the cold build.
+  once core loads, so its first requests skip the cold build. The routers
+  `simulate` builds register copies of the mount's declarations, so inside a
+  declaration's own functions (`redirectTo`, resolves, hooks)
+  `transition.to()` and `state.self` are the copy, not the app's object;
+  compare states by `name`, as UI-Router code does.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
   server, and want its `href()`s to match what the client writes: paths by
   default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
