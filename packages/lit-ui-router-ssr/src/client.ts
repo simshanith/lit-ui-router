@@ -571,9 +571,8 @@ const pinAdopter = (view: Element, policy: AdoptPolicy | undefined): void => {
 
     if (policy) return adopt(woken, policy);
 
-    const above = view.parentNode
-      ? requestContext(view.parentNode, adoptUiViewContext)
-      : undefined;
+    // SAFETY: a served view requests the adopter only on an attached update, and a descendant only under it.
+    const above = requestContext(view.parentNode!, adoptUiViewContext);
 
     if (above) return above(woken);
     adopt(woken, {});
@@ -1054,30 +1053,26 @@ const warnNoneAdopted = (
   );
 };
 
-/** Whether no view the document was drawn with adopted, among those that reported. */
-const noneAdopted = (
-  views: ReadonlyMap<string, BootstrapViewReport>,
-): boolean => ![...views.values()].some(({ outcome }) => outcome === 'adopted');
+/** Whether none of `reports` adopted. */
+const noneAdopted = (reports: readonly BootstrapViewReport[]): boolean =>
+  !reports.some(({ outcome }) => outcome === 'adopted');
 
 /**
  * Warns once in development when no drawn view adopted: at resolve, once one
- * has reported; with every drawn view still pending, once they all have.
+ * has reported; with every drawn view still pending, once they all have. A
+ * document drawn with no view has none to adopt, and stays silent.
  */
-const checkSomeAdopted = (
-  tracker: ViewTracker,
-  views: ReadonlyMap<string, BootstrapViewReport>,
-): void => {
-  const reports = [...views.values()];
+const checkSomeAdopted = (tracker: ViewTracker): void => {
+  const reports = tracker.drawnReports();
 
-  if (reports.length === 0 || !noneAdopted(views)) return;
+  if (reports.length === 0 || !noneAdopted(reports)) return;
 
   if (reports.some(({ outcome }) => outcome !== 'pending'))
-    return warnNoneAdopted(views);
+    return warnNoneAdopted(tracker.snapshot());
 
   tracker.whenDrawnReported(() => {
-    const late = tracker.snapshot();
-
-    if (noneAdopted(late)) warnNoneAdopted(late);
+    if (noneAdopted(tracker.drawnReports()))
+      warnNoneAdopted(tracker.snapshot());
   });
 };
 
@@ -1093,6 +1088,8 @@ interface ViewTracker {
   readonly awake: () => readonly UiView[];
   /** Each view's report so far, drawn views first, the pending ones included. */
   readonly snapshot: () => ReadonlyMap<string, BootstrapViewReport>;
+  /** Each drawn view's report so far, in the signature's order, the pending ones included. */
+  readonly drawnReports: () => readonly BootstrapViewReport[];
   /** Runs `done` once every drawn view has reported, at once when they have. */
   readonly whenDrawnReported: (done: () => void) => void;
 }
@@ -1128,17 +1125,14 @@ const trackViews = (
     onward(view, outcome, error);
   };
 
+  const drawnEntries = (): [string, BootstrapViewReport][] =>
+    drawn.map((name) => [name, reports.get(name) ?? { outcome: 'pending' }]);
+
   return {
     reporter,
     awake: () => awake,
-    snapshot: () =>
-      new Map<string, BootstrapViewReport>([
-        ...drawn.map((name): [string, BootstrapViewReport] => [
-          name,
-          reports.get(name) ?? { outcome: 'pending' },
-        ]),
-        ...reports,
-      ]),
+    snapshot: () => new Map([...drawnEntries(), ...reports]),
+    drawnReports: () => drawnEntries().map(([, report]) => report),
     whenDrawnReported: (run) => {
       done.push(run);
       settle();
@@ -1371,7 +1365,7 @@ const bootServed = async (
   if (fellBack > 0 && signature.state !== router.globals.current.name)
     warnBootElsewhere(signature, router, fellBack);
 
-  if (drawn) checkSomeAdopted(tracker, views);
+  if (drawn) checkSomeAdopted(tracker);
 
   return { outcome: 'adopted', signature: compared, views };
 };
