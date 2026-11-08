@@ -23,7 +23,7 @@ export default {
 };
 ```
 
-A `<style>` element is checked when all its children are text, including one nested in other elements or in a `<template>`. Its expressions become postcss-lit placeholders, as in a `css` template. postcss-lit's `babelOptions` in `package.json` apply to both, and `// postcss-lit-disable-next-line` still skips a `css` template.
+A `<style>` element is checked when all its children are text, including one nested in other elements or in a `<template>`. Its expressions become postcss-lit placeholders, as in a `css` template. postcss-lit's `babelOptions` in `package.json` apply to both, and `// postcss-lit-disable-next-line` skips a `css`, `html` or `svg` template, as postcss-lit does: a line comment on the template or an ancestor.
 
 ## How it works
 
@@ -31,4 +31,4 @@ Each `<style>` element's contents parse as their own root, at the file's own lin
 
 ## Suppressions
 
-Use stylelint's comments inside the CSS, such as `/* stylelint-disable-next-line <rule> -- <reason> */`.
+Use stylelint's comments inside the CSS, such as `/* stylelint-disable-next-line <rule> -- <reason> */`. `// postcss-lit-disable-next-line` skips a whole template.

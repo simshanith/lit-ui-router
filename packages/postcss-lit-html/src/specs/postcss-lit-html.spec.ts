@@ -217,6 +217,58 @@ describe('lint', () => {
     }
   });
 
+  it('skips an html template after a postcss-lit-disable-next-line comment', async () => {
+    const code = src(
+      "import { html } from 'lit';",
+      'export const a = () =>',
+      '  // postcss-lit-disable-next-line',
+      '  html`<style>p { colr: red; }</style>`;',
+    );
+
+    expect((await lint(code)).warnings).toEqual([]);
+  });
+
+  it('skips every template under a disabled ancestor', async () => {
+    const code = src(
+      "import { css, html, svg } from 'lit';",
+      '// postcss-lit-disable-next-line',
+      'export const styles = [',
+      '  css`p { colr: red; }`,',
+      '  html`<style>p { colr: red; }</style>`,',
+      '  svg`<style>circle { colr: red; }</style>`,',
+      '];',
+    );
+
+    expect((await lint(code)).warnings).toEqual([]);
+  });
+
+  it('does not skip a template after a block disable comment', async () => {
+    const code = src(
+      "import { html } from 'lit';",
+      '/* postcss-lit-disable-next-line */',
+      'export const a = html`<style>p { colr: red; }</style>`;',
+    );
+
+    expect((await lint(code)).warnings).toEqual([
+      { ...at(code, 'colr'), rule: 'property-no-unknown' },
+    ]);
+  });
+
+  it('reports a template next to a disabled one', async () => {
+    const code = src(
+      "import { html } from 'lit';",
+      'export const a = [',
+      '  // postcss-lit-disable-next-line',
+      '  html`<style>p { colr: red; }</style>`,',
+      '  html`<style>q { colr: red; }</style>`,',
+      '];',
+    );
+
+    expect((await lint(code)).warnings).toEqual([
+      { ...at(code, 'colr', 'q {'), rule: 'property-no-unknown' },
+    ]);
+  });
+
   it('leaves files without <style> to postcss-lit', async () => {
     const code = src(
       "import { css, html } from 'lit';",
@@ -259,6 +311,21 @@ describe('--fix', () => {
     );
 
     expect((await lint(fixed.code!, FIXABLE)).warnings).toEqual([]);
+  });
+
+  it('leaves a disabled html template byte for byte', async () => {
+    const code = src(
+      "import { html } from 'lit';",
+      'export const a = [',
+      '  // postcss-lit-disable-next-line',
+      '  html`<style>p { color: #ffffff; margin: 0px; }</style>`,',
+      '  html`<style>q { color: #ffffff; }</style>`,',
+      '];',
+    );
+
+    expect((await lint(code, FIXABLE, true)).code).toBe(
+      code.replace('q { color: #ffffff; }', 'q { color: #fff; }'),
+    );
   });
 
   it('leaves the file byte-identical when nothing is fixable', async () => {

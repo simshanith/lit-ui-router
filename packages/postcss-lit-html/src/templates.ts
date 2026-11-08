@@ -1,5 +1,5 @@
 import { parse as babelParse, type ParserOptions } from '@babel/parser';
-import { traverseFast } from '@babel/types';
+import { type Comment, type Node, traverse } from '@babel/types';
 import {
   type DefaultTreeAdapterTypes as T,
   defaultTreeAdapter,
@@ -18,7 +18,7 @@ export interface TemplateSite {
   strings: Span[];
 }
 
-/** The `html`/`svg` templates of a file, and the bodies of its `css` templates. */
+/** The `html`/`svg` templates postcss-lit doesn't skip, and the bodies of the `css` templates. */
 export interface FileTemplates {
   sites: TemplateSite[];
   cssBodies: Span[];
@@ -34,6 +34,13 @@ export interface StyleElement {
   expressions: Span[];
 }
 
+const isDisableComment = (comment: Comment) =>
+  comment.type === 'CommentLine' &&
+  comment.value.includes('postcss-lit-disable-next-line');
+
+const hasDisableComment = (node: Node) =>
+  node.leadingComments?.some(isDisableComment) === true;
+
 /** Every lit tagged template in `source`, found with postcss-lit's Babel options. */
 export function templatesOf(
   source: string,
@@ -42,7 +49,7 @@ export function templatesOf(
   const sites: TemplateSite[] = [];
   const cssBodies: Span[] = [];
 
-  traverseFast(babelParse(source, babelOptions).program, (node) => {
+  traverse(babelParse(source, babelOptions).program, (node, ancestors) => {
     if (node.type !== 'TaggedTemplateExpression') return;
     const { tag, quasi } = node;
     const name = tag.type === 'Identifier' ? tag.name : undefined;
@@ -52,7 +59,12 @@ export function templatesOf(
         start: (quasi.start ?? 0) + 1,
         end: (quasi.end ?? 0) - 1,
       });
-    } else if (name === 'html' || name === 'svg') {
+    } else if (
+      (name === 'html' || name === 'svg') &&
+      // postcss-lit honours the comment on the template or any ancestor
+      !hasDisableComment(node) &&
+      !ancestors.some((ancestor) => hasDisableComment(ancestor.node))
+    ) {
       sites.push({
         tag: name,
         strings: quasi.quasis.map(({ start, end }) => ({
