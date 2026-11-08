@@ -8,7 +8,7 @@ import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
 import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
-import { prerender, redirectPages } from '../src/prerender.ts';
+import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
 import type {
   FileWriter,
   PrerenderOptions,
@@ -639,5 +639,113 @@ describe('redirectPages', () => {
     });
 
     assert.equal(files.size, 0);
+  });
+
+  // A template that spells out the whole line, so a test sees which line built each page.
+  const linePage = (line: RedirectLine): string =>
+    `${line.from} ${line.to} ${line.status}`;
+
+  it('builds every page through a custom page, which receives the whole line', async () => {
+    const received: RedirectLine[] = [];
+
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      extraRules: [{ from: '/old', to: '/new', status: 308 }],
+      rules: redirectPages({
+        page: (line) => {
+          received.push(line);
+
+          return linePage(line);
+        },
+      }),
+    });
+
+    assert.deepEqual(Object.fromEntries(files), {
+      'dist/old/index.html': '/old /new 308',
+      'dist/app/legacy/index.html': '/app/legacy /app/welcome 302',
+    });
+    assert.deepEqual(
+      received.map((line) => line.status),
+      [308, 302],
+    );
+  });
+
+  it('awaits an async page', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages({
+        page: async (line) => {
+          await Promise.resolve();
+
+          return linePage(line);
+        },
+      }),
+    });
+
+    assert.equal(
+      files.get('dist/app/legacy/index.html'),
+      '/app/legacy /app/welcome 302',
+    );
+  });
+
+  it('exports the default page as redirectPage', async () => {
+    const options: Partial<PrerenderOptions> = {
+      paths: ['/app/legacy'],
+      notFound: false,
+    };
+
+    const builtIn = await run({ ...options, rules: redirectPages() });
+
+    const wrapped = await run({
+      ...options,
+      rules: redirectPages({ page: (line) => redirectPage(line) }),
+    });
+
+    assert.deepEqual(wrapped.files, builtIn.files);
+    assert.equal(
+      builtIn.files.get('dist/app/legacy/index.html'),
+      redirectPage({ from: '/app/legacy', to: '/app/welcome', status: 302 }),
+    );
+  });
+
+  it('keeps first-wins, overlap, pattern and base rules under a custom page', async () => {
+    const first = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      extraRules: [{ from: '/app/legacy/', to: '/', status: 301 }],
+      rules: redirectPages({ page: linePage, base: '/app/' }),
+    });
+
+    assert.deepEqual(Object.fromEntries(first.files), {
+      'dist/legacy/index.html': '/app/legacy/ / 301',
+    });
+
+    await assert.rejects(
+      run({
+        extraRules: [{ from: '/sheet/7B/', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage }),
+      }),
+      /prerender wrote a page at 'sheet\/7B\/index.html'/,
+    );
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/blog/*', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage }),
+      }),
+      /'\/blog\/\*' is a pattern, not a path/,
+    );
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/old', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage, base: '/app' }),
+      }),
+      /'\/old' lies outside base '\/app'/,
+    );
   });
 });

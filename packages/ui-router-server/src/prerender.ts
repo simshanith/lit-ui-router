@@ -16,7 +16,7 @@ import type { MountConfig, ServerRouter, Verdict } from './index.ts';
 import { redirectsFileBody } from './redirect-pages.ts';
 import { fileFor, subpathIn } from './site-paths.ts';
 
-export { redirectPages } from './redirect-pages.ts';
+export { redirectPage, redirectPages } from './redirect-pages.ts';
 
 export type { RedirectPagesOptions } from './redirect-pages.ts';
 

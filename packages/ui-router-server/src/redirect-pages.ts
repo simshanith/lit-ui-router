@@ -18,6 +18,13 @@ export interface RedirectPagesOptions {
    * with the line's status before the page is reached.
    */
   redirectsFile?: boolean;
+  /**
+   * Builds each page's HTML from its line, {@link redirectPage} by default.
+   * Wrap that to add to the page, or replace it. `to` arrives unescaped:
+   * HTML-escape it in markup, and escape it as a script string too if it goes
+   * in a script.
+   */
+  page?: (line: RedirectLine) => string | Promise<string>;
 }
 
 /** The `_redirects` file body for the lines: one `from to status` line each. */
@@ -37,12 +44,24 @@ const scriptString = (text: string): string =>
   JSON.stringify(text).replace(/</g, '\\u003c');
 
 /**
- * The redirect page for one target: a `location.replace` that carries the
- * request's query and fragment when the target has none of its own, a meta
- * refresh and a plain link for browsers without script, a canonical link to
- * the target, and `noindex`.
+ * The default redirect page for one line: a `location.replace` that carries
+ * the request's query and fragment when the target has none of its own, a
+ * meta refresh and a plain link for browsers without script, a canonical link
+ * to the target, and `noindex`. The target is escaped in markup and script.
+ *
+ * @param line - the rules line; the page uses its `to`
+ * @returns the page's HTML
+ *
+ * @example
+ * ```ts
+ * import { redirectPage, redirectPages } from 'ui-router-server/prerender';
+ *
+ * const rules = redirectPages({
+ *   page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
+ * });
+ * ```
  */
-const redirectPage = (to: string): string => {
+export const redirectPage = ({ to }: RedirectLine): string => {
   const href = escapeHtml(to);
 
   return `<!doctype html>
@@ -99,7 +118,7 @@ const joinPath = (dir: string, file: string): string =>
  * The first line for a page wins, as in `_redirects`, so a path's two
  * spellings share one page.
  *
- * @param options - the base `outDir` is served at, and whether to write `_redirects` too
+ * @param options - the base `outDir` is served at, whether to write `_redirects` too, and the page template
  * @returns the writer to pass as `rules`
  * @throws an `Error`, when the writer runs, for a line whose page would replace one `prerender` wrote
  * @throws an `Error`, when the writer runs, for a line whose `from` is a pattern or lies outside `base`
@@ -114,7 +133,7 @@ const joinPath = (dir: string, file: string): string =>
 export const redirectPages =
   (options: RedirectPagesOptions = {}): RulesWriter =>
   async (lines, { write, outDir, pages }) => {
-    const { base = '/', redirectsFile = false } = options;
+    const { base = '/', redirectsFile = false, page = redirectPage } = options;
     const written = new Set(pages.map((page) => page.file));
     const planned = new Map<string, RedirectLine>();
 
@@ -130,7 +149,7 @@ export const redirectPages =
     }
 
     for (const [file, line] of planned)
-      await write(joinPath(outDir, file), redirectPage(line.to));
+      await write(joinPath(outDir, file), await page(line));
 
     if (redirectsFile && lines.length > 0)
       await write(joinPath(outDir, '_redirects'), redirectsFileBody(lines));

@@ -58,12 +58,15 @@ import {
 } from 'ui-router-server/matcher';
 import {
   prerender,
+  redirectPage,
+  redirectPages,
   type EmittedPage,
   type FileWriter,
   type PrerenderOptions,
   type PrerenderResult,
   type PrerenderTally,
   type RedirectLine,
+  type RedirectPagesOptions,
   type RenderContext,
 } from 'ui-router-server/prerender';
 import {
@@ -301,6 +304,18 @@ const staticSite: PrerenderOptions = {
   trailingSlash: 'exact',
   write: writeEmitted,
   dryRun: true,
+};
+
+// Redirect pages: the default template wrapped, returned as a promise.
+const pageOptions: RedirectPagesOptions = {
+  base: '/',
+  page: (line) =>
+    Promise.resolve(`${redirectPage(line)}<!-- ${line.status} -->`),
+};
+
+export const pagesSite: PrerenderOptions = {
+  ...staticSite,
+  rules: redirectPages(pageOptions),
 };
 
 export async function staticTally(): Promise<{

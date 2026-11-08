@@ -838,6 +838,21 @@ await prerender({
 - **Options.** `base` is the url path `outDir` is served at, `/` by default.
   `redirectsFile: true` also writes `_redirects`, for a site deployed to both
   kinds of host.
+- **Your own page.** `page` builds each page's HTML from its line (`from`,
+  `to`, `status`), and may return a promise.
+  [`redirectPage`](/api/ui-router-server/prerender/functions/redirectPage) is
+  the default, exported so a template can wrap it. A template gets `to`
+  unescaped: HTML-escape it in markup, and escape it as a script string too if
+  it goes in a script.
+
+```ts
+import { redirectPage, redirectPages } from 'ui-router-server/prerender';
+
+const rules = redirectPages({
+  // Wrap the default: add a tag to every page.
+  page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
+});
+```
 
 ### After `vite build`
 

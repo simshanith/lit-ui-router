@@ -81,7 +81,20 @@ the target has none, a meta refresh, a plain link, a canonical link to the targe
 The page answers 200, so the line's status never reaches the host; the canonical link tells search
 engines the content moved. A line whose page would replace one the run wrote throws, as does a
 pattern line; the first line for a page wins. `base` is the url path `outDir` is served at, and
-`redirectsFile: true` also writes `_redirects`. See
+`redirectsFile: true` also writes `_redirects`. `page` replaces the template: it receives each
+line (`from`, `to`, `status`) and returns the HTML, or a promise of it. `redirectPage` is the
+default, exported to wrap or reuse. A template gets `to` unescaped, so HTML-escape it in markup,
+and escape it as a script string too if it goes in a script.
+
+```ts
+import { redirectPage, redirectPages } from 'ui-router-server/prerender';
+
+const rules = redirectPages({
+  page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
+});
+```
+
+See
 [hosts without redirect rules](https://lit-ui-router.dev/packages/server#hosts-without-redirect-rules).
 
 ## Delegating states
