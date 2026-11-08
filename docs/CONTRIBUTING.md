@@ -212,7 +212,7 @@ report near the end. Save it to a file and search for `repro:`. Run the `repro:`
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
 Two workflows run the same jobs: `run` for the turbo graph, `plan`, and one
-`e2e (<suites>)` job per group of Cypress suites: one suite per job on PRs and
+`e2e (<suites>)` job per group of e2e suites: one suite per job on PRs and
 `main`, three on the branch lane unless the `E2E_SUITES_PER_JOB_BRANCH` repo
 variable says otherwise. Both lanes also run `e2e result`, which is green only
 when every group is:
@@ -249,11 +249,9 @@ Where the `repro:` line isn't enough:
   is the only source.
 - `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
   ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
-  uploads `cypress-screenshots-<group>` (each failing test's screenshot),
-  `playwright-traces-<group>` (each failing Playwright test's screenshot and
-  trace; open a trace with `playwright show-trace`) and `wrangler-logs-<group>` (server logs);
-  `cypress-videos-<group>` exists only
-  when the `cypressVideo` dispatch input was set. A failed axe pass uploads
+  uploads `playwright-traces-<group>` (each failing test's screenshot and
+  trace; open a trace with `playwright show-trace`) and `wrangler-logs-<group>`
+  (server logs). A failed axe pass uploads
   `axe-screenshots-a11y` (the page of each scan that found violations) and
   `wrangler-logs-a11y`.
 - The uncapped summaries are the `turbo-run-summaries` artifact:
@@ -350,8 +348,8 @@ Expected on a green run:
 - `actions/checkout`'s `hint:` lines about the default branch name.
 - `GOOGLE_ANALYTICS_TRACKING_ID missing` from the docs build; only the
   production deploy sets it ([www/DEPLOY.md](../www/DEPLOY.md)).
-- Cypress's Chrome connect retries and workerd's `Broken pipe`; the
-  [suite README](../apps/sample-app-lit-e2e/README.md) says when each matters.
+- workerd's `Broken pipe`; the
+  [suite README](../apps/sample-app-lit-e2e/README.md) says when it matters.
 
 A warning that also shows in a recent `main` run predates the change. A
 `neutral` or `action_required` check from

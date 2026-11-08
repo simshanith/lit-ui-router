@@ -17,7 +17,7 @@ export default defineConfig(
     '**/.wrangler/**',
     '**/.claude/**',
     'tools/dts-backtest/.probe-scratch/**',
-    'apps/sample-app-lit-e2e/cypress/**',
+    'apps/sample-app-lit-e2e/test-results/**',
     'www/lit-ui-router.dev/.vitepress/cache/**',
     'www/lit-ui-router.dev/.vitepress/.temp/**',
     'www/lit-ui-router.dev/api/**',

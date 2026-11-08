@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite and an axe pass, run against all four sample apps and the docs site —
+One Playwright Test suite and an axe pass, run against all four sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -11,28 +11,21 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds every app's
-build), serves it with wrangler on port 8787, and runs the Cypress suites in
+build), serves it with wrangler on port 8787, and runs the Playwright suites in
 parallel. `a11y` runs only when named; on CI it is the `acceptance (a11y)` job (`.github/workflows/acceptance.yml`):
 
-| Suite                  | Target          | Covers                                                                                                                                          |
-| ---------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`              | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                        |
-| `mobx`                 | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                           |
-| `effect`               | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                         |
-| `signals`              | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                        |
-| `docs`                 | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`)                             |
-| `hash`                 | `/app-hash/`    | vanilla app under the `hash` location plugin                                                                                                    |
-| `a11y`                 | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount      |
-| `pushstate`            | `/app/`         | vanilla app under the `pushState` fallback                                                                                                      |
-| `playwright-vanilla`   | `/app/`         | `vanilla` under Playwright Test: the `vanilla` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`     |
-| `playwright-mobx`      | `/app-mobx/`    | `mobx` under Playwright Test: the `mobx` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
-| `playwright-effect`    | `/app-effect/`  | `effect` under Playwright Test: the `effect` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`       |
-| `playwright-signals`   | `/app-signals/` | `signals` under Playwright Test: the `signals` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`     |
-| `playwright-docs`      | site + mounts   | `docs` under Playwright Test: the `docs` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
-| `playwright-hash`      | `/app-hash/`    | `hash` under Playwright Test: the `hash` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/`           |
-| `playwright-pushstate` | `/app/`         | `pushstate` under Playwright Test: the `pushstate` project in `playwright.config.ts`, screenshots and traces kept on failure in `test-results/` |
+| Suite       | Target          | Covers                                                                                                                                     |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vanilla`   | `/app/`         | vanilla app, default routing — the Navigation API plugin                                                                                   |
+| `mobx`      | `/app-mobx/`    | MobX app, default routing — the Navigation API plugin                                                                                      |
+| `effect`    | `/app-effect/`  | Effect app, default routing — the Navigation API plugin                                                                                    |
+| `signals`   | `/app-signals/` | Signals app, default routing — the Navigation API plugin                                                                                   |
+| `docs`      | site + mounts   | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits                                                   |
+| `hash`      | `/app-hash/`    | vanilla app under the `hash` location plugin                                                                                               |
+| `a11y`      | site + mounts   | axe-core (`@tools/a11y`) over the docs pages (one API reference page per kind) in light and dark, and a walk through each sample-app mount |
+| `pushstate` | `/app/`         | vanilla app under the `pushState` fallback                                                                                                 |
 
-Each suite is its own turbo task (`test:e2e:<suite>`). The Cypress suites have their own cache keys,
+Every suite but `a11y` is a project in `playwright.config.ts`, and each suite is its own turbo task (`test:e2e:<suite>`). The Playwright suites have their own cache keys,
 so rerunning one after a flake costs that suite alone rather than the whole
 set. `a11y` is uncached, because contrast and target size are measured on the host's rendering; a scan that finds violations saves a full-page screenshot to `a11y-screenshots/`. Name the suites you want and the umbrella runs those, around the same
 server, cached and summarized exactly like the full run:
@@ -42,6 +35,11 @@ mise run test_e2e hash          # one suite
 mise run test_e2e hash mobx     # an arbitrary set
 mise run test_e2e --help        # the suites this checkout has
 ```
+
+Suites that run together split Playwright's default worker pool, half the
+cores, between them: `scripts/run-e2e.ts` sets `E2E_WORKERS` unless it is
+already set. Without the split, a full local run starts a pool per suite and
+its page loads time out.
 
 The suite list is derived from this package's `test:e2e:*` scripts by
 `scripts/run-e2e.ts`, so a new suite is one `package.json` entry plus its
@@ -91,7 +89,7 @@ suite joins CI with no workflow edit.
 8787 is a default, not a fixture. It lives in code —
 `www/lit-ui-router.dev/dev-port.ts`, beside the server that binds it — so every
 entry point resolves it the same way, mise or no mise. Setting `WWW_DEV_PORT`
-overrides it, and the server, both Cypress configs, the axe suite, and the
+overrides it, and the server, the Playwright config, the axe suite, and the
 deflake sampler all read the override.
 
 That matters because the port is contended: a second checkout running the suite
@@ -112,30 +110,14 @@ The checked-in `.config/mise/config.toml` deliberately does **not** declare
 would already be in the environment when the local file rendered, and the local
 override would silently defer to it.
 
-### Chrome connect retries
+### Failure output
 
-Cypress drives Chrome over CDP and logs its connection attempts once the first
-five seconds pass:
-
-```text
-Still waiting to connect to Chrome, retrying in 1 second (attempt 18/62)
-```
-
-From attempt 18 the attempts are a second apart, so a last attempt of N means
-Chrome connected about N − 12 seconds in; no such line means under five. A
-fresh runner logs a handful of these on a green run. Look closer when the count
-climbs past 40, or at `CDP_COULD_NOT_CONNECT`, which Cypress raises after the
-last attempt, around 50 seconds in.
-
-### Failure logs
-
-A failing test prints the app's browser console and the Cypress command log
-under its title, through
-[cypress-terminal-report](https://github.com/archfz/cypress-terminal-report)
-(`cypress.config.ts` and `src/support/e2e.ts`). Passing tests print nothing
-extra. On CI that output lands in the job log and in the
-`turbo-task-logs-<group>` artifact. The `docs` suite runs without a support
-file, so it prints neither.
+Playwright Test keeps a screenshot and a trace of each failing test in
+`test-results/<suite>/`; a passing test keeps nothing. The trace records the DOM,
+console and network of every step: open it with
+`pnpm --dir apps/sample-app-lit-e2e exec playwright show-trace <trace.zip>`.
+On CI a failed job uploads `test-results/` as the `playwright-traces-<group>`
+artifact, and the job's run summary links it.
 
 ## Against a served origin
 
@@ -151,37 +133,34 @@ With it set, the umbrella starts no server and waits on nothing; the suites run
 straight against that origin. The value is a bare `http(s)` origin, with or
 without a trailing slash, because the site links its mounts by absolute path.
 Anything else fails before a suite starts. `scripts/base-url.ts` resolves it for
-every consumer: both Cypress configs, the mount launcher, the axe suite, and the
-readiness URLs of a local run.
+every consumer: the Playwright config, the axe suite, and the readiness URLs of
+a local run.
 
 The site still builds locally: the suites' build edge reaches it, and the axe
 suite enumerates the docs pages from its `dist`, so a local build that has
 drifted from the deployed one audits the wrong page list.
 
-The Cypress suites hash `E2E_BASE_URL` (`turbo.json`), so a run against one
+The Playwright suites hash `E2E_BASE_URL` (`turbo.json`), so a run against one
 origin never replays a cache entry from another, or from the local server. Two
 runs against the same origin at the same commit do share one, even when the
 deployment behind it changed; `TURBO_FORCE=1` re-runs them.
 
 ## Location plugin suites
 
-The `hash` and `pushState` suites re-run the vanilla specs with a
-suite-wide plugin selected via `cypress run --expose LOCATION_PLUGIN=<mode>`.
-The support file seeds the app's `featureFlags` session storage in
-`cy.visit`'s `onBeforeLoad` — hash routing never rewrites `location.search`,
-so a `?feature-location-plugin` URL param would pin the flag as
-URL-overridden for the whole session. Explicit per-spec `features` passed to
-`visitWithFeatures` still go through the URL param. The Playwright projects carry the
-plugin as the `locationPlugin` option in `playwright.config.ts`, and the `page`
-fixture in `src/playwright/app/fixtures.ts` seeds the same key through
-`addInitScript`.
+The `hash` and `pushstate` suites re-run the vanilla specs with a suite-wide
+plugin: the `locationPlugin` option of their projects in `playwright.config.ts`.
+The `page` fixture in `src/playwright/app/fixtures.ts` seeds the app's
+`featureFlags` session storage through `addInitScript` — hash routing never
+rewrites `location.search`, so a `?feature-location-plugin` URL param would pin
+the flag as URL-overridden for the whole session. Explicit per-spec `features`
+passed to `visit` still go through the URL param.
 
 The `vanilla` and `mobx` suites seed nothing, so they exercise the app's own
 resolution — the Navigation API, with pushState only where the browser lacks
 it. That is why there is no `navigation` lane and there _is_ a `pushState`
 one: every strategy that is not the default needs a lane of its own, or it
 rides the default and loses coverage the moment the default moves.
-`location_plugin.cy.js` asserts which plugin each lane actually booted.
+`location_plugin.spec.ts` asserts which plugin each lane actually booted.
 
 To run a single mode with its own server:
 
@@ -200,7 +179,7 @@ workerd). The class arrived in wrangler 4.114.0, ran at ~40% of attempts on
 
 wrangler 4.129.1 ships workers-sdk#15252, which replays a transiently-failed
 GET/HEAD request instead of fatal-exiting the dev server. That is a mitigation,
-not the missing `unsafeHandleRuntimeRestart` hook — but `cy.visit()` traffic is
+not the missing `unsafeHandleRuntimeRestart` hook — but page-load traffic is
 exactly the retryable class, and the sampler measured 20 clean attempts out of
 20 against it. The catalog now carries a caret range and wrangler rides routine
 dependency bumps like any other package.
@@ -254,34 +233,26 @@ Start one app's dev server (default ports and base paths are in
 pnpm --filter sample-app-lit-vanilla dev
 ```
 
-Then run one spec against it. Vanilla's config reads `WWW_DEV_PORT`, so the
-package script works:
+Then run one spec against it, pointing the suite at the dev server's port with
+`WWW_DEV_PORT`. Each project resolves its mount under that origin, so the same
+form serves every app; pick the project whose mount the dev server serves:
 
 ```bash
-pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla --spec src/integration/dialog.cy.js
+WWW_DEV_PORT=5173 pnpm --dir apps/sample-app-lit-e2e test:e2e:vanilla src/playwright/app/dialog.spec.ts
+WWW_DEV_PORT=5175 pnpm --dir apps/sample-app-lit-e2e test:e2e:effect src/playwright/app/dialog.spec.ts
 ```
 
-`test:e2e:mobx`, `test:e2e:effect` and `test:e2e:signals` don't forward `--spec`; pass the config
-[`scripts/cypress-suite.ts`](scripts/cypress-suite.ts) builds instead:
-
-```bash
-pnpm --dir apps/sample-app-lit-e2e exec cypress run --browser chrome --config baseUrl=http://localhost:5175/app-effect/,videosFolder=cypress/videos-effect,screenshotsFolder=cypress/screenshots-effect --spec src/integration/dialog.cy.js
-```
-
-Videos land in `cypress/videos*/`; screenshots only on failure or an explicit
-`cy.screenshot()`. The specs in `src/integration/` are the reference for each
-flow (login, dialogs, location plugins); read the one nearest your change.
+`pnpm --dir apps/sample-app-lit-e2e e2e` opens Playwright's UI mode instead. The
+specs in `src/playwright/app/` are the reference for each flow (login, dialogs,
+location plugins); read the one nearest your change.
 
 Load the app once before the first spec. A cold vite server transforms the
 whole module graph on the first hit, and the transition that is still running
-can leave the visualizer `<svg>` covering a `cy.click()` target — `sample_app.cy.js`
+can leave the visualizer `<svg>` covering a click target — `sample_app.spec.ts`
 ("prompts to save a message being composed") is the usual casualty. A rerun
 against the warm server passes.
 
-Don't verify `prefers-color-scheme` behavior with Cypress. Emulating it over CDP
-(`Emulation.setEmulatedMedia`) holds only before the first page load and sticks
-across specs and separate `cypress run` invocations, so flipping back silently
-fails. Use Playwright: `browser.newContext({ colorScheme })` for load time and
-`page.emulateMedia({ colorScheme })` for live flips. Its contexts emulate `light`
+To verify `prefers-color-scheme` behavior, use `browser.newContext({ colorScheme })` for load time and
+`page.emulateMedia({ colorScheme })` for live flips. Playwright contexts emulate `light`
 by default and pin the scheme inside iframes too, so pass `colorScheme: null`
 when the OS setting or propagation into an embed is what's under test.

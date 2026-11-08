@@ -396,21 +396,6 @@
       }
     },
     {
-      "files": ["**/*.cy.js", "**/cypress/**/*.js"],
-      "globals": {
-        "cy": "readonly",
-        "Cypress": "readonly",
-        "describe": "readonly",
-        "it": "readonly",
-        "beforeEach": "readonly",
-        "afterEach": "readonly",
-        "expect": "readonly"
-      },
-      "env": {
-        "browser": true
-      }
-    },
-    {
       "files": ["**/*.spec.ts", "**/src/specs/**"],
       "rules": {
         "lit-ui-router/anchor-is-valid": "off"
@@ -826,17 +811,6 @@
       }
     },
     {
-      "files": ["tools/build_and_test/src/start-xvfb.ts"],
-      "rules": {
-        "turbo/no-undeclared-env-vars": [
-          "warn",
-          {
-            "allowList": ["^XVFB_"]
-          }
-        ]
-      }
-    },
-    {
       "files": [
         "tools/turbo-summary/src/format-diff.ts",
         "tools/turbo-summary/src/mark-summary-session.ts",
@@ -848,7 +822,7 @@
           "warn",
           {
             "allowList": [
-              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|CYPRESS_SCREENSHOTS_ARTIFACT_URL|PLAYWRIGHT_TRACES_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|VITEST_ATTACHMENTS_ARTIFACT_URL|TURBO_SUMMARY_TOKEN_SET)$"
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|PLAYWRIGHT_TRACES_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|VITEST_ATTACHMENTS_ARTIFACT_URL|TURBO_SUMMARY_TOKEN_SET)$"
             ]
           }
         ]

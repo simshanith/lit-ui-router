@@ -99,7 +99,7 @@ test('names the unsuffixed artifacts the run group', () => {
 });
 
 test('ignores artifacts that are not task logs or run summaries', () => {
-  assert.equal(parseArtifactName('cypress-screenshots-docs'), undefined);
+  assert.equal(parseArtifactName('playwright-traces-docs'), undefined);
   assert.equal(parseArtifactName('turbo-task-logsx'), undefined);
 });
 

@@ -24,10 +24,6 @@ on:
         description: 'Run the ci:main superset (main-only guards included) instead of the PR graph'
         type: boolean
         default: false
-      cypressVideo:
-        description: 'Record Cypress videos and upload them as a run artifact'
-        type: boolean
-        default: false
       # 1 gives every suite its own `e2e (<suite>)` job.
       suitesPerJob:
         description: 'Default e2e suites per e2e job (a positive integer)'
@@ -156,7 +152,7 @@ jobs:
         # Uploaded BEFORE the report so the report can link it: the report caps
         # every list it prints, and this is the uncapped copy to download when
         # the tail is the interesting part. Tiny JSON, so a longer retention
-        # than the video/log artifacts costs nothing and outlives the logs.
+        # than the log artifacts costs nothing and outlives the logs.
         id: run_summaries
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -318,21 +314,6 @@ jobs:
           auto_update: true
       - name: Install dependencies
         run: mise run setup
-      - name: Resolve Cypress version
-        id: cypress-version
-        run: mise run //tools/build_and_test:cypress_version
-      - name: Cache Cypress binary
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
-      - name: Install Cypress
-        # `cypress install` is a near-no-op when the binary is cached; verify
-        # still runs so the suite skips the first-use banner.
-        run: mise run //tools/build_and_test:cypress
-      - name: Start shared Xvfb display
-        # Concurrent Cypress runs without DISPLAY race for one Xvfb display number.
-        run: mise run //tools/build_and_test:xvfb
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
         run: mise run //tools/turbo-summary:mark_session
@@ -355,9 +336,6 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-          # Cypress video off in CI (configs keep video:true for local runs);
-          # the cypressVideo dispatch input re-enables it for debugging.
-          CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Upload turbo run summaries
         # Same fail-open uploads as `run`, named per group.
         id: run_summaries
@@ -390,18 +368,9 @@ jobs:
           include-hidden-files: true
           retention-days: 5
           if-no-files-found: warn
-      - name: Upload Cypress screenshots
-        # The E2E step continues on error, so `failure()` is false here.
-        id: cypress_screenshots
-        if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
-        uses: actions/upload-artifact@v7
-        continue-on-error: true
-        with:
-          name: cypress-screenshots-${{ join(matrix.group, '-') }}
-          path: apps/sample-app-lit-e2e/cypress/screenshots*/
-          retention-days: 5
-          if-no-files-found: ignore
       - name: Upload Playwright traces
+        # Traces and screenshots of failed tests. The E2E step continues on
+        # error, so `failure()` is false here.
         id: playwright_traces
         if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
@@ -421,21 +390,8 @@ jobs:
           TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
-          # Empty on a green run or when no failing test left a screenshot or trace.
-          CYPRESS_SCREENSHOTS_ARTIFACT_URL: ${{ steps.cypress_screenshots.outputs.artifact-url }}
+          # Empty on a green run or when no failing test left a trace.
           PLAYWRIGHT_TRACES_ARTIFACT_URL: ${{ steps.playwright_traces.outputs.artifact-url }}
-      - name: Upload Cypress videos
-        # Videos exist only when the dispatch input turned recording on — no
-        # other caller passes cypressVideo, so the input alone is the condition.
-        # !cancelled() keeps videos from failed suites — the debugging case.
-        # An early failure before Cypress leaves no files, hence warn.
-        if: ${{ inputs.cypressVideo && !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: cypress-videos-${{ join(matrix.group, '-') }}
-          path: apps/sample-app-lit-e2e/cypress/videos*/
-          retention-days: 5
-          if-no-files-found: warn
       - name: Upload wrangler logs
         # The e2e dev server (wrangler dev) intermittently crashes mid-suite
         # with an empty error; its crash log lands only in the runner's

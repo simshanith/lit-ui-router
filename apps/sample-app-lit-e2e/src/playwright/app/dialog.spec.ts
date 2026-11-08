@@ -72,7 +72,7 @@ test.describe('confirmation dialog', () => {
 
     const box = await dialog.boundingBox();
 
-    // the overlay below the card, where Cypress's click('bottom') lands
+    // the overlay below the card, at the bottom edge's midpoint
     await dialog.click({
       position: { x: box!.width / 2, y: box!.height - 1 },
     });
