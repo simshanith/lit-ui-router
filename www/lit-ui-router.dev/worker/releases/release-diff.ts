@@ -13,18 +13,16 @@ import { html, render as renderTemplate, type TemplateResult } from 'lit';
 
 import type { DiffFile, DiffIndex } from './diff-data.ts';
 import type { DiffTree, TreeFile } from './release-diff-tree.ts';
+import { type DiffRouter, diffRouter } from './release-diff-router.ts';
 import {
   comparePaths,
   FILE_FILTERS,
   type FileFilter,
   FILTER_LABELS,
   filterCounts,
-  filterOf,
   shows,
-  urlWithFilter,
 } from './npm-diff/file-filter.ts';
 import { LANGUAGES } from './npm-diff/languages.ts';
-import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 const THEME = {
   light: 'github-light-high-contrast',
@@ -68,10 +66,6 @@ const summary = (files: readonly DiffFile[]): string => {
   return `${count(files.length, 'file')} changed, ${count(added, 'line')} added, ${count(removed, 'line')} removed.`;
 };
 
-/** The page's data routes sit below its own, slashed url, under the R2 layout, so a layout bump changes every url the edge and browsers cache. */
-const dataUrl = (path: string): URL =>
-  new URL(`${LAYOUT}/${path}`, location.href);
-
 const fetched = async (url: URL): Promise<Response> => {
   const response = await fetch(url);
 
@@ -81,20 +75,25 @@ const fetched = async (url: URL): Promise<Response> => {
   return response;
 };
 
-const indexOf = async (): Promise<DiffIndex> =>
+const indexOf = async (router: DiffRouter): Promise<DiffIndex> =>
   // SAFETY: the worker serves the index the release-diffs worker returns.
-  (await (await fetched(dataUrl('index.json'))).json()) as DiffIndex;
+  (await (
+    await fetched(router.dataUrl({ name: 'index' }))
+  ).json()) as DiffIndex;
 
 /** The files a preset shows, parsed from the patch sections the worker serves for it. */
-const presetFiles = async (filter: FileFilter): Promise<FileDiffMetadata[]> =>
+const presetFiles = async (
+  router: DiffRouter,
+  preset: FileFilter,
+): Promise<FileDiffMetadata[]> =>
   parsePatchFiles(
-    await (await fetched(dataUrl(`files/${filter}`))).text(),
+    await (await fetched(router.dataUrl({ name: 'files', preset }))).text(),
   ).flatMap((parsed) => parsed.files);
 
-const download = (filename: string): HTMLAnchorElement => {
+const download = (router: DiffRouter, filename: string): HTMLAnchorElement => {
   const link = document.createElement('a');
 
-  link.href = dataUrl('patch').href;
+  link.href = router.dataUrl({ name: 'patch' }).href;
   link.download = filename;
   link.textContent = 'Download the patch';
 
@@ -396,7 +395,7 @@ interface ViewState {
 }
 
 /** Each preset's files, fetched the first time it shows; a preset whose files another already fetched skips the fetch. */
-const presetLoader = () => {
+const presetLoader = (router: DiffRouter) => {
   const loaded = new Map<string, FileDiffMetadata>();
   const loading = new Map<FileFilter, Promise<void>>();
 
@@ -407,7 +406,7 @@ const presetLoader = () => {
     if (!shown.every(({ path }) => loaded.has(path))) {
       const pending =
         loading.get(filter) ??
-        presetFiles(filter).then((files) => {
+        presetFiles(router, filter).then((files) => {
           for (const file of files) loaded.set(file.name, file);
         });
 
@@ -426,6 +425,7 @@ const render = async (host: HTMLElement): Promise<void> => {
   if (!parts) return;
 
   const { status, note, fieldset, toggle, list } = parts;
+  const router = diffRouter({ pkg: name, from, to });
   // Fetched beside the index; a failure leaves the page without a tree.
   const treeModule = import('./release-diff-tree.ts');
 
@@ -434,7 +434,7 @@ const render = async (host: HTMLElement): Promise<void> => {
   let index: DiffIndex;
 
   try {
-    index = await indexOf();
+    index = await indexOf(router);
   } catch (error) {
     status.textContent = `The diff could not be built: ${error instanceof Error ? error.message : String(error)}.`;
 
@@ -451,12 +451,12 @@ const render = async (host: HTMLElement): Promise<void> => {
 
   status.replaceChildren(
     `${summary(files)} `,
-    download(`${name.replace('/', '-')}-${from}...${to}.patch`),
+    download(router, `${name.replace('/', '-')}-${from}...${to}.patch`),
   );
 
   const items = listItems(list, files);
   const diffs = diffsOf(items);
-  const load = presetLoader();
+  const load = presetLoader(router);
   const counts = filterCounts(files);
 
   const view: ViewState = { shown: [] };
@@ -495,16 +495,9 @@ const render = async (host: HTMLElement): Promise<void> => {
     return filter;
   };
 
-  const check = filterControl(fieldset, counts, (filter) => {
-    check(apply(filter));
-    history.replaceState(
-      history.state,
-      '',
-      urlWithFilter(location.href, filter),
-    );
-  });
+  const check = filterControl(fieldset, counts, router.choose);
 
-  check(apply(filterOf(location.search)));
+  router.start((filter) => check(apply(filter)));
   foldAllControl(parts.foldAll, diffs);
   view.tree = await mountTree(
     treeModule,

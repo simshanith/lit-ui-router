@@ -22,22 +22,9 @@ export const shows = (
   file: { readonly filters: readonly FileFilter[] },
 ): boolean => file.filters.includes(filter);
 
-/** The preset a url's search names, or the default for a missing or unknown one. */
-export const filterOf = (search: string): FileFilter => {
-  const value = new URLSearchParams(search).get(FILTER_PARAM);
-
-  return FILE_FILTERS.find((filter) => filter === value) ?? DEFAULT_FILTER;
-};
-
-/** `url` naming `filter`, its parameter omitted for the default. */
-export const urlWithFilter = (url: string, filter: FileFilter): string => {
-  const next = new URL(url);
-
-  if (filter === DEFAULT_FILTER) next.searchParams.delete(FILTER_PARAM);
-  else next.searchParams.set(FILTER_PARAM, filter);
-
-  return next.href;
-};
+/** The preset a param value names, or the default for a missing or unknown one. */
+export const filterNamed = (value: string | undefined): FileFilter =>
+  FILE_FILTERS.find((filter) => filter === value) ?? DEFAULT_FILTER;
 
 /** How many of `files` each preset shows. */
 export const filterCounts = (
