@@ -112,6 +112,25 @@
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "WWW_DEV_PORT"],
       "outputs": []
     },
+    // The Playwright pilot (#1895): the Cypress key, less CYPRESS_*. Traces
+    // land in test-results/, an uncached side effect like the screenshots.
+    "test:e2e:playwright": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/dev-port.ts",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/scripts/wrangler-dev.ts"
+      ],
+      "env": [
+        "CI",
+        "E2E_BASE_URL",
+        "WWW_WORKER_BUILD",
+        "WRANGLER_BUILD_CONDITIONS"
+      ],
+      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT"],
+      "outputs": []
+    },
     "test:e2e:pushstate": {
       "dependsOn": ["build"],
       "inputs": [

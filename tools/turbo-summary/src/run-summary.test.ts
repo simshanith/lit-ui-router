@@ -47,6 +47,7 @@ import {
   stripAnsi,
   structuredTaskLog,
   summaryMarkdown,
+  tracesLink,
   turboReproduction,
 } from './run-summary.core.ts';
 
@@ -1116,6 +1117,36 @@ describe('screenshotsLink', () => {
       '',
       '   vitest attachments: https://x/a',
       `   cypress screenshots: ${URL}`,
+    ]);
+  });
+});
+
+describe('tracesLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/7';
+
+  it('links the Playwright traces on both lanes', () => {
+    const link = tracesLink({ tracesUrl: URL });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.equal(link?.line, `   playwright traces: ${URL}`);
+  });
+
+  it('stays absent when nothing was uploaded', () => {
+    assert.equal(tracesLink({}), undefined);
+    assert.equal(tracesLink({ tracesUrl: '' }), undefined);
+  });
+
+  it('follows the Cypress screenshots in the stdout footer', () => {
+    const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+
+    const lines = overviewLines(run, {
+      screenshotsUrl: 'https://x/c',
+      tracesUrl: URL,
+    });
+
+    assert.deepEqual(lines.slice(-3), [
+      '',
+      '   cypress screenshots: https://x/c',
+      `   playwright traces: ${URL}`,
     ]);
   });
 });

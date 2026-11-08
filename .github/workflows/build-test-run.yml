@@ -401,6 +401,16 @@ jobs:
           path: apps/sample-app-lit-e2e/cypress/screenshots*/
           retention-days: 5
           if-no-files-found: ignore
+      - name: Upload Playwright traces
+        id: playwright_traces
+        if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: playwright-traces-${{ join(matrix.group, '-') }}
+          path: apps/sample-app-lit-e2e/test-results/
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Turbo run summary
         # Goes red after a failed suite, so a red job opens on the report.
         if: ${{ !cancelled() }}
@@ -411,8 +421,9 @@ jobs:
           TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
           TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
           TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
-          # Empty on a green run or when no test took a screenshot.
+          # Empty on a green run or when no failing test left a screenshot or trace.
           CYPRESS_SCREENSHOTS_ARTIFACT_URL: ${{ steps.cypress_screenshots.outputs.artifact-url }}
+          PLAYWRIGHT_TRACES_ARTIFACT_URL: ${{ steps.playwright_traces.outputs.artifact-url }}
       - name: Upload Cypress videos
         # Videos exist only when the dispatch input turned recording on — no
         # other caller passes cypressVideo, so the input alone is the condition.

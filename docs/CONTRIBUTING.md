@@ -249,8 +249,10 @@ Where the `repro:` line isn't enough:
   is the only source.
 - `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
   ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
-  uploads `cypress-screenshots-<group>` (each failing test's screenshot) and
-  `wrangler-logs-<group>` (server logs); `cypress-videos-<group>` exists only
+  uploads `cypress-screenshots-<group>` (each failing test's screenshot),
+  `playwright-traces-<group>` (each failing Playwright test's screenshot and
+  trace; open a trace with `playwright show-trace`) and `wrangler-logs-<group>` (server logs);
+  `cypress-videos-<group>` exists only
   when the `cypressVideo` dispatch input was set. A failed axe pass uploads
   `axe-screenshots-a11y` (the page of each scan that found violations) and
   `wrangler-logs-a11y`.
