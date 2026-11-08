@@ -1,5 +1,5 @@
 import { LitElementRenderer } from '@lit-labs/ssr/lib/lit-element-renderer.js';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { requestContext } from 'lit-ui-router/context';
 import type { UiView, UIRouterLit } from 'lit-ui-router/pure';
@@ -14,7 +14,7 @@ import type { AdoptOutcome } from '../client.js';
 import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { uiView } from './fixture.js';
-import { bootAt, drain, draw, serve } from './round-trip.js';
+import { bootAt, drain, draw, hydrateInto, serve } from './round-trip.js';
 
 /** The application shell: the routed `<ui-view>` sits in its shadow root, as hellosolarsystem lays it out. */
 class AppRoot extends LitElement {
@@ -52,6 +52,32 @@ const appRoot = (router: UIRouterLit): TemplateResult =>
 
 const lateRoot = (router: UIRouterLit): TemplateResult =>
   html`<ui-router .uiRouter=${router}><late-root></late-root></ui-router>`;
+
+/** An app's own served element, which asks the adopter for itself as it connects, as a `<ui-view>` does on its wake. */
+class OwnPanel extends HTMLElement {
+  readonly renderOptions = {};
+
+  render(): typeof nothing {
+    return nothing;
+  }
+
+  connectedCallback(): void {
+    requestContext(this, adoptUiViewContext)?.(this);
+  }
+}
+
+customElements.define('own-panel', OwnPanel);
+
+/** Holds the late shell's hydrate until the spec opens the gate. */
+const closeGate = (): void => {
+  LateRoot.gate = new Promise((resolve) => {
+    openGate = resolve;
+  });
+};
+
+/** The late shell's view, which waits in its declarative shadow root. */
+const lateView = (container: HTMLElement): UiView | null | undefined =>
+  container.querySelector('late-root')?.shadowRoot?.querySelector('ui-view');
 
 /** Every `<ui-view>` in the shell's open shadow root, nested ones included. */
 const shadowViews = (container: HTMLElement): UiView[] => [
@@ -119,9 +145,7 @@ describe('a <ui-view> inside the shell’s declarative shadow root', () => {
       await draw(lateRoot, [UiViewRenderer, ShellRenderer], '/shell/detail'),
     );
 
-    LateRoot.gate = new Promise((resolve) => {
-      openGate = resolve;
-    });
+    closeGate();
     const received: AdoptOutcome[] = [];
 
     const result = await bootAt(container, lateRoot, '/shell/detail', {
@@ -143,6 +167,92 @@ describe('a <ui-view> inside the shell’s declarative shadow root', () => {
       container.querySelector('late-root')?.shadowRoot?.textContent,
     ).toContain('leaf');
     expect(requestContext(container, adoptUiViewContext)).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('reports an element of the app’s own that asks the adopter to onAdopt, and leaves it out of views', async () => {
+    const { container } = serve(
+      await draw(lateRoot, [UiViewRenderer, ShellRenderer], '/shell/detail'),
+    );
+
+    closeGate();
+    const received: Report[] = [];
+
+    const result = await bootAt(container, lateRoot, '/shell/detail', {
+      onAdopt: (view, outcome) => received.push([view, outcome]),
+    });
+
+    const panel = new OwnPanel();
+    container.append(panel);
+
+    expect(received).toEqual([[panel, 'none']]);
+
+    openGate();
+    await drain(container);
+
+    expect(received.map(([, outcome]) => outcome)).toEqual([
+      'none',
+      'adopted',
+      'adopted',
+    ]);
+    expect([...result.views.keys()]).toEqual(['$default', '$default.$default']);
+    expect(requestContext(container, adoptUiViewContext)).toBeUndefined();
+  });
+
+  it('warns once its views have all reported, when none of them adopted', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { container } = serve(
+      await draw(lateRoot, [UiViewRenderer, ShellRenderer], '/badge'),
+    );
+
+    // Everything between the served pair dropped, as a re-render that wrote an empty view leaves it.
+    const view = lateView(container)!;
+
+    const pair = [...view.childNodes].filter(
+      (node) => node.nodeType === Node.COMMENT_NODE,
+    );
+
+    view.replaceChildren(pair[0], pair.at(-1)!);
+
+    closeGate();
+
+    const result = await bootAt(container, lateRoot, '/badge');
+
+    expect(Object.fromEntries(result.views)).toEqual({
+      $default: { outcome: 'pending' },
+    });
+    expect(warn).not.toHaveBeenCalled();
+
+    openGate();
+    await drain(container);
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain(
+      'none of the views it was drawn with adopted',
+    );
+    expect(warn.mock.calls[0]?.[1]).toEqual({ $default: 'none' });
+  });
+
+  it('adopts on its own when its host hydrates after hydrateRoot is released', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { container, stamp } = serve(
+      await draw(lateRoot, [UiViewRenderer, ShellRenderer], '/shell/detail'),
+    );
+
+    closeGate();
+    const { release } = await hydrateInto(container, lateRoot, '/shell/detail');
+    release();
+
+    openGate();
+    await drain(container);
+
+    expect(lateView(container)?.hasUpdated).toBe(true);
+    expect(
+      container.querySelector('late-root')?.shadowRoot?.textContent,
+    ).toContain('leaf');
+    expect(countRetained(stamp)).toMatchObject({ removed: 0 });
     expect(warn).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-import { nothing, render } from 'lit';
+import { html, nothing, render } from 'lit';
 import type { TemplateResult } from 'lit';
 import {
   afterEach,
@@ -41,6 +41,7 @@ import {
   rootTemplate,
   slottedFallbackRootTemplate,
   tailRootTemplate,
+  uiView,
 } from './fixture.js';
 import type { Page } from './round-trip.js';
 import {
@@ -715,6 +716,64 @@ describe('bootstrap', () => {
       }
 
       expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  it('stays silent over a document drawn for a state that fills no view', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/bare'));
+
+    const result = await bootAt(container, rootTemplate, '/bare');
+
+    expect(readHydrationSignature(container)?.views).toEqual([]);
+    expect(Object.fromEntries(result.views)).toEqual({
+      $default: { outcome: 'none', view: views(container)[0] },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('tracks the views that report, over a signature drawn before views were signed', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { container } = serve(
+      (await drawShell('/shell/detail')).replace(/,"views":\[[^\]]*\]/, ''),
+    );
+
+    const result = await bootAt(container, rootTemplate, '/shell/detail');
+
+    expect(readHydrationSignature(container)).not.toHaveProperty('views');
+    const [outer, nested] = views(container);
+    expect(Object.fromEntries(result.views)).toEqual({
+      $default: { outcome: 'adopted', view: outer },
+      '$default.$default': { outcome: 'adopted', view: nested },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('keeps the first report under a name two views share, and hands both to onAdopt', async () => {
+    const twinTemplate: Page = (router) =>
+      html`<ui-router .uiRouter=${router}>${uiView()}${uiView()}</ui-router>`;
+
+    const { container } = serve(
+      await draw(twinTemplate, [UiViewRenderer], '/shell/detail'),
+    );
+
+    const received: [Element, AdoptOutcome][] = [];
+
+    const result = await bootAt(container, twinTemplate, '/shell/detail', {
+      onAdopt: (view, outcome) => received.push([view, outcome]),
+    });
+
+    const [first, firstNested, second, secondNested] = views(container);
+    expect(received).toEqual([
+      [first, 'adopted'],
+      [second, 'adopted'],
+      [firstNested, 'adopted'],
+      [secondNested, 'adopted'],
+    ]);
+    expect(Object.fromEntries(result.views)).toEqual({
+      $default: { outcome: 'adopted', view: first },
+      '$default.$default': { outcome: 'adopted', view: firstNested },
     });
   });
 
