@@ -7,7 +7,12 @@ import { runInNewContext } from 'node:vm';
 import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
-import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
+import type {
+  MountConfig,
+  ServerRouter,
+  TrailingSlashPolicy,
+  Verdict,
+} from '../src/index.ts';
 import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
 import type {
   FileWriter,
@@ -123,21 +128,127 @@ describe('prerender', () => {
     );
   });
 
-  it('writes one spelling under exact, and hands lines to a rules function', async () => {
+  it('hands lines to a rules function and writes no rules file', async () => {
     let received: RedirectLine[] = [];
 
     const { files, result } = await run({
       paths: ['/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
       rules: (lines) => {
         received = lines;
       },
     });
 
-    assert.equal(result.rules.length, 1);
+    assert.equal(result.rules.length, 2);
     assert.deepEqual(received, result.rules);
     assert.equal(files.has('dist/_redirects'), false);
+  });
+
+  describe("the mount's trailing-slash policy", () => {
+    const respelling = (trailingSlash: TrailingSlashPolicy) =>
+      ({
+        ...mounts,
+        '/app': {
+          ...appMount,
+          routes: [
+            ...appMount.routes,
+            { name: 'badge', url: '/badge.svg', response: true },
+          ],
+          config: { strict: false, trailingSlash },
+        },
+      }) satisfies Record<string, MountConfig>;
+
+    const badge = () => new Response('<svg/>', { status: 200 });
+
+    it("writes a 308 from a page's other spelling under 'always'", async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always' }),
+        paths: ['/app/welcome/', '/app/legacy'],
+        notFound: false,
+      });
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/welcome/index.html', 'dist/_redirects'],
+      );
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+        { from: '/app/legacy', to: '/app/welcome/', status: 302 },
+        { from: '/app/legacy/', to: '/app/welcome/', status: 302 },
+      ]);
+    });
+
+    it("writes a 308 from a page's other spelling under 'never'", async (t) => {
+      const warn = silenceWarn(t);
+
+      const { result } = await run({
+        mounts: respelling({ pages: 'never' }),
+        paths: ['/app/welcome'],
+        notFound: false,
+      });
+
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome/', to: '/app/welcome', status: 308 },
+      ]);
+      assert.equal(warn.mock.callCount(), 0);
+    });
+
+    it('respells a response state by its own policy, not the pages one', async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always', responses: 'never' }),
+        paths: ['/app/badge.svg'],
+        notFound: false,
+        respond: badge,
+      });
+
+      assert.equal(files.get('dist/badge.svg'), '<svg/>');
+      assert.deepEqual(result.rules, [
+        { from: '/app/badge.svg/', to: '/app/badge.svg', status: 308 },
+      ]);
+    });
+
+    it('writes one line for a listed other spelling, never a loop', async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always' }),
+        paths: ['/app/welcome', '/app/welcome/'],
+        notFound: false,
+      });
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/welcome/index.html', 'dist/_redirects'],
+      );
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      ]);
+      assert.equal(result.tally.redirect, 1);
+    });
+
+    it("writes no line from either spelling under 'as-requested'", async () => {
+      const { result } = await run({
+        mounts: respelling({ responses: 'as-requested' }),
+        paths: ['/app/welcome', '/app/badge.svg'],
+        notFound: false,
+        respond: badge,
+      });
+
+      assert.deepEqual(result.rules, []);
+    });
+
+    it('reads the policy from a compiled resolver', async () => {
+      const { result } = await run({
+        mounts: undefined,
+        resolver: createServerRouter({
+          mounts: respelling({ pages: 'always' }),
+        }),
+        paths: ['/app/welcome/'],
+        notFound: false,
+      });
+
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      ]);
+    });
   });
 
   it('counts and warns on an unclaimed path, emitting nothing', async (t) => {
@@ -561,7 +672,6 @@ describe('redirectPages', () => {
       },
       paths: ['/sheet/7B', '/go'],
       notFound: false,
-      trailingSlash: 'exact',
       render: () => ({ location: '/sheet/7', status: 308 }),
       respond: () =>
         new Response(null, { status: 303, headers: { Location: '/sheet/1' } }),
@@ -644,7 +754,6 @@ describe('redirectPages', () => {
     const { files } = await run({
       paths: ['/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
       rules: redirectPages({ redirectsFile: true }),
     });
 
@@ -654,7 +763,36 @@ describe('redirectPages', () => {
     );
     assert.equal(
       files.get('dist/_redirects'),
-      '/app/legacy /app/welcome 302\n',
+      '/app/legacy /app/welcome 302\n/app/legacy/ /app/welcome 302\n',
+    );
+  });
+
+  it("writes no page for a line between a path's two spellings", async () => {
+    const { files, result } = await run({
+      mounts: {
+        ...mounts,
+        '/app': {
+          ...appMount,
+          config: { strict: false, trailingSlash: { pages: 'always' } },
+        },
+      },
+      paths: ['/app/welcome/', '/app/legacy'],
+      notFound: false,
+      rules: redirectPages({ base: '/app/' }),
+    });
+
+    assert.deepEqual(result.rules[0], {
+      from: '/app/welcome',
+      to: '/app/welcome/',
+      status: 308,
+    });
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/welcome/index.html', 'dist/legacy/index.html'],
+    );
+    assert.match(
+      files.get('dist/legacy/index.html') ?? '',
+      /url=\/app\/welcome\/"/,
     );
   });
 

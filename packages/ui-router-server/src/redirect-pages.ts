@@ -100,6 +100,10 @@ const pageFileFor = (from: string, base: string): string => {
   return rest === '' ? 'index.html' : `${rest}/index.html`;
 };
 
+// A line between a path's two spellings, whose page would be its target's.
+const isRespelling = ({ from, to }: RedirectLine): boolean =>
+  trimSlashes(from) === trimSlashes(to);
+
 const joinPath = (dir: string, file: string): string =>
   dir === '' ? file : `${dir.replace(/\/+$/, '')}/${file}`;
 
@@ -111,7 +115,9 @@ const joinPath = (dir: string, file: string): string =>
  * link tells search engines the content moved.
  *
  * The first line for a page wins, as in `_redirects`, so a path's two
- * spellings share one page.
+ * spellings share one page. A line between a path's two spellings, as a
+ * mount's trailing-slash policy adds, writes nothing: its page would be its
+ * target's own, and the host serves that at both spellings.
  *
  * @param options - the base `outDir` is served at, whether to write `_redirects` too, and the page template
  * @returns the writer to pass as `rules`
@@ -134,6 +140,8 @@ export const redirectPages =
 
     for (const line of lines) {
       const file = pageFileFor(line.from, base);
+
+      if (isRespelling(line)) continue;
 
       if (written.has(file))
         throw new Error(

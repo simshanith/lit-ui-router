@@ -80,7 +80,8 @@ them in `result.rules`, and a function receives them with the run's `write`, `ou
 the target has none, a meta refresh, a plain link, a canonical link to the target, and `noindex`.
 The page answers 200, so the line's status never reaches the host; the canonical link tells search
 engines the content moved. A line whose page would replace one the run wrote throws, as does a
-pattern line; the first line for a page wins. `base` is the url path `outDir` is served at, and
+pattern line; the first line for a page wins, and a line between a path's two spellings, as a
+mount's trailing-slash policy adds, writes nothing. `base` is the url path `outDir` is served at, and
 `redirectsFile: true` also writes `_redirects`. `page` replaces the template: it receives each
 line (`from`, `to`, `status`) and returns the HTML, or a promise of it. `redirectPage` is the
 default, exported to wrap or reuse; it escapes `to` with
@@ -161,7 +162,9 @@ and a non-navigation request to a response state or delegate is answered at eith
 policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
 `compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a
 `stateRegistry` url decorator, so `href()` and the urls a transition pushes come out canonical on a
-client router and on a server one built with `installServerLocation(router, { urlConfig })`. A
+client router and on a server one built with `installServerLocation(router, { urlConfig })`.
+`prerender()` follows the mount's policy: it writes a `308` line from each page's or response
+state's other spelling onto the canonical path it was listed at. A
 Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'always' }`, and
 `drop-trailing-slash` to `{ pages: 'never' }`. See
 [trailing slashes](https://lit-ui-router.dev/packages/server#trailing-slashes).

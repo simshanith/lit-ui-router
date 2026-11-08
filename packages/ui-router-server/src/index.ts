@@ -28,7 +28,7 @@ import type {
   RouteMatch,
   RouteTableConfig,
 } from './redirects.ts';
-import { respell } from './trailing-slash.ts';
+import { registerMountPolicies, respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
@@ -1049,6 +1049,12 @@ export function createServerRouter<
   };
 
   compiledMounts.set(router, declared);
+  registerMountPolicies(
+    router,
+    new Map(
+      declared.map((mount) => [mount.base, mount.config.config?.trailingSlash]),
+    ),
+  );
   registerDelegates(router, {
     keys: new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
     responses: new Set(declared.flatMap((mount) => [...mount.responses])),

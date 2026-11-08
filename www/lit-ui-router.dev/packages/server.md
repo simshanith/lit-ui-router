@@ -673,6 +673,8 @@ Each key takes `'always'`, `'never'` or `'as-requested'`.
   `installServerLocation(router, { urlConfig })`.
 - **Composition:** the slash is added when a url is formatted, never spelled in a pattern, so a
   child url appends to its parent's without a `//`.
+- **Static sites:** [`prerender`](#emitting-a-static-site) writes each page or response state at
+  the path listed and a `308` line from the other spelling, the redirect the server answers.
 
 The policy needs `strict: false`, so both spellings match before it picks one;
 `createServerRouter`, `compileRedirects` and `applyUrlConfig` throw without it. On Cloudflare,
@@ -801,7 +803,10 @@ export const transport = {
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
-slash, and no page. The `otherwise` projection becomes `404.html`. A path that
+slash, and no page. Under a mount's [trailing-slash policy](#trailing-slashes),
+a page or response state spelled `'always'` or `'never'` also gets a `308` line
+from its other spelling onto the path listed, so list paths in their canonical
+spelling, as `href()` formats them. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
 development. A path that matches a [delegating state](#delegating-states)
 gets no page and no rules line: it is counted in `result.tally.delegate` and
@@ -872,7 +877,9 @@ await prerender({
 - **No status.** The page answers 200, so the line's 301, 302 or 308 never
   reaches the host. The canonical link tells search engines the content moved.
 - **Collisions.** A line whose page would replace one the run wrote throws.
-  The first line for a page wins, as in `_redirects`, so a path's two
+  A line between a path's two spellings, as a
+  [trailing-slash policy](#trailing-slashes) adds, writes nothing: its page
+  would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
   spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
   throws.
 - **Options.** `base` is the url path `outDir` is served at, `/` by default.

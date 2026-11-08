@@ -301,7 +301,6 @@ const staticSite: PrerenderOptions = {
   notFound: { file: '404.html' },
   rules: '_redirects',
   extraRules: legacyRules,
-  trailingSlash: 'exact',
   write: writeEmitted,
   dryRun: true,
 };

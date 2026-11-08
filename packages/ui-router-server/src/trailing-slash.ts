@@ -5,6 +5,8 @@
  * read it, so a server verdict and a client href agree.
  */
 
+import type { ServerRouter } from './index.ts';
+
 /**
  * How one kind of state spells the trailing slash of its url: `'always'`
  * ends the path with `/`, `'never'` drops it, and `'as-requested'` keeps the
@@ -84,3 +86,28 @@ export const assertRespellable = (
       `${where}: trailingSlash needs strict: false, so both spellings match before the policy picks one`,
     );
 };
+
+// Each createServerRouter router's policy by mount base, for prerender.
+const mountPolicies = new WeakMap<
+  ServerRouter,
+  ReadonlyMap<string, TrailingSlashPolicy | undefined>
+>();
+
+/** @internal */
+export const registerMountPolicies = (
+  router: ServerRouter,
+  policies: ReadonlyMap<string, TrailingSlashPolicy | undefined>,
+): void => {
+  mountPolicies.set(router, policies);
+};
+
+/**
+ * The policy of the mount at `base` on a router from `createServerRouter`;
+ * undefined for any other router.
+ *
+ * @internal
+ */
+export const mountPolicyOf = (
+  router: ServerRouter,
+  base: string,
+): TrailingSlashPolicy | undefined => mountPolicies.get(router)?.get(base);
