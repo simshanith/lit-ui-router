@@ -9,12 +9,13 @@ import type { RouterUrlConfig } from './url-config.ts';
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
  * need no DOM, so per-request instantiation is workerd-safe.
  *
- * Callers must pass FRESH declaration objects on every call: core mutates
- * registrations ($$state), so sharing declarations across routers breaks
- * concurrent use.
+ * Registers a shallow copy of each declaration, so one array can back many
+ * concurrent routers. Inside a declaration's own functions (`redirectTo`,
+ * resolves, hooks), `transition.to()` and `state.self` are the copy, not the
+ * caller's object; compare states by `name`.
  */
 export function createHeadlessRouter(
-  states: StateDeclaration[],
+  states: readonly StateDeclaration[],
   config?: RouterUrlConfig,
 ): UIRouter {
   const router = new UIRouter();
@@ -23,7 +24,8 @@ export function createHeadlessRouter(
   applyUrlConfig(router, config);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
-  states.forEach((state) => router.stateRegistry.register(state));
+  // Core stamps $$state on the object it registers; a shared declaration would point at the last router's StateObject.
+  states.forEach((state) => router.stateRegistry.register({ ...state }));
 
   return router;
 }

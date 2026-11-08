@@ -6,7 +6,7 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/server)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-server)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-server)
 
-Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency).
+Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency). The routers `simulate` builds register copies of the mount's declarations, so inside a declaration's own functions (`redirectTo`, resolves, hooks) `transition.to()` and `state.self` are the copy, not the app's object; compare states by `name`, as UI-Router code does.
 
 The matcher composes each state's url along its parent as `@uirouter/core` does: a state's parent is its `parent:`, otherwise its name minus the last dotted segment.
 
@@ -101,7 +101,10 @@ marker; the host binds a handler to the state's name, typed with `ResponseHandle
 A handler receives `{ resolves, request }`. The verdict is `response`, decided by url matching
 alone, so a host tells it from a page before rendering. A response state needs a url and no
 `redirectTo`, and can't also delegate; `createServerRouter` throws for each, and `as const` routes
-make a row with both markers a compile error. The fetch and Hono adapters pass a GET or HEAD of any
+make a row with both markers a compile error. A url whose pattern is sometimes a page and sometimes a
+redirect needs a `redirectTo` function instead, answered after `settle` with `redirectedTo(router,
+transition)` from `ui-router-server/ssr` at the state's `redirectStatusCode` (`302` by default),
+which a data `redirectTo`'s verdict honors too. The fetch and Hono adapters pass a GET or HEAD of any
 `Accept` that matches one to `serveResponse(verdict, request, ...args)` and answer other methods
 with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `prerender()` hands a
 response state to its `respond` hook and writes a 2xx body at the path its url spells

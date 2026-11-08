@@ -154,7 +154,8 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  *   url: pathname + search,
  *   urlConfig: { strict: false },
  * });
- * states.forEach((state) => router.stateRegistry.register(state));
+ * // core stamps each registered declaration with $$state, so register a copy per router
+ * states.forEach((state) => router.stateRegistry.register({ ...state }));
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
  * });
