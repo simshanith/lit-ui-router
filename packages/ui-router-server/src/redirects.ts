@@ -140,6 +140,39 @@ const parentName = (route: RouteDeclaration): string => {
   return route.name.slice(0, dot);
 };
 
+// A url's path part and its search part, without the '?'.
+const splitSearch = (url: string): [path: string, search: string] => {
+  const index = url.indexOf('?');
+
+  return index < 0 ? [url, ''] : [url.slice(0, index), url.slice(index + 1)];
+};
+
+// A leaf-first chain's full pattern and merged params. As core's
+// UrlMatcher.append: paths join in order, search parts all apply.
+const composeChain = (chain: RouteDeclaration[]) => {
+  let path = '';
+  const searches: string[] = [];
+  const params: NonNullable<RouteDeclaration['params']> = {};
+
+  for (let depth = chain.length - 1; depth >= 0; depth--) {
+    const ancestor = chain[depth];
+
+    if (ancestor.url) {
+      const [own, search] = splitSearch(ancestor.url);
+      path += own;
+
+      if (search) searches.push(search);
+    }
+
+    if (ancestor.params) Object.assign(params, ancestor.params);
+  }
+
+  return {
+    pattern: searches.length ? `${path}?${searches.join('&')}` : path,
+    params,
+  };
+};
+
 /**
  * Compiles the url-addressable routes of a declaration set: each state's url
  * appended to its ancestors' (a state's parent is its `parent`, else its
@@ -208,25 +241,7 @@ export function compileRoutes(
 
   for (const route of routes) {
     if (route.url === undefined) continue;
-    const chain = chainOf(route);
-    let pattern = '';
-    const params: NonNullable<RouteDeclaration['params']> = {};
-
-    for (let depth = chain.length - 1; depth >= 0; depth--) {
-      const ancestor = chain[depth];
-
-      if (ancestor.url) {
-        // Naive concatenation cannot splice a child into a parent's search
-        // part (core's UrlMatcher.append can); fail rather than diverge.
-        if (pattern.includes('?'))
-          throw new Error(
-            `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
-          );
-        pattern += ancestor.url;
-      }
-
-      if (ancestor.params) Object.assign(params, ancestor.params);
-    }
+    const { pattern, params } = composeChain(chainOf(route));
 
     compiled.push({
       name: route.name,
