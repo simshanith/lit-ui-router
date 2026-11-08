@@ -5,7 +5,6 @@ import { applyUrlConfig } from 'ui-router-server/url-config';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import {
-  DEFAULT_FILTER,
   type FileFilter,
   FILTER_PARAM,
   filterNamed,
@@ -53,23 +52,9 @@ export const diffRouter = (pair: PairParams): DiffRouter => {
   // The route table is mount-relative, as the server routes it.
   locationConfig.baseHref(`${RELEASES_MOUNT}/`);
 
+  // Fresh declarations: core mutates registrations.
   for (const route of releaseRoutes)
-    router.stateRegistry.register(
-      // The server matcher can't nest routes under a search param (#1951), so the preset is the client's alone.
-      route.name === COMPARE
-        ? {
-            ...route,
-            url: `${route.url}?${FILTER_PARAM}`,
-            params: {
-              [FILTER_PARAM]: {
-                value: DEFAULT_FILTER,
-                squash: true,
-                dynamic: true,
-              },
-            },
-          }
-        : { ...route },
-    );
+    router.stateRegistry.register({ ...route });
 
   router.urlService.rules.otherwise({ state: 'notFound' });
 

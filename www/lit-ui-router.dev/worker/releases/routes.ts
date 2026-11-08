@@ -1,6 +1,8 @@
 // The /releases and /gh mounts: route tables that both the verdict and the page router compile.
 import type { MountConfig, RouteDeclaration } from 'ui-router-server';
 
+import { DEFAULT_FILTER, FILTER_PARAM } from './npm-diff/file-filter.ts';
+
 export const RELEASES_MOUNT = '/releases';
 
 export const GH_MOUNT = '/gh';
@@ -18,7 +20,13 @@ export const releaseRoutes = [
     params: { via: { value: 'diffshub', squash: true } },
     response: true,
   },
-  { name: 'releases.package.compare', url: '/diff/{from}...{to}' },
+  {
+    name: 'releases.package.compare',
+    url: `/diff/{from}...{to}?${FILTER_PARAM}`,
+    params: {
+      [FILTER_PARAM]: { value: DEFAULT_FILTER, squash: true, dynamic: true },
+    },
+  },
   {
     name: 'releases.package.compare.index',
     url: '/{layout}/index.json',
