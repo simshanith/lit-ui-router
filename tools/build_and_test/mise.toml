@@ -52,6 +52,7 @@ run = "playwright install-deps"
 
 [tasks.playwright_deps_engines]
 # Scoped hit-path deps: firefox+webkit are the only engines whose apt libs
-# the runner image lacks; chromium rides the preinstalled set (proven empirically — see the PR that added this).
+# the runner image lacks; chromium rides the preinstalled set (proven
+# empirically — see the PR that added this).
 description = "Install the Playwright system dependencies for firefox and webkit"
 run = "playwright install-deps firefox webkit"
