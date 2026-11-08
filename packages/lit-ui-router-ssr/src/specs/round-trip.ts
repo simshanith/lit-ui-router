@@ -5,7 +5,7 @@ import type { UIRouterLit } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
 import { bootstrap, hydrateRoot } from '../client.js';
 import type { BootstrapOptions, BootstrapResult } from '../client.js';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { stampServed } from '../testing.js';
 import type { ServedStamp } from '../testing.js';
 import { makeRouter } from './fixture.js';

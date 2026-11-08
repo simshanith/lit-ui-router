@@ -1,13 +1,13 @@
 /**
  * The server half: `prerender()` emits a static site from a `ui-router-server`
- * mount table, and `UiViewRenderer` draws `<ui-view>` inside the `@lit-labs/ssr` render.
+ * mount table, `renderToString()` renders one page for a host that owns the
+ * request, and `UiViewRenderer` draws `<ui-view>` inside the `@lit-labs/ssr` render.
  *
  * @module
  */
 export {
   type EmittedPage,
   type FileWriter,
-  type PagePayload,
   prerender,
   type PrerenderedPage,
   type PrerenderOptions,
@@ -16,6 +16,13 @@ export {
   type RedirectLine,
   type RenderContext,
 } from './prerender.js';
+
+export {
+  type PagePayload,
+  type RenderedPage,
+  renderToString,
+  type RenderToStringOptions,
+} from './render.js';
 
 export {
   type ResolvePayload,
