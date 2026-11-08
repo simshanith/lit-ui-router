@@ -409,6 +409,13 @@ parses, and hydration adopts them there. `LitElementRenderer` does the same for 
 on the page, whether or not it has anything to show on the server, which is the cost the default
 avoids.
 
+A shell element needs that list too: a shadow-DOM component that holds `<ui-view>` in its own
+template, such as an `<app-root>`. Under the default it renders as its bare tag, empty, and the views
+inside it are missing with it. With `LitElementRenderer` after `LightElementRenderer`, the
+`<ui-view>` in its shadow root renders, hydrates and adopts. In development, `prerender()` warns once
+per tag when a shadow-DOM `LitElement` reaches no renderer that draws it; `<ui-router>`, whose shadow
+root is a bare slot, is left out.
+
 ## Registering the elements
 
 A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import

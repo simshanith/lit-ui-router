@@ -15,6 +15,7 @@ import type {
 import { devGate } from '#dev-gate';
 
 import { LightElementRenderer } from './light-element-renderer.js';
+import { withShadowFallback } from './shadow-fallback-renderer.js';
 import { packageVersion, routeOf, signatureAttribute } from './signature.js';
 import { collectDrawnViews, UiViewRenderer } from './ui-view-renderer.js';
 
@@ -181,7 +182,7 @@ export const renderPage = (
         render(body, {
           // a fresh array per render: @lit-labs/ssr mutates the stack
           eventTargetStack: rootedStack(root),
-          elementRenderers,
+          elementRenderers: withShadowFallback(elementRenderers),
           // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
           deferHydration: true,
         }),
