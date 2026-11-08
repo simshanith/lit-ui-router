@@ -9,6 +9,7 @@ import {
 } from '@pierre/diffs';
 import { getOrCreateWorkerPoolSingleton } from '@pierre/diffs/worker';
 import DiffsWorker from '@pierre/diffs/worker/worker.js?worker';
+import { html, render as renderTemplate, type TemplateResult } from 'lit';
 
 import type { DiffFile, DiffIndex } from './diff-data.ts';
 import type { DiffTree, TreeFile } from './release-diff-tree.ts';
@@ -148,6 +149,7 @@ interface Parts {
   fieldset: HTMLFieldSetElement;
   nav: HTMLElement;
   toggle: HTMLButtonElement;
+  foldAll: HTMLButtonElement;
   treeHost: HTMLElement;
   list: HTMLElement;
 }
@@ -159,6 +161,7 @@ const partsOf = (host: HTMLElement): Parts | null => {
     fieldset: host.querySelector<HTMLFieldSetElement>('.diff-filter'),
     nav: host.querySelector<HTMLElement>('.diff-nav'),
     toggle: host.querySelector<HTMLButtonElement>('.diff-nav-toggle'),
+    foldAll: host.querySelector<HTMLButtonElement>('.diff-fold-all'),
     treeHost: host.querySelector<HTMLElement>('.diff-tree'),
     list: host.querySelector<HTMLElement>('.diff-files'),
   };
@@ -186,10 +189,42 @@ const listItems = (
     }),
   );
 
-/** Renders a file's diff into its item, the first time it's asked to. */
-const diffRenderer = (
+/** The header button that folds a file's diff down to its header; it reads as the file's path plus its expanded state. */
+const foldToggle = (
+  path: string,
+  collapsed: boolean,
+  onClick: () => void,
+): TemplateResult =>
+  html`<button
+    type="button"
+    class="diff-file-toggle"
+    aria-label=${path}
+    aria-expanded=${String(!collapsed)}
+    @click=${onClick}
+  ></button>`;
+
+/** Scrolls `item` back to its top when a fold has left the reader past its end. */
+const keepInView = (item: HTMLElement | undefined): void => {
+  if (item && item.getBoundingClientRect().top < 0)
+    item.scrollIntoView({ block: 'start' });
+};
+
+/** The shown file whose diff crosses the top of the viewport. */
+const atTop = (
   items: ReadonlyMap<string, HTMLLIElement>,
-): ((file: FileDiffMetadata) => void) => {
+): HTMLLIElement | undefined =>
+  [...items.values()].find(
+    (item) => !item.hidden && item.getBoundingClientRect().bottom > 0,
+  );
+
+/** The diffs: each renders into its item the first time it's asked to, and folds to its header. */
+interface Diffs {
+  render: (file: FileDiffMetadata) => void;
+  fold: (path: string, collapsed: boolean) => void;
+  foldAll: (collapsed: boolean) => void;
+}
+
+const diffsOf = (items: ReadonlyMap<string, HTMLLIElement>): Diffs => {
   const pool = getOrCreateWorkerPoolSingleton({
     poolOptions: {
       workerFactory: () => new DiffsWorker(),
@@ -202,36 +237,81 @@ const diffRenderer = (
     ? 'dark'
     : 'light';
 
-  const rendered = new Set<string>();
+  // Folded paths, rendered or not, so a file first shown after a fold-all arrives folded.
+  const folded = new Set<string>();
+  const rendered = new Map<string, (collapsed: boolean) => void>();
 
-  return (file) => {
+  const fold = (path: string, collapsed: boolean): void => {
+    if (collapsed) folded.add(path);
+    else folded.delete(path);
+    rendered.get(path)?.(collapsed);
+  };
+
+  const renderFile = (file: FileDiffMetadata): void => {
     if (rendered.has(file.name)) return;
-    rendered.add(file.name);
-    new FileDiff(
+
+    const prefix = document.createElement('span');
+
+    const diff = new FileDiff(
       {
         theme: THEME,
         themeType,
         diffStyle: 'unified',
         overflow: 'scroll',
         hunkSeparators: 'line-info',
+        stickyHeader: true,
+        collapsed: folded.has(file.name),
         unsafeCSS: CONTRAST_CSS,
         onPostRender: focusScrollers,
+        renderHeaderPrefix: () => prefix,
       },
       pool,
-    ).render({
+    );
+
+    const onClick = (): void => {
+      fold(file.name, !folded.has(file.name));
+      keepInView(items.get(file.name));
+    };
+
+    const show = (collapsed: boolean): void => {
+      renderTemplate(foldToggle(file.name, collapsed, onClick), prefix);
+    };
+
+    rendered.set(file.name, (collapsed) => {
+      show(collapsed);
+      diff.setOptions({ ...diff.options, collapsed });
+      diff.rerender();
+    });
+    show(folded.has(file.name));
+    diff.render({
       fileDiff: setLanguageOverride(file, languageOf(file)),
       containerWrapper: items.get(file.name),
     });
   };
+
+  const foldAll = (collapsed: boolean): void => {
+    const top = atTop(items);
+
+    for (const path of items.keys()) fold(path, collapsed);
+    keepInView(top);
+  };
+
+  return { render: renderFile, fold, foldAll };
 };
 
-/** Scrolls to a file's diff and focuses it, closing the narrow layout's tree. */
+/** Scrolls to a file's diff and focuses it, unfolding it and closing the narrow layout's tree. */
 const picker =
-  (items: ReadonlyMap<string, HTMLLIElement>, toggle: HTMLButtonElement) =>
+  (
+    items: ReadonlyMap<string, HTMLLIElement>,
+    toggle: HTMLButtonElement,
+    diffs: Diffs,
+  ) =>
   (path: string): void => {
     const item = items.get(path);
 
     if (!item) return;
+
+    diffs.fold(path, false);
 
     if (!matchMedia(WIDE).matches)
       toggle.setAttribute('aria-expanded', 'false');
@@ -271,13 +351,14 @@ const mountTree = async (
   treeModule: Promise<typeof import('./release-diff-tree.ts')>,
   parts: Parts,
   items: ReadonlyMap<string, HTMLLIElement>,
+  diffs: Diffs,
   shown: () => readonly DiffFile[],
 ): Promise<DiffTree | undefined> => {
   const { nav, toggle, treeHost } = parts;
 
   try {
     const { mountDiffTree } = await treeModule;
-    const tree = mountDiffTree(treeHost, picker(items, toggle));
+    const tree = mountDiffTree(treeHost, picker(items, toggle, diffs));
 
     toggle.addEventListener('click', () =>
       toggle.setAttribute(
@@ -293,6 +374,18 @@ const mountTree = async (
   } catch {
     return undefined;
   }
+};
+
+/** The button that folds every file, then unfolds them. */
+const foldAllControl = (button: HTMLButtonElement, diffs: Diffs): void => {
+  let collapsed = false;
+
+  button.addEventListener('click', () => {
+    collapsed = !collapsed;
+    diffs.foldAll(collapsed);
+    button.textContent = collapsed ? 'Expand all files' : 'Collapse all files';
+  });
+  button.hidden = false;
 };
 
 /** The preset shown, its files, and the tree once it has loaded. */
@@ -362,7 +455,7 @@ const render = async (host: HTMLElement): Promise<void> => {
   );
 
   const items = listItems(list, files);
-  const renderDiff = diffRenderer(items);
+  const diffs = diffsOf(items);
   const load = presetLoader();
   const counts = filterCounts(files);
 
@@ -373,7 +466,7 @@ const render = async (host: HTMLElement): Promise<void> => {
     try {
       const loaded = await load(filter, view.shown);
 
-      if (view.filter === filter) for (const file of loaded) renderDiff(file);
+      if (view.filter === filter) for (const file of loaded) diffs.render(file);
     } catch (error) {
       if (view.filter === filter)
         note.textContent = `The files could not be loaded: ${error instanceof Error ? error.message : String(error)}.`;
@@ -412,7 +505,14 @@ const render = async (host: HTMLElement): Promise<void> => {
   });
 
   check(apply(filterOf(location.search)));
-  view.tree = await mountTree(treeModule, parts, items, () => view.shown);
+  foldAllControl(parts.foldAll, diffs);
+  view.tree = await mountTree(
+    treeModule,
+    parts,
+    items,
+    diffs,
+    () => view.shown,
+  );
 };
 
 const host = document.querySelector<HTMLElement>('[data-npm-diff]');
