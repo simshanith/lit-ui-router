@@ -70,6 +70,9 @@ lit-ui-router-*.tgz
 coverage
 coverage-effect3
 .wrangler
+
+# playwright-cli snapshots, screenshots and logs, written to the working directory
+.playwright-cli/
 .dev.vars
 
 # bv (beads viewer) local config and caches

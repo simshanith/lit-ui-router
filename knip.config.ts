@@ -67,6 +67,8 @@ const workspaces = {
       'cf',
       // Workers Builds runs `npx wrangler` from the repo root (tools/workers-builds/cloudflare-deploy.ts)
       'wrangler',
+      // run ad hoc at the repo root (apps/sample-app-lit-e2e/README.md)
+      '@playwright/cli',
       // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
       'eslint-formatter-tap',
       // knip applies root ignores to every workspace

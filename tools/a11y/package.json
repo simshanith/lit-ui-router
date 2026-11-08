@@ -25,6 +25,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",
+    "playwright-core": "catalog:",
     "typescript": "catalog:",
     "valibot": "catalog:"
   }
