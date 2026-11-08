@@ -8,6 +8,7 @@ import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
 import { installServerLocation } from 'ui-router-server/location';
+import { settle } from 'ui-router-server/ssr';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { lightSlot } from '../client.js';
@@ -15,6 +16,7 @@ import { LightDomHydrating } from '../light-dom.js';
 import { LightElementRenderer } from '../light-element-renderer.js';
 import { prerender } from '../prerender.js';
 import type { FileWriter } from '../prerender.js';
+import { renderToString } from '../render.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { withoutSignature } from './markup.js';
 
@@ -38,6 +40,10 @@ customElements.define('prod-shell', ProdShell);
 class DrawnShell extends ShellRoot {}
 
 customElements.define('drawn-shell', DrawnShell);
+
+class StringShell extends ShellRoot {}
+
+customElements.define('string-shell', StringShell);
 
 /** A branded light-DOM element. */
 class BrandedCard extends LightDomHydrating(LitElement) {
@@ -128,6 +134,20 @@ describe('a shadow-DOM element no listed renderer draws', () => {
     const root = element(parseMarkup(warned), 'bare-shell');
     expect(elements(root, 'template')).toEqual([]);
     expect(elements(root, 'ui-view')).toEqual([]);
+  });
+
+  it('warns from renderToString too, which draws through the same render', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = new UIRouterLit();
+    installServerLocation(router);
+    router.stateRegistry.register({ name: 'home', url: '/' });
+    await settle(router, '/');
+
+    renderToString(html`<string-shell></string-shell>`, { router });
+
+    const warnings = fallbackWarnings(warn);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('<string-shell>');
   });
 
   it('is quiet in production', async () => {

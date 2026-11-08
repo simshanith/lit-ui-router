@@ -64,9 +64,11 @@ export interface RenderToStringOptions {
    */
   root?: EventTarget;
   /**
-   * Element renderers passed through to `@lit-labs/ssr`, verbatim. Defaults to
+   * Element renderers passed through to `@lit-labs/ssr`. Defaults to
    * `[UiViewRenderer, LightElementRenderer]`, as `prerender()`'s option of the
-   * same name does, and a list passed here replaces it the same way.
+   * same name does, and a list passed here replaces it the same way. As there,
+   * a shadow-DOM `LitElement` no renderer in the list answers for renders as
+   * its bare tag, empty, and warns once per tag in development.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**
