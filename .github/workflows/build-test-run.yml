@@ -314,6 +314,19 @@ jobs:
           auto_update: true
       - name: Install dependencies
         run: mise run setup
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: mise run //tools/build_and_test:playwright_version
+      - name: Cache Playwright browsers
+        # Same key as the run job, so they share one cache entry.
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+      - name: Install Playwright Browsers
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: mise run //tools/build_and_test:playwright
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
         run: mise run //tools/turbo-summary:mark_session

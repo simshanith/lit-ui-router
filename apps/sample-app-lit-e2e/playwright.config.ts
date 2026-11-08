@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { e2eUrl } from './scripts/base-url.ts';
 import type { LocationPlugin } from './src/playwright/app/fixtures.ts';
 
-// the runner image's Chrome: the e2e job installs no Playwright browsers
-const chrome = { ...devices['Desktop Chrome'], channel: 'chrome' };
+// Playwright's bundled Chromium, pinned to the installed Playwright version
+const chrome = devices['Desktop Chrome'];
 
 // One project per app suite; each runs every app spec against its mount and location plugin.
 const apps = {

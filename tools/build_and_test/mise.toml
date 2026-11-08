@@ -39,8 +39,8 @@ run = [
 ]
 
 [tasks.playwright]
-# The vitest browser legs need the Playwright browsers + system deps; the
-# binary comes from this package's own devDependency.
+# The vitest browser legs and the e2e suites need the Playwright browsers +
+# system deps; the binary comes from this package's own devDependency.
 description = "Install the Playwright browsers with system dependencies"
 run = "playwright install --with-deps"
 
