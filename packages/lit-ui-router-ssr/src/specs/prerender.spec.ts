@@ -176,6 +176,32 @@ describe('redirect verdicts', () => {
     ]);
     expect(result.tally).toMatchObject({ shell: 1, redirect: 1 });
   });
+
+  it("follows the mount's 'always' policy with a 308 from a page's other spelling", async () => {
+    const always = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        config: { strict: false, trailingSlash: { pages: 'always' } },
+      },
+    } satisfies Record<string, MountConfig>;
+
+    const { files, result } = await run({
+      mounts: always,
+      paths: ['/app/welcome/', '/app/legacy'],
+      notFound: false,
+    });
+
+    expect([...files.keys()]).toEqual([
+      'dist/welcome/index.html',
+      'dist/_redirects',
+    ]);
+    expect(result.rules).toEqual([
+      { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      { from: '/app/legacy', to: '/app/welcome/', status: 302 },
+      { from: '/app/legacy/', to: '/app/welcome/', status: 302 },
+    ]);
+  });
 });
 
 describe('unclaimed paths', () => {
