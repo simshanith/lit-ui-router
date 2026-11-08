@@ -59,6 +59,19 @@ jobs:
           auto_update: true
       - name: Install dependencies
         run: mise run setup
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: mise run //tools/build_and_test:playwright_version
+      - name: Cache Playwright browsers
+        # Same key as build-test-run.yml, so they share one cache entry.
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+      - name: Install Playwright Browsers
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: mise run //tools/build_and_test:playwright
       - name: Build the served site
         # The e2e server serves www/lit-ui-router.dev/dist; the filter pulls the app's full
         # dependency closure. Remote cache makes this a restore when secrets
