@@ -1,11 +1,14 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
-// Paths are relative: baseURL is the /app/ mount, and a leading slash would resolve from the origin.
-
-const EMAIL_ADDRESS = 'myself@angular.dev';
-
-const readAppConfig = (page: Page) =>
-  page.evaluate(() => sessionStorage.getItem('appConfig'));
+import {
+  EMAIL_ADDRESS,
+  authenticate,
+  backdrop,
+  expect,
+  logIn,
+  readAppConfig,
+  test,
+} from './fixtures.ts';
 
 const mainNav = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 
@@ -21,11 +24,6 @@ const folderLink = (page: Page, name: string) =>
 const folder = (page: Page, name: string) =>
   page.getByRole('listitem').filter({ has: folderLink(page, name) });
 
-const logIn = async (page: Page) => {
-  await page.getByLabel('Username').selectOption(EMAIL_ADDRESS);
-  await page.getByRole('button', { name: 'Log in' }).click();
-};
-
 const openCompose = async (page: Page) => {
   await page.getByRole('link', { name: 'New Message' }).click();
   await expect(page).toHaveURL(/\/mymessages\/compose/);
@@ -33,16 +31,13 @@ const openCompose = async (page: Page) => {
 
 const messageTable = (page: Page) => page.getByRole('table');
 
-// The backdrop carries no role, and while it exists it swallows clicks.
-const backdrop = (page: Page) => page.locator('#backdrop');
-
 test.describe('unauthenticated sample app', () => {
-  test('loads', async ({ page }) => {
-    await page.goto('./');
+  test('loads', async ({ visit }) => {
+    await visit('/');
   });
 
-  test('renders home', async ({ page }) => {
-    await page.goto('home');
+  test('renders home', async ({ page, visit }) => {
+    await visit('/home');
 
     // navigation controls are anchors, so they carry a real href
     for (const name of ['Messages', 'Contacts', 'Preferences']) {
@@ -53,8 +48,8 @@ test.describe('unauthenticated sample app', () => {
     }
   });
 
-  test('asks for authentication', async ({ page }) => {
-    await page.goto('home');
+  test('asks for authentication', async ({ page, visit }) => {
+    await visit('/home');
     await page.getByRole('link', { name: 'Preferences' }).click();
 
     await expect(page.getByRole('heading', { name: 'Log In' })).toBeVisible();
@@ -64,8 +59,8 @@ test.describe('unauthenticated sample app', () => {
     expect(await readAppConfig(page)).toBeNull();
   });
 
-  test('can authenticate', async ({ page }) => {
-    await page.goto('prefs');
+  test('can authenticate', async ({ page, visit }) => {
+    await visit('/prefs');
 
     expect(await readAppConfig(page)).toBeNull();
 
@@ -89,42 +84,24 @@ test.describe('unauthenticated sample app', () => {
 });
 
 test.describe('authenticated sample app', () => {
-  // one login per worker; later tests seed its appConfig before the app boots
-  let appConfig: string | null = null;
+  authenticate();
 
-  test.beforeEach(async ({ page }) => {
-    if (appConfig !== null) {
-      await page.addInitScript((value) => {
-        sessionStorage.setItem('appConfig', value);
-      }, appConfig);
-
-      return;
-    }
-
-    await page.goto('login');
-    await logIn(page);
-    await expect(page).toHaveURL(/\/home/);
-
-    appConfig = await readAppConfig(page);
-    expect(appConfig).not.toBeNull();
-  });
-
-  test('navigates to Preferences by url', async ({ page }) => {
-    await page.goto('prefs');
+  test('navigates to Preferences by url', async ({ page, visit }) => {
+    await visit('/prefs');
     await expect(
       page.getByRole('button', { name: 'Reset All Data' }),
     ).toBeVisible();
   });
 
-  test('navigates to Contacts by url', async ({ page }) => {
-    await page.goto('contacts');
+  test('navigates to Contacts by url', async ({ page, visit }) => {
+    await visit('/contacts');
     await expect(
       page.getByRole('heading', { name: 'Select a contact' }),
     ).toBeVisible();
   });
 
-  test('navigates to Messages by url', async ({ page }) => {
-    await page.goto('mymessages');
+  test('navigates to Messages by url', async ({ page, visit }) => {
+    await visit('/mymessages');
     await expect(
       messageTable(page).getByRole('button', { name: 'Sender' }),
     ).toBeVisible();
@@ -133,8 +110,8 @@ test.describe('authenticated sample app', () => {
     ).toBeVisible();
   });
 
-  test('can send a message', async ({ page }) => {
-    await page.goto('mymessages');
+  test('can send a message', async ({ page, visit }) => {
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
     await openCompose(page);
 
@@ -157,8 +134,8 @@ test.describe('authenticated sample app', () => {
     ).toBeVisible();
   });
 
-  test('can save a draft', async ({ page }) => {
-    await page.goto('mymessages');
+  test('can save a draft', async ({ page, visit }) => {
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
     await openCompose(page);
 
@@ -186,8 +163,9 @@ test.describe('authenticated sample app', () => {
   // element, unsent draft and all. Regression guard for #723.
   test('retains an unsent draft across a trip out of the sticky branch', async ({
     page,
+    visit,
   }) => {
-    await page.goto('mymessages');
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
     await openCompose(page);
     await page
@@ -210,8 +188,9 @@ test.describe('authenticated sample app', () => {
   // it, and `contacts.contact` is a descendant of that target.
   test('keeps the Contacts tab active on a nested contact', async ({
     page,
+    visit,
   }) => {
-    await page.goto('contacts');
+    await visit('/contacts');
     await expect(page).toHaveURL(/\/contacts/);
     await expect(navTab(page, 'Contacts')).toHaveClass(/\bactive\b/);
 
@@ -225,8 +204,9 @@ test.describe('authenticated sample app', () => {
   // would come back frozen.
   test('keeps the Contacts tab active after a round trip out of the branch', async ({
     page,
+    visit,
   }) => {
-    await page.goto('contacts');
+    await visit('/contacts');
     await page.getByRole('link', { name: /Finley/ }).click();
     await expect(page).toHaveURL(/\/contacts\/[\w-]+$/);
 
@@ -245,8 +225,9 @@ test.describe('authenticated sample app', () => {
   // previously-active child DSR remembers.
   test('does not reopen a saved draft when returning to messages', async ({
     page,
+    visit,
   }) => {
-    await page.goto('contacts');
+    await visit('/contacts');
     await expect(page).toHaveURL(/\/contacts/);
 
     await openCompose(page);
@@ -265,8 +246,9 @@ test.describe('authenticated sample app', () => {
   // draft must not bleed into the next one.
   test('starts a fresh draft after the previous one was saved', async ({
     page,
+    visit,
   }) => {
-    await page.goto('mymessages');
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
 
     await openCompose(page);
@@ -280,8 +262,8 @@ test.describe('authenticated sample app', () => {
     );
   });
 
-  test('prompts to save a message being composed', async ({ page }) => {
-    await page.goto('mymessages');
+  test('prompts to save a message being composed', async ({ page, visit }) => {
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
     await openCompose(page);
     await page.getByLabel('Recipient').fill('somebody@somewhere.com');
@@ -308,8 +290,8 @@ test.describe('authenticated sample app', () => {
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
   });
 
-  test('navigates through folders', async ({ page }) => {
-    await page.goto('mymessages');
+  test('navigates through folders', async ({ page, visit }) => {
+    await visit('/mymessages');
     await expect(page).toHaveURL(/\/mymessages\/inbox/);
 
     await expect(folder(page, 'inbox')).toHaveClass(/\bselected\b/);
@@ -331,8 +313,8 @@ test.describe('authenticated sample app', () => {
     }
   });
 
-  test('navigates through messages', async ({ page }) => {
-    await page.goto('mymessages/finance');
+  test('navigates through messages', async ({ page, visit }) => {
+    await visit('/mymessages/finance');
     await expect(folder(page, 'finance')).toHaveClass(/\bselected\b/);
 
     for (const [subject, guid] of [
@@ -349,8 +331,8 @@ test.describe('authenticated sample app', () => {
     }
   });
 
-  test('navigates through contacts', async ({ page }) => {
-    await page.goto('contacts');
+  test('navigates through contacts', async ({ page, visit }) => {
+    await visit('/contacts');
 
     for (const [name, id] of [
       ['Rios Sears', 'rsears'],
