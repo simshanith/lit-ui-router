@@ -70,6 +70,9 @@ catalogs:
     '@pierre/trees':
       specifier: ^1.0.0-beta.6
       version: 1.0.0-beta.6
+    '@playwright/cli':
+      specifier: 0.1.22
+      version: 0.1.22
     '@playwright/test':
       specifier: ^1.64.1
       version: 1.64.1
@@ -593,6 +596,8 @@ overrides:
   '@cloudflare/config>zod': ^4.6.7
   '@codecov/bundler-plugin-core>zod': ^4.6.7
   '@pierre/trees>@pierre/theming': ^1.0.2
+  '@playwright/cli>playwright': ^1.64.1
+  '@playwright/cli>playwright-core': ^1.64.1
   d3-color@<3.1.0: ^3.1.0
   dompurify@<3.4.17: ^3.4.17
   get-uri>basic-ftp: ^6.2.1
@@ -605,6 +610,7 @@ patchedDependencies:
   '@api-viewer/docs': c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098
   '@api-viewer/tabs': efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e
   '@uirouter/visualizer': 74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df
+  eslint-plugin-pnpm: 021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a
   lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
 
 importers:
@@ -620,6 +626,9 @@ importers:
       '@commitlint/types':
         specifier: 'catalog:'
         version: 21.2.3
+      '@playwright/cli':
+        specifier: 'catalog:'
+        version: 0.1.22
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:tools/bootstrap
@@ -661,7 +670,7 @@ importers:
         version: 1.13.0(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
       eslint-plugin-pnpm:
         specifier: 'catalog:'
-        version: 1.9.1(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
+        version: 1.9.1(patch_hash=021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
       eslint-plugin-turbo:
         specifier: 'catalog:'
         version: 2.11.10(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))(turbo@2.11.10)
@@ -5175,6 +5184,11 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  '@playwright/cli@0.1.22':
+    resolution: {integrity: sha512-6WMkQNM4VEzqMkdr/l60X9Cr7i+tI/arK87IWz2K7pB6j8I2ZJ8KN+1JfhJDLnK+SXnab6Op8xGt4adcGLsyfA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   '@playwright/test@1.64.1':
     resolution: {integrity: sha512-IaYGml/nSOiZWROfPtuIL7neuu9qDOZ3TNvNljUIrhDMxiGTgPjzj/g9p9RxpS2tSepPDRY+UwAaEeiKtUvIAg==}
@@ -11179,6 +11193,11 @@ snapshots:
       - '@shikijs/themes'
       - shiki
 
+  '@playwright/cli@0.1.22':
+    dependencies:
+      playwright: 1.64.1
+      playwright-core: 1.64.1
+
   '@playwright/test@1.64.1':
     dependencies:
       playwright: 1.64.1
@@ -12979,7 +12998,7 @@ snapshots:
       sort-object-keys: 2.1.0
       sort-package-json: 4.0.0
 
-  eslint-plugin-pnpm@1.9.1(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
+  eslint-plugin-pnpm@1.9.1(patch_hash=021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
     dependencies:
       empathic: 2.1.0
       eslint: 10.14.0(jiti@2.7.0)(supports-color@10.2.2)

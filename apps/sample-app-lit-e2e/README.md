@@ -246,6 +246,26 @@ WWW_DEV_PORT=5175 pnpm --dir apps/sample-app-lit-e2e test:e2e:effect src/playwri
 specs in `src/playwright/app/` are the reference for each flow (login, dialogs,
 location plugins); read the one nearest your change.
 
+To look around before writing a spec, drive the dev server with `playwright-cli`
+from the repo root:
+
+```bash
+pnpm exec playwright-cli open http://localhost:5173/app/
+pnpm exec playwright-cli snapshot
+pnpm exec playwright-cli click e12
+pnpm exec playwright-cli close
+```
+
+It reads `.playwright/cli.config.json` from the working directory, which runs it in
+Playwright's bundled Chromium, the build the suites use. Run from anywhere else, it
+falls back to the installed Google Chrome. Each `@playwright/cli` release is built
+against one Playwright minor; the overrides in `pnpm-workspace.yaml` run it on the
+workspace's Playwright, so a Playwright bump moves the CLI to its matching release
+(`tools/repo-checks/playwright-cli-pin.test.ts` fails until it does).
+`pnpm exec playwright-cli --help` names the agent skill that ships with that
+version, and `.playwright-cli/` collects what it writes. Turn what it finds into a
+spec.
+
 Load the app once before the first spec. A cold vite server transforms the
 whole module graph on the first hit, and the transition that is still running
 can leave the visualizer `<svg>` covering a click target — `sample_app.spec.ts`

@@ -72,6 +72,9 @@ coverage-effect3
 .wrangler
 .dev.vars
 
+# playwright-cli snapshots, screenshots and logs, written to the working directory
+.playwright-cli/
+
 # bv (beads viewer) local config and caches
 .bv/
 
