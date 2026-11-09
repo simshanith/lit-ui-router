@@ -31,7 +31,7 @@ const el = useTemplateRef('el');
 
 let observer: ResizeObserver | undefined;
 
-// The nav, sidebar and hero offset themselves by --vp-layout-top-height.
+// CSS sets the one-line offset for first paint; this corrects it when the banner wraps.
 onMounted(() =>
   watchEffect(() => {
     observer?.disconnect();
@@ -67,21 +67,28 @@ function onClick(event: MouseEvent) {
     aria-label="Docs version"
   >
     <p v-if="kind === 'unreleased'">
-      These docs describe unreleased changes on <code>{{ version.label }}</code
-      >.
-      <a :href target="_self" @click="onClick"
-        >Read this page in the released docs</a
-      >.
+      Unreleased docs from {{ version.label }}.
+      <a :href target="_self" @click="onClick">Go to released</a>
+    </p>
+    <p v-else-if="kind === 'deprecated'">
+      {{ version.label }} is no longer supported.
+      <a :href target="_self" @click="onClick">Go to latest</a>
     </p>
     <p v-else>
-      You're reading the docs for lit-ui-router {{ version.label
-      }}{{ kind === 'deprecated' ? ', which is no longer supported' : '' }}.
-      <a :href target="_self" @click="onClick"
-        >Read this page in the latest docs</a
-      >.
+      You're reading the {{ version.label }} docs.
+      <a :href target="_self" @click="onClick">Go to latest</a>
     </p>
   </div>
 </template>
+
+<style>
+:root:has(.VersionBanner) {
+  --vp-layout-top-height: calc(
+    var(--site-text-sm) * 1.5 + 2 * var(--site-space-2) +
+      var(--site-border-width)
+  );
+}
+</style>
 
 <style scoped>
 .VersionBanner {

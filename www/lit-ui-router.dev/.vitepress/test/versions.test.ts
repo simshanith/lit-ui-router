@@ -52,9 +52,22 @@ describe('VersionManifest', () => {
   });
 
   it('rejects anything else', () => {
-    for (const raw of [null, 'versions', {}, { ...manifest, extra: 1 }]) {
+    for (const raw of [null, 'versions', {}, { ...manifest, hidden: 'main' }]) {
       assert.ok(!v.is(VersionManifestSchema, raw));
     }
+  });
+
+  it('accepts fields a later schema adds, so a frozen build still reads the live manifest', () => {
+    const later = {
+      ...manifest,
+      unreleased: true,
+      others: [{ ...v1, released: '2026-11-01' }],
+    };
+
+    const result = v.safeParse(VersionManifestSchema, later);
+
+    assert.ok(result.success);
+    assert.deepEqual(result.output.others, [v1]);
   });
 });
 
