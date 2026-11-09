@@ -13,7 +13,12 @@ import { devGate } from '#dev-gate';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
+import { redirectsFileBody } from './redirect-pages.ts';
 import { fileFor, subpathIn } from './site-paths.ts';
+
+export { redirectPage, redirectPages } from './redirect-pages.ts';
+
+export type { RedirectPagesOptions } from './redirect-pages.ts';
 
 /** One emitted artefact, as {@link prerender} planned it. */
 export interface EmittedPage {
@@ -64,6 +69,25 @@ export interface RenderContext {
  * verbatim, creating its directory as needed.
  */
 export type FileWriter = (file: string, body: string) => void | Promise<void>;
+
+/** What a {@link RulesWriter} is handed besides the lines. */
+export interface RulesContext {
+  /** The run's {@link PrerenderOptions.write | write}; files take `outDir` joined on. */
+  write: FileWriter;
+  /** The run's {@link PrerenderOptions.outDir | outDir}. */
+  outDir: string;
+  /** Every page the run wrote, the 404 document included. */
+  pages: readonly EmittedPage[];
+}
+
+/**
+ * A {@link PrerenderOptions.rules | `rules`} function: receives every rules
+ * line once the pages are written, and writes whatever the host reads.
+ */
+export type RulesWriter = (
+  lines: RedirectLine[],
+  context: RulesContext,
+) => void | Promise<void>;
 
 /** Options for {@link prerender}. */
 export interface PrerenderOptions {
@@ -119,13 +143,11 @@ export interface PrerenderOptions {
   /**
    * `'_redirects'` (default) writes the Cloudflare Pages / Netlify file;
    * `'none'` writes nothing and leaves {@link PrerenderResult.rules} to the
-   * caller; a function receives the lines and writes whatever the host reads.
+   * caller; a function receives the lines and writes whatever the host reads,
+   * such as `redirectPages` for a host with no redirect rules.
    * No SPA catch-all is ever written — one turns every 404 into a 200.
    */
-  rules?:
-    | '_redirects'
-    | 'none'
-    | ((lines: RedirectLine[]) => void | Promise<void>);
+  rules?: '_redirects' | 'none' | RulesWriter;
   /** Lines prepended to the generated ones, verbatim — a site's own legacy redirects. */
   extraRules?: RedirectLine[];
   /**
@@ -258,24 +280,22 @@ const notFoundPage = async (
 const writeRules = async (
   lines: RedirectLine[],
   rules: NonNullable<PrerenderOptions['rules']>,
-  write: FileWriter,
-  outDir: string,
+  context: RulesContext,
 ): Promise<void> => {
   if (rules === 'none') return;
 
   if (rules !== '_redirects') {
-    await rules(lines);
+    await rules(lines, context);
 
     return;
   }
 
   if (lines.length === 0) return;
 
-  const body = lines
-    .map((line) => `${line.from} ${line.to} ${line.status}`)
-    .join('\n');
-
-  await write(joinPath(outDir, '_redirects'), `${body}\n`);
+  await context.write(
+    joinPath(context.outDir, '_redirects'),
+    redirectsFileBody(lines),
+  );
 };
 
 const resolverOf = (options: PrerenderOptions): ServerRouter => {
@@ -507,7 +527,7 @@ export async function prerender(
 
   const lines = [...extraRules, ...generated];
 
-  if (!dryRun) await writeRules(lines, rules, write, outDir);
+  if (!dryRun) await writeRules(lines, rules, { write, outDir, pages });
 
   return { tally, pages, rules: lines, warnings, delegated };
 }
