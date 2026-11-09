@@ -108,7 +108,20 @@ export type Inputs = {
   /** A package's packument, `null` when npm answers 404, absent when npm could not be read. */
   npm: ReadonlyMap<string, Packument | null>;
   now: number;
+  /** Defaults to {@link ACCEPTED}. */
+  accepted?: readonly Accepted[];
 };
+
+/** A disagreement kept for good: still listed, as a note, with its reason. */
+export type Accepted = { release: string; message: string; reason: string };
+
+export const ACCEPTED: readonly Accepted[] = [
+  {
+    release: 'lit-ui-router@1.3.0',
+    message: 'on npm without a final GitHub release',
+    reason: 'published without a GitHub release; kept as the record (#1424)',
+  },
+];
 
 /** The `<name>@<version>` a release tag names, or undefined for any other tag. */
 export function releaseOf(
@@ -465,10 +478,52 @@ export function reconcile(inputs: Inputs): Finding[] {
     ...names.flatMap((name) => distTagFindings(name, inputs, known)),
   ];
 
+  const accepted = accept(findings, inputs.accepted ?? ACCEPTED, inputs.npm);
+
   return [
-    ...findings.filter(({ level }) => level === 'action'),
-    ...findings.filter(({ level }) => level === 'info'),
+    ...accepted.filter(({ level }) => level === 'action'),
+    ...accepted.filter(({ level }) => level === 'info'),
   ];
+}
+
+const matches = (
+  finding: Finding,
+  entry: Pick<Accepted, 'release' | 'message'>,
+): boolean =>
+  finding.release === entry.release && finding.message === entry.message;
+
+/** Accepted disagreements as notes, plus a note for each entry nothing matched while npm was read. */
+function accept(
+  findings: readonly Finding[],
+  accepted: readonly Accepted[],
+  npm: Inputs['npm'],
+): Finding[] {
+  const kept = findings.map((finding): Finding => {
+    const entry = accepted.find((candidate) => matches(finding, candidate));
+
+    return entry
+      ? {
+          ...finding,
+          level: 'info',
+          message: `${finding.message} (accepted: ${entry.reason})`,
+        }
+      : finding;
+  });
+
+  const stale = accepted.flatMap(({ release, message }): Finding[] =>
+    npm.has(releaseOf(release)?.name ?? '') &&
+    !findings.some((finding) => matches(finding, { release, message }))
+      ? [
+          {
+            release,
+            level: 'info',
+            message: `the accepted \`${message}\` no longer applies; drop it from ACCEPTED`,
+          },
+        ]
+      : [],
+  );
+
+  return [...kept, ...stale];
 }
 
 /** The digest check for one new release: its `.tgz` asset against npm's tarball. */

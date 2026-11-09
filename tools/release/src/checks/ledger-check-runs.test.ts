@@ -75,6 +75,7 @@ const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   releases: [GITHUB_RELEASE],
   npm: new Map([[NAME, packument()]]),
   now: NOW,
+  accepted: [],
   ...overrides,
 });
 
@@ -322,6 +323,34 @@ describe('reconcile', () => {
     });
 
     assert.deepEqual(reconcile(legacy), []);
+  });
+
+  it('notes an accepted disagreement, and an accepted entry nothing matches', () => {
+    const accepted = [
+      {
+        release: RELEASE,
+        message: 'tagged, but not on npm: a publish run stopped before npm',
+        reason: 'kept',
+      },
+    ];
+
+    const tagged = inputs({
+      ledger: {
+        versions: [{ ...ROWS.tagged, status: 'tagged' }],
+        distTags: [],
+      },
+      releases: [],
+      npm: new Map([[NAME, packument(null, {})]]),
+      accepted,
+    });
+
+    assert.deepEqual(summary(reconcile(tagged)), [
+      'info: tagged, but not on npm: a publish run stopped before npm (accepted: kept)',
+    ]);
+
+    assert.deepEqual(summary(reconcile(inputs({ accepted }))), [
+      'info: the accepted `tagged, but not on npm: a publish run stopped before npm` no longer applies; drop it from ACCEPTED',
+    ]);
   });
 
   it('orders action findings before notes', () => {
