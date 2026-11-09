@@ -22,6 +22,7 @@ import {
   CLAIMS_QUEUE,
   consume,
   DEAD_LETTER_QUEUE,
+  PUBLISH_READS,
   type LedgerBatch,
   type LedgerMessage,
   QUEUE_BACKOFF,
@@ -272,11 +273,11 @@ interface Recorded extends LedgerMessage {
 
 let ids = 0;
 
-function messageOf(body: Claim | Partial<Claim>, id = `m${++ids}`): Recorded {
+function messageOf(body: Claim | Partial<Claim>, attempts = 1): Recorded {
   const message: Recorded = {
-    id,
+    id: `m${++ids}`,
     timestamp: new Date('2026-10-17T00:00:00.000Z'),
-    attempts: 1,
+    attempts,
     body,
     acks: 0,
     retries: [],
@@ -454,7 +455,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
   });
 
   it('records npm and GitHub for a version whose tag is gone', async () => {
-    const message = messageOf(claimOf());
+    const message = messageOf(claimOf(), PUBLISH_READS);
 
     await deliver([message], sees({ ...RELEASED, tag: null, distTags: {} }));
 
@@ -472,7 +473,7 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       )
       .bind(NAME, VERSION)
       .run();
-    const message = messageOf(claimOf());
+    const message = messageOf(claimOf(), PUBLISH_READS);
 
     await deliver([message], sees({ ...RELEASED, distTags: {} }));
 
@@ -573,7 +574,11 @@ describe('queue consumer', { timeout: 120_000 }, () => {
 
   it('records a conflict when npm reports a recorded version absent', async () => {
     await seed(ROWS.released);
-    const message = messageOf(claimOf('2026-10-01T00:00:00.000Z'));
+
+    const message = messageOf(
+      claimOf('2026-10-01T00:00:00.000Z'),
+      PUBLISH_READS,
+    );
 
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
@@ -584,6 +589,40 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     assert.equal(row?.npm_integrity, NPM.integrity);
     assert.equal(row?.npm_conflict, 'null');
     assert.equal(row?.gh_conflict, null);
+  });
+
+  it('retries a publish whose dist-tags read names no tag for it', async () => {
+    const message = messageOf(claimOf());
+
+    await deliver(
+      [message],
+      sees({ ...RELEASED, distTags: { latest: '0.0.1-alpha.0' } }),
+    );
+
+    retriedOnce(message);
+    assert.deepEqual(await all('claims'), []);
+  });
+
+  it('retries a publish that npm serves no version for yet', async () => {
+    const message = messageOf(claimOf());
+
+    await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
+
+    retriedOnce(message);
+    assert.deepEqual(await all('claims'), []);
+  });
+
+  it('records a publish untagged once its dist-tags reads run out', async () => {
+    const message = messageOf(claimOf(), PUBLISH_READS);
+
+    await deliver(
+      [message],
+      sees({ ...RELEASED, distTags: { latest: '0.0.1-alpha.0' } }),
+    );
+
+    assert.deepEqual([message.acks, message.retries], [1, []]);
+    assert.deepEqual(await statuses(), ['released']);
+    assert.deepEqual(await all('dist_tags'), []);
   });
 
   it('retries when an observation fails', async () => {
@@ -622,8 +661,8 @@ describe('queue consumer', { timeout: 120_000 }, () => {
     );
   });
 
-  it('folds a GitHub release that is ahead of npm', async () => {
-    const message = messageOf(claimOf());
+  it('folds a GitHub release that is ahead of npm once its reads run out', async () => {
+    const message = messageOf(claimOf(), PUBLISH_READS);
     await deliver([message], sees({ ...RELEASED, npm: null, distTags: {} }));
 
     assert.equal(message.acks, 1);

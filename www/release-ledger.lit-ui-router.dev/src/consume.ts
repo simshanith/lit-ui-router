@@ -167,6 +167,27 @@ const distTagChanges = (
     return outcomes;
   });
 
+/** Deliveries a publish run's claim waits for npm to serve its version and point a dist-tag at it. */
+export const PUBLISH_READS = 5;
+
+/** A publish run's read that misses its version or every tag for it is `stale` until the reads run out; a dist-tags 404 proves nothing. */
+export function publishRead(
+  origin: Claim['origin']['kind'],
+  version: string,
+  { npm, distTags }: Pick<Sources, 'npm' | 'distTags'>,
+  attempts: number,
+): 'visible' | 'stale' | 'unconfirmed' {
+  if (origin !== 'run') return 'visible';
+
+  const missing =
+    npm === null ||
+    (distTags !== null && !Object.values(distTags).includes(version));
+
+  if (!missing) return 'visible';
+
+  return attempts < PUBLISH_READS ? 'stale' : 'unconfirmed';
+}
+
 const handleClaim = (message: LedgerMessage, claim: Claim) =>
   Effect.gen(function* () {
     yield* Effect.annotateCurrentSpan({
@@ -184,6 +205,26 @@ const handleClaim = (message: LedgerMessage, claim: Claim) =>
 
     const sources = yield* (yield* Observer).observe(claim.name, claim.version);
     const { tag, npm, gh } = sources;
+
+    const read = publishRead(
+      claim.origin.kind,
+      claim.version,
+      sources,
+      message.attempts,
+    );
+
+    if (read !== 'visible') {
+      const missing = npm === null ? 'serves no' : 'dist-tags name no tag for';
+      const seen = `npm ${missing} ${claim.name}@${claim.version} (read ${message.attempts} of ${PUBLISH_READS})`;
+
+      if (read === 'stale') {
+        yield* Effect.logInfo(`${seen}; retrying`);
+
+        return RETRY;
+      }
+
+      yield* Effect.logWarning(`${seen}; recording what npm answered`);
+    }
 
     const envelope = envelopeOf(claim);
     const folded = fold(before, { tag, npm, gh }, envelope);
