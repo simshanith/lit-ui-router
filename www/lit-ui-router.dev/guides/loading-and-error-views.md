@@ -29,7 +29,7 @@ settles, which it does on success and on failure alike. `onFinish` is no end
 signal: it is the last hook before success and never runs once an earlier
 hook or resolve rejects.
 
-```ts
+```ts check
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 
@@ -95,7 +95,7 @@ Inside a Lit element, a
 observing `onStart` registers the same hook for as long as the element is
 connected, and hands its callback the transition:
 
-```ts
+```ts check
 import type { Transition } from '@uirouter/core';
 import { LitElement, html, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
@@ -265,7 +265,7 @@ The error view holds the failed
 [`TargetState`](https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html)
 in its `failed` param. Retrying is a new transition to it:
 
-```ts
+```ts check
 import type { TargetState } from '@uirouter/core';
 import { html } from 'lit';
 import type { RoutedLitTemplate } from 'lit-ui-router';

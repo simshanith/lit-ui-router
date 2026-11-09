@@ -285,7 +285,9 @@ Post-processing of prerendered HTML keys on the [hydration signature](#the-clien
 The use site opts in with `uiViewSlot()`, which is what reaches the renderer's light-DOM render and
 commits nothing on the client:
 
-```typescript
+```typescript check
+import { html } from 'lit';
+import type { UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 const page = (router: UIRouterLit) => html`
@@ -300,7 +302,7 @@ same strings with the hole empty and each `<ui-view>` fills itself.
 
 Take a card that receives a post by property and draws it in its own `render()`:
 
-```typescript
+```typescript check
 import { html, LitElement } from 'lit';
 
 type Post = { title: string; summary: string };
@@ -490,7 +492,7 @@ registry holds no `<ui-view>`.
 It imports `lit-ui-router/pure`, which registers nothing, and defines the served class under a tag
 of its own:
 
-```typescript
+```typescript check
 import { UiView } from 'lit-ui-router/pure';
 import { withServedRender } from 'lit-ui-router-ssr/client';
 
@@ -614,7 +616,7 @@ cycle with `LightDomHydrating(Base)` from `lit-ui-router-ssr/client`. `LightElem
 `lit-ui-router-ssr`, one of `prerender()`'s default renderers, draws it on the server, and
 `lightSlot()` marks the hole at the use site:
 
-```typescript
+```typescript check
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';

@@ -12,7 +12,7 @@ powered large AngularJS, Angular, and React applications for over a decade —
 built directly on the framework-agnostic
 [`@uirouter/core`](https://github.com/ui-router/core).
 
-```ts
+```ts check
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';

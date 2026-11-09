@@ -52,7 +52,7 @@ types, which TypeScript ships from 6.0. On TypeScript 5.x, also install
 
 ## Quick start
 
-```ts
+```ts check
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import { UIRouterLit } from 'lit-ui-router';
 

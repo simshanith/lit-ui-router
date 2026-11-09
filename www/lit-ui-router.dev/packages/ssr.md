@@ -369,7 +369,7 @@ before the call. It comes back on the result either way.
 Take a card that receives a post by property and draws it in its own
 `render()`:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 
 type Post = { title: string; summary: string };
@@ -601,7 +601,7 @@ missing. In development `prerender()` warns when the registry holds no
 It imports `lit-ui-router/pure`, which registers nothing, and defines the served
 class under a tag of its own:
 
-```ts
+```ts check
 import { UiView } from 'lit-ui-router/pure';
 import { withServedRender } from 'lit-ui-router-ssr/client';
 
@@ -760,7 +760,7 @@ draws it on the server as one of `prerender()`'s default renderers, and
 [`lightSlot`](/api/lit-ui-router-ssr/client/variables/lightSlot) marks the hole
 at the use site:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';

@@ -73,7 +73,7 @@ excludes 2.x. `RouterReactionController` finds its router through
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { RouterReactionController } from 'lit-ui-router-mobx';
 

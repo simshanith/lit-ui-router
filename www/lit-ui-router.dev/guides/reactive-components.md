@@ -18,7 +18,7 @@ calls `host.requestUpdate()` whenever a matching transition event fires.
 
 ## Basic usage
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { TransitionController } from 'lit-ui-router';
 
@@ -154,7 +154,7 @@ state is the current one.
 exposes exactly that — `active`, `exact`, `entering`, `exiting` — and leaves
 the rendering to you:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

@@ -163,7 +163,7 @@ A template component marks only its first element. When its template has
 several top-level elements, wrap them in one element so a `[routed]` rule
 reaches all of it.
 
-```ts
+```ts check
 const view = document.querySelector('ui-view');
 view?.routedElement?.scrollIntoView();
 ```
