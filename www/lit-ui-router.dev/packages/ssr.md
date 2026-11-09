@@ -41,6 +41,10 @@ The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
 helper `<ui-view>` renders through, and the client hands a served class element
 to the view it wakes.
 
+The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo`
+whether a page's `redirectTo` fired, and reads the status from the redirecting
+state's `redirectStatusCode`.
+
 ## What this package owns
 
 - **The render call.** `provideRouter(root, router)` once, then
@@ -102,6 +106,8 @@ package re-exports, sets the url, syncs the router to it, and resolves with the
 transition that landed, so the synchronous render after it reads every resolve.
 A `redirectTo` chain settles on its final state, and a path the router already
 stands on resolves at once.
+[`redirectedTo`](#page-response-state-or-redirect-which-decides-when) reports
+where a redirected transition landed.
 
 A page fails to land in four ways, and each rejects rather than hangs:
 
@@ -121,6 +127,90 @@ A page fails to land in four ways, and each rejects rather than hangs:
 `urlService` directly, so a page loop calls it once per path on the same
 router, started or not.
 
+## Page, response state or redirect: which decides when
+
+A url's answer is decided at one of two points:
+
+- **The verdict**, from the url alone, before any of the app's code runs.
+  [`createServerRouter`](/packages/server#the-verdict) matches the url
+  against the mount's routes: a pattern rule or a data `redirectTo` answers a
+  redirect, a state marked `response: true` a
+  [response state](#response-states), a `delegate` a host handler, and any
+  other state a page.
+- **Settle**, once the page's transition runs its resolves, hooks and
+  `redirectTo` functions. They can change only a page's answer, since the
+  verdict already called the url a page: a `redirectTo` function can move
+  the transition elsewhere, and a resolve that rejects fails `settle`, which
+  the host maps to an error page.
+
+| Answer                                            | Decided at                             | Declare it as                                         |
+| ------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| a page                                            | the verdict                            | a state with a url                                    |
+| a redirect the url alone decides                  | the verdict                            | a pattern rule in `redirects`, or a data `redirectTo` |
+| a redirect that depends on the params or the data | settle                                 | a `redirectTo` function                               |
+| a `Response` built from resolves, 3xx included    | the verdict picks it, settle builds it | `response: true` and a handler                        |
+| a 404 for a value no resolve finds                | settle                                 | a resolve that rejects, mapped by the host            |
+
+A response state suits a url whose pattern alone says it is not a page. When
+urls of one pattern are sometimes a page and sometimes a redirect, such as a
+compare page whose reversed pair redirects to the forward one, only a
+`redirectTo` function tells them apart.
+
+The state whose `redirectTo` fires, data or function, declares the status in
+[`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode):
+`301`, `302`, `303`, `307` or `308`, `302` by default. A redirect function
+often depends on data, and browsers cache a permanent redirect with no
+expiry, so a redirect that never changes opts into `308`. A pattern rule's
+redirect answers `302`.
+
+After `settle`,
+[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+returns `{ url, status }` for a transition a redirect moved, a change of
+params alone included: the url it landed on, relative to the mount, query
+included, and the redirecting state's `redirectStatusCode`. It returns
+`undefined` for any other transition. A live host answers with it:
+
+```ts
+import { redirectedTo, settle } from 'lit-ui-router-ssr';
+
+const compare = {
+  name: 'compare',
+  url: '/diff/:from/:to',
+  redirectStatusCode: 308,
+  redirectTo: (trans) => {
+    const { from, to } = trans.params();
+
+    return Number(from) > Number(to)
+      ? trans.targetState().withParams({ from: to, to: from })
+      : undefined;
+  },
+};
+
+// A shell verdict under /releases, on a router built for this request.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+```
+
+`prerender` does the same after each `renderShell`: when the transition the
+hook landed was redirected, the path gets a rules line,
+`/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
+`tally.redirect`.
+[`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
+runs this example both ways.
+
+- A url rule that rewrites the url, `when('/old', '/new')`, starts a new
+  transition rather than redirecting one, so `redirectedTo` reports nothing
+  for it. Declare it in the mount's `redirects` and the verdict answers it.
+- `settle` on a path the router already stands on resolves with the
+  transition that brought it there, which may be an earlier path's redirect.
+  `prerender` only reads a transition its hook landed; a live host settles a
+  router built for the request.
+
 ## Rendering one page per request
 
 A host that owns the request, such as a framework route or a worker, renders
@@ -132,8 +222,7 @@ hands `document` for the same template and router. The host settles the
 router, decides the response and writes the document around the markup:
 
 ```ts
-import { renderToString, settle } from 'lit-ui-router-ssr';
-import { redirectedTo } from 'ui-router-server/ssr';
+import { redirectedTo, renderToString, settle } from 'lit-ui-router-ssr';
 
 // `router` serves the mount at /releases; `subpath` is the request's path within it.
 const redirect = redirectedTo(router, await settle(router, subpath));
@@ -238,14 +327,14 @@ for (const { path, payload } of pages) {
 
 ## Verdict to artefact
 
-| Verdict               | What is emitted                                                       |
-| --------------------- | --------------------------------------------------------------------- |
-| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document` |
-| `redirect`            | a rules line (`from to status`), no page                              |
-| `notFound`            | nothing, and the path is listed in `result.warnings`                  |
-| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler  |
-| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line         |
-| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
+| Verdict               | What is emitted                                                                                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
+| `redirect`            | a rules line (`from to status`), no page                                                                                                                                         |
+| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                             |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                             |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                    |
+| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                 |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every

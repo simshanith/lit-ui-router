@@ -272,8 +272,7 @@ const drawnBy = (
  * `deferHydration` so every custom element sleeps until the client's walk
  * reaches it. The status, the redirect and the document around the markup
  * are the host's: settle with `settle`, read a `redirectTo` with
- * `redirectedTo` from `ui-router-server/ssr`, and wrap the markup in the
- * shell html.
+ * `redirectedTo`, and wrap the markup in the shell html.
  *
  * The render is synchronous and collects the whole page into one string. The
  * router is scoped to it through a module slot, so renders on one thread never
@@ -288,8 +287,7 @@ const drawnBy = (
  * ```ts
  * import type { TemplateResult } from 'lit';
  * import type { UIRouterLit } from 'lit-ui-router';
- * import { renderToString, settle } from 'lit-ui-router-ssr';
- * import { redirectedTo } from 'ui-router-server/ssr';
+ * import { redirectedTo, renderToString, settle } from 'lit-ui-router-ssr';
  *
  * declare function page(router: UIRouterLit): TemplateResult;
  * declare function shell(body: string): string;
