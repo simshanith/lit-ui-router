@@ -34,6 +34,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
   `root`, `elementRenderers`, `dehydrate`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
   turns every 404 into a 200.
+- **One page for a host that owns the request.** `renderToString` is that render alone, for a
+  framework route or a worker that settles the router itself.
 - **Response states after settle.** `responder` runs the handler bound to a response state's name
   with the resolves its transition landed with.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
@@ -140,6 +142,43 @@ A page fails to land in four ways, and each rejects rather than hangs:
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
+
+## Rendering one page per request
+
+A host that owns the request, such as a framework route or a worker, renders one page with
+`renderToString(template, { router })`. It is the render `prerender()` runs for each page, hydration
+signature and `deferHydration` included, so its markup is byte for byte what `prerender()` hands
+`document` for the same template and router. The host settles the router, decides the response and
+writes the document around the markup:
+
+```typescript
+import { renderToString, settle } from 'lit-ui-router-ssr';
+import { redirectedTo } from 'ui-router-server/ssr';
+
+// `router` serves the mount at /releases; `subpath` is the request's path within it.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+
+const { html } = renderToString(page(router), { router, dehydrate: {} });
+
+return new Response(shell(html), {
+  status: router.globals.current.name === 'notFound' ? 404 : 200,
+  headers: { 'Content-Type': 'text/html; charset=utf-8' },
+});
+```
+
+The router must stand on the page before the call. It is provided on `root`, a fresh `EventTarget`
+unless one is passed, for the render alone. `elementRenderers` and `dehydrate` act as `prerender()`'s
+options of the same name, and `payload` takes a payload drawn by hand rather than a hook. The result's
+`payload` reports the bytes the resolve payload adds to the signature and, under `dehydrate`, the
+resolves left to re-run on the client.
+
+The markup is collected into one string, synchronously. A streamed render would be a separate export.
 
 ## Response states
 

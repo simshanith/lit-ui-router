@@ -7,7 +7,7 @@ import '../register.js';
 
 import { hydrateRoot } from '../client.js';
 import type { AdoptOutcome } from '../client.js';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { boundClicks, makeClassRouter } from './class-fixture.js';
 import type {

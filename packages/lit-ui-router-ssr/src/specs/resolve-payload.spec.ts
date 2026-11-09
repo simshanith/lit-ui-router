@@ -22,7 +22,7 @@ import {
   readResolvePayload,
 } from '../client.js';
 import type { BootstrapOptions, BootstrapResult } from '../client.js';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { routeOf } from '../signature.js';
 import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';

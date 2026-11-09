@@ -29,7 +29,7 @@ import type {
   HydrateRootOptions,
   UiViewAdoptEvent,
 } from '../client.js';
-import { signatureBlock } from '../prerender.js';
+import { signatureBlock } from '../render.js';
 import { signatureAttribute, signatureSelector } from '../signature.js';
 import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
