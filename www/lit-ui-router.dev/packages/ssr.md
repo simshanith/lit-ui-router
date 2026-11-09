@@ -41,6 +41,10 @@ The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
 helper `<ui-view>` renders through, and the client hands a served class element
 to the view it wakes.
 
+The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo`
+whether a page's `redirectTo` fired, and reads the status from the redirecting
+state's `redirectStatusCode`.
+
 ## What this package owns
 
 - **The render call.** `provideRouter(root, router)` once, then
