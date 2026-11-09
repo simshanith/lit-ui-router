@@ -69,7 +69,7 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "postcss-html": "catalog:",
-    "postcss-lit": "catalog:",
+    "postcss-lit-html": "catalog:workspace",
     "stylelint": "catalog:",
     "stylelint-config-recommended": "catalog:",
     "turbo": "catalog:",
