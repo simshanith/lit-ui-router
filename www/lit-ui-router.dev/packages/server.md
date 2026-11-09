@@ -640,6 +640,47 @@ is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
 router that installs its own plugins. Simulate mounts run on the same
 location.
 
+## Trailing slashes
+
+A static host decides whether a page lives at `/releases/lit/` or `/releases/lit`, and the pages a
+server renders should follow it. Name that spelling once, in the `config` the mount and the client
+router share, and leave the slash out of the route table:
+
+```ts
+import type { RouterUrlConfig } from 'ui-router-server/url-config';
+
+export const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} satisfies RouterUrlConfig;
+```
+
+| Kind of state                        | Key         | Default          |
+| ------------------------------------ | ----------- | ---------------- |
+| A page: neither of the others        | `pages`     | `'as-requested'` |
+| A [response state](#response-states) | `responses` | `'as-requested'` |
+| A [delegate](#delegating-states)     | —           | `'as-requested'` |
+
+Each key takes `'always'`, `'never'` or `'as-requested'`.
+
+- **Matching:** a navigation that matches a state in the other spelling verdicts as a `308`
+  redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
+  canonical spelling in one hop. A non-navigation request to a response state or a delegate is
+  answered at either spelling.
+- **Formatting:** [`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+  installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition
+  pushes come out canonical, on the client and on a server router built with
+  `installServerLocation(router, { urlConfig })`.
+- **Composition:** the slash is added when a url is formatted, never spelled in a pattern, so a
+  child url appends to its parent's without a `//`.
+- **Static sites:** [`prerender`](#emitting-a-static-site) writes each page or response state at
+  the path listed and a `308` line from the other spelling, the redirect the server answers.
+
+The policy needs `strict: false`, so both spellings match before it picks one;
+`createServerRouter`, `compileRedirects` and `applyUrlConfig` throw without it. On Cloudflare,
+match the static assets' `html_handling`: `force-trailing-slash` is `{ pages: 'always' }`,
+`drop-trailing-slash` is `{ pages: 'never' }`, and `none` is the default.
+
 ## Settling a server router
 
 A server render reads the router only once its transition has landed.
@@ -762,7 +803,10 @@ export const transport = {
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
-slash, and no page. The `otherwise` projection becomes `404.html`. A path that
+slash, and no page. Under a mount's [trailing-slash policy](#trailing-slashes),
+a page or response state spelled `'always'` or `'never'` also gets a `308` line
+from its other spelling onto the path listed, so list paths in their canonical
+spelling, as `href()` formats them. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
 development. A path that matches a [delegating state](#delegating-states)
 gets no page and no rules line: it is counted in `result.tally.delegate` and
@@ -833,7 +877,9 @@ await prerender({
 - **No status.** The page answers 200, so the line's 301, 302 or 308 never
   reaches the host. The canonical link tells search engines the content moved.
 - **Collisions.** A line whose page would replace one the run wrote throws.
-  The first line for a page wins, as in `_redirects`, so a path's two
+  A line between a path's two spellings, as a
+  [trailing-slash policy](#trailing-slashes) adds, writes nothing: its page
+  would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
   spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
   throws.
 - **Options.** `base` is the url path `outDir` is served at, `/` by default.
@@ -886,7 +932,8 @@ same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
 as the mount's `config`, or share one object through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig).
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig),
+along with any [trailing-slash policy](#trailing-slashes).
 A static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory
 ([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).

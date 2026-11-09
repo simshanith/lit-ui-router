@@ -450,9 +450,12 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
  * Compiler-wide defaults for {@link urlMatcherFactory}, shared by every
  * pattern it compiles: the router-wide {@link url-config!RouterUrlConfig | `RouterUrlConfig`}
  * options plus `decodeParams`, which core keeps off its public setters.
+ * `trailingSlash` belongs to a route table, which knows each state's kind.
  */
 export interface UrlMatcherCompilerConfig
-  extends RouterUrlConfig, Pick<UrlMatcherCompileConfig, 'decodeParams'> {}
+  extends
+    Omit<RouterUrlConfig, 'trailingSlash'>,
+    Pick<UrlMatcherCompileConfig, 'decodeParams'> {}
 
 interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
   params: NonNullable<UrlMatcherCompileOptions['params']>;

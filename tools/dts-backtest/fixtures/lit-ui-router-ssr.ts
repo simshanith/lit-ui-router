@@ -59,7 +59,6 @@ const options: PrerenderOptions = {
   },
   document: (body, context) => `<title>${context.file}</title>${body}`,
   extraRules,
-  trailingSlash: 'both',
   rules: '_redirects',
   root: new EventTarget(),
   write,

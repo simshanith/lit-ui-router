@@ -80,7 +80,8 @@ them in `result.rules`, and a function receives them with the run's `write`, `ou
 the target has none, a meta refresh, a plain link, a canonical link to the target, and `noindex`.
 The page answers 200, so the line's status never reaches the host; the canonical link tells search
 engines the content moved. A line whose page would replace one the run wrote throws, as does a
-pattern line; the first line for a page wins. `base` is the url path `outDir` is served at, and
+pattern line; the first line for a page wins, and a line between a path's two spellings, as a
+mount's trailing-slash policy adds, writes nothing. `base` is the url path `outDir` is served at, and
 `redirectsFile: true` also writes `_redirects`. `page` replaces the template: it receives each
 line (`from`, `to`, `status`) and returns the HTML, or a promise of it. `redirectPage` is the
 default, exported to wrap or reuse; it escapes `to` with
@@ -140,6 +141,33 @@ with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `pre
 response state to its `respond` hook and writes a 2xx body at the path its url spells
 (`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
 [response states](https://lit-ui-router.dev/packages/server#response-states).
+
+## Trailing slashes
+
+A mount's `config` can name the canonical spelling of a trailing slash per kind of state, so the
+route table spells no slash and both sides agree on it:
+
+```ts
+const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} satisfies RouterUrlConfig;
+```
+
+`pages` covers states answered with a page and `responses` covers response states, each
+`'always'`, `'never'` or `'as-requested'` (the default). A delegating state's url belongs to its
+host handler and keeps the spelling requested. A navigation in the other spelling verdicts as a
+`308` redirect to the canonical one, a data `redirectTo` lands in its target's canonical spelling,
+and a non-navigation request to a response state or delegate is answered at either spelling. The
+policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
+`compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a
+`stateRegistry` url decorator, so `href()` and the urls a transition pushes come out canonical on a
+client router and on a server one built with `installServerLocation(router, { urlConfig })`.
+`prerender()` follows the mount's policy: it writes a `308` line from each page's or response
+state's other spelling onto the canonical path it was listed at. A
+Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'always' }`, and
+`drop-trailing-slash` to `{ pages: 'never' }`. See
+[trailing slashes](https://lit-ui-router.dev/packages/server#trailing-slashes).
 
 ## Values beyond plain JSON
 
