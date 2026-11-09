@@ -4,19 +4,17 @@
 
 ## Installation
 
-```bash
-npm install --save-dev postcss-lit-html
-```
+The package is private and unpublished, so it is workspace-only for now: packages in this repo use it as `postcss-lit-html`, resolved from `packages/postcss-lit-html`. Until it is published, it has no npm install.
 
 ## Usage
 
-Use it in place of `postcss-lit` as stylelint's `customSyntax` for script files:
+This repo's [`stylelint.config.mjs`](../../stylelint.config.mjs) uses it in place of `postcss-lit` as stylelint's `customSyntax` for script files:
 
 ```js
 export default {
   overrides: [
     {
-      files: ['**/*.{ts,js}'],
+      files: ['**/*.{ts,mts,cts,js,mjs,cjs}'],
       customSyntax: 'postcss-lit-html',
     },
   ],
@@ -27,7 +25,11 @@ A `<style>` element is checked when all its children are text, including one nes
 
 ## How it works
 
-Each `<style>` element's contents parse as their own root, at the file's own line, column and offset, so a finding lands on its declaration. `stylelint --fix` writes fixes back into the `css` templates and `<style>` contents and leaves the rest of the file byte for byte.
+Each `<style>` element's contents parse as their own root. Every finding lands at its line and column in the file, including after `\\` escapes and on a template's first line, where postcss-lit's own positions drift.
+
+`stylelint --fix` writes fixes back into the `css` templates and `<style>` contents and leaves the rest of the file byte for byte. In a `<style>` element, text a fix leaves alone is written back as it was in the source, escapes included. postcss-lit writes `css` templates itself, and doubles their lone backslashes, so `—` comes back as `\\u2014`.
+
+When postcss-lit skips a template it can't parse, with its own warning, the other `<style>` elements and `css` templates in the file are still checked. When the `<style>` elements can't be told apart from the rest of the file, such as one nested in another's expression, the file falls back to plain postcss-lit with a `[postcss-lit-html] Skipping <style> elements` warning.
 
 ## Suppressions
 
