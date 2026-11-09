@@ -222,6 +222,7 @@ catalogs:
     '@tools/happy-dom': workspace:*
     '@tools/lcov-rebase': workspace:*
     '@tools/lit-template-lint': workspace:*
+    '@tools/md-content-mapper': workspace:*
     '@tools/lit-test-env': workspace:*
     '@tools/oxc-emit': workspace:*
     '@tools/oxlint-anti-slop': workspace:*

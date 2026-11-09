@@ -532,6 +532,9 @@ catalogs:
     '@tools/lit-test-env':
       specifier: workspace:*
       version: workspace:*
+    '@tools/md-content-mapper':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/oxc-emit':
       specifier: workspace:*
       version: workspace:*
@@ -677,6 +680,9 @@ importers:
       '@tools/lit-template-lint':
         specifier: catalog:workspace
         version: link:tools/lit-template-lint
+      '@tools/md-content-mapper':
+        specifier: catalog:workspace
+        version: link:tools/md-content-mapper
       '@tools/oxlint-anti-slop':
         specifier: catalog:workspace
         version: link:tools/oxlint-anti-slop
@@ -2525,9 +2531,6 @@ importers:
       typescript-7.1:
         specifier: 'catalog:'
         version: typescript@7.1.0-beta
-      valibot:
-        specifier: 'catalog:'
-        version: 1.5.0(typescript@7.0.2)
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -2858,9 +2861,12 @@ importers:
       markdown-it:
         specifier: 'catalog:'
         version: 14.3.3
+      typescript-7.1:
+        specifier: 'catalog:'
+        version: typescript@7.1.0-beta
       valibot:
         specifier: 'catalog:'
-        version: 1.5.0(typescript@7.1.0-beta)
+        version: 1.5.0(typescript@7.0.2)
     devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
@@ -2873,13 +2879,13 @@ importers:
         version: 24.19.2
       oxfmt:
         specifier: 'catalog:'
-        version: 0.74.0
+        version: 0.77.0
       oxlint:
         specifier: 'catalog:'
-        version: 1.89.0(oxlint-tsgolint@7.0.2005)
+        version: 1.92.0(oxlint-tsgolint@7.0.2006)
       typescript:
         specifier: 'catalog:'
-        version: 7.1.0-beta
+        version: 7.0.2
 
   tools/oxc-emit:
     dependencies:

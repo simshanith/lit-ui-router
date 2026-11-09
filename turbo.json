@@ -158,6 +158,7 @@
         "//#lint:workflows",
         "//#lint:templates",
         "//#lint:doc-examples",
+        "//#lint:md-examples",
         "//#lint:css",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:shared-source",
@@ -272,6 +273,47 @@
         // export maps decide what each example's import resolves to
         "packages/*/package.json",
         "tools/doc-example-check/src/**",
+        "tools/shared/src/resolution.ts",
+        "tools/bootstrap/src/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
+      ]
+    },
+    // @tools/md-content-mapper over the Markdown `ts` fences flagged `check`,
+    // each one a module tsc checks through the 7.1 content mapper.
+    "//#lint:md-examples": {
+      // fences import the published entry points, which resolve to dist
+      // d.ts; package-qualified as for //#lint:templates (check:graph-edges)
+      "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
+        "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
+        "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
+        "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // the Markdown tools/md-content-mapper/docs/tsconfig.json includes
+        "*.md",
+        "{apps,docs}/*.md",
+        "packages/*/*.md",
+        // api/*/ is generated, so only the tracked tree is named
+        "www/lit-ui-router.dev/*.md",
+        "www/lit-ui-router.dev/{guides,packages,tutorial}/**/*.md",
+        "www/lit-ui-router.dev/api/index.md",
+        // export maps decide what each fence's import resolves to
+        "packages/*/package.json",
+        "tools/md-content-mapper/package.json",
+        "tools/md-content-mapper/src/**",
+        "tools/md-content-mapper/docs/**",
+        "tools/shared/src/resolution.ts",
         "tools/bootstrap/src/**",
         "pnpm-workspace.yaml",
         "pnpm-lock.yaml"

@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "description": "TypeScript 7.1 content mapper that type-checks the ts fences in the repo's Markdown, one module per fence",
+  "bin": {
+    "check-md-examples": "./src/check.ts"
+  },
   "type": "module",
   "scripts": {
     "check": "./src/check.ts",
@@ -15,6 +18,7 @@
   "dependencies": {
     "@tools/bootstrap": "catalog:workspace",
     "markdown-it": "catalog:",
+    "typescript-7.1": "catalog:",
     "valibot": "catalog:"
   },
   "devDependencies": {

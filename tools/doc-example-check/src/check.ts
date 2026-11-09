@@ -8,6 +8,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import {
+  workspacePaths,
+  type CompilerPaths,
+} from '@tools/shared/resolution.ts';
 import { createFileSystemLayer } from 'typescript-7.1/fs';
 import {
   API,
@@ -24,7 +28,6 @@ import {
   type Census,
   type Diagnostic,
 } from './report.ts';
-import { workspacePaths, type CompilerPaths } from './resolution.ts';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
 

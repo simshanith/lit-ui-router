@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { blockKey, transform } from './protocol.ts';
+import { tsc } from './tsc.ts';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
 
@@ -43,7 +43,7 @@ describe('transform', () => {
 describe('tsc --runExternalCode', () => {
   it('reports a fence error at its Markdown position and never checks an unflagged fence', () => {
     const result = spawnSync(
-      path.join(packageDir, 'node_modules', '.bin', 'tsc'),
+      tsc,
       [
         '-p',
         'fixtures/tsconfig.json',

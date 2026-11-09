@@ -17,8 +17,7 @@
   },
   "dependencies": {
     "@tools/bootstrap": "catalog:workspace",
-    "typescript-7.1": "catalog:",
-    "valibot": "catalog:"
+    "typescript-7.1": "catalog:"
   },
   "devDependencies": {
     "@tools/shared": "catalog:workspace",

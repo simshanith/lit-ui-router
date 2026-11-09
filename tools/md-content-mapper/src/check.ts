@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { workspacePaths } from '@tools/shared/resolution.ts';
 
 import { extractBlocks, type CodeBlock } from './blocks.ts';
 import {
@@ -18,11 +19,9 @@ import {
   parseDiagnostics,
   summarize,
 } from './report.ts';
-import { workspacePaths } from './resolution.ts';
+import { tsc } from './tsc.ts';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
-
-const tsc = path.join(packageDir, 'node_modules', '.bin', 'tsc');
 
 const runTsc = (args: string[]): string => {
   const result = spawnSync(
