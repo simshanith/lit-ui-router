@@ -26,8 +26,12 @@ export interface Site {
   rules: RedirectLine[];
 }
 
-export async function renderSite(): Promise<Site> {
-  const router = configure(installServerLocation(new UIRouterLit()));
+/** Renders every page with hrefs under `baseHref`, the path the site is served at. */
+export async function renderSite(baseHref = '/'): Promise<Site> {
+  const router = configure(
+    installServerLocation(new UIRouterLit(), { baseHref }),
+  );
+
   const bodies = new Map<string, string>();
 
   try {

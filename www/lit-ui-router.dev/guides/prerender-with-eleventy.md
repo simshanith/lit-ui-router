@@ -38,8 +38,7 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
 `prerender()` runs inside Eleventy's build, as a
 [global data file](https://www.11ty.dev/docs/data-global/). Its `write`
 collects each page body in memory instead of writing files, and `rules: 'none'`
-returns the redirect lines on the result instead of writing a `_redirects`
-file:
+skips the `_redirects` file, leaving the redirect lines on the result:
 
 ```ts
 const result = await prerender({
@@ -83,6 +82,10 @@ copies through.
 client boots on the served data instead of running the resolves again.
 `bootstrap()` then adopts the served `<ui-view>` and its routed component,
 keeping the server's nodes.
+
+Links bind `href=${srefHref(...)}` rather than `uiSref`. The server renders
+attribute parts and skips element parts, so a `uiSref` link would be served as
+an `<a>` with no `href` until the client boots.
 
 `<app-root>` renders into a shadow root, so the render lists
 `LitElementRenderer` beside the package's own renderers. The

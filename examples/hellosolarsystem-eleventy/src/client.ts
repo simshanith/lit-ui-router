@@ -11,7 +11,4 @@ router.plugin(pushStateLocationPlugin);
 
 const container = document.getElementById('app');
 
-if (container) {
-  const result = await bootstrap(router, container, page(router));
-  Object.assign(globalThis, { __bootstrap: result });
-}
+if (container) await bootstrap(router, container, page(router));

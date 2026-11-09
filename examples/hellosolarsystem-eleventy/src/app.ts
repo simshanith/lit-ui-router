@@ -7,8 +7,9 @@ import { customElement, property } from 'lit/decorators.js';
 import type { Transition } from '@uirouter/core';
 import {
   type UIRouterLit,
-  uiSref,
-  uiSrefActive,
+  srefActiveClass,
+  srefAriaCurrent,
+  srefHref,
   type LitStateDeclaration,
   type UIViewInjectedProps,
 } from 'lit-ui-router/pure';
@@ -237,7 +238,7 @@ class PlanetListComponent extends LitElement {
         ${this.planets.map(
           (planet) => html`
             <li>
-              <a ${uiSref('planet', { planetId: planet.id })}>
+              <a href=${srefHref('planet', { planetId: planet.id })}>
                 <span
                   class="body"
                   style="width:${dotSize(planet.diameterKm)}px;height:${dotSize(
@@ -336,7 +337,8 @@ class PlanetDetailComponent extends LitElement {
   render() {
     if (!this.planet) {
       return html`<p>
-        Body not found. <a class="back-link" ${uiSref('planets')}>Back</a>
+        Body not found.
+        <a class="back-link" href=${srefHref('planets')}>Back</a>
       </p>`;
     }
 
@@ -344,7 +346,7 @@ class PlanetDetailComponent extends LitElement {
 
     return html`
       <div>
-        <a class="back-link top" ${uiSref('planets')}
+        <a class="back-link top" href=${srefHref('planets')}
           >&lsaquo; Back to the solar system</a
         >
         <h3>${this.planet.name}</h3>
@@ -367,7 +369,9 @@ class PlanetDetailComponent extends LitElement {
           <dd>${this.planet.orbitalPeriod}</dd>
         </dl>
         <p class="fun-fact">${this.planet.funFact}</p>
-        <a class="back-link" ${uiSref('planets')}>Back to the solar system</a>
+        <a class="back-link" href=${srefHref('planets')}
+          >Back to the solar system</a
+        >
       </div>
     `;
   }
@@ -407,7 +411,10 @@ export class AppRoot extends LitElement {
     return html`
       <h2>Hello Solar System</h2>
       <nav aria-label="Hello Solar System (Eleventy SSR)">
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('planets')}
+        <a
+          class=${srefActiveClass({ state: 'planets', activeClasses: ['active'] })}
+          aria-current=${srefAriaCurrent({ state: 'planets' })}
+          href=${srefHref('planets')}
           >Planets</a
         >
       </nav>
