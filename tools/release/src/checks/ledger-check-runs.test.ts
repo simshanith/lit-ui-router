@@ -279,7 +279,22 @@ describe('reconcile', () => {
     });
 
     assert.deepEqual(summary(reconcile(ahead)), [
-      'info: a final GitHub release ahead of npm',
+      'info: a GitHub release ahead of npm',
+    ]);
+
+    const prereleaseAhead = inputs({
+      ledger: {
+        versions: [
+          { ...ROWS.releasedFirst, gh_prerelease: 1, status: 'tagged' },
+        ],
+        distTags: [],
+      },
+      releases: [{ ...GITHUB_RELEASE, prerelease: true, publishedAt: RECENT }],
+      npm: new Map([[NAME, packument(null, {})]]),
+    });
+
+    assert.deepEqual(summary(reconcile(prereleaseAhead)), [
+      'info: a GitHub prerelease ahead of npm',
     ]);
   });
 

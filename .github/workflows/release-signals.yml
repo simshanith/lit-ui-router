@@ -6,10 +6,10 @@
 # ships lit-ui-router.dev. "release-ledger" asks whether the D1 release ledger
 # still matches GitHub's tags and releases and npm. One more,
 # "pages-deploy (altitude-atlas)", sits on the www/atlas head instead and asks
-# whether atlas.lit-ui-router.dev serves it. action_required renders orange = a
-# release, a floor-bump, a dashboard apply, or an atlas deploy is owed; neutral
-# renders grey = the check could not reach a verdict. Never a CI failure — both jobs succeed whatever the signals
-# say.
+# whether atlas.lit-ui-router.dev serves it. action_required renders orange =
+# a release, a floor-bump, a dashboard apply, an atlas deploy or a ledger fix
+# is owed; neutral renders grey = the check could not reach a verdict. Never a
+# CI failure — both jobs succeed whatever the signals say.
 name: Release signals
 
 on:
@@ -22,10 +22,11 @@ on:
       - main
   # Secondary sweep: catches dashboard-side edits and npm-side changes (a
   # deprecate, an unpublish) during quiet periods, which no push would ever
-  # surface. Off-peak and off the hour — the top of the hour is GitHub's most
-  # congested cron slot.
+  # surface. Daily, so a release-ledger lag past its hour turns orange within a
+  # day; after the ledger's 06:00 UTC tag sweep, and off the hour — the top of
+  # the hour is GitHub's most congested cron slot.
   schedule:
-    - cron: '17 7 * * 0'
+    - cron: '17 7 * * *'
   # Dispatched by publish-npm.yml after a successful publish: release-it
   # pushes the bump commit before npm `latest` moves, so the push-triggered
   # run sees stale drift; the post-publish run flips the badge green.

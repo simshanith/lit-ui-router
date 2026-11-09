@@ -279,7 +279,7 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 #### CD-pipeline verification signal
 
 [`release-signals.yml`](../.github/workflows/release-signals.yml) runs the same read-only diff on every push to
-`main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
+`main` — the push that Workers Builds deploys from — plus a daily sweep, and reports it as the
 `workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
 non-gating: green in sync, orange (`action_required`) on drift, gray (`neutral`) when the check could not run.
 It never applies; resolving drift is still a local `--apply`.

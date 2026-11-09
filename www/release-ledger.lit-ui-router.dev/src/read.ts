@@ -3,7 +3,7 @@
 import { Effect, Schema } from 'effect';
 import type { JWTVerifyGetKey } from 'jose';
 
-import { bearerOf, readClaims, text, unauthorized } from './ingest.ts';
+import { bearerOf, readClaims, text, unauthorized } from './auth.ts';
 import type { LedgerSnapshot } from './ledger-sql.ts';
 import { ForbiddenClaim, InvalidToken, runForbiddenReason } from './oidc.ts';
 

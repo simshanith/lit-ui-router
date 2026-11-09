@@ -386,7 +386,10 @@ function pipelineLag(
 ): { at: string; message: string } | undefined {
   if (gh) {
     return npmAt === null
-      ? { at: gh.publishedAt, message: 'a final GitHub release ahead of npm' }
+      ? {
+          at: gh.publishedAt,
+          message: `a GitHub ${gh.prerelease ? 'prerelease' : 'release'} ahead of npm`,
+        }
       : undefined;
   }
 
