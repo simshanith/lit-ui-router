@@ -10,7 +10,7 @@ import {
 } from '@uirouter/core';
 
 import { installServerLocation } from '../src/location.ts';
-import { settle } from '../src/ssr.ts';
+import { redirectedTo, settle } from '../src/ssr.ts';
 
 const later = <T>(value: T, ms = 5): Promise<T> =>
   new Promise((resolve) => {
@@ -43,6 +43,30 @@ const states = (): StateDeclaration[] => [
     resolve: { title: () => new Promise<string>(() => {}) },
   },
   { name: 'notFound', resolve: { title: () => '404' } },
+  {
+    name: 'retired',
+    url: '/retired',
+    redirectTo: () => 'a',
+    redirectStatusCode: 308,
+  },
+  {
+    name: 'find',
+    url: '/find?q',
+    redirectStatusCode: 301,
+    redirectTo: (trans) => {
+      const q = String(trans.params().q ?? '');
+
+      return q === q.toLowerCase()
+        ? undefined
+        : trans.targetState().withParams({ q: q.toLowerCase() });
+    },
+  },
+  {
+    name: 'quiet',
+    url: '/quiet',
+    redirectTo: (trans) =>
+      trans.router.stateService.target('b', {}, { location: false }),
+  },
 ];
 
 const makeRouter = (otherwise = false): UIRouter => {
@@ -171,5 +195,56 @@ describe('settle', () => {
     await assert.rejects(settle(router, '/stuck', { timeout: 20 }), {
       message: 'settle: /stuck did not land within 20ms',
     });
+  });
+});
+
+describe('redirectedTo', () => {
+  it('reports nothing for a transition no redirect moved', async () => {
+    const router = makeRouter();
+    assert.equal(
+      redirectedTo(router, await settle(router, '/sheet/7B')),
+      undefined,
+    );
+  });
+
+  it('reports a data redirectTo at 302 by default', async () => {
+    const router = makeRouter();
+    assert.deepEqual(redirectedTo(router, await settle(router, '/a')), {
+      url: '/b',
+      status: 302,
+    });
+  });
+
+  it('answers with the status of the state the url matched, through a chain', async () => {
+    const router = makeRouter();
+    assert.deepEqual(redirectedTo(router, await settle(router, '/retired')), {
+      url: '/b',
+      status: 308,
+    });
+  });
+
+  it('counts a redirect that changes only params, query included', async () => {
+    const router = makeRouter();
+    assert.deepEqual(
+      redirectedTo(router, await settle(router, '/find?q=ABC')),
+      { url: '/find?q=abc', status: 301 },
+    );
+    assert.equal(
+      redirectedTo(router, await settle(router, '/find?q=xyz')),
+      undefined,
+    );
+  });
+
+  it('reports nothing for a url rule that rewrites the url', async () => {
+    const router = makeRouter();
+    router.urlService.rules.when('/old', '/sheet/1');
+    assert.equal(redirectedTo(router, await settle(router, '/old')), undefined);
+  });
+
+  it('reports nothing for a redirect that leaves the url in place', async () => {
+    const router = makeRouter();
+    const transition = await settle(router, '/quiet');
+    assert.equal(transition.to().name, 'b');
+    assert.equal(redirectedTo(router, transition), undefined);
   });
 });

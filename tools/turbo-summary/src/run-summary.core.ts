@@ -192,12 +192,12 @@ export interface ExcerptBudget {
 
 /**
  * Defaults sized from the real spread of task logs (112 B for a lint task,
- * 389 KB for the Cypress e2e suite): the common failure — typecheck, lint, a
+ * 389 KB for an e2e suite): the common failure — typecheck, lint, a
  * unit suite — fits whole, and only the e2e-class logs are ever cut.
  *
  * Tail-weighted because tsc, oxlint and node:test all put the verdict last.
- * Cypress buries its failure mid-log behind a passing-suite preamble, which is
- * why the head is kept too rather than tailing alone.
+ * An e2e runner can bury its failure mid-log behind a passing-suite preamble,
+ * which is why the head is kept too rather than tailing alone.
  */
 export const DEFAULT_BUDGET: ExcerptBudget = {
   headLines: 20,
@@ -981,10 +981,10 @@ export interface OverviewContext {
    */
   attachmentsUrl?: string;
   /**
-   * The uploaded Cypress `cypress/screenshots*` dirs. Uploaded only by a
+   * The uploaded Playwright Test `test-results/` dir. Uploaded only by a
    * failed e2e suite, so a URL here always has something behind it.
    */
-  screenshotsUrl?: string;
+  tracesUrl?: string;
   /**
    * The uploaded check-a11y `a11y-screenshots/` dir. Uploaded only by a failed
    * axe pass, so a URL here always has something behind it.
@@ -1041,17 +1041,17 @@ export function attachmentsLink(
   };
 }
 
-/** Link to the screenshots Cypress took of each failing e2e test. */
-export function screenshotsLink(
+/** Link to the traces Playwright Test kept for each failing e2e test. */
+export function tracesLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
-  const url = safeArtifactUrl(context.screenshotsUrl);
+  const url = safeArtifactUrl(context.tracesUrl);
 
   if (url === undefined) return undefined;
 
   return {
-    markdown: `[Cypress screenshots](<${url}>) — the page as each failing e2e test left it, downloadable from this run's artifacts.`,
-    line: `   cypress screenshots: ${url}`,
+    markdown: `[Playwright traces](<${url}>) — a screenshot and a trace (DOM, console, network) for each failing e2e test, downloadable from this run's artifacts; open a trace with \`playwright show-trace\`.`,
+    line: `   playwright traces: ${url}`,
   };
 }
 
@@ -1223,7 +1223,7 @@ function footerMarkdown(context: OverviewContext): string[] {
 
   for (const link of [
     attachmentsLink(context),
-    screenshotsLink(context),
+    tracesLink(context),
     a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),
@@ -1369,7 +1369,7 @@ function footerLines(context: OverviewContext): string[] {
   // against the facts it reads as a continuation of whichever one ran last.
   const links = [
     attachmentsLink(context),
-    screenshotsLink(context),
+    tracesLink(context),
     a11yScreenshotsLink(context),
     logsLink(context),
     artifactLink(context),

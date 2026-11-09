@@ -19,6 +19,12 @@ export interface HydrationSignature {
   /** That state's url parameter values, keyed by parameter id. */
   readonly params?: unknown;
   /**
+   * The fully qualified name of each `<ui-view>` the document drew a routed
+   * component into, parent first: `$default`, `$default.$default`, or a named
+   * view's `$default.aside`. `prerender()` writes it as an array of strings.
+   */
+  readonly views?: unknown;
+  /**
    * The resolved values the document was drawn with, keyed by state name, then
    * by resolve token, when `prerender()`'s `payload` hook supplied them.
    */

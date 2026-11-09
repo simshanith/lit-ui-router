@@ -178,41 +178,6 @@ describe('installServerLocation', () => {
       assert.equal(matches(router, '/sheet/7B/'), true);
     });
 
-    it('wins over strictMode where both set strict', () => {
-      const router = installServerLocation(bareRouter(), {
-        urlConfig: { strict: true },
-        // eslint-disable-next-line typescript/no-deprecated -- the precedence under test, until #1907
-        strictMode: false,
-      });
-
-      router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
-
-      assert.equal(matches(router, '/sheet/7B/'), false);
-    });
-
-    it('leaves strictMode in force where it is absent', () => {
-      const router = installServerLocation(bareRouter(), {
-        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
-        strictMode: false,
-      });
-
-      router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
-
-      assert.equal(matches(router, '/sheet/7B/'), true);
-    });
-
-    it('leaves strictMode in force where it sets no strict', () => {
-      const router = installServerLocation(bareRouter(), {
-        urlConfig: { caseInsensitive: true },
-        // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
-        strictMode: false,
-      });
-
-      router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
-
-      assert.equal(matches(router, '/SHEET/7B/'), true);
-    });
-
     it('throws before changing a router that already has a url state', () => {
       const router = sheetRouter();
 
@@ -232,29 +197,6 @@ describe('installServerLocation', () => {
       assert.equal(router.urlService.config.strictMode(), true);
       router.stateRegistry.register({ name: 'later', url: '/later' });
       assert.equal(matches(router, '/later/'), false);
-    });
-  });
-
-  describe('strictMode', () => {
-    it('throws before changing a router that already has a url state', () => {
-      const router = sheetRouter();
-
-      assert.throws(
-        () =>
-          installServerLocation(router, {
-            url: '/sheet/7B/',
-            baseHref: '/app/',
-            // eslint-disable-next-line typescript/no-deprecated -- the shorthand under test, until #1907
-            strictMode: false,
-          }),
-        {
-          message:
-            "applyUrlConfig: state 'sheet' is already registered, and core compiled its url under the previous config. Apply the url config before registering states or url rules.",
-        },
-      );
-      assert.equal(router.getPlugin('server.memoryLocation'), undefined);
-      router.stateRegistry.register({ name: 'later', url: '/later' });
-      assert.equal(router.urlService.match({ path: '/later/' }), null);
     });
 
     it('is not checked when left out', () => {

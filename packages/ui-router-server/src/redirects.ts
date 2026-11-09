@@ -10,11 +10,30 @@
 
 import type { RawParams } from '@uirouter/core';
 
+import { assertRespellable, respell, slashOf } from './trailing-slash.ts';
+import type { TrailingSlash } from './trailing-slash.ts';
+import type { RouterUrlConfig } from './url-config.ts';
 import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
 import type {
   CompiledMatcher,
   UrlMatcherCompilerConfig,
 } from './url-matcher.ts';
+
+/**
+ * A route table's url options: the matcher compiler's, plus the
+ * {@link url-config!RouterUrlConfig.trailingSlash | `trailingSlash`} policy,
+ * which reads each state's kind.
+ */
+export interface RouteTableConfig
+  extends UrlMatcherCompilerConfig, Pick<RouterUrlConfig, 'trailingSlash'> {}
+
+/**
+ * The status a redirect answers with: temporary (`302`, `303`, `307`) or
+ * permanent (`301`, `308`).
+ */
+export type RedirectStatusCode = 301 | 302 | 303 | 307 | 308;
+
+const REDIRECT_STATUS_CODES: readonly number[] = [301, 302, 303, 307, 308];
 
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
@@ -39,6 +58,15 @@ export interface RouteDeclaration {
    * cycles are rejected at compile.
    */
   redirectTo?: string | RedirectTarget;
+  /**
+   * The status this state's `redirectTo` answers with, data or function,
+   * when a url lands on it: in the verdict for a data `redirectTo`, and in
+   * {@link ssr!redirectedTo | `redirectedTo`} after `settle`. Defaults to
+   * `302`, since a permanent redirect is cached by browsers with no expiry;
+   * a redirect that never changes declares `308`. A pattern rule's redirect
+   * stays `302`.
+   */
+  redirectStatusCode?: RedirectStatusCode;
   /**
    * Names the host handler that answers this state's url, for any method and
    * any Accept: the verdict is `delegate` instead of `shell`. The state tree
@@ -91,8 +119,8 @@ export interface RedirectTable {
   routes: readonly RouteDeclaration[];
   /** when()-style rules, evaluated in declaration order before per-state redirectTo entries. */
   rules?: RedirectRule[];
-  /** Matcher compiler options (defaults: strict, case-sensitive). */
-  config?: UrlMatcherCompilerConfig;
+  /** Url options (defaults: strict, case-sensitive, slashes as requested). */
+  config?: RouteTableConfig;
 }
 
 /** One url-addressable state, compiled by {@link compileRoutes}. */
@@ -105,6 +133,8 @@ export interface CompiledRoute {
   matcher: CompiledMatcher;
   /** The state's declared redirect, carried through unresolved (see {@link RouteDeclaration.redirectTo}). */
   redirectTo?: string | RedirectTarget;
+  /** The state's declared redirect status (see {@link RouteDeclaration.redirectStatusCode}). */
+  redirectStatusCode?: RedirectStatusCode;
 }
 
 // Core's StateBuilder.parentName: the `parent`, else the dotted prefix.
@@ -119,6 +149,39 @@ const parentName = (route: RouteDeclaration): string => {
     );
 
   return route.name.slice(0, dot);
+};
+
+// A url's path part and its search part, without the '?'.
+const splitSearch = (url: string): [path: string, search: string] => {
+  const index = url.indexOf('?');
+
+  return index < 0 ? [url, ''] : [url.slice(0, index), url.slice(index + 1)];
+};
+
+// A leaf-first chain's full pattern and merged params. As core's
+// UrlMatcher.append: paths join in order, search parts all apply.
+const composeChain = (chain: RouteDeclaration[]) => {
+  let path = '';
+  const searches: string[] = [];
+  const params: NonNullable<RouteDeclaration['params']> = {};
+
+  for (let depth = chain.length - 1; depth >= 0; depth--) {
+    const ancestor = chain[depth];
+
+    if (ancestor.url) {
+      const [own, search] = splitSearch(ancestor.url);
+      path += own;
+
+      if (search) searches.push(search);
+    }
+
+    if (ancestor.params) Object.assign(params, ancestor.params);
+  }
+
+  return {
+    pattern: searches.length ? `${path}?${searches.join('&')}` : path,
+    params,
+  };
 };
 
 /**
@@ -144,6 +207,14 @@ export function compileRoutes(
     if (route.url && !route.url.startsWith('/') && !route.url.startsWith('?'))
       throw new Error(
         `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
+      );
+
+    if (
+      route.redirectStatusCode !== undefined &&
+      !REDIRECT_STATUS_CODES.includes(route.redirectStatusCode)
+    )
+      throw new Error(
+        `Route '${route.name}': redirectStatusCode must be one of ${REDIRECT_STATUS_CODES.join(', ')}`,
       );
     byName.set(route.name, route);
     parents.set(route, parentName(route));
@@ -181,31 +252,14 @@ export function compileRoutes(
 
   for (const route of routes) {
     if (route.url === undefined) continue;
-    const chain = chainOf(route);
-    let pattern = '';
-    const params: NonNullable<RouteDeclaration['params']> = {};
-
-    for (let depth = chain.length - 1; depth >= 0; depth--) {
-      const ancestor = chain[depth];
-
-      if (ancestor.url) {
-        // Naive concatenation cannot splice a child into a parent's search
-        // part (core's UrlMatcher.append can); fail rather than diverge.
-        if (pattern.includes('?'))
-          throw new Error(
-            `Route '${route.name}': ancestor '${ancestor.name}' cannot extend a pattern that already has search params`,
-          );
-        pattern += ancestor.url;
-      }
-
-      if (ancestor.params) Object.assign(params, ancestor.params);
-    }
+    const { pattern, params } = composeChain(chainOf(route));
 
     compiled.push({
       name: route.name,
       pattern,
       matcher: compile(pattern, { params }),
       redirectTo: route.redirectTo,
+      redirectStatusCode: route.redirectStatusCode,
     });
   }
 
@@ -278,6 +332,8 @@ const isPathPattern = (pattern: string | RegExp): pattern is string =>
 export interface RedirectResolution {
   /** The redirected path, or null (see {@link compileRedirects}). */
   redirect: string | null;
+  /** The matched state's declared redirect status; absent for a pattern rule's redirect. */
+  status?: RedirectStatusCode;
   /** The route match; absent when a when()-rule decided before route matching ran. */
   match?: RouteMatch | null;
 }
@@ -291,6 +347,8 @@ export interface RedirectResolution {
 export interface CompiledResolver {
   /** The table's route lookup: the {@link RouteIndex} over its compiled routes. */
   match: (pathname: string) => RouteMatch | null;
+  /** The trailing-slash spelling a matched state's url takes under the table's policy. */
+  slashOf: (state: string) => TrailingSlash;
   /** Evaluates a pathname once: its redirect and, when reached, its route match. */
   resolve: (pathname: string) => RedirectResolution;
 }
@@ -305,10 +363,21 @@ export function compileResolver(
   table: RedirectTable,
   index: RouteIndex = scanRoutes,
 ): CompiledResolver {
+  assertRespellable('Route table', table.config ?? {});
   const routes = compileRoutes(table.routes, table.config);
   const match = index(routes);
   const byName = new Map(routes.map((route) => [route.name, route]));
   const { compile } = urlMatcherFactory(table.config);
+
+  const slashes = new Map(
+    table.routes.map((route) => [
+      route.name,
+      slashOf(route, table.config?.trailingSlash),
+    ]),
+  );
+
+  const slashFor = (state: string): TrailingSlash =>
+    slashes.get(state) ?? 'as-requested';
 
   const resolveTarget = (
     to: string | RedirectTarget,
@@ -363,7 +432,10 @@ export function compileResolver(
       state = byName.get(next.state)!;
     }
 
-    const path = format(state.matcher, carried);
+    const formatted = format(state.matcher, carried);
+
+    const path =
+      formatted === null ? null : respell(formatted, slashFor(state.name));
 
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;
@@ -403,10 +475,11 @@ export function compileResolver(
     return {
       redirect: follow(target.state, target.params ?? matched.params, pathname),
       match: matched,
+      status: route.redirectStatusCode,
     };
   };
 
-  return { match, resolve };
+  return { match, resolve, slashOf: slashFor };
 }
 
 /**

@@ -22,7 +22,7 @@ import {
   readResolvePayload,
 } from '../client.js';
 import type { BootstrapOptions, BootstrapResult } from '../client.js';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { routeOf } from '../signature.js';
 import { countRetained } from '../testing.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
@@ -209,6 +209,7 @@ describe('the resolves a signature carries', () => {
       version: import.meta.env.PACKAGE_VERSION,
       state: 'shell.detail',
       params: {},
+      views: ['$default', '$default.$default'],
       resolves: {
         shell: { greeting: 'hello' },
         'shell.detail': { detail: 'leaf' },

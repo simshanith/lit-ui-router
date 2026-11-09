@@ -108,16 +108,9 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
   /**
    * The url options the router compiles its urls with, applied through
    * {@link url-config!applyUrlConfig | `applyUrlConfig`} before anything else,
-   * so a mount's `config` passes as is. Its `strict` wins over
-   * {@link ServerLocationOptions.strictMode | `strictMode`}.
+   * so a mount's `config` passes as is.
    */
   urlConfig?: RouterUrlConfig;
-  /**
-   * Whether a trailing slash has to match exactly; most static hosts want `false`.
-   *
-   * @deprecated Shorthand for `urlConfig: { strict }`.
-   */
-  strictMode?: boolean;
 }
 
 /**
@@ -140,7 +133,7 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * @param router - a freshly constructed router, with no location plugin yet
  * @param options - the request's url, the mount's shape, the url shape, and the url config
  * @returns `router`, for chaining
- * @throws if `urlConfig` or `strictMode` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
+ * @throws if `urlConfig` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
  *
  * @example
  * ```ts
@@ -154,7 +147,8 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  *   url: pathname + search,
  *   urlConfig: { strict: false },
  * });
- * states.forEach((state) => router.stateRegistry.register(state));
+ * // core stamps each registered declaration with $$state, so register a copy per router
+ * states.forEach((state) => router.stateRegistry.register({ ...state }));
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
  * });
@@ -169,15 +163,8 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
-  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand until #1907 removes it
-  const { strictMode, urlConfig } = options;
-
   // First, so the ordering guard throws before the plugin or url changes.
-  if (urlConfig || strictMode !== undefined)
-    applyUrlConfig(router, {
-      ...urlConfig,
-      strict: urlConfig?.strict ?? strictMode,
-    });
+  if (options.urlConfig) applyUrlConfig(router, options.urlConfig);
 
   router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
 

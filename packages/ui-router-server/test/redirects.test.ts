@@ -49,7 +49,39 @@ describe('compileRoutes', () => {
     assert.equal(compiled[0].pattern, '/home');
   });
 
-  it('rejects duplicate names, missing ancestors, and non-leaf search params', () => {
+  it('nests under an ancestor with search params, splicing paths before the search part', () => {
+    const compiled = compileRoutes([
+      {
+        name: 'compare',
+        url: '/diff/{from}...{to}?files',
+        params: { files: { value: 'src', squash: true, dynamic: true } },
+      },
+      { name: 'compare.index', url: '/{layout}/index.json?page' },
+    ]);
+
+    assert.deepEqual(
+      compiled.map((route) => route.pattern),
+      [
+        '/diff/{from}...{to}?files',
+        '/diff/{from}...{to}/{layout}/index.json?files&page',
+      ],
+    );
+    assert.deepEqual(
+      matchRoute(compiled, '/diff/1.0.0...2.0.0/v2/index.json'),
+      {
+        state: 'compare.index',
+        params: {
+          from: '1.0.0',
+          to: '2.0.0',
+          layout: 'v2',
+          files: 'src',
+          page: undefined,
+        },
+      },
+    );
+  });
+
+  it('rejects duplicate names and missing ancestors', () => {
     assert.throws(
       () =>
         compileRoutes([
@@ -65,14 +97,6 @@ describe('compileRoutes', () => {
     assert.throws(
       () => compileRoutes([{ name: 'a', url: 'a' }]),
       /must start with '\/' or '\?'/,
-    );
-    assert.throws(
-      () =>
-        compileRoutes([
-          { name: 'a', url: '/a?q' },
-          { name: 'a.b', url: '/b' },
-        ]),
-      /already has search params/,
     );
   });
 });
@@ -231,7 +255,19 @@ describe('differential: core href vs matcher, along parent', () => {
       { folderId: 'sent' },
     ],
     [{ name: 'message', parent: 'folder', url: '/m/:id' }, { id: '3' }],
-    [{ name: 'prefs', parent: 'app', url: '/prefs?tab' }, { tab: 'mail' }],
+    [
+      {
+        name: 'prefs',
+        parent: 'app',
+        url: '/prefs?tab',
+        params: { tab: { value: 'mail', squash: true, dynamic: true } },
+      },
+      { tab: 'filters' },
+    ],
+    [
+      { name: 'prefs.pane', url: '/:pane?sort' },
+      { pane: 'rules', sort: 'name' },
+    ],
   ];
 
   const routes = fixtures.map(([route]) => route);
@@ -251,6 +287,10 @@ describe('differential: core href vs matcher, along parent', () => {
       const rule = router.urlService.match({ path })?.rule as StateRule;
 
       assert.equal(rule.state.name, route.name, href);
+      // SAFETY: the loop skipped url-less fixtures, so compileRoutes emitted this name.
+      const { matcher } = compiled.find(({ name }) => name === route.name)!;
+
+      assert.equal(format(matcher, params), href);
     });
   }
 });

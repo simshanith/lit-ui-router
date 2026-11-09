@@ -24,8 +24,9 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, that state's url parameter values, and the resolved values
-  `dehydrate` or the `payload` hook draws. A page `renderShell` returns as a string is written as-is, without one.
+  state the router stood on, that state's url parameter values, the fully qualified name of each
+  `<ui-view>` it drew a routed component into, and the resolved values `dehydrate` or the
+  `payload` hook draws. A page `renderShell` returns as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
@@ -33,6 +34,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
   `root`, `elementRenderers`, `dehydrate`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
   turns every 404 into a 200.
+- **One page for a host that owns the request.** `renderToString` is that render alone, for a
+  framework route or a worker that settles the router itself.
 - **Response states after settle.** `responder` runs the handler bound to a response state's name
   with the resolves its transition landed with.
 - **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
@@ -95,7 +98,8 @@ virtual fs instead.
 `ui-router-server/vite`'s, with the DOM shim and `lit-ui-router-ssr/register` loaded before the
 prerender script, and its `definePrerender` calls this package's `prerender` with the options the
 script returns; [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) shows
-both files in full.
+both files in full. [Prerender with Eleventy](https://lit-ui-router.dev/guides/prerender-with-eleventy)
+calls `prerender` from an Eleventy data file instead, and lets Eleventy write the pages.
 
 ## Static hosts add a trailing slash
 
@@ -139,6 +143,43 @@ A page fails to land in four ways, and each rejects rather than hangs:
 
 `settle()` never calls `router.start()`, which runs once per router: it drives `urlService`
 directly, so a page loop calls it once per path on the same router, started or not.
+
+## Rendering one page per request
+
+A host that owns the request, such as a framework route or a worker, renders one page with
+`renderToString(template, { router })`. It is the render `prerender()` runs for each page, hydration
+signature and `deferHydration` included, so its markup is byte for byte what `prerender()` hands
+`document` for the same template and router. The host settles the router, decides the response and
+writes the document around the markup:
+
+```typescript
+import { renderToString, settle } from 'lit-ui-router-ssr';
+import { redirectedTo } from 'ui-router-server/ssr';
+
+// `router` serves the mount at /releases; `subpath` is the request's path within it.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+
+const { html } = renderToString(page(router), { router, dehydrate: {} });
+
+return new Response(shell(html), {
+  status: router.globals.current.name === 'notFound' ? 404 : 200,
+  headers: { 'Content-Type': 'text/html; charset=utf-8' },
+});
+```
+
+The router must stand on the page before the call. It is provided on `root`, a fresh `EventTarget`
+unless one is passed, for the render alone. `elementRenderers` and `dehydrate` act as `prerender()`'s
+options of the same name, and `payload` takes a payload drawn by hand rather than a hook. The result's
+`payload` reports the bytes the resolve payload adds to the signature and, under `dehydrate`, the
+resolves left to re-run on the client.
+
+The markup is collected into one string, synchronously. A streamed render would be a separate export.
 
 ## Response states
 
@@ -369,6 +410,13 @@ parses, and hydration adopts them there. `LitElementRenderer` does the same for 
 on the page, whether or not it has anything to show on the server, which is the cost the default
 avoids.
 
+A shell element needs that list too: a shadow-DOM component that holds `<ui-view>` in its own
+template, such as an `<app-root>`. Under the default it renders as its bare tag, empty, and the
+views inside it are missing with it. With `LitElementRenderer` after `LightElementRenderer`, the
+`<ui-view>` in its shadow root renders, hydrates and adopts. In development, `prerender()` and
+`renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no renderer that draws
+it; `<ui-router>`, whose shadow root is a bare slot, is left out.
+
 ## Registering the elements
 
 A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import
@@ -470,12 +518,23 @@ const { outcome } = await bootstrap(router, root, page(router));
   signature, starts the router, waits for the boot transition to land — following redirects to the
   one that succeeds — then runs `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and
   each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
-  router rather than the placeholder it registered against. The call waits for every awake
-  `<ui-view>`, nested ones included, to finish updating, then releases the adopter. It resolves with
-  `outcome` — `adopted` or `cold` — and `signature` (`BootstrapSignature`): `matched` when the boot
-  landed on the state and url parameters the signature names, `elsewhere` when the document carried
-  a signature and the boot landed somewhere else or landed no transition, and `absent` when it
-  carried none. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+  router rather than the placeholder it registered against. It resolves with `outcome` — `adopted`
+  or `cold`, what the root hydrate came to — `signature` (`BootstrapSignature`): `matched` when the
+  boot landed on the state and url parameters the signature names, `elsewhere` when the document
+  carried a signature and the boot landed somewhere else or landed no transition, and `absent` when
+  it carried none — and `views`, described next. Nothing constrains when
+  `lit-ui-router-ssr/register` is imported.
+- **`views` says what each view came to.** A read-only map keyed by a view's fully qualified name
+  (`$default`, `$default.$default`, `$default.aside`) to a `BootstrapViewReport`: `outcome`, an
+  `AdoptOutcome` or `pending`, with the reporting `view` and, on `fell-back`, its `error`. It lists
+  every view the signature says the document was drawn with, then any other view that woke and
+  requested the adopter. Views are tracked by what they report to the adopter, whose request is a
+  composed event, so a view in a shadow root counts like any other. The call
+  resolves once the views that woke have updated, nested ones and those in shadow roots their hosts
+  hydrated included, and lists a drawn view that has not woken as `pending`. The map is a snapshot:
+  the adopter stays installed until every drawn view has reported, so a view whose host hydrates
+  later still adopts and still reaches `onAdopt`. A document that booted where it was drawn and
+  adopted none of its drawn views warns once in development.
 - **The cold path is the same call.** A container with nothing to adopt is emptied and `value`
   rendered into it before the router starts. A boot transition that fails, a url that starts none,
   and a root `hydrate()` that throws over a mutated document all empty the container and render
@@ -543,7 +602,8 @@ const { outcome } = await bootstrap(router, root, page(router));
   served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
   carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
   production as in development. The `onAdopt(view, outcome, error)` option of `bootstrap()` and `hydrateRoot()` receives
-  the same reports for every view its walk reaches, a view the pin adopts after the release included.
+  the same reports for every view its walk reaches, a view the pin adopts after the release included,
+  and a view in a shadow root its host hydrates after the walk.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
 

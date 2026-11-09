@@ -13,7 +13,14 @@ import { devGate } from '#dev-gate';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
+import { redirectsFileBody } from './redirect-pages.ts';
 import { fileFor, subpathIn } from './site-paths.ts';
+import { mountPolicyOf, slashOf } from './trailing-slash.ts';
+import type { TrailingSlash } from './trailing-slash.ts';
+
+export { redirectPage, redirectPages } from './redirect-pages.ts';
+
+export type { RedirectPagesOptions } from './redirect-pages.ts';
 
 /** One emitted artefact, as {@link prerender} planned it. */
 export interface EmittedPage {
@@ -37,6 +44,17 @@ export interface RedirectLine {
   status: number;
 }
 
+/**
+ * A render's answer in place of a page: the path redirects, written as a
+ * rules line like a redirect verdict's.
+ */
+export interface RenderedRedirect {
+  /** Target path, host-absolute, or an absolute url. */
+  location: string;
+  /** Status the host answers with. */
+  status: number;
+}
+
 /** What a render hook is handed besides the verdict. */
 export interface RenderContext {
   /** The requested path. */
@@ -54,24 +72,50 @@ export interface RenderContext {
  */
 export type FileWriter = (file: string, body: string) => void | Promise<void>;
 
+/** What a {@link RulesWriter} is handed besides the lines. */
+export interface RulesContext {
+  /** The run's {@link PrerenderOptions.write | write}; files take `outDir` joined on. */
+  write: FileWriter;
+  /** The run's {@link PrerenderOptions.outDir | outDir}. */
+  outDir: string;
+  /** Every page the run wrote, the 404 document included. */
+  pages: readonly EmittedPage[];
+}
+
+/**
+ * A {@link PrerenderOptions.rules | `rules`} function: receives every rules
+ * line once the pages are written, and writes whatever the host reads.
+ */
+export type RulesWriter = (
+  lines: RedirectLine[],
+  context: RulesContext,
+) => void | Promise<void>;
+
 /** Options for {@link prerender}. */
 export interface PrerenderOptions {
   /** The mount table, compiled here — or pass an already-compiled {@link PrerenderOptions.resolver | resolver}. */
   mounts?: Record<string, MountConfig>;
-  /** A resolver from `createServerRouter`, instead of {@link PrerenderOptions.mounts | mounts}. */
+  /**
+   * A resolver from `createServerRouter`, instead of
+   * {@link PrerenderOptions.mounts | mounts}; its mounts' trailing-slash
+   * policies come with it. Any other resolver is read as `'as-requested'`.
+   */
   resolver?: ServerRouter;
   /** Every path to ask for a verdict. Redirect and notFound paths belong here too. */
   paths: Iterable<string> | AsyncIterable<string>;
   /** Directory the files are written under. */
   outDir: string;
   /**
-   * Renders one shell verdict to the file's full text, document included.
-   * Renders run one at a time, in enumeration order, then the 404 document.
+   * Renders one shell verdict to the file's full text, document included, or
+   * answers a {@link RenderedRedirect} for a page whose render found it
+   * redirects, such as a `redirectTo` function `settle` followed: the path
+   * gets a rules line and no page. Renders run one at a time, in enumeration
+   * order, then the 404 document, which must render a page.
    */
   render: (
     verdict: Extract<Verdict, { kind: 'shell' }>,
     context: RenderContext,
-  ) => string | Promise<string>;
+  ) => string | RenderedRedirect | Promise<string | RenderedRedirect>;
   /**
    * Answers one response verdict: settle the state and run the handler bound
    * to its name. A 2xx answer's body, read as text, is written to the path
@@ -105,25 +149,13 @@ export interface PrerenderOptions {
   /**
    * `'_redirects'` (default) writes the Cloudflare Pages / Netlify file;
    * `'none'` writes nothing and leaves {@link PrerenderResult.rules} to the
-   * caller; a function receives the lines and writes whatever the host reads.
+   * caller; a function receives the lines and writes whatever the host reads,
+   * such as `redirectPages` for a host with no redirect rules.
    * No SPA catch-all is ever written — one turns every 404 into a 200.
    */
-  rules?:
-    | '_redirects'
-    | 'none'
-    | ((lines: RedirectLine[]) => void | Promise<void>);
+  rules?: '_redirects' | 'none' | RulesWriter;
   /** Lines prepended to the generated ones, verbatim — a site's own legacy redirects. */
   extraRules?: RedirectLine[];
-  /**
-   * `'both'` (default) emits every generated redirect line twice, with and
-   * without the trailing slash: a static host that appends one would otherwise
-   * miss the rule. Shell verdicts need no rules line — they are written as
-   * `<subpath>/index.html`, which both spellings reach — but a host that
-   * reaches it by redirecting `<subpath>` to `<subpath>/` boots the client at
-   * the slashed url, so the client's `strictMode(false)` and the mount's
-   * `config: { strict: false }` must both admit it.
-   */
-  trailingSlash?: 'both' | 'exact';
   /** Writes each file; pass one over `node:fs`, a virtual fs, or memory. */
   write: FileWriter;
   /** Plans everything and writes nothing — neither pages nor the rules file. */
@@ -134,7 +166,10 @@ export interface PrerenderOptions {
 export interface PrerenderTally {
   /** Shell verdicts written as `<subpath>/index.html`. */
   shell: number;
-  /** Redirect verdicts, counted once each however many rules lines they produced. */
+  /**
+   * Redirect verdicts, and shell verdicts whose render answered a redirect,
+   * counted once each however many rules lines they produced.
+   */
   redirect: number;
   /** Paths that matched nothing — see {@link PrerenderResult.warnings}. */
   notFound: number;
@@ -169,6 +204,9 @@ type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 
 const DEFAULT_NOT_FOUND_FILE = '404.html';
+
+const isPage = (rendered: string | RenderedRedirect): rendered is string =>
+  typeof rendered === 'string';
 
 // A path no route claims, appended to a mount base for the otherwise probe.
 const PROBE_SEGMENT = '__ui-router-server-probe__';
@@ -208,16 +246,60 @@ const wantsSlashProbe = (
 ): boolean =>
   subpath !== '' && verdict.status === undefined && !path.endsWith('/');
 
+// The line from path, paired with its other spelling unless that is the target itself.
 const redirectLines = (
   path: string,
   { location, status }: { location: string; status: number },
-  trailingSlash: PrerenderOptions['trailingSlash'],
 ): RedirectLine[] => {
   const line: RedirectLine = { from: path, to: location, status };
+  const paired = otherSpelling(path);
 
-  const paired = trailingSlash === 'both' ? otherSpelling(path) : undefined;
+  return paired === undefined || paired === location
+    ? [line]
+    : [line, { ...line, from: paired }];
+};
 
-  return paired === undefined ? [line] : [line, { ...line, from: paired }];
+// The spelling the verdict's mount policy gives its kind of state.
+const slashFor = (
+  resolver: ServerRouter,
+  verdict: ShellVerdict | ResponseVerdict,
+): TrailingSlash =>
+  slashOf(
+    verdict.kind === 'response' ? { response: true } : {},
+    mountPolicyOf(resolver, verdict.mount),
+  );
+
+// The server's redirect from path's other spelling onto path, when the policy respells it.
+const respelledLines = async (
+  resolver: ServerRouter,
+  path: string,
+  slash: TrailingSlash,
+): Promise<RedirectLine[]> => {
+  const other = slash === 'as-requested' ? undefined : otherSpelling(path);
+
+  if (other === undefined) return [];
+  const verdict = await resolver.resolve(other);
+
+  return verdict.kind === 'redirect' && verdict.location === path
+    ? [{ from: other, to: path, status: verdict.status }]
+    : [];
+};
+
+const lineKey = ({ from, to, status }: RedirectLine): string =>
+  `${from} ${to} ${status}`;
+
+// Drops repeats of a line, as a page and a listed respelling of it both write it.
+const uniqueLines = (lines: RedirectLine[]): RedirectLine[] => {
+  const seen = new Set<string>();
+
+  return lines.filter((line) => {
+    const key = lineKey(line);
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+
+    return true;
+  });
 };
 
 // The otherwise projection's 404 shell, or undefined when there is none to emit.
@@ -238,24 +320,22 @@ const notFoundPage = async (
 const writeRules = async (
   lines: RedirectLine[],
   rules: NonNullable<PrerenderOptions['rules']>,
-  write: FileWriter,
-  outDir: string,
+  context: RulesContext,
 ): Promise<void> => {
   if (rules === 'none') return;
 
   if (rules !== '_redirects') {
-    await rules(lines);
+    await rules(lines, context);
 
     return;
   }
 
   if (lines.length === 0) return;
 
-  const body = lines
-    .map((line) => `${line.from} ${line.to} ${line.status}`)
-    .join('\n');
-
-  await write(joinPath(outDir, '_redirects'), `${body}\n`);
+  await context.write(
+    joinPath(context.outDir, '_redirects'),
+    redirectsFileBody(lines),
+  );
 };
 
 const resolverOf = (options: PrerenderOptions): ServerRouter => {
@@ -272,12 +352,22 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html` holding whatever `render` returns, a response
+ * `<subpath>/index.html` holding whatever `render` returns, or a rules line
+ * when `render` answers a {@link RenderedRedirect}, a response
  * state becomes the body or rules line its `respond` answer carries, a
  * redirect becomes a rules line and no page, a delegating state is listed in
  * `delegated` and skipped, and the `otherwise` projection becomes the 404
  * document. A verdict kind this package doesn't know throws rather than being
  * counted.
+ *
+ * Rules lines follow each mount's `config.trailingSlash` policy. Where it
+ * spells a page or a response state `'always'` or `'never'`, the output
+ * lands at the path listed and the other spelling gets the `308` line onto
+ * it that the server answers; list each path in its canonical spelling, as
+ * `href()` formats it under {@link url-config!applyUrlConfig | `applyUrlConfig`}.
+ * Under `'as-requested'` neither spelling gets a line. A redirect's line is
+ * written for both spellings of its path, since a static host may append the
+ * slash.
  *
  * It knows no renderer: `render` turns each shell verdict into the file's
  * text, so any template engine, or a `settle` and a string, can fill it.
@@ -288,6 +378,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
+ * @throws an `Error` when the 404 document's render answers a redirect
  * @throws an `Error` when a path matches a response state and no `respond` is supplied, or its answer is neither a 2xx nor a 3xx with a `Location`
  *
  * @example
@@ -324,7 +415,6 @@ export async function prerender(
     notFound,
     rules = '_redirects',
     extraRules = [],
-    trailingSlash = 'both',
     write,
     dryRun = false,
   } = options;
@@ -345,13 +435,20 @@ export async function prerender(
   const warnings: string[] = [];
   const delegated: string[] = [];
 
+  // Whether the render wrote a page or answered a redirect.
   const emit = async (
     verdict: ShellVerdict,
     path: string,
     subpath: string,
     file: string,
-  ): Promise<void> => {
+  ): Promise<'shell' | 'redirect'> => {
     const html = await render(verdict, { path, subpath, file });
+
+    if (!isPage(html)) {
+      generated.push(...redirectLines(path, html));
+
+      return 'redirect';
+    }
 
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({
@@ -360,6 +457,8 @@ export async function prerender(
       verdict,
       bytes: new TextEncoder().encode(html).length,
     });
+
+    return 'shell';
   };
 
   const answer = async (
@@ -379,9 +478,7 @@ export async function prerender(
     tally.response += 1;
 
     if (status >= 300 && status < 400 && location !== null) {
-      generated.push(
-        ...redirectLines(path, { location, status }, trailingSlash),
-      );
+      generated.push(...redirectLines(path, { location, status }));
 
       return;
     }
@@ -399,6 +496,9 @@ export async function prerender(
       verdict,
       bytes: new TextEncoder().encode(body).length,
     });
+    generated.push(
+      ...(await respelledLines(resolver, path, slashFor(resolver, verdict))),
+    );
   };
 
   let slashProbed = false;
@@ -410,26 +510,31 @@ export async function prerender(
 
     if (verdict.kind === 'shell') {
       const subpath = subpathIn(verdict.mount, path);
-      tally.shell += 1;
+      const slash = slashFor(resolver, verdict);
 
       if (
         import.meta.env?.DEV &&
         devGate() &&
         !slashProbed &&
+        slash === 'as-requested' &&
         wantsSlashProbe(verdict, path, subpath)
       ) {
         slashProbed = true;
         await warnStrictSlash(resolver, path);
       }
 
-      await emit(verdict, path, subpath, fileFor(subpath));
+      const emitted = await emit(verdict, path, subpath, fileFor(subpath));
+      tally[emitted] += 1;
+
+      if (emitted === 'shell')
+        generated.push(...(await respelledLines(resolver, path, slash)));
 
       return;
     }
 
     if (verdict.kind === 'redirect') {
       tally.redirect += 1;
-      generated.push(...redirectLines(path, verdict, trailingSlash));
+      generated.push(...redirectLines(path, verdict));
 
       return;
     }
@@ -465,12 +570,19 @@ export async function prerender(
   if (page) {
     tally.document += 1;
     const { verdict, probe, file } = page;
-    await emit(verdict, probe, subpathIn(verdict.mount, probe), file);
+
+    if (
+      (await emit(verdict, probe, subpathIn(verdict.mount, probe), file)) !==
+      'shell'
+    )
+      throw new Error(
+        `prerender: the 404 document's render for '${probe}' answered a redirect; it must render a page`,
+      );
   }
 
-  const lines = [...extraRules, ...generated];
+  const lines = [...extraRules, ...uniqueLines(generated)];
 
-  if (!dryRun) await writeRules(lines, rules, write, outDir);
+  if (!dryRun) await writeRules(lines, rules, { write, outDir, pages });
 
   return { tally, pages, rules: lines, warnings, delegated };
 }

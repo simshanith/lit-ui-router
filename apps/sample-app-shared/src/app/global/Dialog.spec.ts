@@ -12,7 +12,7 @@ const settleAnimations = (el: Element) =>
 
 describe('confirmation dialog', () => {
   beforeEach(async () => {
-    // the width/centering assertions came from Cypress's default viewport
+    // the width/centering assertions assume a 1000×660 viewport
     await page.viewport(1000, 660);
   });
 

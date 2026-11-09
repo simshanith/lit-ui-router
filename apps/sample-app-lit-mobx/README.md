@@ -4,7 +4,7 @@ This is the [MobX](https://mobx.js.org) variant of the [vanilla sample app](../s
 non-trivial ui-router lit application, with reactivity handled by
 [`lit-ui-router-mobx`](../../packages/lit-ui-router-mobx/) instead of the zero-dependency
 `TransitionController`. The two apps are intentionally behaviorally identical (the same
-Cypress suite runs against both) so the integration idioms can be compared file-by-file —
+e2e suite runs against both) so the integration idioms can be compared file-by-file —
 in the spirit of [TodoMVC](https://todomvc.com) and the
 [ui-router sample apps](https://github.com/ui-router/sample-app-react).
 

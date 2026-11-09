@@ -47,6 +47,7 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
+    "@playwright/cli": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/eslint": "catalog:workspace",

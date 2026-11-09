@@ -138,6 +138,103 @@ for (const strategy of TIERS) {
   });
 }
 
+for (const strategy of TIERS) {
+  describe(`redirectStatusCode (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          ...tierConfig(strategy),
+          routes: [
+            { name: 'home', url: '/home' },
+            { name: 'item', url: '/items/:id' },
+            {
+              name: 'moved',
+              url: '/moved',
+              redirectTo: 'home',
+              redirectStatusCode: 308,
+            },
+            {
+              name: 'renamed',
+              url: '/renamed/:id',
+              redirectTo: 'item',
+              redirectStatusCode: 301,
+            },
+            {
+              name: 'hop',
+              url: '/hop',
+              redirectTo: 'moved',
+              redirectStatusCode: 307,
+            },
+            { name: 'plain', url: '/plain', redirectTo: 'home' },
+          ],
+          redirects: [{ pattern: '/rule', to: 'moved' }],
+        },
+      },
+    });
+
+    const redirect = (location: string, status: number) => ({
+      kind: 'redirect',
+      mount: '/app',
+      location,
+      status,
+    });
+
+    it("answers a data redirectTo with its state's redirectStatusCode", async () => {
+      assert.deepEqual(
+        await router.resolve('/app/moved'),
+        redirect('/app/home', 308),
+      );
+      assert.deepEqual(
+        await router.resolve('/app/renamed/4'),
+        redirect('/app/items/4', 301),
+      );
+    });
+
+    it('takes the status of the state the url matched, not a later hop', async () => {
+      assert.deepEqual(
+        await router.resolve('/app/hop'),
+        redirect('/app/home', 307),
+      );
+    });
+
+    it('answers 302 for a state that declares none, and for a pattern rule', async () => {
+      assert.deepEqual(
+        await router.resolve('/app/plain'),
+        redirect('/app/home', 302),
+      );
+      assert.deepEqual(
+        await router.resolve('/app/rule'),
+        redirect('/app/home', 302),
+      );
+    });
+  });
+}
+
+describe('redirectStatusCode validation', () => {
+  it('rejects a status outside the redirect codes at construction', () => {
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/': {
+              routes: [
+                { name: 'home', url: '/' },
+                {
+                  name: 'old',
+                  url: '/old',
+                  redirectTo: 'home',
+                  // SAFETY: an untyped caller's value the union excludes.
+                  redirectStatusCode: 304 as 301,
+                },
+              ],
+            },
+          },
+        }),
+      /Route 'old': redirectStatusCode must be one of 301, 302, 303, 307, 308/,
+    );
+  });
+});
+
 // The otherwise projection: the mount declares the client's otherwise()
 // mapping (a url-less notFound state), and unknown paths become shell-404
 // verdicts — the shell is the error page, at the retained path.

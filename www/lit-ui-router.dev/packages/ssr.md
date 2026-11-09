@@ -56,6 +56,9 @@ to the view it wakes.
   supplies the lit one and takes the same options, plus `router`,
   `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
   `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **One page for a host that owns the request.**
+  [`renderToString`](#rendering-one-page-per-request) is that render alone,
+  for a framework route or a worker that settles the router itself.
 - **Response states after settle.** [`responder`](#response-states) runs
   the handler bound to a response state's name with the resolves its
   transition landed with.
@@ -117,6 +120,47 @@ A page fails to land in four ways, and each rejects rather than hangs:
 `settle()` never calls `router.start()`, which runs once per router: it drives
 `urlService` directly, so a page loop calls it once per path on the same
 router, started or not.
+
+## Rendering one page per request
+
+A host that owns the request, such as a framework route or a worker, renders
+one page with
+[`renderToString(template, { router })`](/api/lit-ui-router-ssr/index/functions/renderToString).
+It is the render `prerender()` runs for each page, hydration signature and
+`deferHydration` included, so its markup is byte for byte what `prerender()`
+hands `document` for the same template and router. The host settles the
+router, decides the response and writes the document around the markup:
+
+```ts
+import { renderToString, settle } from 'lit-ui-router-ssr';
+import { redirectedTo } from 'ui-router-server/ssr';
+
+// `router` serves the mount at /releases; `subpath` is the request's path within it.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+
+const { html } = renderToString(page(router), { router, dehydrate: {} });
+
+return new Response(shell(html), {
+  status: router.globals.current.name === 'notFound' ? 404 : 200,
+  headers: { 'Content-Type': 'text/html; charset=utf-8' },
+});
+```
+
+The router must stand on the page before the call. It is provided on `root`, a
+fresh `EventTarget` unless one is passed, for the render alone.
+`elementRenderers` and `dehydrate` act as `prerender()`'s options of the same
+name, and `payload` takes a payload drawn by hand rather than a hook. The
+result's `payload` reports the bytes the resolve payload adds to the signature
+and, under `dehydrate`, the resolves left to re-run on the client.
+
+The markup is collected into one string, synchronously. A streamed render
+would be a separate export.
 
 ## Adopting the resolves on boot
 
@@ -264,7 +308,9 @@ or a virtual fs instead — it receives `outDir` already joined on.
 The rules file follows the same seam: `rules: '_redirects'` (the default)
 writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
-your host reads.
+your host reads, such as
+[`redirectPages()`](/packages/server#hosts-without-redirect-rules) for a host
+with no redirect rules.
 
 ## After `vite build`
 
@@ -276,6 +322,8 @@ and its
 [`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender)
 calls this package's `prerender` with the options the script returns;
 [Prerender with Vite](/guides/prerender-with-vite) shows both files in full.
+[Prerender with Eleventy](/guides/prerender-with-eleventy) calls `prerender`
+from an Eleventy data file instead, and lets Eleventy write the pages.
 
 ## Static hosts add a trailing slash
 
@@ -443,6 +491,15 @@ browser attaches as it parses, and hydration adopts them there.
 whether or not it has anything to show on the server, which is the cost the
 default avoids.
 
+A shell element needs that list too: a shadow-DOM component that holds
+`<ui-view>` in its own template, such as an `<app-root>`. Under the default it
+renders as its bare tag, empty, and the views inside it are missing with it.
+With `LitElementRenderer` after `LightElementRenderer`, the `<ui-view>` in its
+shadow root renders, hydrates and adopts. In development, `prerender()` and
+`renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no
+renderer that draws it; `<ui-router>`, whose shadow root is a bare slot, is left
+out.
+
 ## Development and production builds
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
@@ -571,18 +628,29 @@ router, waits for the boot transition to land, then calls
 [`hydrateRoot`](/api/lit-ui-router-ssr/client/functions/hydrateRoot), which provides
 an adopter under the container with core's
 [`provideContext`](/api/reference/core/provideContext) and runs one
-`hydrate()` walk over it. It resolves once every awake view has updated:
+`hydrate()` walk over it. It resolves once the views that woke have updated:
 
 ```ts
 import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const { outcome, signature } = await bootstrap(router, root, page(router));
+const { outcome, signature, views } = await bootstrap(
+  router,
+  root,
+  page(router),
+);
 ```
 
-`signature` is a
+`outcome` is what the root hydrate came to, `adopted` or `cold`. `signature` is a
 [`BootstrapSignature`](/api/lit-ui-router-ssr/client/type-aliases/BootstrapSignature):
 `matched`, `elsewhere` or `absent`, comparing the state the boot landed on with
-the one the document was drawn for.
+the one the document was drawn for. `views` is a read-only map from each view's
+fully qualified name, such as `$default.$default`, to a
+[`BootstrapViewReport`](/api/lit-ui-router-ssr/client/interfaces/BootstrapViewReport):
+the view's `AdoptOutcome`, or `pending` for a view the document was drawn with
+that had not woken yet. Views are tracked by what they report to the adopter,
+so a view in a shadow root counts like any other, and the adopter stays
+installed until every drawn view has reported. A document that booted where it
+was drawn and adopted none of its drawn views warns once in development.
 
 The cold path is the same call: a container with nothing to adopt, a boot
 transition that fails, and a walk that throws all end in a cold render. The
@@ -593,13 +661,14 @@ whose state or url parameters differ from the drawn ones renders cold.
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
 version, the name of the state the router stood on, that state's url
-parameter values, and the resolved values
+parameter values, the fully qualified name of each `<ui-view>` it drew, and the
+resolved values
 [`dehydrate` or the `payload` hook](#adopting-the-resolves-on-boot) draws.
 It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<script type="application/json" data-lit-ui-router-ssr>{"version":"0.2.0","state":"sheet","params":{"num":"7B"}}</script>
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.9.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`
@@ -649,7 +718,8 @@ or a lost pair dropped them for a cold render, with the cause in `error`, and
 `none` when there was nothing to adopt. The
 [`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option of
 `bootstrap` and `hydrateRoot` receives the same reports for every view the walk
-reaches, so a consumer needs no listener:
+reaches, and for a view in a shadow root its host hydrates after the walk, so a
+consumer needs no listener:
 
 ```ts
 await bootstrap(router, root, page(router), {

@@ -72,7 +72,7 @@ Runs the CI pipeline including:
 
 - Build verification
 - Unit tests with Vitest
-- E2E tests with Playwright and Cypress
+- E2E tests with Playwright
 - Lint, typecheck, format, and bundle checks
 - Coverage reporting to Codecov
 - PR coverage comments (on PRs)
@@ -101,7 +101,7 @@ neither event can instantiate the other's jobs:
 | `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group, `/ e2e result` |
 | `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, `e2e result`                                              |
 
-`run` is the turbo graph. `plan` groups the default Cypress suites
+`run` is the turbo graph. `plan` groups the default e2e suites
 `suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own
 runner. PRs and `main` use one suite per job; the branch lane uses three, or the
 `E2E_SUITES_PER_JOB_BRANCH` repo variable. `e2e result` fails unless every suite succeeded, so the rulesets

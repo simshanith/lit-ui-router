@@ -6,7 +6,7 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/server)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-server)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-server)
 
-Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency).
+Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency). The routers `simulate` builds register copies of the mount's declarations, so inside a declaration's own functions (`redirectTo`, resolves, hooks) `transition.to()` and `state.self` are the copy, not the app's object; compare states by `name`, as UI-Router code does.
 
 The matcher composes each state's url along its parent as `@uirouter/core` does: a state's parent is its `parent:`, otherwise its name minus the last dotted segment.
 
@@ -69,6 +69,37 @@ serverRouterPlugin(router, {
 [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite) walks through the
 plugin option and the script.
 
+## Hosts without redirect rules
+
+`prerender()` hands redirects to the host as rules lines, and `rules` decides what happens to them:
+`'_redirects'` (the default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
+them in `result.rules`, and a function receives them with the run's `write`, `outDir` and written
+`pages`. A host with no redirect rules, such as GitHub Pages or a plain bucket, takes
+`redirectPages()` from `ui-router-server/prerender`: each line becomes a page at
+`<from>/index.html` holding a `location.replace` that keeps the request's query and fragment when
+the target has none, a meta refresh, a plain link, a canonical link to the target, and `noindex`.
+The page answers 200, so the line's status never reaches the host; the canonical link tells search
+engines the content moved. A line whose page would replace one the run wrote throws, as does a
+pattern line; the first line for a page wins, and a line between a path's two spellings, as a
+mount's trailing-slash policy adds, writes nothing. `base` is the url path `outDir` is served at, and
+`redirectsFile: true` also writes `_redirects`. `page` replaces the template: it receives each
+line (`from`, `to`, `status`) and returns the HTML, or a promise of it. `redirectPage` is the
+default, exported to wrap or reuse; it escapes `to` with
+[`escape-html`](https://www.npmjs.com/package/escape-html). A template gets `to` unescaped, so
+HTML-escape it in markup (`escape-html` or the template's own escaper), and escape it as a script
+string too if it goes in a script.
+
+```ts
+import { redirectPage, redirectPages } from 'ui-router-server/prerender';
+
+const rules = redirectPages({
+  page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
+});
+```
+
+See
+[hosts without redirect rules](https://lit-ui-router.dev/packages/server#hosts-without-redirect-rules).
+
 ## Delegating states
 
 A state can name a host handler by key, `{ name: 'claims', url: '/claims', delegate: 'ledger' }`,
@@ -101,12 +132,42 @@ marker; the host binds a handler to the state's name, typed with `ResponseHandle
 A handler receives `{ resolves, request }`. The verdict is `response`, decided by url matching
 alone, so a host tells it from a page before rendering. A response state needs a url and no
 `redirectTo`, and can't also delegate; `createServerRouter` throws for each, and `as const` routes
-make a row with both markers a compile error. The fetch and Hono adapters pass a GET or HEAD of any
+make a row with both markers a compile error. A url whose pattern is sometimes a page and sometimes a
+redirect needs a `redirectTo` function instead, answered after `settle` with `redirectedTo(router,
+transition)` from `ui-router-server/ssr` at the state's `redirectStatusCode` (`302` by default),
+which a data `redirectTo`'s verdict honors too. The fetch and Hono adapters pass a GET or HEAD of any
 `Accept` that matches one to `serveResponse(verdict, request, ...args)` and answer other methods
 with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `prerender()` hands a
 response state to its `respond` hook and writes a 2xx body at the path its url spells
 (`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
 [response states](https://lit-ui-router.dev/packages/server#response-states).
+
+## Trailing slashes
+
+A mount's `config` can name the canonical spelling of a trailing slash per kind of state, so the
+route table spells no slash and both sides agree on it:
+
+```ts
+const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} satisfies RouterUrlConfig;
+```
+
+`pages` covers states answered with a page and `responses` covers response states, each
+`'always'`, `'never'` or `'as-requested'` (the default). A delegating state's url belongs to its
+host handler and keeps the spelling requested. A navigation in the other spelling verdicts as a
+`308` redirect to the canonical one, a data `redirectTo` lands in its target's canonical spelling,
+and a non-navigation request to a response state or delegate is answered at either spelling. The
+policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
+`compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a
+`stateRegistry` url decorator, so `href()` and the urls a transition pushes come out canonical on a
+client router and on a server one built with `installServerLocation(router, { urlConfig })`.
+`prerender()` follows the mount's policy: it writes a `308` line from each page's or response
+state's other spelling onto the canonical path it was listed at. A
+Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'always' }`, and
+`drop-trailing-slash` to `{ pages: 'never' }`. See
+[trailing slashes](https://lit-ui-router.dev/packages/server#trailing-slashes).
 
 ## Values beyond plain JSON
 

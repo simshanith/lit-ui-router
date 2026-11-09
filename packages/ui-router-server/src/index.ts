@@ -11,7 +11,7 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
-import type { RawParams, StateDeclaration, StateRule } from '@uirouter/core';
+import type { RawParams, StateRule } from '@uirouter/core';
 
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
@@ -21,19 +21,25 @@ import type { PooledRouter, RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
   RedirectRule,
+  RedirectStatusCode,
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
   RouteMatch,
+  RouteTableConfig,
 } from './redirects.ts';
-import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { registerMountPolicies, respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
+  RedirectStatusCode,
   RedirectTarget,
   RouteDeclaration,
   RouteIndex,
+  RouteTableConfig,
 } from './redirects.ts';
+
+export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
 
 export { routeTrie } from './route-trie.ts';
 
@@ -43,6 +49,8 @@ declare module '@uirouter/core' {
     delegate?: string;
     /** Marks a response state, answered by the handler bound to its name (see {@link RouteDeclaration.response}). */
     response?: true;
+    /** The status this state's `redirectTo` answers with, `302` by default (see {@link RouteDeclaration.redirectStatusCode}). */
+    redirectStatusCode?: RedirectStatusCode;
   }
 }
 
@@ -73,12 +81,14 @@ export interface MountConfig<
    */
   strategy?: 'matcher' | 'simulate';
   /**
-   * Matcher compiler options (defaults: strict, case-sensitive, no squash);
-   * 'simulate' mounts apply all but decodeParams. Hand the same object to
-   * {@link url-config!applyUrlConfig | `applyUrlConfig`} on the client router
-   * so both sides compile urls alike.
+   * Url options (defaults: strict, case-sensitive, no squash, slashes as
+   * requested); 'simulate' mounts apply all but decodeParams. Hand the same
+   * object to {@link url-config!applyUrlConfig | `applyUrlConfig`} on the
+   * client router so both sides compile and format urls alike. Under a
+   * `trailingSlash` policy, a url matching a state in the other spelling
+   * verdicts as a `308` redirect to the canonical one.
    */
-  config?: UrlMatcherCompilerConfig;
+  config?: RouteTableConfig;
   /**
    * How a 'matcher' mount looks up the route a pathname matches. Default: a
    * linear scan that tries every route. {@link routeTrie} walks a segment
@@ -189,7 +199,7 @@ export type Verdict =
       mount: string;
       /** The mount-joined target path; merge the request's search with {@link mergeSearch}. */
       location: string;
-      /** Redirect status to answer with (302 today). */
+      /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
       status: number;
     }
   /**
@@ -627,13 +637,10 @@ const makeSimulateLoader = (): (() => Promise<SimulateModule>) => {
 };
 
 const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
-  // Fresh declarations per call: core mutates registrations, so sharing
-  // them across concurrent resolutions is the hazard the copy prevents.
-  const states: StateDeclaration[] = mount.config.routes.map((route) => ({
-    ...route,
-  }));
-
-  const router = simulate.createHeadlessRouter(states, mount.config.config);
+  const router = simulate.createHeadlessRouter(
+    mount.config.routes,
+    mount.config.config,
+  );
 
   // The real rule, replayed: otherwise() only fires when no other rule
   // matches, and the url-less target leaves the memory location unmoved.
@@ -693,11 +700,15 @@ const shellVerdict = (mount: Mount): Verdict => ({
   mount: mount.base,
 });
 
-const redirectVerdict = (mount: Mount, path: string): Verdict => ({
+const redirectVerdict = (
+  mount: Mount,
+  path: string,
+  status: RedirectStatusCode = 302,
+): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
   location: join(mount.base, path),
-  status: 302,
+  status,
 });
 
 const notFoundVerdict = (mount: Mount): Verdict => ({
@@ -763,11 +774,29 @@ const otherwiseVerdict = (mount: Mount): Verdict => ({
 
 // --- Per-strategy resolution -----------------------------------------------
 
-const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
+// The 308 to the canonical spelling of the matched state's url, or null when the request already used it.
+const respelledVerdict = (
+  mount: Mount,
+  subpath: string,
+  state: string,
+): Verdict | null => {
+  const canonical = respell(subpath, mount.compiled.slashOf(state));
+
+  return join(mount.base, canonical) === join(mount.base, subpath)
+    ? null
+    : redirectVerdict(mount, canonical, 308);
+};
+
+// Navigations only are respelled; a marked state answers a non-navigation at either spelling.
+const matcherVerdict = (
+  mount: Mount,
+  subpath: string,
+  respelled = true,
+): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
   if (resolution.redirect !== null)
-    return redirectVerdict(mount, resolution.redirect);
+    return redirectVerdict(mount, resolution.redirect, resolution.status);
 
   // A when()-rule that lands where it started never reached route matching.
   const match =
@@ -775,7 +804,11 @@ const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
       ? mount.compiled.match(subpath)
       : resolution.match;
 
-  if (match !== null) return routeVerdict(mount, subpath, match);
+  if (match !== null)
+    return (
+      (respelled ? respelledVerdict(mount, subpath, match.state) : null) ??
+      routeVerdict(mount, subpath, match)
+    );
 
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
@@ -830,6 +863,23 @@ const ruleState = (rule: { type: string }): string | undefined =>
   // SAFETY: core tags a state's url rule 'STATE', and only StateRule carries that tag.
   rule.type === 'STATE' ? (rule as StateRule).state.name : undefined;
 
+// The url's own state's redirect status, as the matcher reads it; a pattern rule's match has none.
+const matchedStatus = (
+  router: PooledRouter['router'],
+  subpath: string,
+): RedirectStatusCode | undefined => {
+  const matched = router.urlService.match({
+    path: subpath,
+    search: {},
+    hash: '',
+  });
+
+  // SAFETY: core tags a state's url rule 'STATE', and only StateRule carries that tag.
+  return matched?.rule.type === 'STATE'
+    ? (matched.rule as StateRule).state.self.redirectStatusCode
+    : undefined;
+};
+
 // Verdicts decided by url matching alone; a marked state never transitions here, so its resolves never block the verdict.
 const matchedVerdict = (
   router: PooledRouter['router'],
@@ -862,6 +912,9 @@ const replayVerdict = async (
   const { router } = pooled;
   const decided = matchedVerdict(router, mount, subpath);
 
+  if (decided?.kind === 'response' || decided?.kind === 'delegate')
+    return respelledVerdict(mount, subpath, decided.state) ?? decided;
+
   if (decided !== null) return decided;
   const settled = pooled.nextSettled();
   router.urlService.url(subpath);
@@ -877,8 +930,9 @@ const replayVerdict = async (
   const landed = router.urlService.url();
 
   return landed === subpath
-    ? shellVerdict(mount)
-    : redirectVerdict(mount, landed);
+    ? (respelledVerdict(mount, subpath, router.globals.$current.name) ??
+        shellVerdict(mount))
+    : redirectVerdict(mount, landed, matchedStatus(router, subpath));
 };
 
 const simulateVerdict = async (
@@ -995,6 +1049,12 @@ export function createServerRouter<
   };
 
   compiledMounts.set(router, declared);
+  registerMountPolicies(
+    router,
+    new Map(
+      declared.map((mount) => [mount.base, mount.config.config?.trailingSlash]),
+    ),
+  );
   registerDelegates(router, {
     keys: new Set(declared.flatMap((mount) => [...mount.delegates.values()])),
     responses: new Set(declared.flatMap((mount) => [...mount.responses])),
@@ -1011,7 +1071,7 @@ export function createServerRouter<
 
         if (mount.strategy === 'simulate')
           return simulateMarked(await loadSimulate(), mount, subpath);
-        const verdict = matcherVerdict(mount, subpath);
+        const verdict = matcherVerdict(mount, subpath, false);
 
         return verdict.kind === 'delegate' || verdict.kind === 'response'
           ? verdict

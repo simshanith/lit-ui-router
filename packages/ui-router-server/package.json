@@ -37,6 +37,11 @@
       "node": "./dist/node-conditions.node.js",
       "default": "./dist/node-conditions.js"
     },
+    "#node-output": {
+      "types": "./src/node-output.ts",
+      "node": "./dist/node-output.node.js",
+      "default": "./dist/node-output.js"
+    },
     "#prerender-thread": {
       "node": "./dist/prerender-thread.js"
     }
@@ -170,6 +175,9 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
     "typecheck:vite7": "vite7-compat-guard && tsc -p tsconfig.vite7.json --noEmit"
   },
+  "dependencies": {
+    "escape-html": "catalog:publishedDependencies"
+  },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@repo/dev-gate": "catalog:workspace",
@@ -183,6 +191,7 @@
     "@tools/shared": "catalog:workspace",
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@tools/wintercg-globals": "catalog:workspace",
+    "@types/escape-html": "catalog:",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/core-floor": "catalog:peerFloor",
