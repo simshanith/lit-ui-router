@@ -162,6 +162,41 @@ async function readPackument(name: string): Promise<Packument | null> {
   return v.parse(PackumentSchema, await response.json());
 }
 
+const VersionDocSchema = v.object({
+  dist: v.object({ tarball: v.string() }),
+});
+
+class NotOnNpm extends Error {}
+
+/** The version's tarball from its own document, which npm serves before the packument lists it; null once every try is a 404. */
+async function tarballOf(
+  name: string,
+  version: string,
+): Promise<string | null> {
+  const read = async () => {
+    const response = await fetch(
+      `${NPM_REGISTRY}/${npmPath(name)}/${version}`,
+      {
+        headers: { Accept: 'application/json' },
+      },
+    );
+
+    if (response.status === 404) throw new NotOnNpm();
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    return v.parse(VersionDocSchema, await response.json()).dist.tarball;
+  };
+
+  try {
+    return await withRetry(read, { attempts: 6, baseDelayMs: 2000 });
+  } catch (cause) {
+    if (cause instanceof NotOnNpm) return null;
+
+    throw cause;
+  }
+}
+
 async function sha256Of(url: string): Promise<string> {
   const response = await fetch(url);
 
@@ -176,20 +211,25 @@ async function sha256Of(url: string): Promise<string> {
 async function digestOf(
   release: string,
   releases: readonly GitHubRelease[],
-  npm: ReadonlyMap<string, Packument | null>,
 ): Promise<Read<Finding>> {
   const parsed = releaseOf(release);
 
   if (!parsed)
     return { ok: false, reason: `RELEASE: not a release: ${release}` };
 
-  const tarball = npm.get(parsed.name)?.versions[parsed.version]?.dist.tarball;
-
   const asset = releases
     .find(({ tag }) => tag === release)
     ?.assets.find(({ name }) => name.endsWith('.tgz'));
 
-  if (tarball === undefined) {
+  let tarball: string | null;
+
+  try {
+    tarball = await tarballOf(parsed.name, parsed.version);
+  } catch (cause) {
+    return { ok: false, reason: `npm ${release}: ${messageOf(cause)}` };
+  }
+
+  if (tarball === null) {
     return { ok: true, value: digestFinding(release, asset, undefined) };
   }
 
@@ -248,7 +288,7 @@ async function observe(repo: string, origin: string, release: string) {
 
   if (release === '') return { findings, unreachable };
 
-  const digest = await digestOf(release, releases.value, npm);
+  const digest = await digestOf(release, releases.value);
 
   return digest.ok
     ? { findings: [...findings, digest.value], unreachable }
