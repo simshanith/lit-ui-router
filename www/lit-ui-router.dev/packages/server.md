@@ -828,7 +828,8 @@ await prerender({
 - **What the page holds.** A `location.replace` that carries the request's
   query and fragment into a target with none of its own, a meta refresh and a
   plain link for browsers without script, a canonical link to the target, and
-  `noindex`. The target is HTML-escaped.
+  `noindex`. The target is HTML-escaped with
+  [`escape-html`](https://www.npmjs.com/package/escape-html).
 - **No status.** The page answers 200, so the line's 301, 302 or 308 never
   reaches the host. The canonical link tells search engines the content moved.
 - **Collisions.** A line whose page would replace one the run wrote throws.
@@ -842,8 +843,8 @@ await prerender({
   `to`, `status`), and may return a promise.
   [`redirectPage`](/api/ui-router-server/prerender/functions/redirectPage) is
   the default, exported so a template can wrap it. A template gets `to`
-  unescaped: HTML-escape it in markup, and escape it as a script string too if
-  it goes in a script.
+  unescaped: HTML-escape it in markup, with `escape-html` or the template's
+  own escaper, and escape it as a script string too if it goes in a script.
 
 ```ts
 import { redirectPage, redirectPages } from 'ui-router-server/prerender';

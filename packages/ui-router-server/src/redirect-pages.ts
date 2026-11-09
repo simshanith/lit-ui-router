@@ -3,6 +3,8 @@
  * becomes an HTML page at its `from` path that sends the browser to its `to`.
  */
 
+import escapeHtml from 'escape-html';
+
 import type { RedirectLine, RulesWriter } from './prerender.ts';
 
 /** Options for {@link redirectPages}. */
@@ -21,8 +23,9 @@ export interface RedirectPagesOptions {
   /**
    * Builds each page's HTML from its line, {@link redirectPage} by default.
    * Wrap that to add to the page, or replace it. `to` arrives unescaped:
-   * HTML-escape it in markup, and escape it as a script string too if it goes
-   * in a script.
+   * HTML-escape it in markup, with `escape-html` (a dependency of this
+   * package) or your template's own escaper, and escape it as a script string
+   * too if it goes in a script.
    */
   page?: (line: RedirectLine) => string | Promise<string>;
 }
@@ -30,14 +33,6 @@ export interface RedirectPagesOptions {
 /** The `_redirects` file body for the lines: one `from to status` line each. */
 export const redirectsFileBody = (lines: readonly RedirectLine[]): string =>
   lines.map((line) => `${line.from} ${line.to} ${line.status}\n`).join('');
-
-const escapeHtml = (text: string): string =>
-  text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 
 // JSON in a script: `<` escaped so the target can't close the element.
 const scriptString = (text: string): string =>

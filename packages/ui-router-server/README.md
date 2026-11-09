@@ -83,8 +83,10 @@ engines the content moved. A line whose page would replace one the run wrote thr
 pattern line; the first line for a page wins. `base` is the url path `outDir` is served at, and
 `redirectsFile: true` also writes `_redirects`. `page` replaces the template: it receives each
 line (`from`, `to`, `status`) and returns the HTML, or a promise of it. `redirectPage` is the
-default, exported to wrap or reuse. A template gets `to` unescaped, so HTML-escape it in markup,
-and escape it as a script string too if it goes in a script.
+default, exported to wrap or reuse; it escapes `to` with
+[`escape-html`](https://www.npmjs.com/package/escape-html). A template gets `to` unescaped, so
+HTML-escape it in markup (`escape-html` or the template's own escaper), and escape it as a script
+string too if it goes in a script.
 
 ```ts
 import { redirectPage, redirectPages } from 'ui-router-server/prerender';

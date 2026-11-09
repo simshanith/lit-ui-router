@@ -533,6 +533,22 @@ describe('redirectPages', () => {
     );
   });
 
+  it('escapes & < > " \' in the refresh url and canonical href, and keeps the script closed', () => {
+    const to = '/a?b=1&c=<x>"\'</script>';
+    const page = redirectPage({ from: '/from', to, status: 301 });
+    const escaped = '/a?b=1&amp;c=&lt;x&gt;&quot;&#39;&lt;/script&gt;';
+
+    assert.ok(
+      page.includes(`<meta http-equiv="refresh" content="0; url=${escaped}">`),
+    );
+    assert.ok(page.includes(`<link rel="canonical" href="${escaped}">`));
+    assert.equal(page.match(/<\/script>/g)?.length, 1);
+    assert.equal(
+      replaceTarget(page, 'https://example.com/from'),
+      new URL(to, 'https://example.com/from').href,
+    );
+  });
+
   it('writes a page for a render that answered a redirect and a response state’s 3xx', async () => {
     const { files } = await run({
       mounts: {
