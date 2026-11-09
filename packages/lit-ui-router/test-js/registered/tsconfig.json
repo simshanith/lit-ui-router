@@ -1,0 +1,14 @@
+{
+  // checkJs over a JavaScript consumer that registers in TypeScript: the JavaScript files get the same checks
+  "extends": "../../tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "isolatedDeclarations": false,
+    "allowJs": true,
+    "checkJs": true,
+    "types": []
+  },
+  "include": ["*.ts", "*.js"],
+  "exclude": []
+}

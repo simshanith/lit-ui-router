@@ -3,9 +3,10 @@
 // `LitStateDeclaration` infers it; this program holds `TypedLitStateDeclaration`, which doesn't.
 // `tsc --noEmit` is the assertion; nothing runs this file.
 import { html, LitElement, ReactiveElement } from 'lit';
-import type {
-  TypedLitStateDeclaration,
-  UIViewInjectedProps,
+import {
+  type TypedLitStateDeclaration,
+  type UIViewInjectedProps,
+  uiSref,
 } from 'lit-ui-router';
 import type { TypedStateService } from 'ui-router-registry';
 
@@ -21,8 +22,10 @@ class ContactView extends LitElement {
     // @ts-expect-error a missing required param
     $state.target('contacts.contact.edit');
 
-    return html`<a
-      href=${$state.href('contacts.contact.edit', { contactId: 'c1' })}
+    // @ts-expect-error a misspelled state name
+    uiSref('contcts');
+
+    return html`<a ${uiSref('contacts.contact.edit', { contactId: 'c1' })}
       >Edit</a
     >`;
   }
@@ -52,7 +55,10 @@ const editState = {
         // @ts-expect-error a misspelled state name
         $state.target('contcts');
 
-        return html`<a href=${$state.href('contacts')}>Back</a>`;
+        // @ts-expect-error a missing required param
+        uiSref('contacts.contact');
+
+        return html`<a ${uiSref('contacts')}>Back</a>`;
       },
     },
   },

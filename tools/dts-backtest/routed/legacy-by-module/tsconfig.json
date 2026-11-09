@@ -1,0 +1,4 @@
+{
+  // For lint/IDE tooling only: its own RegisteredStates keeps it apart from the other fixtures.
+  "extends": "./tsconfig.fixture.json"
+}

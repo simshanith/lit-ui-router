@@ -1,0 +1,12 @@
+{
+  // its own program: the routed components here register their own `Register` states
+  "extends": "../../tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "isolatedDeclarations": false,
+    "types": []
+  },
+  "include": ["*.ts"],
+  "exclude": []
+}

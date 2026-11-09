@@ -90,8 +90,14 @@ const workspaces = {
     entry: ['scripts/*.ts'],
   },
   'packages/lit-ui-router': {
-    // read by `cem analyze`, which knip has no plugin for
-    entry: ['custom-elements-manifest.config.js'],
+    entry: [
+      // read by `cem analyze`, which knip has no plugin for
+      'custom-elements-manifest.config.js',
+      // checkJs consumer programs, checked by typecheck:tsc
+      'test-js/**/*.{js,ts}',
+      // modules a test-d program reaches by augmentation, not by import
+      'test-d/registered-by-module/*.ts',
+    ],
     ignoreDependencies: [
       // imported by the emitted dist, not by src
       '@oxc-project/runtime',
@@ -123,7 +129,12 @@ const workspaces = {
     entry: ['fixtures/*.ts'],
   },
   'tools/dts-backtest': {
-    entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
+    entry: [
+      'fixtures/*.ts',
+      'registered/*.ts',
+      'routed/**/*.ts',
+      'optional-peer/**/*.ts',
+    ],
     // the TS version matrix is imported by computed specifier
     ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
   },
