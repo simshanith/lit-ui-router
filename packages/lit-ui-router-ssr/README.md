@@ -24,8 +24,9 @@ imports the pre-1.0 renderer or re-derives the incantation.
   on the page carries `defer-hydration` and renders nothing until the client's walk reaches it.
 - **The hydration signature.** A page rendered from a template opens on a JSON data block,
   `<script type="application/json" data-lit-ui-router-ssr>`, naming this package's version, the
-  state the router stood on, that state's url parameter values, and the resolved values
-  `dehydrate` or the `payload` hook draws. A page `renderShell` returns as a string is written as-is, without one.
+  state the router stood on, that state's url parameter values, the fully qualified name of each
+  `<ui-view>` it drew a routed component into, and the resolved values `dehydrate` or the
+  `payload` hook draws. A page `renderShell` returns as a string is written as-is, without one.
 - **The lit render inside the emit loop.** The loop itself — verdict to file name, redirect to
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
@@ -470,12 +471,23 @@ const { outcome } = await bootstrap(router, root, page(router));
   signature, starts the router, waits for the boot transition to land — following redirects to the
   one that succeeds — then runs `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and
   each `<ui-view>` re-seeks the router before its own first render, so every view finds the settled
-  router rather than the placeholder it registered against. The call waits for every awake
-  `<ui-view>`, nested ones included, to finish updating, then releases the adopter. It resolves with
-  `outcome` — `adopted` or `cold` — and `signature` (`BootstrapSignature`): `matched` when the boot
-  landed on the state and url parameters the signature names, `elsewhere` when the document carried
-  a signature and the boot landed somewhere else or landed no transition, and `absent` when it
-  carried none. Nothing constrains when `lit-ui-router-ssr/register` is imported.
+  router rather than the placeholder it registered against. It resolves with `outcome` — `adopted`
+  or `cold`, what the root hydrate came to — `signature` (`BootstrapSignature`): `matched` when the
+  boot landed on the state and url parameters the signature names, `elsewhere` when the document
+  carried a signature and the boot landed somewhere else or landed no transition, and `absent` when
+  it carried none — and `views`, described next. Nothing constrains when
+  `lit-ui-router-ssr/register` is imported.
+- **`views` says what each view came to.** A read-only map keyed by a view's fully qualified name
+  (`$default`, `$default.$default`, `$default.aside`) to a `BootstrapViewReport`: `outcome`, an
+  `AdoptOutcome` or `pending`, with the reporting `view` and, on `fell-back`, its `error`. It lists
+  every view the signature says the document was drawn with, then any other view that woke and
+  requested the adopter. Views are tracked by what they report to the adopter, whose request is a
+  composed event, so a view in a shadow root counts like any other. The call
+  resolves once the views that woke have updated, nested ones and those in shadow roots their hosts
+  hydrated included, and lists a drawn view that has not woken as `pending`. The map is a snapshot:
+  the adopter stays installed until every drawn view has reported, so a view whose host hydrates
+  later still adopts and still reaches `onAdopt`. A document that booted where it was drawn and
+  adopted none of its drawn views warns once in development.
 - **The cold path is the same call.** A container with nothing to adopt is emptied and `value`
   rendered into it before the router starts. A boot transition that fails, a url that starts none,
   and a root `hydrate()` that throws over a mutated document all empty the container and render
@@ -543,7 +555,8 @@ const { outcome } = await bootstrap(router, root, page(router));
   served nodes are the live ones — `fell-back` — a mismatch or a lost pair, with `detail.error`
   carrying the cause — or `none`, nothing to adopt. It fires once per view, parent first, in
   production as in development. The `onAdopt(view, outcome, error)` option of `bootstrap()` and `hydrateRoot()` receives
-  the same reports for every view its walk reaches, a view the pin adopts after the release included.
+  the same reports for every view its walk reaches, a view the pin adopts after the release included,
+  and a view in a shadow root its host hydrates after the walk.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first empties. The caller renders into it.
 

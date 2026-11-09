@@ -209,6 +209,7 @@ describe('the resolves a signature carries', () => {
       version: import.meta.env.PACKAGE_VERSION,
       state: 'shell.detail',
       params: {},
+      views: ['$default', '$default.$default'],
       resolves: {
         shell: { greeting: 'hello' },
         'shell.detail': { detail: 'leaf' },
