@@ -1,13 +1,14 @@
 diff --git a/dist/index.mjs b/dist/index.mjs
-index cba24f693699f1e8fd651778ada0dfe32306c799..66ba1b507ee9012ea8cf57d2ec4e1dd15825eecb 100644
+index cba24f693699f1e8fd651778ada0dfe32306c799..5dd6cf18e359c93666fefc9e0c3dac58cf124cb0 100644
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
-@@ -836,7 +836,9 @@ var yaml_no_unused_catalog_item_default = createEslintRule({
+@@ -836,7 +836,10 @@ var yaml_no_unused_catalog_item_default = createEslintRule({
  		}
  		for (const [packageName, specifier] of Object.entries(parsed.overrides || {})) if (specifier.startsWith("catalog:")) {
  			const catalog = specifier.slice(8) || "default";
 -			entries.delete(`${packageName}:${catalog}`);
-+			const target = packageName.slice(packageName.lastIndexOf(">") + 1);
++			const delimiterAt = packageName.search(/[^ |@]>/);
++			const target = delimiterAt === -1 ? packageName : packageName.slice(delimiterAt + 2);
 +			const versionAt = target.indexOf("@", 1);
 +			entries.delete(`${versionAt === -1 ? target : target.slice(0, versionAt)}:${catalog}`);
  		}

@@ -604,7 +604,7 @@ patchedDependencies:
   '@api-viewer/docs': c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098
   '@api-viewer/tabs': efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e
   '@uirouter/visualizer': 74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df
-  eslint-plugin-pnpm: 474dc7639015aaf1fa0e0f344a0e95aeb03e1d96bc4776cbdb2a7a197119f339
+  eslint-plugin-pnpm: 021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a
   lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
 
 importers:
@@ -664,7 +664,7 @@ importers:
         version: 1.13.0(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
       eslint-plugin-pnpm:
         specifier: 'catalog:'
-        version: 1.9.1(patch_hash=474dc7639015aaf1fa0e0f344a0e95aeb03e1d96bc4776cbdb2a7a197119f339)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
+        version: 1.9.1(patch_hash=021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
       eslint-plugin-turbo:
         specifier: 'catalog:'
         version: 2.11.10(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))(turbo@2.11.10)
@@ -12975,7 +12975,7 @@ snapshots:
       sort-object-keys: 2.1.0
       sort-package-json: 4.0.0
 
-  eslint-plugin-pnpm@1.9.1(patch_hash=474dc7639015aaf1fa0e0f344a0e95aeb03e1d96bc4776cbdb2a7a197119f339)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
+  eslint-plugin-pnpm@1.9.1(patch_hash=021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
     dependencies:
       empathic: 2.1.0
       eslint: 10.14.0(jiti@2.7.0)(supports-color@10.2.2)
