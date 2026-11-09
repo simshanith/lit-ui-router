@@ -9,13 +9,12 @@ import {
   type LedgerQueue,
   MAINTAINER_ACTIONS,
 } from './claim.ts';
+import { bearerOf, readClaims, text, unauthorized } from './auth.ts';
 import {
   ForbiddenClaim,
   InvalidToken,
   type OidcPolicy,
   forbiddenReason,
-  unverifiedClaims,
-  verifyToken,
 } from './oidc.ts';
 
 export interface IngestEnv {
@@ -34,17 +33,6 @@ class BadRequest extends Schema.TaggedError<BadRequest>()('BadRequest', {
   reason: Schema.String,
 }) {}
 
-class Misconfigured extends Schema.TaggedError<Misconfigured>()(
-  'Misconfigured',
-  { reason: Schema.String },
-) {}
-
-const text = (status: number, body: string): Response =>
-  new Response(body, {
-    status,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
-
 const decodeBody = Schema.decodeUnknownEffect(Schema.fromJsonString(ClaimBody));
 
 const policyOf = (env: IngestEnv): Omit<OidcPolicy, 'audience'> => ({
@@ -54,49 +42,6 @@ const policyOf = (env: IngestEnv): Omit<OidcPolicy, 'audience'> => ({
   workflows: env.OIDC_WORKFLOWS,
   environment: env.OIDC_ENVIRONMENT,
 });
-
-function bearerOf(request: Request): string | undefined {
-  const header = request.headers.get('Authorization') ?? '';
-  const match = /^Bearer (\S+)$/.exec(header);
-
-  return match?.[1];
-}
-
-const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
-  Effect.gen(function* () {
-    const audience = env.OIDC_AUDIENCE ?? '';
-    const skip = env.LEDGER_DEV_SKIP_OIDC === 'true';
-
-    if (audience === '' && skip) {
-      yield* Effect.logWarning('LEDGER_DEV_SKIP_OIDC is set: token unverified');
-
-      return yield* Effect.try({
-        try: () => unverifiedClaims(token),
-        catch: (cause) =>
-          cause instanceof InvalidToken
-            ? cause
-            : new InvalidToken({ reason: 'unverifiable token' }),
-      });
-    }
-
-    if (audience === '') {
-      return yield* new Misconfigured({ reason: 'OIDC_AUDIENCE is unset' });
-    }
-
-    if (skip) {
-      yield* Effect.logWarning(
-        'LEDGER_DEV_SKIP_OIDC is ignored while OIDC_AUDIENCE is set',
-      );
-    }
-
-    return yield* Effect.tryPromise({
-      try: () => verifyToken(token, audience, keys),
-      catch: (cause) =>
-        cause instanceof InvalidToken
-          ? cause
-          : new InvalidToken({ reason: 'unverifiable token' }),
-    });
-  });
 
 const readBody = (request: Request) =>
   Effect.gen(function* () {
@@ -118,9 +63,15 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       return yield* new InvalidToken({ reason: 'no bearer token' });
     }
 
-    const claims = yield* readClaims(token, env, keys).pipe(
-      Effect.withSpan('ledger.verify-token'),
-    );
+    const claims = yield* readClaims(
+      token,
+      {
+        variable: 'OIDC_AUDIENCE',
+        audience: env.OIDC_AUDIENCE,
+        devSkip: env.LEDGER_DEV_SKIP_OIDC,
+      },
+      keys,
+    ).pipe(Effect.withSpan('ledger.verify-token'));
 
     const body = yield* readBody(request);
 
@@ -182,7 +133,7 @@ export const respond = (
 
   return enqueue(request, env, keys).pipe(
     Effect.catchTags({
-      InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
+      InvalidToken: (error) => Effect.succeed(unauthorized(error.reason)),
       ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
       BadRequest: (error) => Effect.succeed(text(400, error.reason)),
       Misconfigured: (error) =>
