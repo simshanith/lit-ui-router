@@ -89,11 +89,11 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 
 **hellosolarsystem** as a static site. The states and resolves are the vanilla ones; the router decides the pages and [Eleventy](https://www.11ty.dev) writes them.
 
-- One [`prerender()`](https://lit-ui-router.dev/packages/ssr) call in `src/prerender.ts` runs inside an Eleventy global data file. It renders each path, the 404 page from the `otherwise` state, and the `legacy` redirect, and hands the bodies and redirect lines back instead of writing files.
+- One [`prerender()`](https://lit-ui-router.dev/packages/ssr) call in `src/prerender.ts` runs before each Eleventy build, in a fresh Node process, and its result becomes Eleventy's global data. It renders each path, the 404 page from the `otherwise` state, and the `legacy` redirect, and hands the bodies and redirect lines back instead of writing files.
 - Paginated templates in `site/` write a page per entry, `_redirects`, and a page per redirect for hosts that don't read `_redirects`; the layout owns the document.
 - `dehydrate: {}` puts each page's resolves in its hydration signature, so `bootstrap()` adopts the served `<ui-view>` without running them again.
 - Links bind `href=${srefHref(...)}` and `class=${srefActiveClass(...)}` rather than `uiSref` and `uiSrefActive`, because the server renders attribute parts and skips element parts: the served pages carry working links before the client boots.
-- It routes with `pushStateLocationPlugin` on real paths, not the hash. `npm run dev` builds the site once and serves it with `eleventy --serve`; rerun it after editing `src/`.
+- It routes with `pushStateLocationPlugin` on real paths, not the hash. `npm run dev` serves the site with `eleventy --serve`, which rebuilds and renders it again on each save under `src/`.
 
 ### hellogalaxy
 
@@ -209,7 +209,7 @@ It drives every state each built example's own links reach, in headless Chromium
 
 ## Project Structure
 
-Every example follows the same structure (the lint example adds `eslint.config.js`; **helloworld-buildless** has `public/index.html` and `public/main.js` in place of `index.html`, `src/main.ts` and `vite.config.ts`; **hellosolarsystem-eleventy** has `build.js`, `eleventy.config.js` and Eleventy's input in `site/` in place of `index.html`, with `src/prerender.ts` and `src/client.ts` as its two entries):
+Every example follows the same structure (the lint example adds `eslint.config.js`; **helloworld-buildless** has `public/index.html` and `public/main.js` in place of `index.html`, `src/main.ts` and `vite.config.ts`; **hellosolarsystem-eleventy** has `build.js`, `eleventy.config.js`, `render.js` and Eleventy's input in `site/` in place of `index.html`, with `src/prerender.ts` and `src/client.ts` as its two entries):
 
 ```text
 <example-name>/

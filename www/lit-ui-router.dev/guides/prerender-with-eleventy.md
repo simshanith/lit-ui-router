@@ -25,18 +25,21 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
 - [`src/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/prerender.ts)
   runs one `prerender()` over those paths and returns the pages and rules.
 - [`site/`](https://github.com/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-eleventy/site)
-  is Eleventy's input: a data file that calls it, a template per output kind,
-  and the layout.
+  is Eleventy's input: a template per output kind, and the layout.
 - [`src/client.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/client.ts)
   boots the client with
   [`bootstrap()`](/packages/ssr#the-hydration-model).
-- [`build.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/build.js)
-  runs the three builds in order.
+- [`eleventy.config.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/eleventy.config.js)
+  builds both halves with Vite and runs
+  [`render.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/render.js),
+  which calls `src/prerender.ts`, before each Eleventy build.
+  [`build.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/build.js)
+  records the base path and starts Eleventy.
 
 ## Who writes what
 
-`prerender()` runs inside Eleventy's build, as a
-[global data file](https://www.11ty.dev/docs/data-global/). Its `write`
+`prerender()` runs before each Eleventy build, and its result becomes
+[global data](https://www.11ty.dev/docs/data-global-custom/). Its `write`
 collects each page body in memory instead of writing files, and `rules: 'none'`
 skips the `_redirects` file, leaving the redirect lines on the result:
 
@@ -72,8 +75,10 @@ there Eleventy does the writing:
   `<base>` for a site served under a path prefix.
 
 Vite builds the two halves Eleventy can't compile itself: the server module
-the data file imports (`vite build --ssr`), and the client bundle Eleventy
-copies through.
+that renders the pages, and the client bundle Eleventy copies through. Under
+`eleventy --serve`, a save under `src/` runs both builds and the render again.
+The render runs in a fresh Node process each time, because importing the
+rebuilt module again would define the app's custom elements a second time.
 
 ## The page, then the client
 
