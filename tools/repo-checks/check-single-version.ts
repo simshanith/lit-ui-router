@@ -43,11 +43,11 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'parse5',
-    why: 'the catalog takes 8, as eslint-plugin-lit does; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, lit-analyzer 5, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
+    why: 'the catalog takes 8, as @tools/lit-template-lint and eslint-plugin-lit do; @lit-labs/ssr and eslint-plugin-lit-a11y pull 7, and eslint-plugin-lit-a11y 4 (dom5) and 6 (parse5-htmlparser2-tree-adapter); dedupe tracked in #1892',
   },
   {
     name: 'typescript',
-    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/dts-backtest takes the typescript-7.1 beta alias; attw, the cem analyzer and web-component-analyzer pin their own',
+    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/dts-backtest and @tools/lit-template-lint take the typescript-7.1 beta alias; attw and the cem analyzer pin their own',
   },
 ];
 

@@ -50,7 +50,7 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
     producerTask: 'build:types',
     select: (member) =>
       isPublishable(member) && hasScript('build:types')(member),
-    why: 'lit-analyzer resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
+    why: 'the template checker resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
   },
 ];
 
