@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
-import { createServerRouter, routeTrie } from '../src/index.ts';
+import { createServerRouter, mergeSearch, routeTrie } from '../src/index.ts';
 import type { MountConfig, RouteDeclaration } from '../src/index.ts';
 import { registeredDelegates } from '../src/delegate-registry.ts';
 import { installServerLocation } from '../src/location.ts';
@@ -258,5 +258,53 @@ describe('differential: core href under the policy vs server verdicts', () => {
     assert.equal(await settled, true);
 
     assert.equal(router.urlService.path(), '/lit/');
+  });
+});
+
+describe('trailingSlash under a search-param ancestor', () => {
+  const nested = [
+    { name: 'home', url: '' },
+    { name: 'list', url: '/list?q' },
+    { name: 'list.item', url: '/{id}?sort' },
+    { name: 'list.old', url: '/old/{id}', redirectTo: 'list.item' },
+  ] as const satisfies readonly RouteDeclaration[];
+
+  for (const strategy of ['matcher', 'simulate'] as const) {
+    it(`respells the path before the merged query (${strategy} tier)`, async () => {
+      const router = createServerRouter({
+        mounts: { '/app': { routes: nested, config: pagesSlashed, strategy } },
+      });
+
+      for (const [path, location, status] of [
+        ['/app/list/7?q=a&sort=n', '/app/list/7/', 308],
+        ['/app/list/old/7?q=a&sort=n', '/app/list/7/', 302],
+      ] as const) {
+        const verdict = await router.resolve(path);
+
+        assert.deepEqual(verdict, redirect(location, status), path);
+        assert.equal(
+          mergeSearch(location, path.slice(path.indexOf('?'))),
+          '/app/list/7/?q=a&sort=n',
+        );
+      }
+
+      assert.deepEqual(await router.resolve('/app/list/7/?q=a&sort=n'), shell);
+    });
+  }
+
+  it('formats the client href with the slash before the query', () => {
+    const client = new UIRouter();
+    client.plugin(servicesPlugin);
+    installServerLocation(client, {
+      baseHref: '/app/',
+      urlConfig: pagesSlashed,
+    });
+
+    for (const state of nested) client.stateRegistry.register({ ...state });
+
+    assert.equal(
+      client.stateService.href('list.item', { id: '7', q: 'a', sort: 'n' }),
+      '/app/list/7/?q=a&sort=n',
+    );
   });
 });
