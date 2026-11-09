@@ -20,9 +20,11 @@ import {
 } from 'typescript-7.1/sync';
 
 import {
+  type Directive,
   type LowerStats,
   lowerFile,
   type Segment,
+  segmentAt,
   toOriginal,
 } from './lower.ts';
 import { classFindings, propertyInsertions } from './members.ts';
@@ -36,6 +38,7 @@ interface LoweredFile {
   source: string;
   text: string;
   segments: Segment[];
+  directives: Directive[];
 }
 
 export interface Finding {
@@ -412,6 +415,7 @@ export function lowerAll(parsed: ParsedFile[], visibility: Visibility) {
       source,
       text: result.text,
       segments: result.segments,
+      directives: result.directives,
     });
   }
 
@@ -452,13 +456,20 @@ function classify(
   file: LoweredFile,
   diagnostic: Diagnostic,
   result: CheckResult,
+  used: Set<number>,
 ) {
   if (diagnostic.category !== ERROR) return;
 
-  const mapped = toOriginal(
-    file.segments,
-    virtualOffset(file.text, diagnostic),
-  );
+  const position = virtualOffset(file.text, diagnostic);
+  const directive = segmentAt(file.segments, position)?.directive;
+
+  if (directive !== undefined) {
+    used.add(directive);
+
+    return;
+  }
+
+  const mapped = toOriginal(file.segments, position);
 
   if (!mapped) {
     result.unmapped += 1;
@@ -503,12 +514,25 @@ function checkLowered(api: API, lowered: LoweredFile[]): CheckResult {
         continue;
       }
 
+      const used = new Set<number>();
+
       for (const diagnostic of [
         ...program.getSyntacticDiagnostics(file.path),
         ...program.getSemanticDiagnostics(file.path),
       ]) {
-        classify(file, diagnostic, result);
+        classify(file, diagnostic, result, used);
       }
+
+      file.directives.forEach(({ kind, at }, i) => {
+        if (kind !== 'expect-error' || used.has(i)) return;
+        result.findings.push({
+          path: file.path,
+          offset: at,
+          rule: 'suppression',
+          code: 2578,
+          text: "Unused '@ts-expect-error' directive.",
+        });
+      });
     }
   } finally {
     snapshot.dispose();

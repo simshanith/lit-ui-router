@@ -69,6 +69,14 @@ export interface Segment {
   kind: 'verbatim' | 'atom' | 'outside' | 'prelude';
   rule?: Rule;
   report?: true;
+  /** Index of the directive comment whose element this segment checks. */
+  directive?: number;
+}
+
+/** A `<!-- @ts-expect-error -->` or `<!-- @ts-ignore -->` comment, at its source offset. */
+export interface Directive {
+  kind: 'expect-error' | 'ignore';
+  at: number;
 }
 
 /** Check code spliced in at `at`, reported at `originalStart`. */
@@ -89,6 +97,7 @@ export interface LowerStats {
 export interface Lowered {
   text: string;
   segments: Segment[];
+  directives: Directive[];
   stats: LowerStats;
 }
 
@@ -135,6 +144,7 @@ const TEMPLATE_CONTEXT = defaultTreeAdapter.createElement(
 class Builder {
   text = '';
   segments: Segment[] = [];
+  directive: number | undefined;
 
   push(
     text: string,
@@ -155,6 +165,8 @@ class Builder {
     if (rule) segment.rule = rule;
 
     if (report) segment.report = true;
+
+    if (this.directive !== undefined) segment.directive = this.directive;
     this.text += text;
     this.segments.push(segment);
   }
@@ -290,7 +302,8 @@ class FileLowerer {
   #site!: TemplateSite;
   #markup!: Markup;
   #placed = new Set<number>();
-  #pendingDirective: { text: string; at: number } | undefined;
+  #pendingDirective: Directive | undefined;
+  readonly directives: Directive[] = [];
 
   constructor(source: string, sites: TemplateSite[], context: LowerContext) {
     this.source = source;
@@ -343,17 +356,26 @@ class FileLowerer {
     }
 
     // nested templates lower inside expressions, so the per-template state stacks
-    const saved = [this.#site, this.#markup, this.#placed] as const;
+    const saved = [
+      this.#site,
+      this.#markup,
+      this.#placed,
+      this.#pendingDirective,
+      this.out.directive,
+    ] as const;
+
     this.#site = site;
     this.#markup = new Markup(this.source, site);
     this.#placed = new Set();
+    this.#pendingDirective = undefined;
+    this.out.directive = undefined;
 
     const fragment = parseFragment(TEMPLATE_CONTEXT, this.#markup.text, {
       sourceCodeLocationInfo: true,
     });
 
     this.out.push('(', 'outside', site.start);
-    this.nodes(fragment.childNodes, false, undefined);
+    this.nodes(fragment.childNodes, undefined);
 
     site.expressions.forEach((_, i) => {
       if (this.#placed.has(i)) return;
@@ -362,7 +384,14 @@ class FileLowerer {
     });
 
     this.out.push(`\n${site.tag}\`\`)`, 'outside', site.start);
-    [this.#site, this.#markup, this.#placed] = saved;
+    this.dropDirective();
+    [
+      this.#site,
+      this.#markup,
+      this.#placed,
+      this.#pendingDirective,
+      this.out.directive,
+    ] = saved;
   }
 
   expression(i: number, rule: Rule): void {
@@ -391,15 +420,15 @@ class FileLowerer {
     }
   }
 
-  nodes(nodes: T.ChildNode[], svg: boolean, parent: string | undefined): void {
+  nodes(nodes: T.ChildNode[], parent: string | undefined): void {
     for (const node of nodes) {
       if (defaultTreeAdapter.isCommentNode(node)) {
         this.comment(node);
       } else if (defaultTreeAdapter.isTextNode(node)) {
         this.children(node.value, this.stats.lowered, 'child');
       } else if (defaultTreeAdapter.isElementNode(node)) {
-        const inSvg = svg || node.namespaceURI === parse5Html.NS.SVG;
-        this.element(node, inSvg, parent);
+        // parse5 puts <foreignObject> content back in the HTML namespace
+        this.element(node, node.namespaceURI === parse5Html.NS.SVG, parent);
 
         const template =
           node.tagName === 'template' &&
@@ -408,7 +437,6 @@ class FileLowerer {
         this.nodes(
           // SAFETY: parse5 builds every HTML <template> with its content fragment
           template ? (node as T.Template).content.childNodes : node.childNodes,
-          inSvg,
           node.tagName,
         );
       }
@@ -419,13 +447,21 @@ class FileLowerer {
     const match = DIRECTIVE_COMMENT.exec(node.data);
 
     if (match) {
+      this.dropDirective();
       this.#pendingDirective = {
-        text: `// @ts-${match[1]}`,
+        // SAFETY: DIRECTIVE_COMMENT's one group matches only these two
+        kind: match[1] as Directive['kind'],
         at: this.#markup.toSource(node.sourceCodeLocation?.startOffset ?? 0),
       };
     }
 
     this.children(node.data, this.stats.skipped, 'comment-binding');
+  }
+
+  /** Records a directive comment no element followed, so an unused one still fails. */
+  dropDirective(): void {
+    if (this.#pendingDirective) this.directives.push(this.#pendingDirective);
+    this.#pendingDirective = undefined;
   }
 
   /** Counts the directive a binding expression calls, if it is a bare call. */
@@ -455,14 +491,12 @@ class FileLowerer {
     );
   }
 
-  /** One line per element, so a directive comment covers all of its checks. */
+  /** A directive comment covers every segment of the next element's own checks. */
   element(node: T.Element, svg: boolean, parent: string | undefined): void {
     this.out.push('\n', 'outside', this.#site.start);
 
     if (this.#pendingDirective) {
-      const { text, at } = this.#pendingDirective;
-      this.out.push(text, 'atom', at);
-      this.out.push('\n', 'outside', this.#site.start);
+      this.out.directive = this.directives.push(this.#pendingDirective) - 1;
       this.#pendingDirective = undefined;
     }
 
@@ -507,6 +541,8 @@ class FileLowerer {
         tag,
       );
     }
+
+    this.out.directive = undefined;
   }
 
   attributeLocation(node: T.Element, name: string) {
@@ -834,6 +870,7 @@ export function lowerFile(
   return {
     text: lowerer.out.text,
     segments: lowerer.out.segments,
+    directives: lowerer.directives,
     stats: lowerer.stats,
   };
 }
@@ -843,11 +880,11 @@ export interface Mapped {
   segment: Segment;
 }
 
-/** The original offset of a virtual position, or undefined outside the checks. */
-export function toOriginal(
+/** The segment holding a virtual position. */
+export function segmentAt(
   segments: Segment[],
   position: number,
-): Mapped | undefined {
+): Segment | undefined {
   let low = 0;
   let high = segments.length - 1;
 
@@ -857,18 +894,26 @@ export function toOriginal(
 
     if (position < segment.virtualStart) high = mid - 1;
     else if (position >= segment.virtualEnd) low = mid + 1;
-    else {
-      if (segment.kind === 'outside') return undefined;
-
-      return {
-        offset:
-          segment.kind === 'verbatim'
-            ? segment.originalStart + position - segment.virtualStart
-            : segment.originalStart,
-        segment,
-      };
-    }
+    else return segment;
   }
 
   return undefined;
+}
+
+/** The original offset of a virtual position, or undefined outside the checks. */
+export function toOriginal(
+  segments: Segment[],
+  position: number,
+): Mapped | undefined {
+  const segment = segmentAt(segments, position);
+
+  if (!segment || segment.kind === 'outside') return undefined;
+
+  return {
+    offset:
+      segment.kind === 'verbatim'
+        ? segment.originalStart + position - segment.virtualStart
+        : segment.originalStart,
+    segment,
+  };
 }

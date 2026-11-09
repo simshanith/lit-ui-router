@@ -7,6 +7,7 @@ import {
   lowerFile,
   type Span,
   type TemplateSite,
+  segmentAt,
   toOriginal,
 } from './lower.ts';
 
@@ -163,15 +164,42 @@ describe('lowerFile', () => {
     );
   });
 
-  it('turns a directive comment into a directive on the next element', () => {
-    const source = 'html`<!-- @ts-expect-error --><ui-veiw></ui-veiw>`';
-    const { text, segments } = lower(source);
+  it('marks the next element checks with a directive comment', () => {
+    const source = 'html`<!-- @ts-expect-error --><ui-veiw></ui-veiw><p></p>`';
+    const { text, segments, directives } = lower(source);
 
-    assert.match(text, /\n\/\/ @ts-expect-error\n__ltc\.tag\("ui-veiw"\)/);
+    assert.deepEqual(directives, [
+      { kind: 'expect-error', at: source.indexOf('<!--') },
+    ]);
     assert.equal(
-      toOriginal(segments, text.indexOf('// @ts-expect-error'))?.offset,
-      source.indexOf('<!--'),
+      segmentAt(segments, text.indexOf('__ltc.tag("ui-veiw")'))?.directive,
+      0,
     );
+    assert.equal(
+      segmentAt(segments, text.indexOf('__ltc.tag("p")'))?.directive,
+      undefined,
+    );
+  });
+
+  it('keeps a trailing directive comment in its own template', () => {
+    const { text, segments, directives } = lower(
+      'x = html`<!-- @ts-expect-error -->`; y = html`<p></p>`',
+    );
+
+    assert.equal(directives.length, 1);
+    assert.equal(
+      segmentAt(segments, text.indexOf('__ltc.tag("p")'))?.directive,
+      undefined,
+    );
+  });
+
+  it('checks foreignObject content as HTML', () => {
+    const { text } = lower(
+      'html`<svg><foreignObject><div></div></foreignObject></svg>`',
+    );
+
+    assert.match(text, /__ltc\.svgTag\("foreignObject"\)/);
+    assert.match(text, /__ltc\.tag\("div"\)/);
   });
 
   it('parses table parts in a template context, as lit does', () => {

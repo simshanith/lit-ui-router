@@ -81,4 +81,19 @@ export const templates = (s: string, n: number, b: boolean, fn: () => void) => [
   // expect suppression
   html`<!-- @ts-expect-error -->
     <div dir="ltr"></div>`,
+  // the directive still covers checks after a binding that spans lines
+  html`<!-- @ts-expect-error -->
+    <div
+      @click=${() => {
+        fn();
+      }}
+      dir="sideways"
+    ></div>`,
+  // expect suppression
+  html`${s}<!-- @ts-expect-error -->`,
+  // expect attribute-value
+  html`<div dir="sideways"></div>`,
+  // prettier-ignore
+  // expect attribute-value
+  html`<svg><foreignObject><div dir="sideways"></div></foreignObject></svg>`,
 ];
