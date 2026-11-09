@@ -256,7 +256,7 @@
         "pnpm-workspace.yaml"
       ]
     },
-    // stylelint over .css, .vue <style> and lit `css` blocks;
+    // stylelint over .css, .vue <style>, lit `css` blocks and <style> in lit html/svg templates;
     // stylelint.config.mjs maps each to its syntax and owns the ignores.
     "//#lint:css": {
       "inputs": [
