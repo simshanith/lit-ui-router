@@ -11,6 +11,7 @@
     "lit-ui-router-ssr: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. ",
     "lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ",
     "lit-ui-router-ssr: this document was prerendered by a release line this client does not adopt, so hydrateRoot() left it to a cold render.",
-    "lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render."
+    "lit-ui-router-ssr: this document carries a hydration signature but no lit-part marker follows it, so hydrateRoot() left it to a cold render.",
+    "lit-ui-router-ssr: a LitElement that renders into a shadow root reached no renderer that writes one, so it was prerendered as its bare tag, empty: "
   ]
 }

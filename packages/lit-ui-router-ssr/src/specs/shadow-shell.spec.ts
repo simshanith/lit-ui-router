@@ -200,11 +200,12 @@ describe('a <ui-view> inside the shell’s declarative shadow root', () => {
   });
 
   it('warns once its views have all reported, when none of them adopted', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const { container } = serve(
       await draw(lateRoot, [UiViewRenderer, ShellRenderer], '/badge'),
     );
+
+    // Spied after the draw: the render's own development warnings are not this spec's.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Everything between the served pair dropped, as a re-render that wrote an empty view leaves it.
     const view = lateView(container)!;

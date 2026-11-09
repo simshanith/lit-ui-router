@@ -122,7 +122,9 @@ export interface PrerenderOptions extends Omit<
    * class `LightDomHydrating` branded. A list passed here replaces the default,
    * so keep `LightElementRenderer` in it, ahead of any renderer that writes a
    * shadow root, to draw those elements. Pass `[]` for a render with no
-   * `<ui-view>` to fill.
+   * `<ui-view>` to fill. A shadow-DOM `LitElement` no renderer in the list
+   * answers for renders as its bare tag, empty, and warns once per tag in
+   * development; put `LitElementRenderer` after `LightElementRenderer` to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**

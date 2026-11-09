@@ -487,6 +487,15 @@ browser attaches as it parses, and hydration adopts them there.
 whether or not it has anything to show on the server, which is the cost the
 default avoids.
 
+A shell element needs that list too: a shadow-DOM component that holds
+`<ui-view>` in its own template, such as an `<app-root>`. Under the default it
+renders as its bare tag, empty, and the views inside it are missing with it.
+With `LitElementRenderer` after `LightElementRenderer`, the `<ui-view>` in its
+shadow root renders, hydrates and adopts. In development, `prerender()` and
+`renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no
+renderer that draws it; `<ui-router>`, whose shadow root is a bare slot, is left
+out.
+
 ## Development and production builds
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
