@@ -56,6 +56,18 @@ const searchOf = (url: string): string => {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
+ * import { responder } from 'lit-ui-router-ssr';
+ * import { createServerRouter } from 'ui-router-server';
+ * import { createFetchHandler } from 'ui-router-server/fetch';
+ * import type { ResponseHandlers } from 'ui-router-server/ssr';
+ *
+ * const routes = [{ name: 'badge', url: '/badge.svg', response: true }] as const;
+ * const router = createServerRouter({ mounts: { '/': { routes } } });
+ *
+ * declare function serveShell(mount: string, request: Request): Promise<Response>;
+ * declare function pageRouter(): UIRouter;
+ *
  * const responses = {
  *   badge: ({ resolves }) =>
  *     new Response(resolves.svg, { headers: { 'Content-Type': 'image/svg+xml' } }),

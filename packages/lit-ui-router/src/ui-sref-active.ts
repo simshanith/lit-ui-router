@@ -814,6 +814,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example With exact matching
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <a ${uiSref('users')}
  *      ${uiSrefActive({
@@ -827,6 +830,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Container mode (watches nested uiSref directives)
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <nav ${uiSrefActive({ activeClasses: ['section-active'] })}>
  *     <a ${uiSref('users')}>Users</a>
@@ -838,6 +844,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Customizing or disabling aria-current
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
+ * declare const messageId: string;
+ *
  * html`
  *   <!-- a step in a multi-step flow -->
  *   <a ${uiSref('wizard.payment')}
@@ -887,6 +898,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Explicit state (without nested uiSref)
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <div ${uiSrefActive({
  *     state: 'dashboard',

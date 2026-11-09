@@ -196,6 +196,12 @@ class UiViewSlotDirective extends RenderLightDirective {
  *
  * @example
  * ```ts
+ * import { html } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ * import { uiViewSlot } from 'lit-ui-router-ssr/client';
+ *
+ * declare const router: UIRouterLit;
+ *
  * html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
  */
@@ -212,6 +218,11 @@ export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
  *
  * @example
  * ```ts
+ * import { html } from 'lit';
+ * import { lightSlot } from 'lit-ui-router-ssr/client';
+ *
+ * declare const title: string;
+ *
  * html`<app-card .title=${title}>${lightSlot()}</app-card>`;
  * ```
  */
@@ -615,6 +626,13 @@ const parseSignature = (json: string): HydrationSignature | null => {
  * @example
  * ```ts
  * import { hydrateRoot, readHydrationSignature } from 'lit-ui-router-ssr/client';
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const booted: Promise<void>;
+ * declare const root: HTMLElement;
+ * declare const router: UIRouterLit;
+ * declare function page(router: UIRouterLit): TemplateResult;
  *
  * await booted;
  * const { state } = readHydrationSignature(root) ?? {};
@@ -648,6 +666,10 @@ export function readHydrationSignature(
  * ```ts
  * import { readResolvePayload } from 'lit-ui-router-ssr/client';
  * import { seed } from 'ui-router-server/ssr/client';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const root: HTMLElement;
+ * declare const router: UIRouterLit;
  *
  * seed(router, readResolvePayload(root));
  * router.start();
@@ -803,6 +825,13 @@ const makeCold = (container: HTMLElement): void => {
  * @example
  * ```ts
  * import { hydrateRoot } from 'lit-ui-router-ssr/client';
+ * import { render, type TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const booted: Promise<void>;
+ * declare const root: HTMLElement;
+ * declare const router: UIRouterLit;
+ * declare function page(router: UIRouterLit): TemplateResult;
  *
  * await booted;
  * const release = hydrateRoot(root, page(router));
@@ -1241,6 +1270,12 @@ const renderCold = (
  * @example
  * ```ts
  * import { bootstrap } from 'lit-ui-router-ssr/client';
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const root: HTMLElement;
+ * declare const router: UIRouterLit;
+ * declare function page(router: UIRouterLit): TemplateResult;
  *
  * const { outcome } = await bootstrap(router, root, page(router));
  * ```

@@ -103,6 +103,11 @@ export type PrerenderEntry = (
  *
  * @example
  * ```ts
+ * import { prerender, type PrerenderOptions } from 'ui-router-server/prerender';
+ * import { definePrerender } from 'ui-router-server/vite';
+ *
+ * declare const { mounts, paths, render }: PrerenderOptions;
+ *
  * export default definePrerender((site) => prerender({ ...site, mounts, paths, render }));
  * ```
  */
@@ -393,7 +398,15 @@ const runPrerender = async (
  *
  * @example
  * ```ts
- * plugins: [serverRouterPlugin(router, { prerender: { entry: './src/prerender.ts' } })],
+ * import type { ServerRouter } from 'ui-router-server';
+ * import { serverRouterPlugin } from 'ui-router-server/vite';
+ * import { defineConfig } from 'vite';
+ *
+ * declare const router: ServerRouter;
+ *
+ * export default defineConfig({
+ *   plugins: [serverRouterPlugin(router, { prerender: { entry: './src/prerender.ts' } })],
+ * });
  * ```
  */
 export function serverRouterPlugin(

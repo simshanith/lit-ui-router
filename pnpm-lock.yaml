@@ -502,6 +502,9 @@ catalogs:
     '@tools/crap':
       specifier: workspace:*
       version: workspace:*
+    '@tools/doc-example-check':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/embed-heights':
       specifier: workspace:*
       version: workspace:*
@@ -659,6 +662,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:tools/bootstrap
+      '@tools/doc-example-check':
+        specifier: catalog:workspace
+        version: link:tools/doc-example-check
       '@tools/eslint':
         specifier: catalog:workspace
         version: link:tools/eslint
@@ -2489,6 +2495,34 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.77.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.92.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/doc-example-check:
+    dependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../bootstrap
+      typescript-7.1:
+        specifier: 'catalog:'
+        version: typescript@7.1.0-beta
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
+    devDependencies:
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared

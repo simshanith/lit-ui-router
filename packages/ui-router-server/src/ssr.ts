@@ -62,6 +62,10 @@ export type ResponseHandler<
  *
  * @example
  * ```ts
+ * import type { ResponseHandlers } from 'ui-router-server/ssr';
+ *
+ * const routes = [{ name: 'badge', url: '/badge.svg', response: true }] as const;
+ *
  * const responses = {
  *   badge: ({ resolves }) => new Response(resolves.svg, { headers: { 'Content-Type': 'image/svg+xml' } }),
  * } satisfies ResponseHandlers<(typeof routes)[number], { badge: { svg: string } }>;
@@ -119,8 +123,13 @@ export interface SettleOptions {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { installServerLocation } from 'ui-router-server/location';
  * import { settle } from 'ui-router-server/ssr';
+ *
+ * declare const router: UIRouter;
+ * declare const pages: Map<string, string>;
+ * declare function render(router: UIRouter): string;
  *
  * installServerLocation(router, { urlConfig: { strict: false } });
  *
@@ -258,16 +267,19 @@ export interface SettledRedirect {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { redirectedTo, settle } from 'ui-router-server/ssr';
  *
  * // `router` serves the mount at /releases; `subpath` is the request's path within it.
- * const redirect = redirectedTo(router, await settle(router, subpath));
+ * async function serveRedirect(router: UIRouter, subpath: string) {
+ *   const redirect = redirectedTo(router, await settle(router, subpath));
  *
- * if (redirect)
- *   return new Response(null, {
- *     status: redirect.status,
- *     headers: { Location: `/releases${redirect.url}` },
- *   });
+ *   if (redirect)
+ *     return new Response(null, {
+ *       status: redirect.status,
+ *       headers: { Location: `/releases${redirect.url}` },
+ *     });
+ * }
  * ```
  */
 export const redirectedTo = (

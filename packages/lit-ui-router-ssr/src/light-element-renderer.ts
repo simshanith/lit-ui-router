@@ -30,13 +30,22 @@ import { prefixInterior } from './served-interior.js';
  *
  * @example
  * ```ts
+ * import { html } from 'lit';
  * import { lightSlot } from 'lit-ui-router-ssr/client';
- * import { LightElementRenderer, prerender, UiViewRenderer } from 'lit-ui-router-ssr';
+ * import {
+ *   LightElementRenderer,
+ *   prerender,
+ *   type PrerenderOptions,
+ *   UiViewRenderer,
+ * } from 'lit-ui-router-ssr';
+ *
+ * declare const label: string;
+ * declare const options: PrerenderOptions;
  *
  * const card = html`<app-card .label=${label}>${lightSlot()}</app-card>`;
  *
  * await prerender({
- *   // …
+ *   ...options,
  *   elementRenderers: [UiViewRenderer, LightElementRenderer],
  * });
  * ```

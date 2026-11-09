@@ -51,6 +51,8 @@ const scriptString = (text: string): string =>
  * ```ts
  * import { redirectPage, redirectPages } from 'ui-router-server/prerender';
  *
+ * declare const analytics: string;
+ *
  * const rules = redirectPages({
  *   page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
  * });
@@ -126,7 +128,13 @@ const joinPath = (dir: string, file: string): string =>
  *
  * @example
  * ```ts
- * import { prerender, redirectPages } from 'ui-router-server/prerender';
+ * import {
+ *   prerender,
+ *   type PrerenderOptions,
+ *   redirectPages,
+ * } from 'ui-router-server/prerender';
+ *
+ * declare const { mounts, paths, render, write }: PrerenderOptions;
  *
  * await prerender({ mounts, outDir: 'dist', paths, render, write, rules: redirectPages() });
  * ```

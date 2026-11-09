@@ -100,6 +100,14 @@ export interface NavigationLocationPluginOptions {
    *
    * @example
    * ```ts
+   * import type { UIRouter } from '@uirouter/core';
+   * import {
+   *   navigationLocationPlugin,
+   *   type NavigationLocationPluginOptions,
+   * } from 'ui-router-navigation-location-plugin';
+   *
+   * declare const router: UIRouter;
+   *
    * router.plugin(navigationLocationPlugin, {
    *   intercept: (event) => ({
    *     async handler() {
@@ -136,6 +144,14 @@ export interface NavigationLocationPluginOptions {
    *
    * @example
    * ```ts
+   * import type { UIRouter } from '@uirouter/core';
+   * import {
+   *   navigationLocationPlugin,
+   *   type NavigationLocationPluginOptions,
+   * } from 'ui-router-navigation-location-plugin';
+   *
+   * declare const router: UIRouter;
+   *
    * router.plugin(navigationLocationPlugin, {
    *   interceptTraverse: (event) => ({
    *     scroll: 'manual',
@@ -305,7 +321,11 @@ export class NavigationLocationService extends BaseLocationServices {
    *
    * @example
    * ```ts
+   * import { NavigationLocationService } from 'ui-router-navigation-location-plugin';
+   *
    * class StubbedNavigationLocationService extends NavigationLocationService {
+   *   stub!: Navigation;
+   *
    *   protected override _navigation(): Navigation {
    *     return this.stub;
    *   }

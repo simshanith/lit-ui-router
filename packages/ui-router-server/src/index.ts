@@ -146,6 +146,8 @@ export interface MountConfig<
    *
    * @example
    * ```ts
+   * import type { MountConfig } from 'ui-router-server';
+   *
    * // /api owns its bare base and answers it with a 404 on purpose.
    * const mounts = {
    *   '/api': {
