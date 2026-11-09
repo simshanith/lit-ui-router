@@ -5,14 +5,15 @@ import bundled from '../public/versions.json' with { type: 'json' };
 /** The production origin; every version is a path under it. */
 export const SITE_ORIGIN = 'https://lit-ui-router.dev';
 
-const DocsVersion = v.strictObject({
+// Loose: a frozen build parses the live manifest, so fields a later schema adds must pass.
+const DocsVersion = v.object({
   id: v.pipe(v.string(), v.nonEmpty()),
   label: v.pipe(v.string(), v.nonEmpty()),
   path: v.pipe(v.string(), v.startsWith('/'), v.endsWith('/')),
 });
 
 /** The version manifest at `/versions.json`: every served build of this site and how each is shown. */
-export const VersionManifest = v.strictObject({
+export const VersionManifest = v.object({
   current: DocsVersion,
   /** Every served non-current version, newest first, hidden ones included. */
   others: v.array(DocsVersion),
