@@ -12,7 +12,7 @@ of `lit-ui-router`, `lit-ui-router-mobx`,
 matrix of:
 
 - **TypeScript versions**: the classic-API legs in `API_VERSIONS` and the
-  native TypeScript 7 leg in `NATIVE_VERSION` (`run.ts`), each a pinned
+  native TypeScript 7.0 and 7.1 legs in `NATIVE_LEGS` (`run.ts`), each a pinned
   `typescript-*` devDependency alias in `package.json`, so no leg tracks the
   repo's own `typescript`. The first classic leg is the consumer floor. The
   6.x leg rides the shared `typescript6` catalog (also vue-check's, for
@@ -40,12 +40,13 @@ a consumer running `skipLibCheck: true` would experience while still holding
 our own declarations to the strict bar.
 
 Every run starts with a **self-test** proving the harness can fail. It
-compiles a probe `.d.ts` from a scratch directory alongside the fixtures; the
-shipped `dist/` is never touched. The classic legs' probe uses `NoInfer<>`
+compiles a probe `.d.ts` alongside the fixtures; the shipped `dist/` is
+never touched. The classic legs' probe uses `NoInfer<>`
 (TypeScript 5.4+ syntax): the floor must reject it and the newest classic
-version accept it. The native TypeScript 7 leg has its own ownership filter
-and its own probe, an unresolvable type name it must report as ours;
-`--versions=current` runs only this one. A green matrix therefore can't be
+version accept it. The native legs share their own ownership filter
+and their own probe, an unresolvable type name the 7.1 leg must report as
+ours. That probe lives in an in-memory file system layer, so it writes
+nothing to disk; `--versions=current` runs it with the 7.0 leg. A green matrix therefore can't be
 the result of a broken diagnostic filter silently classifying everything as
 third-party. See `selftest` and `selftestNative` in `run.ts`.
 
@@ -57,7 +58,7 @@ turbo run test:matrix --filter=@tools/dts-backtest   # full version matrix (main
 ```
 
 Both build the packages first. `node run.ts` defaults to the full matrix;
-`--versions=current` restricts it to the repo-current (native TS 7) leg.
+`--versions=current` restricts it to the repo-current (native TS 7.0) leg.
 The old-TS legs only guard shipped packages, so the full matrix runs on
 main pushes — still ahead of any release — while PRs get fast current-TS
 feedback.
