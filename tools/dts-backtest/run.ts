@@ -12,9 +12,8 @@
 // would experience while still fully checking OUR declarations.
 //
 // Legs through 6.x drive the classic `ts.createProgram` API. TypeScript 7
-// dropped that API, so its leg drives the native compiler through
-// `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
-// expected to replace.
+// dropped that API, so its legs drive the native compiler: 7.0 through
+// `typescript/unstable/sync`, 7.1 through its successor `typescript/sync`.
 
 import {
   mkdirSync,
@@ -27,55 +26,33 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createFileSystemLayer } from 'typescript-7.1/fs';
+
 // The classic (6.x-and-earlier) compiler API. Every API leg is a `typescript`
 // aliased to a fixed version, all sharing this surface, so one namespace types
-// them all. The native 7 leg (checkNative) uses plain objects instead.
+// them all. The native legs (checkNative) take the types each line ships.
 import type * as TS from 'typescript-5.9';
+import type {
+  Diagnostic as Diagnostic70,
+  Program as Program70,
+} from 'typescript-7/unstable/sync';
+import type { RequestFileSystem } from 'typescript-7.1/proto';
+import type {
+  Diagnostic as Diagnostic71,
+  Program as Program71,
+} from 'typescript-7.1/sync';
 
 type ClassicApi = typeof import('typescript-5.9');
 
-// A native (TS 7) diagnostic, as `typescript/unstable/sync` hands them back:
-// plain objects rather than ts.Diagnostic instances.
-type NativeDiagnostic = {
-  fileName?: string;
-  code: number;
-  category: number;
-  text: string;
-  pos?: number;
-  end?: number;
+// One open native project; its diagnostics are plain objects, not ts.Diagnostic.
+type NativeSession = {
+  version: string;
+  errorCategory: number;
+  program: Program70 | Program71 | undefined;
+  close(): void;
 };
 
-// TypeScript 7 ships no types for its unstable `typescript/unstable/sync`
-// surface, so describe exactly the slice checkNative drives and assert the
-// dynamic import to it.
-interface NativeProgram {
-  getSourceFileNames(): string[];
-  getConfigFileParsingDiagnostics(): NativeDiagnostic[];
-  getGlobalDiagnostics(): NativeDiagnostic[];
-  getSyntacticDiagnostics(): NativeDiagnostic[];
-  getSemanticDiagnostics(): NativeDiagnostic[];
-}
-
-interface NativeSnapshot {
-  getProject(configPath: string): { program: NativeProgram } | undefined;
-  dispose(): void;
-}
-
-interface NativeApi {
-  updateSnapshot(options: { openProjects: string[] }): NativeSnapshot;
-  close(): void;
-}
-
-interface NativeSyncModule {
-  API: new (options: { cwd: string }) => NativeApi;
-  DiagnosticCategory: { Error: number };
-}
-
-// Every leg reports its own version from its root export, classic and native
-// alike — the classic legs read it off the API object as `ts.version`.
-interface NativeModule {
-  version: string;
-}
+type NativeDiagnostic = Diagnostic70 | Diagnostic71;
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -85,7 +62,58 @@ const require = createRequire(import.meta.url);
 // repo's own catalog. 6.x is the newest TypeScript with the classic API.
 const API_VERSIONS = ['typescript-5.0', 'typescript-5.9', 'typescript-6'];
 
-const NATIVE_VERSION = 'typescript-7';
+// 7.0 serves the API under unstable/; 7.1 renamed updateSnapshot and getProject.
+async function open70(configPath: string): Promise<NativeSession> {
+  const [{ API, DiagnosticCategory }, { version }] = await Promise.all([
+    import('typescript-7/unstable/sync'),
+    import('typescript-7'),
+  ]);
+
+  const api = new API({ cwd: here });
+  const snapshot = api.updateSnapshot({ openProjects: [configPath] });
+
+  return {
+    version,
+    errorCategory: DiagnosticCategory.Error,
+    program: snapshot.getProject(configPath)?.program,
+    close: () => {
+      snapshot.dispose();
+      api.close();
+    },
+  };
+}
+
+async function open71(
+  configPath: string,
+  fileSystem?: RequestFileSystem,
+): Promise<NativeSession> {
+  const [{ API, DiagnosticCategory }, { version }] = await Promise.all([
+    import('typescript-7.1/sync'),
+    import('typescript-7.1'),
+  ]);
+
+  const api = new API({ cwd: here });
+
+  const snapshot = api.createSnapshot({
+    openProjects: [configPath],
+    fileSystem,
+  });
+
+  return {
+    version,
+    errorCategory: DiagnosticCategory.Error,
+    program: snapshot.getConfiguredProject(configPath)?.program,
+    close: () => {
+      snapshot.dispose();
+      api.close();
+    },
+  };
+}
+
+// open70 is the repo-current leg; open71 tracks the beta alias.
+const NATIVE_LEGS = [open70, open71];
+
+type NativeOpen = (typeof NATIVE_LEGS)[number];
 
 const distDir = (dir: string) =>
   resolve(here, '..', '..', 'packages', dir, 'dist') + sep;
@@ -264,24 +292,20 @@ function check(
 
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
-async function checkNative(specifier: string, configFile: string) {
-  // SAFETY: NATIVE_VERSION ships both modules in these shapes
-  const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
-    import(`${specifier}/unstable/sync`),
-    import(specifier),
-  ])) as [NativeSyncModule, NativeModule];
-
-  const api = new API({ cwd: here });
-  const configPath = resolve(here, configFile);
-  const snapshot = api.updateSnapshot({ openProjects: [configPath] });
+async function checkNative(
+  open: NativeOpen,
+  configFile: string,
+  fileSystem?: RequestFileSystem,
+) {
+  const { version, errorCategory, program, close } = await open(
+    resolve(here, configFile),
+    fileSystem,
+  );
 
   try {
-    const project = snapshot.getProject(configPath);
+    if (!program) throw new Error(`no project for ${configFile}`);
 
-    if (!project) throw new Error(`no project for ${configFile}`);
-    const { program } = project;
-
-    const files: string[] = program.getSourceFileNames();
+    const files = program.getSourceFileNames();
 
     const missing = programDirs(configFile).filter(
       (dir) => !files.some((file) => resolve(file).startsWith(dir)),
@@ -304,7 +328,7 @@ async function checkNative(specifier: string, configFile: string) {
     ];
 
     for (const diagnostic of diagnostics) {
-      if (diagnostic.category !== DiagnosticCategory.Error) continue;
+      if (diagnostic.category !== errorCategory) continue;
 
       if (!diagnostic.fileName || ownsPath(diagnostic.fileName)) {
         owned.push(diagnostic);
@@ -315,8 +339,7 @@ async function checkNative(specifier: string, configFile: string) {
 
     return { version, owned, foreign, fileCount: files.length };
   } finally {
-    snapshot.dispose();
-    api.close();
+    close();
   }
 }
 
@@ -326,9 +349,9 @@ function formatNative(diagnostics: NativeDiagnostic[]): string {
     .join('\n');
 }
 
-async function runNative(specifier: string, configFile: string) {
+async function runNative(open: NativeOpen, configFile: string) {
   const { version, owned, foreign, fileCount } = await checkNative(
-    specifier,
+    open,
     configFile,
   );
 
@@ -422,20 +445,17 @@ const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 const NATIVE_PROBE =
   'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics and
-// relative tsconfig paths resolve; outside this task's turbo `inputs` so the
-// scratch lifecycle never dirties the cache hash.
-async function withProbeFile<T>(
-  probe: string,
-  body: (probePath: string, scratchDir: string) => T | Promise<T>,
-): Promise<T> {
+// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics;
+// outside this task's turbo `inputs` so the scratch lifecycle never dirties
+// the cache hash.
+function withProbeFile<T>(probe: string, body: (probePath: string) => T): T {
   mkdirSync(join(here, '.probe-scratch'), { recursive: true });
   const scratchDir = mkdtempSync(join(here, '.probe-scratch', 'run-'));
   const probePath = join(scratchDir, 'probe.d.ts');
   writeFileSync(probePath, probe);
 
   try {
-    return await body(probePath, scratchDir);
+    return body(probePath);
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }
@@ -482,23 +502,22 @@ function selftest() {
 }
 
 async function selftestNative() {
-  // The native API takes only a tsconfig; relative `include` paths resolve
-  // against the declaring config, so the scratch dir gets its own.
-  const { version, owned } = await withProbeFile(
-    NATIVE_PROBE,
-    (_probePath, scratchDir) => {
-      const scratchConfig = join(scratchDir, 'tsconfig.json');
-      writeFileSync(
-        scratchConfig,
-        JSON.stringify({
-          extends: `../../${BASE_CONFIG}`,
-          include: ['../../fixtures/**/*.ts', './probe.d.ts'],
-        }),
-      );
+  // in-memory overlay under `here`: relative paths resolve as on disk
+  const probeDir = join(here, '.probe-native');
+  const probeConfig = join(probeDir, 'tsconfig.json');
 
-      return checkNative(NATIVE_VERSION, scratchConfig);
-    },
-  );
+  const fileSystem = createFileSystemLayer([
+    [
+      probeConfig,
+      JSON.stringify({
+        extends: `../${BASE_CONFIG}`,
+        include: ['../fixtures/**/*.ts', './probe.d.ts'],
+      }),
+    ],
+    [join(probeDir, 'probe.d.ts'), NATIVE_PROBE],
+  ]);
+
+  const { version, owned } = await checkNative(open71, probeConfig, fileSystem);
 
   const caught = owned.some((diagnostic) =>
     probeDiagnostic(diagnostic.fileName),
@@ -531,7 +550,7 @@ const main = async (): Promise<void> => {
 
   const currentOnly = versionsArg === 'current';
 
-  let ok = currentOnly ? true : await selftest();
+  let ok = currentOnly ? true : selftest();
 
   ok = (await selftestNative()) && ok;
 
@@ -543,8 +562,10 @@ const main = async (): Promise<void> => {
     }
   }
 
-  for (const configFile of CONFIGS.keys()) {
-    ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
+  for (const open of currentOnly ? [open70] : NATIVE_LEGS) {
+    for (const configFile of CONFIGS.keys()) {
+      ok = (await runNative(open, configFile)) && ok;
+    }
   }
 
   if (!ok) process.exitCode = 1;

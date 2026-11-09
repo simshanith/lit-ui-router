@@ -47,7 +47,7 @@ const ALLOWED: SplitAllowance[] = [
   },
   {
     name: 'typescript',
-    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line; attw, the cem analyzer and web-component-analyzer pin their own',
+    why: 'dts-backtest and the typescript6/7 catalogs alias one compiler per line, and @tools/dts-backtest takes the typescript-7.1 beta alias; attw, the cem analyzer and web-component-analyzer pin their own',
   },
 ];
 
