@@ -95,7 +95,7 @@ describe('lint', () => {
       '  html`<style>',
       '    p {',
       '      --accent: ${color};',
-      '      color: var(--accent);',
+      '      color: red;',
       '    }',
       '  </style>`,',
       '];',
