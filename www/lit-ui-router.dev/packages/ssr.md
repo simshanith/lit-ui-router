@@ -320,6 +320,8 @@ and its
 [`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender)
 calls this package's `prerender` with the options the script returns;
 [Prerender with Vite](/guides/prerender-with-vite) shows both files in full.
+[Prerender with Eleventy](/guides/prerender-with-eleventy) calls `prerender`
+from an Eleventy data file instead, and lets Eleventy write the pages.
 
 ## Static hosts add a trailing slash
 
