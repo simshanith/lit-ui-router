@@ -301,6 +301,7 @@ patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@api-viewer/tabs': patches/@api-viewer__tabs.patch
   '@uirouter/visualizer': patches/@uirouter__visualizer.patch
+  eslint-plugin-pnpm: patches/eslint-plugin-pnpm.patch
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAge: 1440
