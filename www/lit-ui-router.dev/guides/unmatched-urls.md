@@ -207,4 +207,4 @@ router.transitionService.onBefore(
 With the rules, the state, and the hook in place, every case behaves: plain
 garbage URLs render the 404 view, the app root goes to welcome, future-state
 URLs still lazy load, and URLs left unmatched _after_ a lazy load land on the
-404 view too. The sample app's `not_found.cy.js` Cypress spec pins each case.
+404 view too. The sample app's `not_found.spec.ts` Playwright spec pins each case.

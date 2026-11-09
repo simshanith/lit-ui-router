@@ -5,7 +5,7 @@ This is the [TC39 Signals](https://github.com/tc39/proposal-signals) variant of 
 with reactivity handled by [`@lit-labs/signals`](https://www.npmjs.com/package/@lit-labs/signals)
 and [`lit-ui-router-signals`](../../packages/lit-ui-router-signals/) on one shared
 [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). The apps are
-intentionally behaviorally identical (the same Cypress suite runs against all of them) so the
+intentionally behaviorally identical (the same e2e suite runs against all of them) so the
 integration idioms can be compared file-by-file. Served at `/app-signals/`.
 
 What's different here:

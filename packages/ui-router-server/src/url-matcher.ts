@@ -164,7 +164,9 @@ const unsupportedTypes = new Set(['hash', 'json', 'any']);
 
 /**
  * A per-param configuration: core's ParamDeclaration members that matching
- * honors. Relaxation vs core: `type` also accepts a plain-object
+ * honors, plus `dynamic` and `inherit`, which only shape transitions and
+ * matching ignores, so one declaration serves a client router too.
+ * Relaxation vs core: `type` also accepts a plain-object
  * {@link ParamType}, and `value` must be static (functions are rejected).
  *
  * A string `squash` is regexp source, as in core: it is spliced into the
@@ -173,7 +175,7 @@ const unsupportedTypes = new Set(['hash', 'json', 'any']);
  */
 export interface ParamDeclaration extends Pick<
   CoreParamDeclaration,
-  'value' | 'squash'
+  'value' | 'squash' | 'dynamic' | 'inherit'
 > {
   /** Type for params not already typed inline (`{id:int}`) — a built-in name or a {@link ParamType}. */
   type?: string | ParamType;

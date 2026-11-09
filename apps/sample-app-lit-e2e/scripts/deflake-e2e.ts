@@ -10,7 +10,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 //   WWW_DEV_PORT  dev-server port to verify free between attempts; unset means
 //                 the default in @www/lit-ui-router.dev/dev-port.ts
 // Each attempt is a full `mise run //:test_e2e` — dev server started and torn
-// down around one turbo run of the five suites. The task is addressed
+// down around one turbo run of the default suites. The task is addressed
 // absolutely: this script's cwd is the package, and a bare `test_e2e` resolves
 // against the cwd's project in a mise monorepo, not the root. TURBO_FORCE is set per
 // attempt because those suites ARE cached tasks now: without it attempt 2

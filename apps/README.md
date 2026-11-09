@@ -15,7 +15,7 @@ Portions are derived from the ui-router sample apps (MIT); see
 | [`sample-app-lit-effect`](./sample-app-lit-effect/)   | The [Effect](https://effect.website) idiom: `SubscriptionRef`s and the app-local ref controllers in `src/app/effect/`. Served at `/app-effect/`.                          |
 | [`sample-app-lit-signals`](./sample-app-lit-signals/) | The [TC39 Signals](https://github.com/tc39/proposal-signals) idiom: `@lit-labs/signals` and `lit-ui-router-signals`' `RouterSignalController`. Served at `/app-signals/`. |
 | [`sample-app-shared`](./sample-app-shared/)           | Private, source-only package with everything the apps have in common: feature modules, router config, styles, fixtures.                                                   |
-| [`sample-app-lit-e2e`](./sample-app-lit-e2e/)         | One Cypress suite, run against all four apps — this is what enforces the behavioral identity.                                                                             |
+| [`sample-app-lit-e2e`](./sample-app-lit-e2e/)         | One Playwright suite, run against all four apps — this is what enforces the behavioral identity.                                                                          |
 
 ## How an app is assembled
 
@@ -102,7 +102,7 @@ pnpm --filter sample-app-lit-vanilla dev --port 5273
 
 ## End-to-end tests
 
-`sample-app-lit-e2e` runs one Cypress suite against all four apps, the docs site,
+`sample-app-lit-e2e` runs one Playwright suite against all four apps, the docs site,
 and every published location strategy. See the
 [`sample-app-lit-e2e` README](./sample-app-lit-e2e/README.md).
 

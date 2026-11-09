@@ -8,7 +8,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## Setup and commands
 
 - Bootstrap with `mise trust`, `mise install`, `mise run setup` ([CONTRIBUTING: Development](docs/CONTRIBUTING.md#development)). A fresh checkout or worktree needs `mise trust` first.
-- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs. Locally it, like any e2e run, holds the CPU for minutes and Cypress can take window focus; tread lightly, and check in only when you judge it matters. A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
+- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs. Locally it, like any e2e run, holds the CPU for minutes; tread lightly, and check in only when you judge it matters. A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
 - Run bare `turbo` in a mise-activated shell and `mise exec -- turbo` in a non-activated one (agent tool shells, unless opted in with `mise run agent_hook`; [CONTRIBUTING: Agent shells](docs/CONTRIBUTING.md#agent-shells)), never `pnpm turbo` or `pnpm exec turbo`. Run it in the foreground; a backgrounded run can die without an error.
 - If a failure lands in a package your diff doesn't touch, rerun that task with `--force` before believing it; an aborted examples `npm ci` leaves `node_modules` half-written.
 - `dist/` is never emptied by a build. Clear stale emit before reading `dist/` as shipped output ([CONTRIBUTING: Running Tests](docs/CONTRIBUTING.md#running-tests)).
@@ -90,7 +90,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 
 - Published `.d.ts` must stay valid under TypeScript 5.0 ([CONTRIBUTING: TypeScript authoring](docs/CONTRIBUTING.md#typescript-authoring)).
 - `@tools/oxc-emit` owns the JS and declaration passes. Declaration emit is syntactic: derive exported types from `as const` data, never from objects of imported values.
-- TypeScript 7 has no JS API. Members that import the compiler (typedoc, vite-plugin-checker, cypress) use the `typescript6-compat` catalog.
+- TypeScript 7 has no JS API. Members that import the compiler (typedoc, vite-plugin-checker) use the `typescript6-compat` catalog.
 - TypeScript 6+ defaults `types` to `[]`; list ambient types explicitly in new tsconfigs.
 - Settle an entry's public exports before its first publish; prefer named re-exports over `export *`.
 
@@ -137,4 +137,4 @@ A skill stays thin: when to use it and what an unattended run needs, linking the
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
-- `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.
+- `playwright-sample-app`: run a sample app on a vite dev server and drive it with one Playwright spec.

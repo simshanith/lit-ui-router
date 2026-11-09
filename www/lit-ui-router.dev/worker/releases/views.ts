@@ -419,6 +419,9 @@ export const CompareView: RoutedLitTemplate<{
       <fieldset class="diff-filter" hidden>
         <legend>Show</legend>
       </fieldset>
+      <button type="button" class="diff-fold-all" hidden>
+        Collapse all files
+      </button>
       <p class="diff-note" role="status"></p>
       <div class="diff-layout">
         <nav class="diff-nav" aria-label="Files" hidden>
