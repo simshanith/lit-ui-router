@@ -47,7 +47,13 @@ export type AdoptUiViewContext = Context<
  * @example
  * ```ts
  * import { provideContext } from 'lit-ui-router/context';
- * import { adoptUiViewContext } from 'lit-ui-router-ssr/client';
+ * import {
+ *   adoptUiViewContext,
+ *   type AdoptableView,
+ * } from 'lit-ui-router-ssr/client';
+ *
+ * declare const container: HTMLElement;
+ * declare function adopt(view: AdoptableView): void;
  *
  * const uninstall = provideContext(container, adoptUiViewContext, (view) =>
  *   adopt(view),

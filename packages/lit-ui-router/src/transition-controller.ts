@@ -121,6 +121,9 @@ export interface TransitionControllerOptions {
  *
  * @example Re-render on every successful transition
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import { TransitionController } from 'lit-ui-router';
+ *
  * class NavHeader extends LitElement {
  *   private transitions = new TransitionController(this);
  *
@@ -133,16 +136,29 @@ export interface TransitionControllerOptions {
  *
  * @example React to parameter changes on a specific state
  * ```ts
+ * import { LitElement } from 'lit';
+ * import { TransitionController } from 'lit-ui-router';
+ *
  * class UserDetail extends LitElement {
  *   private transitions = new TransitionController(this, {
  *     criteria: { to: 'users.detail' },
  *     callback: () => this.loadUser(this.transitions.params.userId),
  *   });
+ *
+ *   loadUser(userId: string) {
+ *     // fetch and render the user
+ *   }
  * }
  * ```
  *
  * @example With an explicit router instance
  * ```ts
+ * import type { ReactiveControllerHost } from 'lit';
+ * import { TransitionController, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const host: ReactiveControllerHost & HTMLElement;
+ * declare const router: UIRouterLit;
+ *
  * const controller = new TransitionController(host, { router });
  * ```
  *

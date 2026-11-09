@@ -193,6 +193,8 @@ const renderClassView = (
  *
  * @example
  * ```ts
+ * import { html } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
  * import { uiViewSlot } from 'lit-ui-router-ssr/client';
  *
  * // `uiViewSlot()` is the use site's opt-in: it is what reaches this

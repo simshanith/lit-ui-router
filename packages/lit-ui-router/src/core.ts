@@ -82,6 +82,9 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  * ```ts
  * import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
  * import { hashLocationPlugin } from '@uirouter/core';
+ * import { LitElement } from 'lit';
+ *
+ * class HomeComponent extends LitElement {}
  *
  * // Create router instance
  * const router = new UIRouterLit();
@@ -146,6 +149,9 @@ export class UIRouterLit extends UIRouter {
    *
    * @example
    * ```ts
+   * import { hashLocationPlugin } from '@uirouter/core';
+   * import { UIRouterLit } from 'lit-ui-router';
+   *
    * const router = new UIRouterLit();
    * router.plugin(hashLocationPlugin);
    * // Register states...

@@ -75,7 +75,9 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * @example Move focus once the new view is in the DOM
  * ```ts
- * import { viewRendered } from 'lit-ui-router';
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
  *
  * router.transitionService.onSuccess({}, async (trans) => {
  *   await viewRendered(router, trans);
@@ -86,7 +88,9 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  * @example Show an error view, and wait for it to render
  * ```ts
  * import { RejectType } from '@uirouter/core';
- * import { viewRendered } from 'lit-ui-router';
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
  *
  * router.transitionService.onError({}, async (trans) => {
  *   // Skip superseded transitions, and stop if the error state itself fails.
@@ -100,7 +104,9 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * @example Release a View Transition
  * ```ts
- * import { viewRendered } from 'lit-ui-router';
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
  *
  * router.transitionService.onStart({}, (trans) => {
  *   if (!document.startViewTransition) return;

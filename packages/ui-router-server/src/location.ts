@@ -137,8 +137,11 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  *
  * @example
  * ```ts
- * import { servicesPlugin, UIRouter } from '@uirouter/core';
+ * import { servicesPlugin, UIRouter, type StateDeclaration } from '@uirouter/core';
  * import { installServerLocation } from 'ui-router-server/location';
+ *
+ * declare const request: Request;
+ * declare const states: StateDeclaration[];
  *
  * const { pathname, search } = new URL(request.url);
  * const router = new UIRouter();

@@ -383,10 +383,15 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { mkdir, writeFile } from 'node:fs/promises';
  * import { dirname } from 'node:path';
- * import { prerender } from 'ui-router-server/prerender';
+ * import { prerender, type PrerenderOptions } from 'ui-router-server/prerender';
  * import { settle } from 'ui-router-server/ssr';
+ *
+ * declare const mounts: PrerenderOptions['mounts'];
+ * declare const router: UIRouter;
+ * declare function page(router: UIRouter): string;
  *
  * const result = await prerender({
  *   mounts,

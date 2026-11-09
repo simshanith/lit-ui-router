@@ -481,16 +481,25 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * @example With parameters
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref } from 'lit-ui-router';
+ *
  * html`<a ${uiSref('user.detail', { userId: 123 })}>View User</a>`
  * ```
  *
  * @example With transition options
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref } from 'lit-ui-router';
+ *
  * html`<a ${uiSref('dashboard', {}, { reload: true })}>Reload Dashboard</a>`
  * ```
  *
  * @example Relative state references
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref } from 'lit-ui-router';
+ *
  * // Navigate to child state
  * html`<a ${uiSref('.child')}>Go to Child</a>`
  *
@@ -500,6 +509,9 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * @example On an element that is not a link
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref } from 'lit-ui-router';
+ *
  * // `<button>` has no href in HTML; 'auto' keeps the attribute off it.
  * // Clicking still navigates — the option governs the href only.
  * html`<button ${uiSref('.new', {}, { assignHref: 'auto' })}>New</button>`

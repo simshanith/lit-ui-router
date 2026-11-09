@@ -45,6 +45,8 @@ export interface RouterUrlConfig extends Pick<
    *
    * @example
    * ```ts
+   * import type { RouterUrlConfig } from 'ui-router-server/url-config';
+   *
    * // pages at /releases/pkg/, response states at the url they were asked for
    * export const urlConfig = {
    *   strict: false,
@@ -126,13 +128,15 @@ const compiledUrl = (router: UIRouter): string | undefined => {
  * export const urlConfig = { strict: false } satisfies RouterUrlConfig;
  *
  * // client
- * import { UIRouterLit } from 'lit-ui-router';
+ * import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
  * import { applyUrlConfig } from 'ui-router-server/url-config';
+ * declare const states: LitStateDeclaration[];
  * const router = applyUrlConfig(new UIRouterLit(), urlConfig);
  * states.forEach((state) => router.stateRegistry.register(state));
  *
  * // server
- * import { createServerRouter } from 'ui-router-server';
+ * import { createServerRouter, type RouteDeclaration } from 'ui-router-server';
+ * declare const routes: RouteDeclaration[];
  * const server = createServerRouter({
  *   mounts: { '/': { routes, config: urlConfig } },
  * });

@@ -163,7 +163,7 @@ export interface PrerenderOptions extends Omit<
    * carried is rebuilt when `bootstrap()` gets the same `transport`.
    *
    * @example
-   * ```ts
+   * ```ts nocheck
    * dehydrate: {
    *   shouldDehydrate: ({ token }) => token !== 'manifest',
    *   transport,
@@ -180,7 +180,7 @@ export interface PrerenderOptions extends Omit<
    *
    * @example
    * Shape the payload `dehydrate` draws before it is written:
-   * ```ts
+   * ```ts nocheck
    * import { dehydrate } from 'ui-router-server/ssr';
    *
    * payload: (transition, { path }) =>
@@ -255,6 +255,16 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  *
  * @example
  * ```ts
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ * import { prerender, settle, type PrerenderOptions } from 'lit-ui-router-ssr';
+ *
+ * declare const mounts: PrerenderOptions['mounts'];
+ * declare const router: UIRouterLit;
+ * declare const titles: Map<string, string>;
+ * declare function page(): TemplateResult;
+ * declare function fillShell(title: string | undefined, body: string): string;
+ *
  * const result = await prerender({
  *   mounts,
  *   router,

@@ -51,6 +51,7 @@ ci:pull_request
 │   ├── //#lint:package-json
 │   ├── //#lint:markdown
 │   ├── //#lint:templates
+│   ├── //#lint:doc-examples
 │   ├── //#lint:css
 │   ├── //#lint:workflows                 (umbrella)
 │   │   ├── //#lint:actionlint

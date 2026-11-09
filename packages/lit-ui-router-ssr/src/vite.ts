@@ -86,6 +86,15 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  *
  * @example
  * ```ts
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ * import { settle, type PrerenderOptions } from 'lit-ui-router-ssr';
+ * import { definePrerender } from 'lit-ui-router-ssr/vite';
+ *
+ * declare const mounts: PrerenderOptions['mounts'];
+ * declare const router: UIRouterLit;
+ * declare function page(router: UIRouterLit): TemplateResult;
+ *
  * export default definePrerender((site) => ({
  *   mounts,
  *   router,
@@ -136,12 +145,17 @@ export function definePrerender(script: PrerenderScript): PrerenderEntry {
  * ```ts
  * import { createServerRouter } from 'ui-router-server';
  * import { serverRouterPlugin } from 'lit-ui-router-ssr/vite';
+ * import { defineConfig } from 'vite';
  *
- * plugins: [
- *   serverRouterPlugin(createServerRouter({ mounts }), {
- *     prerender: './src/prerender.ts',
- *   }),
- * ],
+ * declare const mounts: Parameters<typeof createServerRouter>[0]['mounts'];
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     serverRouterPlugin(createServerRouter({ mounts }), {
+ *       prerender: './src/prerender.ts',
+ *     }),
+ *   ],
+ * });
  * ```
  */
 export function serverRouterPlugin(

@@ -286,23 +286,30 @@ const drawnBy = (
  *
  * @example
  * ```ts
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
  * import { renderToString, settle } from 'lit-ui-router-ssr';
  * import { redirectedTo } from 'ui-router-server/ssr';
  *
+ * declare function page(router: UIRouterLit): TemplateResult;
+ * declare function shell(body: string): string;
+ *
  * // `router` serves the mount at /releases; `subpath` is the request's path within it.
- * const redirect = redirectedTo(router, await settle(router, subpath));
+ * async function serve(router: UIRouterLit, subpath: string): Promise<Response> {
+ *   const redirect = redirectedTo(router, await settle(router, subpath));
  *
- * if (redirect)
- *   return new Response(null, {
- *     status: redirect.status,
- *     headers: { Location: `/releases${redirect.url}` },
+ *   if (redirect)
+ *     return new Response(null, {
+ *       status: redirect.status,
+ *       headers: { Location: `/releases${redirect.url}` },
+ *     });
+ *
+ *   const { html } = renderToString(page(router), { router, dehydrate: {} });
+ *
+ *   return new Response(shell(html), {
+ *     headers: { 'Content-Type': 'text/html; charset=utf-8' },
  *   });
- *
- * const { html } = renderToString(page(router), { router, dehydrate: {} });
- *
- * return new Response(shell(html), {
- *   headers: { 'Content-Type': 'text/html; charset=utf-8' },
- * });
+ * }
  * ```
  */
 export const renderToString = (

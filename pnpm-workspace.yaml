@@ -213,6 +213,7 @@ catalogs:
     '@tools/bundle-probe': workspace:*
     '@tools/compat-guards': workspace:*
     '@tools/crap': workspace:*
+    '@tools/doc-example-check': workspace:*
     '@tools/embed-heights': workspace:*
     '@tools/eslint': workspace:*
     '@tools/eslint-ts-parser': workspace:*

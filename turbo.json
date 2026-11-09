@@ -157,6 +157,7 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
+        "//#lint:doc-examples",
         "//#lint:css",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:shared-source",
@@ -244,6 +245,36 @@
         "{packages,apps,examples}/*/tsconfig*.json",
         "tsconfig*.json",
         "pnpm-workspace.yaml"
+      ]
+    },
+    // @tools/doc-example-check over the `ts` blocks in packages/*/src
+    // `@example` tags, each one an in-memory module checked on the 7.1 API.
+    "//#lint:doc-examples": {
+      // examples import the published entry points, which resolve to dist
+      // d.ts; package-qualified as for //#lint:templates (check:graph-edges)
+      "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
+        "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
+        "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
+        "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "packages/*/src/**",
+        // export maps decide what each example's import resolves to
+        "packages/*/package.json",
+        "tools/doc-example-check/src/**",
+        "tools/bootstrap/src/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
       ]
     },
     // stylelint over .css, .vue <style>, lit `css` blocks and <style> in lit html/svg templates;
