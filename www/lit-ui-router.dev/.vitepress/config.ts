@@ -154,6 +154,10 @@ function makeSidebar() {
           link: '/guides/server-route-matching',
         },
         { text: 'Prerender with Vite', link: '/guides/prerender-with-vite' },
+        {
+          text: 'Prerender with Eleventy',
+          link: '/guides/prerender-with-eleventy',
+        },
         { text: 'Route Guards', link: '/guides/route-guards' },
         {
           text: 'Loading and Error Views',

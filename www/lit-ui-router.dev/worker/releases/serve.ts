@@ -21,9 +21,6 @@ import { rootView, unavailableView } from './views.ts';
 
 export const resolver = createServerRouter({ mounts });
 
-const slashed = (path: string): string =>
-  path.endsWith('/') ? path : `${path}/`;
-
 const isNotInLedger = (error: Error): boolean =>
   error.cause instanceof Rejection && error.cause.detail instanceof NotInLedger;
 
@@ -212,7 +209,7 @@ const htmlAnswer = async (
 
   if (page.redirected !== undefined) {
     const response = redirect(
-      slashed(`${verdict.mount}${page.redirected}`),
+      `${verdict.mount}${page.redirected}`,
       308,
       new URL(request.url),
     );
@@ -251,15 +248,6 @@ const answer = async (
     : { response: answered, cacheable: true };
 };
 
-// A page lives at the slashed spelling; a response state keeps the url it was asked for.
-const wantsSlash = (
-  verdict: PageVerdict | ResponseVerdict,
-  url: URL,
-): boolean =>
-  verdict.kind === 'shell' &&
-  verdict.status === undefined &&
-  !url.pathname.endsWith('/');
-
 const cacheKeyOf = (
   { states }: PageRouter,
   verdict: PageVerdict | ResponseVerdict,
@@ -286,12 +274,10 @@ export const serveReleases = async (
     return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
 
   if (verdict.kind === 'redirect')
-    return redirect(slashed(verdict.location), verdict.status, url);
+    return redirect(verdict.location, verdict.status, url);
 
   // Both mounts project otherwise and name no delegates, so only pages and response states remain.
   if (verdict.kind !== 'shell' && verdict.kind !== 'response') return null;
-
-  if (wantsSlash(verdict, url)) return redirect(`${url.pathname}/`, 308, url);
 
   const pageRouter = routerFor(mount, ledger, diffs);
   const fresh = () => answer(request, pageRouter, verdict);

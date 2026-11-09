@@ -10,11 +10,22 @@
 
 import type { RawParams } from '@uirouter/core';
 
+import { assertRespellable, respell, slashOf } from './trailing-slash.ts';
+import type { TrailingSlash } from './trailing-slash.ts';
+import type { RouterUrlConfig } from './url-config.ts';
 import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
 import type {
   CompiledMatcher,
   UrlMatcherCompilerConfig,
 } from './url-matcher.ts';
+
+/**
+ * A route table's url options: the matcher compiler's, plus the
+ * {@link url-config!RouterUrlConfig.trailingSlash | `trailingSlash`} policy,
+ * which reads each state's kind.
+ */
+export interface RouteTableConfig
+  extends UrlMatcherCompilerConfig, Pick<RouterUrlConfig, 'trailingSlash'> {}
 
 /**
  * The status a redirect answers with: temporary (`302`, `303`, `307`) or
@@ -108,8 +119,8 @@ export interface RedirectTable {
   routes: readonly RouteDeclaration[];
   /** when()-style rules, evaluated in declaration order before per-state redirectTo entries. */
   rules?: RedirectRule[];
-  /** Matcher compiler options (defaults: strict, case-sensitive). */
-  config?: UrlMatcherCompilerConfig;
+  /** Url options (defaults: strict, case-sensitive, slashes as requested). */
+  config?: RouteTableConfig;
 }
 
 /** One url-addressable state, compiled by {@link compileRoutes}. */
@@ -336,6 +347,8 @@ export interface RedirectResolution {
 export interface CompiledResolver {
   /** The table's route lookup: the {@link RouteIndex} over its compiled routes. */
   match: (pathname: string) => RouteMatch | null;
+  /** The trailing-slash spelling a matched state's url takes under the table's policy. */
+  slashOf: (state: string) => TrailingSlash;
   /** Evaluates a pathname once: its redirect and, when reached, its route match. */
   resolve: (pathname: string) => RedirectResolution;
 }
@@ -350,10 +363,21 @@ export function compileResolver(
   table: RedirectTable,
   index: RouteIndex = scanRoutes,
 ): CompiledResolver {
+  assertRespellable('Route table', table.config ?? {});
   const routes = compileRoutes(table.routes, table.config);
   const match = index(routes);
   const byName = new Map(routes.map((route) => [route.name, route]));
   const { compile } = urlMatcherFactory(table.config);
+
+  const slashes = new Map(
+    table.routes.map((route) => [
+      route.name,
+      slashOf(route, table.config?.trailingSlash),
+    ]),
+  );
+
+  const slashFor = (state: string): TrailingSlash =>
+    slashes.get(state) ?? 'as-requested';
 
   const resolveTarget = (
     to: string | RedirectTarget,
@@ -408,7 +432,10 @@ export function compileResolver(
       state = byName.get(next.state)!;
     }
 
-    const path = format(state.matcher, carried);
+    const formatted = format(state.matcher, carried);
+
+    const path =
+      formatted === null ? null : respell(formatted, slashFor(state.name));
 
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;
@@ -452,7 +479,7 @@ export function compileResolver(
     };
   };
 
-  return { match, resolve };
+  return { match, resolve, slashOf: slashFor };
 }
 
 /**

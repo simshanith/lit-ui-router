@@ -8,10 +8,19 @@
  */
 
 import type {
+  BuilderFunction,
+  RawParams,
+  StateObject,
   UIRouter,
   UrlConfig,
+  UrlMatcher,
   UrlMatcherCompileConfig,
 } from '@uirouter/core';
+
+import { assertRespellable, respell, slashOf } from './trailing-slash.ts';
+import type { TrailingSlashPolicy } from './trailing-slash.ts';
+
+export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
 
 /**
  * The url options every `@uirouter/core` router takes through
@@ -27,7 +36,52 @@ export interface RouterUrlConfig extends Pick<
   defaultSquashPolicy?: NonNullable<
     Parameters<UrlConfig['defaultSquashPolicy']>[0]
   >;
+  /**
+   * Which spelling of a trailing slash is canonical, per kind of state; needs
+   * `strict: false`, so both spellings match first. A server mount answers the
+   * other spelling with a `308` redirect to the canonical one, and a router
+   * this config is applied to formats `href()` and the urls it pushes in the
+   * canonical spelling.
+   *
+   * @example
+   * ```ts
+   * // pages at /releases/pkg/, response states at the url they were asked for
+   * export const urlConfig = {
+   *   strict: false,
+   *   trailingSlash: { pages: 'always' },
+   * } satisfies RouterUrlConfig;
+   * ```
+   */
+  trailingSlash?: TrailingSlashPolicy;
 }
+
+// The policy each router formats with; applyUrlConfig installs the decorator once per router.
+const policies = new WeakMap<UIRouter, TrailingSlashPolicy | undefined>();
+
+const respellFormat = (router: UIRouter): void => {
+  const builder: BuilderFunction = (state: StateObject, parent) => {
+    // SAFETY: core's url builder chain returns the state's UrlMatcher, or null for a url-less state.
+    const url = parent?.(state) as UrlMatcher | null;
+    const slash = slashOf(state.self, policies.get(router));
+
+    if (!url || state.self.url === undefined || slash === 'as-requested')
+      return url;
+    const format: (values?: RawParams) => string | null = url.format.bind(url);
+
+    const respelled = (values?: RawParams): string | null => {
+      const formatted = format(values);
+
+      return formatted === null ? null : respell(formatted, slash);
+    };
+
+    // SAFETY: core's format returns null for invalid params, though its type says string.
+    url.format = respelled as UrlMatcher['format'];
+
+    return url;
+  };
+
+  router.stateRegistry.decorator('url', builder);
+};
 
 const compiledUrl = (router: UIRouter): string | undefined => {
   // The root state ('') always exists; its url never reaches a child's regexp.
@@ -47,7 +101,8 @@ const compiledUrl = (router: UIRouter): string | undefined => {
 /**
  * Applies {@link RouterUrlConfig} to `router` through
  * `urlService.config.strictMode`, `caseInsensitive` and
- * `defaultSquashPolicy`, and returns the same router.
+ * `defaultSquashPolicy`, plus a `stateRegistry` url decorator for
+ * `trailingSlash`, and returns the same router.
  *
  * Call it before registering any state or `when()` rule. Core compiles each
  * url when it registers, reading these options then, so a later change
@@ -62,6 +117,7 @@ const compiledUrl = (router: UIRouter): string | undefined => {
  * @param config - the options to apply; a mount's `config` fits as is
  * @returns `router`, for chaining
  * @throws if a state with a url, or a `when()` url rule, is already registered
+ * @throws if `trailingSlash` respells a kind of state while the router is strict
  *
  * @example
  * ```ts
@@ -97,6 +153,16 @@ export function applyUrlConfig<T extends UIRouter>(
   urlConfig.strictMode(config.strict);
   urlConfig.caseInsensitive(config.caseInsensitive);
   urlConfig.defaultSquashPolicy(config.defaultSquashPolicy);
+
+  if (config.trailingSlash !== undefined) {
+    assertRespellable('applyUrlConfig', {
+      strict: urlConfig.strictMode(),
+      trailingSlash: config.trailingSlash,
+    });
+
+    if (!policies.has(router)) respellFormat(router);
+    policies.set(router, config.trailingSlash);
+  }
 
   return router;
 }

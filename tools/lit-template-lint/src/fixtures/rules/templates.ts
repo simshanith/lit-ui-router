@@ -31,6 +31,7 @@ export const templates = (s: string, n: number, b: boolean, fn: () => void) => [
   html`<rule-header><b></b></rule-header>`,
   // expect unclosed-tag
   html`<rule-card />text`,
+  // prettier-ignore
   // expect mixed-binding
   html`<div title=${s}'></div>`,
   // expect expressionless-binding

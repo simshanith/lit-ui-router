@@ -35,6 +35,27 @@ let viewIdCounter = 0;
 // Every `<ui-view>` between the render root and the one now rendering. A render is synchronous and depth-first, so the last entry is the parent view.
 const openViews: UiViewRenderer[] = [];
 
+// The fqn of each view the render in progress drew a routed component into, when a caller collects them.
+let drawnViews: string[] | undefined;
+
+/**
+ * Runs `draw`, collecting the fully qualified name of every `<ui-view>` it
+ * drew a routed component into, parent first.
+ *
+ * @internal
+ */
+export const collectDrawnViews = <T>(draw: () => T): [T, string[]] => {
+  const outer = drawnViews;
+  const views: string[] = [];
+  drawnViews = views;
+
+  try {
+    return [draw(), views];
+  } finally {
+    drawnViews = outer;
+  }
+};
+
 /** The registration a server `<ui-view>` hands core, before any config arrives. */
 type Registration = Omit<ActiveUIView, 'config'> & { config?: ViewConfig };
 
@@ -264,6 +285,8 @@ export class UiViewRenderer extends ElementRenderer {
 
       return undefined;
     }
+
+    drawnViews?.push(this.fqn);
 
     const result = routedViewTemplate(
       component,

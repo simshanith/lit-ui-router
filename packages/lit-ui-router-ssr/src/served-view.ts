@@ -7,6 +7,7 @@ import { adoptServedElement, UiView } from 'lit-ui-router/pure';
 import { devGate } from '#dev-gate';
 
 import { adoptUiViewContext } from './adopt-context.js';
+import { bootPendingContext } from './boot-pending.js';
 import {
   warnDeferredNeverWoken,
   warnDeferredWithoutClient,
@@ -229,12 +230,19 @@ export const withServedRender = (
 
       // A deferred view holds a render's nodes behind whatever the author wrote ahead of them.
       if (this.deferHydration && import.meta.env.DEV && devGate()) {
-        // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
-        setTimeout(() => {
-          if (this.isConnected && this.deferHydration && !this.hasUpdated) {
+        // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it; a pending bootstrap re-arms it after its walk.
+        const check = (): void => {
+          setTimeout(() => {
+            if (!this.isConnected || !this.deferHydration || this.hasUpdated)
+              return;
+            const pending = requestContext(this, bootPendingContext);
+
+            if (pending) return pending(check);
             warnDeferredNeverWoken(this);
-          }
-        }, 0);
+          }, 0);
+        };
+
+        check();
       }
     }
 

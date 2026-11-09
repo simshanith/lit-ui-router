@@ -90,12 +90,6 @@ const githubRelease = (row: LedgerVersion): TemplateResult | string => {
     : 'None recorded';
 };
 
-const href = (
-  router: UIRouter,
-  state: string,
-  params: Record<string, string> = {},
-): string => `${router.stateService.href(state, params)}/`;
-
 const isLeaf = (router: UIRouter, state: string): boolean =>
   router.globals.current.name === state;
 
@@ -105,7 +99,7 @@ const crumbs = (
 ): TemplateResult =>
   html`<nav aria-label="Breadcrumb">
     <ol class="crumbs">
-      <li><a href=${href(router, 'releases')}>Releases</a></li>
+      <li><a href=${router.stateService.href('releases')}>Releases</a></li>
       ${trail.map(({ label, href: to }) =>
         to
           ? html`<li><a href=${to}>${label}</a></li>`
@@ -137,16 +131,21 @@ const indexPage = (
           ({ name: pkg, latest: row }) =>
             html`<tr>
               <th scope="row">
-                <a href=${href(router, 'releases.package', { pkg })}>${pkg}</a>
+                <a href=${router.stateService.href('releases.package', { pkg })}
+                  >${pkg}</a
+                >
               </th>
               <td>
                 ${
                   row
                     ? html`<a
-                        href=${href(router, 'releases.package.version', {
-                          pkg,
-                          version: row.version,
-                        })}
+                        href=${router.stateService.href(
+                          'releases.package.version',
+                          {
+                            pkg,
+                            version: row.version,
+                          },
+                        )}
                         ><span class="visually-hidden">${pkg}@</span
                         >${row.version}</a
                       >`
@@ -259,7 +258,7 @@ const packagePage = (
             html`<tr>
               <th scope="row">
                 <a
-                  href=${href(router, 'releases.package.version', {
+                  href=${router.stateService.href('releases.package.version', {
                     pkg,
                     version: row.version,
                   })}
@@ -348,7 +347,7 @@ export const VersionView: RoutedLitTemplate<{
   ${crumbs(router, [
     {
       label: row.name,
-      href: href(router, 'releases.package', { pkg: row.name }),
+      href: router.stateService.href('releases.package', { pkg: row.name }),
     },
     { label: row.version },
   ])}
@@ -388,7 +387,10 @@ export const CompareView: RoutedLitTemplate<{
 
   return html`
     ${crumbs(router, [
-      { label: pkg, href: href(router, 'releases.package', { pkg }) },
+      {
+        label: pkg,
+        href: router.stateService.href('releases.package', { pkg }),
+      },
       { label: range },
     ])}
     <h1>${pkg} ${range}</h1>

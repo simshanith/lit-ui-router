@@ -1,11 +1,9 @@
-// provideRouter() on a render root, withRouterSync() around a synchronous render, the lit render inside ui-router-server's prerender loop.
-import { render } from '@lit-labs/ssr';
+// provideRouter() on a render root for the run, render.ts's lit render inside ui-router-server's prerender loop.
 import type { RenderInfo } from '@lit-labs/ssr';
-import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
-import { provideRouter, withRouterSync } from 'lit-ui-router/context';
+import { provideRouter } from 'lit-ui-router/context';
 import { isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import { prerender as prerenderSite } from 'ui-router-server/prerender';
@@ -22,13 +20,15 @@ import type {
   DehydrateResult,
   ResolvePayload,
 } from 'ui-router-server/ssr';
-import { devGate } from '#dev-gate';
 
-import { LightElementRenderer } from './light-element-renderer.js';
+import {
+  defaultElementRenderers,
+  renderDrawn,
+  warnUnregistered,
+} from './render.js';
+import type { PagePayload } from './render.js';
 import { responder } from './respond.js';
 import type { BoundResponses } from './respond.js';
-import { packageVersion, routeOf, signatureAttribute } from './signature.js';
-import { UiViewRenderer } from './ui-view-renderer.js';
 
 export type {
   EmittedPage,
@@ -36,6 +36,8 @@ export type {
   PrerenderTally,
   RedirectLine,
 } from 'ui-router-server/prerender';
+
+export type { PagePayload } from './render.js';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
@@ -120,7 +122,9 @@ export interface PrerenderOptions extends Omit<
    * class `LightDomHydrating` branded. A list passed here replaces the default,
    * so keep `LightElementRenderer` in it, ahead of any renderer that writes a
    * shadow root, to draw those elements. Pass `[]` for a render with no
-   * `<ui-view>` to fill.
+   * `<ui-view>` to fill. A shadow-DOM `LitElement` no renderer in the list
+   * answers for renders as its bare tag, empty, and warns once per tag in
+   * development; put `LitElementRenderer` after `LightElementRenderer` to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**
@@ -191,23 +195,6 @@ export interface PrerenderOptions extends Omit<
   ) => ResolvePayload | undefined;
 }
 
-/** What a page's hydration signature carries of its resolve payload. */
-export interface PagePayload {
-  /**
-   * The bytes the payload adds to the page's signature as written: its
-   * `resolves` and `transported` members, escaped as the block spells them.
-   */
-  bytes: number;
-  /**
-   * The resolves {@link PrerenderOptions.dehydrate | `dehydrate`} left out of
-   * the payload because their value is not plain JSON data and no transporter
-   * carries it, each to re-run on the client. Present only when `dehydrate`
-   * drew the payload: a {@link PrerenderOptions.payload | `payload`} hook
-   * returns the payload alone.
-   */
-  unserializable?: DehydrateResult['unserializable'];
-}
-
 /** A page {@link prerender} emitted. */
 export interface PrerenderedPage extends EmittedPage {
   /**
@@ -226,104 +213,6 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
   root: EventTarget;
 }
 
-// litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
-const rootedStack = (root: EventTarget): EventTarget[] => {
-  // SAFETY: the @lit-labs/ssr DOM shim sets `litServerRoot` to an `EventTarget`, or leaves it unset.
-  const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
-    .litServerRoot;
-
-  return litServerRoot && litServerRoot !== root
-    ? [litServerRoot, root]
-    : [root];
-};
-
-/** The signature as `prerender()` writes it. */
-interface WrittenSignature {
-  readonly version: string;
-  readonly state: string;
-  readonly params: Readonly<Record<string, string | string[]>>;
-  readonly resolves?: ResolvePayload['resolves'];
-  readonly transported?: ResolvePayload['transported'];
-}
-
-/** What a page's signature carries of its resolve payload. */
-type DrawnResolves = Pick<ResolvePayload, 'resolves' | 'transported'>;
-
-/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the payload's `resolves` and `transported` when given. */
-export const signatureOf = (
-  router: UIRouterLit,
-  drawn?: DrawnResolves,
-): WrittenSignature => {
-  const [state, params] = routeOf(router.globals);
-  const signature = { version: packageVersion, state, params };
-
-  if (!drawn) return signature;
-
-  const { resolves, transported } = drawn;
-
-  return transported
-    ? { ...signature, resolves, transported }
-    : { ...signature, resolves };
-};
-
-/**
- * The signature as one JSON data block. `<` and `>` only ever stand inside a
- * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
- * `</script` or `<!--` and end the block early.
- */
-export const signatureBlock = (signature: WrittenSignature): string => {
-  const json = JSON.stringify(signature)
-    .replaceAll('<', '\\u003c')
-    .replaceAll('>', '\\u003e');
-
-  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
-};
-
-const utf8Length = (text: string): number =>
-  new TextEncoder().encode(text).length;
-
-/** The bytes `drawn` adds to the signature of the page `router` stands on. */
-const payloadBytes = (router: UIRouterLit, drawn: DrawnResolves): number =>
-  utf8Length(signatureBlock(signatureOf(router, drawn))) -
-  utf8Length(signatureBlock(signatureOf(router)));
-
-/**
- * Renders one page: the signature first, then the render, so the client reads
- * the one before it hydrates the other.
- *
- * @internal
- */
-export const renderPage = (
-  body: TemplateResult,
-  router: UIRouterLit,
-  root: EventTarget,
-  elementRenderers: RenderInfo['elementRenderers'],
-  drawn?: DrawnResolves,
-): string =>
-  signatureBlock(signatureOf(router, drawn)) +
-  withRouterSync(router, () =>
-    collectResultSync(
-      render(body, {
-        // a fresh array per render: @lit-labs/ssr mutates the stack
-        eventTargetStack: rootedStack(root),
-        elementRenderers,
-        // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
-        deferHydration: true,
-      }),
-    ),
-  );
-
-const warnUnregistered = (): void => {
-  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
-  if (!import.meta.env.DEV || !devGate()) return;
-
-  if (globalThis.customElements?.get('ui-view')) return;
-  console.warn(
-    'lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ' +
-      'The DOM shim replaces the registry when it finishes installing: prerender through serverRouterPlugin from lit-ui-router-ssr/vite, which preloads both, load lit-ui-router-ssr/register by dynamic import after the shim, or preload the shim with node --import.',
-  );
-};
-
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
  * `<subpath>/index.html`, a response state becomes the body or rules line its
@@ -340,8 +229,10 @@ const warnUnregistered = (): void => {
  *
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
- * package's version and the state and parameter values the router stood on,
- * which `hydrateRoot()` reads before it touches the document.
+ * package's version, the state and parameter values the router stood on, and
+ * the fully qualified name of each `<ui-view>` it drew a routed component
+ * into, which `hydrateRoot()` reads before it touches the document and
+ * `bootstrap()` reports each view's outcome against.
  * {@link PrerenderOptions.dehydrate | `dehydrate`}, or a
  * {@link PrerenderOptions.payload | `payload`} hook, adds the resolved values
  * the page was drawn with, which `bootstrap()` adopts; the page's entry in
@@ -384,7 +275,7 @@ export async function prerender(
     router,
     renderShell,
     document,
-    elementRenderers = [UiViewRenderer, LightElementRenderer],
+    elementRenderers = defaultElementRenderers,
     root = new EventTarget(),
     write = nodeWrite,
     dehydrate: dehydrateOptions,
@@ -427,18 +318,17 @@ export async function prerender(
     body: TemplateResult,
     context: RenderContext,
   ): string => {
-    const { payload: drawn, unserializable } = drawLanded(context);
+    const page = renderDrawn(
+      body,
+      router,
+      root,
+      elementRenderers,
+      drawLanded(context),
+    );
 
-    if (drawn) {
-      const bytes = payloadBytes(router, drawn);
+    if (page.payload) reports.set(context.file, page.payload);
 
-      reports.set(
-        context.file,
-        unserializable ? { bytes, unserializable } : { bytes },
-      );
-    }
-
-    return renderPage(body, router, root, elementRenderers, drawn);
+    return page.html;
   };
 
   const renderLit = async (

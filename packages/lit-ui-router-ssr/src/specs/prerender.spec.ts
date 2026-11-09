@@ -147,38 +147,34 @@ describe('shell verdicts', () => {
 });
 
 describe('redirect verdicts', () => {
-  it('writes no page and one rules line carrying location and status', async () => {
+  it('writes no page and a rules line per spelling carrying location and status', async () => {
     const { files, result } = await run({
       paths: ['/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
     });
 
     expect(result.tally).toMatchObject({ shell: 0, redirect: 1 });
     expect(result.pages).toEqual([]);
     expect(result.rules).toEqual([
       { from: '/app/legacy', to: '/app/welcome', status: 302 },
+      { from: '/app/legacy/', to: '/app/welcome', status: 302 },
     ]);
-    expect(files.get('dist/_redirects')).toBe('/app/legacy /app/welcome 302\n');
+    expect(files.get('dist/_redirects')).toBe(
+      '/app/legacy /app/welcome 302\n/app/legacy/ /app/welcome 302\n',
+    );
   });
 
-  it("pairs the trailing slash under 'both' and not under 'exact'", async () => {
-    const both = await run({ paths: ['/app/legacy'], notFound: false });
-    expect(both.result.rules.map((line) => line.from)).toEqual([
+  it('pairs the trailing slash and writes no line for a page by default', async () => {
+    const { result } = await run({
+      paths: ['/app/welcome', '/app/legacy'],
+      notFound: false,
+    });
+
+    expect(result.rules.map((line) => line.from)).toEqual([
       '/app/legacy',
       '/app/legacy/',
     ]);
-    expect(both.result.tally.redirect).toBe(1);
-
-    const exact = await run({
-      paths: ['/app/legacy'],
-      notFound: false,
-      trailingSlash: 'exact',
-    });
-
-    expect(exact.result.rules.map((line) => line.from)).toEqual([
-      '/app/legacy',
-    ]);
+    expect(result.tally).toMatchObject({ shell: 1, redirect: 1 });
   });
 });
 
@@ -360,15 +356,10 @@ describe('the 404 document', () => {
 
 describe('the rules file', () => {
   it('never writes an SPA catch-all', async () => {
-    for (const trailingSlash of ['both', 'exact'] as const) {
-      const { files, result } = await run({
-        paths: ['/', '/app/legacy'],
-        trailingSlash,
-      });
+    const { files, result } = await run({ paths: ['/', '/app/legacy'] });
 
-      expect(files.get('dist/_redirects')).not.toContain('/index.html 200');
-      expect(result.rules.some((line) => line.from === '/*')).toBe(false);
-    }
+    expect(files.get('dist/_redirects')).not.toContain('/index.html 200');
+    expect(result.rules.some((line) => line.from === '/*')).toBe(false);
   });
 
   it('leads with extraRules, in order and unpaired', async () => {
@@ -721,7 +712,7 @@ describe('the hydration signature', () => {
     });
   };
 
-  it('opens a rendered page on the version, the state and its params', async () => {
+  it('opens a rendered page on the version, the state, its params and the views drawn', async () => {
     const { files } = await settled(['/sheet/7B']);
     const page = files.get('dist/sheet/7B/index.html')!;
 
@@ -729,6 +720,7 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
     });
     expect(outline(parseMarkup(withoutSignature(page)))[0]).toMatch(
       /^<!--lit-part /,
@@ -787,6 +779,7 @@ describe('the hydration signature', () => {
       version,
       state: 'configured',
       params: { q: '1' },
+      views: [],
     });
   });
 
@@ -817,6 +810,7 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
       resolves: { sheet: { title: '</script> 7B' } },
     });
   });

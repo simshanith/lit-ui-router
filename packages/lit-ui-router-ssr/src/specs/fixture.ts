@@ -50,6 +50,11 @@ export const FormView: RoutedLitTemplate = () =>
 export const BadgeView: RoutedLitTemplate = () =>
   html`<shadow-badge></shadow-badge>`;
 
+/** A parent holding its default view and a named one. */
+export const SplitView: RoutedLitTemplate = () =>
+  html`<main>${uiView()}</main>
+    <aside>${uiView('aside')}</aside>`;
+
 /** A leaf view, drawn from a resolve so the spec can see the resolve arrive. */
 export const DetailView: RoutedLitTemplate = (props) =>
   html`<p class="detail">${String(props.resolves.detail ?? '')}</p>`;
@@ -121,7 +126,9 @@ export const badgeRootTemplate = (router: Router): TemplateResult =>
   >`;
 
 /** Two states: `shell`, and `shell.detail` filling the nested view from `detail`. */
-export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
+export const makeRouter = (
+  detail: () => string | Promise<string> = () => 'leaf',
+): Router => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
   });
@@ -174,6 +181,16 @@ export const makeRouter = (detail: () => string = () => 'leaf'): Router => {
     },
     { name: 'shell.form', url: '/form', component: FormView },
     { name: 'badge', url: '/badge', component: BadgeView },
+    { name: 'split', url: '/split', component: SplitView },
+    {
+      name: 'split.both',
+      url: '/both',
+      views: {
+        $default: { component: DetailView },
+        aside: { component: OtherView },
+      },
+      resolve: { detail },
+    },
     { name: 'bare', url: '/bare' },
   ];
 

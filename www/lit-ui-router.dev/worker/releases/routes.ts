@@ -1,5 +1,6 @@
 // The /releases and /gh mounts: route tables that both the verdict and the page router compile.
 import type { MountConfig, RouteDeclaration } from 'ui-router-server';
+import type { RouterUrlConfig } from 'ui-router-server/url-config';
 
 import { DEFAULT_FILTER, FILTER_PARAM } from './npm-diff/file-filter.ts';
 
@@ -7,8 +8,11 @@ export const RELEASES_MOUNT = '/releases';
 
 export const GH_MOUNT = '/gh';
 
-/** The trailing slash is optional on both sides; the worker redirects a page to the slashed spelling. */
-export const urlConfig = { strict: false } as const;
+/** Pages live at the slashed spelling, as static assets do; response states keep the url they were asked for. */
+export const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} as const satisfies RouterUrlConfig;
 
 export const releaseRoutes = [
   { name: 'releases', url: '' },

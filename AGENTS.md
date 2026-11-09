@@ -55,7 +55,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Overrides name their parent (`parent>child`), never a blanket range. Exact override pins can turn from floors into vulnerable ceilings; test one by deleting it.
 - Peer floors live in the `peerFloor*` and `publishedPeer*` catalogs. A released package's peer ranges admit no prerelease line.
 - A peer range on a 0.x workspace package keeps two `||` legs; `floor-guard` warns past that ([RELEASE](docs/RELEASE.md)).
-- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, `rolldown` without `vite`, and `oxlint` without `eslint-plugin-oxlint`.
+- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, and `oxlint` without `eslint-plugin-oxlint`. Pins that must move together are in the `ignore` list in `.github/dependabot.yml`.
 - Accepted audit advisories go under `audit:` ([CONTRIBUTING: Dependency audit](docs/CONTRIBUTING.md#dependency-audit)).
 
 ## Lint and format
@@ -137,4 +137,4 @@ A skill stays thin: when to use it and what an unattended run needs, linking the
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
-- `playwright-sample-app`: run a sample app on a vite dev server and drive it with one Playwright spec.
+- `playwright-sample-app`: run a sample app on a vite dev server and drive it with one Playwright spec or `playwright-cli`.
