@@ -23,6 +23,8 @@ updates:
       - dependency-name: 'typescript'
       # cf pins it exactly, so it moves with cf; alone it splits and fails check:single-version
       - dependency-name: '@cloudflare/config'
+      # each release pins a Playwright minor, so it moves with playwright (repo-checks playwright-cli-pin.test.ts)
+      - dependency-name: '@playwright/cli'
     commit-message:
       prefix: 'chore'
       include: 'scope'
