@@ -213,17 +213,9 @@
       // turns on github-formatter annotations, which the turbo_summary step re-emits
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
-    // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
-    // tag registry is global to the run, so cross-package `<ui-view>` usage
-    // only resolves when everything is analyzed together).
+    // @tools/lit-template-lint over every tracked src .ts, each in its own tsconfig project.
     "//#lint:templates": {
-      // Cross-package element types come from the published d.ts, not src:
-      // with dist absent `<ui-view>` resolves to nothing, so a
-      // type-incompatible binding against it goes unreported (the run only
-      // fails on unrelated no-missing-import noise). Root has
-      // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason (check:graph-edges
-      // holds the list to every publishable package with a build:types script).
+      // element types come from each package's d.ts; check:graph-edges holds this list
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
@@ -240,19 +232,17 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
-        // over-approximate: `**/*.ts` would skip files sitting directly in
-        // `src/`, which is exactly the bug these globs used to have
+        // `src/**`, not `src/**/*.ts`, so files directly in src/ count
         "packages/*/src/**",
         "apps/*/src/**",
         "examples/*/src/**",
-        // examples resolve a published lit-ui-router, so a lockfile bump can
-        // change what the analyzer sees without any src change
+        // examples check against the lit-ui-router their lockfile pins
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
-        "tools/compat-guards/src/**",
         "tools/shared/src/**",
-        // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
-        "tsconfig.json",
+        // each file is checked in its own tsconfig project
+        "{packages,apps,examples}/*/tsconfig*.json",
+        "tsconfig*.json",
         "pnpm-workspace.yaml"
       ]
     },

@@ -28,7 +28,7 @@ export interface LintResult {
 export class LintReportPanel extends LitElement {
   static styles = css`
     /* light-dark() resolves against the inherited color-scheme, which the host
-       page declares — lit-analyzer's no-invalid-css rejects it in a css block */
+       page declares */
     :host {
       display: block;
       margin-top: 24px;

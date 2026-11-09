@@ -197,12 +197,12 @@ describe.each([
         {
           name: 'home',
           url: '/home',
-          // lit-analyzer reads the global tag map; these tags are scoped
+          // scoped tags are in no global tag map
           component: () =>
             tags === usualTags
-              ? html`<!-- @ts-ignore --><scoped-home
+              ? html`<!-- @ts-expect-error --><scoped-home
                   ></scoped-home>`
-              : html`<!-- @ts-ignore --><app-home
+              : html`<!-- @ts-expect-error --><app-home
                   ></app-home>`,
         },
       ]);
