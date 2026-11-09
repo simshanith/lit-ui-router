@@ -18,12 +18,7 @@ function stampEnd(view: string[], from: number, to: number, text: string) {
   }
 }
 
-/**
- * The source with everything blanked but each `<style>` element's contents,
- * wrapped as a `css` template in the element's own start tag and end tag
- * characters. It is the source's length, with its line breaks, so postcss-lit
- * places every node at the file's own line, column and offset.
- */
+/** The source, same length and line breaks, blanked but for each `<style>`'s contents wrapped as a `css` template. */
 export function cssView(source: string, styles: StyleElement[]): string {
   const view = blank(source).split('');
 

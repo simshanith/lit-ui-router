@@ -1,33 +1,24 @@
 import postcssLit from 'postcss-lit';
 import { getUserConfig } from 'postcss-lit/lib/userConfig.js';
-import type {
-  Document,
-  Parser,
-  ProcessOptions,
-  Root,
-  Stringifier,
-  Syntax,
-} from 'postcss';
+import type { Document, Parser, ProcessOptions, Syntax } from 'postcss';
 
-import { relocate } from './positions.ts';
+import {
+  droppedBackslashes,
+  type Layout,
+  type Placed,
+  relocate,
+} from './positions.ts';
+import { remember, stringify } from './stringify.ts';
 import {
   type Span,
   type StyleElement,
   styleElements,
+  stringsOf,
   templatesOf,
 } from './templates.ts';
 import { cssView } from './view.ts';
 
-interface Placed {
-  root: Root;
-  start: number;
-  end: number;
-}
-
-/**
- * Where each root's CSS starts and its template body ends. postcss-lit chains
- * `codeBefore` from one body's end to the next root's start.
- */
+// postcss-lit chains `codeBefore` from one body's end to the next root's start
 function placed(doc: Document, bodies: Span[]): Placed[] | undefined {
   const out: Placed[] = [];
   let end = 0;
@@ -60,24 +51,25 @@ function styleRoots(
   styles: StyleElement[],
   opts: ProcessOptions | undefined,
 ): Placed[] | undefined {
-  const view = postcssLit.parse(cssView(source, styles), opts);
-
-  if (view.type !== 'document') return undefined;
+  // SAFETY: postcss-lit's parse always returns a Document
+  const view = postcssLit.parse(cssView(source, styles), opts) as Document;
 
   const roots = placed(
     view,
     styles.map(({ cssStart, cssEnd }) => ({ start: cssStart, end: cssEnd })),
   );
 
-  for (const { root, start } of roots ?? []) {
+  for (const { root, start, end } of roots ?? []) {
     const style = styles.find((s) => s.cssStart <= start && start <= s.cssEnd);
+    const holes = style?.expressions ?? [];
 
     // the view blanks each expression; stringify writes the source's back
-    root.raws.litTemplateExpressions = (style?.expressions ?? []).map((hole) =>
+    root.raws.litTemplateExpressions = holes.map((hole) =>
       source.slice(hole.start, hole.end),
     );
 
     if (root.source?.input) root.source.input.document = source;
+    remember(root, source, { start, end }, holes);
   }
 
   return roots;
@@ -100,27 +92,42 @@ function adopt(doc: Document, roots: Placed[], source: string): void {
   doc.nodes[doc.nodes.length - 1].raws.codeAfter = source.slice(cursor);
 }
 
-/** postcss-lit's Document, plus a root for each `<style>` element, in source order. */
-function withStyles(source: string, opts: ProcessOptions | undefined) {
-  const doc = postcssLit.parse(source, opts);
-
-  if (doc.type !== 'document' || !/<style\b/i.test(source)) return doc;
-
-  const { sites, cssBodies } = templatesOf(
+/** Adds a root for each `<style>` element to postcss-lit's `doc`, in source order; returns every root's span. */
+function withStyles(
+  doc: Document,
+  source: string,
+  opts: ProcessOptions | undefined,
+): Layout {
+  const { sites, cssBodies, cssStrings } = templatesOf(
     source,
     getUserConfig('postcss-lit').babelOptions,
   );
 
-  const styles = styleElements(source, sites);
+  const styles = /<style\b/i.test(source) ? styleElements(source, sites) : [];
 
-  if (styles.length === 0) return doc;
+  const dropped = droppedBackslashes(source, [
+    ...cssStrings,
+    ...styles.flatMap(stringsOf),
+  ]);
+
   const fromSource = placed(doc, cssBodies);
-  const fromView = styleRoots(source, styles, opts);
+  const plain: Layout = { placed: fromSource ?? [], dropped };
+
+  if (styles.length === 0) return plain;
+  let fromView: Placed[] | undefined;
+
+  try {
+    fromView = styleRoots(source, styles, opts);
+  } catch (error) {
+    skip(opts?.from, `the CSS view did not parse: ${String(error)}`);
+
+    return plain;
+  }
 
   if (!fromSource || !fromView) {
     skip(opts?.from, 'a template could not be placed');
 
-    return doc;
+    return plain;
   }
 
   const roots = [...fromSource, ...fromView].sort((a, b) => a.start - b.start);
@@ -128,28 +135,32 @@ function withStyles(source: string, opts: ProcessOptions | undefined) {
   if (roots.some((root, i) => i > 0 && root.start <= roots[i - 1].end)) {
     skip(opts?.from, 'a template overlaps another');
 
-    return doc;
+    return plain;
   }
 
+  // postcss-lit skipped every template, each with its own warning
+  if (roots.length === 0) return plain;
   adopt(doc, roots, source);
 
-  return doc;
+  return { placed: roots, dropped };
 }
 
-/**
- * Parses the CSS of a file's lit `css` templates and of the `<style>`
- * elements in its `html` and `svg` templates.
- */
+/** Parses the CSS of a file's lit `css` templates and of the `<style>` elements in its `html` and `svg` templates. */
 export const parse: Parser = (css, opts) => {
   const source = css.toString();
-  const doc = withStyles(source, opts);
+  // SAFETY: postcss-lit's parse always returns a Document
+  const doc = postcssLit.parse(source, opts) as Document;
 
-  relocate(doc, source);
+  const layout: Layout = /<style\b|\\\\/i.test(source)
+    ? withStyles(doc, source, opts)
+    : { placed: [], dropped: [] };
+
+  relocate(doc, source, layout);
 
   return doc;
 };
 
-export const stringify: Stringifier = postcssLit.stringify;
+export { stringify };
 
 const syntax: Syntax = { parse, stringify };
 

@@ -1,39 +1,83 @@
-import type { Document, Position, Root } from 'postcss';
+import { type Document, Input, type Position, type Root } from 'postcss';
 
-/**
- * Sets every node's line and column from its offset in the file. postcss-lit
- * offsets are exact, but its columns on a template's first line count from the
- * template's start.
- */
-export function relocate(doc: Document | Root, source: string): void {
-  const starts = [0];
+import type { Span } from './templates.ts';
 
-  for (let i = source.indexOf('\n'); i >= 0; i = source.indexOf('\n', i + 1)) {
-    starts.push(i + 1);
+/** A root and the source span of its template body. */
+export interface Placed {
+  root: Root;
+  start: number;
+  end: number;
+}
+
+/** Every root's span, and the backslashes postcss-lit drops from them. */
+export interface Layout {
+  placed: Placed[];
+  dropped: number[];
+}
+
+/** Offsets of the backslashes postcss-lit drops when it reads each `\\` in `strings` as `\`. */
+export function droppedBackslashes(source: string, strings: Span[]): number[] {
+  const out: number[] = [];
+
+  for (const { start, end } of strings) {
+    for (let i = start; i < end - 1; i++) {
+      if (source[i] === '\\' && source[i + 1] === '\\') out.push(++i);
+    }
   }
 
-  const place = (position: Position | undefined, offset: number) => {
-    if (!position) return;
-    let low = 0;
-    let high = starts.length - 1;
+  return out.sort((a, b) => a - b);
+}
 
-    while (low < high) {
-      const mid = (low + high + 1) >> 1;
+/** Sets every node's offset, line and column from its place in the file. */
+export function relocate(
+  doc: Document,
+  source: string,
+  { placed, dropped }: Layout,
+): void {
+  const input = new Input(source);
+  const bom = input.hasBOM ? 1 : 0;
 
-      if (starts[mid] <= offset) low = mid;
-      else high = mid - 1;
-    }
+  const place = (position: Position, offset: number) => {
+    const at = input.fromOffset(offset - bom);
 
-    position.line = low + 1;
-    position.column = offset - starts[low] + 1;
+    if (!at) return;
+    position.line = at.line;
+    position.column = at.col;
   };
 
-  doc.walk((node) => {
-    const { start, end } = node.source ?? {};
+  for (const root of doc.nodes) {
+    const span = placed.find((p) => p.root === root);
 
-    // postcss end positions are inclusive, their offsets exclusive
-    if (start) place(start, start.offset);
+    const drops = span
+      ? dropped.filter((offset) => span.start <= offset && offset < span.end)
+      : [];
 
-    if (end) place(end, end.offset - 1);
-  });
+    // postcss-lit's offsets skip the dropped backslashes before them
+    const real = (offset: number) => {
+      let out = offset;
+
+      for (const drop of drops) {
+        if (drop > out) break;
+        out++;
+      }
+
+      return out;
+    };
+
+    const relocateNode = ({ source: at }: Root | Root['nodes'][number]) => {
+      // postcss end positions are inclusive, their offsets exclusive
+      if (at?.start) {
+        at.start.offset = real(at.start.offset);
+        place(at.start, at.start.offset);
+      }
+
+      if (at?.end) {
+        at.end.offset = real(at.end.offset);
+        place(at.end, at.end.offset - 1);
+      }
+    };
+
+    relocateNode(root);
+    root.walk(relocateNode);
+  }
 }

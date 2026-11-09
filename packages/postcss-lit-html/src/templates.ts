@@ -1,11 +1,12 @@
 import { parse as babelParse, type ParserOptions } from '@babel/parser';
-import { type Comment, type Node, traverse } from '@babel/types';
+import { type Node, traverse } from '@babel/types';
 import {
   type DefaultTreeAdapterTypes as T,
   defaultTreeAdapter,
   html as parse5Html,
   parseFragment,
 } from 'parse5';
+import { isDisableComment } from 'postcss-lit/lib/util.js';
 
 export interface Span {
   start: number;
@@ -18,10 +19,11 @@ export interface TemplateSite {
   strings: Span[];
 }
 
-/** The `html`/`svg` templates postcss-lit doesn't skip, and the bodies of the `css` templates. */
+/** The `html`/`svg` templates postcss-lit doesn't skip, and the bodies and strings of the `css` templates. */
 export interface FileTemplates {
   sites: TemplateSite[];
   cssBodies: Span[];
+  cssStrings: Span[];
 }
 
 /** A `<style>` element whose children are all text. */
@@ -34,12 +36,13 @@ export interface StyleElement {
   expressions: Span[];
 }
 
-const isDisableComment = (comment: Comment) =>
-  comment.type === 'CommentLine' &&
-  comment.value.includes('postcss-lit-disable-next-line');
-
 const hasDisableComment = (node: Node) =>
   node.leadingComments?.some(isDisableComment) === true;
+
+const spanOf = ({ start, end }: Node): Span => ({
+  start: start ?? 0,
+  end: end ?? 0,
+});
 
 /** Every lit tagged template in `source`, found with postcss-lit's Babel options. */
 export function templatesOf(
@@ -48,6 +51,7 @@ export function templatesOf(
 ): FileTemplates {
   const sites: TemplateSite[] = [];
   const cssBodies: Span[] = [];
+  const cssStrings: Span[] = [];
 
   traverse(babelParse(source, babelOptions).program, (node, ancestors) => {
     if (node.type !== 'TaggedTemplateExpression') return;
@@ -59,6 +63,7 @@ export function templatesOf(
         start: (quasi.start ?? 0) + 1,
         end: (quasi.end ?? 0) - 1,
       });
+      cssStrings.push(...quasi.quasis.map(spanOf));
     } else if (
       (name === 'html' || name === 'svg') &&
       // postcss-lit honours the comment on the template or any ancestor
@@ -67,15 +72,12 @@ export function templatesOf(
     ) {
       sites.push({
         tag: name,
-        strings: quasi.quasis.map(({ start, end }) => ({
-          start: start ?? 0,
-          end: end ?? 0,
-        })),
+        strings: quasi.quasis.map(spanOf),
       });
     }
   });
 
-  return { sites, cssBodies };
+  return { sites, cssBodies, cssStrings };
 }
 
 const marker = (i: number) => `$lit${i}$`;
@@ -205,4 +207,23 @@ export function styleElements(
   }
 
   return out.sort((a, b) => a.start - b.start);
+}
+
+/** The contents of `style` between its expressions. */
+export function stringsOf({
+  cssStart,
+  cssEnd,
+  expressions,
+}: StyleElement): Span[] {
+  const out: Span[] = [];
+  let start = cssStart;
+
+  for (const hole of expressions) {
+    out.push({ start, end: hole.start });
+    start = hole.end;
+  }
+
+  out.push({ start, end: cssEnd });
+
+  return out;
 }
