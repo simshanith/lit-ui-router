@@ -608,6 +608,18 @@ describe('redirectPages', () => {
     );
   });
 
+  it('writes the base itself as index.html, and into an empty outDir', async () => {
+    const { files } = await run({
+      paths: [],
+      notFound: false,
+      outDir: '',
+      extraRules: [{ from: '/app', to: '/app/home', status: 301 }],
+      rules: redirectPages({ base: '/app/' }),
+    });
+
+    assert.deepEqual([...files.keys()], ['index.html']);
+  });
+
   it('places pages under base, and throws for a line outside it', async () => {
     const { files } = await run({
       paths: ['/app/legacy'],
