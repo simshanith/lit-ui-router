@@ -301,6 +301,20 @@ describe('lint', () => {
     ]);
   });
 
+  it('ignores template HTML comments before a <style>', async () => {
+    const code = src(
+      "import { html } from 'lit';",
+      'export const a = html`',
+      '  <!-- @ts-expect-error -->',
+      '  <!-- stylelint-disable-next-line property-no-unknown -->',
+      '  <style>p { colr: red; }</style>`;',
+    );
+
+    expect((await lint(code)).warnings).toEqual([
+      { ...at(code, 'colr'), rule: 'property-no-unknown' },
+    ]);
+  });
+
   it('leaves files without <style> to postcss-lit', async () => {
     const code = src(
       "import { css, html } from 'lit';",

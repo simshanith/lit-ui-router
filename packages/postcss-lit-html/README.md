@@ -33,4 +33,4 @@ When postcss-lit skips a template it can't parse, with its own warning, the othe
 
 ## Suppressions
 
-Use stylelint's comments inside the CSS, such as `/* stylelint-disable-next-line <rule> -- <reason> */`. `// postcss-lit-disable-next-line` skips a whole template.
+Use stylelint's comments inside the CSS, such as `/* stylelint-disable-next-line <rule> -- <reason> */`. `// postcss-lit-disable-next-line` skips a whole template. HTML comments in the template, such as a template checker's `<!-- @ts-expect-error -->`, don't reach the CSS.
