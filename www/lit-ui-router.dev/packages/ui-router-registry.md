@@ -124,7 +124,7 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 empty `RouteTypes` interface. A type-only import of the matching entry point,
 next to an augmentation, fills it in:
 
-```ts
+```ts check
 import type {} from 'ui-router-registry/signals';
 ```
 

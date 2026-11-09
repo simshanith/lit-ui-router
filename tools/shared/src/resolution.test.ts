@@ -9,7 +9,7 @@ import type { Json } from '@tools/bootstrap/types.ts';
 import { packagePaths } from './resolution.ts';
 
 const withManifest = (manifest: Json): string => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'doc-example-check-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'resolution-'));
 
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(manifest));
 

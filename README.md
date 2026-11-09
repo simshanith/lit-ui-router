@@ -77,7 +77,7 @@ npm install lit-ui-router lit @uirouter/core
 
 Import `UIRouterLit` into your project, register some states, and you're good to go!
 
-```ts
+```ts check
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';

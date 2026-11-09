@@ -183,7 +183,7 @@ The nested `<ui-view>`:
 
 Each list entry gets a glowing dot colored by the star's spectral class letter — O and B stars render blue, G stars like the Sun render yellow, M stars like Betelgeuse render orange-red:
 
-```typescript
+```typescript check
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
 const spectralColors: Record<string, string> = {
   O: '#92b5ff',

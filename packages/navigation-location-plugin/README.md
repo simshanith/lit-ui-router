@@ -28,7 +28,7 @@ The type declarations reference the global `Navigation`, `NavigateEvent` and `Na
 
 Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings) set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs `servicesPlugin` registered before the location plugin:
 
-```typescript
+```typescript check
 import { UIRouter, servicesPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 

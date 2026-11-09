@@ -32,7 +32,7 @@ Both majors are supported (`effect@^3.22.0 || ^4.0.2`) and both are exercised in
 
 ## Quick Start
 
-```typescript
+```typescript check
 import { html, LitElement } from 'lit';
 import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';

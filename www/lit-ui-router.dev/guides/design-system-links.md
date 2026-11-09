@@ -15,7 +15,10 @@ matters to `document.querySelector('a')`.
 [`uiSref`](/api/reference/directives/uiSref) drives it, but the `href` needs
 one option: **`assignHref: true`**.
 
-```ts
+```ts check
+import { html } from 'lit';
+import { uiSref } from 'lit-ui-router';
+
 html`<sp-link ${uiSref('components', {}, { assignHref: true })}
   >Components</sp-link
 >`;
@@ -99,7 +102,10 @@ bound as an **attribute part** — it _is_ the `href`, so there is no
 `assignHref` and no rule to pick. The attribute is written wherever it was
 bound:
 
-```ts
+```ts check
+import { html } from 'lit';
+import { srefHref } from 'lit-ui-router';
+
 html`<sp-link href=${srefHref('components')}>Components</sp-link>`;
 ```
 

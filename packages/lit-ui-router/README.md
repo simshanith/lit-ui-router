@@ -18,7 +18,7 @@ npm install lit-ui-router lit @uirouter/core
 
 ## Quick Start
 
-```ts
+```ts check
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
 import { html } from 'lit';

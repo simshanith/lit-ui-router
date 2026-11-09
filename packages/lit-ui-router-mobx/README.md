@@ -55,7 +55,7 @@ still carries a `lit-ui-router-mobx` 2.0.
 
 ## Quick Start
 
-```typescript
+```typescript check
 import { html, LitElement } from 'lit';
 import { RouterReactionController } from 'lit-ui-router-mobx';
 

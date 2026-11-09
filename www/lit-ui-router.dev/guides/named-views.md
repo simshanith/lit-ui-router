@@ -15,7 +15,7 @@ that fill it declare `views` instead of `component`.
 `<ui-view>` takes its view name from the `name` attribute. A view without one
 is named `$default`.
 
-```ts
+```ts check
 import { LitElement, html } from 'lit';
 import type { LitStateDeclaration } from 'lit-ui-router';
 

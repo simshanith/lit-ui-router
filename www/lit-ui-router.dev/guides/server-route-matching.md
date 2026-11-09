@@ -383,7 +383,7 @@ so it 404s unless a `url: ''` route or a rule such as
 other than `/` that leaves it unclaimed. `resolve()` accepts a
 pathname, an absolute URL string, or anything with a `pathname`:
 
-```ts
+```ts check
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
@@ -671,7 +671,9 @@ of the app's own url. Every `:id` route ships it by default.
 When the ids are known at build time, narrow the param to them. An inline
 `{name:regexp}` placeholder replaces the default segment pattern:
 
-```ts
+```ts check
+import type { RouteDeclaration } from 'ui-router-server';
+
 const ids = ['1', '2A', '12i']; // build-time data: the sheets that exist
 
 const routes: RouteDeclaration[] = [
@@ -721,7 +723,7 @@ template sees the same thing.
 inside the attribute they affect, so the `href` is a real attribute in the
 template. A whole nav:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
 

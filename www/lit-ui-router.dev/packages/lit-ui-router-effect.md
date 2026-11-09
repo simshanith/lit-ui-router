@@ -51,7 +51,7 @@ selections as unchanged.
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';

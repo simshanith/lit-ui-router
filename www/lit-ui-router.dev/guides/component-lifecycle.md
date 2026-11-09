@@ -22,7 +22,7 @@ component is active inside a `<ui-view>`.
 state. Return `true`/`undefined` to allow it, `false` to cancel it, or a
 Promise to make the transition wait — the classic "unsaved changes" prompt:
 
-```ts
+```ts check
 import { LitElement, html } from 'lit';
 import { Transition, type HookResult } from '@uirouter/core';
 import type { UiOnExit } from 'lit-ui-router';

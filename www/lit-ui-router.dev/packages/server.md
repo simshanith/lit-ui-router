@@ -186,7 +186,7 @@ pre-release seed tags have been retired.
 Routes are **data**, not state declarations — a server runtime cannot import
 components:
 
-```ts
+```ts check
 import type { MountConfig, RouteDeclaration } from 'ui-router-server';
 
 const routes: RouteDeclaration[] = [
@@ -557,7 +557,7 @@ never import server code. Its verdict is `response`, decided by url matching
 alone with no transition, so a host can tell it from a page before rendering
 anything, for example to skip a trailing-slash redirect it gives pages.
 
-```ts
+```ts check
 import type { ResponseHandlers } from 'ui-router-server/ssr';
 
 const routes = [
@@ -646,7 +646,7 @@ A static host decides whether a page lives at `/releases/lit/` or `/releases/lit
 server renders should follow it. Name that spelling once, in the `config` the mount and the client
 router share, and leave the slash out of the route table:
 
-```ts
+```ts check
 import type { RouterUrlConfig } from 'ui-router-server/url-config';
 
 export const urlConfig = {
@@ -766,7 +766,7 @@ Where the payload goes in the document is the renderer's choice.
 [transporters](/api/ui-router-server/ssr/interfaces/Transporter), each
 carrying one type of value plain JSON can't, keyed by a name both sides share.
 
-```ts
+```ts check
 import type { Transporter } from 'ui-router-server/ssr';
 
 export const transport = {

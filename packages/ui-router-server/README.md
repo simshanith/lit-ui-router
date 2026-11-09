@@ -147,7 +147,9 @@ response state to its `respond` hook and writes a 2xx body at the path its url s
 A mount's `config` can name the canonical spelling of a trailing slash per kind of state, so the
 route table spells no slash and both sides agree on it:
 
-```ts
+```ts check
+import type { RouterUrlConfig } from 'ui-router-server/url-config';
+
 const urlConfig = {
   strict: false,
   trailingSlash: { pages: 'always' },
@@ -178,7 +180,7 @@ name both sides share. `encode` answers with plain JSON data for a value it carr
 `[false]`; `decode` rebuilds the value on the client. A value nested in an array or plain
 object is carried too.
 
-```ts
+```ts check
 import type { Transporter } from 'ui-router-server/ssr';
 
 export const transport = {

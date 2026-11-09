@@ -59,6 +59,13 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
       isPublishable(member) && hasScript('build:types')(member),
     why: "the doc-example checker resolves each example's imports to dist d.ts, so an unbuilt package checks examples against stale or missing types; add the line to turbo.json",
   },
+  {
+    consumer: '//#lint:md-examples',
+    producerTask: 'build:types',
+    select: (member) =>
+      isPublishable(member) && hasScript('build:types')(member),
+    why: "the Markdown fence checker resolves each fence's imports to dist d.ts, so an unbuilt package checks fences against stale or missing types; add the line to turbo.json",
+  },
 ];
 
 const main = async (): Promise<void> => {

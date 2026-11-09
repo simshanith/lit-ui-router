@@ -36,7 +36,7 @@ dependencies, and `signal-polyfill` is a peer of `ui-router-signals`.
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { RouterSignalController } from 'lit-ui-router-signals';
 

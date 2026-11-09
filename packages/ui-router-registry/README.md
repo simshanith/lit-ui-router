@@ -81,7 +81,7 @@ A row that collides fails at that line, as a missing `'not the row registered un
 
 `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` each declare an empty `RouteTypes` interface. A type-only import of the matching entry point, next to an augmentation, fills it in:
 
-```typescript
+```typescript check
 import type {} from 'ui-router-registry/signals';
 ```
 

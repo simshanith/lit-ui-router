@@ -1,6 +1,7 @@
-// Copied from @tools/md-content-mapper (#1663) until one of the two lands.
-// `paths` stands in for a consumer's node_modules; paths skips package.json
-// exports, so each export's TypeScript target is mapped by hand.
+// tsc resolves a supplemental output's imports from the Markdown file's own
+// directory, where most documented packages aren't installed. `paths` stands in
+// for a consumer's node_modules; paths skips package.json exports, so each
+// export's TypeScript target is mapped by hand.
 import fs from 'node:fs';
 import path from 'node:path';
 
