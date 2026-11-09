@@ -26,6 +26,16 @@ updates:
       - dependency-name: '@cloudflare/config'
       # each release pins a Playwright minor, so it moves with playwright (repo-checks playwright-cli-pin.test.ts)
       - dependency-name: '@playwright/cli'
+      # a Playwright minor needs the @playwright/cli release built against it, so minors move by hand; patches stay in range
+      - dependency-name: 'playwright'
+        update-types: ['version-update:semver-minor']
+      - dependency-name: 'playwright-core'
+        update-types: ['version-update:semver-minor']
+      - dependency-name: '@playwright/test'
+        update-types: ['version-update:semver-minor']
+      # vite pins rolldown to a tilde range, so a rolldown minor waits for the vite release that adopts it
+      - dependency-name: 'rolldown'
+        update-types: ['version-update:semver-minor']
     commit-message:
       prefix: 'chore'
       include: 'scope'
