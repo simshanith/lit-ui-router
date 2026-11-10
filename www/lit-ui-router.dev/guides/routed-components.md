@@ -12,6 +12,12 @@ A routed component gets its inputs from `<ui-view>`, which renders it with
 reading its state's params, loading its own element module only when the state
 is entered, and how the page reaches the element a view rendered.
 
+<DiagramEmbed src="/diagrams/routed-components-anatomy.svg">
+
+<!--@include: ../public/diagrams/routed-components-anatomy.svg-->
+
+</DiagramEmbed>
+
 ## Reading params
 
 Declare the params the component needs as a resolve on its state. The resolve
@@ -153,7 +159,11 @@ ui-view > [routed] {
 }
 ```
 
-```ts
+A template component marks only its first element. When its template has
+several top-level elements, wrap them in one element so a `[routed]` rule
+reaches all of it.
+
+```ts check
 const view = document.querySelector('ui-view');
 view?.routedElement?.scrollIntoView();
 ```
@@ -162,8 +172,26 @@ When a state change replaces one class component with another, `<ui-view>`
 inserts the incoming element next to the outgoing one, and removes the
 outgoing element once the incoming one has completed its first update. The
 view keeps its content in between, so a layout read during the swap does not
-see a collapsed page. `routedElement` and the `routed` attribute point at the
-incoming element from the moment it is inserted.
+see a collapsed page. Only class-to-class swaps hold the outgoing element:
+fallback content and template components are replaced in the same update.
+
+`routedElement` points at the incoming element once the view renders it, and
+the `routed` attribute moves to it when that view update commits. Both
+change before the incoming element has rendered, so during the hold a
+`[routed]` rule styles the incoming element, not the outgoing one still on
+screen.
+
+<DiagramEmbed src="/diagrams/routed-components-hold.svg">
+
+<!--@include: ../public/diagrams/routed-components-hold.svg-->
+
+</DiagramEmbed>
+
+A template component can also swap its elements without the view updating,
+as `until()` does when its content replaces a placeholder. `routedElement`
+returns the new first element at once, and the `routed` attribute follows a
+microtask later, so code that reads `[routed]` in the same task as the swap
+still finds the old element.
 
 The attribute is set when the view renders in the browser, so a prerendered
 page carries it once its views have hydrated.

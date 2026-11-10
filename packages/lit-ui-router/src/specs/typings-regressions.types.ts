@@ -88,3 +88,8 @@ export const componentKind = (
 export const readAsBefore = (
   declaration: NormalizedLitViewDeclaration,
 ): pure.RoutedLitComponent => declaration.component;
+
+// uiSrefActive's documented call shape type-checks against its exported params type (#1729).
+export const srefActiveParams: pure.UiSrefActiveParams = {
+  activeClasses: ['active'],
+};

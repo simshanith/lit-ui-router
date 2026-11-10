@@ -50,7 +50,21 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
     producerTask: 'build:types',
     select: (member) =>
       isPublishable(member) && hasScript('build:types')(member),
-    why: 'lit-analyzer resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
+    why: 'the template checker resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
+  },
+  {
+    consumer: '//#lint:doc-examples',
+    producerTask: 'build:types',
+    select: (member) =>
+      isPublishable(member) && hasScript('build:types')(member),
+    why: "the doc-example checker resolves each example's imports to dist d.ts, so an unbuilt package checks examples against stale or missing types; add the line to turbo.json",
+  },
+  {
+    consumer: '//#lint:md-examples',
+    producerTask: 'build:types',
+    select: (member) =>
+      isPublishable(member) && hasScript('build:types')(member),
+    why: "the Markdown fence checker resolves each fence's imports to dist d.ts, so an unbuilt package checks fences against stale or missing types; add the line to turbo.json",
   },
 ];
 

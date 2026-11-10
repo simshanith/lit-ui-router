@@ -65,15 +65,19 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * A transition that fails or is superseded renders nothing of its own: the
  * promise resolves once the views have settled, and `transition.promise`
- * still carries the outcome.
+ * still carries the outcome. A transition started in its place, such as a
+ * redirect from an `onError` hook, is not followed; await that transition
+ * with its own call.
  *
  * @param router - The router the `<ui-view>`s registered with.
- * @param transition - The transition to wait for; defaults to the last
- * successful one.
+ * @param transition - The transition to wait for; defaults to the one in
+ * flight, else the last successful one.
  *
  * @example Move focus once the new view is in the DOM
  * ```ts
- * import { viewRendered } from 'lit-ui-router';
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
  *
  * router.transitionService.onSuccess({}, async (trans) => {
  *   await viewRendered(router, trans);
@@ -81,8 +85,29 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  * });
  * ```
  *
+ * @example Show an error view, and wait for it to render
+ * ```ts
+ * import { RejectType } from '@uirouter/core';
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
+ *
+ * router.transitionService.onError({}, async (trans) => {
+ *   // Skip superseded transitions, and stop if the error state itself fails.
+ *   if (trans.error()?.type !== RejectType.ERROR) return;
+ *   if (trans.to().name === 'error') return;
+ *   const redirect = router.stateService.go('error');
+ *   await viewRendered(router, redirect.transition);
+ *   document.querySelector<HTMLElement>('main h1')?.focus();
+ * });
+ * ```
+ *
  * @example Release a View Transition
  * ```ts
+ * import { viewRendered, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
+ *
  * router.transitionService.onStart({}, (trans) => {
  *   if (!document.startViewTransition) return;
  *   let captured!: () => void;
@@ -99,9 +124,8 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  */
 export async function viewRendered(
   router: UIRouter,
-  transition:
-    | Transition
-    | undefined = router.globals.successfulTransitions.peekTail(),
+  transition: Transition | undefined = router.globals.transition ??
+    router.globals.successfulTransitions.peekTail(),
 ): Promise<void> {
   await transition?.promise.then(noop, noop);
 

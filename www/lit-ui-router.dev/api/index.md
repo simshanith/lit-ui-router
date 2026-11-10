@@ -1,4 +1,4 @@
-# API Overview
+# API
 
 This guide provides a quick overview of the `lit-ui-router` API. For detailed type signatures and complete documentation, see the [API Reference](./reference/). Companion packages have their own home — see [Companion Packages](/packages/).
 

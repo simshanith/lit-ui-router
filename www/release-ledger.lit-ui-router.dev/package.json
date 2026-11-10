@@ -15,8 +15,10 @@
     "types:worker": "wrangler types worker/worker-configuration.d.ts"
   },
   "dependencies": {
+    "@distilled.cloud/cloudflare": "catalog:",
     "@effect/sql-d1": "catalog:",
     "@tools/release-ledger": "catalog:workspace",
+    "cloudflare-effect-tracer": "catalog:",
     "effect": "catalog:",
     "jose": "catalog:"
   },

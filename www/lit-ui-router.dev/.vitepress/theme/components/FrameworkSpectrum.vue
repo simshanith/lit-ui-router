@@ -59,13 +59,13 @@ function stateClass(id: string) {
 <template>
   <figure
     class="framework-spectrum"
-    aria-label="Where the ecosystem lands on the server-support spectrum, level 0 (memory) through level 5 (full-stack); each point is a tool's documented position, detailed by the cards below"
+    aria-label="Where the ecosystem lands on the server-support spectrum, level 0 (memory location) through level 5 (full-stack shared router); each point is a tool's documented position, detailed by the cards below"
   >
     <div class="bands" role="presentation">
       <div v-for="level in levels" :key="level.n" class="band">
         <span class="band-label">
           <span class="band-n">{{ level.n }}</span>
-          {{ level.name }}
+          <span>{{ level.name }}</span>
         </span>
         <span class="band-points">
           <button
@@ -125,16 +125,16 @@ function stateClass(id: string) {
 
 <style scoped>
 .framework-spectrum {
-  margin-block: 20px 8px;
+  margin-block: var(--site-space-5) var(--site-space-2);
 }
 
 .bands {
   position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
-  background: var(--vp-c-bg-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-card);
+  background: var(--site-color-surface-soft);
   overflow: clip;
 }
 
@@ -147,44 +147,36 @@ function stateClass(id: string) {
   width: 45%;
   background: linear-gradient(
     to right,
-    rgb(0 0 0 / 0.05) 0%,
-    rgb(0 0 0 / 0.05) 72%,
+    var(--site-color-ground-shade) 0%,
+    var(--site-color-ground-shade) 72%,
     transparent 100%
   );
   pointer-events: none;
-}
-
-.dark .bands::before {
-  background: linear-gradient(
-    to right,
-    rgb(0 0 0 / 0.22) 0%,
-    rgb(0 0 0 / 0.22) 72%,
-    transparent 100%
-  );
 }
 
 .band {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--site-space-2);
   min-height: 120px;
-  padding-block: 8px;
-  padding-inline: 6px;
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-1-5);
 }
 
 .band + .band {
-  border-inline-start: 1px solid var(--vp-c-divider);
+  border-inline-start: var(--site-border-width) solid var(--site-color-line);
 }
 
 .band-label {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 11px;
   line-height: 1.2;
   color: var(--vp-c-text-2);
-  white-space: nowrap;
+  text-wrap: balance;
 }
 
 .band-n {
@@ -194,17 +186,17 @@ function stateClass(id: string) {
   justify-content: center;
   width: 16px;
   height: 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 50%;
-  font-size: 10px;
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-pill);
+  font-size: var(--site-text-micro);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface);
 }
 
 .band-points {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--site-space-1);
   align-content: flex-start;
 }
 
@@ -216,15 +208,15 @@ function stateClass(id: string) {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 50%;
-  background: var(--vp-c-bg);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-pill);
+  background: var(--site-color-surface);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color 0.15s var(--ease-out),
-    opacity 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .point img {
@@ -234,19 +226,19 @@ function stateClass(id: string) {
   height: auto;
 }
 
-/* this stack's own points wear the brand ring at rest… */
+/* this stack's own points wear the identity ring at rest… */
 .point.featured {
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--site-color-identity-ink);
 }
 
 .point.active {
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
+  border-color: var(--site-color-interaction);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-interaction);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .point.active {
-    transform: translateY(-1px);
+    transform: translateY(calc(-1 * var(--site-border-width)));
   }
 }
 
@@ -257,20 +249,21 @@ function stateClass(id: string) {
 
 /* …and active still reads stronger */
 .point.featured.active {
-  box-shadow: 0 0 0 2px var(--vp-c-brand-1);
+  box-shadow: 0 0 0 calc(2 * var(--site-border-width))
+    var(--site-color-interaction);
 }
 
 .point:focus-visible,
 .legend-entry:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 .ambient {
   display: flex;
-  gap: 6px;
+  gap: var(--site-space-1-5);
   margin-block-start: auto;
-  color: var(--vp-c-text-3);
+  color: var(--site-color-text-inactive);
   opacity: 0.55;
 }
 
@@ -280,18 +273,18 @@ function stateClass(id: string) {
 }
 
 .axis-caption {
-  margin-block-start: 6px;
-  font-size: 11px;
-  color: var(--vp-c-text-2);
+  margin-block-start: var(--site-space-1-5);
+  font-size: var(--site-text-caption);
+  color: var(--site-color-text-muted);
   text-align: end;
 }
 
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--site-space-1-5);
   max-width: 320px;
-  margin-block: 12px 0;
+  margin-block: var(--site-space-3) 0;
   margin-inline: 0;
   padding: 0;
   list-style: none;
@@ -305,37 +298,37 @@ function stateClass(id: string) {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 8px;
-  padding-block: 6px;
-  padding-inline: 10px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  gap: var(--site-space-2);
+  padding-block: var(--site-space-1-5);
+  padding-inline: var(--site-space-3);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
   background: none;
-  font-size: 12.5px;
+  font-size: var(--site-text-xs);
   text-align: start;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    border-color 0.15s var(--ease-out),
-    opacity 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    border-color var(--site-duration-fast) var(--ease-out),
+    opacity var(--site-duration-fast) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 .legend li.featured {
-  margin-block-end: 6px;
+  margin-block-end: var(--site-space-1-5);
 }
 
 .legend-entry.featured {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-text-1);
+  border-color: var(--site-color-identity-ink);
+  background: var(--site-color-surface-soft);
+  color: var(--site-color-text);
 }
 
 .legend-entry.active {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-text-1);
-  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
+  border-color: var(--site-color-interaction);
+  color: var(--site-color-text);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-interaction);
 }
 
 .legend-mark {
@@ -378,17 +371,8 @@ function stateClass(id: string) {
     height: 50%;
     background: linear-gradient(
       to right,
-      rgb(0 0 0 / 0.05) 0%,
-      rgb(0 0 0 / 0.05) 60%,
-      transparent 80%
-    );
-  }
-
-  .dark .bands::before {
-    background: linear-gradient(
-      to right,
-      rgb(0 0 0 / 0.22) 0%,
-      rgb(0 0 0 / 0.22) 60%,
+      var(--site-color-ground-shade) 0%,
+      var(--site-color-ground-shade) 60%,
       transparent 80%
     );
   }
@@ -398,7 +382,7 @@ function stateClass(id: string) {
   }
 
   .band:nth-child(n + 4) {
-    border-block-start: 1px solid var(--vp-c-divider);
+    border-block-start: var(--site-border-width) solid var(--site-color-line);
   }
 
   .band {

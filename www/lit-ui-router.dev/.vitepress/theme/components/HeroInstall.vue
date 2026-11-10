@@ -22,35 +22,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6em;
+  gap: var(--site-space-2);
   block-size: 44px;
-  padding-inline: 18px;
+  padding-inline: var(--site-space-4);
   font-family: var(--vp-font-family-mono);
-  font-size: 15px;
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 22px;
+  font-size: var(--site-text-md);
+  color: var(--site-color-text);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-pill);
   touch-action: manipulation;
-  transition: border-color 0.15s var(--ease-out);
+  transition: border-color var(--site-duration-fast) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-install {
     transition:
-      border-color 0.15s var(--ease-out),
-      transform 0.15s var(--ease-out);
+      border-color var(--site-duration-fast) var(--ease-out),
+      transform var(--site-duration-fast) var(--ease-out);
   }
 }
 
 .hero-install:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 2px;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .hero-install:hover {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 
@@ -64,7 +64,7 @@
 }
 
 .prompt {
-  color: var(--vp-c-text-3);
+  color: var(--site-color-text-muted);
 }
 
 .hero-install code {

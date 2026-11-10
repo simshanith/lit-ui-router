@@ -13,6 +13,7 @@
   "include": [
     "index.ts",
     "test/ledger-stub/index.ts",
+    "test/release-diffs-stub/index.ts",
     "worker-configuration.d.ts"
   ]
 }

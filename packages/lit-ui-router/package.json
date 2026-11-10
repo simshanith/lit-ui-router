@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
@@ -95,6 +95,7 @@
     "@lit/context": "catalog:",
     "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
+    "@testing-library/dom": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/crap": "catalog:workspace",

@@ -15,7 +15,10 @@ matters to `document.querySelector('a')`.
 [`uiSref`](/api/reference/directives/uiSref) drives it, but the `href` needs
 one option: **`assignHref: true`**.
 
-```ts
+```ts check
+import { html } from 'lit';
+import { uiSref } from 'lit-ui-router';
+
 html`<sp-link ${uiSref('components', {}, { assignHref: true })}
   >Components</sp-link
 >`;
@@ -86,7 +89,7 @@ that matches no state.
 `'auto'` as the fix, because it cannot know your element forwards `href`. It
 is gated on both this package's development build and lit's own, and the
 message text is not present in a production bundle at all — see
-[Development & Production Builds](./development-builds). Pass `false` and set
+[Development and Production Builds](./development-builds). Pass `false` and set
 the property yourself if you would rather not see it in development.
 :::
 
@@ -99,7 +102,10 @@ bound as an **attribute part** — it _is_ the `href`, so there is no
 `assignHref` and no rule to pick. The attribute is written wherever it was
 bound:
 
-```ts
+```ts check
+import { html } from 'lit';
+import { srefHref } from 'lit-ui-router';
+
 html`<sp-link href=${srefHref('components')}>Components</sp-link>`;
 ```
 

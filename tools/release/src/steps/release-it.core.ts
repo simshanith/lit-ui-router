@@ -31,24 +31,36 @@ export function tagArgs(dryRun: boolean): string[] {
 }
 
 // only --fix-lockfile unlinks a floor alias pnpm linked while the workspace sat at its version
-const BUMP_LOCKFILE_HOOK =
-  'pnpm install --lockfile-only --fix-lockfile && ' +
-  'git add ":(top)pnpm-lock.yaml"';
+function bumpHook(packageName: string): string {
+  return (
+    'pnpm install --lockfile-only --fix-lockfile && ' +
+    `mise run //tools/release:dependent_floor_gate --package '${packageName}' && ` +
+    'git add ":(top)pnpm-lock.yaml"'
+  );
+}
 
 /**
  * bump-version.yml Bump version step: set the exact computed version,
- * re-resolve pnpm-lock.yaml against it, commit, and push the release
- * branch. `--dry-run` makes release-it log every git/github/npm write (and
+ * re-resolve pnpm-lock.yaml against it, fail when a dependent's floor stops
+ * proving its range (release-dependent-floor-gate.ts), commit, and push the
+ * release branch. `--dry-run` makes release-it log every git/github/npm write (and
  * the hook) instead of performing it.
  */
 // The commit message is passed whole, built from the pinned `changelogArgs`
 // run; release-it's own changelog here is unpinned and unused (no infile).
 export function bumpArgs(options: {
+  packageName: string;
   version: string;
   commitMessage: string;
   dryRun: boolean;
 }): string[] {
-  const { version, commitMessage, dryRun } = options;
+  const { packageName, version, commitMessage, dryRun } = options;
+
+  if (!/^[\w@/.-]+$/.test(packageName)) {
+    throw new Error(
+      `packageName ${JSON.stringify(packageName)} is not a package name`,
+    );
+  }
 
   if (version.trim() === '') throw new Error('version must be non-empty');
 
@@ -63,7 +75,7 @@ export function bumpArgs(options: {
     '--git.commitMessage',
     commitMessage,
     '--hooks.after:bump',
-    BUMP_LOCKFILE_HOOK,
+    bumpHook(packageName),
   ];
 }
 

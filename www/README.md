@@ -9,7 +9,7 @@ own worker config; the pipeline that ships them is shared.
 | [`lit-ui-router.dev/`](./lit-ui-router.dev)                               | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                                                                |
 | [`atlas.lit-ui-router.dev/`](./atlas.lit-ui-router.dev)                   | [atlas.lit-ui-router.dev](https://atlas.lit-ui-router.dev) — the Altitude Atlas, the drawing set that surveys this repo; an example promoted to a site                                           |
 | [`release-ledger.lit-ui-router.dev/`](./release-ledger.lit-ui-router.dev) | [release-ledger.lit-ui-router.dev](https://release-ledger.lit-ui-router.dev) — the release-ledger worker: `POST /claims` takes OIDC claims from GitHub Actions, and its queue folds them into D1 |
-| [`release-diffs.lit-ui-router.dev/`](./release-diffs.lit-ui-router.dev)   | No hostname — the release-diffs worker, reached through the docs worker's service binding and answering 404 until the release diffs land                                                         |
+| [`release-diffs.lit-ui-router.dev/`](./release-diffs.lit-ui-router.dev)   | No hostname — the release-diffs worker: each version pair's `npm diff`, built once by a `ReleaseDiff` Durable Object into R2, for the docs worker's service binding                              |
 
 ## Adding a site
 
@@ -27,8 +27,7 @@ A new site is a package under `www/<domain>/`, named for the domain it serves:
 - **Trigger config.** An entry in
   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
   whose `build_command` and `deploy_command` name the shared
-  [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) — a shim over
-  [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) — and
+  [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) and
   [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts), plus the
   build environment variables that script expects.
 

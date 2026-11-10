@@ -3,7 +3,7 @@ title: Route Guards
 description: Protect states with transition hooks - the requiresAuth pattern
 ---
 
-# Route Guards (Transition Hooks)
+# Route Guards
 
 Every navigation in UI-Router is a
 [Transition](https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html),
@@ -79,7 +79,11 @@ offers the full lifecycle — `onBefore`, `onStart`, `onEnter`, `onRetain`,
 `onExit`, `onFinish`, `onSuccess`, `onError` — and all of them accept the
 same criteria/callback shape.
 
+<DiagramEmbed src="/diagrams/route-guards-transition-lifecycle.svg">
+
 <!--@include: ../public/diagrams/route-guards-transition-lifecycle.svg-->
+
+</DiagramEmbed>
 
 ## Return the user after login
 

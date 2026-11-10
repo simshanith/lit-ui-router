@@ -32,20 +32,12 @@
         "$TURBO_DEFAULT$",
         "src/**/*.ts",
         "vitest.config.ts",
-        "vitest.setup.ts",
-        "cypress.config.ts"
+        "vitest.setup.ts"
       ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
-      // CYPRESS_video: CI disables Cypress recording (build-test.yml);
-      // strict env mode would scrub the override before it reaches Cypress.
       // CI, GITHUB_ACTIONS: they only pick reporters, so the artifact is
       // identical either way — hashing them would wall laptops off from CI's cache.
-      "passThroughEnv": [
-        "WRANGLER_LOG",
-        "CYPRESS_video",
-        "CI",
-        "GITHUB_ACTIONS"
-      ]
+      "passThroughEnv": ["WRANGLER_LOG", "CI", "GITHUB_ACTIONS"]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -145,6 +137,14 @@
       "passThroughEnv": ["CI", "GITHUB_ACTIONS"],
       "outputs": ["coverage-effect3/**"]
     },
+    // The node --test suites resolved against the vite-7 alias (the 7.x line
+    // the vite peer range covers) through a module resolve hook; mirrors
+    // test:mobx6-compat. The vite-7 types ride typecheck:vite7.
+    "test:vite7-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "passThroughEnv": ["CI", "GITHUB_ACTIONS"]
+    },
     // Umbrellas (no script) fan out via dependsOn to the leaves that carry the
     // scripts and cache keys; `with` is only for persistent sidecars. A package
     // override replaces dependsOn wholesale, so it restates these lists.
@@ -157,6 +157,8 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
+        "//#lint:doc-examples",
+        "//#lint:md-examples",
         "//#lint:css",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:shared-source",
@@ -213,17 +215,9 @@
       // turns on github-formatter annotations, which the turbo_summary step re-emits
       "passThroughEnv": ["GITHUB_ACTIONS"]
     },
-    // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
-    // tag registry is global to the run, so cross-package `<ui-view>` usage
-    // only resolves when everything is analyzed together).
+    // @tools/lit-template-lint over every tracked src .ts, each in its own tsconfig project.
     "//#lint:templates": {
-      // Cross-package element types come from the published d.ts, not src:
-      // with dist absent `<ui-view>` resolves to nothing, so a
-      // type-incompatible binding against it goes unreported (the run only
-      // fails on unrelated no-missing-import noise). Root has
-      // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason (check:graph-edges
-      // holds the list to every publishable package with a build:types script).
+      // element types come from each package's d.ts; check:graph-edges holds this list
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
@@ -240,23 +234,92 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
-        // over-approximate: `**/*.ts` would skip files sitting directly in
-        // `src/`, which is exactly the bug these globs used to have
+        // `src/**`, not `src/**/*.ts`, so files directly in src/ count
         "packages/*/src/**",
         "apps/*/src/**",
         "examples/*/src/**",
-        // examples resolve a published lit-ui-router, so a lockfile bump can
-        // change what the analyzer sees without any src change
+        // examples check against the lit-ui-router their lockfile pins
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
-        "tools/compat-guards/src/**",
         "tools/shared/src/**",
-        // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
-        "tsconfig.json",
+        // each file is checked in its own tsconfig project
+        "{packages,apps,examples}/*/tsconfig*.json",
+        "tsconfig*.json",
         "pnpm-workspace.yaml"
       ]
     },
-    // stylelint over .css, .vue <style> and lit `css` blocks;
+    // @tools/doc-example-check over the `ts` blocks in packages/*/src
+    // `@example` tags, each one an in-memory module checked on the 7.1 API.
+    "//#lint:doc-examples": {
+      // examples import the published entry points, which resolve to dist
+      // d.ts; package-qualified as for //#lint:templates (check:graph-edges)
+      "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
+        "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
+        "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
+        "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "packages/*/src/**",
+        // export maps decide what each example's import resolves to
+        "packages/*/package.json",
+        "tools/doc-example-check/src/**",
+        "tools/shared/src/resolution.ts",
+        "tools/bootstrap/src/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
+      ]
+    },
+    // @tools/md-content-mapper over the Markdown `ts` fences flagged `check`,
+    // each one a module tsc checks through the 7.1 content mapper.
+    "//#lint:md-examples": {
+      // fences import the published entry points, which resolve to dist
+      // d.ts; package-qualified as for //#lint:templates (check:graph-edges)
+      "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
+        "lit-ui-router#build:types",
+        "lit-ui-router-effect#build:types",
+        "lit-ui-router-mobx#build:types",
+        "lit-ui-router-signals#build:types",
+        "lit-ui-router-ssr#build:types",
+        "ui-router-effect#build:types",
+        "ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-registry#build:types",
+        "ui-router-server#build:types",
+        "ui-router-signals#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // the Markdown tools/md-content-mapper/docs/tsconfig.json includes
+        "*.md",
+        "{apps,docs}/*.md",
+        "packages/*/*.md",
+        // api/*/ is generated, so only the tracked tree is named
+        "www/lit-ui-router.dev/*.md",
+        "www/lit-ui-router.dev/{guides,packages,tutorial}/**/*.md",
+        "www/lit-ui-router.dev/api/index.md",
+        // export maps decide what each fence's import resolves to
+        "packages/*/package.json",
+        "tools/md-content-mapper/package.json",
+        "tools/md-content-mapper/src/**",
+        "tools/md-content-mapper/docs/**",
+        "tools/shared/src/resolution.ts",
+        "tools/bootstrap/src/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml"
+      ]
+    },
+    // stylelint over .css, .vue <style>, lit `css` blocks and <style> in lit html/svg templates;
     // stylelint.config.mjs maps each to its syntax and owns the ignores.
     "//#lint:css": {
       "inputs": [
@@ -371,7 +434,8 @@
         "typecheck:src",
         "typecheck:lit2",
         "typecheck:mobx6",
-        "typecheck:effect3"
+        "typecheck:effect3",
+        "typecheck:vite7"
       ]
     },
     "typecheck:tsc": {
@@ -413,6 +477,15 @@
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
+    // the vite seams against the vite-7 alias's types; mirrors typecheck:mobx6.
+    "typecheck:vite7": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
       // versions, so gating would break atomic core-API + mobx-adoption PRs
@@ -437,6 +510,7 @@
         "test:lit2-compat",
         "test:mobx6-compat",
         "test:effect3-compat",
+        "test:vite7-compat",
         "lint",
         "typecheck",
         "format:check",
@@ -502,11 +576,12 @@
       // oxfmt skips gitignored files but this glob does not, so the generated
       // trees have to come off by hand (same set as `lint:oxlint` above)
       "inputs": [
-        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue,css}",
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
         "!**/coverage-effect3/**",
+        "!**/test-results/**",
         "!**/.turbo/**",
         "!**/.probe-scratch/**",
         "!.cache/**",
@@ -543,8 +618,8 @@
       "dependsOn": ["^build"],
       "with": ["@www/lit-ui-router.dev#wrangler:dev"],
       // Override of the default in www/lit-ui-router.dev/dev-port.ts; both the
-      // server and the Cypress config read it, so it must reach both.
-      // E2E_BASE_URL points the Cypress config at another origin instead.
+      // server and the Playwright config read it, so it must reach both.
+      // E2E_BASE_URL points the Playwright config at another origin instead.
       "passThroughEnv": ["WWW_DEV_PORT", "E2E_BASE_URL"],
       "cache": false,
       "persistent": true

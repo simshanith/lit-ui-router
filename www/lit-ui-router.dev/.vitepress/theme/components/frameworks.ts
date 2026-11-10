@@ -5,12 +5,12 @@ import { brandMarks, type Brand } from './brands';
 export const activeId = ref<string | null>(null);
 
 export const levels = [
-  { n: 0, name: 'Memory' },
-  { n: 1, name: 'Hash' },
-  { n: 2, name: '200 fallback' },
-  { n: 3, name: 'Static rules' },
-  { n: 4, name: 'Route-aware' },
-  { n: 5, name: 'Full-stack' },
+  { n: 0, name: 'Memory location' },
+  { n: 1, name: 'Hash location' },
+  { n: 2, name: 'Path · platform-default fallback' },
+  { n: 3, name: 'Path · static error rules' },
+  { n: 4, name: 'Path · route-aware server' },
+  { n: 5, name: 'Path · full-stack shared router' },
 ] as const;
 
 export interface SpectrumPoint {

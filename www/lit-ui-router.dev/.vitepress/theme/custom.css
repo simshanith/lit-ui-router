@@ -1,10 +1,6 @@
-:root {
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
-     320px, giving the deep API identifiers room to sit on one line. The
-     ≥1440px width formula derives from this variable too. */
-  --vp-sidebar-width: 320px;
-  --vp-home-hero-image-background-image: url(/images/hero-glow.svg);
+/* A tip's links keep the interaction colour; its code is not a link. */
+.custom-block.tip :not(a) > code {
+  color: var(--vp-code-color);
 }
 
 /* Doc prose wrapping; overflow-wrap breaks only a word that would overflow. */
@@ -20,16 +16,113 @@
   text-wrap: pretty;
 }
 
+/* The theme's one button style; :is() lifts it over .vp-doc a for button-styled links. */
+:is(.site-button, .vp-doc a.site-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--site-space-1-5);
+  min-block-size: var(--example-control-size);
+  padding-block: var(--site-space-1-5);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
+  font-weight: 500;
+  color: var(--site-color-text);
+  text-decoration: none;
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color var(--site-duration-base) var(--ease-out),
+    border-color var(--site-duration-base) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.site-button, .vp-doc a.site-button):hover {
+    background: var(--site-color-surface-hover);
+    border-color: var(--site-color-interaction);
+  }
+}
+
+.site-button:active {
+  transform: scale(0.97);
+}
+
+.site-button:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+}
+
+.site-button:disabled {
+  color: var(--site-color-text-inactive);
+  cursor: not-allowed;
+}
+
+/* UI icons are Lucide through VPIcon, drawn at --site-icon-sm in a fixed box. */
+.site-button-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--example-icon-size);
+  block-size: var(--example-icon-size);
+  font-size: var(--site-icon-sm);
+}
+
+/* === Expand dialogs: an embed is its own <dialog>, inline while closed, filling the window under showModal() (expand-dialog.ts) === */
+.site-expand:not([open]) {
+  display: block;
+}
+
+.site-expand {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.site-expand:modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--example-actions-gap);
+  box-sizing: border-box;
+  inline-size: 100dvw;
+  block-size: 100dvh;
+  margin: 0;
+  padding: var(--site-space-4);
+  background: var(--site-color-surface);
+}
+
+.site-expand::backdrop {
+  background: var(--site-color-surface);
+}
+
+html:has(.site-expand:modal) {
+  overflow: hidden;
+}
+
+/* === end expand dialogs === */
+
 /* Style links in the homepage tagline */
 .VPHero .tagline a {
-  color: var(--vp-c-brand-1);
+  color: var(--site-color-interaction);
   text-decoration: none;
-  transition: color 0.25s var(--ease-out);
+  transition: color var(--site-duration-base) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .VPHero .tagline a:hover {
-    color: var(--vp-c-brand-2);
+    color: var(--site-color-interaction-hover);
     text-decoration: underline;
   }
 }
@@ -49,7 +142,7 @@
   }
 }
 
-.VPHero .tagline a.library>img {
+.VPHero .tagline a.library > img {
   display: inline;
   block-size: 1em;
   inline-size: auto;
@@ -57,16 +150,16 @@
   vertical-align: -0.125em;
 }
 
-.vp-doc .badges a.badge>img {
+.vp-doc .badges a.badge > img {
   display: inline-block;
-  border-radius: 4px;
-  box-shadow: 0px 0px 0px 0px currentColor;
-  transition: box-shadow 0.25s var(--ease-out);
+  border-radius: var(--site-radius-control-inner);
+  box-shadow: 0 0 0 0 currentColor;
+  transition: box-shadow var(--site-duration-base) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .vp-doc .badges a.badge:hover>img {
-    box-shadow: 0px 0px 12px 0px currentColor;
+  .vp-doc .badges a.badge:hover > img {
+    box-shadow: 0 0 var(--site-space-3) 0 currentColor;
   }
 }
 
@@ -74,7 +167,7 @@
 .VPHero.has-image .actions.actions {
   display: grid;
   grid-template-columns: repeat(2, auto);
-  gap: 12px;
+  gap: var(--site-space-3);
   inline-size: fit-content;
   margin-inline: auto;
   margin-block: 0;
@@ -96,18 +189,23 @@
   inline-size: 100%;
 }
 
+/* A sidebar heading that is itself a link has no items, so it takes a collapsed group's spacing. */
+.VPSidebar .VPSidebarItem.level-0.is-link {
+  padding-block-end: 0.625rem;
+}
+
 /* Version badges on package pages */
 .vp-doc .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-block: 16px 24px;
+  gap: var(--site-space-2);
+  margin-block: var(--site-space-4) var(--site-space-6);
 }
 
 /* The atlas thumb on the companion overview: one image per scheme, the
    figure beside the prose from the sidebar breakpoint up. */
 .vp-doc .atlas-thumb {
-  margin-block: 24px;
+  margin-block: var(--site-space-6);
   max-inline-size: 320px;
   margin-inline: auto;
 }
@@ -119,9 +217,9 @@
   aspect-ratio: 3 / 2;
   object-fit: cover;
   object-position: center 8%;
-  border-radius: 8px;
+  border-radius: var(--site-radius-card);
   box-shadow: 0 0 0 0 currentColor;
-  transition: box-shadow 0.25s var(--ease-out);
+  transition: box-shadow var(--site-duration-base) var(--ease-out);
 }
 
 .vp-doc .atlas-thumb .dark-only,
@@ -135,60 +233,48 @@
 
 @media (hover: hover) and (pointer: fine) {
   .vp-doc .atlas-thumb a:hover > img {
-    box-shadow: 0 0 12px 0 currentColor;
+    box-shadow: 0 0 var(--site-space-3) 0 currentColor;
   }
 }
 
 .vp-doc .atlas-thumb figcaption {
-  margin-block-start: 8px;
-  font-size: 14px;
+  margin-block-start: var(--site-space-2);
+  font-size: var(--site-text-sm);
   line-height: 1.5;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
 }
 
 @media (min-width: 960px) {
   .vp-doc .atlas-thumb {
     float: inline-end;
     inline-size: 220px;
-    margin-block: 0 16px;
-    margin-inline: 24px 0;
+    margin-block: 0 var(--site-space-4);
+    margin-inline: var(--site-space-6) 0;
   }
 }
 
 /* Shields badges: pin a legible height so the wide release badge doesn't
    scale down to fit a table column (it wraps to the next line instead). */
-.vp-doc img[src*="img.shields.io"] {
+.vp-doc img[src*='img.shields.io'] {
   height: 20px;
   width: auto;
   max-width: none;
   vertical-align: middle;
 }
 
-.VPHero  .tagline {
-    max-width: 292px;
+.VPHero .tagline {
+  max-width: 292px;
 }
 
 @media (min-width: 960px) {
-  .VPHero  .tagline {
-      max-width: 720px;
+  .VPHero .tagline {
+    max-width: 720px;
   }
-}
-
-/* Brand tokens hold 4.5:1 for white button text and for brand link text. */
-:root:not(.dark) {
-  --vp-c-brand-3: #4a67ca;
-}
-
-.dark {
-  --vp-c-brand-2: #7a8cf0;
-  --vp-button-brand-hover-bg: #4f6ad0;
-  --vp-button-brand-active-bg: #3a5ccc;
-  --vp-home-hero-image-background-image: url(/images/hero-glow-dark.svg);
 }
 
 /* The logo sizes to the hero's width, in feature-card columns; the box is the logo, so no negative margins. */
 .VPHero.has-image .image {
-  margin: 0 0 2rem;
+  margin: 0 0 var(--site-space-8);
   container-type: inline-size;
 }
 
@@ -231,13 +317,13 @@
 
 /* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
 .VPHome.VPHome {
-  margin-block-end: 1.5rem;
+  margin-block-end: var(--site-space-6);
 }
 
 @media (min-width: 768px) {
-    .VPHero.has-image .image-container {
-      --hero-logo-size: calc((100cqi - 1rem) / 2);
-    }
+  .VPHero.has-image .image-container {
+    --hero-logo-size: calc((100cqi - 1rem) / 2);
+  }
 }
 
 /* The blend also makes the logo a stacking context, so it paints over the filtered glow. */
@@ -249,33 +335,119 @@
   mix-blend-mode: plus-lighter;
 }
 
-.box>.VPImage {
-  background-color: var(--vp-c-bg);
-  border-radius: 6px;
+.box > .VPImage {
+  background-color: var(--site-color-surface);
+  border-radius: var(--site-radius-control);
 }
 
 @media (min-width: 960px) {
-    /* The feature cards' three columns and 1rem gutter: text spans two, the logo fills the third. */
-    .VPHero.has-image .container {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      column-gap: 1rem;
-    }
+  /* The feature cards' three columns and 1rem gutter (VPFeatures' rem gutter, not a theme token): text spans two, the logo fills the third. */
+  .VPHero.has-image .container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
 
-    .VPHero.has-image .main.main {
-      grid-column: span 2;
-      inline-size: auto;
-      max-inline-size: none;
-    }
+  .VPHero.has-image .main.main {
+    grid-column: span 2;
+    inline-size: auto;
+    max-inline-size: none;
+  }
 
-    .VPHero.has-image .image {
-      margin: 0;
-    }
+  .VPHero.has-image .image {
+    margin: 0;
+  }
 
-    .VPHero.has-image .image-container {
-      --hero-logo-size: 100cqi;
-      place-items: center end;
-      block-size: 100%;
-    }
+  .VPHero.has-image .image-container {
+    --hero-logo-size: 100cqi;
+    place-items: center end;
+    block-size: 100%;
+  }
 }
 
+/* === HTTP status colors: one fill per status for the chips and diagrams === */
+html {
+  --status-ok: #18794e;
+  --status-redirect: #915930;
+  --status-not-found: #b8272c;
+  --status-as-served: #67676c;
+  --status-ink: #ffffff;
+  --status-ok-ink: var(--status-ink);
+  --status-redirect-ink: var(--status-ink);
+  --status-not-found-ink: var(--status-ink);
+  --status-as-served-ink: var(--status-ink);
+}
+
+html.dark {
+  --status-ok: #3dd68c;
+  --status-redirect: #f9b44e;
+  --status-not-found: #f66f81;
+  --status-as-served: #98989f;
+  --status-ink: #000000;
+}
+
+/* Ink is white on a fill darker than the threshold lightness and black on one lighter. */
+@supports (color: oklch(from red l c h)) {
+  html {
+    --status-ok-ink: oklch(
+      from var(--status-ok) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-redirect-ink: oklch(
+      from var(--status-redirect) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-not-found-ink: oklch(
+      from var(--status-not-found) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+    --status-as-served-ink: oklch(
+      from var(--status-as-served) clamp(0, (0.6 - l) * 1000, 1) 0 0
+    );
+  }
+}
+
+/* <Badge type="status-…"> takes its fill and ink from the table above. */
+.VPBadge.status-ok {
+  --status-fill: var(--status-ok);
+  --status-fill-ink: var(--status-ok-ink);
+}
+
+.VPBadge.status-redirect {
+  --status-fill: var(--status-redirect);
+  --status-fill-ink: var(--status-redirect-ink);
+}
+
+.VPBadge.status-not-found {
+  --status-fill: var(--status-not-found);
+  --status-fill-ink: var(--status-not-found-ink);
+}
+
+.VPBadge.status-as-served {
+  --status-fill: var(--status-as-served);
+  --status-fill-ink: var(--status-as-served-ink);
+}
+
+.VPBadge:is(
+  .status-ok,
+  .status-redirect,
+  .status-not-found,
+  .status-as-served
+) {
+  margin-inline-start: 6px;
+  border-radius: 4px;
+  padding-inline: 6px;
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--status-fill-ink);
+  background-color: var(--status-fill);
+}
+/* === end HTTP status colors === */
+
+/* === Diagrams: the outline box every inlined diagram sits in (docs/DIAGRAMS.md) === */
+.vp-doc svg[role='img'][viewBox^='0 0 720 '] {
+  display: block;
+  box-sizing: border-box;
+  margin-block: 16px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 12px;
+}
+/* === end diagrams === */

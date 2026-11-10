@@ -59,6 +59,8 @@ release_closure = "--filter @tools/release... --filter {packages/*}..."
 [shell_alias]
 # Activated shells only: a task runs in a child process and can't move the caller.
 cd_config_root = 'cd "{{config_root}}"'
+# Every worktree shares the main checkout's .git, so its parent is the main checkout.
+cd_main_checkout = 'cd "$(git rev-parse --path-format=absolute --git-common-dir)/.."'
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
@@ -111,7 +113,6 @@ run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE}'
 
 [tasks.setup.env]
 RELEASE_CLOSURE = "{{vars.release_closure}}"
-CYPRESS_INSTALL_BINARY = "0"
 # npm config for the examples/*
 NPM_CONFIG_AUDIT = "false"
 NPM_CONFIG_FUND = "false"
@@ -260,7 +261,7 @@ usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   # --continue=dependencies-successful: one failing task still lets the rest
   # report and turbo still exits non-zero, while a failed build skips its
   # dependents. Bare --continue means `always`, which runs them against no output.
@@ -287,13 +288,13 @@ usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   # --continue=dependencies-successful: as in ci_graph.
   "mise run pause_commands -- turbo run ci:main --continue=dependencies-successful --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.test_e2e]
-# The e2e umbrella: turbo runs and caches the Cypress suites,
+# The e2e umbrella: turbo runs and caches the Playwright suites,
 # start-server-and-test owns the dev server they share (turbo has no lifecycle
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
@@ -308,8 +309,7 @@ run = [
 # than displace it.
 #
 # WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
-# resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
-# passThroughEnv.
+# resolves. WRANGLER_LOG reaches the suites through the tasks' passThroughEnv.
 #
 # --base-url (E2E_BASE_URL) runs the suites against an already-served origin and
 # starts no server; build_www stays, since the suites' build edge reaches the
@@ -320,7 +320,7 @@ run = [
 # task invoked from a package directory gets a silently narrowed plan.
 depends = ["build_www", "turbo_force_guard"]
 dir = "{{config_root}}"
-description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+description = "Run the Playwright e2e suites via turbo, around one shared dev server"
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
@@ -345,11 +345,11 @@ description = "Upload bundle-analysis stats to Codecov via turbo"
 usage = '''
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
-run = "turbo run codecov:bundle --ui=stream --log-order=stream --output-logs=\"${usage_output_logs?}\""
+run = "turbo run codecov:bundle --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\""
 
 [tasks.bench_pulse]
 # The benches one at a time on a short budget, for the `acceptance (bench)`
-# job; //tools/build_and_test:bench_summary reports the result files and
+# job; //tools/turbo-summary:bench_summary reports the result files and
 # turbo_summary the run, as for ci_graph.
 depends = ["turbo_force_guard"]
 description = "Run the tinybench benches on a short time budget via turbo"
@@ -358,8 +358,22 @@ flag "--time-ms <time_ms>" help="tinybench time budget per bench task, in ms" de
 flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
 '''
 run = [
-  "mise run //tools/build_and_test:mark_session",
+  "mise run //tools/turbo-summary:mark_session",
   "BENCH_TIME_MS=\"${usage_time_ms?}\" mise run pause_commands -- turbo run bench --concurrency=1 --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
+]
+
+[tasks.npm_diff_parity]
+# The release-diffs worker's npm diff against the npm CLI's, byte for byte,
+# for the `acceptance (npm-diff)` job; turbo_summary reports the run, as for
+# ci_graph.
+depends = ["turbo_force_guard"]
+description = "Compare the release-diffs worker's npm diff with the npm CLI's via turbo"
+usage = '''
+flag "--output-logs <mode>" help="turbo task output: full | errors-only | new-only | hash-only | none; CI sets errors-only" default="full" env="TURBO_OUTPUT_LOGS"
+'''
+run = [
+  "mise run //tools/turbo-summary:mark_session",
+  "turbo run test:npm-diff --ui=stream --log-order=stream --summarize --log-file --output-logs=\"${usage_output_logs?}\"",
 ]
 
 [tasks.dts_backtest_matrix]

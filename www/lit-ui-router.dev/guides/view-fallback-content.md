@@ -28,6 +28,10 @@ view, and it is replaced the moment one does.
 The third row is the interesting one: it is the master/detail case, and it
 is the reason fallback content exists at all.
 
+Fallback content swaps in the same update as the routed content it replaces
+or gives way to; only a swap between two class components holds the
+outgoing element ([The routed element](./routed-components#the-routed-element)).
+
 ## How the capture works
 
 On connect, `<ui-view>` takes its light-DOM children as the view's fallback

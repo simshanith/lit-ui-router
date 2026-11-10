@@ -85,10 +85,13 @@ const rendersSame = (
  * @example Composing with classMap and aria-current
  * ```ts
  * import { html, LitElement } from 'lit';
+ * import { property } from 'lit/decorators.js';
  * import { classMap } from 'lit/directives/class-map.js';
  * import { srefHref, SrefStatusController } from 'lit-ui-router';
  *
  * class NavLink extends LitElement {
+ *   @property({ type: Boolean }) locked = false;
+ *
  *   private users = new SrefStatusController(this, { state: 'users' });
  *
  *   render() {
@@ -103,12 +106,22 @@ const rendersSame = (
  *
  * @example With an explicit router instance
  * ```ts
+ * import type { ReactiveControllerHost } from 'lit';
+ * import { SrefStatusController, type UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const host: ReactiveControllerHost & HTMLElement;
+ * declare const router: UIRouterLit;
+ *
  * // status is computed in the constructor, before the host ever connects
  * const status = new SrefStatusController(host, { state: 'users', router });
  * ```
  *
  * @example Re-target from a property setter
  * ```ts
+ * import { LitElement } from 'lit';
+ * import { property } from 'lit/decorators.js';
+ * import { SrefStatusController } from 'lit-ui-router';
+ *
  * class NavLink extends LitElement {
  *   private status = new SrefStatusController(this);
  *
@@ -120,6 +133,10 @@ const rendersSame = (
  *
  * @example Container mode: watch the links in the host's template
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import { classMap } from 'lit/directives/class-map.js';
+ * import { SrefStatusController, srefHref } from 'lit-ui-router';
+ *
  * class NavSection extends LitElement {
  *   // no `state`: every srefHref link below feeds this controller
  *   private section = new SrefStatusController(this);

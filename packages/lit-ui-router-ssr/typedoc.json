@@ -1,6 +1,11 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts", "src/client.ts", "src/testing.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/client.ts",
+    "src/testing.ts",
+    "src/vite.ts"
+  ],
   "out": "../../www/lit-ui-router.dev/api/lit-ui-router-ssr",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
@@ -14,7 +19,9 @@
   "readme": "none",
   "githubPages": false,
   "treatWarningsAsErrors": true,
-  "validation": { "notDocumented": true },
+  "validation": {
+    "notDocumented": true
+  },
   "entryFileName": "index",
   "useCodeBlocks": true,
   "expandObjects": true,
@@ -36,7 +43,8 @@
     "ui-router-server": {
       "MountConfig": "/api/ui-router-server/index/interfaces/MountConfig",
       "ServerRouter": "/api/ui-router-server/index/interfaces/ServerRouter",
-      "Verdict": "/api/ui-router-server/index/type-aliases/Verdict"
+      "Verdict": "/api/ui-router-server/index/type-aliases/Verdict",
+      "PrerenderOptions.preload": "/api/ui-router-server/vite/interfaces/PrerenderOptions#preload"
     }
   },
   "sidebar": {

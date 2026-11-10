@@ -1,0 +1,16 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index cba24f693699f1e8fd651778ada0dfe32306c799..5dd6cf18e359c93666fefc9e0c3dac58cf124cb0 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -836,7 +836,10 @@ var yaml_no_unused_catalog_item_default = createEslintRule({
+ 		}
+ 		for (const [packageName, specifier] of Object.entries(parsed.overrides || {})) if (specifier.startsWith("catalog:")) {
+ 			const catalog = specifier.slice(8) || "default";
+-			entries.delete(`${packageName}:${catalog}`);
++			const delimiterAt = packageName.search(/[^ |@]>/);
++			const target = delimiterAt === -1 ? packageName : packageName.slice(delimiterAt + 2);
++			const versionAt = target.indexOf("@", 1);
++			entries.delete(`${versionAt === -1 ? target : target.slice(0, versionAt)}:${catalog}`);
+ 		}
+ 		if (entries.size === 0) return {};
+ 		const packages = Array.from(getWorkspacePackageJsonPaths(workspace)).filter((x) => existsSync(x)).sort();

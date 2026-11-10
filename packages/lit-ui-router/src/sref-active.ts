@@ -602,15 +602,23 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<
  *
  * @example In place of classMap
  * ```ts
+ * import { html } from 'lit';
+ * import { srefActiveClass } from 'lit-ui-router';
+ *
+ * declare const locked: boolean;
+ *
  * html`<a class=${srefActiveClass({
  *   state: 'users',
  *   activeClasses: ['active'],
- *   classes: { 'nav-link': true, disabled: this.locked },
+ *   classes: { 'nav-link': true, disabled: locked },
  * })}>Users</a>`
  * ```
  *
  * @example Container mode
  * ```ts
+ * import { html } from 'lit';
+ * import { srefActiveClass, srefHref } from 'lit-ui-router';
+ *
  * html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
  *   <a href=${srefHref('users')}>Users</a>
  * </li>`

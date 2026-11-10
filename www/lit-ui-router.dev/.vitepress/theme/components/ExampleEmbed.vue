@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
-import screenfull from 'screenfull';
+import { useTemplateRef } from 'vue';
+import { VPIcon } from 'vitepress/theme';
+import { useExpandDialog } from './expand-dialog';
 
 // Same-origin iframe embed for the tutorial examples served at
 // /examples/<name>/ — no StackBlitz boot, just the built app.
@@ -13,23 +14,9 @@ const props = withDefaults(
   { height: '420px' },
 );
 
-const container = useTemplateRef('container');
+const dialog = useTemplateRef('dialog');
 
-const isFullscreenSupported = ref(false);
-
-const isFullscreen = ref(false);
-
-const iconsLoaded = ref(false);
-
-const toggleFullscreen = () => {
-  if (screenfull.isEnabled && container.value) {
-    screenfull.toggle(container.value);
-  }
-};
-
-const handleFullscreenChange = () => {
-  isFullscreen.value = screenfull.isFullscreen;
-};
+const { expanded, toggle, onClose } = useExpandDialog(dialog);
 
 const iframe = useTemplateRef('iframe');
 
@@ -38,41 +25,14 @@ function restartIframe() {
 
   if (el) el.src += '';
 }
-
-async function loadIcons() {
-  await Promise.all([
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-link-out.js'),
-  ]);
-  iconsLoaded.value = true;
-}
-
-if (!import.meta.env.SSR) {
-  loadIcons();
-}
-
-onMounted(async () => {
-  isFullscreenSupported.value = screenfull.isEnabled;
-
-  if (screenfull.isEnabled) {
-    screenfull.on('change', handleFullscreenChange);
-  }
-});
-
-onUnmounted(() => {
-  if (screenfull.isEnabled) {
-    screenfull.off('change', handleFullscreenChange);
-  }
-});
 </script>
 
 <template>
-  <div
-    ref="container"
-    class="example-embed"
-    :class="{ fullscreen: isFullscreen }"
+  <dialog
+    ref="dialog"
+    class="example-embed site-expand"
+    :aria-label="title"
+    @close="onClose"
   >
     <iframe
       :src="src"
@@ -83,26 +43,45 @@ onUnmounted(() => {
     />
     <div class="example-embed-actions">
       <button
-        v-if="isFullscreenSupported"
         type="button"
-        class="fullscreen-btn btn"
-        @click="toggleFullscreen"
+        class="site-expand-button site-button"
+        @click="toggle"
       >
-        <sp-icon-full-screen-exit v-if="iconsLoaded && isFullscreen" />
-        <sp-icon-full-screen v-if="iconsLoaded && !isFullscreen" />
-        {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
+        <!-- Both render: the build only ships CSS for icons in the server render. -->
+        <span class="site-button-icon">
+          <VPIcon
+            v-show="!expanded"
+            icon="lucide:maximize"
+            aria-hidden="true"
+          />
+          <VPIcon v-show="expanded" icon="lucide:minimize" aria-hidden="true" />
+        </span>
+        {{ expanded ? 'Close' : 'Expand' }}
       </button>
-      <button @click="restartIframe" class="restart-btn btn" type="button">
-        <sp-icon-refresh v-if="iconsLoaded" label="Restart example" />
+      <button
+        @click="restartIframe"
+        class="restart-btn site-button"
+        type="button"
+      >
+        <span class="site-button-icon">
+          <VPIcon icon="lucide:rotate-cw" aria-hidden="true" />
+        </span>
         Restart
       </button>
-      <a :href="src" target="_blank" rel="noopener" class="open-btn btn">
-        <sp-icon-link-out v-if="iconsLoaded" />
+      <a
+        :href="src"
+        target="_blank"
+        rel="noopener"
+        class="open-btn site-button"
+      >
+        <span class="site-button-icon">
+          <VPIcon icon="lucide:external-link" aria-hidden="true" />
+        </span>
         Open in new tab
       </a>
       <slot></slot>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -115,105 +94,31 @@ onUnmounted(() => {
   max-width: 100%;
   height: var(--embed-height, 420px);
   /* Cap tall embeds so small viewports keep the page (svh dodges iOS toolbars). */
-  height: min(var(--embed-height, 420px), calc(100svh - 120px));
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 4px;
+  height: min(var(--embed-height, 420px), var(--example-frame-max-height));
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
   overflow: clip;
-  background: #fff;
+  /* Shows only until the example paints; an example without color-scheme gets the UA's light canvas. */
+  background: var(--site-color-surface);
   margin: auto;
 }
 
-.example-embed:fullscreen,
-.example-embed:-webkit-full-screen {
-  background: var(--vp-c-bg);
-  padding: 16px;
+/* Expanded, the frame flexes into whatever the padding, gap and a wrapped action row leave. */
+.example-embed:modal iframe {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
 }
 
-.example-embed:fullscreen iframe,
-.example-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px);
-  border-radius: 8px;
-  width: 88%;
-}
-
-.example-embed.fullscreen:fullscreen iframe,
-.example-embed.fullscreen:-webkit-full-screen iframe {
-  width: 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .example-embed {
-    transition:
-      padding 0.3s var(--ease-out),
-      width 0.3s var(--ease-out);
-  }
-
-  .example-embed iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
-  }
-
-  .example-embed:fullscreen iframe,
-  .example-embed:-webkit-full-screen iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0s,
-      border-radius 0.3s var(--ease-out);
-  }
-
-  .example-embed.fullscreen:fullscreen iframe,
-  .example-embed.fullscreen:-webkit-full-screen iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
-  }
+.example-embed:modal .example-embed-actions {
+  margin-block-start: 0;
 }
 
 .example-embed-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-block-start: 8px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding-block: 6px;
-  padding-inline: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vp-c-text-1);
-  text-decoration: none;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    background-color 0.2s var(--ease-out),
-    border-color 0.2s var(--ease-out),
-    transform 0.15s var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover {
-    background: var(--vp-c-bg-mute);
-    border-color: var(--vp-c-brand-1);
-  }
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  gap: var(--site-space-3);
+  margin-block-start: var(--example-actions-gap);
 }
 </style>

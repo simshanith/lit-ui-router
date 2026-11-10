@@ -154,9 +154,9 @@ into the local cache without saying so:
   failure, propagates instead as a failure naming the status code.
 
 The `test`, `test:coverage`, `test:engines`, `test:lit2-compat`,
-`test:mobx6-compat` and `test:effect3-compat` tasks hash `CI` in `turbo.json`,
-so their artifacts carry a key no laptop can produce: those always run
-locally, backfill or not.
+`test:mobx6-compat`, `test:effect3-compat` and `test:vite7-compat` tasks hash
+`CI` in `turbo.json`, so their artifacts carry a key no laptop can produce:
+those always run locally, backfill or not.
 
 Without the backfill, a worktree computes everything its branch changed and
 hits the shared cache for the rest, never re-probing the remote.

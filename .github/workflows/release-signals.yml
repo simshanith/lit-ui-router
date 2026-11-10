@@ -3,12 +3,13 @@
 # single "workers-builds (triggers)" (README badges read them all via shields'
 # check-runs endpoint). All three answer "does the outside world still match
 # main?" — npm artifacts, peer ranges, and the Cloudflare deploy pipeline that
-# ships lit-ui-router.dev. One more, "pages-deploy (altitude-atlas)", sits on
-# the www/atlas head instead and asks whether atlas.lit-ui-router.dev serves
-# it. action_required renders orange = a release, a floor-bump, a dashboard
-# apply, or an atlas deploy is owed; neutral renders grey = the check could not
-# reach a verdict. Never a CI failure — both jobs succeed whatever the signals
-# say.
+# ships lit-ui-router.dev. "release-ledger" asks whether the D1 release ledger
+# still matches GitHub's tags and releases and npm. One more,
+# "pages-deploy (altitude-atlas)", sits on the www/atlas head instead and asks
+# whether atlas.lit-ui-router.dev serves it. action_required renders orange =
+# a release, a floor-bump, a dashboard apply, an atlas deploy or a ledger fix
+# is owed; neutral renders grey = the check could not reach a verdict. Never a
+# CI failure — both jobs succeed whatever the signals say.
 name: Release signals
 
 on:
@@ -21,41 +22,23 @@ on:
       - main
   # Secondary sweep: catches dashboard-side edits and npm-side changes (a
   # deprecate, an unpublish) during quiet periods, which no push would ever
-  # surface. Off-peak and off the hour — the top of the hour is GitHub's most
-  # congested cron slot.
+  # surface. Daily, so a release-ledger lag past its hour turns orange within a
+  # day; after the ledger's 06:00 UTC tag sweep, and off the hour — the top of
+  # the hour is GitHub's most congested cron slot.
   schedule:
-    - cron: '17 7 * * 0'
-  # Called by publish-npm.yml after a successful publish: release-it pushes
-  # the bump commit before npm `latest` moves, so the push-triggered run sees
-  # stale drift; the post-publish call flips the badge green. Calls always
-  # run the full package set.
-  workflow_call:
-    secrets:
-      TURBO_TOKEN:
-        # Remote turbo cache; absent = local cache only.
-        required: false
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
-        # Signs/verifies remote artifacts; absent = local cache only.
-        required: false
-      TURBO_API:
-        # Remote cache endpoint; a secret (not a var) so the worker domain stays
-        # out of public logs. Secrets don't auto-propagate into a called
-        # workflow, so the caller must pass it; absent = local cache only.
-        required: false
-      CLOUDFLARE_API_TOKEN:
-        # Read-scoped ("Workers Scripts: Read" for the name -> tag lookup,
-        # "Workers Builds Configuration: Read", and "Pages: Read" for the
-        # atlas deploy), USER-scoped — account-owned tokens don't cover the
-        # Builds triggers API. Absent = both Cloudflare signals report neutral
-        # (grey), never a failure.
-        required: false
-      CLOUDFLARE_ACCOUNT_ID:
-        # A secret, not a var, so it stays out of public logs.
-        required: false
+    - cron: '17 7 * * *'
+  # Dispatched by publish-npm.yml after a successful publish: release-it
+  # pushes the bump commit before npm `latest` moves, so the push-triggered
+  # run sees stale drift; the post-publish run flips the badge green.
   workflow_dispatch:
     inputs:
       packages:
         description: 'Comma-separated published package names to re-check (re-nudge tool: a scoped run creates check runs only for these, so on a head with no prior full run the other badges show nothing until the next push/full run). Empty = all.'
+        required: false
+        default: ''
+        type: string
+      release:
+        description: 'The <name>@<version> just published; the release-ledger check compares its tarball digest with npm. Empty skips that comparison.'
         required: false
         default: ''
         type: string
@@ -65,15 +48,13 @@ env:
   HUSKY: 0
 
 # One refresh at a time, newest wins; every run targets main's current head.
-# Literal group: github.workflow evaluates to the CALLER's name on
-# workflow_call, which would split called refreshes from push refreshes.
 concurrency:
   group: release-signals
   # The scheduled sweep is the one run that must never cancel: a cron firing
-  # mid-publish would kill the post-publish workflow_call whose whole job is
+  # mid-publish would kill the post-publish dispatch whose whole job is
   # flipping the badges green. cancel-in-progress is read off the INCOMING
   # run, so a sweep queues behind whatever holds the group (and re-checks with
-  # fresh data when it starts), while any later push/call run still cancels
+  # fresh data when it starts), while any later push/dispatch run still cancels
   # the queued sweep and does the same work.
   cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
@@ -89,9 +70,8 @@ jobs:
       - name: 'Checkout code'
         uses: actions/checkout@v7
         with:
-          # Always main's head: workflow_call inherits the caller's context
-          # (a tag ref from publish-npm), and the badges query main —
-          # filter=latest supersedes stale same-name runs there.
+          # Always main's head: the badges query main — filter=latest
+          # supersedes stale same-name runs there.
           ref: main
           persist-credentials: false
       - name: Setup mise
@@ -100,12 +80,14 @@ jobs:
           auto_update: true
       - name: Install dependencies
         run: mise run setup --release
+      - name: Mark summary session
+        # Bounds the report below to the published_diff runs.
+        run: mise run //tools/turbo-summary:mark_session
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:
-          # Empty on push, schedule, and workflow_call runs = full set (the
-          # inputs context is null off workflow_dispatch, so this renders as
-          # the empty string the tool already treats as "all").
+          # Empty on push, schedule, and post-publish runs = full set (the
+          # empty string the tool treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -127,6 +109,47 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Upload turbo run summaries
+        # Same fail-open uploads as build-test-run.yml; the report links both.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries-release-signals
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload turbo task logs
+        id: task_logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: turbo-task-logs-release-signals
+          path: |
+            .turbo/turbo-*.log
+            .turbo/logs/*.json
+            apps/*/.turbo/turbo-*.log
+            examples/.turbo/turbo-*.log
+            packages/*/.turbo/turbo-*.log
+            packages/shared/*/.turbo/turbo-*.log
+            tools/*/.turbo/turbo-*.log
+            www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
+            www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Turbo run summary
+        # Reports the published_diff runs; no BUILD_OUTCOME, since that step goes red itself.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/turbo-summary:turbo_summary
+        env:
+          # Presence only: the remote is off by design without a token (Dependabot, forks).
+          TURBO_SUMMARY_TOKEN_SET: ${{ secrets.TURBO_TOKEN != '' }}
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
+          TURBO_LOGS_ARTIFACT_URL: ${{ steps.task_logs.outputs.artifact-url }}
 
   # Separate from npm so a crash there never skips the Cloudflare signals.
   cloudflare:
@@ -136,6 +159,7 @@ jobs:
     permissions:
       checks: write
       contents: read
+      id-token: write # The ledger's read policy verifies this job's OIDC token
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v7
@@ -173,3 +197,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Posts "release-ledger": action_required when the ledger and GitHub or
+      # npm disagree, neutral when a source can't be read. Report only; exits
+      # 0 on every path.
+      - name: Release ledger check run
+        run: mise run //tools/release:ledger_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Empty off the post-publish dispatch, which skips the digest comparison.
+          RELEASE: ${{ inputs.release }}

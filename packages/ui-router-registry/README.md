@@ -81,7 +81,7 @@ A row that collides fails at that line, as a missing `'not the row registered un
 
 `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` each declare an empty `RouteTypes` interface. A type-only import of the matching entry point, next to an augmentation, fills it in:
 
-```typescript
+```typescript check
 import type {} from 'ui-router-registry/signals';
 ```
 
@@ -150,4 +150,4 @@ A template written inline on the state declaration is inferred the same way, so 
 
 ## Dependencies
 
-`@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each needed only by its entry point. Install one copy of this package per app: two copies mean two registries, and the augmentations type only one.
+`@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`, `ui-router-effect` and `ui-router-mobx` are optional peers, each needed only by its entry point. Install one copy of this package per app: two copies mean two registries, and the augmentations type only one.

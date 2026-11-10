@@ -1,0 +1,33 @@
+{
+  "name": "lit-ui-router-example-hellosolarsystem-eleventy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --serve"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.8",
+    "@lit-labs/ssr": "^4.1.0",
+    "@lit-labs/ssr-client": "^1.1.8",
+    "@uirouter/core": "^6.1.2",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.19.1",
+    "lit-ui-router-ssr": "^0.8.1",
+    "ui-router-server": "^0.8.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}

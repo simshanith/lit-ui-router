@@ -11,6 +11,7 @@ export default {
     '**/tmp/**',
     '**/node_modules/**',
     '**/coverage/**',
+    '**/coverage-effect3/**',
     '**/.turbo/**',
     '**/.cache/**',
     '**/.vitest/**',
@@ -19,7 +20,7 @@ export default {
     '**/.cloudflare/**',
     '**/*.d.ts',
     'tools/dts-backtest/.probe-scratch/**',
-    'apps/sample-app-lit-e2e/cypress/**',
+    'apps/sample-app-lit-e2e/test-results/**',
     'www/lit-ui-router.dev/.vitepress/cache/**',
     'www/lit-ui-router.dev/.vitepress/.temp/**',
     'www/lit-ui-router.dev/api/**',
@@ -31,7 +32,7 @@ export default {
   overrides: [
     {
       files: ['**/*.{ts,mts,cts,js,mjs,cjs}'],
-      customSyntax: 'postcss-lit',
+      customSyntax: 'postcss-lit-html',
     },
     {
       files: ['**/*.vue'],

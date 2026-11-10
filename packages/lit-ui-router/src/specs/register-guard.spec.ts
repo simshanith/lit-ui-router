@@ -1,9 +1,8 @@
 // No static register import: the stubs must be defined before the modules evaluate.
 
 // One helper for both stubs; the tag is a parameter so each `it` reads the
-// same. (This also keeps the stub out of lit-analyzer's tag registry, which
-// only matches `customElements.define('<literal>', X)` — incidental now that
-// the analyzer sees ui-view.ts/ui-router.ts, whose real definitions win.)
+// same, and so //#lint:templates, which registers only a literal
+// `customElements.define('<tag>', X)`, never counts a stub as a duplicate.
 function defineStub(tag: string): CustomElementConstructor {
   class Stub extends HTMLElement {}
 

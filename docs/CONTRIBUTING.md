@@ -38,7 +38,7 @@ every later step.
 
 An activated shell also gets the config's `[shell_alias]` entries. `cd_config_root`
 changes to the root of the checkout or worktree you are in, from any directory
-inside it.
+inside it. `cd_main_checkout` changes to the main checkout's root, from any worktree.
 
 An `[env]` assignment overrides the inherited value, and the checked-in config
 evaluates before `config.local.toml`, so a default declared there defeats a
@@ -135,13 +135,36 @@ config keys its Vite cache directory by it; pick a port no script uses so the
 run can't collide with a turbo task. Install the browsers with
 `mise run '//tools/build_and_test:playwright'` if they are missing.
 
+### Testing HTML output
+
+A test of rendered HTML parses it before asserting. Pick the parser by what
+the test checks:
+
+| What the test checks                                                                              | Parse with                                                                                                                                             | Assert with                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What a page means (links, headings, forms, text): release pages, prerendered apps, rendered links | [`parseHtml`](../tools/lit-test-env/README.md#parse-htmlts-what-a-page-means): happy-dom's `DOMParser`, with no global registration                    | `@testing-library/dom` role and accessible-name queries, plus `node:assert` or `expect`. `querySelector` only as a fallback, with a one-line reason. |
+| The format of Lit SSR output (`<!--lit-part-->` markers, declarative shadow roots, child order)   | [`ssr-tree`](../tools/lit-test-env/README.md#ssr-treets-the-format-of-lit-ssr-output): parse5, which keeps comments, template contents and child order | `outlineTree`, `litPart`, `shadowRoot`, `lightChildren` and the lookups                                                                              |
+| Exact bytes (stub passthroughs, generated Markdown)                                               | none                                                                                                                                                   | string equality                                                                                                                                      |
+
+Regexes and substrings over HTML don't belong in the first two rows. CSS is
+parsed with postcss and postcss-html.
+
+Both helpers live in `@tools/lit-test-env`; its
+[README](../tools/lit-test-env/README.md#testing-html-output) lists their API.
+testing-library's types need lib.dom, so a node test that queries a parsed page
+typechecks under its own `tsconfig.dom.json`, as the docs worker's
+[`worker/test`](../www/lit-ui-router.dev/worker/test/tsconfig.dom.json) and
+`ui-router-server`'s
+[`test`](../packages/ui-router-server/test/tsconfig.dom.json) do.
+
 ### Reproducing a CI failure
 
 A `Build and Test` job ends with the `Turbo run summary` step. It reads every
-`--summarize` JSON the job wrote (the ci graph, the docs build, the e2e suites)
-and reports only the tasks that failed. The ci graph and the e2e suites run with
-`--continue=dependencies-successful`, so one red run reports every independent
-failure, and a task whose dependency failed doesn't run. The docs build stops
+`--summarize` JSON the job wrote (the ci graph, the Codecov bundle upload, the
+docs build, the e2e suites) and reports only the tasks that failed. The ci graph
+and the e2e suites run with `--continue=dependencies-successful`, so one red run
+reports every independent failure, and a task whose dependency failed doesn't
+run. The docs build stops
 at the first failure, and turbo's stream also prints `ELIFECYCLE` for every task
 it cancelled. The headline is a run annotation, so `gh run view <run-id>` shows
 it:
@@ -189,7 +212,7 @@ report near the end. Save it to a file and search for `repro:`. Run the `repro:`
 cached. `exact:` is the command turbo ran, from the directory it ran in.
 
 Two workflows run the same jobs: `run` for the turbo graph, `plan`, and one
-`e2e (<suites>)` job per group of Cypress suites: one suite per job on PRs and
+`e2e (<suites>)` job per group of e2e suites: one suite per job on PRs and
 `main`, three on the branch lane unless the `E2E_SUITES_PER_JOB_BRANCH` repo
 variable says otherwise. Both lanes also run `e2e result`, which is green only
 when every group is:
@@ -226,9 +249,9 @@ Where the `repro:` line isn't enough:
   is the only source.
 - `test:e2e:*` tasks need a server. Reproduce one with `mise run test_e2e <suite>`
   ([the suite README](../apps/sample-app-lit-e2e/README.md)). A failed suite
-  uploads `cypress-screenshots-<group>` (each failing test's screenshot) and
-  `wrangler-logs-<group>` (server logs); `cypress-videos-<group>` exists only
-  when the `cypressVideo` dispatch input was set. A failed axe pass uploads
+  uploads `playwright-traces-<group>` (each failing test's screenshot and
+  trace; open a trace with `playwright show-trace`) and `wrangler-logs-<group>`
+  (server logs). A failed axe pass uploads
   `axe-screenshots-a11y` (the page of each scan that found violations) and
   `wrangler-logs-a11y`.
 - The uncapped summaries are the `turbo-run-summaries` artifact:
@@ -325,8 +348,8 @@ Expected on a green run:
 - `actions/checkout`'s `hint:` lines about the default branch name.
 - `GOOGLE_ANALYTICS_TRACKING_ID missing` from the docs build; only the
   production deploy sets it ([www/DEPLOY.md](../www/DEPLOY.md)).
-- Cypress's Chrome connect retries and workerd's `Broken pipe`; the
-  [suite README](../apps/sample-app-lit-e2e/README.md) says when each matters.
+- workerd's `Broken pipe`; the
+  [suite README](../apps/sample-app-lit-e2e/README.md) says when it matters.
 
 A warning that also shows in a recent `main` run predates the change. A
 `neutral` or `action_required` check from

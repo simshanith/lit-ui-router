@@ -108,16 +108,9 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
   /**
    * The url options the router compiles its urls with, applied through
    * {@link url-config!applyUrlConfig | `applyUrlConfig`} before anything else,
-   * so a mount's `config` passes as is. Its `strict` wins over
-   * {@link ServerLocationOptions.strictMode | `strictMode`}.
+   * so a mount's `config` passes as is.
    */
   urlConfig?: RouterUrlConfig;
-  /**
-   * Whether a trailing slash has to match exactly; most static hosts want `false`.
-   *
-   * @deprecated Shorthand for `urlConfig: { strict }`.
-   */
-  strictMode?: boolean;
 }
 
 /**
@@ -129,22 +122,26 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * included — and constructing one here pins that choice. Build the router
  * yourself and hand it over; it comes back at the type it went in as.
  *
- * The url is set before any transition runs, so `router.start()` heads for
- * the state the request asked for. `start()` returns nothing, and the
+ * The url is set before any transition runs, so the router's first sync
+ * (`start()` on a `UIRouterLit`, `urlService.sync()` on a core router) heads
+ * for the state the request asked for. Neither returns anything, and the
  * transition settles asynchronously, resolves included: await it before
  * reading the router. `transitionService.onSuccess` fires when it lands;
- * `stateService.go()` returns the transition promise where `start()` does not.
+ * `stateService.go()` returns the transition promise where those do not.
  *
  * @typeParam T - the router type, returned unchanged
  * @param router - a freshly constructed router, with no location plugin yet
  * @param options - the request's url, the mount's shape, the url shape, and the url config
  * @returns `router`, for chaining
- * @throws if `urlConfig` or `strictMode` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
+ * @throws if `urlConfig` is given and a state with a url, or a `when()` url rule, is already registered; the router is left unchanged
  *
  * @example
  * ```ts
- * import { servicesPlugin, UIRouter } from '@uirouter/core';
+ * import { servicesPlugin, UIRouter, type StateDeclaration } from '@uirouter/core';
  * import { installServerLocation } from 'ui-router-server/location';
+ *
+ * declare const request: Request;
+ * declare const states: StateDeclaration[];
  *
  * const { pathname, search } = new URL(request.url);
  * const router = new UIRouter();
@@ -153,11 +150,12 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  *   url: pathname + search,
  *   urlConfig: { strict: false },
  * });
- * states.forEach((state) => router.stateRegistry.register(state));
+ * // core stamps each registered declaration with $$state, so register a copy per router
+ * states.forEach((state) => router.stateRegistry.register({ ...state }));
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
  * });
- * router.start();
+ * router.urlService.sync();
  * await settled;
  * ```
  */
@@ -168,15 +166,8 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
-  // eslint-disable-next-line typescript/no-deprecated -- the option still honors its shorthand
-  const { strictMode, urlConfig } = options;
-
   // First, so the ordering guard throws before the plugin or url changes.
-  if (urlConfig || strictMode !== undefined)
-    applyUrlConfig(router, {
-      ...urlConfig,
-      strict: urlConfig?.strict ?? strictMode,
-    });
+  if (options.urlConfig) applyUrlConfig(router, options.urlConfig);
 
   router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
 

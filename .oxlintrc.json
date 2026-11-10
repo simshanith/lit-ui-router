@@ -407,21 +407,6 @@
       }
     },
     {
-      "files": ["**/*.cy.js", "**/cypress/**/*.js"],
-      "globals": {
-        "cy": "readonly",
-        "Cypress": "readonly",
-        "describe": "readonly",
-        "it": "readonly",
-        "beforeEach": "readonly",
-        "afterEach": "readonly",
-        "expect": "readonly"
-      },
-      "env": {
-        "browser": true
-      }
-    },
-    {
       "files": ["**/*.spec.ts", "**/src/specs/**"],
       "rules": {
         "lit-ui-router/anchor-is-valid": "off"
@@ -468,17 +453,20 @@
         "tools/ci-logs/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/crap/**/*.test.ts",
+        "tools/doc-example-check/**/*.test.ts",
         "tools/embed-heights/**/*.test.ts",
         "tools/eslint/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/lint-elements/**/*.test.ts",
         "tools/lit-template-lint/**/*.test.ts",
+        "tools/md-content-mapper/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/release-config/**/*.test.ts",
         "tools/release-ledger/**/*.test.ts",
         "tools/repo-checks/**/*.test.ts",
         "tools/shared/**/*.test.ts",
+        "tools/turbo-summary/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
         "apps/sample-app-lit-e2e/scripts/**/*.test.ts",
@@ -486,6 +474,7 @@
         "www/lit-ui-router.dev/worker/test/**/*.test.ts",
         "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts",
         "www/lit-ui-router.dev/scripts/test/**/*.test.ts",
+        "www/release-diffs.lit-ui-router.dev/**/*.test.ts",
         "www/release-ledger.lit-ui-router.dev/**/*.test.ts"
       ],
       "rules": {
@@ -754,7 +743,7 @@
           "warn",
           {
             "allowList": [
-              "^(PACKAGE|PACKAGE_NAME|PACKAGE_DIR|PACKAGE_INPUT|TARBALL|DRY_RUN|INCREMENT|OTHER_INCREMENT|PR_BASE|BRANCH_PREFIX_INPUT)$"
+              "^(PACKAGE|PACKAGE_NAME|PACKAGE_DIR|PACKAGE_INPUT|TARBALL|DRY_RUN|INCREMENT|OTHER_INCREMENT|PR_BASE|BRANCH_PREFIX_INPUT|RELEASE|ACTIONS_ID_TOKEN_REQUEST_URL|ACTIONS_ID_TOKEN_REQUEST_TOKEN)$"
             ]
           }
         ]
@@ -835,29 +824,18 @@
       }
     },
     {
-      "files": ["tools/build_and_test/src/start-xvfb.ts"],
-      "rules": {
-        "turbo/no-undeclared-env-vars": [
-          "warn",
-          {
-            "allowList": ["^XVFB_"]
-          }
-        ]
-      }
-    },
-    {
       "files": [
-        "tools/build_and_test/src/format-diff.ts",
-        "tools/build_and_test/src/mark-summary-session.ts",
-        "tools/build_and_test/src/run-summary.ts",
-        "tools/build_and_test/src/session.ts"
+        "tools/turbo-summary/src/format-diff.ts",
+        "tools/turbo-summary/src/mark-summary-session.ts",
+        "tools/turbo-summary/src/run-summary.ts",
+        "tools/turbo-summary/src/session.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
             "allowList": [
-              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|CYPRESS_SCREENSHOTS_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|TURBO_SUMMARY_TOKEN_SET)$"
+              "^(TURBO_RUNS_DIR|TURBO_SUMMARY_SESSION|TURBO_SUMMARY_ARTIFACT_URL|TURBO_LOGS_ARTIFACT_URL|PLAYWRIGHT_TRACES_ARTIFACT_URL|A11Y_SCREENSHOTS_ARTIFACT_URL|FORMAT_PATCH_ARTIFACT_URL|VITEST_ATTACHMENTS_ARTIFACT_URL|TURBO_SUMMARY_TOKEN_SET)$"
             ]
           }
         ]

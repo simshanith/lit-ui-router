@@ -41,7 +41,7 @@ TypeScript settings the code below needs.
 
 Here's the complete source code for this tutorial. Don't worry if it looks overwhelming - we'll break it down step by step below.
 
-```typescript
+```typescript check
 import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { render } from 'lit';
@@ -125,7 +125,7 @@ Let's break down the code step by step.
 
 ### ES Module Imports
 
-```typescript
+```typescript check
 import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { render } from 'lit';

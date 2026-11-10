@@ -20,9 +20,16 @@ client deployed across every point on the server-support spectrum.
 - [Server-Side Routing](./server-route-matching) — serve routing verdicts
   at the edge with `ui-router-server`: the app shell for real routes, 302
   entry redirects, and real 404s for everything else, across the full
-  server-support spectrum (every level [live on the site](/sample-app)).
-  Routing honesty ships today; content rendering — build-time pre-rendering
-  and server-side rendering — is the roadmap next axis on the same spine
+  server-support spectrum (every level [live on the site](/sample-app)), and
+  [`lit-ui-router-ssr`](/packages/ssr) for prerendering those verdicts to
+  static html at build time
+- [Prerender with Vite](./prerender-with-vite) — one `serverRouterPlugin`
+  option and a prerender script turn `vite build` into one HTML page per
+  route, a `404.html` and a `_redirects` file, decided by the app's own route
+  table
+- [Prerender with Eleventy](./prerender-with-eleventy) — Eleventy writes the
+  pages, the layout and the host rules; `prerender()` decides what each path
+  is and renders it, and the client adopts the served page
 
 ## Transitions & Guards
 
@@ -35,11 +42,14 @@ client deployed across every point on the server-support spectrum.
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
 - [Routed Components](./routed-components) — reading a state's params
-  through a resolve, and code-splitting a route's element with an awaited
-  import or a `lazyLoad` future state
+  through a resolve, code-splitting a route's element with an awaited import
+  or a `lazyLoad` future state, and reaching the element a view rendered
 
 ## Links & Markup
 
+- [Named Views](./named-views) — fill several `<ui-view name="…">` viewports
+  from one state with `views`, and target a view another state created with
+  `name@state`, relative `^` anchors and absolute `!` paths
 - [View Fallback Content](./view-fallback-content) — what a `<ui-view>`
   renders when no routed component is active: the capture rules, the
   master/detail idiom, and what a prerendered shell emits
@@ -51,7 +61,7 @@ client deployed across every point on the server-support spectrum.
 
 ## Builds & Diagnostics
 
-- [Development & Production Builds](./development-builds) — the `development`
+- [Development and Production Builds](./development-builds) — the `development`
   export condition, the warnings the development build carries and the
   production build cannot print, and which packages ship two builds at all
 
@@ -63,8 +73,7 @@ client deployed across every point on the server-support spectrum.
 
 ## Companion Packages
 
-The [MobX bindings](/packages/lit-ui-router-mobx) and the
-[Navigation API location plugin](/packages/navigation-plugin) are optional
-[companion packages](/packages/) — each independently versioned, with its own
-guide and API reference. [`ui-router-server`](/packages/server), the
-server-side routing package, is in development on the same model.
+The [companion packages](/packages/) — Effect, MobX and Signals bindings, the
+Navigation API location plugin, typed state names, server-side routing
+verdicts, static prerendering and ESLint rules — are optional and
+independently versioned, each with its own guide and API reference.

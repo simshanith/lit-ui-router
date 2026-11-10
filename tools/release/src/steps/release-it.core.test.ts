@@ -54,6 +54,7 @@ describe('bumpArgs', () => {
   it('commits and pushes the exact computed version', () => {
     assert.deepEqual(
       bumpArgs({
+        packageName: 'lit-ui-router',
         version: '1.8.0',
         commitMessage: 'Release 1.8.0\n\n* fix: things',
         dryRun: false,
@@ -68,22 +69,46 @@ describe('bumpArgs', () => {
         '--git.commitMessage',
         'Release 1.8.0\n\n* fix: things',
         '--hooks.after:bump',
-        'pnpm install --lockfile-only --fix-lockfile && git add ":(top)pnpm-lock.yaml"',
+        'pnpm install --lockfile-only --fix-lockfile && mise run //tools/release:dependent_floor_gate --package \'lit-ui-router\' && git add ":(top)pnpm-lock.yaml"',
       ],
     );
   });
 
   it('leads with --dry-run, matching the old flag position', () => {
     assert.equal(
-      bumpArgs({ version: '1.8.0', commitMessage: 'x', dryRun: true })[0],
+      bumpArgs({
+        packageName: 'lit-ui-router',
+        version: '1.8.0',
+        commitMessage: 'x',
+        dryRun: true,
+      })[0],
       '--dry-run',
     );
   });
 
   it('rejects a blank version', () => {
     assert.throws(
-      () => bumpArgs({ version: ' ', commitMessage: 'x', dryRun: false }),
+      () =>
+        bumpArgs({
+          packageName: 'lit-ui-router',
+          version: ' ',
+          commitMessage: 'x',
+          dryRun: false,
+        }),
       /version/,
+    );
+  });
+
+  it('rejects a package name the hook would have to quote', () => {
+    assert.throws(
+      () =>
+        bumpArgs({
+          packageName: "x' && rm -rf / #",
+          version: '1.8.0',
+          commitMessage: 'x',
+          dryRun: false,
+        }),
+      /not a package name/,
     );
   });
 });

@@ -111,6 +111,8 @@ onMounted(() => {
           <img
             alt="Open in StackBlitz"
             src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
+            width="162"
+            height="32"
           />
         </a>
       </div>
@@ -162,47 +164,48 @@ onMounted(() => {
 
 <style scoped>
 .live-example {
-  margin-block: 16px;
-  container-type: inline-size;
+  margin-block: var(--site-space-4);
 }
 
 .live-example-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-block-end: 8px;
+  /* Links sit at the end of a shared row and at the start once wrapped. */
+  justify-content: space-between;
+  gap: var(--site-space-3);
+  margin-block-end: var(--site-space-2);
 }
 
 .live-example-tablist {
   display: inline-flex;
-  gap: 4px;
-  padding: 3px;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  gap: var(--site-space-1);
+  padding: var(--site-inset-control);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
 }
 
 .tab {
-  padding-block: 5px;
-  padding-inline: 12px;
-  font-size: 14px;
+  padding-block: var(--site-space-1);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
   font-weight: 500;
-  color: var(--vp-c-text-2);
+  color: var(--site-color-text-muted);
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--site-radius-control-inner);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color 0.2s var(--ease-out),
-    color 0.2s var(--ease-out),
-    transform 0.15s var(--ease-out);
+    background-color var(--site-duration-base) var(--ease-out),
+    color var(--site-duration-base) var(--ease-out),
+    transform var(--site-duration-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .tab:hover {
-    color: var(--vp-c-text-1);
+    color: var(--site-color-text);
   }
 }
 
@@ -211,29 +214,20 @@ onMounted(() => {
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 .tab.active {
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg);
-  box-shadow: 0 0 0 1px var(--vp-c-divider);
+  color: var(--site-color-text);
+  background: var(--site-color-surface);
+  box-shadow: 0 0 0 var(--site-border-width) var(--site-color-line);
 }
 
 .live-example-links {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-inline-start: auto;
-}
-
-/* Below the tabs+links intrinsic width the bar wraps the links onto their own
-   row — align them with the tabs instead of the far edge. */
-@container (max-width: 480px) {
-  .live-example-links {
-    margin-inline-start: 0;
-  }
+  gap: var(--site-space-2);
 }
 
 .open-badge,
@@ -241,44 +235,49 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
   overflow: clip;
-  transition: border-color 0.2s var(--ease-out);
+  transition: border-color var(--site-duration-base) var(--ease-out);
 }
 
 .source-link {
   justify-content: center;
-  inline-size: 38px;
-  block-size: 38px;
-  color: var(--vp-c-text-1);
-  font-size: 20px;
-  background: var(--vp-c-bg-soft);
+  inline-size: var(--example-control-size);
+  block-size: var(--example-control-size);
+  color: var(--site-color-text);
+  font-size: var(--site-icon-sm);
+  background: var(--site-color-surface-soft);
 }
 
 .source-link:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .open-badge:hover,
   .source-link:hover {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 
 .open-badge img {
   display: block;
-  height: 36px;
+  height: calc(var(--example-control-size) - 2 * var(--site-border-width));
+  /* The width/height attributes give the ratio before the badge loads. */
+  width: auto;
   /* .vp-doc gives content imgs 16px vertical margin — kill the gap. */
   margin: 0;
 }
 
-/* Reserve the preview pane's frame height so its iframe loading in doesn't
-   shift the page. */
+/* Reserve the preview pane's frame and action row so its iframe loading in
+   doesn't shift the page. */
 .live-example-panels {
-  min-height: min(var(--embed-height, 420px), calc(100svh - 120px));
+  min-height: calc(
+    min(var(--embed-height, 420px), var(--example-frame-max-height)) +
+      var(--example-actions-gap) + var(--example-control-size)
+  );
 }
 
 /* The StackBlitz pane sizes itself — the editor keeps its own aspect ratio
@@ -289,13 +288,13 @@ onMounted(() => {
 }
 
 .fallback-note {
-  padding-block: 8px;
-  padding-inline: 12px;
-  font-size: 14px;
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
 }
 
 .fallback-note p {

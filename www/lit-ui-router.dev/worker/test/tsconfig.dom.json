@@ -1,0 +1,9 @@
+{
+  // The tests that query a parsed page: testing-library's types need lib.dom.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["releases.test.ts", "releases.workerd.test.ts"],
+  "exclude": []
+}

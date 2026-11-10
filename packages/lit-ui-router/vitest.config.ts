@@ -13,6 +13,7 @@ const browserOnlySpecs = [
   // composed-event retargeting at nested shadow roots, which happy-dom skips
   'src/specs/context.browser.spec.ts',
   'src/specs/sref-active.browser.spec.ts',
+  'src/specs/ui-sref-active.browser.spec.ts',
   'src/specs/sref-status-controller.browser.spec.ts',
   // real custom-element connect ordering, which happy-dom gets wrong for innerHTML
   'src/specs/parser-connect.browser.spec.ts',

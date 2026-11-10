@@ -12,6 +12,12 @@ indicator while the transition runs, a skeleton for data the transition does
 not wait for, and an error view when it fails. [Route Guards](./route-guards)
 covers how hooks are registered and matched.
 
+<DiagramEmbed src="/diagrams/loading-and-error-views-timeline.svg">
+
+<!--@include: ../public/diagrams/loading-and-error-views-timeline.svg-->
+
+</DiagramEmbed>
+
 ## Pending indicator
 
 The view a transition leaves stays mounted while the transition runs: core
@@ -23,12 +29,12 @@ settles, which it does on success and on failure alike. `onFinish` is no end
 signal: it is the last hook before success and never runs once an earlier
 hook or resolve rejects.
 
-```ts
+```ts check
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 
-const DELAY = 150; // ms a transition runs before the indicator shows
-const MIN_SHOWN = 400; // ms the indicator stays once shown
+const PENDING_DELAY_MS = 150; // a transition runs this long before the indicator shows
+const MIN_SHOWN_MS = 400; // the indicator stays at least this long once shown
 
 export function trackPending(router: UIRouterLit, region: HTMLElement): void {
   let latest: Transition | undefined;
@@ -41,6 +47,7 @@ export function trackPending(router: UIRouterLit, region: HTMLElement): void {
     region.removeAttribute('aria-busy');
     clearTimeout(showTimer);
     showTimer = undefined;
+
     if (shownAt === undefined) return;
 
     setTimeout(
@@ -49,18 +56,19 @@ export function trackPending(router: UIRouterLit, region: HTMLElement): void {
         shownAt = undefined;
         region.classList.remove('pending');
       },
-      Math.max(0, shownAt + MIN_SHOWN - Date.now()),
+      Math.max(0, shownAt + MIN_SHOWN_MS - Date.now()),
     );
   };
 
   router.transitionService.onStart({}, (trans) => {
     latest = trans;
     region.setAttribute('aria-busy', 'true');
+
     if (shownAt === undefined && showTimer === undefined) {
       showTimer = setTimeout(() => {
         shownAt = Date.now();
         region.classList.add('pending');
-      }, DELAY);
+      }, PENDING_DELAY_MS);
     }
 
     const done = () => settle(trans);
@@ -76,12 +84,18 @@ region as updating for assistive technology from the moment the transition
 starts. The promise is handled on both sides because a failed transition
 rejects it, and the error is the `onError` hook's to report.
 
+The recipe assumes LAZY resolves, the default. Core fetches an
+[EAGER](https://ui-router.github.io/core/docs/latest/interfaces/_resolve_interface_.resolvepolicy.html#when)
+resolve from its own `onStart` hook, which runs ahead of this one, so the
+indicator only starts once that fetch settles and never shows for it. For
+EAGER resolves, register the same hook with `onBefore`.
+
 Inside a Lit element, a
 [`TransitionController`](/api/reference/controllers/TransitionController)
 observing `onStart` registers the same hook for as long as the element is
 connected, and hands its callback the transition:
 
-```ts
+```ts check
 import type { Transition } from '@uirouter/core';
 import { LitElement, html, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
@@ -176,8 +190,8 @@ class ContactList extends LitElement {
 A template function can hand the promise to lit's
 [`until()`](https://lit.dev/docs/templates/directives/#until) instead:
 `until(resolves.contacts.then(renderList), skeleton)`. The `.then()` builds a
-new promise on every render, so the skeleton shows again each time the view
-re-renders.
+new promise on every render, so each re-render rebuilds the skeleton in the
+DOM; it paints only while the promise is pending.
 
 A rejected NOWAIT resolve does not fail the transition, which has already
 succeeded; the component renders that failure itself, as the task's `error`
@@ -251,7 +265,7 @@ The error view holds the failed
 [`TargetState`](https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html)
 in its `failed` param. Retrying is a new transition to it:
 
-```ts
+```ts check
 import type { TargetState } from '@uirouter/core';
 import { html } from 'lit';
 import type { RoutedLitTemplate } from 'lit-ui-router';
@@ -280,6 +294,7 @@ resolve, so the shell shows the pending view their state's `data` names:
 default. Activity's resolve is NOWAIT, so its view renders at once and fills in
 when the promise settles. Check _Fail requests_ to see the default error state,
 the `account.error` state that `account`'s `data` names for its subtree, and
-Activity's in-place retry with `reload`.
+Activity's in-place retry with `reload`. Check _Fast requests_ to see the
+pending view held for its minimum display time.
 
 <LiveExample name="loading-and-error-views" />

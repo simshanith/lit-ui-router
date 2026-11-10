@@ -17,7 +17,11 @@ import type {
   UIRouter,
 } from '@uirouter/core';
 
-import type { ResponseState, RouteDeclaration } from './index.ts';
+import type {
+  RedirectStatusCode,
+  ResponseState,
+  RouteDeclaration,
+} from './index.ts';
 
 export { dehydrate } from './dehydrate.ts';
 
@@ -58,6 +62,10 @@ export type ResponseHandler<
  *
  * @example
  * ```ts
+ * import type { ResponseHandlers } from 'ui-router-server/ssr';
+ *
+ * const routes = [{ name: 'badge', url: '/badge.svg', response: true }] as const;
+ *
  * const responses = {
  *   badge: ({ resolves }) => new Response(resolves.svg, { headers: { 'Content-Type': 'image/svg+xml' } }),
  * } satisfies ResponseHandlers<(typeof routes)[number], { badge: { svg: string } }>;
@@ -115,8 +123,13 @@ export interface SettleOptions {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { installServerLocation } from 'ui-router-server/location';
  * import { settle } from 'ui-router-server/ssr';
+ *
+ * declare const router: UIRouter;
+ * declare const pages: Map<string, string>;
+ * declare function render(router: UIRouter): string;
  *
  * installServerLocation(router, { urlConfig: { strict: false } });
  *
@@ -220,4 +233,67 @@ export const settle = (
       ),
     );
   });
+};
+
+/** Where a redirected transition landed, as {@link redirectedTo | `redirectedTo`} reports it. */
+export interface SettledRedirect {
+  /** The url it landed on, relative to the mount, query included. */
+  url: string;
+  /** The redirecting state's `redirectStatusCode`, `302` when it declares none. */
+  status: RedirectStatusCode;
+}
+
+/**
+ * Reports where `transition` was redirected to, so a host answers the
+ * request with a redirect instead of the page it landed on. A transition is
+ * redirected when a `redirectTo`, data or function, or a hook returning a
+ * target state moved it, a change of params alone included. The status is
+ * the `redirectStatusCode` of the state the redirect chain started from, the
+ * state the url matched.
+ *
+ * A url rule that rewrites the url (`when('/old', '/new')`) starts a fresh
+ * transition rather than redirecting one, so it reports nothing: the
+ * verdict answers a mount's pattern rules before render. A redirect with
+ * `location: false` leaves the url where it was and reports nothing either.
+ *
+ * Call it with the transition `settle` resolved. On a router that serves
+ * more than one path, `settle` on the path the router already stands on
+ * resolves with the transition that brought it there, which may be an
+ * earlier path's redirect.
+ *
+ * @param router - the router `transition` ran on, read for the url it landed on
+ * @param transition - the transition `settle` resolved with
+ * @returns the landed url and status, or `undefined` when nothing redirected it
+ *
+ * @example
+ * ```ts
+ * import type { UIRouter } from '@uirouter/core';
+ * import { redirectedTo, settle } from 'ui-router-server/ssr';
+ *
+ * // `router` serves the mount at /releases; `subpath` is the request's path within it.
+ * async function serveRedirect(router: UIRouter, subpath: string) {
+ *   const redirect = redirectedTo(router, await settle(router, subpath));
+ *
+ *   if (redirect)
+ *     return new Response(null, {
+ *       status: redirect.status,
+ *       headers: { Location: `/releases${redirect.url}` },
+ *     });
+ * }
+ * ```
+ */
+export const redirectedTo = (
+  router: UIRouter,
+  transition: Transition,
+): SettledRedirect | undefined => {
+  if (
+    transition.redirectedFrom() === null ||
+    transition.options().location === false
+  )
+    return undefined;
+
+  return {
+    url: router.urlService.url(),
+    status: transition.originalTransition().to().redirectStatusCode ?? 302,
+  };
 };

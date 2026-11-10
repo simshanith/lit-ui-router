@@ -6,6 +6,8 @@ design is [#1424](https://github.com/simshanith/lit-ui-router/issues/1424) and
 [#1430](https://github.com/simshanith/lit-ui-router/issues/1430); the model it
 stores, its regions and the fold, is
 [`@tools/release-ledger`](../../tools/release-ledger/README.md).
+[How this site runs](https://lit-ui-router.dev/about-this-site#the-release-ledger)
+draws the worker, its queue and its readers.
 
 - [`migrations/`](./migrations): the D1 schema. A `versions` row stores facts,
   never a state; the `version_states` view derives each region's state and an
@@ -26,6 +28,13 @@ stores, its regions and the fold, is
   nothing to D1. `repair` is refused here. `publish-npm.yml`'s `publish_npm`
   job posts here in its last step, through the
   [`ledger_claim`](../../.config/mise/tasks/ledger_claim) mise task.
+- **`GET /ledger`** ([`src/read.ts`](./src/read.ts)) answers every `versions`
+  row with its derived states and conflicts, and every `dist_tags` row,
+  `Cache-Control: no-store`. It takes an OIDC id-token for the `OIDC_READ_*`
+  policy: its own audience, the `release-signals.yml` workflow, the same
+  repository pins, and no environment. The two policies share no audience or
+  workflow, so a read token can't post claims and a publish token can't read.
+  `release-signals.yml`'s `release-ledger` check reads here.
 - **The queue consumer** ([`src/consume.ts`](./src/consume.ts)) is the only D1
   writer. Per claim, it observes the tag, npm and GitHub, taking a 404 as the
   source reporting the fact absent, folds the observation through
@@ -37,6 +46,9 @@ stores, its regions and the fold, is
   the redelivery delay instead ([`src/observe.ts`](./src/observe.ts)).
   Redeliveries back off exponentially with jitter.
   A 404 for the package's dist-tags leaves the recorded dist-tags untouched.
+  npm can lag a publish, so a publish run's claim that npm serves no version
+  for, or whose dist-tags name no tag for its version, is redelivered, up to
+  `PUBLISH_READS` deliveries, before it is recorded as read.
   A message that is not a claim is recorded `undecodable` without retries. The
   dead-letter queue's consumer records a claim whose retries ran out as
   `exhausted`, unless its message already has a row.
@@ -72,7 +84,8 @@ claim: it builds every claim's origin from the verified OIDC token.
 ## Local development
 
 `/claims` skips token verification only when `LEDGER_DEV_SKIP_OIDC` is `true`
-and `OIDC_AUDIENCE` is unset or empty. With an audience set, the flag is ignored
+and `OIDC_AUDIENCE` is unset or empty; `/ledger` does the same with
+`OIDC_READ_AUDIENCE`. With an audience set, the flag is ignored
 and the token is verified. `wrangler dev` merges `.dev.vars` over the `vars` in
 `wrangler.jsonc`, which set the audience, so a local `.dev.vars` blanks it:
 

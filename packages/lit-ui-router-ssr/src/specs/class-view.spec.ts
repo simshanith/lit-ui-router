@@ -7,12 +7,12 @@ import '../register.js';
 
 import { hydrateRoot } from '../client.js';
 import type { AdoptOutcome } from '../client.js';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { boundClicks, makeClassRouter } from './class-fixture.js';
 import type {
   BoundCard,
-  LightCard,
+  LightClassCard,
   RoutedCard,
   StickyCard,
 } from './class-fixture.js';
@@ -146,7 +146,7 @@ describe('a prerendered routed LitElement class', () => {
 
   it('keeps a light-DOM element the server wrote bare, and renders it cold into its light DOM', async () => {
     const { container } = serve(await drawClass('/light'));
-    const served = container.querySelector<LightCard>('light-card')!;
+    const served = container.querySelector<LightClassCard>('light-class-card')!;
 
     const { outcomes, view } = await bootClass(container, '/light');
     await served.updateComplete;

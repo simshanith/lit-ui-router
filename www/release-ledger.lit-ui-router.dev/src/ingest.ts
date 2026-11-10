@@ -9,13 +9,12 @@ import {
   type LedgerQueue,
   MAINTAINER_ACTIONS,
 } from './claim.ts';
+import { bearerOf, readClaims, text, unauthorized } from './auth.ts';
 import {
   ForbiddenClaim,
   InvalidToken,
   type OidcPolicy,
   forbiddenReason,
-  unverifiedClaims,
-  verifyToken,
 } from './oidc.ts';
 
 export interface IngestEnv {
@@ -34,17 +33,6 @@ class BadRequest extends Schema.TaggedError<BadRequest>()('BadRequest', {
   reason: Schema.String,
 }) {}
 
-class Misconfigured extends Schema.TaggedError<Misconfigured>()(
-  'Misconfigured',
-  { reason: Schema.String },
-) {}
-
-const text = (status: number, body: string): Response =>
-  new Response(body, {
-    status,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
-
 const decodeBody = Schema.decodeUnknownEffect(Schema.fromJsonString(ClaimBody));
 
 const policyOf = (env: IngestEnv): Omit<OidcPolicy, 'audience'> => ({
@@ -54,49 +42,6 @@ const policyOf = (env: IngestEnv): Omit<OidcPolicy, 'audience'> => ({
   workflows: env.OIDC_WORKFLOWS,
   environment: env.OIDC_ENVIRONMENT,
 });
-
-function bearerOf(request: Request): string | undefined {
-  const header = request.headers.get('Authorization') ?? '';
-  const match = /^Bearer (\S+)$/.exec(header);
-
-  return match?.[1];
-}
-
-const readClaims = (token: string, env: IngestEnv, keys?: JWTVerifyGetKey) =>
-  Effect.gen(function* () {
-    const audience = env.OIDC_AUDIENCE ?? '';
-    const skip = env.LEDGER_DEV_SKIP_OIDC === 'true';
-
-    if (audience === '' && skip) {
-      yield* Effect.logWarning('LEDGER_DEV_SKIP_OIDC is set: token unverified');
-
-      return yield* Effect.try({
-        try: () => unverifiedClaims(token),
-        catch: (cause) =>
-          cause instanceof InvalidToken
-            ? cause
-            : new InvalidToken({ reason: 'unverifiable token' }),
-      });
-    }
-
-    if (audience === '') {
-      return yield* new Misconfigured({ reason: 'OIDC_AUDIENCE is unset' });
-    }
-
-    if (skip) {
-      yield* Effect.logWarning(
-        'LEDGER_DEV_SKIP_OIDC is ignored while OIDC_AUDIENCE is set',
-      );
-    }
-
-    return yield* Effect.tryPromise({
-      try: () => verifyToken(token, audience, keys),
-      catch: (cause) =>
-        cause instanceof InvalidToken
-          ? cause
-          : new InvalidToken({ reason: 'unverifiable token' }),
-    });
-  });
 
 const readBody = (request: Request) =>
   Effect.gen(function* () {
@@ -118,7 +63,16 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       return yield* new InvalidToken({ reason: 'no bearer token' });
     }
 
-    const claims = yield* readClaims(token, env, keys);
+    const claims = yield* readClaims(
+      token,
+      {
+        variable: 'OIDC_AUDIENCE',
+        audience: env.OIDC_AUDIENCE,
+        devSkip: env.LEDGER_DEV_SKIP_OIDC,
+      },
+      keys,
+    ).pipe(Effect.withSpan('ledger.verify-token'));
+
     const body = yield* readBody(request);
 
     if (body.action !== undefined && body.action !== 'observe') {
@@ -149,23 +103,27 @@ const enqueue = (request: Request, env: IngestEnv, keys?: JWTVerifyGetKey) =>
       },
     };
 
+    yield* Effect.annotateCurrentSpan({
+      'ledger.package': claim.name,
+      'ledger.version': claim.version,
+    });
     yield* Effect.promise(() => env.LEDGER_QUEUE.send(claim));
 
     return text(202, 'accepted');
   });
 
 /** Answers one request; `keys` replaces GitHub's JWKS in tests. */
-export const ingest = (
+export const respond = (
   request: Request,
   env: IngestEnv,
   keys?: JWTVerifyGetKey,
-): Promise<Response> => {
+): Effect.Effect<Response> => {
   const { pathname } = new URL(request.url);
 
-  if (pathname !== '/claims') return Promise.resolve(text(404, 'not found'));
+  if (pathname !== '/claims') return Effect.succeed(text(404, 'not found'));
 
   if (request.method !== 'POST') {
-    return Promise.resolve(
+    return Effect.succeed(
       new Response('method not allowed', {
         status: 405,
         headers: { Allow: 'POST' },
@@ -173,18 +131,22 @@ export const ingest = (
     );
   }
 
-  return Effect.runPromise(
-    enqueue(request, env, keys).pipe(
-      Effect.catchTags({
-        InvalidToken: (error) => Effect.succeed(text(401, error.reason)),
-        ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
-        BadRequest: (error) => Effect.succeed(text(400, error.reason)),
-        Misconfigured: (error) =>
-          Effect.as(
-            Effect.logError(error.reason),
-            text(500, 'the ledger is misconfigured'),
-          ),
-      }),
-    ),
+  return enqueue(request, env, keys).pipe(
+    Effect.catchTags({
+      InvalidToken: (error) => Effect.succeed(unauthorized(error.reason)),
+      ForbiddenClaim: (error) => Effect.succeed(text(403, error.reason)),
+      BadRequest: (error) => Effect.succeed(text(400, error.reason)),
+      Misconfigured: (error) =>
+        Effect.as(
+          Effect.logError(error.reason),
+          text(500, 'the ledger is misconfigured'),
+        ),
+    }),
   );
 };
+
+export const ingest = (
+  request: Request,
+  env: IngestEnv,
+  keys?: JWTVerifyGetKey,
+): Promise<Response> => Effect.runPromise(respond(request, env, keys));

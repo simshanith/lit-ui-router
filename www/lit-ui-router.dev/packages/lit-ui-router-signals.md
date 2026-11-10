@@ -1,5 +1,5 @@
 ---
-title: Signals Bindings
+title: lit-ui-router-signals
 description: Watcher-based Lit controllers over TC39 Signals of the route with lit-ui-router-signals
 ---
 
@@ -36,7 +36,7 @@ dependencies, and `signal-polyfill` is a peer of `ui-router-signals`.
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { RouterSignalController } from 'lit-ui-router-signals';
 
@@ -54,7 +54,7 @@ class AppNav extends LitElement {
 
 No router configuration is required: the controller discovers the router from
 the enclosing `<ui-router>` element when the host connects, and
-`RouterSignals.for` attaches its single transition hook on first use.
+`RouterSignals.for` attaches its transition hooks on first use.
 
 ## The pieces
 
@@ -102,6 +102,10 @@ behaviorally identical to the <a href="/app" target="_self">vanilla sample app</
 <a href="/app-effect" target="_self">Effect sample app</a>, so the
 [four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the Signals idiom changes.
+
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-signals" />
 
 ## Further reading
 

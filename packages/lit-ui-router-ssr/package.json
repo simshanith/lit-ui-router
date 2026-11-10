@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {
@@ -69,6 +69,14 @@
       "deno": "./dist/testing.js",
       "node": "./dist/development/testing.js",
       "default": "./dist/testing.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "development": "./dist/development/vite.js",
+      "production": "./dist/vite.js",
+      "deno": "./dist/vite.js",
+      "node": "./dist/development/vite.js",
+      "default": "./dist/vite.js"
     }
   },
   "scripts": {
@@ -100,6 +108,7 @@
     "@oxc-project/runtime-floor": "catalog:oxc-compat",
     "@release-it/conventional-changelog": "catalog:",
     "@repo/dev-gate": "catalog:workspace",
+    "@testing-library/dom": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/crap": "catalog:workspace",
@@ -126,6 +135,7 @@
     "typescript-7": "catalog:",
     "ui-router-server": "catalog:workspace",
     "ui-router-server-floor": "catalog:peerFloorSsr",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
@@ -179,6 +189,19 @@
         "lit",
         "lit-ui-router",
         "ui-router-server",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./vite": {
+      "free": [
+        "@lit-labs/ssr",
+        "@lit-labs/ssr-client",
+        "@uirouter/core",
+        "lit",
+        "lit-ui-router",
         "hono",
         "vite",
         "node:fs",

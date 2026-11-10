@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // Gate for the `--development` emit split: the dev-only warning messages a
 // package declares in dev-warnings.json must ship in dist/development/*.js and
-// must NOT ship in dist/*.js, and only the graph of a package.json#imports
+// must NOT ship in dist/*.js, no dist/*.js bare import may lack its dev twin's, and only the graph of a package.json#imports
 // `node` target may mention `process`. Reads the built output, so it runs after build:js.
 // Usage (from the package dir): oxc-emit-check-dev-split
 import { existsSync, globSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
 import {
   findDevSplitViolations,
+  findFoldedBareImports,
   findProcessReads,
   formatDevSplitReport,
   type ImportsMap,
@@ -21,10 +22,16 @@ import { DEV_OUT, OUT } from './shared.ts';
 
 const CONFIG = 'dev-warnings.json';
 
-const read = (dir: string): string =>
-  globSync(join(dir, '*.js'))
-    .map((file) => readFileSync(file, 'utf8'))
-    .join('\n');
+const byName = (dir: string): Map<string, string> =>
+  new Map(
+    globSync(join(dir, '*.js')).map((file) => [
+      basename(file),
+      readFileSync(file, 'utf8'),
+    ]),
+  );
+
+const read = (files: ReadonlyMap<string, string>): string =>
+  [...files.values()].join('\n');
 
 const main = (): void => {
   if (!existsSync(CONFIG)) {
@@ -51,7 +58,9 @@ const main = (): void => {
   };
 
   // dist/*.js is non-recursive, so the dist/development/ emit is not double-read
-  const production = read(OUT);
+  const productionFiles = byName(OUT);
+  const developmentFiles = byName(DEV_OUT);
+  const production = read(productionFiles);
 
   if (!production) {
     console.error(
@@ -85,8 +94,9 @@ const main = (): void => {
         prefix: messagePrefix(name),
         devOnly,
         production,
-        development: read(DEV_OUT),
+        development: read(developmentFiles),
       }),
+      ...findFoldedBareImports(productionFiles, developmentFiles),
       ...findProcessReads(emitted, nodeImportRoots(imports, [OUT, DEV_OUT])),
     ],
     devOnly.length,

@@ -25,6 +25,9 @@
       "ui-router-server/ssr": [
         "./node_modules/ui-router-server-floor/dist/ssr.d.ts"
       ],
+      "ui-router-server/vite": [
+        "./node_modules/ui-router-server-floor/dist/vite.d.ts"
+      ],
       "ui-router-server/ssr/client": [
         "./node_modules/ui-router-server-floor/dist/ssr-client.d.ts"
       ],

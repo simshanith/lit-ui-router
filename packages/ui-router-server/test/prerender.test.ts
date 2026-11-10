@@ -3,11 +3,17 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
+import { runInNewContext } from 'node:vm';
 import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
-import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
-import { prerender } from '../src/prerender.ts';
+import type {
+  MountConfig,
+  ServerRouter,
+  TrailingSlashPolicy,
+  Verdict,
+} from '../src/index.ts';
+import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
 import type {
   FileWriter,
   PrerenderOptions,
@@ -122,21 +128,127 @@ describe('prerender', () => {
     );
   });
 
-  it('writes one spelling under exact, and hands lines to a rules function', async () => {
+  it('hands lines to a rules function and writes no rules file', async () => {
     let received: RedirectLine[] = [];
 
     const { files, result } = await run({
       paths: ['/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
       rules: (lines) => {
         received = lines;
       },
     });
 
-    assert.equal(result.rules.length, 1);
+    assert.equal(result.rules.length, 2);
     assert.deepEqual(received, result.rules);
     assert.equal(files.has('dist/_redirects'), false);
+  });
+
+  describe("the mount's trailing-slash policy", () => {
+    const respelling = (trailingSlash: TrailingSlashPolicy) =>
+      ({
+        ...mounts,
+        '/app': {
+          ...appMount,
+          routes: [
+            ...appMount.routes,
+            { name: 'badge', url: '/badge.svg', response: true },
+          ],
+          config: { strict: false, trailingSlash },
+        },
+      }) satisfies Record<string, MountConfig>;
+
+    const badge = () => new Response('<svg/>', { status: 200 });
+
+    it("writes a 308 from a page's other spelling under 'always'", async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always' }),
+        paths: ['/app/welcome/', '/app/legacy'],
+        notFound: false,
+      });
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/welcome/index.html', 'dist/_redirects'],
+      );
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+        { from: '/app/legacy', to: '/app/welcome/', status: 302 },
+        { from: '/app/legacy/', to: '/app/welcome/', status: 302 },
+      ]);
+    });
+
+    it("writes a 308 from a page's other spelling under 'never'", async (t) => {
+      const warn = silenceWarn(t);
+
+      const { result } = await run({
+        mounts: respelling({ pages: 'never' }),
+        paths: ['/app/welcome'],
+        notFound: false,
+      });
+
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome/', to: '/app/welcome', status: 308 },
+      ]);
+      assert.equal(warn.mock.callCount(), 0);
+    });
+
+    it('respells a response state by its own policy, not the pages one', async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always', responses: 'never' }),
+        paths: ['/app/badge.svg'],
+        notFound: false,
+        respond: badge,
+      });
+
+      assert.equal(files.get('dist/badge.svg'), '<svg/>');
+      assert.deepEqual(result.rules, [
+        { from: '/app/badge.svg/', to: '/app/badge.svg', status: 308 },
+      ]);
+    });
+
+    it('writes one line for a listed other spelling, never a loop', async () => {
+      const { files, result } = await run({
+        mounts: respelling({ pages: 'always' }),
+        paths: ['/app/welcome', '/app/welcome/'],
+        notFound: false,
+      });
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/welcome/index.html', 'dist/_redirects'],
+      );
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      ]);
+      assert.equal(result.tally.redirect, 1);
+    });
+
+    it("writes no line from either spelling under 'as-requested'", async () => {
+      const { result } = await run({
+        mounts: respelling({ responses: 'as-requested' }),
+        paths: ['/app/welcome', '/app/badge.svg'],
+        notFound: false,
+        respond: badge,
+      });
+
+      assert.deepEqual(result.rules, []);
+    });
+
+    it('reads the policy from a compiled resolver', async () => {
+      const { result } = await run({
+        mounts: undefined,
+        resolver: createServerRouter({
+          mounts: respelling({ pages: 'always' }),
+        }),
+        paths: ['/app/welcome/'],
+        notFound: false,
+      });
+
+      assert.deepEqual(result.rules, [
+        { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      ]);
+    });
   });
 
   it('counts and warns on an unclaimed path, emitting nothing', async (t) => {
@@ -301,6 +413,37 @@ describe('prerender', () => {
     });
   });
 
+  it('writes a render that answers a redirect as a rules line and no page, counted as a redirect', async () => {
+    const { files, result } = await run({
+      paths: ['/', '/sheet/7B'],
+      notFound: false,
+      render: (_verdict, { path }) =>
+        path === '/sheet/7B' ? { location: '/sheet/7', status: 308 } : '<p/>',
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/index.html', 'dist/_redirects']);
+    assert.equal(
+      files.get('dist/_redirects'),
+      '/sheet/7B /sheet/7 308\n/sheet/7B/ /sheet/7 308\n',
+    );
+    assert.deepEqual(
+      result.pages.map((page) => page.path),
+      ['/'],
+    );
+    assert.equal(result.tally.shell, 1);
+    assert.equal(result.tally.redirect, 1);
+  });
+
+  it('throws when the 404 document’s render answers a redirect', async () => {
+    await assert.rejects(
+      run({
+        paths: [],
+        render: () => ({ location: '/', status: 302 }),
+      }),
+      /the 404 document's render for '\/__ui-router-server-probe__' answered a redirect/,
+    );
+  });
+
   it('throws for a verdict kind it does not know instead of counting it', async () => {
     const kind: string = 'forbidden';
 
@@ -404,6 +547,371 @@ describe('prerender', () => {
     assert.match(
       await readFile(path.join(outDir, '_redirects'), 'utf8'),
       /^\/app\/legacy \/app\/welcome 302$/m,
+    );
+  });
+});
+
+describe('redirectPages', () => {
+  // Runs a redirect page's script against a request url; answers where location.replace went.
+  const replaceTarget = (page: string, href: string): string => {
+    const script = /<script>([\s\S]*)<\/script>/.exec(page)?.[1] ?? '';
+    const url = new URL(href);
+    let replaced = '';
+
+    runInNewContext(script, {
+      URL,
+      location: {
+        href,
+        search: url.search,
+        hash: url.hash,
+        replace: (to: string) => {
+          replaced = to;
+        },
+      },
+    });
+
+    return replaced;
+  };
+
+  it('writes one page per redirect, shared by both spellings, and no rules file', async () => {
+    const { files, result } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages(),
+    });
+
+    assert.equal(result.rules.length, 2);
+    assert.deepEqual([...files.keys()], ['dist/app/legacy/index.html']);
+    const page = files.get('dist/app/legacy/index.html') ?? '';
+
+    assert.match(
+      page,
+      /<meta http-equiv="refresh" content="0; url=\/app\/welcome">/,
+    );
+    assert.match(page, /<link rel="canonical" href="\/app\/welcome">/);
+    assert.match(page, /<meta name="robots" content="noindex">/);
+    assert.match(page, /<a href="\/app\/welcome">/);
+  });
+
+  it('carries the query and fragment into a target that has none', async () => {
+    const { files } = await run({
+      paths: [],
+      notFound: false,
+      extraRules: [
+        { from: '/old', to: '/new', status: 301 },
+        { from: '/kept', to: '/new?tab=a#top', status: 301 },
+      ],
+      rules: redirectPages(),
+    });
+
+    assert.equal(
+      replaceTarget(
+        files.get('dist/old/index.html') ?? '',
+        'https://example.com/old/?q=1#x',
+      ),
+      'https://example.com/new?q=1#x',
+    );
+    assert.equal(
+      replaceTarget(
+        files.get('dist/kept/index.html') ?? '',
+        'https://example.com/kept?q=1#x',
+      ),
+      'https://example.com/new?tab=a#top',
+    );
+  });
+
+  it('escapes the target in markup and script', async () => {
+    const to = 'https://example.com/a?x="</script><b>"&y=\'1\'';
+
+    const { files } = await run({
+      paths: [],
+      notFound: false,
+      extraRules: [{ from: '/out', to, status: 302 }],
+      rules: redirectPages(),
+    });
+
+    const page = files.get('dist/out/index.html') ?? '';
+
+    assert.doesNotMatch(page, /<b>/);
+    assert.equal(page.match(/<\/script>/g)?.length, 1);
+    assert.match(
+      page,
+      /href="https:\/\/example.com\/a\?x=&quot;&lt;\/script&gt;&lt;b&gt;&quot;&amp;y=&#39;1&#39;"/,
+    );
+    assert.equal(
+      replaceTarget(page, 'https://example.com/out'),
+      new URL(to).href,
+    );
+  });
+
+  it('escapes & < > " \' in the refresh url and canonical href, and keeps the script closed', () => {
+    const to = '/a?b=1&c=<x>"\'</script>';
+    const page = redirectPage({ from: '/from', to, status: 301 });
+    const escaped = '/a?b=1&amp;c=&lt;x&gt;&quot;&#39;&lt;/script&gt;';
+
+    assert.ok(
+      page.includes(`<meta http-equiv="refresh" content="0; url=${escaped}">`),
+    );
+    assert.ok(page.includes(`<link rel="canonical" href="${escaped}">`));
+    assert.equal(page.match(/<\/script>/g)?.length, 1);
+    assert.equal(
+      replaceTarget(page, 'https://example.com/from'),
+      new URL(to, 'https://example.com/from').href,
+    );
+  });
+
+  it('writes a page for a render that answered a redirect and a response state’s 3xx', async () => {
+    const { files } = await run({
+      mounts: {
+        '/': {
+          routes: [
+            { name: 'sheet', url: '/sheet/:num' },
+            { name: 'go', url: '/go', response: true },
+          ],
+        },
+      },
+      paths: ['/sheet/7B', '/go'],
+      notFound: false,
+      render: () => ({ location: '/sheet/7', status: 308 }),
+      respond: () =>
+        new Response(null, { status: 303, headers: { Location: '/sheet/1' } }),
+      rules: redirectPages(),
+    });
+
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/sheet/7B/index.html', 'dist/go/index.html'],
+    );
+    assert.match(files.get('dist/go/index.html') ?? '', /url=\/sheet\/1"/);
+  });
+
+  it('keeps the first line for a page, as _redirects does', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      extraRules: [{ from: '/app/legacy/', to: '/', status: 301 }],
+      rules: redirectPages(),
+    });
+
+    assert.match(files.get('dist/app/legacy/index.html') ?? '', /url=\/"/);
+  });
+
+  it('throws for a redirect whose page would replace a prerendered one', async () => {
+    await assert.rejects(
+      run({
+        extraRules: [{ from: '/sheet/7B/', to: '/', status: 301 }],
+        rules: redirectPages(),
+      }),
+      /redirectPages: '\/sheet\/7B\/' redirects, but prerender wrote a page at 'sheet\/7B\/index.html'/,
+    );
+  });
+
+  it('throws for a pattern line', async () => {
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/blog/*', to: '/', status: 301 }],
+        rules: redirectPages(),
+      }),
+      /'\/blog\/\*' is a pattern, not a path/,
+    );
+  });
+
+  it('writes the base itself as index.html, and into an empty outDir', async () => {
+    const { files } = await run({
+      paths: [],
+      notFound: false,
+      outDir: '',
+      extraRules: [{ from: '/app', to: '/app/home', status: 301 }],
+      rules: redirectPages({ base: '/app/' }),
+    });
+
+    assert.deepEqual([...files.keys()], ['index.html']);
+  });
+
+  it('places pages under base, and throws for a line outside it', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages({ base: '/app/' }),
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/legacy/index.html']);
+
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/old', to: '/', status: 301 }],
+        rules: redirectPages({ base: '/app' }),
+      }),
+      /'\/old' lies outside base '\/app'/,
+    );
+  });
+
+  it('writes the _redirects file too under redirectsFile', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages({ redirectsFile: true }),
+    });
+
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/app/legacy/index.html', 'dist/_redirects'],
+    );
+    assert.equal(
+      files.get('dist/_redirects'),
+      '/app/legacy /app/welcome 302\n/app/legacy/ /app/welcome 302\n',
+    );
+  });
+
+  it("writes no page for a line between a path's two spellings", async () => {
+    const { files, result } = await run({
+      mounts: {
+        ...mounts,
+        '/app': {
+          ...appMount,
+          config: { strict: false, trailingSlash: { pages: 'always' } },
+        },
+      },
+      paths: ['/app/welcome/', '/app/legacy'],
+      notFound: false,
+      rules: redirectPages({ base: '/app/' }),
+    });
+
+    assert.deepEqual(result.rules[0], {
+      from: '/app/welcome',
+      to: '/app/welcome/',
+      status: 308,
+    });
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/welcome/index.html', 'dist/legacy/index.html'],
+    );
+    assert.match(
+      files.get('dist/legacy/index.html') ?? '',
+      /url=\/app\/welcome\/"/,
+    );
+  });
+
+  it('writes nothing under dryRun', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      dryRun: true,
+      rules: redirectPages({ redirectsFile: true }),
+    });
+
+    assert.equal(files.size, 0);
+  });
+
+  // A template that spells out the whole line, so a test sees which line built each page.
+  const linePage = (line: RedirectLine): string =>
+    `${line.from} ${line.to} ${line.status}`;
+
+  it('builds every page through a custom page, which receives the whole line', async () => {
+    const received: RedirectLine[] = [];
+
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      extraRules: [{ from: '/old', to: '/new', status: 308 }],
+      rules: redirectPages({
+        page: (line) => {
+          received.push(line);
+
+          return linePage(line);
+        },
+      }),
+    });
+
+    assert.deepEqual(Object.fromEntries(files), {
+      'dist/old/index.html': '/old /new 308',
+      'dist/app/legacy/index.html': '/app/legacy /app/welcome 302',
+    });
+    assert.deepEqual(
+      received.map((line) => line.status),
+      [308, 302],
+    );
+  });
+
+  it('awaits an async page', async () => {
+    const { files } = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages({
+        page: async (line) => {
+          await Promise.resolve();
+
+          return linePage(line);
+        },
+      }),
+    });
+
+    assert.equal(
+      files.get('dist/app/legacy/index.html'),
+      '/app/legacy /app/welcome 302',
+    );
+  });
+
+  it('exports the default page as redirectPage', async () => {
+    const options: Partial<PrerenderOptions> = {
+      paths: ['/app/legacy'],
+      notFound: false,
+    };
+
+    const builtIn = await run({ ...options, rules: redirectPages() });
+
+    const wrapped = await run({
+      ...options,
+      rules: redirectPages({ page: (line) => redirectPage(line) }),
+    });
+
+    assert.deepEqual(wrapped.files, builtIn.files);
+    assert.equal(
+      builtIn.files.get('dist/app/legacy/index.html'),
+      redirectPage({ from: '/app/legacy', to: '/app/welcome', status: 302 }),
+    );
+  });
+
+  it('keeps first-wins, overlap, pattern and base rules under a custom page', async () => {
+    const first = await run({
+      paths: ['/app/legacy'],
+      notFound: false,
+      extraRules: [{ from: '/app/legacy/', to: '/', status: 301 }],
+      rules: redirectPages({ page: linePage, base: '/app/' }),
+    });
+
+    assert.deepEqual(Object.fromEntries(first.files), {
+      'dist/legacy/index.html': '/app/legacy/ / 301',
+    });
+
+    await assert.rejects(
+      run({
+        extraRules: [{ from: '/sheet/7B/', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage }),
+      }),
+      /prerender wrote a page at 'sheet\/7B\/index.html'/,
+    );
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/blog/*', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage }),
+      }),
+      /'\/blog\/\*' is a pattern, not a path/,
+    );
+    await assert.rejects(
+      run({
+        paths: [],
+        notFound: false,
+        extraRules: [{ from: '/old', to: '/', status: 301 }],
+        rules: redirectPages({ page: linePage, base: '/app' }),
+      }),
+      /'\/old' lies outside base '\/app'/,
     );
   });
 });

@@ -1,5 +1,5 @@
 ---
-title: MobX Bindings
+title: lit-ui-router-mobx
 description: Observable router state and reaction-based controllers with lit-ui-router-mobx
 ---
 
@@ -73,7 +73,7 @@ excludes 2.x. `RouterReactionController` finds its router through
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { RouterReactionController } from 'lit-ui-router-mobx';
 
@@ -104,9 +104,8 @@ protocols.
 ### RouterStore
 
 [`RouterStore`](/api/lit-ui-router-mobx/classes/RouterStore) is an observable
-mirror of a router's current state, updated by one
-`transitionService.onSuccess` hook per router. It is `ui-router-mobx`'s
-`RouterStore`, re-exported.
+mirror of a router's current state, updated by its router's `onSuccess` and
+`onStart` hooks. It is `ui-router-mobx`'s `RouterStore`, re-exported.
 
 | Member                      | Description                                                                                                |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -114,6 +113,8 @@ mirror of a router's current state, updated by one
 | `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
 | `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
 | `transition`                | The most recent successful `Transition`                                                                    |
+| `pending`                   | The newest transition still in flight, `undefined` when none is                                            |
+| `error`                     | The newest transition's `RejectType.ERROR` rejection, or `undefined`                                       |
 | `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
 | `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
@@ -175,7 +176,7 @@ stale values.
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the mechanism
+[Development and Production Builds](/guides/development-builds) for the mechanism
 and the full warning inventory across packages.
 
 One warning exists here. A `RouterReactionController` whose host finds no
@@ -202,9 +203,10 @@ composition-friendly alternative:
 
 ## Resolves stay on view props
 
-`RouterStore` mirrors `current`, `params` and `transition` — not resolves.
-Resolved data reaches a routed component exactly as it does without these
-bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+`RouterStore` mirrors `current`, `params`, `transition`, `pending` and
+`error` — not resolves. Resolved data reaches a routed component exactly as it
+does without these bindings: as
+[`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
 on `_uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the store, and
@@ -261,6 +263,10 @@ application built on these controllers. It is behaviorally identical to the
 `TransitionController`), so the
 [two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the MobX idiom changes.
+
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-mobx" />
 
 ## Further reading
 

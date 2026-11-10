@@ -98,7 +98,11 @@ export interface DehydrateResult {
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { dehydrate, settle } from 'ui-router-server/ssr';
+ *
+ * declare const router: UIRouter;
+ * declare const path: string;
  *
  * const { payload, unserializable } = dehydrate(await settle(router, path));
  *
@@ -110,7 +114,11 @@ export interface DehydrateResult {
  * Keep the site-wide `manifest` out of every page, so the client loads it
  * once from its own file:
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { dehydrate, settle } from 'ui-router-server/ssr';
+ *
+ * declare const router: UIRouter;
+ * declare const path: string;
  *
  * const { payload } = dehydrate(await settle(router, path), {
  *   shouldDehydrate: ({ token }) => token !== 'manifest',
@@ -120,7 +128,11 @@ export interface DehydrateResult {
  * @example
  * Carry a `Date`, and pass the same transport to `seed` on the client:
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
  * import { dehydrate, settle, type Transporter } from 'ui-router-server/ssr';
+ *
+ * declare const router: UIRouter;
+ * declare const path: string;
  *
  * export const transport = {
  *   Date: {

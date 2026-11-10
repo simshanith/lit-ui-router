@@ -32,7 +32,7 @@ Both majors are supported (`effect@^3.22.0 || ^4.0.2`) and both are exercised in
 
 ## Quick Start
 
-```typescript
+```typescript check
 import { html, LitElement } from 'lit';
 import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';
@@ -116,6 +116,8 @@ class NavHeader extends LitElement {
 ```
 
 The refs are a tuple, and the selector receives their values positionally. Pass a thunk instead (`() => [ref]`) for refs that depend on the host's place in the DOM; it is resolved on every `hostConnected`, and `.value` carries `options.initialValue` until then.
+
+`ui-router-effect`'s `pendingRef(router)` and `errorRef(router)` are `SubscriptionRef`s too, so a `RefController` over them follows the in-flight transition and the last failed one.
 
 ## Development and production builds
 

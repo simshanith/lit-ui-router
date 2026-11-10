@@ -7,7 +7,6 @@
  * instead. Until an app registers, each type falls back to core's loose
  * `string` and `RawParams`. Nothing here emits JavaScript.
  */
-/* oxlint-disable typescript/no-redundant-type-constituents -- StateName is `string` until an app registers; the unions are written for the registered case */
 import type {
   HrefOptions,
   RawParams,

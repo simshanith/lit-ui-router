@@ -63,13 +63,19 @@ function typeTestEntries(dir: string): string[] {
 const workspaces = {
   '.': {
     ignoreDependencies: [
-      // nothing scripts these; kept so `pnpm wrangler` and `pnpm cf` work at the repo root
+      // run ad hoc at the repo root; cf sites declare their own
       'cf',
+      // Workers Builds runs `npx wrangler` from the repo root (tools/workers-builds/cloudflare-deploy.ts)
       'wrangler',
+      // run ad hoc at the repo root (apps/sample-app-lit-e2e/README.md)
+      '@playwright/cli',
       // ad-hoc `pnpm lint:package-json --format tap` (docs/TURBO.md)
       'eslint-formatter-tap',
-      // .oxlintrc.json extends its config by path, which knip does not follow
-      '@tools/lint-elements',
+      // knip applies root ignores to every workspace
+      // floor-guard and check:bundle find <dep>-floor aliases by name; tsconfig paths read them by node_modules path
+      /-floor$/,
+      // compat lanes swap in <dep>-<major> through vitest aliases, tsconfig paths or a resolve hook, which knip doesn't count
+      /^(?:lit-2|effect-3|mobx-6|vite-7)$/,
     ],
     // a promoted example: its own npm lockfile, not a pnpm workspace member
     ignore: ['www/atlas.lit-ui-router.dev/**'],
@@ -84,8 +90,8 @@ const workspaces = {
   'apps/sample-app-lit-effect': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-mobx': { entry: ['src/**/*.test-d.ts'] },
   'apps/sample-app-lit-e2e': {
-    // reached from root mise tasks and `cypress --config-file`
-    entry: ['scripts/*.ts', 'cypress*.config.ts', 'src/**/*.cy.{ts,js}'],
+    // reached from root mise tasks
+    entry: ['scripts/*.ts'],
   },
   'packages/lit-ui-router': {
     // read by `cem analyze`, which knip has no plugin for
@@ -95,107 +101,24 @@ const workspaces = {
       '@oxc-project/runtime',
       // exact-pin alias pnpm dedupes the wide range onto (#454)
       'oxc-project-runtime',
-      // release-it plugin, named in @tools/release-config's config
-      '@release-it/conventional-changelog',
-      // vitest alias target for the lit 2 compat lane
-      'lit-2',
-      // peer and dependency floor installs, bundled by check:bundle's peer lines
-      '@uirouter/core-floor',
-      '@oxc-project/runtime-floor',
     ],
   },
-  'packages/lit-ui-router-effect': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      'effect-3',
-      'effect-floor',
-      'lit-2',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
-  'packages/lit-ui-router-mobx': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      'lit-2',
-      'mobx-6',
-      'mobx-floor',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
-  'packages/lit-ui-router-signals': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the lit 2 compat lane
-      'lit-2',
-      'lit-ui-router-floor',
-      '@uirouter/core-floor',
-    ],
-    entry: ['test-d/*.test-d.ts'],
-  },
+  'packages/lit-ui-router-effect': { entry: ['test-d/*.test-d.ts'] },
+  'packages/lit-ui-router-mobx': { entry: ['test-d/*.test-d.ts'] },
+  'packages/lit-ui-router-signals': { entry: ['test-d/*.test-d.ts'] },
   'packages/lit-ui-router-ssr': {
-    ignoreDependencies: [
-      // imported by the emitted dist, not by src
-      '@oxc-project/runtime',
-      '@release-it/conventional-changelog',
-      '@lit-labs/ssr-floor',
-      '@lit-labs/ssr-client-floor',
-      '@oxc-project/runtime-floor',
-      '@uirouter/core-floor',
-      'lit-ui-router-floor',
-      'ui-router-server-floor',
-    ],
-  },
-  'packages/navigation-location-plugin': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-    ],
-  },
-  'packages/ui-router-effect': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the effect 3 compat lane
-      'effect-3',
-      'effect-floor',
-      '@uirouter/core-floor',
-    ],
-  },
-  'packages/ui-router-mobx': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      // vitest alias target for the mobx 6 compat lane
-      'mobx-6',
-      'mobx-floor',
-      '@uirouter/core-floor',
+    // imported by the emitted dist, not by src
+    ignoreDependencies: ['@oxc-project/runtime'],
+    // vite builds the fixture app from these by path, in vite-build.spec.ts
+    entry: [
+      'src/specs/vite-build/main.ts',
+      'src/specs/vite-build/prerender*.ts',
     ],
   },
   'packages/ui-router-registry': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-    ],
     entry: ['src/specs/*.test-d.ts', 'test-d/**/*.test-d.ts'],
   },
-  'packages/ui-router-signals': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-      'signal-polyfill-floor',
-    ],
-  },
-  'packages/ui-router-server': {
-    ignoreDependencies: [
-      '@release-it/conventional-changelog',
-      '@uirouter/core-floor',
-      'hono-floor',
-    ],
-  },
   'packages/eslint-plugin-lit-ui-router': {
-    ignoreDependencies: ['@release-it/conventional-changelog'],
     // oxlint fixture inputs, never imported
     ignore: ['test/oxlint/**/*.js'],
   },
@@ -203,10 +126,20 @@ const workspaces = {
     // bundled by path in free-of.test.ts, never imported
     entry: ['fixtures/*.ts'],
   },
+  'tools/doc-example-check': {
+    // read by path in check.test.ts, never imported
+    entry: ['fixtures/*.ts'],
+  },
   'tools/dts-backtest': {
     entry: ['fixtures/*.ts', 'registered/*.ts', 'routed/**/*.ts'],
     // the TS version matrix is imported by computed specifier
-    ignoreDependencies: ['typescript-5.0', 'typescript-6', 'typescript-7'],
+    ignoreDependencies: ['typescript-5.0', 'typescript-6'],
+  },
+  'tools/lit-template-lint': {
+    // checked by path in check.test.ts, never imported
+    entry: ['src/fixtures/**/*.ts'],
+    // reached via createRequire(), which knip does not follow
+    ignoreDependencies: ['@vscode/web-custom-data'],
   },
   'tools/oxc-emit': {
     // reached via createRequire(), which knip does not follow
@@ -220,22 +153,19 @@ const workspaces = {
   'www/lit-ui-router.dev': {
     // is-server.ts is the wrangler alias target for lit-html/is-server.js
     entry: ['.vitepress/vite.config.ts', 'worker/is-server.ts'],
-    // copied out of node_modules/<name>/dist by path in the vite config; cloudflare:workers is a workerd built-in
+    // copied out of node_modules/<name>/dist by path in the vite config
     ignoreDependencies: [
-      'cloudflare',
       'sample-app-lit-vanilla',
       'sample-app-lit-mobx',
       'sample-app-lit-effect',
       'sample-app-lit-signals',
+      // VitePress loads icon collections by the prefix in a VPIcon name
+      '@iconify-json/lucide',
     ],
   },
-  // knip has no cf plugin, and the config names its entrypoint as a string
+  // knip has no cf plugin
   'www/release-diffs.lit-ui-router.dev': {
-    entry: ['cloudflare.config.ts', 'worker/index.ts'],
-  },
-  // cloudflare:workers is a workerd built-in, not a package
-  'www/release-ledger.lit-ui-router.dev': {
-    ignoreDependencies: ['cloudflare'],
+    entry: ['cloudflare.config.ts'],
   },
 } satisfies Record<string, WorkspaceProjectConfig>;
 

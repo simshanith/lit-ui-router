@@ -28,7 +28,7 @@ The type declarations reference the global `Navigation`, `NavigateEvent` and `Na
 
 Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings) set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs `servicesPlugin` registered before the location plugin:
 
-```typescript
+```typescript check
 import { UIRouter, servicesPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
@@ -281,7 +281,7 @@ The Navigation API is supported in all modern engines:
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
-The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Cypress end-to-end suite runs in Chrome only.
+The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Playwright end-to-end suite runs in Chrome only.
 
 For older browsers, consider using:
 

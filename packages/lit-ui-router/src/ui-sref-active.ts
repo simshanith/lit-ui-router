@@ -15,6 +15,7 @@ import { subscribeRouter } from './router-subscription.js';
 import {
   isNativeLink,
   mergeSrefStatus,
+  srefEventLink,
   srefStatus,
   toAriaCurrentValues,
   TransEvt,
@@ -23,6 +24,7 @@ import {
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
 } from './sref-internals.js';
 import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
@@ -144,9 +146,9 @@ const isLinkElement = (element: Element): boolean =>
  */
 export interface UiSrefActiveParams {
   /** CSS classes to add when the state (or a child state) is active */
-  activeClasses: string[];
+  activeClasses?: string[];
   /** CSS classes to add only when the exact state is active */
-  exactClasses: string[];
+  exactClasses?: string[];
   /**
    * The `aria-current` value to set when the **exact** state is active — the
    * same binding Vue Router's `ariaCurrentValue` uses.
@@ -166,17 +168,19 @@ export interface UiSrefActiveParams {
    */
   ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
-  state: string;
+  state?: string;
   /** State parameters to match */
   params?: RawParams;
   /** Transition options */
   options?: TransitionOptions;
-  /** Target states from nested uiSref directives */
-  targetStates: TargetState[];
+  /**
+   * The states to watch, built with `router.stateService.target()`. Lets an
+   * element go active for several states, or for links that aren't `uiSref`
+   * directives. Takes precedence: when given, `state` is ignored and nested
+   * `uiSref` links are not tracked.
+   */
+  targetStates?: TargetState[];
 }
-
-/** @internal */
-let _first: UiSrefActiveDirective | null = null;
 
 type deregisterFn = () => void;
 
@@ -310,8 +314,6 @@ export class UiSrefActiveDirective extends AsyncDirective {
         'The `uiSrefActive` directive must be used as an element',
       );
     }
-
-    _first = _first || this;
   }
 
   /** @internal */
@@ -459,8 +461,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     part: ElementPart,
     [
       {
-        activeClasses,
-        exactClasses,
+        activeClasses = [],
+        exactClasses = [],
         ariaCurrentValue,
         state,
         params = {},
@@ -537,6 +539,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
         UI_SREF_TARGET_EVENT,
         // SAFETY: only `uiSrefTargetEvent()` dispatches UI_SREF_TARGET_EVENT
         this.onUiSrefTargetEvent as EventListener,
+      );
+      this.element!.addEventListener(
+        UI_SREF_TARGET_REMOVED_EVENT,
+        this.onUiSrefTargetRemovedEvent,
       );
     }
 
@@ -619,6 +625,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onUiSrefTargetEvent as EventListener,
     );
     this.element.removeEventListener(
+      UI_SREF_TARGET_REMOVED_EVENT,
+      this.onUiSrefTargetRemovedEvent,
+    );
+    this.element.removeEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
@@ -670,7 +680,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
-    const previous = this._linkTargets.get(event.target);
+    // SAFETY: only a link dispatches UI_SREF_TARGET_EVENT; key by it, not a shadow host it retargets to
+    const link = srefEventLink(event) as UiSrefElement;
+    const previous = this._linkTargets.get(link);
 
     if (previous) {
       this.targetStates.delete(previous);
@@ -678,8 +690,27 @@ export class UiSrefActiveDirective extends AsyncDirective {
     }
 
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target);
-    this._linkTargets.set(event.target, targetState);
+    this.uiSrefs.set(targetState, link);
+    this._linkTargets.set(link, targetState);
+
+    if (this._firstUpdated) {
+      this.onStatesChanged();
+    }
+  };
+
+  /** @internal */
+  onUiSrefTargetRemovedEvent = (event: Event): void => {
+    // SAFETY: a link dispatches its own removal, the key `onUiSrefTargetEvent` stored
+    const link = srefEventLink(event) as UiSrefElement;
+    const previous = this._linkTargets.get(link);
+
+    if (!previous) {
+      return;
+    }
+
+    this.targetStates.delete(previous);
+    this.uiSrefs.delete(previous);
+    this._linkTargets.delete(link);
 
     if (this._firstUpdated) {
       this.onStatesChanged();
@@ -783,6 +814,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example With exact matching
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <a ${uiSref('users')}
  *      ${uiSrefActive({
@@ -796,6 +830,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Container mode (watches nested uiSref directives)
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <nav ${uiSrefActive({ activeClasses: ['section-active'] })}>
  *     <a ${uiSref('users')}>Users</a>
@@ -807,6 +844,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Customizing or disabling aria-current
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ *
+ * declare const messageId: string;
+ *
  * html`
  *   <!-- a step in a multi-step flow -->
  *   <a ${uiSref('wizard.payment')}
@@ -828,7 +870,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *   </a>
  *
  *   <!-- mark the ancestor section as well as the current page:
- *        at `users` -> aria-current="page", at `users.detail` -> "location" -->
+ *        at 'users' -> aria-current="page", at 'users.detail' -> "location" -->
  *   <a ${uiSref('users')}
  *      ${uiSrefActive({
  *        activeClasses: ['active'],
@@ -856,6 +898,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @example Explicit state (without nested uiSref)
  * ```ts
+ * import { html } from 'lit';
+ * import { uiSrefActive } from 'lit-ui-router';
+ *
  * html`
  *   <div ${uiSrefActive({
  *     state: 'dashboard',

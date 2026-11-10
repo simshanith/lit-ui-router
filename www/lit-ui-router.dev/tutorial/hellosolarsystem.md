@@ -30,7 +30,7 @@ A **resolve** fetches data before a state is entered. The state's component only
 
 First, we create a data service. Each body carries real data plus a CSS gradient used to draw it:
 
-```typescript
+```typescript check
 interface SolarBody {
   id: number;
   name: string;
@@ -156,7 +156,7 @@ Key points:
 
 Each list item draws its body as a `radial-gradient` circle. A `dotSize` helper log-scales the circle by real diameter, so the Sun and Pluto fit on the same screen:
 
-```typescript
+```typescript check
 // Log scale keeps the Sun and Pluto on the same screen.
 const dotSize = (diameterKm: number): number =>
   Math.round(Math.log2(diameterKm / 1000) * 6 + 10);

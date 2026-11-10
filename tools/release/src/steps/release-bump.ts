@@ -8,7 +8,8 @@
 //   1. compute the bumped version (release-it --release-version, with the
 //      increment argv validated by release-increment-args.core.ts)
 //   2. create the release branch (skipped on dry runs, like the old `if:`)
-//   3. bump: release-it commits and pushes, message = "Release <version>" +
+//   3. bump: release-it re-resolves the lockfile, runs the dependent floor
+//      gate (release-dependent-floor-gate.ts), then commits and pushes, message = "Release <version>" +
 //      the changelog, its range pinned to the package's previous tag in
 //      this lane or the repo root (#302, release-prev-tag.ts) — the same
 //      pin the publish driver applies, so the PR body, the squash commit
@@ -80,7 +81,10 @@ runMain(async () => {
   });
 
   await group(`bump ${packageName} to ${version}`, () =>
-    releaseItRun(packageName, bumpArgs({ version, commitMessage, dryRun })),
+    releaseItRun(
+      packageName,
+      bumpArgs({ packageName, version, commitMessage, dryRun }),
+    ),
   );
 
   if (!dryRun) {

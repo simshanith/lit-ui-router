@@ -1,5 +1,5 @@
 ---
-title: Server-Side Routing
+title: Server
 description: Honest HTTP verdicts for a static SPA with ui-router-server — the client's route table, running on the server or the edge
 ---
 
@@ -46,7 +46,8 @@ leaves the ones before it unchanged:
 2. **Server-rendered pages.** The same states' resolves and views, rendered
    with [`lit-ui-router-ssr`](/packages/ssr) on
    [`settle`](#settling-a-server-router) and
-   [`prerender`](#emitting-a-static-site).
+   [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
+   after [`vite build`](/guides/prerender-with-vite).
 3. **[Response states](#response-states).** A state answers with its own
    `Response` (a redirect, JSON, a badge) built from its resolves once
    `settle` lands it.
@@ -68,7 +69,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.get('/healthz', (c) => c.text('ok'));
 
 app.use('*', (c, next) =>
-  serverRouterHono(router, {
+  serverRouterHono<typeof router, { Bindings: Env }>(router, {
     serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
   })(c, next),
 );
@@ -142,7 +143,11 @@ Picking one:
   actual rules. Both strategies consume the same declaration data and produce
   identical verdicts today (the package tests assert parity), so `strategy`
   is a pure cost knob. A simulate mount's `prewarm` count builds idle routers
-  once core loads, so its first requests skip the cold build.
+  once core loads, so its first requests skip the cold build. The routers
+  `simulate` builds register copies of the mount's declarations, so inside a
+  declaration's own functions (`redirectTo`, resolves, hooks)
+  `transition.to()` and `state.self` are the copy, not the app's object;
+  compare states by `name`, as UI-Router code does.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
   server, and want its `href()`s to match what the client writes: paths by
   default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
@@ -181,7 +186,7 @@ pre-release seed tags have been retired.
 Routes are **data**, not state declarations — a server runtime cannot import
 components:
 
-```ts
+```ts check
 import type { MountConfig, RouteDeclaration } from 'ui-router-server';
 
 const routes: RouteDeclaration[] = [
@@ -260,9 +265,10 @@ type Verdict =
   the request's validators so the asset fetch returns a body to relabel.
 - **`redirect`** — `location` is the mount-joined target path and may already
   carry a query string, so preserve the request's search with the exported
-  `mergeSearch(location, incoming)` rather than concatenating. Verdicts fix
-  `status: 302`: a redirect table is configuration that changes with the next
-  deploy, and browsers cache 301s past it.
+  `mergeSearch(location, incoming)` rather than concatenating. `status` is
+  `302` unless the matched state declares `redirectStatusCode`: a redirect
+  table is configuration that changes with the next deploy, and browsers
+  cache a permanent redirect past it. A pattern rule's redirect is `302`.
 - **`delegate`** — the path matched a state that names a host handler by key
   ([delegating states](#delegating-states)); the handler answers the request.
 - **`response`** — the path matched a [response state](#response-states); the
@@ -349,8 +355,9 @@ The honest-status upgrade of Vite's built-in SPA fallback: `vite dev` and
 `vite preview` answer the same 302s and mount-owned 404s the production
 server does, from the same mounts table. The plugin installs its middleware
 in the pre position — before Vite's always-200 HTML fallback — and its
-returned object is a structural subset of Vite's `Plugin`, so Vite stays a
-type-only peer this package never imports.
+returned object is a structural subset of Vite's `Plugin`. Vite (7 or 8) is an
+optional peer the plugin imports only for its build step, which
+[prerenders the built app](#after-vite-build).
 
 In this example each mount's HTML entry is built to `<mount>.html`:
 
@@ -420,7 +427,7 @@ const router = createServerRouter({ mounts });
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', (c, next) =>
-  serverRouterHono(router, {
+  serverRouterHono<typeof router, { Bindings: Env }>(router, {
     serveShell: (_mount, request) => c.env.ASSETS.fetch(request),
   })(c, next),
 );
@@ -550,7 +557,7 @@ never import server code. Its verdict is `response`, decided by url matching
 alone with no transition, so a host can tell it from a page before rendering
 anything, for example to skip a trailing-slash redirect it gives pages.
 
-```ts
+```ts check
 import type { ResponseHandlers } from 'ui-router-server/ssr';
 
 const routes = [
@@ -577,7 +584,9 @@ and its second parameter types each handler's resolves by state name.
 - A response state needs a url and no `redirectTo`, can't also delegate, and
   its children don't inherit the marker. `createServerRouter` throws for each,
   and `as const` routes make a row with both markers a compile error. A
-  redirect may target a response state.
+  redirect may target a response state. A url whose pattern is sometimes a
+  page and sometimes a redirect needs a `redirectTo` function instead:
+  [which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
   `<img>` reaches its badge, and answer other methods with a 405.
@@ -586,7 +595,7 @@ and its second parameter types each handler's resolves by state name.
   `serveResponse` at compile time, and construction throws without it.
 - The Connect adapter throws for response states unless `responses: 'next'`.
 - `ui-router-server` augments core's `StateDeclaration` with
-  `response?: true`, as it does with `delegate`.
+  `response?: true`, as it does with `delegate` and `redirectStatusCode`.
 
 ## Server-side hrefs
 
@@ -609,7 +618,14 @@ installServerLocation(router, {
   baseHref: '/app/',
   urlConfig: { strict: false },
 });
+states.forEach((state) => router.stateRegistry.register({ ...state }));
 ```
+
+Register a copy of each declaration, or build them in a function that runs per
+request: core stamps the object it registers with a `$$state` pointer to that
+router's state, so a declaration shared by concurrent routers points at
+whichever registered last. `createHeadlessRouter` and simulate mounts copy
+their declarations already.
 
 `baseHref` is the mount prefix: it is added to every href, and `url` is
 passed without it, exactly as a `<base href>` client matches. `urlConfig`
@@ -623,6 +639,47 @@ is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
 { html5Mode: false })` — and its config as `ServerLocationConfig`, for a
 router that installs its own plugins. Simulate mounts run on the same
 location.
+
+## Trailing slashes
+
+A static host decides whether a page lives at `/releases/lit/` or `/releases/lit`, and the pages a
+server renders should follow it. Name that spelling once, in the `config` the mount and the client
+router share, and leave the slash out of the route table:
+
+```ts check
+import type { RouterUrlConfig } from 'ui-router-server/url-config';
+
+export const urlConfig = {
+  strict: false,
+  trailingSlash: { pages: 'always' },
+} satisfies RouterUrlConfig;
+```
+
+| Kind of state                        | Key         | Default          |
+| ------------------------------------ | ----------- | ---------------- |
+| A page: neither of the others        | `pages`     | `'as-requested'` |
+| A [response state](#response-states) | `responses` | `'as-requested'` |
+| A [delegate](#delegating-states)     | —           | `'as-requested'` |
+
+Each key takes `'always'`, `'never'` or `'as-requested'`.
+
+- **Matching:** a navigation that matches a state in the other spelling verdicts as a `308`
+  redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
+  canonical spelling in one hop. A non-navigation request to a response state or a delegate is
+  answered at either spelling.
+- **Formatting:** [`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+  installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition
+  pushes come out canonical, on the client and on a server router built with
+  `installServerLocation(router, { urlConfig })`.
+- **Composition:** the slash is added when a url is formatted, never spelled in a pattern, so a
+  child url appends to its parent's without a `//`.
+- **Static sites:** [`prerender`](#emitting-a-static-site) writes each page or response state at
+  the path listed and a `308` line from the other spelling, the redirect the server answers.
+
+The policy needs `strict: false`, so both spellings match before it picks one;
+`createServerRouter`, `compileRedirects` and `applyUrlConfig` throw without it. On Cloudflare,
+match the static assets' `html_handling`: `force-trailing-slash` is `{ pages: 'always' }`,
+`drop-trailing-slash` is `{ pages: 'never' }`, and `none` is the default.
 
 ## Settling a server router
 
@@ -651,6 +708,15 @@ transition, and past its
 imports `@uirouter/core` and no renderer, so it runs under any renderer.
 [`lit-ui-router-ssr`](/packages/ssr) builds its
 prerender on the same step.
+
+A `redirectTo` chain settles on its final state.
+[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+then returns `{ url, status }` for a transition a redirect moved, a `redirectTo`
+function's included: the mount-relative url it landed on, query included, and
+the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
+of the state the url matched, `302` by default. It returns `undefined` for any
+other transition, so a host answers a redirect found at settle as a 30x; see
+[which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
 
 ### Handing resolves to the client
 
@@ -701,7 +767,7 @@ Where the payload goes in the document is the renderer's choice.
 [transporters](/api/ui-router-server/ssr/interfaces/Transporter), each
 carrying one type of value plain JSON can't, keyed by a name both sides share.
 
-```ts
+```ts check
 import type { Transporter } from 'ui-router-server/ssr';
 
 export const transport = {
@@ -738,7 +804,10 @@ export const transport = {
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
-slash, and no page. The `otherwise` projection becomes `404.html`. A path that
+slash, and no page. Under a mount's [trailing-slash policy](#trailing-slashes),
+a page or response state spelled `'always'` or `'never'` also gets a `308` line
+from its other spelling onto the path listed, so list paths in their canonical
+spelling, as `href()` formats them. The `otherwise` projection becomes `404.html`. A path that
 matches nothing is counted, listed in `result.warnings`, and warned about in
 development. A path that matches a [delegating state](#delegating-states)
 gets no page and no rules line: it is counted in `result.tally.delegate` and
@@ -777,6 +846,78 @@ a `Map`, under any runtime.
 [`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
 
+### Hosts without redirect rules
+
+`rules` decides what happens to the redirect lines: `'_redirects'` (the
+default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
+them in `result.rules`, and a function receives them with the run's `write`,
+`outDir` and written `pages`. A host with no redirect rules, such as GitHub
+Pages or a plain bucket, takes
+[`redirectPages()`](/api/ui-router-server/prerender/functions/redirectPages):
+each line becomes a page at `<from>/index.html` that sends the browser to its
+`to`.
+
+```ts
+import { prerender, redirectPages } from 'ui-router-server/prerender';
+
+await prerender({
+  mounts,
+  outDir: 'dist',
+  paths,
+  render,
+  write,
+  rules: redirectPages(),
+});
+```
+
+- **What the page holds.** A `location.replace` that carries the request's
+  query and fragment into a target with none of its own, a meta refresh and a
+  plain link for browsers without script, a canonical link to the target, and
+  `noindex`. The target is HTML-escaped with
+  [`escape-html`](https://www.npmjs.com/package/escape-html).
+- **No status.** The page answers 200, so the line's 301, 302 or 308 never
+  reaches the host. The canonical link tells search engines the content moved.
+- **Collisions.** A line whose page would replace one the run wrote throws.
+  A line between a path's two spellings, as a
+  [trailing-slash policy](#trailing-slashes) adds, writes nothing: its page
+  would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
+  spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
+  throws.
+- **Options.** `base` is the url path `outDir` is served at, `/` by default.
+  `redirectsFile: true` also writes `_redirects`, for a site deployed to both
+  kinds of host.
+- **Your own page.** `page` builds each page's HTML from its line (`from`,
+  `to`, `status`), and may return a promise.
+  [`redirectPage`](/api/ui-router-server/prerender/functions/redirectPage) is
+  the default, exported so a template can wrap it. A template gets `to`
+  unescaped: HTML-escape it in markup, with `escape-html` or the template's
+  own escaper, and escape it as a script string too if it goes in a script.
+
+```ts
+import { redirectPage, redirectPages } from 'ui-router-server/prerender';
+
+const rules = redirectPages({
+  // Wrap the default: add a tag to every page.
+  page: (line) => redirectPage(line).replace('</head>', `${analytics}</head>`),
+});
+```
+
+### After `vite build`
+
+`serverRouterPlugin` prerenders the built app after `vite build`, through a
+prerender script whose default export calls `prerender()` with a renderer of
+its own. The script runs in a worker thread, one per build, after the modules
+listed in `preload`, so whatever they install never reaches Vite's process:
+
+```ts
+serverRouterPlugin(router, {
+  prerender: { entry: './src/prerender.ts', preload: ['./src/dom-shim.ts'] },
+});
+```
+
+[Prerender with Vite](/guides/prerender-with-vite) walks through the plugin
+option and the script.
+
 A delegated path has no static file, so the host must send it to the server.
 On Cloudflare Workers, list `result.delegated` in
 [`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
@@ -792,13 +933,18 @@ same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
 as the mount's `config`, or share one object through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig).
+[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig),
+along with any [trailing-slash policy](#trailing-slashes).
 A static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory
 ([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
 Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
 ([parameterized routes and soft 404s](/guides/server-route-matching#parameterized-routes-and-soft-404s)).
+
+## Releases
+
+<ReleaseDiffPicker name="ui-router-server" />
 
 ## Further reading
 

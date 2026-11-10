@@ -2,15 +2,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "release-ledger",
-  "compatibility_date": "2026-07-01",
+  "compatibility_date": "2026-09-25",
+  // cloudflare-effect-tracer imports node:async_hooks.
+  "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.ts",
-  // Only the route serves /claims; Previews get no URL of their own.
+  // Only the route serves /claims and /ledger; Previews get no URL of their own.
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
     { "pattern": "release-ledger.lit-ui-router.dev", "custom_domain": true },
   ],
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "traces": { "enabled": true } },
   // A Preview binds only what this block names, so branches reach no production data.
   "previews": {},
   // Placeholder schedule for the tag sweep.
@@ -24,6 +26,11 @@
       "simshanith/lit-ui-router/.github/workflows/publish-npm.yml",
     ],
     "OIDC_ENVIRONMENT": "publish",
+    // GET /ledger's policy; its audience and workflows are disjoint from /claims'.
+    "OIDC_READ_AUDIENCE": "https://release-ledger.lit-ui-router.dev/ledger",
+    "OIDC_READ_WORKFLOWS": [
+      "simshanith/lit-ui-router/.github/workflows/release-signals.yml",
+    ],
   },
   "d1_databases": [
     {

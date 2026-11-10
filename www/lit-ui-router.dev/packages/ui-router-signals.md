@@ -1,5 +1,5 @@
 ---
-title: UI-Router Signals
+title: ui-router-signals
 description: A framework-agnostic TC39 Signals mirror of the router's current state with ui-router-signals
 ---
 
@@ -31,8 +31,8 @@ two separate signal graphs.
 ## RouterSignals
 
 [`RouterSignals.for(router)`](/api/ui-router-signals/classes/RouterSignals#for)
-returns the router's one instance, attaching a
-single `onSuccess` transition hook on first use. It writes one route snapshot
+returns the router's one instance, attaching its
+transition hooks on first use. An `onSuccess` hook writes one route snapshot
 per successful transition, so every value is a settled route. Its fields are
 read-only `Signal.Computed`s over that snapshot:
 
@@ -52,6 +52,33 @@ import { RouterSignals } from 'ui-router-signals';
 const signals = RouterSignals.for(router);
 
 signals.current.get()?.name;
+```
+
+## Pending and failed transitions
+
+Two more read-only `Signal.Computed`s sit beside `route`, not inside it,
+since every snapshot is a settled route. One `onStart` hook feeds both.
+
+- `pending` holds the newest transition still in flight, and `undefined` when
+  none is. The transition's promise clears it when that transition settles,
+  whether it succeeds, errors or is aborted. A superseded transition never
+  clears its successor, and a transition already running on first use counts
+  as pending.
+- `error` holds the newest transition's failure as core's `Rejection`, and
+  `undefined` otherwise. Only a `RejectType.ERROR` rejection, such as a
+  resolve that throws, sets it; superseded, redirected, aborted and ignored
+  transitions leave it `undefined`. The next transition clears it as it
+  starts, so a retry clears the error as it begins. A failure changes
+  `pending` and `error` together, and a superseded transition that fails
+  late changes neither.
+
+```ts
+const stop = watchSelection(
+  () =>
+    signals.pending.get() ? 'loading' : signals.error.get() ? 'error' : 'idle',
+  undefined,
+  (status) => (document.body.dataset.routeStatus = status),
+);
 ```
 
 ## Typed snapshots
@@ -90,6 +117,10 @@ const stop = watchSelection(
   (name) => console.log(name),
 );
 ```
+
+## Releases
+
+<ReleaseDiffPicker name="ui-router-signals" />
 
 ## Further reading
 

@@ -1,6 +1,8 @@
 import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import { getByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { RejectType, Rejection } from '@uirouter/core';
 import { html } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
@@ -209,9 +211,12 @@ describe('settle', () => {
       },
       write: (file, body) => void files.set(file, body),
     });
-    expect(files.get('dist/index.html')).toMatch(/<h1>(<!--[^>]*-->)*home/);
-    expect(files.get('dist/sheet/7B/index.html')).toMatch(
-      /<h1>(<!--[^>]*-->)*sheet 7B/,
-    );
+
+    const heading = (file: string): string | null =>
+      getByRole(parseHtml(files.get(file)!).body, 'heading', { level: 1 })
+        .textContent;
+
+    expect(heading('dist/index.html')).toBe('home');
+    expect(heading('dist/sheet/7B/index.html')).toBe('sheet 7B');
   });
 });

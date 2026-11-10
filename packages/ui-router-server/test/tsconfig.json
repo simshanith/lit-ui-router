@@ -8,5 +8,7 @@
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["*.ts", "../src/**/*"]
+  "include": ["*.ts", "fixtures/**/*.ts", "../src/**/*"],
+  // tsconfig.dom.json checks the tests that need lib.dom
+  "exclude": ["vite-prerender.test.ts"]
 }

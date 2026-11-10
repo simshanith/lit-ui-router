@@ -11,6 +11,7 @@
 // A source that reads `import.meta.env.PACKAGE_VERSION` gets the manifest's version
 // defined, so a package can name its own release without importing package.json.
 // A pass with nothing to define passes no `define`, keeping its emit unchanged.
+// A pass with a `define` drops the bare imports its folding leaves (folded-imports.ts).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 
@@ -19,6 +20,7 @@ import { transformSync } from 'oxc-transform';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
+import { dropFoldedImports } from './folded-imports.ts';
 import { rewriteInlined } from './inline.ts';
 import {
   DEV_OUT,
@@ -53,10 +55,8 @@ const main = (): void => {
   for (const { file, stem, inlined: embed } of units) {
     const source = readFileSync(file, 'utf8');
 
-    for (const { out: outDir, dev } of passes) {
-      const define = passDefine(source, version, dev);
-
-      const transformed = transformSync(file, source, {
+    const transform = (define: Record<string, string> | undefined) =>
+      transformSync(file, source, {
         target: 'es2022',
         sourcemap: true,
         // tsconfig.base parity: experimentalDecorators + useDefineForClassFields:false
@@ -71,9 +71,18 @@ const main = (): void => {
         define,
       });
 
+    for (const { out: outDir, dev } of passes) {
+      const define = passDefine(source, version, dev);
+
+      const transformed = transform(define);
+
       if (transformed.errors.length) fail(file, transformed.errors);
 
-      const printed = minifySync(file, transformed.code, {
+      const code = define
+        ? dropFoldedImports(file, transformed.code, transform(undefined).code)
+        : transformed.code;
+
+      const printed = minifySync(file, code, {
         compress: false,
         mangle: false,
         codegen: { removeWhitespace: false },
@@ -87,9 +96,12 @@ const main = (): void => {
       }
 
       const out = join(outDir, `${stem}.js`);
-      const code = rewriteInlined(printed.code, stem, inlined);
+      const shipped = rewriteInlined(printed.code, stem, inlined);
       mkdirSync(dirname(out), { recursive: true });
-      writeFileSync(out, `${code}//# sourceMappingURL=${basename(out)}.map\n`);
+      writeFileSync(
+        out,
+        `${shipped}//# sourceMappingURL=${basename(out)}.map\n`,
+      );
       writeFileSync(
         `${out}.map`,
         shippedMap(

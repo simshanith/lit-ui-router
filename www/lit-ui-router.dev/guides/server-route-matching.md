@@ -32,7 +32,11 @@ full-stack system where the same router executes on both sides. Each level
 is defined by what the app asks of its server; find yours, and what moving
 up would buy.
 
+<DiagramEmbed src="/diagrams/server-route-matching-spectrum.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-spectrum.svg-->
+
+</DiagramEmbed>
 
 **Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
 router with no address bar at all — tests, embedded widgets, headless
@@ -211,7 +215,11 @@ min+gzip by its own esbuild probe:
 | `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
 
+<DiagramEmbed src="/diagrams/server-route-matching-package-tiers.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-package-tiers.svg-->
+
+</DiagramEmbed>
 
 The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
@@ -247,6 +255,8 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
+  Until then a page's render reaches them after `settle`
+  ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
   A simulate mount's `prewarm` count builds idle routers once core loads, so
   its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
@@ -273,7 +283,11 @@ on the scan.
 
 ## The projection: routes as data
 
+<DiagramEmbed src="/diagrams/server-route-matching-projection.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-projection.svg-->
+
+</DiagramEmbed>
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
@@ -355,7 +369,11 @@ real package API.
 
 ## The verdict
 
+<DiagramEmbed src="/diagrams/server-route-matching-verdict-flow.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-verdict-flow.svg-->
+
+</DiagramEmbed>
 
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
@@ -367,7 +385,7 @@ so it 404s unless a `url: ''` route or a rule such as
 other than `/` that leaves it unclaimed. `resolve()` accepts a
 pathname, an absolute URL string, or anything with a `pathname`:
 
-```ts
+```ts check
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
@@ -449,47 +467,75 @@ binding, outside that budget entirely.
 
 Each diagram follows one request through the four lanes in production.
 
-#### Static page <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+#### Static page <Badge type="status-ok">200</Badge>
 
 Not a `run_worker_first` path, and the file exists. The worker never runs.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-1-static-page.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-1-static-page.svg-->
 
-#### Static miss <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+</DiagramEmbed>
+
+#### Static miss <Badge type="status-not-found">404</Badge>
 
 Not a `run_worker_first` path, and no file: `not_found_handling` serves the site’s `404.html`.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-2-static-miss.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-2-static-miss.svg-->
 
-#### App deep link <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-green-soft, rgba(16,185,129,0.14)); color: var(--vp-c-green-1, #18794e)">200</span>
+</DiagramEmbed>
+
+#### App deep link <Badge type="status-ok">200</Badge>
 
 A route in a mount: the verdict is `shell`, and the worker fetches the app shell through `ASSETS`. A revalidation that gets a 304 passes it on.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-3-app-deep-link.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-3-app-deep-link.svg-->
 
-#### App redirect <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-indigo-soft, rgba(100,108,255,0.14)); color: var(--vp-c-indigo-1, #3451b2)">302</span>
+</DiagramEmbed>
+
+#### App redirect <Badge type="status-redirect">302</Badge>
 
 A redirect rule at the mount root: the verdict is `redirect`, and nothing is fetched from assets.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-4-app-redirect.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-4-app-redirect.svg-->
 
-#### Unknown path, mount with `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+</DiagramEmbed>
+
+#### Unknown path, mount with `otherwise` <Badge type="status-not-found">404</Badge>
 
 `/not-found-spa` declares an `otherwise`, so the verdict is the shell with status 404. The shell request goes without validators, so assets answer with a full body, never a 304.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-5-unknown-path-otherwise.svg-->
 
-#### Unknown path, mount without `otherwise` <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-yellow-soft, rgba(234,179,8,0.14)); color: var(--vp-c-yellow-1, #915930)">404</span>
+</DiagramEmbed>
+
+#### Unknown path, mount without `otherwise` <Badge type="status-not-found">404</Badge>
 
 The verdict is `notFound` with a mount, and the worker serves that mount’s 404 page.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-6-unknown-path-no-otherwise.svg-->
 
-#### No mount <span style="margin-left: 6px; padding: 0 6px; border-radius: 4px; font-family: var(--vp-font-family-mono); font-size: 12px; font-weight: 600; vertical-align: 2px; background: var(--vp-c-default-soft, rgba(142,150,170,0.14)); color: var(--vp-c-text-1, #3c3c43)">as served</span>
+</DiagramEmbed>
+
+#### No mount <Badge type="status-as-served">as served</Badge>
 
 The pass-through, for a worker-first path no mount owns: the verdict is `notFound` without a mount, the adapter returns `null`, and the worker hands the request to `ASSETS` unchanged.
 
+<DiagramEmbed src="/diagrams/server-route-matching-seq-7-no-mount.svg">
+
 <!--@include: ../public/diagrams/server-route-matching-seq-7-no-mount.svg-->
+
+</DiagramEmbed>
 
 `vitepress dev` sends the sample-app navigations through the same verdicts
 with the `ui-router-server/vite` plugin, Vite standing in for Cloudflare and
@@ -516,9 +562,11 @@ The redirect table takes two kinds of entry, both pure data:
 
 That is the boundary: redirects expressible as **data** belong in the table.
 Anything that needs **code** to decide — hooks, resolves, `redirectTo`
-functions, injected services — is where the simulate tier is headed (a planned
-`MountConfig` widening; not yet reachable in the verdict API), and the sample
-apps deliberately keep those decisions client-side today.
+functions, injected services — is out of the verdict's reach. A server render
+reaches it after `settle`: `redirectedTo` reports a `redirectTo` function's
+redirect, which the host answers as a 30x or `prerender` writes as a rules
+line ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)). The sample apps keep those
+decisions client-side, since they render no page on the server.
 
 Contracts worth internalizing:
 
@@ -529,11 +577,11 @@ package's `mergeSearch`: target params win, remaining request params append.
 `/app/?flag=1` 302s to `/app/welcome?flag=1`. The matcher tier resolves
 pathnames only — incoming search values never flow into redirect params.
 
-**302, not 301.** The redirect table is configuration that changes with the
-next deploy, and browsers cache 301s so aggressively that a mis-shipped
-permanent redirect outlives the config that produced it. Verdicts fix
-`status: 302`; a per-rule 301 for genuinely legacy moves would be a table
-extension.
+**302 unless declared.** The redirect table is configuration that changes
+with the next deploy, and browsers cache 301s so aggressively that a
+mis-shipped permanent redirect outlives the config that produced it. Verdicts
+answer `302` unless the matched state declares `redirectStatusCode`, such as
+`308` for a move that never changes; a pattern rule's redirect stays `302`.
 
 **Mount-root rules are for path-mode entries.** Server redirects rewrite
 the path, and a hash-location client keeps its route state where the server
@@ -597,9 +645,12 @@ is a transition that settled on the `notFound` state. The cost is the full
 core chunk plus per-request router construction, and it is small: measured
 under `wrangler dev` (workerd), the first simulate request took 12.4 ms
 total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The level
-earns its keep the day a redirect needs hooks, resolves, or a `redirectTo`
-function — until then the flagships stay on the matcher tier and the switch
-remains one word of config.
+earns its keep the day a redirect must be decided before render by hooks,
+resolves, or a `redirectTo` function; a page rendered on the server already
+reaches them after `settle`
+([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
+Until then the flagships stay on the matcher tier and the switch remains one
+word of config.
 
 ## Real 404s, per mount
 
@@ -627,7 +678,9 @@ of the app's own url. Every `:id` route ships it by default.
 When the ids are known at build time, narrow the param to them. An inline
 `{name:regexp}` placeholder replaces the default segment pattern:
 
-```ts
+```ts check
+import type { RouteDeclaration } from 'ui-router-server';
+
 const ids = ['1', '2A', '12i']; // build-time data: the sheets that exist
 
 const routes: RouteDeclaration[] = [
@@ -677,7 +730,7 @@ template sees the same thing.
 inside the attribute they affect, so the `href` is a real attribute in the
 template. A whole nav:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
 
@@ -756,7 +809,8 @@ installServerLocation(router, {
   url: pathname + search,
   urlConfig: { strict: false },
 });
-states.forEach((state) => router.stateRegistry.register(state));
+// core stamps each registered declaration with $$state, so register a copy per router
+states.forEach((state) => router.stateRegistry.register({ ...state }));
 router.start();
 
 const uninstall = provideRouter(globalThis.litServerRoot, router);
@@ -767,6 +821,12 @@ try {
   uninstall();
 }
 ```
+
+Each request registers `{ ...state }`, not the shared declaration: core
+stamps the object it registers with a `$$state` pointer to that router's
+state, so a declaration shared by concurrent routers points at whichever
+registered last. Building the declarations in a function that runs per
+request works too.
 
 `withRouterSync(router, run)` is a synchronous slot, not an async context: it
 sets a module-level variable, runs `run`, and restores the previous value in a

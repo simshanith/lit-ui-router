@@ -12,6 +12,8 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
+        "//#lint:doc-examples",
+        "//#lint:md-examples",
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:dedupe",
         "@tools/repo-checks#check:single-version",

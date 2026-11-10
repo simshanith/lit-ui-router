@@ -1,5 +1,5 @@
 ---
-title: Static Prerendering
+title: Server-Side Rendering (SSR)
 description: A ui-router-server mount table in, an emitted static site out, with lit-ui-router-ssr
 ---
 
@@ -33,11 +33,17 @@ npm install lit-ui-router-ssr
 and `@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half
 and `@lit-labs/ssr-client` the client half, so a bundle takes one or the other,
 never both. `@lit-labs/ssr-client` is optional: install it when you import
-`lit-ui-router-ssr/client`.
+`lit-ui-router-ssr/client`. `lit-ui-router-ssr/vite` wraps
+`ui-router-server/vite`, so it takes `vite` through that package's optional
+peer.
 
 The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
 helper `<ui-view>` renders through, and the client hands a served class element
 to the view it wakes.
+
+The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo`
+whether a page's `redirectTo` fired, and reads the status from the redirecting
+state's `redirectStatusCode`.
 
 ## What this package owns
 
@@ -52,8 +58,11 @@ to the view it wakes.
   [`prerender`](/packages/server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers`, `payload` and
-  `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
+  `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
+  `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **One page for a host that owns the request.**
+  [`renderToString`](#rendering-one-page-per-request) is that render alone,
+  for a framework route or a worker that settles the router itself.
 - **Response states after settle.** [`responder`](#response-states) runs
   the handler bound to a response state's name with the resolves its
   transition landed with.
@@ -97,6 +106,8 @@ package re-exports, sets the url, syncs the router to it, and resolves with the
 transition that landed, so the synchronous render after it reads every resolve.
 A `redirectTo` chain settles on its final state, and a path the router already
 stands on resolves at once.
+[`redirectedTo`](#page-response-state-or-redirect-which-decides-when) reports
+where a redirected transition landed.
 
 A page fails to land in four ways, and each rejects rather than hangs:
 
@@ -116,28 +127,146 @@ A page fails to land in four ways, and each rejects rather than hangs:
 `urlService` directly, so a page loop calls it once per path on the same
 router, started or not.
 
+## Page, response state or redirect: which decides when
+
+A url's answer is decided at one of two points:
+
+- **The verdict**, from the url alone, before any of the app's code runs.
+  [`createServerRouter`](/packages/server#the-verdict) matches the url
+  against the mount's routes: a pattern rule or a data `redirectTo` answers a
+  redirect, a state marked `response: true` a
+  [response state](#response-states), a `delegate` a host handler, and any
+  other state a page.
+- **Settle**, once the page's transition runs its resolves, hooks and
+  `redirectTo` functions. They can change only a page's answer, since the
+  verdict already called the url a page: a `redirectTo` function can move
+  the transition elsewhere, and a resolve that rejects fails `settle`, which
+  the host maps to an error page.
+
+| Answer                                            | Decided at                             | Declare it as                                         |
+| ------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| a page                                            | the verdict                            | a state with a url                                    |
+| a redirect the url alone decides                  | the verdict                            | a pattern rule in `redirects`, or a data `redirectTo` |
+| a redirect that depends on the params or the data | settle                                 | a `redirectTo` function                               |
+| a `Response` built from resolves, 3xx included    | the verdict picks it, settle builds it | `response: true` and a handler                        |
+| a 404 for a value no resolve finds                | settle                                 | a resolve that rejects, mapped by the host            |
+
+A response state suits a url whose pattern alone says it is not a page. When
+urls of one pattern are sometimes a page and sometimes a redirect, such as a
+compare page whose reversed pair redirects to the forward one, only a
+`redirectTo` function tells them apart.
+
+The state whose `redirectTo` fires, data or function, declares the status in
+[`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode):
+`301`, `302`, `303`, `307` or `308`, `302` by default. A redirect function
+often depends on data, and browsers cache a permanent redirect with no
+expiry, so a redirect that never changes opts into `308`. A pattern rule's
+redirect answers `302`.
+
+After `settle`,
+[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+returns `{ url, status }` for a transition a redirect moved, a change of
+params alone included: the url it landed on, relative to the mount, query
+included, and the redirecting state's `redirectStatusCode`. It returns
+`undefined` for any other transition. A live host answers with it:
+
+```ts
+import { redirectedTo, settle } from 'lit-ui-router-ssr';
+
+const compare = {
+  name: 'compare',
+  url: '/diff/:from/:to',
+  redirectStatusCode: 308,
+  redirectTo: (trans) => {
+    const { from, to } = trans.params();
+
+    return Number(from) > Number(to)
+      ? trans.targetState().withParams({ from: to, to: from })
+      : undefined;
+  },
+};
+
+// A shell verdict under /releases, on a router built for this request.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+```
+
+`prerender` does the same after each `renderShell`: when the transition the
+hook landed was redirected, the path gets a rules line,
+`/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
+`tally.redirect`.
+[`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
+runs this example both ways.
+
+- A url rule that rewrites the url, `when('/old', '/new')`, starts a new
+  transition rather than redirecting one, so `redirectedTo` reports nothing
+  for it. Declare it in the mount's `redirects` and the verdict answers it.
+- `settle` on a path the router already stands on resolves with the
+  transition that brought it there, which may be an earlier path's redirect.
+  `prerender` only reads a transition its hook landed; a live host settles a
+  router built for the request.
+
+## Rendering one page per request
+
+A host that owns the request, such as a framework route or a worker, renders
+one page with
+[`renderToString(template, { router })`](/api/lit-ui-router-ssr/index/functions/renderToString).
+It is the render `prerender()` runs for each page, hydration signature and
+`deferHydration` included, so its markup is byte for byte what `prerender()`
+hands `document` for the same template and router. The host settles the
+router, decides the response and writes the document around the markup:
+
+```ts
+import { redirectedTo, renderToString, settle } from 'lit-ui-router-ssr';
+
+// `router` serves the mount at /releases; `subpath` is the request's path within it.
+const redirect = redirectedTo(router, await settle(router, subpath));
+
+if (redirect)
+  return new Response(null, {
+    status: redirect.status,
+    headers: { Location: `/releases${redirect.url}` },
+  });
+
+const { html } = renderToString(page(router), { router, dehydrate: {} });
+
+return new Response(shell(html), {
+  status: router.globals.current.name === 'notFound' ? 404 : 200,
+  headers: { 'Content-Type': 'text/html; charset=utf-8' },
+});
+```
+
+The router must stand on the page before the call. It is provided on `root`, a
+fresh `EventTarget` unless one is passed, for the render alone.
+`elementRenderers` and `dehydrate` act as `prerender()`'s options of the same
+name, and `payload` takes a payload drawn by hand rather than a hook. The
+result's `payload` reports the bytes the resolve payload adds to the signature
+and, under `dehydrate`, the resolves left to re-run on the client.
+
+The markup is collected into one string, synchronously. A streamed render
+would be a separate export.
+
 ## Adopting the resolves on boot
 
-The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload) option
-hands each rendered page's landed transition to a hook, which returns the
-resolve payload to write.
+The [`dehydrate`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#dehydrate)
+option draws each rendered page's resolve payload: `prerender` calls
 [`dehydrate`](/api/ui-router-server/ssr/functions/dehydrate) from
-`ui-router-server/ssr` draws one, and the hook decides what to do with the
-resolves it leaves out:
+`ui-router-server/ssr` on the page's landed transition with the options given,
+so `shouldDehydrate` and `transport` act exactly as they do there. Pass `{}`
+to draw every resolve:
 
 ```ts
 import { prerender } from 'lit-ui-router-ssr';
-import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
   // mounts, router, paths, renderShell, …
-  payload: (transition, { path }) => {
-    const { payload, unserializable } = dehydrate(transition);
-
-    for (const { state, token } of unserializable)
-      console.warn(`${path}: ${state}.${token} re-runs on the client`);
-
-    return payload;
+  dehydrate: {
+    shouldDehydrate: ({ token }) => token !== 'manifest',
   },
 });
 ```
@@ -150,27 +279,62 @@ with adopts its value in place of running its function. Every other resolve
 runs as it would without one: a value `dehydrate` left out, a `NOWAIT`
 resolve, every resolve of a boot that lands on another state or other
 parameters, and every resolve of a page whose block carries no `resolves`.
-Without the hook no page carries resolves. What `dehydrate` draws, and which
-values it leaves out, is in
+Without `dehydrate` or a `payload` hook no page carries resolves. What
+`dehydrate` draws, and which values it leaves out, is in
 [Handing resolves to the client](/packages/server#handing-resolves-to-the-client).
 
 A value plain JSON can't carry, such as a `Date`, travels through a
-transporter. Pass the same `transport` to `dehydrate` in the hook and to
+transporter. Pass the same `transport` in `dehydrate` and to
 [`bootstrap`](/api/lit-ui-router-ssr/client/interfaces/BootstrapOptions#transport):
 the signature keeps the payload's `transported` marks, and `bootstrap` hands
 `transport` to `seed`. See
 [Values beyond plain JSON](/packages/server#values-beyond-plain-json).
 
+The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload)
+option takes the drawing over by hand: a hook handed each page's landed
+transition returns the payload to write, or `undefined` to write none. Pass
+one or the other; passing both throws.
+
+```ts
+import { dehydrate } from 'ui-router-server/ssr';
+
+await prerender({
+  // mounts, router, paths, renderShell, …
+  payload: (transition, { path }) =>
+    path.startsWith('/drafts/')
+      ? undefined
+      : dehydrate(transition, { transport }).payload,
+});
+```
+
+Each rendered page's entry in `result.pages` reports its payload as
+[`payload`](/api/lit-ui-router-ssr/index/interfaces/PagePayload): `bytes`,
+what the payload adds to the page's signature as written, and, when
+`dehydrate` drew it, `unserializable`, the resolves left out to re-run on the
+client. A hook returns the payload alone, so behind one the report carries
+`bytes` only. A page with no payload has no `payload` field.
+
+```ts
+const { pages } = await prerender({ /* … */ dehydrate: {} });
+
+for (const { path, payload } of pages) {
+  if (!payload) continue;
+  console.log(`${path}: ${payload.bytes} bytes of resolves`);
+  for (const { state, token } of payload.unserializable ?? [])
+    console.warn(`${path}: ${state}.${token} re-runs on the client`);
+}
+```
+
 ## Verdict to artefact
 
-| Verdict               | What is emitted                                                       |
-| --------------------- | --------------------------------------------------------------------- |
-| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document` |
-| `redirect`            | a rules line (`from to status`), no page                              |
-| `notFound`            | nothing, and the path is listed in `result.warnings`                  |
-| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler  |
-| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line         |
-| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell      |
+| Verdict               | What is emitted                                                                                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
+| `redirect`            | a rules line (`from to status`), no page                                                                                                                                         |
+| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                             |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                             |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                    |
+| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                 |
 
 [`PrerenderResult`](/api/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
@@ -233,7 +397,22 @@ or a virtual fs instead — it receives `outDir` already joined on.
 The rules file follows the same seam: `rules: '_redirects'` (the default)
 writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
-your host reads.
+your host reads, such as
+[`redirectPages()`](/packages/server#hosts-without-redirect-rules) for a host
+with no redirect rules.
+
+## After `vite build`
+
+`lit-ui-router-ssr/vite` prerenders the built app after `vite build`. Its
+[`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
+is [`ui-router-server/vite`'s](/packages/server#after-vite-build), with the
+DOM shim and `lit-ui-router-ssr/register` loaded before the prerender script,
+and its
+[`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender)
+calls this package's `prerender` with the options the script returns;
+[Prerender with Vite](/guides/prerender-with-vite) shows both files in full.
+[Prerender with Eleventy](/guides/prerender-with-eleventy) calls `prerender`
+from an Eleventy data file instead, and lets Eleventy write the pages.
 
 ## Static hosts add a trailing slash
 
@@ -279,7 +458,7 @@ before the call. It comes back on the result either way.
 Take a card that receives a post by property and draws it in its own
 `render()`:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 
 type Post = { title: string; summary: string };
@@ -401,11 +580,20 @@ browser attaches as it parses, and hydration adopts them there.
 whether or not it has anything to show on the server, which is the cost the
 default avoids.
 
+A shell element needs that list too: a shadow-DOM component that holds
+`<ui-view>` in its own template, such as an `<app-root>`. Under the default it
+renders as its bare tag, empty, and the views inside it are missing with it.
+With `LitElementRenderer` after `LightElementRenderer`, the `<ui-view>` in its
+shadow root renders, hydrates and adopts. In development, `prerender()` and
+`renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no
+renderer that draws it; `<ui-router>`, whose shadow root is a bare slot, is left
+out.
+
 ## Development and production builds
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the
+[Development and Production Builds](/guides/development-builds) for the
 mechanism.
 
 Three warnings come from `prerender()`. The first two come from the
@@ -452,30 +640,45 @@ await bootstrap(router, root, page(router));
 
 A `<ui-view>` another class already defined throws, naming both ways out.
 
-The build-time entry that calls `prerender()` imports
-`lit-ui-router-ssr/register` too, once the DOM shim has finished installing.
-The shim module awaits at its top level, so a static import beside it evaluates
-first: lit's Node build installs a registry of its own, the elements are defined
-there, and the shim then replaces `globalThis.customElements` with an empty one.
-Import the shim statically and everything that defines or reaches an element by
-dynamic import:
+The build-time entry that calls `prerender()` needs the DOM shim installed
+before anything defines an element. The shim module awaits at its top level, so
+a static import beside it evaluates first: lit's Node build installs a registry
+of its own, the elements are defined there, and the shim then replaces
+`globalThis.customElements` with an empty one. Load the shim and
+`lit-ui-router-ssr/register` before the entry starts.
+[`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
+from `lit-ui-router-ssr/vite` names both as preloads of its prerender worker,
+and its
+[`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender)
+calls `prerender()` with the options the entry returns:
 
 ```ts
-import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+// vite.config.ts
+import { createServerRouter } from 'ui-router-server';
+import { serverRouterPlugin } from 'lit-ui-router-ssr/vite';
 
-await import('lit-ui-router-ssr/register');
-const { UIRouterLit } = await import('lit-ui-router/pure');
-const { prerender, settle } = await import('lit-ui-router-ssr');
-const { page } = await import('./views.js');
+plugins: [
+  serverRouterPlugin(createServerRouter({ mounts }), {
+    prerender: './src/prerender.ts',
+  }),
+];
+
+// src/prerender.ts
+import { definePrerender } from 'lit-ui-router-ssr/vite';
+
+export default definePrerender((site) => ({
+  mounts,
+  router,
+  paths,
+  renderShell,
+  document,
+}));
 ```
 
-The atlas's
-[`app/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/prerender.ts)
-is a complete entry in this shape.
-
-Preloading the shim with
-`node --import @lit-labs/ssr/lib/install-global-dom-shim.js` finishes it before
-the entry's graph starts, so static imports hold there too.
+The entry then uses plain static imports; see
+[Prerender with Vite](/guides/prerender-with-vite). An entry node runs directly
+gets the same order from
+`node --import @lit-labs/ssr/lib/install-global-dom-shim.js`.
 [`UiViewRenderer`](/api/lit-ui-router-ssr/index/classes/UiViewRenderer) draws the
 served class, and a `<ui-view>` nothing defined on the server renders as an
 inert element with an empty part pair — no error, and every page's body
@@ -487,7 +690,7 @@ missing. In development `prerender()` warns when the registry holds no
 It imports `lit-ui-router/pure`, which registers nothing, and defines the served
 class under a tag of its own:
 
-```ts
+```ts check
 import { UiView } from 'lit-ui-router/pure';
 import { withServedRender } from 'lit-ui-router-ssr/client';
 
@@ -514,18 +717,29 @@ router, waits for the boot transition to land, then calls
 [`hydrateRoot`](/api/lit-ui-router-ssr/client/functions/hydrateRoot), which provides
 an adopter under the container with core's
 [`provideContext`](/api/reference/core/provideContext) and runs one
-`hydrate()` walk over it. It resolves once every awake view has updated:
+`hydrate()` walk over it. It resolves once the views that woke have updated:
 
 ```ts
 import { bootstrap } from 'lit-ui-router-ssr/client';
 
-const { outcome, signature } = await bootstrap(router, root, page(router));
+const { outcome, signature, views } = await bootstrap(
+  router,
+  root,
+  page(router),
+);
 ```
 
-`signature` is a
+`outcome` is what the root hydrate came to, `adopted` or `cold`. `signature` is a
 [`BootstrapSignature`](/api/lit-ui-router-ssr/client/type-aliases/BootstrapSignature):
 `matched`, `elsewhere` or `absent`, comparing the state the boot landed on with
-the one the document was drawn for.
+the one the document was drawn for. `views` is a read-only map from each view's
+fully qualified name, such as `$default.$default`, to a
+[`BootstrapViewReport`](/api/lit-ui-router-ssr/client/interfaces/BootstrapViewReport):
+the view's `AdoptOutcome`, or `pending` for a view the document was drawn with
+that had not woken yet. Views are tracked by what they report to the adopter,
+so a view in a shadow root counts like any other, and the adopter stays
+installed until every drawn view has reported. A document that booted where it
+was drawn and adopted none of its drawn views warns once in development.
 
 The cold path is the same call: a container with nothing to adopt, a boot
 transition that fails, and a walk that throws all end in a cold render. The
@@ -536,13 +750,14 @@ whose state or url parameters differ from the drawn ones renders cold.
 `prerender()` opens every page it renders from a template on a hydration
 signature: a JSON data block ahead of the render, carrying this package's
 version, the name of the state the router stood on, that state's url
-parameter values, and the resolved values the
-[`payload` hook](#adopting-the-resolves-on-boot) supplies.
+parameter values, the fully qualified name of each `<ui-view>` it drew, and the
+resolved values
+[`dehydrate` or the `payload` hook](#adopting-the-resolves-on-boot) draws.
 It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<script type="application/json" data-lit-ui-router-ssr>{"version":"0.2.0","state":"sheet","params":{"num":"7B"}}</script>
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.9.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`
@@ -592,7 +807,8 @@ or a lost pair dropped them for a cold render, with the cause in `error`, and
 `none` when there was nothing to adopt. The
 [`onAdopt`](/api/lit-ui-router-ssr/client/interfaces/HydrateRootOptions) option of
 `bootstrap` and `hydrateRoot` receives the same reports for every view the walk
-reaches, so a consumer needs no listener:
+reaches, and for a view in a shadow root its host hydrates after the walk, so a
+consumer needs no listener:
 
 ```ts
 await bootstrap(router, root, page(router), {
@@ -633,7 +849,7 @@ draws it on the server as one of `prerender()`'s default renderers, and
 [`lightSlot`](/api/lit-ui-router-ssr/client/variables/lightSlot) marks the hole
 at the use site:
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { LightDomHydrating, lightSlot } from 'lit-ui-router-ssr/client';
@@ -747,6 +963,10 @@ expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
   removed: 0,
 });
 ```
+
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-ssr" />
 
 ## Further reading
 

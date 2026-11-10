@@ -1,5 +1,5 @@
 ---
-title: UI-Router Registry
+title: Registry
 description: Typed state names and params for a @uirouter/core router with ui-router-registry, a types-only registry
 ---
 
@@ -21,9 +21,9 @@ npm install --save-dev ui-router-registry
 ```
 
 `@uirouter/core` is a peer dependency, for its types only. `ui-router-signals`,
-`ui-router-effect` and `ui-router-mobx` are optional peers at `^0.2.0`, each
-needed only by its entry point. Install one copy of this package per app: two
-copies mean two registries, and the augmentations type only one.
+`ui-router-effect` and `ui-router-mobx` are optional peers, each needed only by
+its entry point. Install one copy of this package per app: two copies mean two
+registries, and the augmentations type only one.
 
 ## Registering states
 
@@ -124,7 +124,7 @@ stateService.go('contacts.contact', { contactId: 'c1' });
 empty `RouteTypes` interface. A type-only import of the matching entry point,
 next to an augmentation, fills it in:
 
-```ts
+```ts check
 import type {} from 'ui-router-registry/signals';
 ```
 

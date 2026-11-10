@@ -17,6 +17,10 @@ import { TemplateResult, LitElement } from 'lit';
  *
  * @example
  * ```ts
+ * import type { RawParams, Transition } from '@uirouter/core';
+ * import { LitElement } from 'lit';
+ * import type { UiOnParamsChanged } from 'lit-ui-router';
+ *
  * class UserDetail extends LitElement implements UiOnParamsChanged {
  *   uiOnParamsChanged(newParams: RawParams, trans?: Transition) {
  *     console.log('Parameters changed:', newParams);
@@ -24,6 +28,10 @@ import { TemplateResult, LitElement } from 'lit';
  *     if (newParams.userId) {
  *       this.loadUser(newParams.userId);
  *     }
+ *   }
+ *
+ *   loadUser(userId: string) {
+ *     // fetch and render the user
  *   }
  * }
  * ```
@@ -63,6 +71,10 @@ export interface UiOnParamsChanged {
  *
  * @example
  * ```ts
+ * import type { HookResult, Transition } from '@uirouter/core';
+ * import { LitElement } from 'lit';
+ * import type { UiOnExit } from 'lit-ui-router';
+ *
  * class EditForm extends LitElement implements UiOnExit {
  *   hasUnsavedChanges = false;
  *
@@ -113,7 +125,7 @@ export interface UiOnExit {
  * @see {@link UIViewResolves}
  * @category types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
 export type DefaultResolvesType = Record<string, any>;
 
 /**
@@ -128,7 +140,7 @@ export type DefaultResolvesType = Record<string, any>;
  * @category types
  */
 export type UIViewResolves<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = T;
 
@@ -143,6 +155,9 @@ export type UIViewResolves<
  *
  * @example Using in a template function
  * ```ts
+ * import { html } from 'lit';
+ * import type { RoutedLitTemplate } from 'lit-ui-router';
+ *
  * const UserDetail: RoutedLitTemplate = (props) => {
  *   const { resolves, router } = props!;
  *   return html`
@@ -156,6 +171,13 @@ export type UIViewResolves<
  *
  * @example Using in a LitElement class
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import type { UIViewInjectedProps } from 'lit-ui-router';
+ *
+ * interface User {
+ *   name: string;
+ * }
+ *
  * class UserDetail extends LitElement {
  *   _uiViewProps?: UIViewInjectedProps<{ user: User }>;
  *
@@ -190,14 +212,20 @@ export interface UIViewInjectedProps<
  *
  * @example Simple template (no props needed)
  * ```ts
+ * import { html } from 'lit';
+ * import type { LitStateDeclaration, RoutedLitTemplate } from 'lit-ui-router';
+ *
  * const HomeView: RoutedLitTemplate = () => html`<h1>Welcome Home</h1>`;
  *
- * // Or use directly inline in a state declaration:
- * { name: 'home', url: '/', component: () => html`<h1>Home</h1>` }
+ * // Or inline in a state declaration:
+ * const home: LitStateDeclaration = { name: 'home', url: '/', component: () => html`<h1>Home</h1>` };
  * ```
  *
  * @example With route parameters
  * ```ts
+ * import { html } from 'lit';
+ * import type { RoutedLitTemplate } from 'lit-ui-router';
+ *
  * const UserView: RoutedLitTemplate = (props) => html`
  *   <h1>User: ${props?.transition?.params().id}</h1>
  * `;
@@ -205,6 +233,9 @@ export interface UIViewInjectedProps<
  *
  * @example With resolved data (typed)
  * ```ts
+ * import { html } from 'lit';
+ * import type { RoutedLitTemplate } from 'lit-ui-router';
+ *
  * interface UserResolves { user: { name: string } }
  *
  * const UserDetail: RoutedLitTemplate<UserResolves> = (props) => html`
@@ -215,7 +246,7 @@ export interface UIViewInjectedProps<
  * @category types
  */
 export type RoutedLitTemplate<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = (props: UIViewInjectedProps<T>) => TemplateResult;
 
@@ -228,7 +259,7 @@ export type RoutedLitTemplate<
  * @category types
  */
 export type LitViewDeclarationTemplate<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = RoutedLitTemplate<T> & _ViewDeclaration;
 
@@ -245,6 +276,15 @@ export type LitViewDeclarationTemplate<
  *
  * @example Constructor injection
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import type {
+ *   LitStateDeclaration,
+ *   UIRouterLit,
+ *   UIViewInjectedProps,
+ * } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
+ *
  * class UserList extends LitElement {
  *   _uiViewProps: UIViewInjectedProps;
  *
@@ -258,15 +298,20 @@ export type LitViewDeclarationTemplate<
  *   }
  * }
  *
- * router.stateRegistry.register({
+ * const usersState: LitStateDeclaration = {
  *   name: 'users',
  *   url: '/users',
  *   component: UserList
- * });
+ * };
+ * router.stateRegistry.register(usersState);
  * ```
  *
  * @example Argless constructor with property injection (typical Lit)
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import { property } from 'lit/decorators.js';
+ * import type { UIViewInjectedProps } from 'lit-ui-router';
+ *
  * class UserDetail extends LitElement {
  *   // reactive property: sticky reuse re-renders when props are reassigned
  *   @property({ attribute: false }) _uiViewProps?: UIViewInjectedProps;
@@ -305,7 +350,7 @@ export interface RoutedLitElement<
  * @category types
  */
 export type RoutedLitComponent<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > = RoutedLitTemplate<T> | RoutedLitElement<T>;
 
@@ -342,7 +387,7 @@ export interface LitViewDeclarationObject<
  * @category types
  */
 export type LitViewDeclaration<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- backwards compatible default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | LitViewDeclarationObject<T>
@@ -356,12 +401,12 @@ export type LitViewDeclaration<
  * The `component` property accepts template functions, LitElement classes, or both.
  *
  * @example Simplest: inline template function
- * ```ts
+ * ```ts nocheck
  * { name: 'home', url: '/', component: () => html`<h1>Home</h1>` }
  * ```
  *
  * @example Template with route parameters
- * ```ts
+ * ```ts nocheck
  * {
  *   name: 'user',
  *   url: '/user/:id',
@@ -370,7 +415,7 @@ export type LitViewDeclaration<
  * ```
  *
  * @example Template with resolved data
- * ```ts
+ * ```ts nocheck
  * {
  *   name: 'users',
  *   url: '/users',
@@ -382,12 +427,18 @@ export type LitViewDeclaration<
  * ```
  *
  * @example LitElement class (for complex components)
- * ```ts
+ * ```ts nocheck
  * { name: 'dashboard', url: '/dashboard', component: DashboardElement }
  * ```
  *
  * @example Nested states
  * ```ts
+ * import { html, LitElement } from 'lit';
+ * import type { LitStateDeclaration } from 'lit-ui-router';
+ *
+ * class AppShell extends LitElement {}
+ * class UsersView extends LitElement {}
+ *
  * const states: LitStateDeclaration[] = [
  *   { name: 'app', abstract: true, component: AppShell },
  *   { name: 'app.home', url: '/home', component: () => html`<h1>Home</h1>` },
@@ -436,7 +487,7 @@ export interface LitStateDeclaration<
  * @category types
  */
 export type TypedLitViewComponent<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | ((props: UIViewInjectedProps<T>) => void)
@@ -461,7 +512,7 @@ export type TypedLitViewComponent<
  * @category types
  */
 export type TypedLitViewDeclaration<
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- matches LitStateDeclaration's default until 2.0 (#1474)
   T extends DefaultResolvesType = DefaultResolvesType,
 > =
   | (TypedLitViewComponent<T> & _ViewDeclaration)
@@ -487,6 +538,11 @@ export type TypedLitViewDeclaration<
  *
  * @example
  * ```ts
+ * import { LitElement } from 'lit';
+ * import type { TypedLitStateDeclaration } from 'lit-ui-router';
+ *
+ * class ContactView extends LitElement {}
+ *
  * const contactState = {
  *   name: 'contacts.contact',
  *   url: '/:contactId',

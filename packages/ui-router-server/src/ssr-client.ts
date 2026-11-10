@@ -138,10 +138,16 @@ const revive = (
  *
  * @example
  * ```ts
+ * import type { UIRouter } from '@uirouter/core';
+ * import type { ResolvePayload } from 'ui-router-server/ssr';
  * import { seed } from 'ui-router-server/ssr/client';
  *
+ * declare const router: UIRouter;
+ * declare const payload: ResolvePayload | undefined;
+ *
  * seed(router, payload);
- * router.start();
+ * router.urlService.listen();
+ * router.urlService.sync();
  * ```
  */
 export const seed = (

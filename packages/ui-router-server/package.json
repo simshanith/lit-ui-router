@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.7.1",
+  "version": "0.9.0",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/server",
   "bugs": {
@@ -31,6 +31,19 @@
       "deno": "./dist/dev-gate.js",
       "node": "./dist/dev-gate.node.js",
       "default": "./dist/dev-gate.js"
+    },
+    "#node-conditions": {
+      "types": "./src/node-conditions.ts",
+      "node": "./dist/node-conditions.node.js",
+      "default": "./dist/node-conditions.js"
+    },
+    "#node-output": {
+      "types": "./src/node-output.ts",
+      "node": "./dist/node-output.node.js",
+      "default": "./dist/node-output.js"
+    },
+    "#prerender-thread": {
+      "node": "./dist/prerender-thread.js"
     }
   },
   "exports": {
@@ -155,25 +168,34 @@
     "lint:oxlint": "oxlint .",
     "test": "node --import ./test/import-meta-env.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "test:coverage": "mkdir -p coverage && node --import ./test/import-meta-env.ts --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=@tools/shared/test-reporter.ts --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
+    "test:vite7-compat": "vite7-compat-guard && node --import ./test/import-meta-env.ts --import ./test/vite7-compat.ts --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "typecheck:runtime-globals": "tsc -p tsconfig.runtime-globals.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit && tsc -p test/tsconfig.dom.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
+    "typecheck:vite7": "vite7-compat-guard && tsc -p tsconfig.vite7.json --noEmit"
+  },
+  "dependencies": {
+    "escape-html": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@repo/dev-gate": "catalog:workspace",
+    "@testing-library/dom": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",
     "@tools/lcov-rebase": "catalog:workspace",
+    "@tools/lit-test-env": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@tools/wintercg-globals": "catalog:workspace",
+    "@types/escape-html": "catalog:",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/core-floor": "catalog:peerFloor",
+    "happy-dom": "catalog:",
     "hono": "catalog:",
     "hono-floor": "catalog:peerFloor",
     "oxfmt": "catalog:",
@@ -186,17 +208,23 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "typescript-7": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-7": "catalog:vite7-compat",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
-    "hono": "catalog:publishedPeer"
+    "hono": "catalog:publishedPeer",
+    "vite": "catalog:publishedPeer"
   },
   "peerDependenciesMeta": {
     "@uirouter/core": {
       "optional": true
     },
     "hono": {
+      "optional": true
+    },
+    "vite": {
       "optional": true
     }
   },
@@ -277,7 +305,14 @@
     },
     "./vite": {
       "free": [
-        "@uirouter/core"
+        "@uirouter/core",
+        "@lit-labs/ssr",
+        "lit",
+        "lit-ui-router",
+        "vite",
+        "node:fs",
+        "node:path",
+        "node:process"
       ]
     }
   }

@@ -5,13 +5,14 @@
     "docs:api": {
       "outputs": ["../../www/lit-ui-router.dev/api/ui-router-server/**"]
     },
+    // development-build and bundle-size specs read this package's own dist
     "test": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "build:js"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // root task keys inputs on vitest configs; this suite is node --test
     "test:coverage": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "build:js"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["coverage/**"]
     },
@@ -24,12 +25,14 @@
         "typecheck:lit2",
         "typecheck:mobx6",
         "typecheck:effect3",
+        "typecheck:vite7",
         "typecheck:tests",
         "typecheck:runtime-globals"
       ]
     },
+    // the vite-prerender fixture imports this package by name, from its own dist
     "typecheck:tests": {
-      "dependsOn": ["^build:types"],
+      "dependsOn": ["^build:types", "build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     // transit carries the dep closure's hashes: the shims this withdraws live

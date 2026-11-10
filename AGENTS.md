@@ -8,7 +8,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## Setup and commands
 
 - Bootstrap with `mise trust`, `mise install`, `mise run setup` ([CONTRIBUTING: Development](docs/CONTRIBUTING.md#development)). A fresh checkout or worktree needs `mise trust` first.
-- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs. Locally it, like any e2e run, holds the CPU for minutes and Cypress can take window focus; tread lightly, and check in only when you judge it matters. A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
+- `mise run ci` is the full local gate: the turbo graph the PR lane's `run` job runs, then every e2e suite, which CI runs as parallel jobs. Locally it, like any e2e run, holds the CPU for minutes; tread lightly, and check in only when you judge it matters. A scoped `turbo run build typecheck lint test` misses `format:check`; add it.
 - Run bare `turbo` in a mise-activated shell and `mise exec -- turbo` in a non-activated one (agent tool shells, unless opted in with `mise run agent_hook`; [CONTRIBUTING: Agent shells](docs/CONTRIBUTING.md#agent-shells)), never `pnpm turbo` or `pnpm exec turbo`. Run it in the foreground; a backgrounded run can die without an error.
 - If a failure lands in a package your diff doesn't touch, rerun that task with `--force` before believing it; an aborted examples `npm ci` leaves `node_modules` half-written.
 - `dist/` is never emptied by a build. Clear stale emit before reading `dist/` as shipped output ([CONTRIBUTING: Running Tests](docs/CONTRIBUTING.md#running-tests)).
@@ -55,7 +55,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Overrides name their parent (`parent>child`), never a blanket range. Exact override pins can turn from floors into vulnerable ceilings; test one by deleting it.
 - Peer floors live in the `peerFloor*` and `publishedPeer*` catalogs. A released package's peer ranges admit no prerelease line.
 - A peer range on a 0.x workspace package keeps two `||` legs; `floor-guard` warns past that ([RELEASE](docs/RELEASE.md)).
-- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, `rolldown` without `vite`, and `oxlint` without `eslint-plugin-oxlint`.
+- Dependabot edits to reject: narrowing the `@oxc-project/runtime` floor in `publishedDependencies`, and `oxlint` without `eslint-plugin-oxlint`. Pins that must move together are in the `ignore` list in `.github/dependabot.yml`.
 - Accepted audit advisories go under `audit:` ([CONTRIBUTING: Dependency audit](docs/CONTRIBUTING.md#dependency-audit)).
 
 ## Lint and format
@@ -63,8 +63,10 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - oxlint config is `.oxlintrc.json`. `!` negations in an override's `files` are ignored (use `excludeFiles`), a later override replaces a rule's config instead of merging, and `no-restricted-imports` `regex` has no lookaround. Misconfiguration is silent, so prove a new override fires with a temporary violation.
 - `.js`/`.mjs`/`.cjs` files have type-aware rules off; renaming one to `.ts` turns them on. `lint:root` ignores `tools/`, so run `turbo run lint`.
 - oxlint doesn't count `{@link X}` as a use. Link without a doc-only import: `{@link "@uirouter/core"!StateService | StateService}`.
-- lit-analyzer runs through `tools/lit-template-lint` (`//#lint:templates`). Its only suppression is `@ts-ignore` in a template HTML comment. It rejects `@focusout` (bind it imperatively) and `color-scheme` inside `css` blocks (declare it at `:root`).
-- stylelint (`//#lint:css`, `stylelint.config.mjs`) owns CSS validity in `.css`, `.vue` and lit `css` blocks. Suppress with `/* stylelint-disable-next-line <rule> -- <reason> */`; a disable without a reason, or one that suppresses nothing, fails the lane.
+- `//#lint:templates` (`tools/lit-template-lint`) lowers lit `html` templates to TypeScript and checks them on the 7.1 API, through the scoped `typescript-7.1` catalog alias. `<!-- @ts-expect-error -->` in a template suppresses the next element's checks, and an unused one fails. Events come from lib.dom's event maps plus the element class's `@fires` tags and literal `dispatchEvent` calls; an event dispatched through a factory needs `@fires`.
+- `//#lint:doc-examples` (`tools/doc-example-check`) type-checks every `ts` block in a published `@example` tag as its own module, on the same alias, against built `dist` types. Write each example self-contained: its imports, plus `declare const router: UIRouterLit;` for names the app supplies. Flag a genuine fragment, such as a bare state literal, with ` ```ts nocheck `.
+- `//#lint:md-examples` (`tools/md-content-mapper`) type-checks the Markdown `ts` fences flagged ` ```ts check ` as their own modules, through a 7.1 content mapper run by `tsc --runExternalCode`. It is opt-in because most docs fences are fragments; flag a fence that is complete on its own, imports included. All flagged fences share one program, so leave a fence that augments a module (`declare module`) unflagged.
+- stylelint (`//#lint:css`, `stylelint.config.mjs`) owns CSS validity in `.css`, `.vue` and lit `css` blocks, and in `<style>` elements of lit `html` templates through the `postcss-lit-html` syntax. Suppress with `/* stylelint-disable-next-line <rule> -- <reason> */`; a disable without a reason, or one that suppresses nothing, fails the lane.
 - oxfmt formats `.md`, YAML and `package.json` too, and owns top-level key order. rumdl lints Markdown (`mise run lint_markdown`); taplo owns TOML.
 - Suppressions are fine when justified; prefer clean code when possible.
 - Complexity has two levels. oxlint's `complexity` (max 15) gates every workspace package, `examples/` and `.vue` included; by convention a waiver is `eslint-disable-next-line complexity -- <reason>` where a split would read worse, and a split lands well under 15. `//#lint:complexity` (`tools/eslint/complexity-ceiling.ts`, max 25; vendored code gets a per-file limit there) ignores disable comments and covers JS/TS outside gitignored paths; `.vue` files are outside it.
@@ -76,6 +78,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Re-render specs build templates from one factory; two `html` literals are two templates and rebuild the element.
 - e2e serves on port 8787 by default, shared across checkouts; see the e2e README to move one. `wrangler dev` crashes are a known flake; rerun first.
 - Test effort goes to `packages/*` before the docs site.
+- Tests of rendered HTML parse it before asserting: [CONTRIBUTING: Testing HTML output](docs/CONTRIBUTING.md#testing-html-output).
 - Codecov failures: [CONTRIBUTING: Reproducing a Codecov failure](docs/CONTRIBUTING.md#reproducing-a-codecov-failure).
 
 ## lit runtime traps
@@ -89,7 +92,8 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 
 - Published `.d.ts` must stay valid under TypeScript 5.0 ([CONTRIBUTING: TypeScript authoring](docs/CONTRIBUTING.md#typescript-authoring)).
 - `@tools/oxc-emit` owns the JS and declaration passes. Declaration emit is syntactic: derive exported types from `as const` data, never from objects of imported values.
-- TypeScript 7 has no JS API. Members that import the compiler (typedoc, vite-plugin-checker, cypress) use the `typescript6-compat` catalog.
+- TypeScript 7 has no classic compiler API (`typescript/sync` is a different surface). Members that import the compiler (typedoc, vite-plugin-checker) use the `typescript6-compat` catalog.
+- A package's `tsc` bin is its highest-versioned TypeScript dependency or alias, so a `typescript-7.1` user type-checks on the beta.
 - TypeScript 6+ defaults `types` to `[]`; list ambient types explicitly in new tsconfigs.
 - Settle an entry's public exports before its first publish; prefer named re-exports over `export *`.
 
@@ -136,4 +140,4 @@ A skill stays thin: when to use it and what an unattended run needs, linking the
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
-- `cypress-sample-app`: run a sample app on a vite dev server and drive it with one Cypress spec.
+- `playwright-sample-app`: run a sample app on a vite dev server and drive it with one Playwright spec or `playwright-cli`.

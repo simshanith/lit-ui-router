@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, computed, onMounted, onUnmounted } from 'vue';
-import screenfull from 'screenfull';
+import { useTemplateRef, ref, computed, onMounted } from 'vue';
+import { VPIcon } from 'vitepress/theme';
 import ExampleEmbed from './ExampleEmbed.vue';
+import { useExpandDialog } from './expand-dialog';
 import { webContainersSupported } from './webcontainers';
 
 const props = defineProps<{
@@ -22,23 +23,9 @@ const openUrl = computed(() => {
   return url.toString();
 });
 
-const container = useTemplateRef('container');
+const dialog = useTemplateRef('dialog');
 
-const isFullscreenSupported = ref(false);
-
-const isFullscreen = ref(false);
-
-const iconsLoaded = ref(false);
-
-const toggleFullscreen = () => {
-  if (screenfull.isEnabled && container.value) {
-    screenfull.toggle(container.value);
-  }
-};
-
-const handleFullscreenChange = () => {
-  isFullscreen.value = screenfull.isFullscreen;
-};
+const { expanded, toggle, onClose } = useExpandDialog(dialog);
 
 const iframe = useTemplateRef('iframe');
 
@@ -48,32 +35,8 @@ function refreshIframe() {
   if (el) el.src += '';
 }
 
-async function loadIcons() {
-  await Promise.all([
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
-    import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
-  ]);
-  iconsLoaded.value = true;
-}
-
-if (!import.meta.env.SSR) {
-  loadIcons();
-}
-
-onMounted(async () => {
+onMounted(() => {
   embedSupported.value = webContainersSupported();
-  isFullscreenSupported.value = screenfull.isEnabled;
-
-  if (screenfull.isEnabled) {
-    screenfull.on('change', handleFullscreenChange);
-  }
-});
-
-onUnmounted(() => {
-  if (screenfull.isEnabled) {
-    screenfull.off('change', handleFullscreenChange);
-  }
 });
 </script>
 
@@ -95,19 +58,26 @@ onUnmounted(() => {
       :title="title"
       :height="fallbackHeight"
     >
-      <a :href="openUrl" target="_blank" rel="noopener" class="btn">
+      <a :href="openUrl" target="_blank" rel="noopener" class="site-button">
         Open in StackBlitz
       </a>
     </ExampleEmbed>
-    <a v-else :href="openUrl" target="_blank" rel="noopener" class="btn">
+    <a
+      v-else
+      :href="openUrl"
+      target="_blank"
+      rel="noopener"
+      class="site-button"
+    >
       Open in StackBlitz
     </a>
   </div>
-  <div
+  <dialog
     v-else
-    ref="container"
-    class="stackblitz-embed"
-    :class="{ fullscreen: isFullscreen }"
+    ref="dialog"
+    class="stackblitz-embed site-expand"
+    :aria-label="title"
+    @close="onClose"
   >
     <iframe
       :src="src"
@@ -119,21 +89,34 @@ onUnmounted(() => {
     />
     <div class="stackblitz-embed-actions">
       <button
-        v-if="isFullscreenSupported"
         type="button"
-        class="fullscreen-btn btn"
-        @click="toggleFullscreen"
+        class="site-expand-button site-button"
+        @click="toggle"
       >
-        <sp-icon-full-screen-exit v-if="iconsLoaded && isFullscreen" />
-        <sp-icon-full-screen v-if="iconsLoaded && !isFullscreen" />
-        {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
+        <!-- Both render: the build only ships CSS for icons in the server render. -->
+        <span class="site-button-icon">
+          <VPIcon
+            v-show="!expanded"
+            icon="lucide:maximize"
+            aria-hidden="true"
+          />
+          <VPIcon v-show="expanded" icon="lucide:minimize" aria-hidden="true" />
+        </span>
+        {{ expanded ? 'Close' : 'Expand' }}
       </button>
-      <button @click="refreshIframe" class="refresh-btn btn">
-        <sp-icon-refresh v-if="iconsLoaded" label="Refresh iframe" />
+      <button
+        @click="refreshIframe"
+        class="refresh-btn site-button"
+        type="button"
+      >
+        <span class="site-button-icon">
+          <VPIcon icon="lucide:rotate-cw" aria-hidden="true" />
+        </span>
+        Restart
       </button>
       <slot></slot>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -151,141 +134,68 @@ onUnmounted(() => {
   height: auto;
   aspect-ratio: 16 / 10;
   min-height: 320px;
-  max-height: calc(100svh - 120px);
+  max-height: var(--example-frame-max-height);
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--site-radius-control);
   overflow: clip;
   margin: auto;
 }
 
-.stackblitz-embed:fullscreen,
-.stackblitz-embed:-webkit-full-screen {
-  background: var(--vp-c-bg);
-  padding: 16px;
+/* Expanded, the frame flexes into whatever the padding, gap and a wrapped action row leave. */
+.stackblitz-embed:modal iframe {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  aspect-ratio: auto;
 }
 
-.stackblitz-embed:fullscreen iframe,
-.stackblitz-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px);
-  border-radius: 8px;
-  width: 88%;
-}
-
-.stackblitz-embed.fullscreen:fullscreen iframe,
-.stackblitz-embed.fullscreen:-webkit-full-screen iframe {
-  width: 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .stackblitz-embed {
-    transition:
-      padding 0.3s var(--ease-out),
-      width 0.3s var(--ease-out);
-  }
-
-  .stackblitz-embed iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
-  }
-
-  .stackblitz-embed:fullscreen iframe,
-  .stackblitz-embed:-webkit-full-screen iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0s,
-      border-radius 0.3s var(--ease-out);
-  }
-
-  .stackblitz-embed.fullscreen:fullscreen iframe,
-  .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
-    transition:
-      height 0.3s var(--ease-out),
-      width 0.3s var(--ease-out),
-      border-radius 0.3s var(--ease-out);
-  }
+.stackblitz-embed:modal .stackblitz-embed-actions {
+  margin-block-start: 0;
 }
 
 .stackblitz-embed-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-block-start: 8px;
+  gap: var(--site-space-3);
+  margin-block-start: var(--example-actions-gap);
 }
 
 .fallback-note {
-  margin-block: 0 8px;
-  padding-block: 8px;
-  padding-inline: 12px;
-  font-size: 14px;
-  color: var(--vp-c-text-2);
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  margin-block: 0 var(--site-space-2);
+  padding-block: var(--site-space-2);
+  padding-inline: var(--site-space-3);
+  font-size: var(--site-text-sm);
+  color: var(--site-color-text-muted);
+  background: var(--site-color-surface-soft);
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding-block: 6px;
-  padding-inline: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vp-c-text-1);
-  text-decoration: none;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    background-color 0.2s var(--ease-out),
-    border-color 0.2s var(--ease-out),
-    transform 0.15s var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover {
-    background: var(--vp-c-bg-mute);
-    border-color: var(--vp-c-brand-1);
-  }
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 1px;
-}
-
-/* Framed like the sibling .btn controls; border present in both states so
+/* Framed like the sibling .site-button controls; border present in both states so
    hover changes color only, never size. */
 .stackblitz-embed-actions :deep(a) {
   display: inline-flex;
   align-items: center;
   line-height: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
   overflow: clip;
-  transition: border-color 0.2s var(--ease-out);
+  transition: border-color var(--site-duration-base) var(--ease-out);
 }
 
 .stackblitz-embed-actions :deep(a img) {
   display: block;
-  /* 36px + the 1px frame = 38px, level with the sibling .btn controls. */
-  height: 36px;
+  /* Inside the frame's border, level with the sibling .site-button controls. */
+  height: calc(var(--example-control-size) - 2 * var(--site-border-width));
   /* .vp-doc gives content imgs 16px vertical margin — the actual gap culprit. */
   margin: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .stackblitz-embed-actions :deep(a:hover) {
-    border-color: var(--vp-c-brand-1);
+    border-color: var(--site-color-interaction);
   }
 }
 </style>

@@ -7,7 +7,9 @@
       // package; over-approximate instead. The extra globs are the read-sets of
       // the tests that look outside this package: pnpm-pin.test.ts compares the
       // repo's pnpm version pins against package.json's `packageManager` and
-      // keeps pnpm-lock.yaml one document, and
+      // keeps pnpm-lock.yaml one document,
+      // playwright-cli-pin.test.ts holds @playwright/cli to the lock's
+      // playwright minor, and
       // runner-label.test.ts reads every workflow plus the actionlint config,
       // mise-pin.test.ts reads every workflow's mise-action pins, and
       // task-logs-upload.test.ts holds the task-log uploads to the workspace globs,
@@ -107,6 +109,7 @@
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
         "!$TURBO_ROOT$/**/coverage-effect3/**",
+        "!$TURBO_ROOT$/**/test-results/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",

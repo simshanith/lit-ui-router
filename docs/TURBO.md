@@ -42,6 +42,7 @@ ci:pull_request
 ├── test:lit2-compat
 ├── test:mobx6-compat
 ├── test:effect3-compat
+├── test:vite7-compat
 ├── lint                                  (umbrella)
 │   ├── lint:oxlint
 │   │   └── ^build:types
@@ -50,6 +51,8 @@ ci:pull_request
 │   ├── //#lint:package-json
 │   ├── //#lint:markdown
 │   ├── //#lint:templates
+│   ├── //#lint:doc-examples
+│   ├── //#lint:md-examples
 │   ├── //#lint:css
 │   ├── //#lint:workflows                 (umbrella)
 │   │   ├── //#lint:actionlint
@@ -71,7 +74,8 @@ ci:pull_request
 │   ├── typecheck:src
 │   ├── typecheck:lit2
 │   ├── typecheck:mobx6
-│   └── typecheck:effect3
+│   ├── typecheck:effect3
+│   └── typecheck:vite7
 ├── format:check                          (umbrella)
 │   ├── format:check:oxfmt
 │   ├── //#format:check:root
@@ -122,8 +126,8 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `test:engines` is the Firefox + WebKit full-suite vitest pass (lit-ui-router, navigation-location-plugin); PR chromium correctness rides `test:coverage`.
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
-- `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Cypress suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the Acceptance workflow names it).
+- `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached. `@www/lit-ui-router.dev` has none: its build logs the search index's size and warns on any other client chunk over 500 kB, without failing.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is Playwright's UI mode, the interactive lane — not the headless suites, which are the `test:e2e:*` tasks under `//:test_e2e`: one cached task per Playwright suite, plus the uncached axe pass `test:e2e:a11y`, which runs only when named (the Acceptance workflow names it).
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -143,12 +147,12 @@ key and its own upstream edges (`^build:types` sits on `lint:oxlint` and
 `typecheck:tsc`, not on the umbrella). Siblings under one umbrella run in
 parallel, and a leaf's failure fails the run.
 
-| Umbrella       | Per-package leaf     | Other leaves                                                                                   |
-| -------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| `lint`         | `lint:oxlint`        | the `//#lint:*` lanes, `@tools/repo-checks#check:*`, `@tools/release#check:release-closure`    |
-| `typecheck`    | `typecheck:tsc`      | `//#typecheck:root`, `typecheck:src`, `typecheck:lit2`, `typecheck:mobx6`, `typecheck:effect3` |
-| `format`       | `format:oxfmt`       | `//#format:root`, `//#format:toml`                                                             |
-| `format:check` | `format:check:oxfmt` | `//#format:check:root`, `//#format:check:toml`                                                 |
+| Umbrella       | Per-package leaf     | Other leaves                                                                                                      |
+| -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `lint`         | `lint:oxlint`        | the `//#lint:*` lanes, `@tools/repo-checks#check:*`, `@tools/release#check:release-closure`                       |
+| `typecheck`    | `typecheck:tsc`      | `//#typecheck:root`, `typecheck:src`, `typecheck:lit2`, `typecheck:mobx6`, `typecheck:effect3`, `typecheck:vite7` |
+| `format`       | `format:oxfmt`       | `//#format:root`, `//#format:toml`                                                                                |
+| `format:check` | `format:check:oxfmt` | `//#format:check:root`, `//#format:check:toml`                                                                    |
 
 Packages add their own leaves by overriding the umbrella: eslint-plugin-lit-ui-router
 (`lint:docs`, `lint:rules`; its `test` umbrella over `test:unit`, `test:oxlint`,
@@ -159,7 +163,7 @@ override **replaces** the root's `dependsOn`, so each one restates the root
 umbrella's list before its own leaves.
 
 `with` is only for persistent sidecars: `e2e` keeps `wrangler:dev` running
-beside `cypress open`. turbo stops a `with` sidecar when its parent
+beside Playwright's UI mode. turbo stops a `with` sidecar when its parent
 exits and does not count that as a failure, so on a finite task a sidecar that
 outlives its parent is cut short and the run still reports green.
 `check:graph-edges` fails on `with` under any non-persistent task.
@@ -172,24 +176,24 @@ and turbo only runs a root script when a `//#`-qualified task names it.
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
 
-| Workspace                                                 | Custom Configuration                                                                                                                                                                                                                                                                   |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/lit-ui-router`                                  | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                                                                                                 |
-| `packages/lit-ui-router-mobx`                             | Configures `docs:api` outputs                                                                                                                                                                                                                                                          |
-| `packages/navigation-location-plugin`                     | Configures `docs:api` outputs                                                                                                                                                                                                                                                          |
-| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`, `typecheck:runtime-globals`                                                                                                                                                                                |
-| `apps/sample-app-lit-vanilla`                             | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                                                                    |
-| `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
-| `apps/sample-app-lit-effect`                              | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
-| `apps/sample-app-lit-signals`                             | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
-| `apps/sample-app-lit-e2e`                                 | One `test:e2e:*` task per suite (Cypress suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server); CYPRESS\_\* passes through un-hashed                                                                                        |
-| `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface); sample-app-routes' `bench` adds `^build` (it resolves through `ui-router-server`'s dist)                                                                                                                 |
-| `@www/lit-ui-router.dev`                                  | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                                                    |
-| `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                                               |
-| `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                                                                                |
-| `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                                                                     |
-| `tools/repo-checks`                                       | Adds `check:patches`, `check:dedupe`, `check:single-version`, `check:package-coverage`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.config.ts`), `check:shared-source`, each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs |
-| `tools/build_and_test`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                                                                                    |
+| Workspace                                                                        | Custom Configuration                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/lit-ui-router`                                                         | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                                                                                                 |
+| `packages/lit-ui-router-mobx`                                                    | Configures `docs:api` outputs                                                                                                                                                                                                                                                          |
+| `packages/navigation-location-plugin`                                            | Configures `docs:api` outputs                                                                                                                                                                                                                                                          |
+| `packages/ui-router-server`                                                      | `test` and `test:coverage` ride the `transit` chain plus the own `build:js` (specs read `dist/`); adds `typecheck:tests`, `typecheck:runtime-globals`                                                                                                                                  |
+| `apps/sample-app-lit-vanilla`                                                    | `build` is an umbrella over `build:vanilla` and `build:hash` (VITE\_\* env on each)                                                                                                                                                                                                    |
+| `apps/sample-app-lit-mobx`                                                       | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
+| `apps/sample-app-lit-effect`                                                     | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
+| `apps/sample-app-lit-signals`                                                    | Adds env vars for build (VITE\_\*)                                                                                                                                                                                                                                                     |
+| `apps/sample-app-lit-e2e`                                                        | One `test:e2e:*` task per suite (Playwright suites cached, the `a11y` axe pass uncached), reached via the `//:test_e2e` umbrella (which owns the dev server)                                                                                                                           |
+| `apps/sample-app-routes`, `apps/sample-app-shared`                               | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface); sample-app-routes' `bench` adds `^build` (it resolves through `ui-router-server`'s dist)                                                                                                                 |
+| `@www/lit-ui-router.dev`                                                         | Adds `check:embeds`, `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build                                                    |
+| `examples`                                                                       | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                                                                                               |
+| `tools/release`                                                                  | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                                                                                                |
+| `tools/workers-builds`                                                           | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                                                                                     |
+| `tools/repo-checks`                                                              | Adds `check:patches`, `check:dedupe`, `check:single-version`, `check:package-coverage`, `check:graph-edges`, `check:task-inputs`, `check:knip` (config in root `knip.config.ts`), `check:shared-source`, each keyed on repo-wide `$TURBO_ROOT$` globs; over-approximated `test` inputs |
+| `tools/build_and_test`, `tools/turbo-summary`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                                                                                    |
 
 ## Common Commands
 
@@ -268,12 +272,12 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and pnpm (held equal to the `packageManager` pin); `mise run setup` installs dependencies
-3. **Install browsers** - Playwright for the vitest browser specs (`run` job) and Cypress for the e2e suites (`e2e` jobs), restored from `actions/cache` keyed on the installed package versions
+3. **Install browsers** - Playwright's browsers for the vitest browser specs (`run` job) and the e2e suites (`e2e` jobs), restored from one `actions/cache` entry keyed on the installed package version
 4. **Build and Test** - the `run` job runs the turbo graph: PRs and branch pushes run `mise run ci_graph` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main_graph` (turbo `ci:main`, adding the main-only guards). In parallel, a `plan` job groups the default e2e suites (`mise run e2e_plan`) and one `e2e (<suites>)` job per group runs `mise run test_e2e <suites>`. The `suitesPerJob` input sets the group size: PRs and main use 1, so each suite reports as `e2e (<suite>)`; the branch lane uses the `E2E_SUITES_PER_JOB_BRANCH` repo variable, or 3 when it is unset. On every lane, the `e2e result` job is green only when the plan and every group are. Locally, `mise run ci` and `mise run ci_main` run the graph and then every suite
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
-Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
+Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch.
 
 ### Smoke-testing the main graph before merge
 
@@ -295,25 +299,27 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 
 ### Task-to-CI Mapping
 
-| Turbo Task                                 | CI Placement                                                                                                                                                                             |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build`                                    | `ci:pull_request` (every PR and push)                                                                                                                                                    |
-| `test`                                     | `ci:pull_request`                                                                                                                                                                        |
-| `test:coverage`                            | `ci:pull_request`, feeds coverage reports                                                                                                                                                |
-| `lint`                                     | `ci:pull_request`                                                                                                                                                                        |
-| `typecheck`                                | `ci:pull_request`                                                                                                                                                                        |
-| `test:lit2-compat`, `typecheck:lit2`       | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` is a leaf of the `typecheck` umbrella |
-| `test:mobx6-compat`, `typecheck:mobx6`     | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx and ui-router-mobx); `typecheck:mobx6` is likewise a leaf of `typecheck`                                     |
-| `test:effect3-compat`, `typecheck:effect3` | `ci:pull_request` — same split against the effect-3 alias (lit-ui-router-effect only); `typecheck:effect3` is likewise a leaf of `typecheck`                                             |
-| `format:check`                             | `ci:pull_request`                                                                                                                                                                        |
-| `check:bundle`, `codecov:bundle`           | `ci:pull_request`                                                                                                                                                                        |
-| `test:engines`                             | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                |
-| `@tools/release#check:pack`                | `ci:main` only                                                                                                                                                                           |
-| `@tools/dts-backtest#test:matrix`          | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                       |
-| `@www/lit-ui-router.dev#check:embeds`      | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                               |
-| `typecheck:peer-floor`                     | Neither ci graph — Release signals check runs + bump gate                                                                                                                                |
-| `bench`                                    | Neither ci graph — the advisory `acceptance (bench)` job (Acceptance workflow): `mise run bench_pulse`, uncached; its job summary is the ui-router-server bench pulse                    |
-| `test:peer-floor`                          | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                         |
+| Turbo Task                                           | CI Placement                                                                                                                                                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build`                                              | `ci:pull_request` (every PR and push)                                                                                                                                                           |
+| `test`                                               | `ci:pull_request`                                                                                                                                                                               |
+| `test:coverage`                                      | `ci:pull_request`, feeds coverage reports                                                                                                                                                       |
+| `lint`                                               | `ci:pull_request`                                                                                                                                                                               |
+| `typecheck`                                          | `ci:pull_request`                                                                                                                                                                               |
+| `test:lit2-compat`, `typecheck:lit2`                 | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck; `typecheck:lit2` is a leaf of the `typecheck` umbrella        |
+| `test:mobx6-compat`, `typecheck:mobx6`               | `ci:pull_request` — same split against the mobx-6 alias (lit-ui-router-mobx and ui-router-mobx); `typecheck:mobx6` is likewise a leaf of `typecheck`                                            |
+| `test:effect3-compat`, `typecheck:effect3`           | `ci:pull_request` — same split against the effect-3 alias (lit-ui-router-effect only); `typecheck:effect3` is likewise a leaf of `typecheck`                                                    |
+| `test:vite7-compat`, `typecheck:vite7`               | `ci:pull_request` — the node suites and the vite seam types against the vite-7 alias (ui-router-server only), redirected by a resolve hook; `typecheck:vite7` is likewise a leaf of `typecheck` |
+| `format:check`                                       | `ci:pull_request`                                                                                                                                                                               |
+| `check:bundle`, `codecov:bundle`                     | `ci:pull_request`                                                                                                                                                                               |
+| `test:engines`                                       | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                       |
+| `@tools/release#check:pack`                          | `ci:main` only                                                                                                                                                                                  |
+| `@tools/dts-backtest#test:matrix`                    | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                              |
+| `@www/lit-ui-router.dev#check:embeds`                | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                                      |
+| `typecheck:peer-floor`                               | Neither ci graph — Release signals check runs + bump gate                                                                                                                                       |
+| `bench`                                              | Neither ci graph — the advisory `acceptance (bench)` job (Acceptance workflow): `mise run bench_pulse`, uncached; its job summary is the ui-router-server bench pulse                           |
+| `@www/release-diffs.lit-ui-router.dev#test:npm-diff` | Neither ci graph — the advisory `acceptance (npm-diff)` job: `mise run npm_diff_parity`, uncached; reads the npm registry                                                                       |
+| `test:peer-floor`                                    | `ci:pull_request` — eslint-plugin-lit-ui-router's rule suite on the eslint-floor alias, a leaf of that package's `test` umbrella                                                                |
 
 ## Remote Caching
 
@@ -425,7 +431,7 @@ E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
 
 Run these separately from cached tasks.
 
-`e2e` here is `cypress open`, the interactive lane. The headless suites are the
+`e2e` here is Playwright's UI mode, the interactive lane. The headless suites are the
 `test:e2e:*` tasks — not persistent, cached except the `a11y` axe pass, and reached through the
 `//:test_e2e` mise task, which owns the dev server because turbo has no
 lifecycle for one. If those hang, look at the server or the suite, not at a

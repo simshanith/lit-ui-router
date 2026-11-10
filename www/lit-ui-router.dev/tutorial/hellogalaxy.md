@@ -87,7 +87,7 @@ The `galaxy` state's component is a shell: section navigation plus a `<ui-view>`
 ```typescript
 @customElement('galaxy-shell')
 class GalaxyShellComponent extends LitElement {
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -183,7 +183,7 @@ The nested `<ui-view>`:
 
 Each list entry gets a glowing dot colored by the star's spectral class letter — O and B stars render blue, G stars like the Sun render yellow, M stars like Betelgeuse render orange-red:
 
-```typescript
+```typescript check
 // Approximate real star colors by spectral class letter (O hottest, M coolest)
 const spectralColors: Record<string, string> = {
   O: '#92b5ff',
@@ -272,9 +272,9 @@ Note the `:starId` parameter here is a string slug (`sirius`, `proxima-centauri`
 Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of `galaxy.stars`: activating it swaps the entire stars UI out of the shell's `<ui-view>` and renders a 3D model instead — the Smithsonian's high-resolution scan of Neil Armstrong's Apollo 11 spacesuit, displayed with the `<model-viewer>` web component:
 
 ```typescript
-@customElement('astronaut-view')
-class AstronautViewComponent extends LitElement {
-  // Injected by <ui-view>; required by the RoutedLitElement contract
+@customElement('astronaut-detail')
+class AstronautDetailComponent extends LitElement {
+  @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -314,7 +314,7 @@ class AstronautViewComponent extends LitElement {
 const astronautState: LitStateDeclaration = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
-  component: AstronautViewComponent,
+  component: AstronautDetailComponent,
   resolve: [
     {
       // Resolves can await code, not just data: model-viewer loads on state
@@ -345,8 +345,11 @@ router.stateRegistry.register(starsState);
 router.stateRegistry.register(starState);
 router.stateRegistry.register(astronautState);
 router.urlService.rules.initial({ state: 'galaxy.stars' });
+router.urlService.rules.otherwise({ state: 'galaxy.stars' });
 router.start();
 ```
+
+`initial` sends the app root to the star list; `otherwise` sends any URL no state matches, such as `#/nowhere`, there too. A URL that does match a state still enters it: `#/galaxy/stars/nowhere` enters `galaxy.stars.star` and shows "Star not found". [Unmatched URLs](/guides/unmatched-urls) covers routing to a 404 state instead.
 
 ## Full Source Code
 
@@ -356,18 +359,32 @@ The complete source — including the full ten-star catalog and the deep-space s
 
 ## The State Tree
 
-Here's how our states form a hierarchy:
+The four states form a tree, and their components nest `<ui-view>`s in the same shape. Each state's component renders into the `<ui-view>` of its parent state's component:
+
+<DiagramEmbed src="/diagrams/hellogalaxy-state-view-tree.svg">
+
+<!--@include: ../public/diagrams/hellogalaxy-state-view-tree.svg-->
+
+</DiagramEmbed>
+
+`galaxy.stars` and `galaxy.astronaut` are siblings, so they take turns in the one `<ui-view>` inside `GalaxyShellComponent`.
+
+### One URL: `/galaxy/stars/sirius`
+
+Here is the screen at a single URL. Each child state's URL appends to its parent's, and the numbers follow the transition: the router enters each state from the root down, then the views render from the outside in:
+
+<DiagramEmbed src="/diagrams/hellogalaxy-nested-views.svg">
 
 <!--@include: ../public/diagrams/hellogalaxy-nested-views.svg-->
 
-When navigating to `/galaxy/stars/sirius`:
+</DiagramEmbed>
 
-1. `galaxy` state is activated (if not already active)
-2. `GalaxyShellComponent` renders in the root `<ui-view>`
-3. `galaxy.stars` state is activated; its `stars` resolve fetches the catalog
-4. `StarsContainerComponent` renders in the shell's nested `<ui-view>`
-5. `galaxy.stars.star` state is activated; its `star` resolve finds Sirius in the inherited catalog
-6. `StarDetailComponent` renders in the nested `<ui-view>` inside `StarsContainerComponent`
+1. `galaxy` is entered (if not already active)
+2. `galaxy.stars` is entered; its `stars` resolve fetches the catalog
+3. `galaxy.stars.star` is entered; its `star` resolve finds Sirius in the inherited catalog
+4. The transition succeeds, and `GalaxyShellComponent` renders in the root `<ui-view>`
+5. `StarsContainerComponent` renders in the shell's nested `<ui-view>`
+6. `StarDetailComponent` renders in the `<ui-view>` inside `StarsContainerComponent`
 
 ---
 

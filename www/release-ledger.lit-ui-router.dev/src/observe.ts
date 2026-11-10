@@ -179,6 +179,7 @@ const getJson = <S extends Schema.Top>(
                 : error.message,
           }),
     ),
+    Effect.withSpan(`GET ${source}`, { attributes: { 'url.full': url } }),
   );
 
 const npmPath = (name: string): string => name.replace('/', '%2f');

@@ -1,4 +1,4 @@
-# On-demand e2e flake sampler: N fresh serial runs of the Cypress suites
+# On-demand e2e flake sampler: N fresh serial runs of the Playwright suites
 # against a real dev server, reported per attempt. Two opt-ins:
 #   - `deflake` PR label: one-shot, like `coderabbit:review` — applying it
 #     samples once and the run strips it again, so re-labelling is the re-run
@@ -59,18 +59,19 @@ jobs:
           auto_update: true
       - name: Install dependencies
         run: mise run setup
-      - name: Resolve Cypress version
-        id: cypress-version
-        run: mise run //tools/build_and_test:cypress_version
-      - name: Cache Cypress binary
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: mise run //tools/build_and_test:playwright_version
+      - name: Cache Playwright browsers
+        # Same key as build-test-run.yml, so they share one cache entry.
+        id: playwright-cache
         uses: actions/cache@v6
         with:
-          path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
-      - name: Install Cypress
-        run: mise run //tools/build_and_test:cypress
-      - name: Start shared Xvfb display
-        run: mise run //tools/build_and_test:xvfb
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+      - name: Install Playwright Browsers
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: mise run //tools/build_and_test:playwright
       - name: Build the served site
         # The e2e server serves www/lit-ui-router.dev/dist; the filter pulls the app's full
         # dependency closure. Remote cache makes this a restore when secrets
@@ -88,7 +89,6 @@ jobs:
           # falls back to the same default on an unparseable value.
           DEFLAKE_RUNS: ${{ inputs.runs || '5' }}
           WRANGLER_LOG: warn
-          CYPRESS_video: false
         run: pnpm --filter sample-app-lit-e2e run deflake
       - name: Upload attempt logs
         # Not `failure()`: a green run can still hold near-miss logs (passed
@@ -101,6 +101,15 @@ jobs:
           path: apps/sample-app-lit-e2e/attempt-*.log
           retention-days: 5
           if-no-files-found: warn
+      - name: Upload Playwright traces
+        # Traces of the last failing attempt: each attempt's run replaces test-results/.
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deflake-playwright-traces
+          path: apps/sample-app-lit-e2e/test-results/
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Upload wrangler logs
         # The crash log lands only in the runner's ~/.config/.wrangler/logs.
         if: ${{ failure() }}

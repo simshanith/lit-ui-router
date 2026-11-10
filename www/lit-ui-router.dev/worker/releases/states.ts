@@ -4,19 +4,29 @@ import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import type { ResponseHandlers } from 'lit-ui-router-ssr';
 import { mergeSearch } from 'ui-router-server';
 import type { ResponseState } from 'ui-router-server';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
+import type { DiffIndex, DiffPair, ReleaseDiffs } from './diff-data.ts';
 import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
 import {
   type LedgerPackage,
   type LedgerReader,
   type LedgerVersion,
   latestOf,
+  isReversed,
+  NotInLedger,
+  ordered,
   packagesOf,
+  type PublishedPair,
   versionIn,
   versionsOf,
 } from './ledger.ts';
+import { FILE_FILTERS, type FileFilter } from './npm-diff/file-filter.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
+  CompareView,
+  diffUrl,
+  filesDiffPath,
   NotFoundView,
   PackageView,
   ReleasesView,
@@ -35,7 +45,20 @@ interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': { latest: LedgerVersion };
-  'releases.package.version': { release: LedgerVersion };
+  'releases.package.diff': { compare: string };
+  'releases.package.compare': {
+    pair: PublishedPair;
+  };
+  'releases.package.compare.index': { index: DiffIndex };
+  'releases.package.compare.files': { files: ReadableStream<Uint8Array> };
+  'releases.package.compare.patch': {
+    pair: PublishedPair;
+    patch: ReadableStream<Uint8Array>;
+  };
+  'releases.package.version': {
+    release: LedgerVersion;
+    versions: LedgerVersion[];
+  };
   githubRelease: { latest: LedgerVersion };
   notFound: object;
 }
@@ -56,6 +79,49 @@ type Attached = {
 const paramsOf = (trans: Transition) =>
   trans.params() as { pkg: string; version: string };
 
+// SAFETY: an absent query param is undefined and a repeated one an array, neither of which names a version.
+const diffParamsOf = (trans: Transition) =>
+  trans.params() as { pkg: string; from: string; to: string; via: string };
+
+const COMPARES = new Map([
+  ['diffshub', diffUrl],
+  ['files', filesDiffPath],
+]);
+
+/** The url `via` compares the older of `from` and `to` with the newer at, or a `NotInLedger` rejection when either is unknown, they are one version, or either lacks what `via` needs. */
+const compareIn = (
+  versions: readonly LedgerVersion[],
+  { pkg, from, to, via }: ReturnType<typeof diffParamsOf>,
+): string => {
+  const pair = ordered(
+    versionIn(versions, { pkg, version: from }),
+    versionIn(versions, { pkg, version: to }),
+  );
+
+  const url = pair && COMPARES.get(via)?.(pair.from, pair.to);
+
+  if (!url) throw new NotInLedger(`${pkg}@${from}...${to} via ${via}`);
+
+  return url;
+};
+
+/** Both versions' rows, or a `NotInLedger` rejection when either is unknown or never reached npm, or `from` doesn't precede `to`. */
+const publishedPairIn = (
+  versions: readonly LedgerVersion[],
+  { pkg, from, to }: ReturnType<typeof diffParamsOf>,
+): PublishedPair => {
+  const fromRow = versionIn(versions, { pkg, version: from });
+  const pair = ordered(fromRow, versionIn(versions, { pkg, version: to }));
+
+  if (pair?.from !== fromRow)
+    throw new NotInLedger(`${pkg}@${from}...${to} older first`);
+
+  if (filesDiffPath(pair.from, pair.to) === null)
+    throw new NotInLedger(`${pkg}@${from}...${to} on npm`);
+
+  return pair;
+};
+
 const versionPath = ({ name, version }: LedgerVersion): string =>
   `${RELEASES_MOUNT}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/`;
 
@@ -74,7 +140,58 @@ const latestResolve = (ledger: LedgerReader) => ({
   resolveFn: (trans: Transition) => latestOf(ledger)(paramsOf(trans)),
 });
 
-const attach = (ledger: LedgerReader): Attached => ({
+const IMMUTABLE = 'public, max-age=31536000, immutable';
+
+const PATCH_TYPE = 'text/x-diff; charset=utf-8';
+
+/** A data route's answer: a pair's published files never change, so neither does it. */
+const data = (
+  body: string | ReadableStream<Uint8Array>,
+  type: string,
+  headers: Record<string, string> = {},
+): Response =>
+  new Response(body, {
+    headers: { 'Content-Type': type, 'Cache-Control': IMMUTABLE, ...headers },
+  });
+
+/** The release-diffs worker's name for a pair the parent state found in the ledger. */
+const diffPairOf = ({ from, to }: PublishedPair): DiffPair => ({
+  name: to.name,
+  from: from.version,
+  to: to.version,
+});
+
+// SAFETY: the url sets the layout param, a string.
+const layoutParamOf = (trans: Transition) =>
+  (trans.params() as { layout: string }).layout;
+
+/** The R2 layout the url names, or a `NotInLedger` rejection for one this build doesn't serve; the release-diffs worker checks it again. */
+const layoutOf = (trans: Transition): string => {
+  const layout = layoutParamOf(trans);
+
+  if (layout !== LAYOUT) throw new NotInLedger(`no ${layout} layout`);
+
+  return layout;
+};
+
+// SAFETY: the url sets the preset param, a string.
+const presetParamOf = (trans: Transition) =>
+  (trans.params() as { preset: string }).preset;
+
+/** The preset the url names, or a `NotInLedger` rejection for an unknown one. */
+const presetOf = (trans: Transition): FileFilter => {
+  const preset = presetParamOf(trans);
+  const filter = FILE_FILTERS.find((candidate) => candidate === preset);
+
+  if (!filter) throw new NotInLedger(`no ${preset} preset`);
+
+  return filter;
+};
+
+const patchFilename = ({ from, to }: PublishedPair): string =>
+  `${to.name.replace('/', '-')}-${from.version}...${to.version}.patch`;
+
+const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
   releases: {
     component: ReleasesView,
     resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
@@ -90,6 +207,71 @@ const attach = (ledger: LedgerReader): Attached => ({
     ],
   },
   'releases.package.latest': { resolve: [latestResolve(ledger)] },
+  'releases.package.diff': {
+    resolve: [
+      {
+        token: 'compare',
+        deps: ['versions', '$transition$'],
+        resolveFn: (versions: LedgerVersion[], trans: Transition) =>
+          compareIn(versions, diffParamsOf(trans)),
+      },
+    ],
+  },
+  'releases.package.compare': {
+    component: CompareView,
+    redirectTo: (trans: Transition) => {
+      const { from, to } = diffParamsOf(trans);
+
+      return isReversed(from, to)
+        ? trans.targetState().withParams({ from: to, to: from })
+        : undefined;
+    },
+    resolve: [
+      {
+        token: 'pair',
+        deps: ['versions', '$transition$'],
+        resolveFn: (versions: LedgerVersion[], trans: Transition) =>
+          publishedPairIn(versions, diffParamsOf(trans)),
+      },
+    ],
+  },
+  'releases.package.compare.index': {
+    resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
+      {
+        token: 'index',
+        deps: ['pair', 'layout'],
+        resolveFn: (pair: PublishedPair, layout: string) =>
+          diffs.index(diffPairOf(pair), layout),
+      },
+    ],
+    cacheKey: urlKey,
+  },
+  'releases.package.compare.files': {
+    resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
+      { token: 'preset', deps: ['$transition$'], resolveFn: presetOf },
+      {
+        token: 'files',
+        deps: ['pair', 'preset', 'layout'],
+        resolveFn: (pair: PublishedPair, preset: FileFilter, layout: string) =>
+          diffs.files(diffPairOf(pair), preset, layout),
+      },
+    ],
+    cacheKey: urlKey,
+  },
+  'releases.package.compare.patch': {
+    resolve: [
+      { token: 'layout', deps: ['$transition$'], resolveFn: layoutOf },
+      {
+        token: 'patch',
+        deps: ['pair', 'layout'],
+        resolveFn: (pair: PublishedPair, layout: string) =>
+          diffs.patch(diffPairOf(pair), layout),
+      },
+    ],
+    cacheKey: urlKey,
+  },
   'releases.package.version': {
     component: VersionView,
     resolve: [
@@ -111,6 +293,16 @@ export const releaseResponses = {
     found(
       mergeSearch(versionPath(resolves.latest), new URL(request.url).search),
     ),
+  // The search only names the pair, which the target spells in its own url.
+  'releases.package.diff': ({ resolves }) => found(resolves.compare),
+  'releases.package.compare.index': ({ resolves }) =>
+    data(JSON.stringify(resolves.index), 'application/json'),
+  'releases.package.compare.files': ({ resolves }) =>
+    data(resolves.files, PATCH_TYPE),
+  'releases.package.compare.patch': ({ resolves }) =>
+    data(resolves.patch, PATCH_TYPE, {
+      'Content-Disposition': `attachment; filename="${patchFilename(resolves.pair)}"`,
+    }),
   githubRelease: ({ resolves, request }) =>
     found(
       releaseUrl(resolves.latest) ??
@@ -119,12 +311,13 @@ export const releaseResponses = {
     ),
 } satisfies ResponseHandlers<Route, ResolvesOf>;
 
-/** The states of the tree at `mount` for one request, reading `ledger`. */
+/** The states of the tree at `mount` for one request, reading `ledger` and, for the diff page's data, `diffs`. */
 export const releaseStates = (
   mount: string,
   ledger: LedgerReader,
+  diffs: ReleaseDiffs,
 ): ReleaseState[] => {
-  const attached = attach(ledger);
+  const attached = attach(ledger, diffs);
   const routes = mount === GH_MOUNT ? ghRoutes : releaseRoutes;
 
   return routes.map((route) => ({ ...route, ...attached[route.name] }));

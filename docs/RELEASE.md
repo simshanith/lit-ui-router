@@ -72,7 +72,7 @@ Runs the CI pipeline including:
 
 - Build verification
 - Unit tests with Vitest
-- E2E tests with Playwright and Cypress
+- E2E tests with Playwright
 - Lint, typecheck, format, and bundle checks
 - Coverage reporting to Codecov
 - PR coverage comments (on PRs)
@@ -101,7 +101,7 @@ neither event can instantiate the other's jobs:
 | `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run`, `/ plan`, `/ e2e (<suites>)` per group, `/ e2e result` |
 | `build-test-run.yml`    | `workflow_call` only         | the jobs both callers share: `run`, `plan`, `e2e (<suites>)`, `e2e result`                                              |
 
-`run` is the turbo graph. `plan` groups the default Cypress suites
+`run` is the turbo graph. `plan` groups the default e2e suites
 `suitesPerJob` at a time, and each `e2e (<suites>)` job runs one group on its own
 runner. PRs and `main` use one suite per job; the branch lane uses three, or the
 `E2E_SUITES_PER_JOB_BRANCH` repo variable. `e2e result` fails unless every suite succeeded, so the rulesets
@@ -182,7 +182,7 @@ for good, and test or canary publishes stay as evidence rather than cleanup.
 
 ### 5. Release signals (`release-signals.yml`)
 
-**Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+**Triggers:** Pushes to `main`; dispatched by Publish to NPM after a publish; a daily schedule; manual dispatch
 
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
@@ -201,6 +201,16 @@ effect, `publishedPeerSignals` and `peerFloorSignals` for signals, and
 These run in the `release signals (npm)` job. A separate `release signals (cloudflare)`
 job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
 ([`www/DEPLOY.md`](../www/DEPLOY.md)), so a failure in one job never skips the other.
+
+The cloudflare job also posts the `release-ledger` check run. It reads the
+release ledger's `GET /ledger` with its OIDC id-token
+([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md))
+and compares every version against GitHub's tags and releases and npm. It only
+reports: `action_required` when a source disagrees with the ledger or a step lags
+past an hour, `neutral` when a source can't be read. A deprecation is a note in
+the summary. On the post-publish dispatch, Publish to NPM passes the new release
+as the `release` input, and the check also compares its `.tgz` asset with npm's
+tarball.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
@@ -252,6 +262,9 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 - `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
   (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
   so it goes red only when a bench crashes.
+- `acceptance (npm-diff)`: the patch the release-diffs worker stores against
+  `npm diff`, byte for byte but for a final blank context line npm trims, for a few published version pairs (`mise run npm_diff_parity`).
+  Both read the npm registry.
 
 A red check is a real failure on that commit, unlike a release signal, but it
 gates nothing: Tag & push needs only `build_and_test`. The README badges read

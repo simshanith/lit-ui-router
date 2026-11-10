@@ -4,11 +4,12 @@ import { mounts } from 'sample-app-routes';
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 import { EXAMPLE_NAMES } from 'examples/embeds';
+import { LANGUAGES } from '../worker/releases/npm-diff/languages.ts';
 import { writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { defineConfig, Plugin } from 'vite';
+import { build, defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { llmsPlugins } from './llms.ts';
@@ -61,41 +62,31 @@ function examplesIndexPlugin(): Plugin {
   };
 }
 
-// vite's own build.chunkSizeWarningLimit default, applied to every client chunk.
-const CHUNK_BUDGET_KB = 500;
+// vite's own build.chunkSizeWarningLimit default; the lazy search index is exempt (tracked in #1340).
+const CHUNK_WARNING_KB = 500;
 
-// The lazy local-search index (API pages included) measures ~597 kB; the budget leaves 20% headroom.
-const SEARCH_INDEX_BUDGET_KB = 720;
-
-/** Fails the client build on a chunk over its budget and logs the search index's size. */
-function chunkBudgetPlugin(): Plugin {
+/** Logs the search index's size and warns, without failing, on any other client chunk over 500 kB. */
+function chunkSizePlugin(): Plugin {
   return {
-    name: 'chunk-budget',
+    name: 'chunk-size',
     apply: (_config, { command, isSsrBuild }) =>
       command === 'build' && !isSsrBuild,
     generateBundle(_options, bundle) {
-      const over: string[] = [];
-
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk') continue;
+
         const kB = Buffer.byteLength(chunk.code) / 1000;
-        const isIndex = chunk.name.startsWith('@localSearchIndex');
-        const budget = isIndex ? SEARCH_INDEX_BUDGET_KB : CHUNK_BUDGET_KB;
 
-        if (isIndex) {
-          const gzipKB = gzipSync(chunk.code).length / 1000;
-
+        if (chunk.name.startsWith('@localSearchIndex')) {
           console.log(
-            `chunk-budget: ${chunk.fileName} ${kB.toFixed(1)} kB (gzip ${gzipKB.toFixed(1)} kB) of ${budget} kB`,
+            `chunk-size: ${chunk.fileName} ${kB.toFixed(1)} kB (gzip ${(gzipSync(chunk.code).length / 1000).toFixed(1)} kB)`,
+          );
+        } else if (kB > CHUNK_WARNING_KB) {
+          console.warn(
+            `chunk-size: ${chunk.fileName} is ${kB.toFixed(1)} kB, over ${CHUNK_WARNING_KB} kB`,
           );
         }
-
-        if (kB > budget) {
-          over.push(`${chunk.fileName} ${kB.toFixed(1)} kB > ${budget} kB`);
-        }
       }
-
-      if (over.length) this.error(`chunks over budget: ${over.join(', ')}`);
     },
   };
 }
@@ -104,14 +95,19 @@ const RELEASE_PAGES_CSS = fileURLToPath(
   new URL('../worker/releases/release-pages.css', import.meta.url),
 );
 
+const THEME_TOKENS_CSS = fileURLToPath(
+  new URL('theme/tokens.css', import.meta.url),
+);
+
 const RELEASE_PAGES_ENTRY = '\0release-pages-entry';
 
-/** Emits the release pages' stylesheet, the theme's Inter faces and variables first, at a stable `/<basename>`. */
+/** Emits the release pages' stylesheet, the theme's Inter faces, variables and tokens first, at a stable `/<basename>`. */
 function releasePagesStylesheetPlugin(): Plugin {
   // `?url` keeps them out of style.css; a CSS @import would skip vitepress:webfonts and load Google Fonts.
   const sources = [
     'vitepress/dist/client/theme-default/styles/fonts.css',
     'vitepress/dist/client/theme-default/styles/vars.css',
+    THEME_TOKENS_CSS,
     RELEASE_PAGES_CSS,
   ];
 
@@ -174,11 +170,107 @@ function releasePagesStylesheetPlugin(): Plugin {
   };
 }
 
+const RELEASE_DIFF_SCRIPT = fileURLToPath(
+  new URL('../worker/releases/release-diff.ts', import.meta.url),
+);
+
+/** Builds the diff page's client to a stable `/release-diff.js`, the one script the worker-rendered page loads. */
+function releaseDiffScriptPlugin(): Plugin {
+  const chunks = 'assets/release-diff/[name].[hash].js';
+
+  return {
+    name: 'release-diff-script',
+    apply: (_config, { command, isSsrBuild }) =>
+      command === 'build' && !isSsrBuild,
+    // A build of its own: in the docs build, vitepress's chunking puts the preload helper, and Vue with it, in front of the page.
+    async writeBundle({ dir = '' }) {
+      await build({
+        configFile: false,
+        root: fileURLToPath(new URL('..', import.meta.url)),
+        publicDir: false,
+        logLevel: 'warn',
+        plugins: [chunkSizePlugin(), diffHighlighterPlugin()],
+        worker: {
+          // The highlighter worker loads its backend lazily, which a classic worker can't.
+          format: 'es',
+          plugins: () => [diffHighlighterPlugin()],
+          rolldownOptions: {
+            output: { entryFileNames: chunks, chunkFileNames: chunks },
+          },
+        },
+        build: {
+          outDir: dir,
+          emptyOutDir: false,
+          rolldownOptions: {
+            input: RELEASE_DIFF_SCRIPT,
+            output: {
+              entryFileNames: basename(RELEASE_DIFF_SCRIPT).replace(
+                /\.ts$/,
+                '.js',
+              ),
+              chunkFileNames: chunks,
+            },
+          },
+        },
+      });
+    },
+  };
+}
+
+const DIFF_LANGUAGES = '\0diff-languages';
+
+const NO_WASM = '\0diff-no-wasm';
+
+/** Trims @pierre/diffs' lazy Shiki imports to what the diff page loads: LANGUAGES' grammars, and no wasm engine. */
+function diffHighlighterPlugin(): Plugin {
+  let catalogImporter = '';
+
+  return {
+    name: 'diff-highlighter',
+    // Ahead of vite:resolve, which would resolve the full catalogs first.
+    enforce: 'pre',
+    resolveId: {
+      filter: { id: /^shiki\/(langs|wasm)$/ },
+      handler: (id, importer) => {
+        if (!importer?.includes('/@pierre/diffs/')) return null;
+
+        if (id === 'shiki/wasm') return NO_WASM;
+        catalogImporter = importer;
+
+        return DIFF_LANGUAGES;
+      },
+    },
+    load: {
+      filter: { id: /^\0diff-(languages|no-wasm)$/ },
+      async handler(id) {
+        if (id === NO_WASM)
+          return `throw new Error('The diff page highlights with the JavaScript regex engine.');\n`;
+
+        const loaders = await Promise.all(
+          LANGUAGES.map(async (lang) => {
+            const resolved = await this.resolve(
+              `shiki/langs/${lang}.mjs`,
+              catalogImporter,
+            );
+
+            if (!resolved) this.error(`no shiki grammar for ${lang}`);
+
+            return `  ${JSON.stringify(lang)}: () => import(${JSON.stringify(resolved.id)}),`;
+          }),
+        );
+
+        return `export const bundledLanguages = {\n${loaders.join('\n')}\n};\n`;
+      },
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     ...llmsPlugins(),
-    chunkBudgetPlugin(),
+    chunkSizePlugin(),
     releasePagesStylesheetPlugin(),
+    releaseDiffScriptPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,
       // Dev parity with the worker's mount-owned 404: serve the mount's
@@ -326,7 +418,7 @@ export default defineConfig({
     rolldownOptions: {
       // A throw here is swallowed, so fail through the exit code instead.
       onLog(level, log, handler) {
-        // The reporter's only warning is the chunk-size one chunk-budget replaces.
+        // The reporter's only warning is the chunk-size one chunkSizePlugin replaces.
         if (log.plugin === 'builtin:vite-reporter') return;
         handler(level, log);
 

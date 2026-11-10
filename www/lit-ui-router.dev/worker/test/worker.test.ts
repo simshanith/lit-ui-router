@@ -9,8 +9,8 @@ import { memoryEdge } from './memory-cache.ts';
 // real module (real sample-app-routes mounts, real ui-router-server fetch
 // adapter, the worker's own shell aliasing / noindex / 404-page policy) with
 // only the assets binding mocked. Which ASSET PATH the worker fetches is the
-// assertion that replaces the old Cypress body-title checks — the built
-// bodies themselves stay covered by the docs suite's cy.visit smokes.
+// assertion that replaces the old e2e body-title checks — the built
+// bodies themselves stay covered by the docs suite's page-load smokes.
 const ORIGIN = 'http://docs.test';
 
 // Stand-ins for dist/: the five shell builds, the flagship 404 pages,
@@ -97,6 +97,9 @@ const env: Env = {
   // SAFETY: the worker calls only the LedgerReader methods the fixture implements.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the fixture is a plain object, not a Service
   LEDGER: fixtureLedger as unknown as Env['LEDGER'],
+  // SAFETY: these mounts never reach the release diffs; a call would throw on the missing method.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
+  RELEASE_DIFFS: {} as unknown as Env['RELEASE_DIFFS'],
   ASSETS: {
     connect: () => {
       throw new Error('the assets binding has no sockets');
@@ -125,7 +128,7 @@ const env: Env = {
   },
 };
 
-// Plain GETs, like the Cypress cy.request calls these tests replace; the
+// Plain GETs, like the e2e requests these tests replace; the
 // worker judges every request it receives (shouldHandle: () => true — it only
 // runs for the run_worker_first prefixes).
 // The cf type parameter is the incoming one: a bare `RequestInit` would

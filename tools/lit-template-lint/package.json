@@ -2,9 +2,9 @@
   "name": "@tools/lit-template-lint",
   "version": "0.0.1",
   "private": true,
-  "description": "Runs lit-analyzer's strict ruleset over packages/ and apps/ src as one program-wide pass",
+  "description": "Type-checks Lit html templates in packages/, apps/ and examples/ src by lowering them to TypeScript and checking them through the TypeScript 7.1 API",
   "bin": {
-    "lint-templates": "./src/lint-templates.ts"
+    "lint-templates": "./src/check.ts"
   },
   "type": "module",
   "scripts": {
@@ -15,11 +15,19 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@tools/bootstrap": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
-    "lit-analyzer": "catalog:",
+    "@types/webidl2": "catalog:",
+    "@vscode/web-custom-data": "catalog:",
+    "@webref/elements": "catalog:",
+    "@webref/idl": "catalog:",
+    "lit": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "typescript": "catalog:"
+    "parse5": "catalog:",
+    "typescript": "catalog:",
+    "typescript-7.1": "catalog:",
+    "webidl2": "catalog:"
   }
 }

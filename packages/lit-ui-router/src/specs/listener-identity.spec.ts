@@ -45,9 +45,7 @@ class TestInlineArrowListener extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    // The fixture is the leak: this element exists to prove an inline arrow
-    // cannot be removed.
-    // eslint-disable-next-line wc/require-listener-teardown
+    // eslint-disable-next-line wc/require-listener-teardown -- the fixture is the leak: it proves an inline arrow can't be removed
     this.addEventListener(UIRouterLitElement.uiRouterContextEventName, () => {
       inlineArrowInvocations++;
     });

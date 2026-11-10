@@ -151,8 +151,9 @@ const noParentViewUnsubscribe = () => {};
  * @hideconstructor
  * @category components
  *
- * @slot - <code>&lt;ui-view&gt;</code> renders slotted content as fallback
- * whenever no routed component is active.
+ * @slot - <code>&lt;ui-view&gt;</code> captures its light-DOM children on
+ * connect and shows them as fallback content whenever no routed component is
+ * active. It renders to itself, so this is not a <code>&lt;slot&gt;</code>.
  *
  * @fires {CustomEvent} ui-router-context
  *
@@ -239,6 +240,9 @@ export class UiView extends LitElement {
 
   /** The element carrying the `routed` attribute. */
   private markedElement?: Element;
+
+  /** Re-marks when a template component's directives swap its elements without updating the view. */
+  private templateObserver?: MutationObserver;
 
   /** @internal */
   createRenderRoot(): this {
@@ -348,6 +352,7 @@ export class UiView extends LitElement {
     if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
+      this.syncRoutedMark();
     } else {
       // Past the first render the children are lit's own nodes and part markers, never authored content.
       this.captureContent();
@@ -699,6 +704,7 @@ export class UiView extends LitElement {
     this.providerSubscription?.();
     this.providerSubscription = undefined;
     this.deregisterAll();
+    this.templateObserver?.disconnect();
   }
 
   /**
@@ -861,21 +867,26 @@ export class UiView extends LitElement {
     this.placeFallback();
   }
 
-  /**
-   * Reports a missing provider once this view has actually rendered nothing.
-   *
-   * Deliberately here rather than at the failed seek in `setupUiView`: the seek
-   * runs in `connectedCallback`, and custom-element upgrade order is not
-   * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
-   * upgrades. The first update's `willUpdate` re-seeks, so by the first
-   * completed update the no-op is observable.
-   *
-   * @internal
-   */
   /** @internal */
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
+    this.syncRoutedMark();
+  }
+
+  /** Marks the routed element, and watches the children while a template component renders them. */
+  private syncRoutedMark(): void {
     this.markRoutedElement();
+
+    if (this.classElement || this.showsFallback || !this.isConnected) {
+      this.templateObserver?.disconnect();
+
+      return;
+    }
+
+    this.templateObserver ??= new MutationObserver(() =>
+      this.markRoutedElement(),
+    );
+    this.templateObserver.observe(this, { childList: true });
   }
 
   /** Moves the `routed` attribute onto the current routed element. */
@@ -891,6 +902,17 @@ export class UiView extends LitElement {
     this.markedElement = element;
   }
 
+  /**
+   * Reports a missing provider once this view has actually rendered nothing.
+   *
+   * Deliberately here rather than at the failed seek in `setupUiView`: the seek
+   * runs in `connectedCallback`, and custom-element upgrade order is not
+   * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
+   * upgrades. The first update's `willUpdate` re-seeks, so by the first
+   * completed update the no-op is observable.
+   *
+   * @internal
+   */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
 

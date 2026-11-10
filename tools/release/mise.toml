@@ -107,8 +107,8 @@ usage = '''
 flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
 '''
 run = [
-  "turbo run resolve:published",
-  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff',
+  "turbo run resolve:published --summarize --log-file",
+  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff --summarize --log-file',
 ]
 
 [tasks.publish_check_runs]
@@ -141,6 +141,14 @@ run = "node src/checks/workers-builds-check-runs.ts"
 description = "Create the altitude-atlas Pages deploy check run (deploy signal, non-gating)"
 run = "node src/checks/pages-deploy-check-runs.ts"
 
+[tasks.ledger_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, ACTIONS_ID_TOKEN_REQUEST_* (id-token: write).
+description = "Create the release-ledger reconcile check run (ledger vs GitHub and npm, non-gating)"
+usage = '''
+flag "--release <release>" help="<name>@<version> to digest-check against npm; empty skips the digest check" env="RELEASE"
+'''
+run = 'RELEASE="${usage_release:-}" node src/checks/ledger-check-runs.ts'
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.
@@ -149,6 +157,15 @@ usage = '''
 flag "--package <package>" help="Package being bumped" required=#true env="PACKAGE"
 '''
 run = 'PACKAGE="${usage_package?}" node src/steps/release-peer-floor-gate.ts'
+
+[tasks.dependent_floor_gate]
+# Run by bump's after:bump hook, after the lockfile is re-resolved and before
+# release-it commits and pushes; standalone it checks the checked-out version.
+description = "Fail a bump when a dependent's peer floor stops proving its published range"
+usage = '''
+flag "--package <package>" help="Package being bumped" required=#true env="PACKAGE"
+'''
+run = 'PACKAGE="${usage_package?}" node src/steps/release-dependent-floor-gate.ts'
 
 [tasks.bump]
 # env: GH_TOKEN (gh pr create; the branch push rides checkout's PAT).

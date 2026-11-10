@@ -1,12 +1,14 @@
 // The routed views; each parent draws its own page at its own url and its child's view below it.
 import type { UIRouter } from '@uirouter/core';
 import { html, nothing } from 'lit';
+import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
+import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
-import { isStable } from './ledger.ts';
-import type { LedgerPackage, LedgerVersion } from './ledger.ts';
+import { isStable, pickerPair, previousIn } from './ledger.ts';
+import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
@@ -27,23 +29,66 @@ const date = (iso: string | null): TemplateResult | string =>
 export const releaseUrl = (row: LedgerVersion): string | null =>
   row.gh_url?.startsWith(`${REPOSITORY}/releases/`) ? row.gh_url : null;
 
+const tagOf = ({ name, version }: LedgerVersion): string =>
+  `${name}@${version}`;
+
+/** DiffsHub's compare between two tagged versions; it mirrors GitHub's compare url. */
+export const diffUrl = (
+  from: LedgerVersion,
+  to: LedgerVersion,
+): string | null =>
+  from.git_sha === null || to.git_sha === null
+    ? null
+    : `${REPOSITORY.replace('//github.com/', '//diffshub.com/')}/compare/${encodeURIComponent(tagOf(from))}...${encodeURIComponent(tagOf(to))}`;
+
+/** This site's diff of the files two versions published to npm. */
+export const filesDiffPath = (
+  from: LedgerVersion,
+  to: LedgerVersion,
+): string | null =>
+  from.npm_integrity === null || to.npm_integrity === null
+    ? null
+    : `${RELEASES_MOUNT}/${encodeURIComponent(from.name)}/diff/${encodeURIComponent(from.version)}...${encodeURIComponent(to.version)}/`;
+
+// Lucide's chevron-down: a <select> takes no pseudo-element, so the caret is a sibling.
+const caret = html`<svg
+  aria-hidden="true"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 9 6 6 6-6" />
+</svg>`;
+
+const diff = (
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+  compare = diffUrl,
+): TemplateResult | null => {
+  const previous = previousIn(versions, row);
+  const url = previous && compare(previous, row);
+
+  return previous && url
+    ? html`<a href=${url}
+        ><span class="visually-hidden">Diff</span> from ${previous.version}
+        <span class="visually-hidden">to ${row.version}</span></a
+      >`
+    : null;
+};
+
 const githubRelease = (row: LedgerVersion): TemplateResult | string => {
   const url = releaseUrl(row);
 
   return url
     ? html`<a href=${url}
-        >GitHub release<span class="visually-hidden">
-          for ${row.name}@${row.version}</span
-        ></a
+        >GitHub release
+        <span class="visually-hidden">for ${row.name}@${row.version}</span></a
       >`
     : 'None recorded';
 };
-
-const href = (
-  router: UIRouter,
-  state: string,
-  params: Record<string, string> = {},
-): string => `${router.stateService.href(state, params)}/`;
 
 const isLeaf = (router: UIRouter, state: string): boolean =>
   router.globals.current.name === state;
@@ -54,7 +99,7 @@ const crumbs = (
 ): TemplateResult =>
   html`<nav aria-label="Breadcrumb">
     <ol class="crumbs">
-      <li><a href=${href(router, 'releases')}>Releases</a></li>
+      <li><a href=${router.stateService.href('releases')}>Releases</a></li>
       ${trail.map(({ label, href: to }) =>
         to
           ? html`<li><a href=${to}>${label}</a></li>`
@@ -86,16 +131,21 @@ const indexPage = (
           ({ name: pkg, latest: row }) =>
             html`<tr>
               <th scope="row">
-                <a href=${href(router, 'releases.package', { pkg })}>${pkg}</a>
+                <a href=${router.stateService.href('releases.package', { pkg })}
+                  >${pkg}</a
+                >
               </th>
               <td>
                 ${
                   row
                     ? html`<a
-                        href=${href(router, 'releases.package.version', {
-                          pkg,
-                          version: row.version,
-                        })}
+                        href=${router.stateService.href(
+                          'releases.package.version',
+                          {
+                            pkg,
+                            version: row.version,
+                          },
+                        )}
                         ><span class="visually-hidden">${pkg}@</span
                         >${row.version}</a
                       >`
@@ -116,6 +166,68 @@ export const ReleasesView: RoutedLitTemplate<{
 }> = ({ router, resolves }) =>
   isLeaf(router, 'releases') ? indexPage(router, resolves.packages) : uiView();
 
+const versionOptions = (
+  versions: readonly LedgerVersion[],
+  selected: LedgerVersion | undefined,
+): TemplateResult[] =>
+  versions.map(
+    ({ version }) =>
+      html`<option value=${version} ?selected=${version === selected?.version}>
+        ${version}
+      </option>`,
+  );
+
+/** The form `releases.package.diff` answers, starting on `pickerPair`. */
+const compareForm = (
+  router: UIRouter,
+  pkg: string,
+  versions: readonly LedgerVersion[],
+): TemplateResult | typeof nothing => {
+  const { from, to } = pickerPair(versions);
+
+  return versions.length < 2
+    ? nothing
+    : html`<form
+        class="compare"
+        method="get"
+        action=${router.stateService.href('releases.package.diff', { pkg })}
+        aria-label="Compare two versions"
+        target="_blank"
+        rel="noopener"
+      >
+        <label
+          >From
+          <span class="select"
+            ><select name="from">
+              ${versionOptions(versions, from)}</select
+            >${caret}</span
+          ></label
+        >
+        <label
+          >To
+          <span class="select"
+            ><select name="to">
+              ${versionOptions(versions, to)}</select
+            >${caret}</span
+          ></label
+        >
+        <fieldset>
+          <legend>Diff</legend>
+          <label
+            ><input type="radio" name="via" value="diffshub" checked /> Git
+            source on DiffsHub</label
+          >
+          <label
+            ><input type="radio" name="via" value="files" /> Published
+            files</label
+          >
+        </fieldset>
+        <button type="submit">
+          Compare <span class="visually-hidden">(opens in a new tab)</span>
+        </button>
+      </form>`;
+};
+
 const packagePage = (
   router: UIRouter,
   pkg: string,
@@ -128,6 +240,7 @@ const packagePage = (
     first. Its npm page is
     <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
   </p>
+  ${compareForm(router, pkg, versions)}
   <div class="table">
     <table>
       <thead>
@@ -136,6 +249,7 @@ const packagePage = (
           <th scope="col">Status</th>
           <th scope="col">Published</th>
           <th scope="col">Notes</th>
+          <th scope="col">Diff</th>
         </tr>
       </thead>
       <tbody>
@@ -144,7 +258,7 @@ const packagePage = (
             html`<tr>
               <th scope="row">
                 <a
-                  href=${href(router, 'releases.package.version', {
+                  href=${router.stateService.href('releases.package.version', {
                     pkg,
                     version: row.version,
                   })}
@@ -158,6 +272,7 @@ const packagePage = (
               <td>${row.status}</td>
               <td>${date(row.npm_published_at)}</td>
               <td>${githubRelease(row)}</td>
+              <td>${diff(versions, row) ?? '—'}</td>
             </tr>`,
         )}
       </tbody>
@@ -190,7 +305,7 @@ const npmFacts = (row: LedgerVersion): TemplateResult => {
 };
 
 const tagFacts = (row: LedgerVersion): TemplateResult => {
-  const tag = `${row.name}@${row.version}`;
+  const tag = tagOf(row);
 
   return row.git_sha === null
     ? html`<dt>Git tag</dt>
@@ -204,15 +319,35 @@ const tagFacts = (row: LedgerVersion): TemplateResult => {
         </dd>`;
 };
 
-/** `releases.package.version`: one version's facts, linking out to its GitHub release. */
-export const VersionView: RoutedLitTemplate<{ release: LedgerVersion }> = ({
-  router,
-  resolves: { release: row },
-}) => html`
+const diffFacts = (
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+): TemplateResult | typeof nothing => {
+  const source = diff(versions, row);
+  const files = diff(versions, row, filesDiffPath);
+
+  return html`${
+    source
+      ? html`<dt>Diff</dt>
+          <dd>${source} on DiffsHub</dd>`
+      : nothing
+  }${
+    files
+      ? html`<dt>Published files</dt>
+          <dd>${files}</dd>`
+      : nothing
+  }`;
+};
+
+/** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
+export const VersionView: RoutedLitTemplate<{
+  release: LedgerVersion;
+  versions: LedgerVersion[];
+}> = ({ router, resolves: { release: row, versions } }) => html`
   ${crumbs(router, [
     {
       label: row.name,
-      href: href(router, 'releases.package', { pkg: row.name }),
+      href: router.stateService.href('releases.package', { pkg: row.name }),
     },
     { label: row.version },
   ])}
@@ -229,8 +364,84 @@ export const VersionView: RoutedLitTemplate<{ release: LedgerVersion }> = ({
           : html`, ${date(row.gh_published_at)}`
       }
     </dd>
+    ${diffFacts(versions, row)}
   </dl>
 `;
+
+/** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
+/** The patch link without JavaScript; a binding can't sit inside raw-text <noscript>, so the layout is baked into the template. */
+const noscriptDownload = staticHtml`<noscript
+  ><p>
+    The diff renders with JavaScript.
+    <a href="${unsafeStatic(LAYOUT)}/patch" download>Download the patch</a>
+    instead.
+  </p></noscript
+>`;
+
+export const CompareView: RoutedLitTemplate<{
+  pair: PublishedPair;
+}> = ({ router, resolves: { pair } }) => {
+  const { name: pkg } = pair.to;
+  const range = `${pair.from.version}...${pair.to.version}`;
+  const source = diffUrl(pair.from, pair.to);
+
+  return html`
+    ${crumbs(router, [
+      {
+        label: pkg,
+        href: router.stateService.href('releases.package', { pkg }),
+      },
+      { label: range },
+    ])}
+    <h1>${pkg} ${range}</h1>
+    <p>
+      The files npm published for each version, compared as
+      <code
+        >npm diff --diff=${pkg}@${pair.from.version}
+        --diff=${pkg}@${pair.to.version}</code
+      >
+      prints
+      them.${
+        source
+          ? html` The git source compare is
+              <a href=${source}>on DiffsHub</a>.`
+          : nothing
+      }
+    </p>
+    <section
+      class="npm-diff"
+      data-npm-diff
+      data-package=${pkg}
+      data-from=${pair.from.version}
+      data-to=${pair.to.version}
+      aria-label="Changed files"
+    >
+      <p class="diff-status" role="status">Loading the diff…</p>
+      ${noscriptDownload}
+      <fieldset class="diff-filter" hidden>
+        <legend>Show</legend>
+      </fieldset>
+      <button type="button" class="diff-fold-all" hidden>
+        Collapse all files
+      </button>
+      <p class="diff-note" role="status"></p>
+      <div class="diff-layout">
+        <nav class="diff-nav" aria-label="Files" hidden>
+          <button
+            type="button"
+            class="diff-nav-toggle"
+            aria-expanded="false"
+            aria-controls="diff-tree"
+          >
+            Files
+          </button>
+          <div class="diff-tree" id="diff-tree"></div>
+        </nav>
+        <ol class="diff-files"></ol>
+      </div>
+    </section>
+  `;
+};
 
 /** `notFound`: the mount's otherwise state, and any package or version the ledger lacks. */
 export const NotFoundView: RoutedLitTemplate = () => html`

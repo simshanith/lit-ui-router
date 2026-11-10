@@ -3,6 +3,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
+import { getByRole, getByText } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import {
+  element,
+  elements,
+  outline,
+  parseMarkup,
+  shadowRoot,
+  text,
+} from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
@@ -13,6 +23,7 @@ import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 import { dehydrate, settle } from 'ui-router-server/ssr';
+import type { DehydrateOptions, Transporter } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
@@ -136,37 +147,59 @@ describe('shell verdicts', () => {
 });
 
 describe('redirect verdicts', () => {
-  it('writes no page and one rules line carrying location and status', async () => {
+  it('writes no page and a rules line per spelling carrying location and status', async () => {
     const { files, result } = await run({
       paths: ['/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
     });
 
     expect(result.tally).toMatchObject({ shell: 0, redirect: 1 });
     expect(result.pages).toEqual([]);
     expect(result.rules).toEqual([
       { from: '/app/legacy', to: '/app/welcome', status: 302 },
+      { from: '/app/legacy/', to: '/app/welcome', status: 302 },
     ]);
-    expect(files.get('dist/_redirects')).toBe('/app/legacy /app/welcome 302\n');
+    expect(files.get('dist/_redirects')).toBe(
+      '/app/legacy /app/welcome 302\n/app/legacy/ /app/welcome 302\n',
+    );
   });
 
-  it("pairs the trailing slash under 'both' and not under 'exact'", async () => {
-    const both = await run({ paths: ['/app/legacy'], notFound: false });
-    expect(both.result.rules.map((line) => line.from)).toEqual([
+  it('pairs the trailing slash and writes no line for a page by default', async () => {
+    const { result } = await run({
+      paths: ['/app/welcome', '/app/legacy'],
+      notFound: false,
+    });
+
+    expect(result.rules.map((line) => line.from)).toEqual([
       '/app/legacy',
       '/app/legacy/',
     ]);
-    expect(both.result.tally.redirect).toBe(1);
+    expect(result.tally).toMatchObject({ shell: 1, redirect: 1 });
+  });
 
-    const exact = await run({
-      paths: ['/app/legacy'],
+  it("follows the mount's 'always' policy with a 308 from a page's other spelling", async () => {
+    const always = {
+      ...mounts,
+      '/app': {
+        ...appMount,
+        config: { strict: false, trailingSlash: { pages: 'always' } },
+      },
+    } satisfies Record<string, MountConfig>;
+
+    const { files, result } = await run({
+      mounts: always,
+      paths: ['/app/welcome/', '/app/legacy'],
       notFound: false,
-      trailingSlash: 'exact',
     });
 
-    expect(exact.result.rules.map((line) => line.from)).toEqual([
-      '/app/legacy',
+    expect([...files.keys()]).toEqual([
+      'dist/welcome/index.html',
+      'dist/_redirects',
+    ]);
+    expect(result.rules).toEqual([
+      { from: '/app/welcome', to: '/app/welcome/', status: 308 },
+      { from: '/app/legacy', to: '/app/welcome/', status: 302 },
+      { from: '/app/legacy/', to: '/app/welcome/', status: 302 },
     ]);
   });
 });
@@ -349,15 +382,10 @@ describe('the 404 document', () => {
 
 describe('the rules file', () => {
   it('never writes an SPA catch-all', async () => {
-    for (const trailingSlash of ['both', 'exact'] as const) {
-      const { files, result } = await run({
-        paths: ['/', '/app/legacy'],
-        trailingSlash,
-      });
+    const { files, result } = await run({ paths: ['/', '/app/legacy'] });
 
-      expect(files.get('dist/_redirects')).not.toContain('/index.html 200');
-      expect(result.rules.some((line) => line.from === '/*')).toBe(false);
-    }
+    expect(files.get('dist/_redirects')).not.toContain('/index.html 200');
+    expect(result.rules.some((line) => line.from === '/*')).toBe(false);
   });
 
   it('leads with extraRules, in order and unpaired', async () => {
@@ -482,9 +510,13 @@ describe('renderShell return values', () => {
       renderShell: (): TemplateResult => html`<p>from a template</p>`,
     });
 
-    expect(templated.files.get('dist/index.html')).toContain(
-      '<p>from a template</p>',
-    );
+    expect(
+      getByText(
+        parseHtml(templated.files.get('dist/index.html')!).body,
+        'from a template',
+        { selector: 'p' },
+      ),
+    ).toBeDefined();
 
     const verbatim = await run({
       paths: ['/'],
@@ -504,10 +536,13 @@ describe('renderShell return values', () => {
         `<!doctype html><title>${context.path}</title><div id="root">${body}</div>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('<title>/</title>');
-    expect(written).toContain('<div id="root">');
-    expect(written).toContain('<p>body</p>');
+    const written = parseHtml(files.get('dist/index.html')!);
+    expect(written.title).toBe('/');
+    // the mount point has no role, so it's found by id
+    const root = written.querySelector('#root');
+    expect(
+      getByText(written.body, 'body', { selector: 'p' }).parentElement,
+    ).toBe(root);
   });
 
   it('propagates a renderShell rejection and writes no rules file', async () => {
@@ -551,7 +586,11 @@ describe('the render composition', () => {
         html`<a href=${srefHref('sheet', { num: '7B' })}>7B</a>`,
     });
 
-    expect(files.get('dist/index.html')).toContain('href="/sheet/7B"');
+    expect(
+      getByRole(parseHtml(files.get('dist/index.html')!).body, 'link', {
+        name: '7B',
+      }).getAttribute('href'),
+    ).toBe('/sheet/7B');
   });
 
   it('answers a context-request that reaches the render root', async () => {
@@ -563,9 +602,13 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('/sheet/7B');
-    expect(written).not.toContain('no-router');
+    // happy-dom's DOMParser leaves a declarative shadow root unattached, so parse5 reads it
+    const probe = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'router-probe',
+    );
+
+    expect(text(element(shadowRoot(probe), 'span'))).toBe('/sheet/7B');
   });
 
   it('defaults to the light-DOM renderers, so no element gets a shadow root it never asked for', async () => {
@@ -587,7 +630,9 @@ describe('the render composition', () => {
       renderShell: (): TemplateResult => html`<ui-view></ui-view>`,
     });
 
-    expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
+    expect(
+      element(parseMarkup(files.get('dist/index.html')!), 'ui-view').attrs,
+    ).toEqual([{ name: 'defer-hydration', value: '' }]);
   });
 });
 
@@ -626,20 +671,32 @@ describe('the default element renderers', () => {
 
   it('draws a branded light-DOM element into its light DOM', async () => {
     const { files } = await run({ notFound: false, renderShell: cards });
-    const written = files.get('dist/index.html')!;
+    const tree = parseMarkup(files.get('dist/index.html')!);
+    const card = element(tree, 'default-card');
 
-    expect(written).toMatch(
-      /<default-card[^>]*>(<!--[^>]*-->)*<p class="default-card">(<!--[^>]*-->)*drawn/,
-    );
-    expect(written).not.toContain('shadowroot');
+    // only markers come before the card's paragraph
+    const children = outline(card);
+    const at = children.indexOf('<p>');
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(
+      children.slice(0, at).filter((label) => !label.startsWith('<!--')),
+    ).toEqual([]);
+    const label = element(card, 'p');
+    expect(label.attrs).toEqual([{ name: 'class', value: 'default-card' }]);
+    expect(text(label)).toBe('drawn');
+    expect(elements(tree, 'template')).toEqual([]);
   });
 
   it('serves an unbranded element empty', async () => {
     const { files } = await run({ notFound: false, renderShell: cards });
 
-    expect(files.get('dist/index.html')).toMatch(
-      /<plain-card\s+defer-hydration><!--lit-part--><!--\/lit-part--><\/plain-card>/,
+    const card = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'plain-card',
     );
+
+    expect(card.attrs).toEqual([{ name: 'defer-hydration', value: '' }]);
+    expect(outline(card)).toEqual(['<!--lit-part-->', '<!--/lit-part-->']);
   });
 
   it('gives way to an explicit elementRenderers list', async () => {
@@ -649,10 +706,12 @@ describe('the default element renderers', () => {
       elementRenderers: [UiViewRenderer],
     });
 
-    const written = files.get('dist/index.html')!;
+    const tree = parseMarkup(files.get('dist/index.html')!);
 
-    expect(written).not.toContain('default-card"');
-    expect(written).not.toContain('drawn');
+    // no shadow root either, so the light-DOM checks below see the whole render
+    expect(elements(tree, 'template')).toEqual([]);
+    expect(elements(tree, 'p', { class: 'default-card' })).toEqual([]);
+    expect(text(tree)).not.toContain('drawn');
   });
 });
 
@@ -679,7 +738,7 @@ describe('the hydration signature', () => {
     });
   };
 
-  it('opens a rendered page on the version, the state and its params', async () => {
+  it('opens a rendered page on the version, the state, its params and the views drawn', async () => {
     const { files } = await settled(['/sheet/7B']);
     const page = files.get('dist/sheet/7B/index.html')!;
 
@@ -687,8 +746,11 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
     });
-    expect(withoutSignature(page)).toMatch(/^<!--lit-part /);
+    expect(outline(parseMarkup(withoutSignature(page)))[0]).toMatch(
+      /^<!--lit-part /,
+    );
   });
 
   it('reads the version from the manifest', () => {
@@ -743,6 +805,7 @@ describe('the hydration signature', () => {
       version,
       state: 'configured',
       params: { q: '1' },
+      views: [],
     });
   });
 
@@ -773,6 +836,7 @@ describe('the hydration signature', () => {
       version,
       state: 'sheet',
       params: { num: '7B' },
+      views: [],
       resolves: { sheet: { title: '</script> 7B' } },
     });
   });
@@ -788,6 +852,172 @@ describe('the hydration signature', () => {
     const { files } = await run({ paths: ['/'], notFound: false });
 
     expect(files.get('dist/index.html')).toBe('<p>page</p>');
+  });
+});
+
+const transport = {
+  Date: {
+    encode: (value) => value instanceof Date && value.toISOString(),
+    // SAFETY: `encode` above answers with an ISO string, the only encoding `decode` gets.
+    decode: (encoded) => new Date(encoded as string),
+  } satisfies Transporter<Date>,
+};
+
+// `deps: []`, since core reads a bare function's dependencies from its source.
+const resolved = <T>(token: string, resolveFn: () => T) => ({
+  token,
+  resolveFn,
+  deps: [],
+});
+
+/** Prerenders `paths` over a `plate` state whose resolves take a string, a `Date` and a site-wide manifest; `/plain` renders as a string. */
+const plates = (
+  paths: string[],
+  overrides: Partial<Parameters<typeof prerender>[0]> = {},
+) => {
+  const router = sheetRouter();
+  router.stateRegistry.register({
+    name: 'plate',
+    url: '/plate/:num',
+    resolve: [
+      resolved('title', () => 'Plate 7B'),
+      resolved('when', () => new Date(0)),
+      resolved('manifest', () => ['7B', '9']),
+    ],
+  });
+  router.stateRegistry.register({ name: 'plain', url: '/plain' });
+
+  return run({
+    router,
+    paths,
+    notFound: false,
+    mounts: {
+      '/': {
+        routes: [
+          { name: 'plate', url: '/plate/:num' },
+          { name: 'plain', url: '/plain' },
+        ],
+        config: { strict: false },
+      },
+    },
+    ...overrides,
+    renderShell: async (
+      _verdict,
+      { path },
+    ): Promise<TemplateResult | string> => {
+      await settle(router, path);
+
+      return path === '/plain' ? '<p>plain</p>' : html`<p>page</p>`;
+    },
+  });
+};
+
+describe('the dehydrate option', () => {
+  const keepManifestOut: DehydrateOptions['shouldDehydrate'] = ({ token }) =>
+    token !== 'manifest';
+
+  it.each<[string, DehydrateOptions]>([
+    ['no options', {}],
+    ['shouldDehydrate', { shouldDehydrate: keepManifestOut }],
+    ['transport', { transport }],
+    ['both', { shouldDehydrate: keepManifestOut, transport }],
+  ])(
+    'writes the signature a payload hook calling dehydrate() writes, given %s',
+    async (_name, options) => {
+      const paths = ['/plate/7B', '/plate/9'];
+      const built = await plates(paths, { dehydrate: options });
+
+      const hooked = await plates(paths, {
+        payload: (transition) => dehydrate(transition, options).payload,
+      });
+
+      expect(built.files).toEqual(hooked.files);
+    },
+  );
+
+  it('carries what shouldDehydrate keeps and transport encodes', async () => {
+    const { files } = await plates(['/plate/7B'], {
+      dehydrate: { shouldDehydrate: keepManifestOut, transport },
+    });
+
+    expect(signatureIn(files.get('dist/plate/7B/index.html')!)).toMatchObject({
+      state: 'plate',
+      resolves: {
+        plate: { title: 'Plate 7B', when: '1970-01-01T00:00:00.000Z' },
+      },
+      transported: { plate: { when: [{ type: 'Date', path: [] }] } },
+    });
+  });
+
+  it('throws when a payload hook is passed too', async () => {
+    await expect(
+      plates(['/plate/7B'], { dehydrate: {}, payload: () => undefined }),
+    ).rejects.toThrow('pass `dehydrate` or `payload`, not both');
+  });
+});
+
+describe('the payload report', () => {
+  /** The bytes the signature's `resolves` and `transported` add to `page`, as written. */
+  const addedBytes = (page: string): number => {
+    const {
+      resolves: _resolves,
+      transported: _transported,
+      ...bare
+    } = signatureIn(page);
+
+    return signatureText(page).length - JSON.stringify(bare).length;
+  };
+
+  it('reports the bytes and unserializable resolves of a page dehydrate drew', async () => {
+    const { files, result } = await plates(['/plate/7B'], { dehydrate: {} });
+
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].payload).toEqual({
+      bytes: addedBytes(files.get('dist/plate/7B/index.html')!),
+      unserializable: [{ state: 'plate', token: 'when' }],
+    });
+    expect(result.pages[0].payload!.bytes).toBeGreaterThan(0);
+  });
+
+  it('reports none unserializable when transport carries the value', async () => {
+    const { result } = await plates(['/plate/7B'], {
+      dehydrate: { transport },
+    });
+
+    expect(result.pages[0].payload?.unserializable).toEqual([]);
+  });
+
+  it('omits the field on a page with no payload', async () => {
+    const { result } = await plates(['/plate/7B', '/plain'], {
+      dehydrate: {},
+    });
+
+    const [plate, plain] = result.pages;
+
+    expect(plate.payload).toBeDefined();
+    expect(plain.path).toBe('/plain');
+    expect(plain).not.toHaveProperty('payload');
+  });
+
+  it('omits the field when there is nothing to draw with or a hook returns none', async () => {
+    const bare = await plates(['/plate/7B']);
+    const hooked = await plates(['/plate/7B'], { payload: () => undefined });
+
+    expect(bare.result.pages[0]).not.toHaveProperty('payload');
+    expect(hooked.result.pages[0]).not.toHaveProperty('payload');
+  });
+
+  it('reports bytes only behind a payload hook', async () => {
+    const options: DehydrateOptions = { transport };
+    const built = await plates(['/plate/7B'], { dehydrate: options });
+
+    const hooked = await plates(['/plate/7B'], {
+      payload: (transition) => dehydrate(transition, options).payload,
+    });
+
+    expect(hooked.result.pages[0].payload).toEqual({
+      bytes: built.result.pages[0].payload!.bytes,
+    });
   });
 });
 
@@ -837,9 +1067,12 @@ describe('the render root', () => {
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
-    const written = files.get('dist/index.html')!;
-    expect(written).toContain('/sheet/7B');
-    expect(written).not.toContain('no-router');
+    const probe = element(
+      parseMarkup(files.get('dist/index.html')!),
+      'router-probe',
+    );
+
+    expect(text(element(shadowRoot(probe), 'span'))).toBe('/sheet/7B');
     expect(result.root).toBe(root);
     expect(requestRouter(root!)).toBeUndefined();
   });

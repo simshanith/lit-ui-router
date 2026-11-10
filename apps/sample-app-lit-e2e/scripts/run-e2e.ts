@@ -1,3 +1,4 @@
+import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
@@ -54,6 +55,11 @@ const main = async (): Promise<void> => {
   }
 
   const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
+
+  // Playwright's default pool is half the cores per process; suites run side by side split it instead
+  process.env.E2E_WORKERS ??= String(
+    Math.max(1, Math.floor(availableParallelism() / 2 / selected.length)),
+  );
 
   // e2e verifies what deploys; set before the handover, so the suites' cache keys see it too
   process.env.WWW_WORKER_BUILD ??= 'production';

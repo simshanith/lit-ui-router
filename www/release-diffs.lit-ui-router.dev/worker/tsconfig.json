@@ -4,7 +4,8 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "module": "es2022",
+    // The cf-worker import attribute in cloudflare.config.ts needs esnext.
+    "module": "esnext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
@@ -12,5 +13,10 @@
     "lib": ["ES2022"],
     "types": []
   },
-  "include": ["index.ts", "../cloudflare.config.ts", "../.cloudflare/types"]
+  "include": [
+    "index.ts",
+    "test/*.ts",
+    "../cloudflare.config.ts",
+    "../.cloudflare/types"
+  ]
 }

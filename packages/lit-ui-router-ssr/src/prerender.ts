@@ -1,35 +1,48 @@
-// provideRouter() on a render root, withRouterSync() around a synchronous render, the lit render inside ui-router-server's prerender loop.
-import { render } from '@lit-labs/ssr';
+// provideRouter() on a render root for the run, render.ts's lit render inside ui-router-server's prerender loop.
 import type { RenderInfo } from '@lit-labs/ssr';
-import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
-import { provideRouter, withRouterSync } from 'lit-ui-router/context';
+import { provideRouter } from 'lit-ui-router/context';
 import { isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import { prerender as prerenderSite } from 'ui-router-server/prerender';
 import type {
+  EmittedPage,
   FileWriter,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
+  RenderedRedirect,
 } from 'ui-router-server/prerender';
-import type { ResolvePayload } from 'ui-router-server/ssr';
-import { devGate } from '#dev-gate';
+import {
+  dehydrate as dehydrateLanded,
+  redirectedTo,
+} from 'ui-router-server/ssr';
+import type {
+  DehydrateOptions,
+  DehydrateResult,
+  ResolvePayload,
+} from 'ui-router-server/ssr';
 
-import { LightElementRenderer } from './light-element-renderer.js';
+import {
+  defaultElementRenderers,
+  renderDrawn,
+  warnUnregistered,
+} from './render.js';
+import type { PagePayload } from './render.js';
 import { responder } from './respond.js';
 import type { BoundResponses } from './respond.js';
-import { packageVersion, routeOf, signatureAttribute } from './signature.js';
-import { UiViewRenderer } from './ui-view-renderer.js';
 
 export type {
   EmittedPage,
   FileWriter,
   PrerenderTally,
   RedirectLine,
+  RenderedRedirect,
 } from 'ui-router-server/prerender';
+
+export type { PagePayload } from './render.js';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
@@ -86,7 +99,11 @@ export interface PrerenderOptions extends Omit<
    * Renders one shell verdict. Return a template and this package renders it,
    * behind the hydration signature; return a string and it is written as-is.
    * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
-   * path before it returns.
+   * path before it returns. When the transition the router lands on during
+   * the hook was redirected, by a `redirectTo` function for one, the path
+   * gets a rules line to where it landed, at the redirecting state's
+   * `redirectStatusCode`, and no page: `redirectedTo` from
+   * `ui-router-server/ssr` reports it.
    */
   renderShell: (
     verdict: ShellVerdict,
@@ -114,7 +131,9 @@ export interface PrerenderOptions extends Omit<
    * class `LightDomHydrating` branded. A list passed here replaces the default,
    * so keep `LightElementRenderer` in it, ahead of any renderer that writes a
    * shadow root, to draw those elements. Pass `[]` for a render with no
-   * `<ui-view>` to fill.
+   * `<ui-view>` to fill. A shadow-DOM `LitElement` no renderer in the list
+   * answers for renders as its bare tag, empty, and warns once per tag in
+   * development; put `LitElementRenderer` after `LightElementRenderer` to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**
@@ -138,26 +157,45 @@ export interface PrerenderOptions extends Omit<
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
   /**
-   * Draws the resolve payload for a rendered page, handed the transition the
+   * Draws each rendered page's resolve payload with `dehydrate` from
+   * `ui-router-server/ssr`, called with these options on the transition the
    * router last landed, once `renderShell` has returned a template. The
    * payload's `resolves` go into the page's hydration signature, beside the
    * state and parameters the router stands on, and the client adopts them on
-   * boot in place of running those resolve functions. Return `undefined` to
-   * write none. Without this hook no page carries resolves.
+   * boot in place of running those resolve functions. Pass `{}` to draw every
+   * resolve `dehydrate` draws by default. Without this option or
+   * {@link PrerenderOptions.payload | `payload`}, no page carries resolves.
    *
-   * `dehydrate` from `ui-router-server/ssr` draws the payload; its
-   * documentation says which values it leaves out. The payload's
+   * `dehydrate`'s documentation says which values it leaves out and how
+   * `shouldDehydrate` and `transport` act. The payload's
    * `transported` marks go into the signature too, so a value a transporter
    * carried is rebuilt when `bootstrap()` gets the same `transport`.
    *
    * @example
-   * ```ts
-   * payload: (transition, { path }) => {
-   *   const { payload, unserializable } = dehydrate(transition);
-   *   for (const { state, token } of unserializable)
-   *     console.warn(`${path}: ${state}.${token} re-runs on the client`);
-   *   return payload;
+   * ```ts nocheck
+   * dehydrate: {
+   *   shouldDehydrate: ({ token }) => token !== 'manifest',
+   *   transport,
    * },
+   * ```
+   */
+  dehydrate?: DehydrateOptions;
+  /**
+   * Draws the resolve payload for a rendered page by hand, in place of
+   * {@link PrerenderOptions.dehydrate | `dehydrate`}: handed the transition the
+   * router last landed, once `renderShell` has returned a template, it returns
+   * the payload the page's signature carries, or `undefined` to write none.
+   * Passing both this and `dehydrate` throws.
+   *
+   * @example
+   * Shape the payload `dehydrate` draws before it is written:
+   * ```ts nocheck
+   * import { dehydrate } from 'ui-router-server/ssr';
+   *
+   * payload: (transition, { path }) =>
+   *   path.startsWith('/drafts/')
+   *     ? undefined
+   *     : dehydrate(transition, { transport }).payload,
    * ```
    */
   payload?: (
@@ -166,105 +204,28 @@ export interface PrerenderOptions extends Omit<
   ) => ResolvePayload | undefined;
 }
 
+/** A page {@link prerender} emitted. */
+export interface PrerenderedPage extends EmittedPage {
+  /**
+   * What the page's signature carries of its resolve payload. Absent on a page
+   * that carries none: one drawn with no payload, one `renderShell` returned
+   * as a string, and a response state's body.
+   */
+  payload?: PagePayload;
+}
+
 /** What {@link prerender} did. */
-export interface PrerenderResult extends SitePrerenderResult {
+export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
+  /** Every page emitted or planned, in enumeration order. */
+  pages: PrerenderedPage[];
   /** The root event target, created or passed through. */
   root: EventTarget;
 }
 
-// litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
-const rootedStack = (root: EventTarget): EventTarget[] => {
-  // SAFETY: the @lit-labs/ssr DOM shim sets `litServerRoot` to an `EventTarget`, or leaves it unset.
-  const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
-    .litServerRoot;
-
-  return litServerRoot && litServerRoot !== root
-    ? [litServerRoot, root]
-    : [root];
-};
-
-/** The signature as `prerender()` writes it. */
-interface WrittenSignature {
-  readonly version: string;
-  readonly state: string;
-  readonly params: Readonly<Record<string, string | string[]>>;
-  readonly resolves?: ResolvePayload['resolves'];
-  readonly transported?: ResolvePayload['transported'];
-}
-
-/** What a page's signature carries of its resolve payload. */
-type DrawnResolves = Pick<ResolvePayload, 'resolves' | 'transported'>;
-
-/** The signature of the page `router` currently stands on, encoded as the client compares it, carrying the payload's `resolves` and `transported` when given. */
-export const signatureOf = (
-  router: UIRouterLit,
-  drawn?: DrawnResolves,
-): WrittenSignature => {
-  const [state, params] = routeOf(router.globals);
-  const signature = { version: packageVersion, state, params };
-
-  if (!drawn) return signature;
-
-  const { resolves, transported } = drawn;
-
-  return transported
-    ? { ...signature, resolves, transported }
-    : { ...signature, resolves };
-};
-
-/**
- * The signature as one JSON data block. `<` and `>` only ever stand inside a
- * JSON string, where `\u003c` and `\u003e` spell them, so no value can spell
- * `</script` or `<!--` and end the block early.
- */
-export const signatureBlock = (signature: WrittenSignature): string => {
-  const json = JSON.stringify(signature)
-    .replaceAll('<', '\\u003c')
-    .replaceAll('>', '\\u003e');
-
-  return `<script type="application/json" ${signatureAttribute}>${json}</script>`;
-};
-
-/**
- * Renders one page: the signature first, then the render, so the client reads
- * the one before it hydrates the other.
- *
- * @internal
- */
-export const renderPage = (
-  body: TemplateResult,
-  router: UIRouterLit,
-  root: EventTarget,
-  elementRenderers: RenderInfo['elementRenderers'],
-  drawn?: DrawnResolves,
-): string =>
-  signatureBlock(signatureOf(router, drawn)) +
-  withRouterSync(router, () =>
-    collectResultSync(
-      render(body, {
-        // a fresh array per render: @lit-labs/ssr mutates the stack
-        eventTargetStack: rootedStack(root),
-        elementRenderers,
-        // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
-        deferHydration: true,
-      }),
-    ),
-  );
-
-const warnUnregistered = (): void => {
-  // DEV folds away in dist/*.js; #dev-gate also closes it under node when NODE_ENV is production.
-  if (!import.meta.env.DEV || !devGate()) return;
-
-  if (globalThis.customElements?.get('ui-view')) return;
-  console.warn(
-    'lit-ui-router-ssr: <ui-view> is not defined on the current customElements registry, so every <ui-view> on these pages renders empty. ' +
-      'The DOM shim replaces the registry when it finishes installing: load lit-ui-router-ssr/register by dynamic import after the shim, or preload the shim with node --import.',
-  );
-};
-
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, a response state becomes the body or rules line its
+ * `<subpath>/index.html`, or a rules line when the transition its
+ * `renderShell` landed was redirected, a response state becomes the body or rules line its
  * handler in {@link PrerenderOptions.responses | responses} answers, a
  * redirect becomes a rules line and no page, and the `otherwise` projection
  * becomes the 404 document. The loop is
@@ -278,10 +239,15 @@ const warnUnregistered = (): void => {
  *
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
- * package's version and the state and parameter values the router stood on,
- * which `hydrateRoot()` reads before it touches the document. A
- * {@link PrerenderOptions.payload | `payload`} hook adds the resolved values
- * the page was drawn with, which `bootstrap()` adopts. A `renderShell`
+ * package's version, the state and parameter values the router stood on, and
+ * the fully qualified name of each `<ui-view>` it drew a routed component
+ * into, which `hydrateRoot()` reads before it touches the document and
+ * `bootstrap()` reports each view's outcome against.
+ * {@link PrerenderOptions.dehydrate | `dehydrate`}, or a
+ * {@link PrerenderOptions.payload | `payload`} hook, adds the resolved values
+ * the page was drawn with, which `bootstrap()` adopts; the page's entry in
+ * the result's `pages` reports the bytes they add and, from `dehydrate`, the
+ * resolves left to re-run on the client. A `renderShell`
  * that returns a string is written as-is, with no signature, so the client
  * renders it cold.
  *
@@ -295,9 +261,20 @@ const warnUnregistered = (): void => {
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
+ * @throws an `Error` when both `dehydrate` and `payload` are supplied
  *
  * @example
  * ```ts
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ * import { prerender, settle, type PrerenderOptions } from 'lit-ui-router-ssr';
+ *
+ * declare const mounts: PrerenderOptions['mounts'];
+ * declare const router: UIRouterLit;
+ * declare const titles: Map<string, string>;
+ * declare function page(): TemplateResult;
+ * declare function fillShell(title: string | undefined, body: string): string;
+ *
  * const result = await prerender({
  *   mounts,
  *   router,
@@ -318,38 +295,93 @@ export async function prerender(
     router,
     renderShell,
     document,
-    elementRenderers = [UiViewRenderer, LightElementRenderer],
+    elementRenderers = defaultElementRenderers,
     root = new EventTarget(),
     write = nodeWrite,
+    dehydrate: dehydrateOptions,
     payload,
     responses,
     origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
 
+  if (dehydrateOptions && payload)
+    throw new Error(
+      'prerender: pass `dehydrate` or `payload`, not both; a `payload` hook calls `dehydrate()` itself',
+    );
+
   warnUnregistered();
 
-  const payloadOf = (context: RenderContext): ResolvePayload | undefined => {
-    if (!payload) return undefined;
+  const draw = (
+    transition: Transition,
+    context: RenderContext,
+  ): Partial<DehydrateResult> => {
+    if (dehydrateOptions) return dehydrateLanded(transition, dehydrateOptions);
 
-    // SAFETY: `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
-    const landed = router.globals.successfulTransitions.peekTail() as
-      | Transition
-      | undefined;
+    return { payload: payload?.(transition, context) };
+  };
 
-    return landed && payload(landed, context);
+  // `peekTail()` is typed `Transition` and returns `undefined` on an empty queue.
+  const lastLanded = (): Transition | undefined =>
+    router.globals.successfulTransitions.peekTail();
+
+  const drawLanded = (context: RenderContext): Partial<DehydrateResult> => {
+    if (!dehydrateOptions && !payload) return {};
+    const landed = lastLanded();
+
+    return landed ? draw(landed, context) : {};
+  };
+
+  // A transition this render landed, not one an earlier page left the router on.
+  const redirectOf = (
+    verdict: ShellVerdict,
+    before: Transition | undefined,
+  ): RenderedRedirect | undefined => {
+    const landed = lastLanded();
+
+    const redirect =
+      landed && landed !== before ? redirectedTo(router, landed) : undefined;
+
+    if (!redirect) return undefined;
+    const { mount } = verdict;
+
+    return {
+      location: mount === '/' ? redirect.url || '/' : mount + redirect.url,
+      status: redirect.status,
+    };
+  };
+
+  const reports = new Map<string, PagePayload>();
+
+  const renderTemplate = (
+    body: TemplateResult,
+    context: RenderContext,
+  ): string => {
+    const page = renderDrawn(
+      body,
+      router,
+      root,
+      elementRenderers,
+      drawLanded(context),
+    );
+
+    if (page.payload) reports.set(context.file, page.payload);
+
+    return page.html;
   };
 
   const renderLit = async (
     verdict: ShellVerdict,
     siteContext: SiteRenderContext,
-  ): Promise<string> => {
+  ): Promise<string | RenderedRedirect> => {
     const context: RenderContext = { ...siteContext, root };
+    const before = lastLanded();
     const body = await renderShell(verdict, context);
+    const redirect = redirectOf(verdict, before);
 
-    const markup = isString(body)
-      ? body
-      : renderPage(body, router, root, elementRenderers, payloadOf(context));
+    if (redirect) return redirect;
+
+    const markup = isString(body) ? body : renderTemplate(body, context);
 
     return document ? document(markup, context) : markup;
   };
@@ -379,7 +411,13 @@ export async function prerender(
       write,
     });
 
-    return { ...result, root };
+    const pages = result.pages.map((page): PrerenderedPage => {
+      const report = reports.get(page.file);
+
+      return report ? { ...page, payload: report } : page;
+    });
+
+    return { ...result, pages, root };
   } finally {
     uninstall();
   }

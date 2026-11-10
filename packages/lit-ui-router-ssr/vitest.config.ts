@@ -25,7 +25,11 @@ const coexistSpecs = [
   'src/specs/client-coexist.spec.ts',
   'src/specs/light-dom-coexist.spec.ts',
   'src/specs/class-view.spec.ts',
+  'src/specs/shadow-shell.spec.ts',
 ];
+
+// Real `vite build`s, whose prerender runs in a worker over this package's dist: no shim and no document in the test's own realm.
+const viteSpecs = ['src/specs/vite-build.spec.ts'];
 
 // Specs that must also hold against the published build of `@lit-labs/ssr-client`.
 const prodSpecs = ['src/specs/render-light-flag.spec.ts'];
@@ -118,7 +122,12 @@ export default defineConfig({
           environment: 'node',
           setupFiles: ['./vitest.setup.ts'],
           include: ['src/specs/**/*.spec.ts'],
-          exclude: [...configDefaults.exclude, ...clientSpecs, ...coexistSpecs],
+          exclude: [
+            ...configDefaults.exclude,
+            ...clientSpecs,
+            ...coexistSpecs,
+            ...viteSpecs,
+          ],
           isolate: true,
         },
       },
@@ -133,6 +142,16 @@ export default defineConfig({
           setupFiles: ['./vitest.setup.ts'],
           include: prodSpecs,
           isolate: true,
+        },
+      },
+      {
+        cacheDir: `node_modules/.vite-${cacheKey}-vite`,
+        test: {
+          name: 'vite',
+          environment: 'node',
+          include: viteSpecs,
+          isolate: true,
+          testTimeout: 30_000,
         },
       },
       {

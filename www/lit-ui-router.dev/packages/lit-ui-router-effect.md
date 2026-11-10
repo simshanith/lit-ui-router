@@ -1,5 +1,5 @@
 ---
-title: Effect Bindings
+title: lit-ui-router-effect
 description: A SubscriptionRef of the route and ref-following Lit controllers with lit-ui-router-effect
 ---
 
@@ -51,7 +51,7 @@ selections as unchanged.
 
 ## Quick start
 
-```ts
+```ts check
 import { html, LitElement } from 'lit';
 import { Equal } from 'effect';
 import { RouterRefController } from 'lit-ui-router-effect';
@@ -176,6 +176,10 @@ a thunk instead (`() => [ref]`) for refs that depend on the host's place in
 the DOM; it is resolved on every `hostConnected`, and `.value` carries
 `options.initialValue` until then.
 
+[`pendingRef(router)` and `errorRef(router)`](/packages/ui-router-effect#pendingref-and-errorref)
+are `SubscriptionRef`s too, so a `RefController` over them follows the
+in-flight transition and the last failed one.
+
 ## Lifecycle safety
 
 Each controller runs one fiber — `Stream.runForEach` over the refs' `changes`
@@ -194,7 +198,7 @@ value a browser would.
 
 Like `lit-ui-router`, this package ships two builds and bundlers pick between
 them through the `development` export condition — see
-[Development & Production Builds](/guides/development-builds) for the mechanism
+[Development and Production Builds](/guides/development-builds) for the mechanism
 and the full warning inventory across packages.
 
 One warning exists here. A `RouterRefController` whose host has no
@@ -250,6 +254,10 @@ can be compared file-by-file to see exactly what the Effect idiom changes.
 For a smaller picture, the
 [Hello Galaxy (Effect)](/tutorial/live-examples#hello-galaxy-effect) example
 is the galaxy tutorial rebuilt on these controllers, installed from npm.
+
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router-effect" />
 
 ## Further reading
 

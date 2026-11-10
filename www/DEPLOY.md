@@ -68,10 +68,10 @@ the build output beside it).
 
 | Environment                                                                                             | Build                                        | Deploy                                               |
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
 
-Every other site appends its key to both commands (`cloudflare-build.sh <site>`,
+Every other site appends its key to both commands (`cloudflare-build.ts <site>`,
 `cloudflare-deploy.ts main <site>`), as its entry in
 [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
 records. The key resolves to `www/<site>/`, whose `package.json` must be named `@www/<site>`; an
@@ -80,22 +80,17 @@ commands stay bare because a trigger's command is shared by every branch it buil
 branches whose checkout predates the argument.
 
 Both commands are **repo scripts, not the steps themselves**
-([`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh),
+([`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts),
 [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
 command for every branch it matches, so inlining the steps means a branch cannot
 change them — and a package-manager change is exactly a branch that needs to. Pinning the
 path instead lets the script differ per branch while the declared value stays constant, so
 divergence never reads as drift and never needs an `--apply` to test.
 
-`cloudflare-build.sh` is a two-line shim over
-[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts), which holds the actual
-steps. The script runs **before** the install, so it cannot import a workspace package by
-name; its one non-builtin import is a relative reach into
-[`@tools/bootstrap`](../tools/bootstrap), whose own lint rule holds it to node builtins and
-its own files, so resolution never consults `node_modules`. The shim keeps the path still: the pinned value is the same for every branch
-at once, so renaming it would break the preview build of every branch whose checkout does not
-carry the new name. Once every open branch carries the `.ts`, `build_command` can name it
-directly and the shim can go.
+[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) runs **before** the
+install, so it cannot import a workspace package by name; its one non-builtin import is a relative
+reach into [`@tools/bootstrap`](../tools/bootstrap), whose own lint rule holds it to node builtins
+and its own files, so resolution never consults `node_modules`.
 
 That resolve-without-`node_modules` constraint is lint-enforced, not just documented:
 `.oxlintrc.json` scopes `no-restricted-imports` to `cloudflare-build.ts` and allows only node
@@ -171,7 +166,12 @@ The release ledger and the release diffs build their branches as
 block `wrangler preview` requires, and a Preview binds only what that block names, so a branch
 reaches none of the ledger's production data, while each Preview gets Durable Object namespaces of
 its own. `cf previews deploy` evaluates the release diffs' `cloudflare.config.ts` with `isPreview`
-set, so that config, not a `previews` block, decides what its Previews bind. The
+set, so that config, not a `previews` block, decides what its Previews bind: the
+`release-diffs-preview` R2 bucket in place of `release-diffs`, so the release diffs' own branches
+build apart from production's. A service binding always calls the bound Worker's production
+deployment, even from a Preview, so a docs-site branch that binds the release diffs reaches
+production's worker and bucket. Its `ReleaseDiff` Durable Object class is declared in the config's `exports`
+map, which takes the place of wrangler's `migrations` list. The
 ledger's routes, cron trigger and queue consumers stay with production. The docs site still uploads
 versions.
 
@@ -179,6 +179,12 @@ Cloudflare's switch to Previews is one-way, and it replaces the Worker's preview
 Previews base config on the Worker itself, which `check:workers-builds` diffs and patches in the
 trigger's place. The switched command applies to every branch at once, so a branch whose checkout
 predates the `preview` mode fails its preview build until it is rebased.
+
+A branch's first push copies the base config into a per-branch trigger, which later applies never
+touch and `cf builds triggers list` does not return. Branches first pushed before 2026-11-03T18:21Z
+copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
+[`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
+until none of those branches remain.
 
 ### Adding a site
 
@@ -273,7 +279,7 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 #### CD-pipeline verification signal
 
 [`release-signals.yml`](../.github/workflows/release-signals.yml) runs the same read-only diff on every push to
-`main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
+`main` — the push that Workers Builds deploys from — plus a daily sweep, and reports it as the
 `workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
 non-gating: green in sync, orange (`action_required`) on drift, gray (`neutral`) when the check could not run.
 It never applies; resolving drift is still a local `--apply`.
@@ -294,7 +300,7 @@ snapshots its environment when a build is enqueued, so pushing first spends one 
 old config.
 
 The trap is the other case. When the value being applied names a file in the repo — as `build_command` and
-`deploy_command` both do, pointing at [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh)
+`deploy_command` both do, pointing at [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts)
 and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
 But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
@@ -319,9 +325,6 @@ Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Pr
 tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale
 token shows up as the grey `workers-builds (triggers)` badge, not a red run.
 
-`publish-npm.yml` forwards both into its post-publish `workflow_call`; secrets do not auto-propagate, and
-without that the badge would go gray after every release.
-
 ### Build Environment Variables
 
 Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
@@ -331,7 +334,7 @@ and leaves every other variable on the trigger untouched.
 **Declared** (plaintext, committed, `--apply` writes them):
 
 - `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to
-  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
+  `cloudflare-build.ts`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
 - `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs
@@ -382,9 +385,34 @@ The worker renders `/releases/` and the pages under it from the
 urls GitHub lacks, such as `/gh/releases/<pkg>/latest`, a redirect to that
 package's latest GitHub release. The route tables are
 [`worker/releases/routes.ts`](lit-ui-router.dev/worker/releases/routes.ts).
-Preview uploads bind the production ledger the same way. Locally the binding
-reaches only a ledger running in another dev process, and the pages answer 503
-without one. To serve fixture rows, pass both configs, the docs worker's first:
+`/releases/<pkg>/diff/<from>...<to>/` is a shell the worker validates against
+the ledger; its one script, `/release-diff.js`, renders the patch `npm diff`
+would print beside a
+[`@pierre/trees`](https://www.npmjs.com/package/@pierre/trees)
+file tree. Presets narrow both to source, published JS, types or all files;
+`?files=js|types|all` names any but the default, source (their labels and url
+handling live in
+[`worker/releases/npm-diff/file-filter.ts`](lit-ui-router.dev/worker/releases/npm-diff/file-filter.ts)).
+The docs build
+emits that script from
+[`worker/releases/release-diff.ts`](lit-ui-router.dev/worker/releases/release-diff.ts)
+in a Vite build of its own (`.vitepress/vite.config.ts`).
+
+The browser never fetches a tarball. The script reads the page's data routes,
+`<layout>/index.json`, `<layout>/files/<preset>` and `<layout>/patch`, which the
+worker answers only for a pair the ledger validates and the layout this build
+imports from the release-diffs package. Each calls the method of the same name on the
+`RELEASE_DIFFS` service binding, the
+[release-diffs worker](release-diffs.lit-ui-router.dev/README.md)'s default
+entrypoint, which builds a pair once and keeps it in R2. The index lists the
+presets each file belongs to. The answers are immutable, so the Cache API keeps
+them without refreshing (`cacheKey` in `worker/releases/states.ts`). A failed
+call answers 503 and is never cached.
+
+Preview uploads bind the production ledger and release-diffs workers the same
+way. Locally the bindings reach only workers running in another dev process,
+and the pages answer 503 without one. To serve fixture rows, pass both configs,
+the docs worker's first; the diff pages' data routes still answer 503:
 
 ```bash
 pnpm --filter @www/lit-ui-router.dev wrangler:dev -c wrangler.jsonc -c worker/test/ledger-stub/wrangler.jsonc

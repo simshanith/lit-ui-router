@@ -1,5 +1,5 @@
 ---
-title: UI-Router Effect
+title: ui-router-effect
 description: A framework-agnostic Effect SubscriptionRef of the router's current state with ui-router-effect
 ---
 
@@ -94,6 +94,47 @@ const active = SubscriptionRef.changes(routeRef(router)).pipe(
 Effect.runFork(Stream.runForEach(active, (sections) => Effect.log(sections)));
 ```
 
+## pendingRef and errorRef
+
+Two more refs sit beside `routeRef`, not inside its value, since every
+snapshot is a settled route. The first call to either for a router creates
+both refs and registers one `onStart` hook that feeds them; later calls return
+the same refs.
+
+- [`pendingRef(router)`](/api/ui-router-effect/functions/pendingRef) holds the
+  newest transition still in flight, and `undefined` when none is. The
+  transition's promise clears it when that transition settles, whether it
+  succeeds, errors or is aborted. A superseded transition never clears its
+  successor, and a transition already running on first use counts as pending.
+- [`errorRef(router)`](/api/ui-router-effect/functions/errorRef) holds the
+  newest transition's failure as core's `Rejection`, and `undefined`
+  otherwise. Only a `RejectType.ERROR` rejection, such as a resolve that
+  throws, sets it; superseded, redirected, aborted and ignored transitions
+  leave it `undefined`. The next transition clears it as it starts, so a retry
+  clears the error as it begins, and a superseded transition that fails late
+  never sets it.
+
+On a failure, `error` is set before `pending` clears; on a start, `pending` is
+set before `error` clears. A stream combining the two never reads idle in
+between.
+
+```ts
+import { Effect, Stream, SubscriptionRef } from 'effect';
+import { errorRef, pendingRef } from 'ui-router-effect';
+
+const status = Stream.zipLatestWith(
+  SubscriptionRef.changes(pendingRef(router)),
+  SubscriptionRef.changes(errorRef(router)),
+  (pending, error) => (pending ? 'loading' : error ? 'error' : 'idle'),
+).pipe(Stream.changes);
+
+Effect.runFork(
+  Stream.runForEach(status, (value) =>
+    Effect.sync(() => (document.body.dataset.routeStatus = value)),
+  ),
+);
+```
+
 ## RouteSnapshot
 
 The ref holds a
@@ -129,6 +170,10 @@ declare module 'ui-router-effect' {
   }
 }
 ```
+
+## Releases
+
+<ReleaseDiffPicker name="ui-router-effect" />
 
 ## Further reading
 

@@ -282,6 +282,9 @@ export class SrefHrefDirective extends AsyncDirective {
  *
  * @example With srefActiveClass and srefAriaCurrent
  * ```ts
+ * import { html } from 'lit';
+ * import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
+ *
  * html`<a href=${srefHref('users')}
  *         class="nav-link ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
  *         aria-current=${srefAriaCurrent({ state: 'users' })}>Users</a>`

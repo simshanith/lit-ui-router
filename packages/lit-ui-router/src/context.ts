@@ -99,6 +99,7 @@ export type RouterContext = Context<RouterContextKey, UIRouterLit>;
  * @example
  * ```ts
  * import { consume } from '@lit/context';
+ * import { LitElement } from 'lit';
  * import { routerContext } from 'lit-ui-router/context';
  * import type { UIRouterLit } from 'lit-ui-router';
  *
@@ -258,6 +259,8 @@ export type RequestRouterOptions = RequestContextOptions<RouterContext>;
  * ```ts
  * import { requestContext, routerContext } from 'lit-ui-router/context';
  *
+ * declare const element: HTMLElement;
+ *
  * const router = requestContext(element, routerContext);
  * ```
  *
@@ -306,8 +309,12 @@ export const requestContext: <T extends UnknownContext>(
  * @example
  * ```ts
  * import { requestRouter } from 'lit-ui-router/context';
+ * import { LitElement } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
  *
  * class MyElement extends LitElement {
+ *   router?: UIRouterLit;
+ *
  *   connectedCallback() {
  *     super.connectedCallback();
  *     this.router = requestRouter(this);
@@ -352,8 +359,13 @@ export const requestRouter: (
  * @example
  * ```ts
  * import { provideContext, routerContext } from 'lit-ui-router/context';
+ * import type { UIRouterLit } from 'lit-ui-router';
  *
- * const uninstall = provideContext(globalThis.litServerRoot, routerContext, router);
+ * declare const router: UIRouterLit;
+ * // installed on globalThis by the @lit-labs/ssr DOM shim
+ * declare const litServerRoot: EventTarget;
+ *
+ * const uninstall = provideContext(litServerRoot, routerContext, router);
  * try {
  *   // …render…
  * } finally {
@@ -399,8 +411,13 @@ export const provideContext: <T extends UnknownContext>(
  * @example
  * ```ts
  * import { provideRouter } from 'lit-ui-router/context';
+ * import type { UIRouterLit } from 'lit-ui-router';
  *
- * const uninstall = provideRouter(globalThis.litServerRoot, router);
+ * declare const router: UIRouterLit;
+ * // installed on globalThis by the @lit-labs/ssr DOM shim
+ * declare const litServerRoot: EventTarget;
+ *
+ * const uninstall = provideRouter(litServerRoot, router);
  * try {
  *   // …render…
  * } finally {
@@ -462,6 +479,7 @@ export type ParentUiViewContext = Context<ParentUiViewContextKey, ParentUiView>;
  * @example
  * ```ts
  * import { consume } from '@lit/context';
+ * import { LitElement } from 'lit';
  * import { parentUiViewContext } from 'lit-ui-router/context';
  * import type { ParentUiView } from 'lit-ui-router/context';
  *
@@ -474,6 +492,8 @@ export type ParentUiViewContext = Context<ParentUiViewContextKey, ParentUiView>;
  * @example
  * ```ts
  * import { parentUiViewContext, requestContext } from 'lit-ui-router/context';
+ *
+ * declare const element: HTMLElement;
  *
  * const parentView = requestContext(element, parentUiViewContext);
  * ```
@@ -544,6 +564,10 @@ const isThenable = <T>(value: T): value is T & PromiseLike<unknown> =>
  * import { render } from '@lit-labs/ssr';
  * import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
  * import { withRouterSync } from 'lit-ui-router/context';
+ * import { html } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ *
+ * declare const router: UIRouterLit;
  *
  * const markup = withRouterSync(router, () =>
  *   collectResultSync(render(html`<my-page></my-page>`)),

@@ -10,7 +10,7 @@ import type {
   UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 import { settle } from 'ui-router-server/ssr';
-import { renderPage } from '../prerender.js';
+import { renderPage } from '../render.js';
 import { LightDomHydrating, lightRenderers } from './light-dom-api.js';
 import { makeRouter, uiView } from './fixture.js';
 import type { Page } from './round-trip.js';
