@@ -49,6 +49,9 @@ catalogs:
     '@distilled.cloud/cloudflare':
       specifier: 1.0.0-rc.18
       version: 1.0.0-rc.18
+    '@distilled.cloud/core':
+      specifier: 1.0.0-rc.18
+      version: 1.0.0-rc.18
     '@effect/sql-d1':
       specifier: ^4.1.2
       version: 4.1.2
@@ -3194,6 +3197,12 @@ importers:
       '@cloudflare/config':
         specifier: 'catalog:'
         version: 0.30.2
+      '@distilled.cloud/cloudflare':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18(effect@4.1.2)
+      '@distilled.cloud/core':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18(effect@4.1.2)
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
@@ -3203,6 +3212,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      effect:
+        specifier: 'catalog:'
+        version: 4.1.2
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1

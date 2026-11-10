@@ -9,14 +9,34 @@
 // Exit codes: 0 in sync, 1 a deploy is owed, 2 usage/API error. The token
 // needs "Pages: Read". All decisions live in pages-deploy.core.ts.
 
-import { cf } from './cloudflare-api.ts';
+import { listProjectDeployments } from '@distilled.cloud/cloudflare/pages';
+
+import { type CloudflareApi, call } from './cloudflare-api.ts';
 import {
+  type Deployment,
   PAGES_PROJECT,
   PRODUCTION_BRANCH,
   deployVerdict,
   deploymentsFromApi,
   isCommitSha,
 } from './pages-deploy.core.ts';
+
+/** The first page of production deployments, validated. */
+export const productionDeployments = async (
+  api: CloudflareApi,
+): Promise<Deployment[]> => {
+  const { result } = await call(
+    api,
+    `GET /{account_id}/pages/projects/${PAGES_PROJECT}/deployments?env=production`,
+    listProjectDeployments({
+      accountId: api.accountId,
+      projectName: PAGES_PROJECT,
+      env: 'production',
+    }),
+  );
+
+  return deploymentsFromApi(result);
+};
 
 const main = async ([branchHead, ...extra]: string[]): Promise<void> => {
   if (
@@ -44,12 +64,13 @@ const main = async ([branchHead, ...extra]: string[]): Promise<void> => {
   }
 
   try {
-    const result = await cf(
+    const deployments = await productionDeployments({
       token,
-      `/${accountId}/pages/projects/${PAGES_PROJECT}/deployments?env=production`,
-    );
+      accountId,
+      fetch: globalThis.fetch,
+    });
 
-    const report = deployVerdict(deploymentsFromApi(result), branchHead);
+    const report = deployVerdict(deployments, branchHead);
     console.log(report.text);
     process.exitCode = report.ok ? 0 : 1;
   } catch (error: unknown) {
