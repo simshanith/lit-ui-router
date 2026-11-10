@@ -1,6 +1,7 @@
 ---
 title: Server-Side Rendering (SSR)
 description: A ui-router-server mount table in, an emitted static site out, with lit-ui-router-ssr
+type: package
 ---
 
 # lit-ui-router-ssr

@@ -48,6 +48,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@11ty/gray-matter": "catalog:",
     "@iconify-json/lucide": "catalog:",
     "@testing-library/dom": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
@@ -57,9 +58,11 @@
     "@tools/release-ledger": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/vue-check": "catalog:workspace",
+    "@types/markdown-it": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "jsonc-parser": "catalog:",
+    "markdown-it": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",

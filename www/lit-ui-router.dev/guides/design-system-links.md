@@ -1,6 +1,8 @@
 ---
 title: Design System Links
 description: "Driving a design system's link component with uiSref, and why assignHref: true is the option for it"
+type: guide
+topic: markup
 ---
 
 # Design System Links

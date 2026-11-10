@@ -1,6 +1,7 @@
 ---
 title: Guides
 description: Task-oriented guides for lit-ui-router, grouped by topic
+type: index
 ---
 
 # Guides

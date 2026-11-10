@@ -1,6 +1,7 @@
 ---
 title: MobX
 description: The MobX packages for UI-Router — ui-router-mobx holds the router's state in an observable store, and lit-ui-router-mobx provides reaction-based Lit controllers
+type: package
 ---
 
 # MobX

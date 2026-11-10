@@ -1,6 +1,7 @@
 ---
 title: All Examples
 description: Every tutorial example app in one place, running live
+type: index
 ---
 
 # All Examples

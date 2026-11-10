@@ -1,6 +1,7 @@
 ---
 title: Companion Packages
 description: Optional packages that layer extra integrations on lit-ui-router — Effect, MobX and TC39 Signals bindings, the Navigation API location plugin, server-side routing verdicts, static prerendering, framework-agnostic Signals, Effect and MobX mirrors of the router, typed state names and params, and directive-aware ESLint rules — each independently versioned with its own guide and API reference
+type: index
 ---
 
 # Companion Packages

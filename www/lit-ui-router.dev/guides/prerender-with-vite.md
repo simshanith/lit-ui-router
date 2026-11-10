@@ -1,6 +1,8 @@
 ---
 title: Prerender with Vite
 description: Emit one HTML page per route, a 404.html and a _redirects file from vite build, decided by the route table the app runs
+type: guide
+topic: server
 ---
 
 # Prerender with Vite

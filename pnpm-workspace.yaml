@@ -9,6 +9,7 @@ packages:
   - examples
 
 catalog:
+  '@11ty/gray-matter': ^2.1.0
   '@ampproject/remapping': ^2.3.0
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5

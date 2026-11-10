@@ -1,6 +1,7 @@
 ---
 title: What is Lit UI Router?
 description: What is Lit UI Router? State-based routing for Lit web components
+type: concept
 ---
 
 # What is Lit UI Router?

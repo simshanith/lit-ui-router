@@ -1,6 +1,8 @@
 ---
 title: Reactive Components
 description: Keep any component in sync with the router using TransitionController
+type: guide
+topic: reactivity
 ---
 
 # Reactive Components

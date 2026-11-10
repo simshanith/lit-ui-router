@@ -1,6 +1,8 @@
 ---
 title: Development and Production Builds
 description: How lit-ui-router ships a separate development build, what warnings it carries, and why production bundles never contain them
+type: guide
+topic: builds
 ---
 
 # Development and Production Builds

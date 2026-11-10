@@ -6,6 +6,7 @@ import {
   type UserConfig,
 } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
+import { guideGroups } from './guides-sidebar.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { STUB_DIR } from './release-stubs.ts';
 import { renderForSearch } from './search-render.ts';
@@ -176,88 +177,16 @@ function makeSidebar() {
       ],
     },
     {
-      // Groups and membership mirror guides/index.md.
+      // page-meta.test.ts holds the groups to guides/index.md and each guide's topic.
       text: 'Guides',
       collapsed: true,
       items: [
         { text: 'Overview', link: '/guides/' },
-        {
-          text: 'URLs & Location',
+        ...guideGroups.map(({ text, items }) => ({
+          text,
           collapsed: false,
-          items: [
-            { text: 'Location Plugins', link: '/guides/location-plugins' },
-            { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
-          ],
-        },
-        {
-          text: 'Server-side',
-          collapsed: false,
-          items: [
-            {
-              text: 'Server-Side Routing',
-              link: '/guides/server-route-matching',
-            },
-            {
-              text: 'Prerender with Vite',
-              link: '/guides/prerender-with-vite',
-            },
-            {
-              text: 'Prerender with Eleventy',
-              link: '/guides/prerender-with-eleventy',
-            },
-          ],
-        },
-        {
-          text: 'Transitions & Guards',
-          collapsed: false,
-          items: [
-            { text: 'Route Guards', link: '/guides/route-guards' },
-            {
-              text: 'Loading and Error Views',
-              link: '/guides/loading-and-error-views',
-            },
-            {
-              text: 'Component Lifecycle Hooks',
-              link: '/guides/component-lifecycle',
-            },
-            { text: 'Routed Components', link: '/guides/routed-components' },
-          ],
-        },
-        {
-          text: 'Links & Markup',
-          collapsed: false,
-          items: [
-            { text: 'Named Views', link: '/guides/named-views' },
-            {
-              text: 'View Fallback Content',
-              link: '/guides/view-fallback-content',
-            },
-            {
-              text: 'Design System Links',
-              link: '/guides/design-system-links',
-            },
-          ],
-        },
-        {
-          text: 'Builds & Diagnostics',
-          collapsed: false,
-          items: [
-            {
-              text: 'Development and Production Builds',
-              link: '/guides/development-builds',
-            },
-          ],
-        },
-        {
-          text: 'Reactivity',
-          collapsed: false,
-          items: [
-            {
-              text: 'Reactive Components',
-              link: '/guides/reactive-components',
-            },
-          ],
-        },
+          items,
+        })),
       ],
     },
     { text: 'Releases', link: '/releases/', target: '_self', items: [] },

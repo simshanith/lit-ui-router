@@ -1,6 +1,7 @@
 ---
 title: Registry
 description: Typed state names and params for a @uirouter/core router with ui-router-registry, a types-only registry
+type: package
 ---
 
 # ui-router-registry
