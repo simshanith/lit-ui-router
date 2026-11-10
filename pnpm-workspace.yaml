@@ -32,7 +32,7 @@ catalog:
   '@lit-labs/ssr-client': ^1.1.8
   '@lit-labs/ssr-dom-shim': ^1.6.0
   '@lit/context': ^1.1.6
-  '@oxlint/plugins': 1.92.0
+  '@oxlint/plugins': 1.93.0
   '@pierre/diffs': 1.6.4
   '@pierre/trees': ^1.0.0-beta.6
   '@playwright/cli': 0.1.23
@@ -93,10 +93,10 @@ catalog:
   lodash-es: ^4.18.1
   markdown-it: ^14.3.3
   mobx: ^7.1.5
-  oxc-minify: 0.157.0
-  oxc-parser: 0.157.0
-  oxc-transform: 0.157.0
-  oxfmt: 0.77.0
+  oxc-minify: 0.158.0
+  oxc-parser: 0.158.0
+  oxc-transform: 0.158.0
+  oxfmt: 0.78.0
   oxlint: 1.92.0
   oxlint-tsgolint: 7.0.2006
   pacote: ^22.0.1
@@ -109,7 +109,7 @@ catalog:
   publint: ^0.3.25
   release-it: ^21.1.2
   rimraf: ^6.1.4
-  rolldown: ^1.2.16
+  rolldown: ^1.2.18
   semver: ^7.8.6
   signal-polyfill: ^0.2.2
   start-server-and-test: ^3.0.13
