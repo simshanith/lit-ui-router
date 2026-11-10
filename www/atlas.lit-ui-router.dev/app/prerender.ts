@@ -288,7 +288,7 @@ const verdictOnly: string[] = [
 ];
 
 // The megacanvas is not a state: both spellings of its url go to the index.
-// `trailingSlash` pairs the generated lines only — these ride verbatim.
+// The prerender pairs the generated lines only — these ride verbatim.
 const megacanvas: RedirectLine[] = [
   { from: `${BASE}megacanvas`, to: href.gallery, status: 301 },
   { from: `${BASE}megacanvas/`, to: href.gallery, status: 301 },

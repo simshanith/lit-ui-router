@@ -847,3 +847,14 @@ update: the worker flushes its output before it posts the result, and
 drain await and the pages cast are gone from `prerender.ts`; every report
 line reaches the build log, 75 pages and the 404, 76 of 76 renders on a
 scoped router, 114 check-scenes checks holding.
+
+**Update, 2026-11-09.** The atlas is on `ui-router-server@0.9.0` and
+`lit-ui-router-ssr@0.9.0` with no change to its source. It passed neither
+option the releases removed, `trailingSlash` on the prerender and
+`strictMode` on the server location, and its mount keeps the
+`as-requested` policy: Pages serves each page at the slash and answers the
+bare path with its own 308, while the route table and every href spell no
+slash. The one difference in the served pages is the signature, which
+lists the views each page drew, `"views":["$default","$default.$default"]`
+on a shell page. `/office` keeps its 302 and its pair of lines; 75 pages
+and the 404, 76 rules, 76 of 76 renders on a scoped router.
