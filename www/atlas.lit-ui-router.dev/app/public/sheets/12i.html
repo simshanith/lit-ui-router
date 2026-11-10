@@ -1,7 +1,7 @@
 <section class="sheet rg" id="sheet-12i" aria-label="Sheet 12i: THE REGISTER, WALKED">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — INTERACTIVE PLATE</span><span class="shno">SHEET 12i / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>REGISTER, WALKED</h2>
-  <p class="sheet-sub">ALTITUDE 3¼ — <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s plate, live under the pointer · the whole ci graph carried node by node · 1,482 NODES · 363 RUN A COMMAND · 6,386 EDGES · 323 JOIN TWO REAL TASKS · surveyed at origin/main @ 6ae72d27 (commit 2026-11-09) · turbo 2.11.10</p>
+  <p class="sheet-sub">ALTITUDE 3¼ — <a class="xref" data-sheet="12" href="/sheet/12/">sheet 12</a>'s plate, live under the pointer · the whole ci graph carried node by node · 1,482 NODES · 363 RUN A COMMAND · 6,386 EDGES · 323 JOIN TWO REAL TASKS · surveyed at origin/main @ 6ae72d27 (commit 2026-11-09) · turbo 2.11.10</p>
   <style>
 .rg { --lane-measure: 750px; }
 .rg .nw { white-space: nowrap; }
@@ -436,7 +436,7 @@
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-plate.json</code>, the checked-in plate <code>generator/<wbr>census-plate.mjs</code>
 writes from <a href="https://turborepo.dev/docs/reference/run#--dry----dry-run"><code>turbo run ci --dry=json</code></a> against a materialized, <em>installed</em> archive of
-the ref — surveyed at origin/main @ 6ae72d27 (commit 2026-11-09) · turbo 2.11.10. <a class="xref" data-sheet="12" href="/sheet/12">Sheet 12</a> reads that plate's cell codes and tallies; this sheet reads the plate's two
+the ref — surveyed at origin/main @ 6ae72d27 (commit 2026-11-09) · turbo 2.11.10. <a class="xref" data-sheet="12" href="/sheet/12/">Sheet 12</a> reads that plate's cell codes and tallies; this sheet reads the plate's two
 full-graph fields, <code>graphNodes</code> and <code>graphEdges</code>: one <code>(package, task)</code> pair
 per line, sorted by task id, and one <code>[dependency, dependent]</code> index pair per line into that array.
 The whole graph is carried — all 1,482 nodes and all 6,386 edges, unaggregated — and it is
@@ -448,11 +448,11 @@ an actual command. A <em>phantom</em> is a node whose command is the literal <co
 a placeholder turbo mints so that a <code>^task</code> chain has something in that package to hang an edge on.
 The default view here is the real subgraph alone — 363 nodes and the 323 edges that join two of
 them. <code>PHANTOM SHROUD</code> floods in the other 1119 nodes and 6,063 edges, faint, and
-that flood <em>is</em> the 75.5% figure <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a> prints: the share of this graph a maintainer reads in
+that flood <em>is</em> the 75.5% figure <a class="xref" data-sheet="12" href="/sheet/12/">sheet 12</a> prints: the share of this graph a maintainer reads in
 <a href="https://turborepo.dev/docs/reference/run#--graph-file-name"><code>--graph</code></a> output that runs nothing at all. Untick it and the real subgraph comes back unchanged —
 the shroud is a visibility swap over one fixed layout, never a re-layout.</p>
 <p><strong>Layout — ranked from the edges, computed at build time.</strong> Rows are the 58 packages in
-<a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
+<a class="xref" data-sheet="12" href="/sheet/12/">sheet 12</a>'s own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
 way down the page. Columns are the 69 task names, and their order is not editorial: each column is
 ranked by the longest dependency depth any of its nodes reaches, which sorts the graph into its real stages —
 gather, emit, check, prove, roll-up — out of the edge list rather than out of a hand-written list. Positions are
@@ -466,14 +466,14 @@ semi-opaque wall washed over it, so the frame reads through and the themed node 
 task is a works shed with a lit door. A phantom is the plot without the building: a dashed frame, no wall, no
 roof — it cannot be mistaken for work at any zoom. Both palettes are baked at build time and swapped with the
 page's theme, the survey office's pattern exactly.</p>
-<p><strong>What this shows that the plate cannot.</strong> <a class="xref" data-sheet="12" href="/sheet/12">Sheet 12</a> proves the phantom share as a ratio; here it
+<p><strong>What this shows that the plate cannot.</strong> <a class="xref" data-sheet="12" href="/sheet/12/">Sheet 12</a> proves the phantom share as a ratio; here it
 is a shape. With the shroud off, the 363 real tasks fall into a handful of dense columns and the
 323 real edges are sparse enough to trace one by one — the deepest run counted in real nodes is 6
 build steps, from <code>@tools/<wbr>typedoc-plugin-lit-ui-router#build:types</code> to <code>sample-app-lit-e2e#build</code>. With the shroud
 on, the same picture disappears into 1,482 nodes and 6,386 edges of scaffolding. Hover any
 building for its package, its task, whether it runs, whether a cache hit would be wrong (0 nodes in
 this graph are <a href="https://turborepo.dev/docs/reference/configuration#cache"><code>cache:false</code></a> — the repo's uncacheable tier is outside every <code>ci:*</code> graph by
-design, which is <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s finding, here as an empty field), its in and out degree in both readings, and the
+design, which is <a class="xref" data-sheet="12" href="/sheet/12/">sheet 12</a>'s finding, here as an empty field), its in and out degree in both readings, and the
 full list of what it waits on.</p>
 <p><strong>What is editorial.</strong> The row blocks and their order; the pitch, the sprite drawing and the
 colours; the <a href="https://lucide.dev">Lucide</a> glyphs (ISC, restroked) that mark the lane's controls and panel heads; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>

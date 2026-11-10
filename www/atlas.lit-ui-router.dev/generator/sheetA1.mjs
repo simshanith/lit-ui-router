@@ -424,7 +424,7 @@ function refCard(x, y, r) {
     box(x, y, TH_W, TH_H, 'sks'),
   ].join('\n');
   return [
-    `<a href="${r.href}" target="_blank" rel="noreferrer">${card}</a>`,
+    `<a href="${r.href}" target="_blank" rel="noreferrer" aria-label="${r.alt}">${card}</a>`,
     lines(x, capY, wrap(r.teach, 38), 'lblf', 'start', 11),
     txt(x, capY + 47, r.credit, 'lbls'),
   ].join('\n');

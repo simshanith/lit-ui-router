@@ -173,11 +173,13 @@ layer is meant to be liftable into `examples/` as-is.
 Three base-layer details a Playwright pass against the deployed site taught, each with a comment at
 the line:
 
-- `applyUrlConfig(router, URL_CONFIG)` (`router.ts`), with `URL_CONFIG = { strict: false }` from
-  `routes.ts`. Cloudflare Pages serves `dist/sheet/7/index.html` and 308s `/sheet/7` onto
-  `/sheet/7/`; core's default strict matching rejected the slash and booted every deep link into
-  `atlas.notFound`. The server mount's `config` and the prerender's `installServerLocation` take the
-  same object, so the three compile urls alike.
+- `applyUrlConfig(router, URL_CONFIG)` (`router.ts`), with
+  `URL_CONFIG = { strict: false, trailingSlash: { pages: 'always' } }` from `routes.ts`. Cloudflare
+  Pages serves `dist/sheet/7/index.html` at `/sheet/7/`, so the slash is every page's canonical
+  spelling: the route table spells none, `href()` and each url a transition pushes come out with
+  it, and `/sheet/7` answers 308 onto `/sheet/7/` from a line the prerender writes. The server
+  mount's `config` and the prerender's `installServerLocation` take the same object, so the three
+  compile urls alike.
 - The Navigation API plugin's `intercept` option (`router.ts`). The plugin intercepts the
   `navigation.navigate()` calls it makes, so every click is a same-document navigation; the app's
   option returns `scroll: 'manual'` and `focusReset: 'manual'` for an in-place change — a key-index
@@ -278,16 +280,16 @@ and is used twice:
   `vite preview` answer the same 302 for `/office` and the same honest 404 for `/sheet/99` the
   deployed site does. Its `prerender` option names `prerender.ts`, which the plugin runs after the
   client build in a worker with the DOM shim and `lit-ui-router-ssr/register` loaded first.
-  Preview then serves the prerendered `dist/<subpath>/index.html` for a shell verdict, slash or no
-  slash, and `404.html` for a path the otherwise rule catches, so what you curl is what Pages
-  serves.
+  Preview then serves the prerendered `dist/<subpath>/index.html` for a shell verdict at the
+  slash, a 308 onto it for the bare path, and `404.html` for a path the otherwise rule catches,
+  so what you curl is what Pages serves.
 - **`prerender.ts`** — its default export, from the plugin's `definePrerender`, hands the mount
   table, one router and the views in `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which
   resolves every listed path to a verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
-  becomes a line in `dist/_redirects` (both spellings of the path), and the `otherwise` projection
-  becomes `dist/404.html`. The mount here takes the `simulate` tier with `prewarm: 1`: one pooled
+  becomes a line in `dist/_redirects` (both spellings of the path), each page gets a 308 line
+  from its bare spelling, and the `otherwise` projection becomes `dist/404.html`. The mount here takes the `simulate` tier with `prewarm: 1`: one pooled
   headless `@uirouter/core` router, built before the first path, replays the whole list. Dev and
-  preview take the default `matcher` tier; both tiers read the mount's `strict: false`, so a path
+  preview take the default `matcher` tier; both tiers read the mount's `config`, so a path
   verdicts the same on either. This file supplies the shell html and the titles, registers the same
   route table with the client's components and its own disk-backed resolves, and drives the router
   to each path; the render is `views.page(router)`, and `UiViewRenderer` draws each `<ui-view>`'s

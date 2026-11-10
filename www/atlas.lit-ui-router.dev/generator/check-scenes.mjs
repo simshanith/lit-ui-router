@@ -443,9 +443,9 @@ try {
     const page = await open('/city/');
     await settled(page);
     for (let i = 0; i < 10; i++) {
-      await page.click('a[href="/sheet/7"]');
+      await page.click('a[href="/sheet/7/"]');
       await page.waitForFunction(() => location.pathname.startsWith('/sheet/7') && !window.__cityScene);
-      await page.click('a[href="/plant"]');
+      await page.click('a[href="/plant/"]');
       await page.waitForFunction(() => location.pathname.startsWith('/plant') && window.__cityScene && window.__cityScene.plant);
       await settled(page);
     }
@@ -577,7 +577,7 @@ try {
   {
     const manifest = JSON.parse(readFileSync(join(PUBLIC, 'manifest.json'), 'utf8'));
     const row = manifest.sheets.find((sheet) => sheet.num === '7');
-    const target = `/sheet/${row.num}`;
+    const target = `/sheet/${row.num}/`;
     // core's defaultErrorHandler logs the refused resolve; that line is the point, not a finding
     const failing = async ({ theme = 'light', phone = false } = {}) => {
       const page = await browser.newPage(phone
@@ -606,7 +606,7 @@ try {
     const { page, pending, failed } = await failing();
     check(pending === `LOADING SHEET ${row.num}…`, `a slow fragment names the page coming: ${pending}`);
     check(failed.text.startsWith(`SHEET ${row.num} DID NOT LOAD — `) && failed.text.endsWith('TRY AGAIN')
-      && failed.again?.endsWith(`/sheet/${row.num}`) && failed.path === '/' && failed.cards > 0,
+      && failed.again?.endsWith(`/sheet/${row.num}/`) && failed.path === '/' && failed.cards > 0,
       `a refused fragment names the page that did not load, links it again, and the gallery stays: ${failed.text}`, JSON.stringify(failed));
     if (shots) await page.screenshot({ path: join(shots, 'status-error-light.png') });
     await page.unroute(() => true);

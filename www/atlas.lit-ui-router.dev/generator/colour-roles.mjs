@@ -1,7 +1,7 @@
 // THE COLOUR ROLES — one row per `light-dark()` token in chrome.mjs's `:root`.
 //
 // `kind` sets the floor check-colour.mjs holds the token to, against each
-// background in `on`, in both themes: TEXT 4.5:1 and MARK 3:1 (the thresholds
+// background in `on`, in every theme: TEXT 4.5:1 and MARK 3:1 (the thresholds
 // the docs site's role guard uses), RULE and SURFACE none. A RULE is a stroke
 // that carries no reading alone (WCAG 1.4.11 leaves it out); its ratios are
 // printed, not gated. A token with no row here, or a row with no token, stops the build.

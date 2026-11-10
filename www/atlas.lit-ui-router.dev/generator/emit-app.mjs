@@ -146,7 +146,7 @@ function linkRefs(html, self, byUpper) {
       for (const n of hits) refs.add(n);
       // One anchor over the whole phrase, pointed at its first sheet: the
       // prose reads "sheets 7–10", not four separate links.
-      return `<a class="xref" data-sheet="${hits[0]}" href="${BASE}sheet/${hits[0]}">${match}</a>`;
+      return `<a class="xref" data-sheet="${hits[0]}" href="${BASE}sheet/${hits[0]}/">${match}</a>`;
     });
   });
   return { html: chipBreaks(out.join('')), refs: [...refs].sort(bySheet) };

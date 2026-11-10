@@ -52,7 +52,7 @@ import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
-import { BASE, MOUNT, SHEET_ALIASES, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
+import { BASE, MOUNT, SHEET_ALIASES, SITE, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 import { ICON_SPRITE } from './src/generated/icons.js';
 import { CYTOSCAPE_URL, FILL_SCRIPT, PLATE_END_SCRIPT } from './src/generated/plate-page.js';
@@ -66,6 +66,18 @@ const manifest: Manifest = JSON.parse(
 ) as Manifest;
 
 const ROOT_RE = /(<div id="root">)(\s*)(<\/div>)/;
+
+/** A manifest string as attribute text: its markup dropped, its quotes escaped. */
+const plain = (html: string): string => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const attr = (text: string): string => text.replace(/&(?!\w+;)/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// The head tags a shell page rewrites; a tag the shell does not carry fails the build.
+const HEAD_TAGS = {
+  title: /<title>[^<]*<\/title>/,
+  description: /(<meta\s+name="description"\s+content=")[^"]*(")/,
+  ogTitle: /(<meta\s+property="og:title"\s+content=")[^"]*(")/,
+  ogDescription: /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
+};
 
 // BOTH lists narrow the `/sheet/{num:...}` alternation: the appendix is out of
 // the ascent, but /sheet/A1 is as real a url as /sheet/13.
@@ -194,7 +206,8 @@ const plateDocument = (row: SheetRow, fragment: string, fontLinks: string[]): st
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>${sheetTitle(row)}</title>
-<meta name="description" content="${row.caption}">
+<meta name="description" content="${attr(plain(row.caption))}">
+<link rel="canonical" href="${SITE}${href.sheet(row.num)}">
 <link rel="icon" href="${BASE}favicon.ico" sizes="any">
 <link rel="icon" href="${BASE}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${BASE}apple-touch-icon.png">
@@ -300,6 +313,8 @@ if (findings.length > 0) throw new Error(`prerender: ${findings.map((f) => `${f.
 
 const site = definePrerender(({ shellHtml }) => {
   if (!ROOT_RE.test(shellHtml)) throw new Error('prerender: dist/index.html has no empty <div id="root">');
+  for (const [name, tag] of Object.entries(HEAD_TAGS))
+    if (!tag.test(shellHtml)) throw new Error(`prerender: dist/index.html has no ${name} tag to rewrite`);
   // The stand-in font links, as the shell carries them; the stager swaps them for the kit.
   const fontLinks = shellHtml.match(/<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>/g) ?? [];
   return {
@@ -329,8 +344,22 @@ const site = definePrerender(({ shellHtml }) => {
       const plate = plateOf.get(path);
       if (plate) return plateDocument(plate, body, fontLinks);
       const title = titles.get(path) ?? TITLES.notFound;
-      return shellHtml
-        .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+      const sheet = sheetOf.get(path);
+      const row = sheet === undefined ? undefined : PLATES.find((plateRow) => plateRow.num === sheet);
+      // A sheet's page carries its own verdict; the 404 names no canonical url.
+      const describe = (html: string): string =>
+        row
+          ? html
+              .replace(HEAD_TAGS.description, (_all, open: string, close: string) => `${open}${attr(plain(row.verdict))}${close}`)
+              .replace(HEAD_TAGS.ogDescription, (_all, open: string, close: string) => `${open}${attr(plain(row.verdict))}${close}`)
+          : html;
+      const canonical = titles.has(path)
+        ? `<link rel="canonical" href="${SITE}${path}"><meta property="og:url" content="${SITE}${path}">`
+        : '';
+      return describe(shellHtml)
+        .replace(HEAD_TAGS.title, () => `<title>${title}</title>`)
+        .replace(HEAD_TAGS.ogTitle, (_all, open: string, close: string) => `${open}${attr(title)}${close}`)
+        .replace('</head>', () => `${canonical}</head>`)
         .replace(ROOT_RE, () => `<div id="root">${body}</div>`);
     },
   };

@@ -12,7 +12,9 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { BACKGROUNDS, NASA_MANUAL, REPORTED, SOURCES, TOKENS } from './generated/tokens.js';
 import type { Theme, Token } from './generated/tokens.js';
 
-const THEMES: Theme[] = ['light', 'dark'];
+const THEMES: Theme[] = ['light', 'dark', 'print'];
+/** The scheme a forced panel's native parts take: print is drawn on white. */
+const schemeOf = (theme: Theme): string => (theme === 'dark' ? 'dark' : 'light');
 const BY_NAME = new Map(TOKENS.map((t) => [t.name, t]));
 
 function token(name: string): Token {
@@ -35,7 +37,8 @@ const contrast = (a: number, b: number): number => (Math.max(a, b) + 0.05) / (Ma
 
 const STYLE_ID = 'atlas-colour-css';
 const CSS = `
-atlas-colour { display: block; }
+/* the swatches are the reading here, so a printer keeps their fills */
+atlas-colour { display: block; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 atlas-colour .cs-prose p { font-family: var(--prose); font-size: 17px; line-height: 1.75; max-width: 74ch; margin-block: 0 1.2em; }
 atlas-colour .cs-prose p strong { font-weight: 600; }
 atlas-colour .cs-prose code { font-family: var(--code); font-size: 0.86em; }
@@ -57,7 +60,7 @@ atlas-colour .cs-live { inline-size: 30px; block-size: 30px; border: 1px solid v
 atlas-colour .cs-forced { display: flex; align-items: center; gap: 4px; inline-size: 52px; block-size: 30px; padding-inline: 5px; border: 1px solid; flex: none; font-family: var(--data); font-size: 13px; font-weight: 600; }
 atlas-colour .cs-chip { inline-size: 14px; block-size: 14px; border: 1px solid; flex: none; }
 atlas-colour .cs-ratios { white-space: nowrap; }
-atlas-colour .cs-ratios div { display: grid; grid-template-columns: 5.5em 3.2em 3.2em; gap: 6px; }
+atlas-colour .cs-ratios div { display: grid; grid-template-columns: 5.5em 3.2em 3.2em 3.2em; gap: 6px; }
 atlas-colour .cs-ratios .bg { color: var(--ink-soft); letter-spacing: 0.1em; font-size: 10.5px; }
 atlas-colour .cs-under { color: var(--red); font-weight: 600; }
 atlas-colour .cs-matrices { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 18px; }
@@ -125,7 +128,7 @@ function row(t: Token): TemplateResult {
       </div>
     </td>
     <td class="cs-name">--${t.name}</td>
-    <td class="cs-values"><code>${t.light}</code><code>${t.dark}</code></td>
+    <td class="cs-values"><code>${t.light}</code><code>${t.dark}</code><code>${t.print}</code></td>
     <td class="cs-kind">${t.kind}${t.floor > 0 ? html` · ${t.floor}:1` : ''}</td>
     <td class="role">${t.role}</td>
     <td class="cs-ratios">${ratios(t)}</td>
@@ -153,7 +156,7 @@ function matrix(theme: Theme): TemplateResult {
     tabindex="0"
     role="region"
     aria-label=${`The matrix, ${theme} theme`}
-    style=${styleMap({ colorScheme: theme, background: lit('paper', theme), color: lit('ink', theme) })}
+    style=${styleMap({ colorScheme: schemeOf(theme), background: lit('paper', theme), color: lit('ink', theme) })}
   >
     <table class="cs-matrix">
       <caption style=${styleMap({ background: lit('paper-2', theme), color: lit('ink-soft', theme) })}>
@@ -182,7 +185,7 @@ function scale(theme: Theme): TemplateResult {
   const ink = token('ink').themes[theme].y;
   const paper = token('paper').themes[theme].y;
   const steps = TOKENS.filter((t) => t.themes[theme].alpha === 1).sort((a, b) => b.themes[theme].y - a.themes[theme].y);
-  return html`<div class="cs-scale" style=${styleMap({ colorScheme: theme })} role="list" aria-label=${`Value scale, ${theme} theme`}>
+  return html`<div class="cs-scale" style=${styleMap({ colorScheme: schemeOf(theme) })} role="list" aria-label=${`Value scale, ${theme} theme`}>
     ${steps.map((t) => {
       const y = t.themes[theme].y;
       const type = contrast(y, ink) >= contrast(y, paper) ? 'ink' : 'paper';
@@ -212,8 +215,9 @@ export class AtlasColour extends LitElement {
         <p>
           <strong>What the bench is.</strong> Every colour the plates are inked in is a
           <code>light-dark()</code> token in the <code>:root</code> block of
-          <a href=${SOURCES.chrome}><code>chrome.mjs</code></a>. The table below is parsed out of
-          that block at build time, so it cannot disagree with the sheets. Each token carries one
+          <a href=${SOURCES.chrome}><code>chrome.mjs</code></a>, with a third value in the print
+          set under it: white paper, a neutral ink ramp, and the hues that carry a reading. The
+          table below is parsed out of both at build time, so it cannot disagree with the sheets. Each token carries one
           role from <a href=${SOURCES.roles}><code>colour-roles.mjs</code></a>, the grounds it may
           stand on, and a kind that sets its floor: TEXT 4.5:1, MARK 3:1, RULE and SURFACE none. A
           RULE is a stroke that carries no reading alone, a hairline or a frame, which WCAG's
@@ -223,16 +227,16 @@ export class AtlasColour extends LitElement {
           <strong>Where the numbers come from.</strong>
           <a href=${SOURCES.guard}><code>check-colour.mjs</code></a> resolves each value, oklch to
           linear sRGB to relative luminance, and reads the contrast of every TEXT and MARK token
-          against each ground it is allowed on, in both themes: ${gated} pairs. The build stops on a
+          against each ground it is allowed on, in light, dark and print: ${gated} pairs. The build stops on a
           pair under its floor, on a token with no role and on a role with no token. The ratios on
           this page are the guard's own, carried in the generated module. ${reported} of the pairs
           sit under their floor and are reported, not gated, each held at the ratio it reads; the
           token or the floor is the maintainer's call.
         </p>
         <p>
-          <strong>Reading a row.</strong> The first swatch is drawn in this page's theme; the two
-          beside it force light and dark on that theme's paper from the values as written, so both
-          sides read at once. <code>--halo</code> is the accent at a tenth of its strength over
+          <strong>Reading a row.</strong> The first swatch is drawn in this page's theme; the three
+          beside it force light, dark and print on that theme's paper from the values as written,
+          so every side reads at once. <code>--halo</code> is the accent at a tenth of its strength over
           whatever lies under it: a SURFACE overlay with no floor, its swatch read over paper.
         </p>
       </div>
@@ -242,12 +246,12 @@ export class AtlasColour extends LitElement {
         <table class="schedule cs-table">
           <thead>
             <tr>
-              <th scope="col">LIVE · LIGHT · DARK</th>
+              <th scope="col">LIVE · LIGHT · DARK · PRINT</th>
               <th scope="col">TOKEN</th>
-              <th scope="col">AS WRITTEN · LIGHT / DARK</th>
+              <th scope="col">AS WRITTEN · LIGHT / DARK / PRINT</th>
               <th scope="col">KIND · FLOOR</th>
               <th scope="col">ROLE</th>
-              <th scope="col">ON · LIGHT · DARK</th>
+              <th scope="col">ON · LIGHT · DARK · PRINT</th>
             </tr>
           </thead>
           <tbody>

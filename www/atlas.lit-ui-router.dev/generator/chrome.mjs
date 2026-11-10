@@ -39,6 +39,29 @@ export const CSS = `
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
+/* THE PRINT SET. White paper and a neutral ink ramp whatever theme is pinned; the
+   hues that carry a reading keep their hue. check-colour.mjs holds it to the same floors. */
+@media print {
+  :root, :root[data-theme] {
+    color-scheme: light;
+    --ground: oklch(100% 0 0);
+    --paper: oklch(100% 0 0);
+    --paper-2: oklch(95% 0 0);
+    --ink: oklch(15% 0 0);
+    --ink-soft: oklch(42% 0 0);
+    --ink-faint: oklch(50% 0 0);
+    --line: oklch(80% 0 0);
+    --edge: oklch(66% 0 0);
+    --accent: oklch(38% 0.09 253);
+    --accent-soft: oklch(58% 0.06 252);
+    --red: oklch(48% 0.15 30);
+    --red-hatch: oklch(48% 0.15 30);
+    --green: oklch(45% 0.06 149);
+    --halo: color-mix(in oklch, var(--accent) 10%, transparent);
+    --pencil: oklch(50% 0 0);
+    --cherokee: oklch(46% 0.14 31);
+  }
+}
 
 *, *::before, *::after { box-sizing: border-box; min-width: 0; margin: 0; }
 :root {
@@ -406,6 +429,7 @@ code, kbd, samp { font-family: var(--code); }
 }
 .schedule-title { font-weight: 600; border-block-end: 1.5px solid var(--ink); }
 .schedule-total { border-block-start: 1.5px solid var(--ink); font-variant-numeric: tabular-nums; }
+.schedule-grid:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-offset: -2px; }
 .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 0 24px; overflow-x: auto; }
 .schedule { width: 100%; border-collapse: collapse; align-self: start; }
 .schedule th {
@@ -563,6 +587,22 @@ svg a:focus-visible { outline: max(2px, 0.08em) solid var(--accent); outline-off
 .gl.lane { display: inline-block; width: 12px; height: 12px; flex: none;
   vertical-align: calc(0.5cap - 6px); margin-inline-end: 0.45em; }
 .gl.lane.after { margin-inline-end: 0; margin-inline-start: 0.45em; }
+/* ---- PRINT ---- the head and the drawing share page one: landscape, or portrait for a
+   plate taller than it is wide (data-tall). The cap is spent on max-width, as on screen. */
+@page { size: landscape; margin: 10mm; }
+@page tall { size: portrait; margin: 10mm; }
+@media print {
+  body { background: none; padding: 0; min-height: 0; }
+  .sheet { border-width: 1px; margin-block-end: 0; padding: 14px; }
+  .sheet:has(.plate[data-tall]) { page: tall; }
+  .fill, .plate::after { display: none !important; }
+  .figure-wrap, .schedule-grid { overflow: visible; }
+  .plate { margin-block: 12px 8px; --print-cap: 138mm; }
+  .plate[data-tall] { --print-cap: 218mm; }
+  .figure-wrap svg { min-width: 0; max-width: min(100%, calc(var(--print-cap) * var(--plate-ar, 1.4))); }
+  .plate, .schedules, .schedule tr, figcaption, .keyblock { break-inside: avoid; }
+  .notes p { orphans: 3; widows: 3; }
+}
 `;
 
 // Marker defs (per-sheet id prefix keeps the gallery collision-free).
@@ -632,6 +672,9 @@ export function titleBlock(sheet) {
 </div>`;
 }
 
+// Under this ratio a plate prints on a portrait page.
+const TALL_RATIO = 1.15;
+
 // the plate's own aspect ratio, read off its viewBox, so the contain cap can be
 // spent on max-width (CSS cannot reach an inline SVG's width through max-height)
 export function plateRatio(svg) {
@@ -658,7 +701,7 @@ export function scheduleTable({ title, head, rows, total }) {
   const parts = rows.length > SCHEDULE_SPLIT ? [rows.slice(0, Math.ceil(rows.length / 2)), rows.slice(Math.ceil(rows.length / 2))] : [rows];
   const thead = `<thead><tr>${head.map((h, i) => (i === 0 ? `<th class="n">${esc(String(h))}</th>` : cell(h, 'th'))).join('')}</tr></thead>`;
   const table = (part) => `<table class="schedule">${thead}<tbody>${part.map((r) => `<tr><td class="n">${esc(String(r[0]))}</td>${r.slice(1).map((v) => cell(v)).join('')}</tr>`).join('\n')}</tbody></table>`;
-  return `<div class="schedules"><p class="schedule-title">${esc(title)}</p><div class="schedule-grid">${parts.map(table).join('\n')}</div>${total ? `<p class="schedule-total">${esc(total)}</p>` : ''}</div>`;
+  return `<div class="schedules"><p class="schedule-title">${esc(title)}</p><div class="schedule-grid" tabindex="0" role="group" aria-label="${esc(title)}; scrolls sideways">${parts.map(table).join('\n')}</div>${total ? `<p class="schedule-total">${esc(total)}</p>` : ''}</div>`;
 }
 
 export function sheetSection(sheet, { headline = true } = {}) {
@@ -668,7 +711,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
-    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
+    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}${ar && Number(ar) < TALL_RATIO ? ' data-tall' : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
     ${schedules.map((sc) => `${scheduleTable(sc)}\n    `).join('')}<figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">

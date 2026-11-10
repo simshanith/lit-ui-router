@@ -4,6 +4,7 @@ export const TOKENS = [
     "name": "ground",
     "light": "oklch(92.2% 0.016 106.7)",
     "dark": "oklch(22.3% 0.054 258.1)",
+    "print": "oklch(100% 0 0)",
     "kind": "SURFACE",
     "floor": 0,
     "on": [],
@@ -30,6 +31,17 @@ export const TOKENS = [
           "paper": 1.21,
           "paper-2": 1.05
         }
+      },
+      "print": {
+        "hex": "#ffffff",
+        "alpha": 1,
+        "gamut": true,
+        "y": 1,
+        "ratios": {
+          "ground": 1,
+          "paper": 1,
+          "paper-2": 1.16
+        }
       }
     }
   },
@@ -37,6 +49,7 @@ export const TOKENS = [
     "name": "paper",
     "light": "oklch(95.3% 0.012 101.5)",
     "dark": "oklch(28.8% 0.077 258.1)",
+    "print": "oklch(100% 0 0)",
     "kind": "SURFACE",
     "floor": 0,
     "on": [],
@@ -63,6 +76,17 @@ export const TOKENS = [
           "paper": 1,
           "paper-2": 1.15
         }
+      },
+      "print": {
+        "hex": "#ffffff",
+        "alpha": 1,
+        "gamut": true,
+        "y": 1,
+        "ratios": {
+          "ground": 1,
+          "paper": 1,
+          "paper-2": 1.16
+        }
       }
     }
   },
@@ -70,6 +94,7 @@ export const TOKENS = [
     "name": "paper-2",
     "light": "oklch(92.9% 0.015 102.5)",
     "dark": "oklch(24.2% 0.065 259.0)",
+    "print": "oklch(95% 0 0)",
     "kind": "SURFACE",
     "floor": 0,
     "on": [],
@@ -96,6 +121,17 @@ export const TOKENS = [
           "paper": 1.15,
           "paper-2": 1
         }
+      },
+      "print": {
+        "hex": "#eeeeee",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.857,
+        "ratios": {
+          "ground": 1.16,
+          "paper": 1.16,
+          "paper-2": 1
+        }
       }
     }
   },
@@ -103,6 +139,7 @@ export const TOKENS = [
     "name": "ink",
     "light": "oklch(30.3% 0.010 151.5)",
     "dark": "oklch(91.9% 0.023 248.1)",
+    "print": "oklch(15% 0 0)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -133,6 +170,17 @@ export const TOKENS = [
           "paper": 11.27,
           "paper-2": 12.96
         }
+      },
+      "print": {
+        "hex": "#0b0b0b",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.003,
+        "ratios": {
+          "ground": 19.67,
+          "paper": 19.67,
+          "paper-2": 17
+        }
       }
     }
   },
@@ -140,6 +188,7 @@ export const TOKENS = [
     "name": "ink-soft",
     "light": "oklch(48.8% 0.016 135.0)",
     "dark": "oklch(72.8% 0.049 255.4)",
+    "print": "oklch(42% 0 0)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -170,6 +219,17 @@ export const TOKENS = [
           "paper": 5.94,
           "paper-2": 6.83
         }
+      },
+      "print": {
+        "hex": "#4d4d4d",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.074,
+        "ratios": {
+          "ground": 8.46,
+          "paper": 8.46,
+          "paper-2": 7.31
+        }
       }
     }
   },
@@ -177,6 +237,7 @@ export const TOKENS = [
     "name": "ink-faint",
     "light": "oklch(50.7% 0.012 136.6)",
     "dark": "oklch(67.6% 0.057 255.5)",
+    "print": "oklch(50% 0 0)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -206,6 +267,17 @@ export const TOKENS = [
           "paper": 4.89,
           "paper-2": 5.63
         }
+      },
+      "print": {
+        "hex": "#636363",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.125,
+        "ratios": {
+          "ground": 6,
+          "paper": 6,
+          "paper-2": 5.19
+        }
       }
     }
   },
@@ -213,6 +285,7 @@ export const TOKENS = [
     "name": "line",
     "light": "oklch(82.6% 0.025 112.1)",
     "dark": "oklch(37.2% 0.082 258.1)",
+    "print": "oklch(80% 0 0)",
     "kind": "RULE",
     "floor": 0,
     "on": [
@@ -242,6 +315,17 @@ export const TOKENS = [
           "paper": 1.37,
           "paper-2": 1.58
         }
+      },
+      "print": {
+        "hex": "#bebebe",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.512,
+        "ratios": {
+          "ground": 1.87,
+          "paper": 1.87,
+          "paper-2": 1.61
+        }
       }
     }
   },
@@ -249,6 +333,7 @@ export const TOKENS = [
     "name": "edge",
     "light": "oklch(73.5% 0.025 112.2)",
     "dark": "oklch(41.7% 0.088 259.4)",
+    "print": "oklch(66% 0 0)",
     "kind": "RULE",
     "floor": 0,
     "on": [
@@ -278,6 +363,17 @@ export const TOKENS = [
           "paper": 1.66,
           "paper-2": 1.91
         }
+      },
+      "print": {
+        "hex": "#929292",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.287,
+        "ratios": {
+          "ground": 3.11,
+          "paper": 3.11,
+          "paper-2": 2.69
+        }
       }
     }
   },
@@ -285,6 +381,7 @@ export const TOKENS = [
     "name": "accent",
     "light": "oklch(42.4% 0.077 253.0)",
     "dark": "oklch(77.9% 0.081 248.9)",
+    "print": "oklch(38% 0.09 253)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -315,6 +412,17 @@ export const TOKENS = [
           "paper": 7.16,
           "paper-2": 8.23
         }
+      },
+      "print": {
+        "hex": "#1a4371",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.055,
+        "ratios": {
+          "ground": 10.03,
+          "paper": 10.03,
+          "paper-2": 8.66
+        }
       }
     }
   },
@@ -322,6 +430,7 @@ export const TOKENS = [
     "name": "accent-soft",
     "light": "oklch(61.8% 0.055 252.3)",
     "dark": "oklch(60.3% 0.087 253.0)",
+    "print": "oklch(58% 0.06 252)",
     "kind": "MARK",
     "floor": 3,
     "on": [
@@ -351,6 +460,17 @@ export const TOKENS = [
           "paper": 3.67,
           "paper-2": 4.22
         }
+      },
+      "print": {
+        "hex": "#607d9d",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.196,
+        "ratios": {
+          "ground": 4.27,
+          "paper": 4.27,
+          "paper-2": 3.69
+        }
       }
     }
   },
@@ -358,6 +478,7 @@ export const TOKENS = [
     "name": "red",
     "light": "oklch(50.5% 0.141 30.3)",
     "dark": "oklch(65.5% 0.142 33.2)",
+    "print": "oklch(48% 0.15 30)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -387,6 +508,17 @@ export const TOKENS = [
           "paper": 4.24,
           "paper-2": 4.87
         }
+      },
+      "print": {
+        "hex": "#a13124",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.099,
+        "ratios": {
+          "ground": 7.05,
+          "paper": 7.05,
+          "paper-2": 6.09
+        }
       }
     }
   },
@@ -394,6 +526,7 @@ export const TOKENS = [
     "name": "red-hatch",
     "light": "oklch(50.5% 0.141 30.3)",
     "dark": "oklch(72.4% 0.114 39.2)",
+    "print": "oklch(48% 0.15 30)",
     "kind": "MARK",
     "floor": 3,
     "on": [
@@ -422,6 +555,17 @@ export const TOKENS = [
           "paper": 5.61,
           "paper-2": 6.45
         }
+      },
+      "print": {
+        "hex": "#a13124",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.099,
+        "ratios": {
+          "ground": 7.05,
+          "paper": 7.05,
+          "paper-2": 6.09
+        }
       }
     }
   },
@@ -429,6 +573,7 @@ export const TOKENS = [
     "name": "green",
     "light": "oklch(49.6% 0.055 149.0)",
     "dark": "oklch(73.8% 0.069 152.0)",
+    "print": "oklch(45% 0.06 149)",
     "kind": "MARK",
     "floor": 3,
     "on": [
@@ -458,6 +603,17 @@ export const TOKENS = [
           "paper": 6.33,
           "paper-2": 7.28
         }
+      },
+      "print": {
+        "hex": "#3d5f43",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.095,
+        "ratios": {
+          "ground": 7.23,
+          "paper": 7.23,
+          "paper-2": 6.25
+        }
       }
     }
   },
@@ -465,6 +621,7 @@ export const TOKENS = [
     "name": "halo",
     "light": "color-mix(in oklch, var(--accent) 10%, transparent)",
     "dark": "color-mix(in oklch, var(--accent) 12%, transparent)",
+    "print": "color-mix(in oklch, var(--accent) 10%, transparent)",
     "kind": "SURFACE",
     "floor": 0,
     "on": [],
@@ -491,6 +648,17 @@ export const TOKENS = [
           "paper": 1.27,
           "paper-2": 1.27
         }
+      },
+      "print": {
+        "hex": "#e8ecf1",
+        "alpha": 0.1,
+        "gamut": true,
+        "y": 0.836,
+        "ratios": {
+          "ground": 1.18,
+          "paper": 1.18,
+          "paper-2": 1.18
+        }
       }
     }
   },
@@ -498,6 +666,7 @@ export const TOKENS = [
     "name": "pencil",
     "light": "oklch(59.3% 0.013 133.4)",
     "dark": "oklch(66.9% 0.057 255.5)",
+    "print": "oklch(50% 0 0)",
     "kind": "TEXT",
     "floor": 4.5,
     "on": [
@@ -526,6 +695,17 @@ export const TOKENS = [
           "paper": 4.76,
           "paper-2": 5.48
         }
+      },
+      "print": {
+        "hex": "#636363",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.125,
+        "ratios": {
+          "ground": 6,
+          "paper": 6,
+          "paper-2": 5.19
+        }
       }
     }
   },
@@ -533,6 +713,7 @@ export const TOKENS = [
     "name": "cherokee",
     "light": "oklch(48.7% 0.136 31.0)",
     "dark": "oklch(67.1% 0.144 32.5)",
+    "print": "oklch(46% 0.14 31)",
     "kind": "MARK",
     "floor": 3,
     "on": [
@@ -560,6 +741,17 @@ export const TOKENS = [
           "ground": 5.43,
           "paper": 4.51,
           "paper-2": 5.18
+        }
+      },
+      "print": {
+        "hex": "#963021",
+        "alpha": 1,
+        "gamut": true,
+        "y": 0.087,
+        "ratios": {
+          "ground": 7.64,
+          "paper": 7.64,
+          "paper-2": 6.6
         }
       }
     }

@@ -1,5 +1,5 @@
 // THE COLOUR GUARD — every TEXT and MARK token against every background it is
-// allowed on, in both themes, held to its floor (colour-roles.mjs).
+// allowed on, in every theme, held to its floor (colour-roles.mjs).
 //
 // The tokens are parsed out of chrome.mjs's `:root` block, never retyped:
 // oklch → oklab → linear sRGB → WCAG relative luminance, contrast
@@ -10,7 +10,8 @@ import { CSS } from './chrome.mjs';
 import { BACKGROUNDS, FLOORS, ROLES } from './colour-roles.mjs';
 import { NASA_MANUAL } from './helpers.mjs';
 
-export const THEMES = ['light', 'dark'];
+// light and dark are the two sides of each `light-dark()`; print is the `@media print` block under it.
+export const THEMES = ['light', 'dark', 'print'];
 
 /**
  * Pairs under their floor that the guard reports and does not stop on, each
@@ -52,6 +53,14 @@ export function parseTokens(css = CSS) {
     tokens.push({ name: m[1], light: parts[0], dark: parts[1] });
   }
   if (tokens.length === 0) throw new Error('check-colour: no light-dark() tokens in :root');
+  const at = css.indexOf('@media print {\n  :root, :root[data-theme] {');
+  if (at === -1) throw new Error('check-colour: chrome.mjs carries no print set');
+  const print = new Map([...css.slice(at, css.indexOf('\n  }', at)).matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  for (const t of tokens) {
+    if (!print.has(t.name)) throw new Error(`check-colour: --${t.name} has no value in the print set`);
+    t.print = print.get(t.name);
+  }
+  for (const name of print.keys()) if (!tokens.some((t) => t.name === name)) throw new Error(`check-colour: the print set names --${name}, which :root does not declare`);
   return tokens;
 }
 
@@ -135,7 +144,7 @@ export function colourTable(css = CSS) {
       }));
       return { hex: hex(flat), alpha: c.alpha, gamut: c.gamut, y: Math.round(luminance(flat) * 1000) / 1000, ratios };
     };
-    return { name: t.name, light: t.light, dark: t.dark, kind, floor: FLOORS[kind], on, role, themes: { light: theme('light'), dark: theme('dark') } };
+    return { name: t.name, light: t.light, dark: t.dark, print: t.print, kind, floor: FLOORS[kind], on, role, themes: Object.fromEntries(THEMES.map((th) => [th, theme(th)])) };
   });
 }
 
@@ -219,11 +228,11 @@ export const tokensModule = (table = colourTable()) =>
 export const TOKENS_DTS =
   GENERATED +
   "export type Kind = 'TEXT' | 'MARK' | 'RULE' | 'SURFACE';\n" +
-  "export type Theme = 'light' | 'dark';\n" +
+  "export type Theme = 'light' | 'dark' | 'print';\n" +
   '/** One theme of a token: its hex (an overlay read over paper), alpha, whether it sits in sRGB, its relative luminance and its ratio per background. */\n' +
   'export interface TokenTheme {\n  hex: string;\n  alpha: number;\n  gamut: boolean;\n  y: number;\n  ratios: Record<string, number>;\n}\n' +
-  '/** A `light-dark()` token of chrome.mjs\'s `:root`, with its role row and the guard\'s numbers. */\n' +
-  'export interface Token {\n  name: string;\n  light: string;\n  dark: string;\n  kind: Kind;\n  floor: number;\n  on: string[];\n  role: string;\n  themes: Record<Theme, TokenTheme>;\n}\n' +
+  '/** A `light-dark()` token of chrome.mjs\'s `:root` and its value in the print set, with its role row and the guard\'s numbers. */\n' +
+  'export interface Token {\n  name: string;\n  light: string;\n  dark: string;\n  print: string;\n  kind: Kind;\n  floor: number;\n  on: string[];\n  role: string;\n  themes: Record<Theme, TokenTheme>;\n}\n' +
   'export declare const TOKENS: Token[];\n' +
   '/** The surfaces a TEXT, MARK or RULE token is measured against. */\n' +
   'export declare const BACKGROUNDS: string[];\n' +

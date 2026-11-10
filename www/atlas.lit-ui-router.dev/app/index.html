@@ -1696,6 +1696,35 @@
         color: var(--ink-soft);
         margin-inline-end: 10px;
       }
+      /* A finger's target: the strip's links and buttons stand 24px tall where they wrap. */
+      @media (max-width: 900px), (pointer: coarse) {
+        .crumb a,
+        .util-links > a {
+          display: inline-block;
+          padding-block: 5px;
+        }
+        .themer button,
+        .util-copy,
+        .prefs-toggle {
+          padding-block: 6px 4px;
+        }
+      }
+      /* Print keeps the sheet: the rail, the strip and the status stay on the screen. */
+      @media print {
+        .app {
+          display: block;
+          min-height: 0;
+        }
+        .rail,
+        .util,
+        .plate-data,
+        .plate-verdict,
+        .route-status,
+        #uirStateVisualizer,
+        #uirTransitionVisualizer {
+          display: none !important;
+        }
+      }
       /* ---- press: every pressable gives under the pointer ---- */
       .themer button:active,
       .util-copy:active,

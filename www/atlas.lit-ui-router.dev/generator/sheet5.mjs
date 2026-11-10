@@ -103,7 +103,7 @@ ${lettering(name, lx, y - 1, anchor)}
 ${txt(lx, y + 12, note, 'lblf', anchor)}</g>`;
 }).join('\n');
 
-const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten entries are plotted as labeled circles, the platform's own primitives among them: the Navigation API at client runtime, node:http and the fetch handler at server runtime. The ui-router lineage is the one state-first entry, drawn as three squares on one row of the library band, one in each column — lit-ui-router-ssr at build time, ui-router-server at server runtime, lit-ui-router at client runtime — joined by a bracket, the sheet's only edge.">
+const svg = `<svg viewBox="0 0 1080 640" role="group" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten entries are plotted as labeled circles, the platform's own primitives among them: the Navigation API at client runtime, node:http and the fetch handler at server runtime. The ui-router lineage is the one state-first entry, drawn as three squares on one row of the library band, one in each column — lit-ui-router-ssr at build time, ui-router-server at server runtime, lit-ui-router at client runtime — joined by a bracket, the sheet's only edge.">
 ${defs(P)}
 
 <!-- frame + column bands -->

@@ -63,7 +63,7 @@ import type { BuildsScene } from './generated/builds-init.js';
 import { ARTIFACT } from './mode.ts';
 import { readPref, setTrace, setVisualizer } from './prefs.ts';
 import type { PrefName, PrefState } from './prefs.ts';
-import { href } from './routes.ts';
+import { href, SITE } from './routes.ts';
 import { titleFor } from './titles.ts';
 import { runtime } from './runtime.ts';
 import type { ThemeChoice } from './theme.ts';
@@ -99,7 +99,6 @@ const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
 /** The live site — where every page the artifact does not route lives. */
-const SITE = 'https://atlas.lit-ui-router.dev';
 const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 // the homes the colophon names: packages at npmx.dev, the atlas's files on its branch, each tool's own site
@@ -139,7 +138,7 @@ const outTarget = ARTIFACT ? '_blank' : nothing;
  */
 const goHref = (state: string, params?: { num: string }): ReturnType<typeof srefHref> | string =>
   ARTIFACT
-    ? `${SITE}${state === 'atlas.sheet' ? href.sheet(params?.num ?? '') : `${href.gallery}${state.slice('atlas.'.length)}`}/`
+    ? `${SITE}${state === 'atlas.sheet' ? href.sheet(params?.num ?? '') : `${href.gallery}${state.slice('atlas.'.length)}/`}`
     : srefHref(state, params);
 const goClass = (options: Parameters<typeof srefActiveClass>[0]): ReturnType<typeof srefActiveClass> | string =>
   ARTIFACT ? '' : srefActiveClass(options);
@@ -1655,7 +1654,7 @@ export const ColourView: RoutedLitTemplate<ColourResolves> = (props) => {
       <h2 class="sheet-title">${THE}COLOUR STANDARDS</h2>
       <p class="sheet-sub">
         EVERY TOKEN THE SHEETS ARE INKED IN, READ OUT OF THE CHROME · ITS ROLE, THE GROUNDS IT
-        MAY STAND ON AND ITS CONTRAST IN BOTH THEMES · THE NUMBERS ARE THE BUILD GUARD'S OWN
+        MAY STAND ON AND ITS CONTRAST IN LIGHT, DARK AND PRINT · THE NUMBERS ARE THE BUILD GUARD'S OWN
       </p>
       <atlas-colour></atlas-colour>
     </section>

@@ -55,7 +55,7 @@ const manifest = JSON.parse(readFileSync(join(dist, 'manifest.json'), 'utf8'));
 const pages = [...manifest.sheets, ...manifest.appendix]
   .map((row) => [legacyFile(row.num, row.title), row.num])
   .sort(([a], [b]) => a.localeCompare(b));
-const plateUrl = (num) => `${BASE}plate/${num}`;
+const plateUrl = (num) => `${BASE}plate/${num}/`;
 const spellings = (file) => {
   const stem = file.replace(/\.html$/, '');
   return [`/${file}`, `/${stem}`, `${OLD_SET_MOUNT}/${file}`, `${OLD_SET_MOUNT}/${stem}`];

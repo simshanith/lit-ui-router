@@ -858,3 +858,19 @@ slash. The one difference in the served pages is the signature, which
 lists the views each page drew, `"views":["$default","$default.$default"]`
 on a shell page. `/office` keeps its 302 and its pair of lines; 75 pages
 and the 404, 76 rules, 76 of 76 renders on a scoped router.
+
+**Update, 2026-11-09, the slash.** The mount takes 0.9's trailing-slash
+policy, `trailingSlash: { pages: 'always' }` on the one `URL_CONFIG` the
+client router, the mount and the prerender's router share. Pages serves
+every page at the slash and answered each bare link with its own 308 on a
+hard load; with the policy the route table still spells no slash, and
+`href()`, every pushed url, the hand-built `href` table, the generator's
+cross-references and the stager's retired-url targets all come out at
+`/sheet/7/`. The prerender writes a 308 line from each page's bare spelling,
+74 of them, so `_redirects` carries 150 rules beside the stager's. Pages
+matches a rule's source exactly, slash included (a single-spelling rule on
+the live site 301s and its slashed twin 404s), so the 308 line and the page
+it lands on cannot loop. Read in a preview: `/sheet/7` 308s, `/sheet/7a`
+302s to `/sheet/7A/`, `/office` 302s to `/sheet/A2/`, a card click, a
+cross-reference, back and the lightbox all hold the slash, and a redirect
+lands booted `adopted:matched`.

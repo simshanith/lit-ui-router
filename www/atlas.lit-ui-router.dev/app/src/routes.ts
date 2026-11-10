@@ -18,31 +18,35 @@ import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
  */
 export const MOUNT = '/';
 
+/** The origin the site is served at: canonical links and the artifact's links out are absolute. */
+export const SITE = 'https://atlas.lit-ui-router.dev';
+
 /** `MOUNT` with its trailing slash: the prefix every href in the app starts with. */
 export const BASE = MOUNT.endsWith('/') ? MOUNT : `${MOUNT}/`;
 
 /**
  * The url shape both halves compile with. Cloudflare Pages serves
- * `<subpath>/index.html` and 308s the bare path onto the slash, so `/sheet/7/`
- * must be as real a url as `/sheet/7`. The client router takes it through
- * `applyUrlConfig` (src/router.ts), the mount through `config`, and the
- * prerender's router through `installServerLocation` (prerender.ts).
+ * `<subpath>/index.html` at the slash, so the slash is every page's canonical
+ * spelling: the route table spells none, `href()` and each pushed url come out
+ * with it, and the bare path answers 308 onto it. The client router takes the
+ * policy through `applyUrlConfig` (src/router.ts), the mount through `config`,
+ * and the prerender's router through `installServerLocation` (prerender.ts).
  */
-export const URL_CONFIG = { strict: false } satisfies RouterUrlConfig;
+export const URL_CONFIG = { strict: false, trailingSlash: { pages: 'always' } } satisfies RouterUrlConfig;
 
-/** The hrefs the client templates and the server templates share. */
+/** The hrefs the client templates and the server templates share, in the canonical spelling. */
 export const href = {
   gallery: BASE,
-  about: `${BASE}about`,
-  city: `${BASE}city`,
-  plant: `${BASE}plant`,
-  bricks: `${BASE}bricks`,
-  builds: `${BASE}builds`,
-  specimen: `${BASE}specimen`,
-  colour: `${BASE}colour`,
-  log: `${BASE}log`,
-  sheet: (num: string): string => `${BASE}sheet/${num}`,
-  plate: (num: string): string => `${BASE}plate/${num}`,
+  about: `${BASE}about/`,
+  city: `${BASE}city/`,
+  plant: `${BASE}plant/`,
+  bricks: `${BASE}bricks/`,
+  builds: `${BASE}builds/`,
+  specimen: `${BASE}specimen/`,
+  colour: `${BASE}colour/`,
+  log: `${BASE}log/`,
+  sheet: (num: string): string => `${BASE}sheet/${num}/`,
+  plate: (num: string): string => `${BASE}plate/${num}/`,
 };
 
 /**
