@@ -127,7 +127,7 @@ catalog:
   typescript-7.1: npm:typescript@7.1.0-beta
   valibot: ^1.5.0
   vite: ^8.3.5
-  vite-plugin-checker: ^0.14.5
+  vite-plugin-checker: ^1.0.0
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.21
   vitepress-plugin-llms: ^1.14.0
