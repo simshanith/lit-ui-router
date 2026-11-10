@@ -113,19 +113,28 @@ export interface PrerenderOptions {
   resolver?: ServerRouter;
   /**
    * Every path to ask for a verdict. Redirect and notFound paths belong here
-   * too. They lie under {@link PrerenderOptions.base | base} with it taken
-   * off, unless {@link PrerenderOptions.pathsIncludeBase | pathsIncludeBase}
-   * says they spell it.
+   * too. They spell the {@link PrerenderOptions.base | base} when
+   * {@link PrerenderOptions.pathsIncludeBase | pathsIncludeBase} is on, as
+   * it is by default for a router that declares one, and lie under it with
+   * it taken off otherwise.
    */
   paths: Iterable<string> | AsyncIterable<string>;
   /**
    * Whether each of {@link PrerenderOptions.paths | paths} spells the
    * {@link PrerenderOptions.base | base}, as a host serves it: `/app/about`
-   * under `/app/`. `false` by default, when a path is read as given, even one
-   * that starts with the base. When `true`, the base is taken off each path
-   * once, before anything else sees it, so the output matches the base-free
-   * listing; a path outside the base throws. `pages`, `warnings` and
+   * under `/app/`. When `true`, the base is taken off each path once,
+   * before anything else sees it, so the output matches the base-free
+   * listing; a path outside the base throws. When `false`, a path is read as
+   * given, even one that starts with the base. `pages`, `warnings` and
    * `delegated` report each path as listed. Under base `/` it changes nothing.
+   *
+   * Defaults to whether the router declares a base: `true` for a
+   * {@link PrerenderOptions.resolver | resolver} from
+   * `createServerRouter({ base, mounts })` or a
+   * {@link PrerenderOptions.mounts | mounts} table keyed by the base, so a
+   * table that spells real urls lists real urls; `false` for a table at `/`
+   * stripped under a `base`, so its paths stay the same at any base. The
+   * default follows that declaration, never the shape of the paths.
    */
   pathsIncludeBase?: boolean;
   /** Directory the files are written under. */
@@ -470,13 +479,15 @@ export async function prerender(
     extraRules = [],
     write,
     dryRun = false,
-    pathsIncludeBase = false,
   } = options;
 
   const base = baseFor(options.resolver ?? {}, options.base, 'prerender');
   const keyed = mounts !== undefined && keyedBy(base, mounts);
   const resolver = resolverOf(options, keyed ? base : undefined);
   await checkUndeclaredBase(resolver, base, 'prerender');
+
+  const pathsIncludeBase =
+    options.pathsIncludeBase ?? resolver.base !== undefined;
 
   const tally: PrerenderTally = {
     shell: 0,

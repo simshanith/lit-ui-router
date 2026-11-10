@@ -335,13 +335,17 @@ router.base; // '/solar/'
 await router.resolve('/legacy'); // { kind: 'redirect', location: '/about', ... }
 ```
 
-`prerender()` lists `paths` the same way, with the base taken off. A table
-keyed by the base can list them as the host serves them instead, by opting in
-with `pathsIncludeBase: true`: every path then lies under the base, which is
-taken off once, and a path outside it throws. The output is the same either
-way, and `result.pages`, `warnings` and `delegated` report each path as
-listed. Without the option, a path that starts with the base is read as
-given.
+`prerender()`'s `pathsIncludeBase` says whether `paths` spell the base. It
+defaults to whether the router declares one: a `resolver` from
+`createServerRouter({ base, mounts })`, or a `mounts` table keyed by the base,
+lists real urls such as `/solar/about`, while a table at `/` stripped under a
+base lists base-free paths such as `/about`, so the same script deploys at any
+base. The default follows that declaration, never the shape of the paths, and
+an explicit value wins. When it is on, every path lies under the base, which is
+taken off once, and a path outside it throws; when it is off, a path that
+starts with the base is read as given. The output is the same either way, and
+`result.pages`, `warnings` and `delegated` report each path as listed. Under
+base `/` it changes nothing.
 
 Each adapter's `base` defaults to `router.base`, and a different value
 throws. `serverRouterPlugin` takes no `base` option: it reads Vite's resolved
@@ -583,6 +587,14 @@ received (`c.req.raw` in Hono).
   either.
 - The Connect adapter throws for delegate keys unless `delegates: 'next'`,
   as its section above describes.
+
+A static build leaves delegated paths to the server: `prerender()` lists them
+in `result.delegated`, in the form `paths` listed them. With a table keyed by
+the base, `paths` are real urls by default
+([serving under a base path](#serving-under-a-base-path)), so `delegated` goes
+straight into Cloudflare's `assets.run_worker_first`. With a table at `/`
+stripped under a base, `paths` and `delegated` are base-free, and the deploy
+step adds the base.
 
 #### Typing delegates
 
@@ -887,9 +899,10 @@ where they are; the base goes once onto each generated rules line's `from`
 and onto its `to` when that is a path. `extraRules` are written as given.
 `base` defaults to a `resolver`'s `router.base`, and a `mounts` table keyed by
 the base compiles as `createServerRouter({ base, mounts })` does. A table with
-keys both under and outside the base throws. Either way, `paths` lie under
-the base, with it taken off, unless `pathsIncludeBase: true` lists them with
-it ([serving under a base path](#serving-under-a-base-path)).
+keys both under and outside the base throws. `paths` spell the base for a
+router that declares one, and lie under it with it taken off otherwise;
+`pathsIncludeBase` overrides that
+([serving under a base path](#serving-under-a-base-path)).
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';

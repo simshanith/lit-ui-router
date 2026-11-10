@@ -7,7 +7,7 @@ export default definePrerender((site) =>
   prerender({
     ...site,
     mounts: keyedMounts,
-    paths: ['/', '/about', '/legacy'],
+    paths: ['/app/', '/app/about', '/app/legacy'],
     rules: redirectPages({ redirectsFile: true }),
     render: (verdict, { path }) =>
       site.shellHtml.replace(

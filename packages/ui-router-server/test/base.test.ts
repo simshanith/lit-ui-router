@@ -186,12 +186,16 @@ describe('prerender under a base', () => {
     `<p>${path}</p>`;
 
   const paths = ['/', '/about', '/legacy'];
+  const fullPaths = ['/app/', '/app/about', '/app/legacy'];
 
   it('writes the same files from a keyed table, a keyed resolver and a relative table', async () => {
-    const tables: Pick<PrerenderOptions, 'mounts' | 'resolver' | 'base'>[] = [
-      { mounts: { '/app/': site }, base: '/app/' },
-      { resolver: keyed() },
-      { mounts: { '/': site }, base: '/app/' },
+    const tables: Pick<
+      PrerenderOptions,
+      'mounts' | 'resolver' | 'base' | 'paths'
+    >[] = [
+      { mounts: { '/app/': site }, base: '/app/', paths: fullPaths },
+      { resolver: keyed(), paths: fullPaths },
+      { mounts: { '/': site }, base: '/app/', paths },
     ];
 
     const runs = await Promise.all(
@@ -206,7 +210,6 @@ describe('prerender under a base', () => {
         await prerender({
           ...table,
           outDir: 'dist',
-          paths,
           render,
           write,
           notFound,
@@ -229,54 +232,66 @@ describe('prerender under a base', () => {
     assert.deepEqual(keyedResolver, relative);
   });
 
-  it('writes the same files from paths listed with the base under pathsIncludeBase', async () => {
-    const run = async (listed: string[], pathsIncludeBase?: boolean) => {
+  describe('pathsIncludeBase', () => {
+    const run = async (
+      table: Pick<PrerenderOptions, 'mounts' | 'resolver'>,
+      listed: string[],
+      pathsIncludeBase?: boolean,
+    ) => {
       const { files, write } = memory();
 
       const result = await prerender({
-        mounts: { '/app/': site },
+        ...table,
         base: '/app/',
         pathsIncludeBase,
         outDir: 'dist',
         paths: listed,
         render,
         write,
+        notFound: false,
       });
 
       return { files, result };
     };
 
-    const free = await run(paths);
-    const full = await run(['/app/', '/app/about', '/app/legacy'], true);
-    assert.deepEqual(full.files, free.files);
-    assert.deepEqual(full.result.rules, free.result.rules);
-    assert.deepEqual(
-      full.result.pages.map((page) => page.path),
-      ['/app/', '/app/about', '/__ui-router-server-probe__'],
-    );
+    const keyedTable = { mounts: { '/app/': site } };
+    const stripped = { mounts: { '/': site } };
 
-    await assert.rejects(
-      run(['/app/about', '/about'], true),
-      /prerender: '\/about' lies outside base '\/app\/', and pathsIncludeBase lists every path under it/,
-    );
-  });
+    const outside =
+      /prerender: '\/about' lies outside base '\/app\/', and pathsIncludeBase lists every path under it/;
 
-  it('reads a path that starts with the base as base-free without pathsIncludeBase', async () => {
-    const { files, write } = memory();
+    it('defaults on for a router that declares the base: full paths in, the listed form out', async () => {
+      for (const table of [keyedTable, { resolver: keyed() }]) {
+        const full = await run(table, fullPaths);
+        const free = await run(table, paths, false);
+        assert.deepEqual(full.files, free.files);
+        assert.deepEqual(full.result.rules, free.result.rules);
+        assert.deepEqual(
+          full.result.pages.map((page) => page.path),
+          ['/app/', '/app/about'],
+        );
 
-    const result = await prerender({
-      mounts: { '/': site },
-      base: '/app/',
-      outDir: 'dist',
-      paths: ['/app/about'],
-      render,
-      write,
-      notFound: false,
+        await assert.rejects(run(table, ['/app/about', '/about']), outside);
+      }
     });
 
-    assert.deepEqual([...files.keys()], ['dist/app/about/index.html']);
-    assert.equal(files.get('dist/app/about/index.html'), '<p>/app/about</p>');
-    assert.equal(result.pages[0]?.verdict.kind, 'shell');
+    it('reads paths base-free on a keyed router under an explicit false', async () => {
+      const { files } = await run(keyedTable, ['/about'], false);
+      assert.deepEqual([...files.keys()], ['dist/about/index.html']);
+    });
+
+    it('defaults off under stripping, reading a path that starts with the base as given', async () => {
+      const { files, result } = await run(stripped, ['/app/about']);
+      assert.deepEqual([...files.keys()], ['dist/app/about/index.html']);
+      assert.equal(files.get('dist/app/about/index.html'), '<p>/app/about</p>');
+      assert.equal(result.pages[0]?.path, '/app/about');
+    });
+
+    it('requires full paths under stripping with an explicit true', async () => {
+      const { files } = await run(stripped, ['/app/about'], true);
+      assert.deepEqual([...files.keys()], ['dist/about/index.html']);
+      await assert.rejects(run(stripped, ['/about'], true), outside);
+    });
   });
 
   it("is a no-op under base '/'", async () => {

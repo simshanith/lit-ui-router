@@ -155,8 +155,9 @@ places name it:
 A route table keyed by the base, such as `{ '/solar/': ... }`, declares it
 instead: `createServerRouter({ base: '/solar/', mounts })`. The plugin then
 sets Vite's `base` from the router, and the prerender script passes the same
-keyed `mounts`. `paths` still lie under the base, or spell it when the
-script passes `pathsIncludeBase: true`. Keying the table by the base
+keyed `mounts`, and its `paths` spell the base, as `/solar/about`. A table
+at `/` lists them base-free, so its script builds the same at any base;
+`pathsIncludeBase` overrides either default. Keying the table by the base
 without declaring it fails the build and `vite preview` with a message naming
 `createServerRouter({ base, mounts })`
 ([both forms](/packages/server#serving-under-a-base-path)).
