@@ -13,6 +13,7 @@
 
 import type { RawParams, StateRule } from '@uirouter/core';
 
+import { mountsUnder, normalizeBase as siteBase } from './base-path.ts';
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
@@ -274,8 +275,19 @@ declare const routeDeclarations: unique symbol;
 export interface ServerRouter<
   Decls extends RouteDeclaration = RouteDeclaration,
 > {
-  /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
+  /**
+   * Accepts a pathname, an absolute url string, or anything with a `pathname`
+   * (URL, Location). Under a {@link ServerRouter.base | base}, the pathname
+   * lies under it, with the base taken off, as the adapters hand it over;
+   * verdict mounts and redirect locations come back the same way.
+   */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
+  /**
+   * The url path the site is served at, from `createServerRouter({ base })`,
+   * with one trailing slash. The adapters, `serverRouterPlugin` and
+   * `prerender` default their own `base` to it.
+   */
+  readonly base?: string;
   /** Type-only: carries `Decls`; never set at runtime. */
   readonly [routeDeclarations]?: Decls;
 }
@@ -1004,9 +1016,15 @@ const simulateMarked = (
  * resolve; under `node`, only while `NODE_ENV` is not `production`. The
  * default build never warns.
  *
+ * With `base`, the mount keys spell the base and the router takes it off:
+ * `createServerRouter({ base: '/app/', mounts: { '/app/': ... } })` resolves
+ * as `{ '/': ... }` does, and `resolve` takes paths under the base.
+ *
  * The router's `Decls` is the union of every mount's route declarations:
  * typed when each `routes` array is `as const`, {@link RouteDeclaration}
  * otherwise.
+ *
+ * @throws an `Error` when `base` is relative or a full URL, or a mount key lies outside it
  */
 export function createServerRouter<
   M extends Record<string, readonly RouteDeclaration[]> = Record<
@@ -1015,10 +1033,27 @@ export function createServerRouter<
   >,
 >(
   config: {
+    /**
+     * The url path the site is served at, such as Vite's `base`. Every mount
+     * key lies under it (`/app/` and `/app/admin` under `/app/`), and the
+     * router compiles them with it taken off, so `resolve` takes paths under
+     * the base and the router reports it as `router.base`.
+     */
+    base?: string;
     mounts: { [B in keyof M]: MountConfig<M[B]> };
   } & ExclusiveMarkers<M[keyof M][number]>,
 ): ServerRouter<M[keyof M][number]> {
-  const declared = compileMounts(config.mounts);
+  const base =
+    config.base === undefined
+      ? undefined
+      : siteBase(config.base, 'createServerRouter');
+
+  const declared = compileMounts(
+    base === undefined
+      ? config.mounts
+      : mountsUnder<MountConfig>(base, config.mounts, 'createServerRouter'),
+  );
+
   const mounts = byLongestBase(declared);
   const loadSimulate = makeSimulateLoader();
 
@@ -1032,7 +1067,7 @@ export function createServerRouter<
       .then((simulate) => prewarmPools(simulate, mounts))
       .catch(() => {});
 
-  const router: ServerRouter = {
+  const routing: ServerRouter = {
     async resolve(pathnameOrUrl) {
       const pathname = pathnameOf(pathnameOrUrl);
 
@@ -1049,6 +1084,9 @@ export function createServerRouter<
       return { kind: 'notFound' };
     },
   };
+
+  const router: ServerRouter =
+    base === undefined ? routing : { base, resolve: routing.resolve };
 
   compiledMounts.set(router, declared);
   registerMountPolicies(

@@ -5,6 +5,7 @@ import type {
   Plugin,
   PreviewServer,
   ResolvedConfig,
+  UserConfig,
   ViteDevServer,
 } from 'vite';
 
@@ -17,6 +18,7 @@ import type {
   ServerRouterPlugin,
   ViteMiddlewareServer,
   ViteResolvedConfig,
+  ViteUserConfig,
 } from '../src/vite.ts';
 
 // The connect/vite adapters keep HAND-WRITTEN structural host contracts on
@@ -53,4 +55,6 @@ export const seams: [
   AssignableTo<PreviewServer, ViteMiddlewareServer>,
   // ...and the resolved config its configResolved hook reads.
   AssignableTo<ResolvedConfig, ViteResolvedConfig>,
-] = [true, true, true, true, true, true, true];
+  // ...and the user config its config hook reads.
+  AssignableTo<UserConfig, ViteUserConfig>,
+] = [true, true, true, true, true, true, true, true];

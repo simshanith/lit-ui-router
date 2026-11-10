@@ -317,8 +317,38 @@ createFetchHandler(router, {
 
 A delegate or response handler gets the original request, base included.
 A relative base (`./`) or a full-URL base throws at construction.
-`serverRouterPlugin` sets `base` from Vite's resolved config, so it takes no
-`base` option of its own; [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+
+A table can name the base in its keys instead. `createServerRouter` takes
+`base` too: every mount key lies under it, the router compiles the keys with
+the base taken off, and it reports the base as `router.base`. The table below
+resolves exactly as `{ '/': appMount }` does, and `resolve()` takes paths
+under the base, as the adapters hand them over:
+
+```ts
+const MOUNT = '/solar/';
+const router = createServerRouter({
+  base: MOUNT,
+  mounts: { [MOUNT]: appMount },
+});
+
+router.base; // '/solar/'
+await router.resolve('/legacy'); // { kind: 'redirect', location: '/about', ... }
+```
+
+Each adapter's `base` defaults to `router.base`, and a different value
+throws. `serverRouterPlugin` takes no `base` option: it reads Vite's resolved
+`base`, and sets Vite's from `router.base` when the config leaves it unset.
+When both are set and differ, the config fails.
+
+A table keyed by the base without declaring it would see the base twice.
+Under a base other than `/`, on a router with no `base`, the plugin's config,
+each adapter and `prerender()` resolve the base path, and fail when the mount
+that owns it already carries it:
+`mount '/solar' already carries base '/solar/': declare createServerRouter({ base: '/solar/', mounts }), or key the mount '/'`.
+The plugin fails at config time and `prerender()` before it writes anything;
+the adapters fail each request, through `next(error)` from Connect and a
+rejection from fetch and Hono.
+[Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
 covers the build.
 
 ### fetch — the edge
@@ -847,6 +877,10 @@ throws instead of being counted.
 [adapters](#serving-under-a-base-path). The mounts and the page files stay
 where they are; the base goes once onto each generated rules line's `from`
 and onto its `to` when that is a path. `extraRules` are written as given.
+`base` defaults to a `resolver`'s `router.base`, and a `mounts` table keyed by
+the base compiles as `createServerRouter({ base, mounts })` does. A table with
+keys both under and outside the base throws. Either way, `paths` lie under
+the base, with it taken off.
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';

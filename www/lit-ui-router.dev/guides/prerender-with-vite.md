@@ -152,6 +152,14 @@ places name it:
   `site.base` plus the path.
 - Nothing else: the plugin reads `base` from Vite's config.
 
+A route table keyed by the base, such as `{ '/solar/': ... }`, declares it
+instead: `createServerRouter({ base: '/solar/', mounts })`. The plugin then
+sets Vite's `base` from the router, and the prerender script passes the same
+keyed `mounts`; `paths` still lie under the base. Keying the table by the base
+without declaring it fails the build and `vite preview` with a message naming
+`createServerRouter({ base, mounts })`
+([both forms](/packages/server#serving-under-a-base-path)).
+
 ```ts
 export default definePrerender((site) => {
   const router = installServerLocation(new UIRouterLit(), {

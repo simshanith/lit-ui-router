@@ -22,7 +22,12 @@
 import { nodeConditions } from '#node-conditions';
 import { drainOutput } from '#node-output';
 
-import { normalizeBase, stripBase, withBase } from './base-path.ts';
+import {
+  checkUndeclaredBase,
+  normalizeBase,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { createConnectMiddleware } from './connect.ts';
 import type {
   ConnectAdapterOptions,
@@ -43,6 +48,12 @@ export interface ViteMiddlewareServer {
     /** Appends middleware to the stack, in call order. */
     use(middleware: ConnectMiddleware): void;
   };
+}
+
+/** The sliver of Vite's user config the plugin reads before it resolves. */
+export interface ViteUserConfig {
+  /** The public base path, as configured or passed with `--base`. */
+  base?: string;
 }
 
 /** The sliver of Vite's resolved config the plugin reads. */
@@ -122,7 +133,7 @@ export function definePrerender(entry: PrerenderEntry): PrerenderEntry {
 
 /** Options for {@link serverRouterPlugin}: the Connect adapter's, plus the build step; the base comes from Vite's config. */
 export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
-  /** Not an option here: the plugin reads Vite's resolved `base`. */
+  /** Not an option here: the plugin reads Vite's resolved `base`, which the router's `base` sets when Vite's is unset. */
   base?: never;
   /**
    * Prerenders the app after `vite build`. `entry` names the prerender
@@ -161,8 +172,14 @@ export interface PrerenderOptions {
 export interface ServerRouterPlugin {
   /** The plugin name Vite reports in errors and logs. */
   name: string;
-  /** Reads the root, the output directory and the logger. */
-  configResolved(config: ViteResolvedConfig): void;
+  /** Sets Vite's `base` from the router's when the config leaves it unset; throws when the two differ. */
+  config(config: ViteUserConfig): ViteUserConfig | undefined;
+  /**
+   * Reads the root, the base, the output directory and the logger. Under a
+   * base the router doesn't declare, resolves it and throws when a mount
+   * already carries it.
+   */
+  configResolved(config: ViteResolvedConfig): Promise<void>;
   /** Installs the middleware into `vite dev`, synchronously so it lands in the PRE position. */
   configureServer(server: ViteMiddlewareServer): void;
   /** Installs the same middleware into `vite preview`, serving the prerendered pages when there are any. */
@@ -431,17 +448,18 @@ export function serverRouterPlugin(
     typeof prerender === 'string' ? { entry: prerender } : prerender;
 
   // Built now so a misconfigured router throws at plugin construction; the base arrives later.
-  const middleware = createConnectMiddleware(router, adapter);
+  createConnectMiddleware(router, adapter);
   let resolved: ViteResolvedConfig | undefined;
 
+  const siteBase = (): string =>
+    normalizeBase(resolved?.base ?? router.base, 'serverRouterPlugin');
+
   const served = (): ConnectMiddleware =>
-    resolved === undefined || resolved.base === '/'
-      ? middleware
-      : createConnectMiddleware(router, { ...adapter, base: resolved.base });
+    createConnectMiddleware(router, { ...adapter, base: siteBase() });
 
   const preview = (): ConnectMiddleware => {
     if (job === undefined || adapter.serveShell !== undefined) return served();
-    const base = normalizeBase(resolved?.base, 'serverRouterPlugin');
+    const base = siteBase();
 
     return createConnectMiddleware(router, {
       ...adapter,
@@ -456,8 +474,25 @@ export function serverRouterPlugin(
 
   return {
     name: 'ui-router-server',
-    configResolved(config) {
+    config({ base }) {
+      const declared = router.base;
+
+      if (declared === undefined) return undefined;
+
+      if (base === undefined) return { base: declared };
+
+      if (base !== declared && `${base}/` !== declared)
+        throw new Error(
+          `serverRouterPlugin: Vite's base '${base}' differs from the router's base '${declared}'; set one of them`,
+        );
+
+      return undefined;
+    },
+    async configResolved(config) {
       resolved = config;
+
+      if (config.base.startsWith('/'))
+        await checkUndeclaredBase(router, config.base, 'serverRouterPlugin');
     },
     configureServer(server) {
       server.middlewares.use(served());

@@ -10,7 +10,13 @@
 // Verdicts turned into files and host rules; the page body comes from the caller's render.
 import { devGate } from '#dev-gate';
 
-import { normalizeBase, withBase } from './base-path.ts';
+import {
+  baseFor,
+  carriesBase,
+  checkUndeclaredBase,
+  mountsUnder,
+  withBase,
+} from './base-path.ts';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
@@ -113,7 +119,12 @@ export interface PrerenderOptions {
    * default. The mounts stay at `/` and page files don't move: the base goes
    * once onto each generated rules line's `from` and host-absolute `to`.
    * {@link PrerenderOptions.extraRules | extraRules} are written as given.
-   * A relative or full-URL base throws.
+   * Defaults to the {@link PrerenderOptions.resolver | resolver}'s own
+   * `base`; a different value throws, as does a relative or full-URL base.
+   * A {@link PrerenderOptions.mounts | mounts} table keyed by the base
+   * compiles as `createServerRouter({ base, mounts })` would. Either way,
+   * {@link PrerenderOptions.paths | paths} lie under the base, with it taken
+   * off.
    */
   base?: string;
   /**
@@ -349,7 +360,14 @@ const writeRules = async (
   );
 };
 
-const resolverOf = (options: PrerenderOptions): ServerRouter => {
+// Whether a mounts table spells the base in its keys, and so compiles under it.
+const keyedBy = (base: string, mounts: Record<string, MountConfig>): boolean =>
+  Object.keys(mounts).some((key) => carriesBase(base, key));
+
+const resolverOf = (
+  options: PrerenderOptions,
+  base: string | undefined,
+): ServerRouter => {
   if (options.resolver) return options.resolver;
 
   if (!options.mounts) {
@@ -358,7 +376,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
     );
   }
 
-  return createServerRouter({ mounts: options.mounts });
+  return createServerRouter({ base, mounts: options.mounts });
 };
 
 /**
@@ -388,7 +406,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @param options - the mount table, the paths, the render, and the hooks
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
- * @throws an `Error` when `base` is relative or a full URL
+ * @throws an `Error` when `base` is relative or a full URL, or differs from the resolver's
+ * @throws an `Error` when a mount of a resolver that declares no `base` already carries `base`
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
  * @throws an `Error` when the 404 document's render answers a redirect
@@ -437,8 +456,10 @@ export async function prerender(
     dryRun = false,
   } = options;
 
-  const base = normalizeBase(options.base, 'prerender');
-  const resolver = resolverOf(options);
+  const base = baseFor(options.resolver ?? {}, options.base, 'prerender');
+  const keyed = mounts !== undefined && keyedBy(base, mounts);
+  const resolver = resolverOf(options, keyed ? base : undefined);
+  await checkUndeclaredBase(resolver, base, 'prerender');
 
   const tally: PrerenderTally = {
     shell: 0,
@@ -584,7 +605,11 @@ export async function prerender(
 
   for await (const path of paths) await visit(path);
 
-  const page = await notFoundPage(notFound, mounts, resolver);
+  const page = await notFoundPage(
+    notFound,
+    keyed ? mountsUnder(base, mounts, 'prerender') : mounts,
+    resolver,
+  );
 
   if (page) {
     tally.document += 1;

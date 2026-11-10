@@ -22,7 +22,12 @@
  * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */
 
-import { normalizeBase, stripBase, withBase } from './base-path.ts';
+import {
+  baseFor,
+  checkUndeclaredBase,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { registeredDelegates } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
 import type { ServerRouter, Verdict } from './index.ts';
@@ -73,6 +78,10 @@ export interface ConnectAdapterOptions {
    * `next()` untouched, and puts the base back on redirect `Location`s, the
    * canonical `Link` and the url the default {@link ConnectAdapterOptions.serveShell | serveShell}
    * hands downstream. A host `serveShell` sees `req.url` with the base on.
+   * Defaults to the router's {@link index!ServerRouter.base | base}; a
+   * different value throws. Under a base the router doesn't declare, the
+   * middleware resolves the base once and fails every request through
+   * `next(error)` when a mount already carries it.
    */
   base?: string;
   /**
@@ -224,7 +233,9 @@ export function createConnectMiddleware(
   router: ServerRouter,
   options: ConnectAdapterOptions = {},
 ): ConnectMiddleware {
-  const base = normalizeBase(options.base, 'createConnectMiddleware');
+  const base = baseFor(router, options.base, 'createConnectMiddleware');
+  const ready = checkUndeclaredBase(router, base, 'createConnectMiddleware');
+  ready.catch(() => {});
 
   const {
     shellPath = (mount) => mount,
@@ -263,55 +274,57 @@ export function createConnectMiddleware(
 
     const cut = url.indexOf('?');
     const search = cut === -1 ? '' : url.substring(cut);
-    router.resolve(url).then((verdict) => {
-      if (verdict.kind === 'redirect') {
-        res.writeHead(verdict.status, {
-          Location: mergeSearch(withBase(base, verdict.location), search),
-        });
-        res.end();
+    ready
+      .then(() => router.resolve(url))
+      .then((verdict) => {
+        if (verdict.kind === 'redirect') {
+          res.writeHead(verdict.status, {
+            Location: mergeSearch(withBase(base, verdict.location), search),
+          });
+          res.end();
 
-        return;
-      }
-
-      if (verdict.kind === 'shell') {
-        if (verdict.status === undefined) {
-          res.setHeader(
-            'Link',
-            `<${withBase(base, verdict.mount)}>; rel="canonical"`,
-          );
-        } else {
-          stripValidators(req);
-          relabel(res, verdict.status);
+          return;
         }
 
-        serveShell(verdict.mount, req, res, next, verdict);
+        if (verdict.kind === 'shell') {
+          if (verdict.status === undefined) {
+            res.setHeader(
+              'Link',
+              `<${withBase(base, verdict.mount)}>; rel="canonical"`,
+            );
+          } else {
+            stripValidators(req);
+            relabel(res, verdict.status);
+          }
 
-        return;
-      }
+          serveShell(verdict.mount, req, res, next, verdict);
 
-      if (verdict.kind === 'delegate' && !passDelegates) {
-        next(unservedDelegate(verdict.delegate));
+          return;
+        }
 
-        return;
-      }
+        if (verdict.kind === 'delegate' && !passDelegates) {
+          next(unservedDelegate(verdict.delegate));
 
-      if (verdict.kind === 'response' && !passResponses) {
-        next(unservedResponse(verdict.state));
+          return;
+        }
 
-        return;
-      }
+        if (verdict.kind === 'response' && !passResponses) {
+          next(unservedResponse(verdict.state));
 
-      if (
-        verdict.kind === 'delegate' ||
-        verdict.kind === 'response' ||
-        verdict.mount === undefined
-      ) {
-        next();
+          return;
+        }
 
-        return;
-      }
+        if (
+          verdict.kind === 'delegate' ||
+          verdict.kind === 'response' ||
+          verdict.mount === undefined
+        ) {
+          next();
 
-      serveNotFound(verdict.mount, req, res, next);
-    }, next);
+          return;
+        }
+
+        serveNotFound(verdict.mount, req, res, next);
+      }, next);
   };
 }

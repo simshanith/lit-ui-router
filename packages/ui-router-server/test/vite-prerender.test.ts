@@ -16,6 +16,7 @@ import type { PreviewServer } from 'vite';
 import { createServerRouter } from '../src/index.ts';
 import { serverRouterPlugin } from '../src/vite.ts';
 import { LOG_LINES } from './fixtures/vite-prerender/src/prerender-logs.ts';
+import { keyedMounts } from './fixtures/vite-prerender/src/routes-keyed.ts';
 import { mounts } from './fixtures/vite-prerender/src/routes.ts';
 
 const execNode = promisify(execFile);
@@ -193,6 +194,186 @@ describe('serverRouterPlugin prerender under a base, end to end', () => {
     const outside = await page('/legacy');
     assert.equal(outside.status, 404);
     assert.equal(outside.headers.get('location'), null);
+  });
+});
+
+// Every file under dir, keyed by its path relative to dir.
+const tree = async (dir: string): Promise<Map<string, string>> => {
+  const files = await readdir(dir, { recursive: true, withFileTypes: true });
+
+  const entries = await Promise.all(
+    files
+      .filter((file) => file.isFile())
+      .map(async (file) => {
+        const full = path.join(file.parentPath, file.name);
+
+        return [
+          path.relative(dir, full),
+          await readFile(full, 'utf8'),
+        ] as const;
+      }),
+  );
+
+  return new Map(entries.sort(([a], [b]) => a.localeCompare(b)));
+};
+
+// The answers a preview gives, request by request.
+const answers = async (server: PreviewServer, urls: string[]) => {
+  const origin = server.resolvedUrls?.local[0];
+  assert.ok(origin);
+
+  return Promise.all(
+    urls.map(async (url) => {
+      const res = await fetch(new URL(url, origin), {
+        headers: { accept: 'text/html' },
+        redirect: 'manual',
+      });
+
+      return {
+        url,
+        status: res.status,
+        location: res.headers.get('location'),
+        body: await res.text(),
+      };
+    }),
+  );
+};
+
+// The relative table under Vite's `base`, and the table keyed by the base under `createServerRouter({ base })`.
+describe('serverRouterPlugin under a base, keyed or relative', () => {
+  const base = '/app/';
+
+  const urls = [
+    '/app/',
+    '/app/about',
+    '/app/legacy',
+    '/app/nowhere',
+    '/legacy',
+  ];
+
+  const servers: PreviewServer[] = [];
+  const dirs: string[] = [];
+
+  const relative = () =>
+    serverRouterPlugin(createServerRouter({ mounts }), {
+      prerender: './src/prerender-relative.ts',
+    });
+
+  const keyed = () =>
+    serverRouterPlugin(createServerRouter({ base, mounts: keyedMounts }), {
+      prerender: './src/prerender-keyed.ts',
+    });
+
+  const buildWith = async (
+    plugin: ReturnType<typeof serverRouterPlugin>,
+    viteBase?: string,
+  ) => {
+    const outDir = await mkdtemp(path.join(tmpdir(), 'ui-router-server-base-'));
+    dirs.push(outDir);
+    await build({
+      root,
+      base: viteBase,
+      configFile: false,
+      logLevel: 'silent',
+      build: { outDir, emptyOutDir: true },
+      plugins: [plugin],
+    });
+
+    return outDir;
+  };
+
+  const previewWith = async (
+    plugin: ReturnType<typeof serverRouterPlugin>,
+    outDir: string,
+    viteBase?: string,
+  ) => {
+    const server = await preview({
+      root,
+      base: viteBase,
+      configFile: false,
+      logLevel: 'silent',
+      build: { outDir },
+      preview: { port: 0, open: false },
+      plugins: [plugin],
+    });
+
+    servers.push(server);
+
+    return server;
+  };
+
+  after(async () => {
+    await Promise.all(servers.map((server) => server.close()));
+    await Promise.all(
+      dirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+  });
+
+  it('builds the same dist and previews the same answers', async () => {
+    const [relativeDir, keyedDir] = await Promise.all([
+      buildWith(relative(), base),
+      buildWith(keyed()),
+    ]);
+
+    const [relativeTree, keyedTree] = await Promise.all([
+      tree(relativeDir),
+      tree(keyedDir),
+    ]);
+
+    assert.deepEqual(keyedTree, relativeTree);
+    assert.equal(
+      relativeTree.get('_redirects'),
+      '/app/legacy /app/about 302\n/app/legacy/ /app/about 302\n',
+    );
+    assert.ok(relativeTree.has('legacy/index.html'));
+    assert.ok(relativeTree.has('404.html'));
+
+    const relativeAnswers = await answers(
+      await previewWith(relative(), relativeDir, base),
+      urls,
+    );
+
+    const keyedAnswers = await answers(
+      await previewWith(keyed(), keyedDir),
+      urls,
+    );
+
+    assert.deepEqual(keyedAnswers, relativeAnswers);
+    assert.deepEqual(
+      relativeAnswers.map(({ url, status, location }) => [
+        url,
+        status,
+        location,
+      ]),
+      [
+        ['/app/', 200, null],
+        ['/app/about', 200, null],
+        ['/app/legacy', 302, '/app/about'],
+        ['/app/nowhere', 404, null],
+        ['/legacy', 404, null],
+      ],
+    );
+    assert.ok(paragraph(relativeAnswers[1]?.body ?? '', '/about 200'));
+  });
+
+  const undeclared = () =>
+    serverRouterPlugin(createServerRouter({ mounts: keyedMounts }), {
+      prerender: './src/prerender-relative.ts',
+    });
+
+  const carried =
+    /mount '\/app' already carries base '\/app\/': declare createServerRouter\(\{ base: '\/app\/', mounts \}\), or key the mount '\/'/;
+
+  it('fails a build and a preview whose table already carries an undeclared base', async () => {
+    await assert.rejects(buildWith(undeclared(), base), carried);
+    await assert.rejects(previewWith(undeclared(), tmpdir(), base), carried);
+  });
+
+  it("fails when Vite's base and the router's differ", async () => {
+    await assert.rejects(
+      buildWith(keyed(), '/other/'),
+      /Vite's base '\/other\/' differs from the router's base '\/app\/'/,
+    );
   });
 });
 

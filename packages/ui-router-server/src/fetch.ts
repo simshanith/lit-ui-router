@@ -36,7 +36,12 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { normalizeBase, stripBase, withBase } from './base-path.ts';
+import {
+  baseFor,
+  checkUndeclaredBase,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { registeredDelegates, sharedWeakMap } from './delegate-registry.ts';
 import type { DelegateRegistration } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
@@ -206,7 +211,10 @@ export interface FetchAdapterOptions<
    * each request with the base taken off, so the mount table stays at `/`,
    * returns `null` for a request outside the base, and puts the base back on
    * redirect `Location`s, the canonical `Link` and the shell Request's url.
-   * Delegates and `serveResponse` get the original request.
+   * Delegates and `serveResponse` get the original request. Defaults to the
+   * router's {@link index!ServerRouter.base | base}; a different value
+   * throws. Under a base the router doesn't declare, the handler resolves
+   * the base once and every request rejects when a mount already carries it.
    */
   base?: string;
   /**
@@ -474,7 +482,9 @@ export function createFetchHandler<
     RequiredDelegates<Args, ServerRouterDeclarations<R>> &
     RequiredServeResponse<Args, ServerRouterDeclarations<R>>,
 ): FetchHandler<Args> {
-  const base = normalizeBase(options.base, 'createFetchHandler');
+  const base = baseFor(router, options.base, 'createFetchHandler');
+  const ready = checkUndeclaredBase(router, base, 'createFetchHandler');
+  ready.catch(() => {});
 
   const {
     serveShell,
@@ -593,6 +603,7 @@ export function createFetchHandler<
     const url = routedUrl(request.url);
 
     if (url === undefined) return null;
+    await ready;
 
     if (!shouldHandle(request)) {
       if (!marking) return null;

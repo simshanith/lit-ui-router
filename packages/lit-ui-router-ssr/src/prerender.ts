@@ -332,7 +332,7 @@ export async function prerender(
     ...site
   } = options;
 
-  const base = site.base ?? '/';
+  const base = site.base ?? site.resolver?.base ?? '/';
 
   if (dehydrateOptions && payload)
     throw new Error(
