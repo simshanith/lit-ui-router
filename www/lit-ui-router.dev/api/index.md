@@ -325,7 +325,7 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 - [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
 
 On the server, `serverLocationPlugin` from
-[`ui-router-server/location`](/packages/server) is the in-memory plugin whose
+[`ui-router-server/location`](/packages/ui-router-server) is the in-memory plugin whose
 hrefs are paths, so a prerendered link matches what the pushState client writes.
 
 ## Server Rendering
@@ -347,7 +347,7 @@ See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server
 
 ## Companion Packages
 
-`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx), the [Navigation API location plugin](/packages/navigation-plugin), and [server-side routing verdicts](/packages/server) with [`ui-router-server`](/api/ui-router-server/) (in development), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
+`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx), the [Navigation API location plugin](/packages/ui-router-navigation-location-plugin), and [server-side routing verdicts](/packages/ui-router-server) with [`ui-router-server`](/api/ui-router-server/) (in development), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
 
 ## Further Reading
 

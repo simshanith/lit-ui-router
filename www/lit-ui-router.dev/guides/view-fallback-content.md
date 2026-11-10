@@ -56,7 +56,7 @@ Three consequences are worth knowing:
   rather than to a shadow root, so there is no slot assignment and no
   `::slotted()` styling at runtime — style the fallback with ordinary
   selectors. The one place a `<slot>` appears is a server render without
-  [`lit-ui-router-ssr`](/packages/ssr); see below.
+  [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr); see below.
 
 The fallback set stands ahead of the render marker `<ui-view>` writes for
 its own output, so routed content and fallback content never interleave.
@@ -131,7 +131,7 @@ whatever the client renders into the light DOM. For
 <ui-view><template shadowroot="open" shadowrootmode="open"><!--lit-part Pz0gobCCM4E=--><slot></slot><!--/lit-part--></template><p>fallback</p></ui-view>
 ```
 
-[`lit-ui-router-ssr`](/packages/ssr) draws the view itself instead. Its
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) draws the view itself instead. Its
 renderer writes the routed component into the view's light DOM — no
 declarative shadow root and no `<slot>` — and the served view, the `<ui-view>`
 that `lit-ui-router-ssr/register` defines, arrives asleep, holding that markup
@@ -153,7 +153,7 @@ until the client's hydrate wakes it. Three things follow for fallback content:
 Fallback content reads the same on both sides, then: the nodes an author wrote
 inside a `<ui-view>` are that view's fallback set whether the client created it
 or a prerender drew it. The prerender and hydration model as a whole is on the
-[`lit-ui-router-ssr` page](/packages/ssr).
+[`lit-ui-router-ssr` page](/packages/lit-ui-router-ssr).
 
 Prerendered links are a separate question. `uiSref` is an element-part
 directive and `@lit-labs/ssr` skips element parts, so it emits nothing; the
@@ -169,5 +169,5 @@ of [Server-Side Routing](./server-route-matching) for where that axis stands.
 - [Hello Galaxy: nested ui-view with fallback content](/tutorial/hellogalaxy#nested-ui-view-with-fallback-content)
 - [Component Lifecycle Hooks](./component-lifecycle)
 - [Server-Side Routing](./server-route-matching)
-- [`lit-ui-router-ssr`](/packages/ssr)
+- [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr)
 - [`<ui-view>` API reference](/api/reference/components/UiView)

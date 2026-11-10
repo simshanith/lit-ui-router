@@ -23,6 +23,23 @@ describe('catalog/redirects.ts', () => {
     assert.deepEqual(tableProblems(lines), []);
   });
 
+  it('keeps every rule a released package links to, at its target', () => {
+    const linked = REDIRECTS.flatMap((rule) =>
+      'linkedFrom' in rule ? [`${rule.from} -> ${rule.to}`] : [],
+    );
+
+    assert.deepEqual(
+      linked,
+      [
+        '/packages/eslint-plugin -> /packages/eslint-plugin-lit-ui-router',
+        '/packages/navigation-plugin -> /packages/ui-router-navigation-location-plugin',
+        '/packages/server -> /packages/ui-router-server',
+        '/packages/ssr -> /packages/lit-ui-router-ssr',
+      ],
+      'released npm READMEs and homepage fields link these sources and cannot be republished; keep each rule, and retarget one only where its page moves again',
+    );
+  });
+
   // surfaces.test.ts holds the worker rows to wrangler.jsonc's run_worker_first.
   it('sends no source to the worker, where _redirects never applies', () => {
     const patterns = SURFACES.flatMap(({ renderer, paths }) =>

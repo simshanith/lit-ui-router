@@ -1,4 +1,4 @@
-// The docs example for "Page, response state or redirect" in www/lit-ui-router.dev/packages/ssr.md.
+// The docs example for "Page, response state or redirect" in www/lit-ui-router.dev/packages/lit-ui-router-ssr.md.
 import '../register.js';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type { MountConfig } from 'ui-router-server';

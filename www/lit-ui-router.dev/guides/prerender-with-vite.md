@@ -16,7 +16,7 @@ answers a deep link, a redirect and a typo the way the
 Three terms carry the rest of this page:
 
 - The **route table** is the `mounts` object
-  [`ui-router-server`](/packages/server#quick-start) compiles. Each key is a
+  [`ui-router-server`](/packages/ui-router-server#quick-start) compiles. Each key is a
   mount, the url prefix an app is served under (`/` here), and holds that
   app's route names and urls as plain data, with no components, so
   `vite.config.ts` and a server can import it.
@@ -34,7 +34,7 @@ url-less `notFound` state that the mount's `otherwise` rule sends every
 unmatched path to. Its `src/app.ts` holds the Lit side: `states`, the same
 names and urls with their components, and `page(router)`, the template
 `src/main.ts` renders in the browser. That template's `<ui-view>` holds
-[`uiViewSlot()`](/packages/ssr#the-hydration-model) from
+[`uiViewSlot()`](/packages/lit-ui-router-ssr#the-hydration-model) from
 `lit-ui-router-ssr/client`, the hole the server render fills with the routed
 view.
 
@@ -61,7 +61,7 @@ export default defineConfig({
 `prerender` names the prerender script, resolved against Vite's root. The
 plugin is `ui-router-server/vite`'s, set up for Lit: before the script it
 loads `@lit-labs/ssr`'s DOM shim, then
-[`lit-ui-router-ssr/register`](/packages/ssr#a-prerendered-app), which
+[`lit-ui-router-ssr/register`](/packages/lit-ui-router-ssr#a-prerendered-app), which
 defines the elements in the registry the shim installed. Modules of your own
 to load before the script go in `prerender: { entry, preload: [...] }`, and
 load after those two; a module listed twice loads once. To use another DOM,
@@ -116,7 +116,7 @@ the built `index.html`, where the app's container holds a marker:
 
 The shim must finish installing before anything defines an element, which
 is why the plugin preloads it rather than the script importing it:
-[`lit-ui-router-ssr`](/packages/ssr#a-prerendered-app) explains the order a
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr#a-prerendered-app) explains the order a
 script that imports the shim itself has to follow. A page whose `<ui-view>`
 leaves out `uiViewSlot()` renders that view empty, with no error.
 
@@ -134,7 +134,7 @@ Next to Vite's own `assets/`, `dist/` gains:
 `_redirects`, the file Cloudflare Pages and Netlify read. Those hosts serve
 `about/index.html` at `/about/`, so both the route table and the browser
 router need to
-[accept the trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
+[accept the trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash).
 
 ## How it runs
 
@@ -258,7 +258,7 @@ are the same pair without Lit: the plugin preloads only what
 `prerender: { entry, preload }` lists, and the script's default export calls
 a `prerender()` itself and returns its result. For an app that does not
 render with Lit, call `prerender` from
-[`ui-router-server/prerender`](/packages/server#emitting-a-static-site) with a
+[`ui-router-server/prerender`](/packages/ui-router-server#emitting-a-static-site) with a
 `render` of your own, which receives each page verdict and returns the file's
 text:
 
@@ -280,7 +280,7 @@ export default definePrerender((site) =>
 ```
 
 **Delegating states on Workers.** A path that matches a
-[delegating state](/packages/server#delegating-states) gets no file, and the
+[delegating state](/packages/ui-router-server#delegating-states) gets no file, and the
 result lists it in `delegated`. On Cloudflare Workers, list those paths in
 [`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
 so the Worker answers them before the asset layer does.

@@ -186,7 +186,7 @@ than an authoring mistake.
 ## Catching the same problems at author time
 
 Two of the warnings above have static counterparts in
-[`eslint-plugin-lit-ui-router`](/packages/eslint-plugin) — the inert `href` and
+[`eslint-plugin-lit-ui-router`](/packages/eslint-plugin-lit-ui-router) — the inert `href` and
 the silent `aria-current` takeover — alongside a rule for the directives'
 element-part-only constructor throw, which is unconditional and fires in both
 builds. Lint reports all three across the whole codebase at author time,

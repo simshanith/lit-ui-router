@@ -356,7 +356,7 @@ export class AppRoot extends LitElement {
           The log is a <code>navigate</code> listener too, so it sees router
           navigations that a <code>history.pushState</code> patch never would:
           <a
-            href="https://lit-ui-router.dev/packages/navigation-plugin#what-else-observes-navigation"
+            href="https://lit-ui-router.dev/packages/ui-router-navigation-location-plugin#what-else-observes-navigation"
             target="_blank"
             rel="noopener"
             >what else observes navigation</a

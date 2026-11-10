@@ -20,7 +20,7 @@ redirect, and a real 404.
 [`ui-router-server`](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
 packages that decision as a **routing verdict** — a pathname in, a plain
 object out; no `fetch`, no `Response`, no runtime assumptions — so the server
-itself stays a thin consumer (the [package page](/packages/server) covers the
+itself stays a thin consumer (the [package page](/packages/ui-router-server) covers the
 tiers, adapters, and status). This site runs the pattern in production, and
 not just the destination: the Cloudflare Worker behind lit-ui-router.dev
 serves the whole spectrum below, live and side by side, from the
@@ -189,7 +189,7 @@ This machinery is for **path-location clients** — apps whose routes live in
 the URL path and therefore reach the server on every deep link:
 [`pushStateLocationPlugin`](./location-plugins#html5-pushstate), or its most
 modern shape, this repo's own
-[`ui-router-navigation-location-plugin`](/packages/navigation-plugin) companion
+[`ui-router-navigation-location-plugin`](/packages/ui-router-navigation-location-plugin) companion
 package, which produces the same clean paths through the Navigation API.
 Path-addressed routes are the ones a server is asked to vouch for; that is
 what earns them routing verdicts.
@@ -258,7 +258,7 @@ Picking a tier:
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
   Until then a page's render reaches them after `settle`
-  ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
+  ([which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)).
   A simulate mount's `prewarm` count builds idle routers once core loads, so
   its first requests skip the cold build.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
@@ -567,7 +567,7 @@ Anything that needs **code** to decide — hooks, resolves, `redirectTo`
 functions, injected services — is out of the verdict's reach. A server render
 reaches it after `settle`: `redirectedTo` reports a `redirectTo` function's
 redirect, which the host answers as a 30x or `prerender` writes as a rules
-line ([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)). The sample apps keep those
+line ([which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)). The sample apps keep those
 decisions client-side, since they render no page on the server.
 
 Contracts worth internalizing:
@@ -650,7 +650,7 @@ total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The level
 earns its keep the day a redirect must be decided before render by hooks,
 resolves, or a `redirectTo` function; a page rendered on the server already
 reaches them after `settle`
-([which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when)).
+([which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)).
 Until then the flagships stay on the matcher tier and the switch remains one
 word of config.
 
@@ -790,7 +790,7 @@ renderer calls a directive's `render()` with no element behind it, so there is
 nothing to dispatch from and nothing to listen on.
 
 `lit-ui-router/context` answers that with two tree-less providers, and
-[`ui-router-server/location`](/packages/server) supplies the location half — a
+[`ui-router-server/location`](/packages/ui-router-server) supplies the location half — a
 memory plugin in html5 mode, so `stateService.href()` builds the same path the
 pushState client writes rather than the `#/…` form `memoryLocationPlugin`
 returns.
@@ -853,7 +853,7 @@ leaves the listener behind for the next request.
 plugin `installServerLocation` installs, for a render that wires the rest by
 hand.
 
-[`lit-ui-router-ssr`](/packages/ssr) packages this hand-off: it owns the
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) packages this hand-off: it owns the
 `@lit-labs/ssr` call, the `provideRouter`/`withRouterSync` pairing, and the
 `finally` — so a build that prerenders a whole mount table writes none of the
 above by hand. [The Altitude Atlas](https://atlas.lit-ui-router.dev) prerenders
@@ -891,7 +891,7 @@ hand it to both the mount and
 on the client router, which throws if a state's url already compiled. A
 static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory — see
-[static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
+[static hosts add a trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash).
 
 **The 404 UX is asymmetric — by design.** With the flagship pattern,
 client-side navigation to an unknown URL still renders the in-router
@@ -911,5 +911,5 @@ routing spine, which returns the identical verdict at every setting. Left
 alone, `ui-router-server` sits at that axis's first setting —
 **client-rendered**, the shell hydrating in the browser, so a crawler loading
 a real route gets a correct 200 over an empty shell.
-[`lit-ui-router-ssr`](/packages/ssr) is the next setting: it consumes these
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) is the next setting: it consumes these
 same verdicts and renders each one to a static html file at build time.

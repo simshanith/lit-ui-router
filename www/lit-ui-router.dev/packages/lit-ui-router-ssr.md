@@ -12,7 +12,7 @@ type: package
 </p>
 
 [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr) turns a
-[`ui-router-server`](/packages/server) mount table into an emitted static
+[`ui-router-server`](/packages/ui-router-server) mount table into an emitted static
 site. `prerender()` asks the table for a verdict per path and makes each one
 an artefact: a shell verdict becomes `<subpath>/index.html`, a redirect
 becomes a host rules line and no page, and the mount's `otherwise` projection
@@ -56,7 +56,7 @@ state's `redirectStatusCode`.
 - **The lit render inside the emit loop.** The loop itself — verdict to file
   name, redirect to rules line, the `_redirects` file, delegating states
   skipped, tally, and a warning for every path that matched nothing — is
-  [`prerender`](/packages/server#emitting-a-static-site) from
+  [`prerender`](/packages/ui-router-server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
   `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
@@ -102,7 +102,7 @@ and it is written as-is. `dryRun: true` plans everything and writes nothing.
 A server render reads the router only once its transition has landed,
 resolves included.
 [`settle(router, path)`](/api/ui-router-server/ssr/functions/settle), the
-[`ui-router-server/ssr`](/packages/server#settling-a-server-router) step this
+[`ui-router-server/ssr`](/packages/ui-router-server#settling-a-server-router) step this
 package re-exports, sets the url, syncs the router to it, and resolves with the
 transition that landed, so the synchronous render after it reads every resolve.
 A `redirectTo` chain settles on its final state, and a path the router already
@@ -133,7 +133,7 @@ router, started or not.
 A url's answer is decided at one of two points:
 
 - **The verdict**, from the url alone, before any of the app's code runs.
-  [`createServerRouter`](/packages/server#the-verdict) matches the url
+  [`createServerRouter`](/packages/ui-router-server#the-verdict) matches the url
   against the mount's routes: a pattern rule or a data `redirectTo` answers a
   redirect, a state marked `response: true` a
   [response state](#response-states), a `delegate` a host handler, and any
@@ -282,14 +282,14 @@ resolve, every resolve of a boot that lands on another state or other
 parameters, and every resolve of a page whose block carries no `resolves`.
 Without `dehydrate` or a `payload` hook no page carries resolves. What
 `dehydrate` draws, and which values it leaves out, is in
-[Handing resolves to the client](/packages/server#handing-resolves-to-the-client).
+[Handing resolves to the client](/packages/ui-router-server#handing-resolves-to-the-client).
 
 A value plain JSON can't carry, such as a `Date`, travels through a
 transporter. Pass the same `transport` in `dehydrate` and to
 [`bootstrap`](/api/lit-ui-router-ssr/client/interfaces/BootstrapOptions#transport):
 the signature keeps the payload's `transported` marks, and `bootstrap` hands
 `transport` to `seed`. See
-[Values beyond plain JSON](/packages/server#values-beyond-plain-json).
+[Values beyond plain JSON](/packages/ui-router-server#values-beyond-plain-json).
 
 The [`payload`](/api/lit-ui-router-ssr/index/interfaces/PrerenderOptions#payload)
 option takes the drawing over by hand: a hook handed each page's landed
@@ -346,12 +346,12 @@ target.
 
 `delegated` gets no page and no rules line, so the host must send those paths
 to the server. On Cloudflare Workers, list them in
-[`assets.run_worker_first`](/packages/server#emitting-a-static-site) so the
+[`assets.run_worker_first`](/packages/ui-router-server#emitting-a-static-site) so the
 Worker sees them before static assets do.
 
 ## Response states
 
-A [response state](/packages/server#response-states) answers with a `Response`
+A [response state](/packages/ui-router-server#response-states) answers with a `Response`
 built from its resolves instead of a page. `responder(router, responses)`
 serves one: it settles `router` on the verdict's subpath, the request's query
 included, runs the handler bound to the landed state's name with that
@@ -399,14 +399,14 @@ The rules file follows the same seam: `rules: '_redirects'` (the default)
 writes the Cloudflare Pages / Netlify file, `'none'` writes nothing and leaves
 `result.rules` to you, and a function receives the lines and writes whatever
 your host reads, such as
-[`redirectPages()`](/packages/server#hosts-without-redirect-rules) for a host
+[`redirectPages()`](/packages/ui-router-server#hosts-without-redirect-rules) for a host
 with no redirect rules.
 
 ## After `vite build`
 
 `lit-ui-router-ssr/vite` prerenders the built app after `vite build`. Its
 [`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
-is [`ui-router-server/vite`'s](/packages/server#after-vite-build), with the
+is [`ui-router-server/vite`'s](/packages/ui-router-server#after-vite-build), with the
 DOM shim and `lit-ui-router-ssr/register` loaded before the prerender script,
 and its
 [`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender)
@@ -974,7 +974,7 @@ expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
 - [API reference](/api/lit-ui-router-ssr/)
 - [Server-Side Routing guide](/guides/server-route-matching) — the verdicts
   this consumes, and the router hand-off it performs
-- [`ui-router-server`](/packages/server) — the mount table and its verdicts
+- [`ui-router-server`](/packages/ui-router-server) — the mount table and its verdicts
 - [View fallback content](/guides/view-fallback-content#prerendered-shells-and-server-rendering) —
   what a `<ui-view>` renders in a prerendered shell
 - [The Altitude Atlas](https://atlas.lit-ui-router.dev) and

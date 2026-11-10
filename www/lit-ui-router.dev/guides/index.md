@@ -25,7 +25,7 @@ client deployed across every point on the server-support spectrum.
   at the edge with `ui-router-server`: the app shell for real routes, 302
   entry redirects, and real 404s for everything else, across the full
   server-support spectrum (every level [live on the site](/sample-app)), and
-  [`lit-ui-router-ssr`](/packages/ssr) for prerendering those verdicts to
+  [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) for prerendering those verdicts to
   static html at build time
 - [Prerender with Vite](./prerender-with-vite) — one `serverRouterPlugin`
   option and a prerender script turn `vite build` into one HTML page per

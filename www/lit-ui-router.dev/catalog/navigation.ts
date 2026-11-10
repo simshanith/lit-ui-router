@@ -115,15 +115,21 @@ const COMPANIONS: Record<Exclude<Role, 'renderer'>, SidebarEntry[]> = {
     },
   ],
   location: [
-    { text: 'Navigation API Plugin', link: '/packages/navigation-plugin' },
+    {
+      text: 'Navigation API Plugin',
+      link: '/packages/ui-router-navigation-location-plugin',
+    },
   ],
   server: [
-    { text: 'Server', link: '/packages/server' },
-    { text: 'Server-Side Rendering (SSR)', link: '/packages/ssr' },
+    { text: 'Server', link: '/packages/ui-router-server' },
+    {
+      text: 'Server-Side Rendering (SSR)',
+      link: '/packages/lit-ui-router-ssr',
+    },
   ],
   dx: [
     { text: 'Registry', link: '/packages/ui-router-registry' },
-    { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
+    { text: 'ESLint Plugin', link: '/packages/eslint-plugin-lit-ui-router' },
   ],
 };
 

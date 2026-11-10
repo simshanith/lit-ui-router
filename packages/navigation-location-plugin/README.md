@@ -169,11 +169,11 @@ router.transitionService.onSuccess({}, () => {
 });
 ```
 
-See [What else observes navigation](https://lit-ui-router.dev/packages/navigation-plugin#what-else-observes-navigation) for the full walkthrough.
+See [What else observes navigation](https://lit-ui-router.dev/packages/ui-router-navigation-location-plugin#what-else-observes-navigation) for the full walkthrough.
 
 ## Reaching Past the Router
 
-A `navigate` listener of the app's own is correct for a navigation the router does not own, such as a link that leaves the app while a draft is unsaved. On the router's own navigations it is a smell: guard those with transition hooks and do extra work through `intercept`. See [Reaching past the router](https://lit-ui-router.dev/packages/navigation-plugin#reaching-past-the-router) for when each applies, with a live example.
+A `navigate` listener of the app's own is correct for a navigation the router does not own, such as a link that leaves the app while a draft is unsaved. On the router's own navigations it is a smell: guard those with transition hooks and do extra work through `intercept`. See [Reaching past the router](https://lit-ui-router.dev/packages/ui-router-navigation-location-plugin#reaching-past-the-router) for when each applies, with a live example.
 
 ## API
 
@@ -300,7 +300,7 @@ For older browsers, consider using:
 
 ## Links
 
-- [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/navigation-plugin)
+- [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/ui-router-navigation-location-plugin)
 - [Docs - Location Plugins guide](https://lit-ui-router.dev/guides/location-plugins)
 - [MDN - Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
 - [Chrome for Developers - Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
