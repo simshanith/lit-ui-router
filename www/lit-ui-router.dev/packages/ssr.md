@@ -407,7 +407,7 @@ with no redirect rules.
 [`ui-router-server`'s prerender](/packages/server#emitting-a-static-site).
 The router builds its hrefs under its own `baseHref`, so build it with
 `installServerLocation(router, { baseHref: site.base })`; `prerender()`
-throws when the router's `baseHref()` lies outside `base`. A response state's handler gets a request for
+throws when a render settles the router where its links don't reach the page: `baseHref()` plus the router's url has to spell `base` plus the path. A response state's handler gets a request for
 the path under the base, and a redirect `renderShell` lands on gets the base
 once in its rules line. [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
 shows the setup.

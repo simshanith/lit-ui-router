@@ -3,7 +3,7 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import type { Verdict } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
-import type { ResponseHandlers } from 'ui-router-server/ssr';
+import { settle, type ResponseHandlers } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
 import { prerender } from '../prerender.js';
@@ -229,21 +229,60 @@ describe('prerender responses', () => {
     ]);
   });
 
-  it("throws when the router's baseHref lies outside the base", async () => {
-    await expect(
-      prerender({
-        mounts: { '/': { routes } },
-        router: serverRouter(),
-        base: '/solar/',
+  it.each([
+    { baseHref: undefined, linked: '/' },
+    { baseHref: '/solar/app/', linked: '/solar/app/' },
+  ])(
+    'throws when baseHref $baseHref links the page at $linked, not under the base',
+    async ({ baseHref, linked }) => {
+      const router = serverRouter(baseHref);
+
+      await expect(
+        prerender({
+          mounts: { '/': { routes } },
+          router,
+          base: '/solar/',
+          outDir: 'dist',
+          paths: ['/'],
+          renderShell: async (_verdict, { path }) => {
+            await settle(router, path);
+
+            return '';
+          },
+          write: () => {},
+        }),
+      ).rejects.toThrow(
+        `prerender: the router settled '/' at '${linked}', but the page is served at '/solar/'; build the router with installServerLocation(router, { baseHref: '/solar/' })`,
+      );
+    },
+  );
+
+  it.each([
+    { base: '/solar/', mount: '/', baseHref: '/solar/', at: 'path' },
+    { base: '/', mount: '/releases', baseHref: '/releases/', at: 'subpath' },
+    { base: '/', mount: '/releases', baseHref: undefined, at: 'path' },
+  ] as const)(
+    'renders under base $base, mount $mount, baseHref $baseHref, settled on the $at',
+    async ({ base, mount, baseHref, at }) => {
+      const router = serverRouter(baseHref);
+
+      const result = await prerender({
+        mounts: { [mount]: { routes } },
+        router,
+        base,
         outDir: 'dist',
-        paths: [],
-        renderShell: () => '',
+        paths: [mount === '/' ? '/' : `${mount}/`],
+        renderShell: async (_verdict, context) => {
+          await settle(router, context[at] || '/');
+
+          return '';
+        },
         write: () => {},
-      }),
-    ).rejects.toThrow(
-      /the router's baseHref '\/' lies outside base '\/solar\/'; build the router with installServerLocation\(router, \{ baseHref: site.base \}\)/,
-    );
-  });
+      });
+
+      expect(result.pages.map((page) => page.file)).toEqual(['index.html']);
+    },
+  );
 
   it('throws for a response state without responses', async () => {
     await expect(

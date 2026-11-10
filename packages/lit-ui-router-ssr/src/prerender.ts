@@ -60,17 +60,29 @@ interface NodeFsPromises {
   writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
-const slashed = (base: string): string =>
-  base.endsWith('/') ? base : `${base}/`;
+const trimmed = (path: string): string => path.replace(/\/+$/, '');
 
-// The router's hrefs carry its baseHref, so it must lie under the base the site is served at.
-const checkBaseHref = (router: UIRouterLit, base: string): void => {
-  const baseHref = slashed(router.urlService.config.baseHref());
+const pathOf = (url: string): string => url.replace(/[?#].*$/, '');
 
-  if (!baseHref.startsWith(slashed(base)))
-    throw new Error(
-      `prerender: the router's baseHref '${baseHref}' lies outside base '${base}'; build the router with installServerLocation(router, { baseHref: site.base })`,
-    );
+// The router's hrefs are its baseHref plus its url, so after a settle they must spell the page's served path.
+const checkSettled = (
+  router: UIRouterLit,
+  base: string,
+  path: string,
+): void => {
+  const url = pathOf(router.urlService.url());
+  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
+  const served = `${trimmed(base)}${pathOf(path)}`;
+
+  if (trimmed(linked) === trimmed(served)) return;
+
+  const suggested = served.endsWith(url)
+    ? `${trimmed(served.slice(0, served.length - url.length))}/`
+    : undefined;
+
+  throw new Error(
+    `prerender: the router settled '${path}' at '${linked}', but the page is served at '${served}'; build the router with installServerLocation(router, { baseHref: ${suggested === undefined ? 'site.base' : `'${suggested}'`} })`,
+  );
 };
 
 const dirOf = (file: string): string => {
@@ -276,7 +288,7 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when both `dehydrate` and `payload` are supplied
- * @throws an `Error` when the router's `baseHref()` lies outside `base`
+ * @throws an `Error` when a render settles the router where its links don't spell the page's served path: `baseHref()` plus its url, against `base` plus the path
  *
  * @example
  * ```ts
@@ -321,7 +333,6 @@ export async function prerender(
   } = options;
 
   const base = site.base ?? '/';
-  checkBaseHref(router, base);
 
   if (dehydrateOptions && payload)
     throw new Error(
@@ -398,6 +409,8 @@ export async function prerender(
     const redirect = redirectOf(verdict, before);
 
     if (redirect) return redirect;
+
+    if (lastLanded() !== before) checkSettled(router, base, context.path);
 
     const markup = isString(body) ? body : renderTemplate(body, context);
 

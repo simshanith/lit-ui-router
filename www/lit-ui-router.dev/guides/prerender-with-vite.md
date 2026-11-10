@@ -147,8 +147,9 @@ places name it:
 - `index.html` declares `<base href="%BASE_URL%">` in its `<head>`, which
   Vite fills in, so the browser router builds its hrefs under the base.
 - The prerender script builds its router with the base, so the server render
-  does too. `prerender()` throws when the router's `baseHref()` lies
-  outside `site.base`.
+  does too. `prerender()` throws when a page's router settles where its links
+  don't reach the page: `baseHref()` plus the router's url has to spell
+  `site.base` plus the path.
 - Nothing else: the plugin reads `base` from Vite's config.
 
 ```ts
