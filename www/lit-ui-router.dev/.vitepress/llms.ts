@@ -80,6 +80,9 @@ export function llmsSidebar(
   });
 }
 
+/** Page paths llms.txt leaves out: the members of each API reference, including a multi-entry reference's root module (`api/<pkg>/index.md`), which matches the same sidebar link as the package index (`api/<pkg>.md`). */
+export const LLMS_TXT_IGNORE = ['api/*/**'];
+
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.
 
 Install it with its peers, \`lit\` and \`@uirouter/core\`:
@@ -106,7 +109,7 @@ export function llmsPlugins(): Plugin[] {
       customTemplateVariables: { details: LLMS_DETAILS },
       ignoreFiles: [`${EXCLUDED_PAGE}.md`],
       // Member pages the sidebar filter drops would otherwise land under "Other".
-      ignoreFilesPerOutput: { llmsTxt: ['api/*/**', '!api/*/index.md'] },
+      ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
       sidebar: (sidebar) => {
         if (!Array.isArray(sidebar)) {
           throw new Error('llms: expected the themeConfig sidebar array');
