@@ -140,7 +140,7 @@ const LABEL_H = 92;        // lettering under the main row
 const CODEBASE = GROUPS.filter((g) => !g.atlas);
 const ATLAS = GROUPS.find((g) => g.atlas);
 const GAP_MIN = 8;         // screen px between two districts' slots
-const ZOOM_MIN = 0.8;      // the smallest fraction of sheet 7's ruler this sheet draws at
+const ZOOM_MIN = 0.7;      // the smallest fraction of sheet 7's ruler this sheet draws at
 // the main row, west to east
 const ROW = ['pkg', 'site', 'app', 'tool'].map((k) => CODEBASE.find((g) => g.key === k));
 // a district's slot: its frame, or its widest label line at 6.3 px a character where that is wider

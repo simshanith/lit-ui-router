@@ -270,9 +270,11 @@ try {
       probeMaterials(`${tag} test-light lane`, lit, 'light');
       await probePixel(page, `${tag} test-light, under member 1's pin`, p1.x, p1.y + 22, id === 'plant' ? crown : /^L-b1-cap$/, cityDress(pal, lit.M, 'light'), foot);
       const p34 = await pinAt(page, 34);
-      const shadow = await pixel(page, p34.x, p34.y + 14);
+      // samples down the cap: an edge line or a crown part over it is no reading of the face
+      const shadows = [];
+      for (const dy of [4, 6, 8, 10, 12, 14, 16, 18]) shadows.push(await pixel(page, p34.x, p34.y + dy));
       const paper = pal.paper.map(srgb);
-      check(lum(shadow) < lum(paper), `${tag} test-light: under member 34's pin, a shadow stands darker than the paper (${await materialAt(page, p34.x, p34.y + 14)})`, `${shadow} vs ${paper}`);
+      check(shadows.filter((px) => lum(px) < lum(paper)).length >= 2, `${tag} test-light: under member 34's pin, a shadow stands darker than the paper (${await materialAt(page, p34.x, p34.y + 14)})`, `${shadows.join(' · ')} vs ${paper}`);
       if (shots) {
         await page.evaluate(() => { for (const el of document.querySelectorAll('#cs-viewer [slot^="hotspot-"]')) el.style.visibility = ''; });
         for (const lane of ['tier', 'light']) {

@@ -38,12 +38,9 @@ const CITES = {
   '//#lint:actionlint': { mise: true, files: [] },
   '//#lint:markdown': { mise: true, files: ['.config/mise/tasks/rumdl'] },
   '//#lint:shellcheck': { mise: true, files: ['.config/mise/tasks/shellcheck'] },
-  '//#lint:templates': {
-    files: [
-      'tools/compat-guards/src/lit-analyzer-ts-guard.ts',
-      'tools/lit-template-lint/src/lint-templates.ts',
-    ],
-  },
+  '//#lint:doc-examples': { files: ['tools/doc-example-check/src/check.ts'] },
+  '//#lint:md-examples': { files: ['tools/md-content-mapper/src/check.ts'] },
+  '//#lint:templates': { files: ['tools/lit-template-lint/src/check.ts'] },
   '//#lint:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:zizmor': { mise: true, files: [] },
   '@tools/dts-backtest#test': { files: ['tools/dts-backtest/run.ts'] },
@@ -67,6 +64,8 @@ const BY_TASK = {
   'typecheck:mobx6': ['tools/compat-guards/src/mobx6-compat-guard.ts'],
   'test:effect3-compat': ['tools/compat-guards/src/effect3-compat-guard.ts'],
   'typecheck:effect3': ['tools/compat-guards/src/effect3-compat-guard.ts'],
+  'test:vite7-compat': ['tools/compat-guards/src/vite7-compat-guard.ts'],
+  'typecheck:vite7': ['tools/compat-guards/src/vite7-compat-guard.ts'],
 };
 
 // stdout is pure JSON; the banner goes to stderr.
@@ -111,7 +110,7 @@ function sccSloc(files) {
 // Binaries this repo did not write: they contribute only the script line.
 const EXTERNAL = new Set([
   'oxfmt', 'oxlint', 'tsc', 'eslint', 'vitest', 'node', 'vitepress', 'wrangler', 'typedoc',
-  'concurrently', 'cypress', 'vite', 'turbo', 'rimraf', 'cem', 'mkdir', 'mise',
+  'concurrently', 'playwright', 'vite', 'turbo', 'rimraf', 'cem', 'mkdir', 'mise',
   'start-server-and-test', 'api-extractor', 'taplo', 'rumdl', 'shellcheck', 'knip',
   'eslint-doc-generator', 'pnpm',
 ]);

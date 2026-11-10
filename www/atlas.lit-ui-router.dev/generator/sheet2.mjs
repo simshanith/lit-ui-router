@@ -181,7 +181,7 @@ const NAV = [0, 0, 128];       // 2 — over the LOCATION SEAT
 const MBX = [240, 40, 432];    // 3 — highest, over F '2,1': clear of the bridge's cap where it stands behind it
 const EFF = [160, 40, 380];    // 5 — overhangs brick 1's front edge by one stud, its flank clear of brick 7's fall
 const SIG = [200, 0, 400];     // 7 — between bricks 5 and 3, its front corner clear above its stud
-const UEF = [120, 200, 150];   // 8 — over stud C itself, under brick 2's lettering
+const UEF = [120, 200, 126];   // 8 — over stud C itself, its cap under brick 2's lettering
 const USG = [280, 120, 100];   // 9 — over stud E itself, lowest, clear of brick 1's drop
 const UMX = [240, 200, 120];   // 10 — the C rail's far seat, clear of every drop and leader
 const SSR = [280, -40, 340];   // 6 — its near end over brick 1, its far end over brick 4
@@ -230,12 +230,14 @@ ${brick(OX2, OY2, 0, 0, B(4).shape[0], B(4).shape[1], B(4).courses, { z0: srvZ0,
 // ---- the seated model: the same parts, on the plates ------------------------------------
 // The landscape has two levels: browser ground under the client plate, and a server
 // shelf under the headless plate. Brick 6 seats on brick 1's cap AND on brick 4's, so
-// the shelf stands exactly as many courses up as the caps need to meet, and the plate's
+// the level under the shorter brick stands exactly as many courses up as the caps need to meet, and the plate's
 // origin is the one plan point that puts stud H under the bridge.
 const P2 = [SSR_REACH[0] - B4_SEAT[0], SSR_REACH[1] - B4_SEAT[1]];
 const P2_UP = B(1).courses - B(4).courses;
-if (P2_UP < 1) throw new Error('sheet2: brick 4’s cap would stand above brick 1’s — the bridge cannot seat on both');
-const GROUND = CRS;   // the browser ground, one course of landscape under the client plate
+// each level is one course of landscape at least; the one under the shorter brick makes up the difference
+const GROUND = CRS * (1 + Math.max(0, -P2_UP));
+const SHELF = CRS * (1 + Math.max(0, P2_UP));
+if (GROUND + B(1).courses * CRS !== SHELF + B(4).courses * CRS) throw new Error('sheet2: brick 4’s cap and brick 1’s stand at different heights — the bridge cannot seat on both');
 // the one stud of a 1×1 plate brick, ringed: a brick on brick 1's cap peers it
 const PEER_RING = ['0,0'];
 const MODEL = [
@@ -249,7 +251,7 @@ const MODEL = [
   { id: 8, kind: 'brick', x: UEF[0], y: UEF[1], ws: B(8).shape[0], ds: B(8).shape[1], courses: B(8).courses, hue: B(8).hue, on: 'P1', rings: PEER_RING },
   { id: 9, kind: 'brick', x: USG[0], y: USG[1], ws: B(9).shape[0], ds: B(9).shape[1], courses: B(9).courses, hue: B(9).hue, on: 'P1', rings: PEER_RING },
   { id: 10, kind: 'brick', x: UMX[0], y: UMX[1], ws: B(10).shape[0], ds: B(10).shape[1], courses: B(10).courses, hue: B(10).hue, on: 'P1', rings: PEER_RING },
-  { id: 'G2', kind: 'ground', x: P2[0] - 20, y: P2[1] - 20, ws: 5, ds: 5, h: GROUND + P2_UP * CRS },
+  { id: 'G2', kind: 'ground', x: P2[0] - 20, y: P2[1] - 20, ws: 5, ds: 5, h: SHELF },
   { id: 'P2', kind: 'plate', x: P2[0], y: P2[1], ws: 4, ds: 4, on: 'G2', dash: '6 4', edge: 'sks', named: SRV_NAMED },
   { id: 4, kind: 'brick', x: P2[0], y: P2[1], ws: B(4).shape[0], ds: B(4).shape[1], courses: B(4).courses, hue: B(4).hue, on: 'P2', rings: ['0,3'] },
   { id: 6, kind: 'brick', x: SSR[0], y: SSR[1], ws: B(6).shape[1], ds: B(6).shape[0], courses: B(6).courses, hue: B(6).hue, on: 1 },
@@ -289,8 +291,8 @@ ${brick(OX, OY, MBX[0], MBX[1], B(3).shape[0], B(3).shape[1], B(3).courses, { z0
 
 // ---- parts callout (LEGO manual language, drafting-set lettering) --------------------
 const MU = 10, MC = 7, MRX = 3.7, MRY = 2.1, MSH = 2.4;
-function miniBrick(ox, oy, ws, ds, courses, dash = '', hue = null) {
-  const w = ws * MU, d = ds * MU, h = courses * MC;
+function miniBrick(ox, oy, ws, ds, courses, dash = '', hue = null, { mu = MU, mc = MC } = {}) {
+  const w = ws * mu, d = ds * mu, h = courses * mc, k = mu / MU;
   const q = (px, py, pz) => {
     const [sx, sy] = isoPt(ox, oy, px, py, pz);
     return `${sx.toFixed(1)},${sy.toFixed(1)}`;
@@ -303,32 +305,37 @@ function miniBrick(ox, oy, ws, ds, courses, dash = '', hue = null) {
   return `${face([q(0, d, h), q(w, d, h), q(w, d, 0), q(0, d, 0)].join(' '), cls, pa?.left ?? 'var(--paper-2)', { under: pa?.leftUnder, extra: da + (pa?.leftExtra ?? ''), more: stroke })}
 ${face([q(w, 0, h), q(w, d, h), q(w, d, 0), q(w, 0, 0)].join(' '), cls, pa?.right ?? `url(#${P}-hx)`, { under: pa?.rightUnder ?? 'var(--paper)', extra: da, more: stroke })}
 <polygon points="${[q(0, 0, h), q(w, 0, h), q(w, d, h), q(0, d, h)].join(' ')}" class="${cls} fp"${da}${sty(pa?.top && `fill:${pa.top}`, pa?.stroke && `stroke:${pa.stroke}`)}/>
-${Array.from({ length: ws * ds }, (_, k) => {
-  const [sx, sy] = isoPt(ox, oy, (Math.floor(k / ds) + 0.5) * MU, ((k % ds) + 0.5) * MU, h + MSH);
-  return `<path d="M${(sx - MRX).toFixed(1)},${sy.toFixed(1)} v${MSH} a${MRX},${MRY} 0 0 0 ${2 * MRX},0 v${-MSH} Z" class="${cls} fp2"${da}${studStyle(pa?.studWall)}/>
-<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="${MRX}" ry="${MRY}" class="${cls} fp2"${da}${studStyle(pa?.studTop)}/>`;
+${Array.from({ length: ws * ds }, (_, i) => {
+  const [sx, sy] = isoPt(ox, oy, (Math.floor(i / ds) + 0.5) * mu, ((i % ds) + 0.5) * mu, h + MSH * k);
+  const rx = +(MRX * k).toFixed(2), ry = +(MRY * k).toFixed(2), sh = +(MSH * k).toFixed(2);
+  return `<path d="M${(sx - rx).toFixed(1)},${sy.toFixed(1)} v${sh} a${rx},${ry} 0 0 0 ${2 * rx},0 v${-sh} Z" class="${cls} fp2"${da}${studStyle(pa?.studWall)}/>
+<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="${rx}" ry="${ry}" class="${cls} fp2"${da}${studStyle(pa?.studTop)}/>`;
 }).join('\n')}`;
 }
 
 const mouldOf = (b) => `${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`;
 
-// [brick, row y] — shape and courses come from the brick itself
-const PARTS = [[1, 126], [2, 168], [3, 200], [4, 242], [5, 280], [6, 320], [7, 356], [8, 388], [9, 414], [10, 440]];
-if (PARTS.length !== BRICKS.length) throw new Error('sheet2: the parts callout lists a row per brick');
-const partsBox = `<rect x="30" y="34" width="246" height="${PARTS.at(-1)[1] + 32 - 34}" class="skf fnone"/>
+// A row is as tall as its own brick, so no part stands over the row above it.
+const PARTS_MU = 8, PARTS_MC = 3, PARTS_ROW_MIN = 24, PARTS_GAP = 4, PARTS_TOP = 70, PARTS_FLOOR = 452;
+const PARTS = BRICKS.reduce((rows, b) => {
+  const above = b.courses * PARTS_MC + MSH + MRY, below = ((b.shape[0] + b.shape[1]) * PARTS_MU) / 2;
+  const top = rows.length ? rows.at(-1).bottom + PARTS_GAP : PARTS_TOP;
+  const h = Math.max(PARTS_ROW_MIN, above + below);
+  return [...rows, { b, oy: top + (h - above - below) / 2 + above, mid: top + h / 2, bottom: top + h }];
+}, []);
+const PARTS_BOTTOM = PARTS.at(-1).bottom + 8;
+const partsBox = `<rect x="30" y="34" width="246" height="${PARTS_BOTTOM - 34}" class="skf fnone"/>
 ${txt(44, 56, `PARTS — ${BRICKS.length} BRICKS, 2 PLATES`, 'lbls')}
 ${leader(30, 64, 276, 64)}
-${PARTS.map(([n, oy]) => {
-  const b = B(n);
-  return `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses, '', b.hue)}
-${badge(48, oy - 4, n)}
-${txt(120, oy - 6, b.disp, 'lbl')}
-${txt(120, oy + 6, `x1 · ${mouldOf(b)}`, 'lblf')}`;
-}).join('\n')}`;
+${PARTS.map(({ b, oy, mid }) => `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses, '', b.hue, { mu: PARTS_MU, mc: PARTS_MC })}
+${badge(48, mid - 4, b.n)}
+${txt(120, mid - 2, b.disp, 'lbl')}
+${txt(120, mid + 10, `x1 · ${mouldOf(b)}`, 'lblf')}`).join('\n')}`;
 
 // ---- spare parts: the same stud, not in this set --------------------------------------
 const SPARE = ['@uirouter/visualizer 7.2.1', '@uirouter/sticky-states 1.5.1', '@uirouter/dsr 1.2.0', '@uirouter/rx 1.0.0'];
 const SPY = 672;
+if (PARTS_BOTTOM > PARTS_FLOOR) throw new Error(`sheet2: the parts callout runs to ${PARTS_BOTTOM}, past its floor at ${PARTS_FLOOR}`);
 const spareBox = `<rect x="30" y="${SPY}" width="286" height="142" class="skf fnone" stroke-dasharray="5 4"/>
 ${txt(44, SPY + 22, 'SPARE PARTS — STUD A, NOT IN THIS SET', 'lbls')}
 ${[70, 130, 190, 250].map((x) => miniBrick(x, SPY + 52, 1, 1, 1, '3 2')).join('\n')}
@@ -430,12 +437,12 @@ ${txt(734, 670, 'STUDS C · E — on the plate itself', 'lbla')}
 ${txt(734, 682, 'carries J — RouterSignals.for()', 'lbla')}
 
 ${badge(744, 118, 6, 'ska fp', 'lbla')}
-<!-- lifted 3 px when ssr's brick grew to four courses (#1010, #1020) -->
-${txt(696, 51, `${B(6).name} ${B(6).ver}`, 'lblb')}
-${txt(696, 63, stats(B(6)), 'lblf')}
-${txt(696, 75, 'SEATS ON BRICK 1 — G · context-request', 'lbla')}
-${txt(696, 87, 'AND ON BRICK 4 — H · createServerRouter()', 'lbla')}
-${txt(696, 99, 'the bridge — a drop line onto each assembly', 'lblf')}
+<!-- east of the bridge's cap, over brick 4's -->
+${txt(812, 49, `${B(6).name} ${B(6).ver}`, 'lblb')}
+${txt(812, 61, stats(B(6)), 'lblf')}
+${txt(812, 73, 'SEATS ON BRICK 1 — G · context-request', 'lbla')}
+${txt(812, 85, 'AND ON BRICK 4 — H · createServerRouter()', 'lbla')}
+${txt(812, 97, 'the bridge — a drop line onto each assembly', 'lblf')}
 
 ${badge(974, 472, 4, 'ska fp', 'lbla')}
 ${txt(990, 476, `${B(4).name} ${B(4).ver}`, 'lblb')}
@@ -540,13 +547,15 @@ const wholes = WHOLES.map(({ fig, cap }, i) => {
   return `${fig.at(x, ROW2_BOTTOM - fig.h)}\n${lines(i ? 1352 : 48, ROW2_BOTTOM + 16, cap, 'lblf', i ? 'end' : 'start', 12)}`;
 }).join('\n');
 // the two grounds, lettered between the wholes
+const courseN = (n) => `${WORD[n]} course${n === 1 ? '' : 's'}`;
+const SHELF_STANDS = P2_UP > 0 ? `${courseN(P2_UP)} higher` : P2_UP < 0 ? `${courseN(-P2_UP)} lower` : 'level with it';
 const GX = 700;
 const grounds = `${txt(GX, ROW2_TOP + 60, 'TWO LEVELS OF GROUND', 'lbls', 'middle')}
-${txt(GX, ROW2_TOP + 80, 'the browser — the DOM, one course of', 'lblf', 'middle')}
+${txt(GX, ROW2_TOP + 80, `the browser — the DOM, ${WORD[GROUND / CRS]} course${GROUND === CRS ? '' : 's'} of`, 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 92, 'ground under the client plate', 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 112, `the server shelf — a request runtime with no DOM (node ${SRV_NODE};`, 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 124, 'Connect, Vite, fetch and Hono adapters), standing', 'lblf', 'middle')}
-${txt(GX, ROW2_TOP + 136, `${WORD[P2_UP]} courses higher, because brick 4’s cap must meet`, 'lblf', 'middle')}
+${txt(GX, ROW2_TOP + 136, `${SHELF_STANDS}, because brick 4’s cap must meet`, 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 148, `brick 1’s for brick ${BRIDGE} to seat on both`, 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 168, 'the headless plate is dashed on its shelf: an optional', 'lblf', 'middle')}
 ${txt(GX, ROW2_TOP + 180, 'peer, reached by lazy import — the ground is real', 'lblf', 'middle')}`;
@@ -676,7 +685,7 @@ ${finishedBand}
 </svg>`;
 
 export const sheet2 = {
-  num: 2, id: 'companions', rev: 'K',
+  num: 2, id: 'companions', rev: 'L',
   title: 'THE BRICK ASSEMBLY',
   sub: `ALTITUDE 2 — one baseplate, ${WORD[BRICKS.length]} bricks, ${TOT_F} authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · REV J 2026-10-24: ${REGISTRY.name} takes schedule row ${BRICKS.length + 1}, a compile-time part beside the lint plugin — types only, no stud, not drawn · source ${COUNTED}`,
   scale: `${WORD[BRICKS.length].toUpperCase()} PACKAGES`,
@@ -703,6 +712,6 @@ export const sheet2 = {
     keyRow('<rect x="4" y="4" width="40" height="11" class="sks fnone" stroke-dasharray="6 4"/>', 'a second plate — optional peer, reached by lazy import'),
     keyRow('<line x1="2" y1="9" x2="44" y2="9" class="skf" stroke-dasharray="5 4"/><circle cx="23" cy="9" r="6" class="skr fp"/><line x1="19" y1="13" x2="27" y2="5" class="skr"/>', 'no coupling — the server takes no stud on this plate'),
     keyRow('<polygon points="8,12 16,7 26,12 26,15 16,10 8,15" class="sks fp" stroke-dasharray="3 2"/>', 'spare part — same stud, not in this set (sheet 4)'),
-    keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — the browser, and a server shelf above the no-DOM line'),
+    keyRow('<polygon points="4,8 16,2 44,9 44,15 16,8 4,14" class="sk fp"/>', 'ground — the browser, and a server shelf across the no-DOM line'),
   ].join('\n'),
 };

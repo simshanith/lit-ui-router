@@ -94,10 +94,12 @@ const hashmapSeeds = () => {
 // than reported as hundreds of false orphans. `_headers` is a Cloudflare
 // deploy directive, read by the platform and never fetched. Orphan detection
 // is therefore a statement about HASHED BUILD OUTPUT.
-// absolute URLs (llms.txt, Link headers), crawlers and the worker's /releases pages address these, never a dist file
+// absolute URLs (llms.txt, Link headers), crawlers and the worker's /releases pages address these, never a dist file;
+// an example's own `_redirects` is a deploy directive for the example hosted alone
 const MIRROR = (f) => f.endsWith('.md') || /^llms(-full)?\.txt$/.test(f);
-const PLATFORM = new Set(['_headers', 'robots.txt', 'sitemap.xml', 'release-pages.css']);
-const SEEDED = (f) => f.startsWith('images/') || f.startsWith('static/') || f.startsWith('diagrams/') || MIRROR(f) || PLATFORM.has(f);
+const PLATFORM = new Set(['_headers', 'robots.txt', 'sitemap.xml', 'release-pages.css', 'release-diff.js']);
+const DIRECTIVE = (f) => /^examples\/[^/]+\/_redirects$/.test(f);
+const SEEDED = (f) => f.startsWith('images/') || f.startsWith('static/') || f.startsWith('diagrams/') || MIRROR(f) || PLATFORM.has(f) || DIRECTIVE(f);
 
 const bfs = (seeds) => {
   const seen = new Set(seeds);
@@ -131,17 +133,18 @@ const PATTERNS = [
   ['demo corpora', /^static\/data\/corpora\//],
   ['static data', /^static\/data\//],
   ['inter fonts', /^assets\/inter-[^/]+\.woff2$/],
-  ['images', /^images\/|^favicon\.ico$/],
+  ['images', /^images\/|^favicon\.ico$|^apple-touch-icon\.png$/],
   ['diagrams', /^diagrams\/[^/]+\.svg$/],
   ['examples', /^examples\//],
   ['html pages', /\.html$/],
   ['markdown pages', /\.md$|^llms(-full)?\.txt$/],
   ['site css', /\.css$/],
+  ['release diff', /^release-diff\.js$|^assets\/release-diff\//],
   ['vp framework', /^assets\/chunks\/|^assets\/app\.[\w-]+\.js$|^hashmap\.json$|^_headers$|^robots\.txt$|^sitemap\.xml$/],
   ['page chunks', /^assets\/[\w-]+\.md\.[\w-]+(\.lean)?\.js$/],
 ];
 const ORDER = [
-  'demo corpora', 'inter fonts', 'html pages', 'markdown pages', 'examples', 'page chunks', 'vp framework',
+  'demo corpora', 'inter fonts', 'html pages', 'markdown pages', 'examples', 'page chunks', 'vp framework', 'release diff',
   'images', 'diagrams', 'app: vanilla', 'app: mobx', 'app: effect', 'app: hash', 'app: signals', 'static data', 'site css',
   'orphans', 'unclassified',
 ];
@@ -191,7 +194,7 @@ writeData('census-shipped.json', {
   used: `git archive ${PINNED ? CABINET.ref : basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> ${SITE}/dist`,
   wasAssociatedWith: ['pnpm (mise-provisioned)', 'turbo', 'node:zlib gzip level 9'],
   measure: 'per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> effect -> hash -> signals',
-  seededTrees: ['images/', 'static/', 'diagrams/', '*.md', 'llms.txt', 'llms-full.txt', ...PLATFORM],
+  seededTrees: ['images/', 'static/', 'diagrams/', '*.md', 'llms.txt', 'llms-full.txt', ...PLATFORM, 'examples/*/_redirects'],
   totals,
   rows,
   orphans: orphans.map((f) => ({ file: f, raw: raw.get(f), gz: gz.get(f) })),

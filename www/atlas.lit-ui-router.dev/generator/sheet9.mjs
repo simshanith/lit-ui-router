@@ -11,6 +11,7 @@ const HOME = {
   plate: `${REPO}/blob/www/atlas/www/atlas.lit-ui-router.dev/data/census-shipped.json`,
   site: 'https://lit-ui-router.dev',
   siteDir: `${REPO}/tree/main/www/lit-ui-router.dev`,
+  releaseDiff: `${REPO}/blob/main/www/lit-ui-router.dev/worker/releases/release-diff.ts`,
   sampleApp: 'https://lit-ui-router.dev/sample-app',
   example: (name) => `https://lit-ui-router.dev/examples/${name}/`,
   inter: 'https://rsms.me/inter/',
@@ -22,7 +23,7 @@ const HOME = {
   modelViewer: 'https://modelviewer.dev',
 };
 // the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
-const OX = 480, OY = 716;
+const OX = 440, OY = 950;
 const VB_W = 1160;
 // callout pitch: an 11 px lbla line's box is 13.1 px tall, so 12 px stacks touch
 const CP = 14;
@@ -49,39 +50,40 @@ export const HT = (gz) => Math.max(8, gz / 4300);
 
 // Manual plan, grouped by role, tall districts in back. [name → x, y]
 const PLAN = {
-  'examples': [150, 30],
-  'images': [30, 120],
+  // the examples tower east and the images south of the vacant lot, so the whole lot shows between them
+  'examples': [162, 30],
+  'images': [24, 150],
   'static data': [175, 140],
-  // the site, re-laid at the 85e0ce5c refresh: the html tower at the back, the Markdown mirror east of it, the chunks in front
+  // the site: the html tower and the diff client along the back, the Markdown mirror in front of the client, the chunks in front of the tower
   'html pages': [324, 2],
-  // the mirror north off 20 at the b499e2a5 refresh, when its 304 pages reached the chunks' lot
-  'markdown pages': [524, 4],
-  'page chunks': [282, 204],
-  // the small towers in a row between the mirror and the apps' outline
-  'inter fonts': [560, 204],
-  'vp framework': [610, 204],
-  'diagrams': [660, 204],
-  'site css': [710, 204],
-  'app: vanilla': [560, 300],
-  'app: hash': [575, 398],
-  'app: mobx': [655, 345],
-  // the fourth shell, /app-effect (#721) — the lot east of vanilla, inside the group
-  'app: effect': [660, 295],
-  // the fifth shell, /app-signals: between vanilla and mobx, north of hash, inside the group
-  'app: signals': [612, 360],
+  'release diff': [540, 4],
+  'markdown pages': [588, 150],
+  // the chunks stand south-east of the demo payload, so their roof leaves the vacant lot in view
+  'page chunks': [290, 250],
+  // the small towers in a row in front of the mirror
+  'inter fonts': [600, 366],
+  'vp framework': [648, 366],
+  'diagrams': [688, 366],
+  'site css': [750, 366],
+  // the five shells, a group of their own in front of the chunks
+  'app: vanilla': [320, 570],
+  'app: hash': [335, 668],
+  'app: mobx': [415, 615],
+  'app: effect': [420, 565],
+  'app: signals': [372, 630],
 };
 
 // The demo corpora are not shipped; their footprint is drawn as a vacant lot so
 // the plan shows the gap. Files size the outline, as for every other district.
-const LOT = { name: 'demo corpora', x: 60, y: 10, files: 15, gz: 899000 };
+const LOT = { name: 'demo corpora', x: 30, y: 8, files: 15, gz: 899000 };
 
 // The role outlines, in drawing order; appendix A4 sums the deploy by these roles, so a district no role claims is a build error.
 export const ROLES = [
-  { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 230, 200], label: [40, OY - 55, 'start'],
+  { name: 'demo payload', role: 'demo payload — media · data', box: [20, 0, 236, 262], label: [40, OY - 55, 'start'],
     districts: ['examples', 'images', 'static data'] },
-  { name: 'the documentation site', role: 'the documentation site', box: [275, 0, 745, 285], label: [985, OY + 60, 'start'],
-    districts: ['html pages', 'markdown pages', 'inter fonts', 'vp framework', 'page chunks', 'diagrams', 'site css'] },
-  { name: 'the routed apps', role: 'the routed apps', box: [540, 290, 720, 450], label: [526, OY + 515, 'end'],
+  { name: 'the documentation site', role: 'the documentation site', box: [280, -4, 800, 550], label: [676, OY + 690, 'start'],
+    districts: ['html pages', 'markdown pages', 'inter fonts', 'vp framework', 'page chunks', 'release diff', 'diagrams', 'site css'] },
+  { name: 'the routed apps', role: 'the routed apps', box: [300, 560, 480, 720], label: [218, OY + 616, 'end'],
     districts: ['app: vanilla', 'app: hash', 'app: mobx', 'app: effect', 'app: signals'] },
 ];
 
@@ -118,7 +120,7 @@ ${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
 const bodies = depthSort(masses).map((m) => m.svg).join('\n') + '\n' + badges;
 
 // the role outlines' near corners are the plate's lowest points
-const VB_H = Math.ceil(Math.max(...ROLES.map(({ box: [, , x2, y2] }) => isoPt(OX, OY, x2, y2)[1]))) + 20;
+const VB_H = Math.ceil(Math.max(...ROLES.map(({ box: [, , x2, y2] }) => isoPt(OX, OY, x2, y2)[1]))) + 30;
 // every cap corner and badge stays inside the frame: a grown district cannot ship cut off
 for (const { name, x, y, s, h } of all) {
   const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
@@ -164,7 +166,7 @@ const APPS = all.filter((r) => r.name.startsWith('app:')).reduce((s, r) => s + r
 const APP_PCT = ((APPS / PLATE.totals.gzBytes) * 100).toFixed(1);
 const APP_N = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][all.filter((r) => r.name.startsWith('app:')).length];
 if (!APP_N) throw new Error('sheet 9: no number word for the routed apps — extend the list');
-const INTER = row('inter fonts'), PAGES = row('html pages'), MIRROR = row('markdown pages'), DIAGRAMS = row('diagrams');
+const INTER = row('inter fonts'), PAGES = row('html pages'), MIRROR = row('markdown pages'), DIAGRAMS = row('diagrams'), DIFF = row('release diff');
 const EXAMPLES = row('examples'), VANILLA = row('app: vanilla'), HASH = row('app: hash');
 // the examples' lead is read off the plate: the example that carries it and the chunk's unhashed name
 const LEAD = EXAMPLES.top;
@@ -187,21 +189,29 @@ const rank = (name) => {
 const ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
 const INTER_RANK = rank('inter fonts');
 const TALLER_THAN_INTER = RANKED.slice(0, INTER_RANK - 1).map((r) => r.name);
-if (TALLER_THAN_INTER.join() !== [PAGES.district, EXAMPLES.district].join()) throw new Error(`sheet 9: the notes say only the prose and the examples outrank the lettering, and the plate ranks [${TALLER_THAN_INTER}] above it`);
+// the districts above the lettering: the prose, then script districts only, the examples first among them
+const SCRIPT = ['examples', 'release diff', 'page chunks', 'vp framework'];
+const SCRIPT_ABOVE = TALLER_THAN_INTER.filter((n) => n !== PAGES.district);
+if (!ORD[INTER_RANK - 1] || SCRIPT_ABOVE[0] !== EXAMPLES.district || SCRIPT_ABOVE.some((n) => !SCRIPT.includes(n))) throw new Error(`sheet 9: the notes say only the prose and script districts, the examples first, outrank the lettering, and the plate ranks [${TALLER_THAN_INTER}] above it`);
+const PROSE_TYPE = PAGES.gz + MIRROR.gz + INTER.gz;
+if (PROSE_TYPE * 2 <= PLATE.totals.gzBytes) throw new Error('sheet 9: the notes call the deploy mostly prose and typography, and the plate weighs them under half');
+if (PLATE.orphans.length) throw new Error(`sheet 9: the notes say the deploy carries no unreachable file, and the plate lists ${PLATE.orphans.length}`);
+const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const RUNNER_GAP = RANKED[0].gz - RANKED[1].gz;
 if (RANKED[0].name !== PAGES.district) throw new Error(`sheet 9: the notes say the prose is the tallest district, and the plate ranks ${RANKED[0].name} first`);
 // the cover index's fit verdict, told from the plate's own ranking
 export const SHEET9_VERDICT = `the wire survey — the deploy's tallest district is ${RANKED[0].name} at ${KB(RANKED[0].gz)}, and the lettering alone outweighs every routed app the site exists to demonstrate (${KB(INTER.gz)} against ${KB(APPS)})`;
 
-// the apps callout lands mid-height on the effect app's +x face, the app nearest its lettering
-const EFFECT = all.find((r) => r.name === 'app: effect');
-const EFFECT_FACE = isoPt(OX, OY, EFFECT.x + EFFECT.s, EFFECT.y + EFFECT.s / 2, EFFECT.h / 2);
+// the apps callout lands mid-height on the +y face of the app nearest the eye, the one nearest its lettering
+const NEAR_APP = all.filter((r) => r.name.startsWith('app:')).reduce((a, r) => (r.x + r.y + 2 * r.s > a.x + a.y + 2 * a.s ? r : a));
+const NEAR_FACE = isoPt(OX, OY, NEAR_APP.x + NEAR_APP.s / 2, NEAR_APP.y + NEAR_APP.s, NEAR_APP.h / 2);
+const APPS_S = isoPt(OX, OY, ROLES[2].box[2], ROLES[2].box[3]);
 
 const SCHEDULE = schedule(
   'STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant',
   ['#', 'district', 'files', 'gzipped', 'largest tenant', 'tenant gzipped'],
   all.map((r) => [r.n, r.name, r.f, KB(r.gz), tenant(r.top.name), KB(r.top.gz)]),
-  `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`,
+  `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · ${PLATE.orphans.length} orphans · ${BASIS}`,
 );
 
 const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The three tallest towers are ${RANKED.slice(0, 3).map((r) => r.name).join(', ')}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry. The ${APP_N} routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A schedule below the drawing lists every district with exact counts and its largest tenant.">
@@ -211,29 +221,30 @@ ${outlines}
 
 ${bodies}
 
-${lines(150, OY - 85, [`a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'Beowulf and an RFC the site does not ship'], 'lbla', 'start', CP)}
-${leader(442, OY - 85 + CP, 502, OY + 43)}
-${lines(1120, OY + 510, [`all ${APP_N} apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'end', CP)}
-${leader(972, OY + 506, ...EFFECT_FACE)}
+${lines(110, OY - 85, [`a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'Beowulf and an RFC the site does not ship'], 'lbla', 'start', CP)}
+${leader(402, OY - 85 + CP, ...isoPt(OX, OY, LOT.x + SIDE(LOT.files) / 2, LOT.y + SIDE(LOT.files) / 2))}
+${lines(APPS_S[0] + 22, APPS_S[1] + 20, [`all ${APP_N} apps: ${KB(APPS)} —`, `${APP_PCT}% of the deploy they exist to demonstrate`], 'lbla', 'start', CP)}
+${leader(APPS_S[0] + 40, APPS_S[1] + 8, ...NEAR_FACE)}
 
 <!-- one short line at the frame's top-right corner, east of the html-pages cap -->
 ${txt(1120, 26, 'SCALE — 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
 </svg>`;
 
 export const sheet9 = {
-  num: 9, id: 'shipped', rev: 'I',
+  num: 9, id: 'shipped', rev: 'J',
   title: 'THE SHIPPED CITY',
   sub: `ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · ${fmt(PLATE.totals.files)} files in ${all.length} districts, ${MB(PLATE.totals.gzBytes)} on the wire, footprint from file count and height from gzipped bytes — ${BASIS}`,
   scale: 'ONE DEPLOY',
   form: 'SHIPPED CITY',
   svg,
   schedule: SCHEDULE,
-  caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are prerendered prose and font files, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
+  caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest tower is prerendered prose, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
   notes: `
 <p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-shipped.json</code></a> — ${BASIS}. The probe builds <code><a href="${HOME.siteDir}">www/lit-ui-router.dev</a>/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → effect → hash → signals), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
-<p><strong>The tallest building is the prose.</strong> The skyline is <a href="${HOME.site}">the site</a>'s ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with <code>${RANKED[1].name}</code> ${fmt(RUNNER_GAP)} bytes behind at ${KB(RANKED[1].gz)} — the prose outweighs the runner-up ${(PAGES.gz / RANKED[1].gz).toFixed(1)} to 1. <a href="${HOME.inter}">Inter</a>'s ${INTER.files} <code>woff2</code> faces stand ${ORD[INTER_RANK - 1]} at ${KB(INTER.gz)}: on the wire, this documentation site is still mostly prose and typography, and the one script district that outranks the lettering is the examples, led by a single galaxy. The prose ships twice: beside the HTML stands its Markdown mirror, ${MIRROR.files} files at ${KB(MIRROR.gz)} — a plain-text copy of every page plus <code>llms.txt</code> and <code>llms-full.txt</code>, the site's text for language models — and the ${DIAGRAMS.files} diagrams the pages inline also stand alone as public <code>.svg</code> files, ${KB(DIAGRAMS.gz)}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry.</p>
+<p><strong>The tallest building is the prose.</strong> The skyline is <a href="${HOME.site}">the site</a>'s ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with <code>${RANKED[1].name}</code> ${fmt(RUNNER_GAP)} bytes behind at ${KB(RANKED[1].gz)} — the prose outweighs the runner-up ${(PAGES.gz / RANKED[1].gz).toFixed(1)} to 1. <a href="${HOME.inter}">Inter</a>'s ${INTER.files} <code>woff2</code> faces stand ${ORD[INTER_RANK - 1]} at ${KB(INTER.gz)}: on the wire, this documentation site is still mostly prose and typography, and the script ${SCRIPT_ABOVE.length === 1 ? 'district that outranks' : 'districts that outrank'} the lettering ${SCRIPT_ABOVE.length === 1 ? 'is' : 'are'} ${listOf(SCRIPT_ABOVE.map((n) => (n === EXAMPLES.district ? 'the examples, led by a single galaxy' : `the ${n}`)).reverse())}. The prose ships twice: beside the HTML stands its Markdown mirror, ${MIRROR.files} files at ${KB(MIRROR.gz)} — a plain-text copy of every page plus <code>llms.txt</code> and <code>llms-full.txt</code>, the site's text for language models — and the ${DIAGRAMS.files} diagrams the pages inline also stand alone as public <code>.svg</code> files, ${KB(DIAGRAMS.gz)}. A vacant lot at the plan's edge is the demo corpora's footprint, which the deploy does not carry.</p>
 <p><strong>The product is a guest in its own city.</strong> The ${APP_N} routed <a href="${HOME.sampleApp}">sample apps</a> — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. First claim seats <a href="${HOME.visualizer}"><code>visualizer.esm</code></a> and the <a href="${HOME.manifest}">custom-elements manifest</a> in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)} while the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Two rules shape those numbers rather than the CDN: a <a href="${HOME.overrides}">scoped override</a> holds the <a href="${HOME.apiViewer}"><code>@api-viewer</code></a>/<a href="${HOME.litDialog}"><code>lit-dialog</code></a> stack to one lit major, so identical lit chunks hash identically <em>across</em> apps and part of mobx's download is chunks vanilla already ships; and the api-viewer docs panel, which renders only behind a feature flag, arrives in a lazy <code>api-docs</code> chunk rather than the eager main one. Same bytes on the CDN, fewer on the critical path.</p>
 <p><strong>There is no ghost district.</strong> The reachability walk follows the backtick-quoted asset URLs the app chunks build by hand, so the api-viewer custom-elements manifest is reachable after all, and the orphan list on this plate is <em>empty</em> — no hatched block stands here. Read that as a statement about the instrument as much as the deploy: an orphan count is only as good as the walk that produces it, and earlier walks over an accumulated local <code>dist/</code> reported orphans that were stale build output, not shipped weight. This census builds clean, into a materialized archive of the ref, and counts what a browser can reach.</p>
+<p><strong>The release pages bring a client of their own.</strong> The worker renders the release diff page and that page loads <a href="${HOME.releaseDiff}"><code>/release-diff.js</code></a> with the highlighter chunks behind it: ${DIFF.files} files, ${KB(DIFF.gz)}, ${ORD[rank('release diff') - 1]} on the skyline, addressed by the worker and by no page the build prerenders.</p>
 <p><strong>One example outweighs the router.</strong> The examples district — ${EXAMPLES.files} files, ${KB(EXAMPLES.gz)} — is led by the <a href="${HOME.example(LEAD_EXAMPLE)}"><code>${LEAD_EXAMPLE}</code></a> example's <a href="${HOME.modelViewer}"><code>${LEAD_CHUNK}</code></a> chunk at ${KB(LEAD.gz)} on its own, heavier than the vanilla, mobx and hash apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'site district — height = gzipped bytes'),

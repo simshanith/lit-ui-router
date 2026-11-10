@@ -16,7 +16,7 @@ if (!REF || REF.startsWith('--')) throw new Error('usage: node survey-shipped.mj
 // archive by its own npm scripts, every file weighed raw and at gzip level 9, districts by a pattern
 // table after a reachability walk from every page.
 const PATTERNS = [
-  ['routed pages', /^(?:index\.html|404\.html|(?:about|log|city|plant|bricks|builds|specimen)\/index\.html|sheet\/[^/]+\/index\.html)$/],
+  ['routed pages', /^(?:index\.html|404\.html|(?:about|log|city|plant|bricks|builds|specimen|colour)\/index\.html|sheet\/[^/]+\/index\.html)$/],
   ['bare plates', /^plate\/[^/]+\/index\.html$/],
   ['card pictures', /^thumbs\/[^/]+\.webp$/],
   ['the share card', /^brand\/card(?:-light|-dark)?\.(?:webp|png)$/],

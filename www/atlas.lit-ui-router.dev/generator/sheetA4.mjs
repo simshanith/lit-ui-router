@@ -67,7 +67,7 @@ const roleOf = (deploy, district) => (deploy === 'docs' ? ROLES : ATLAS_ROLES).f
 
 // ---- the city lots, back to front: the tallest stand at the back, and a district with no lot is a build error
 const DOCS_LOTS = [
-  ['html pages', 'markdown pages', 'examples', 'inter fonts'],
+  ['html pages', 'markdown pages', 'examples', 'release diff', 'inter fonts'],
   ['page chunks', 'images', 'vp framework', 'diagrams'],
   ['app: vanilla', 'app: signals', 'app: effect', 'app: mobx', 'app: hash', 'static data', 'site css'],
 ];
@@ -166,7 +166,7 @@ const HEAD = 104;          // the header band's foot
 const SEAM_W = 60;         // screen px across the seam between the two deploys
 const SLOT_MIN = 140;      // a role's lettering slot, screen px, where its block is narrower
 const GAP_MIN = 8;         // screen px between two slots
-const ZOOM_MIN = 0.8;      // the smallest fraction of sheet 9's ruler this sheet draws at
+const ZOOM_MIN = 0.7;      // the smallest fraction of sheet 9's ruler this sheet draws at
 const ROLE_ROW = GROUPS.filter((g) => g.kind === 'role');
 const CITY_ROW = GROUPS.filter((g) => g.kind === 'city');
 const west = (row) => row.filter((g) => g.deploy === 'docs');
@@ -357,7 +357,7 @@ const HOME = {
 };
 
 export const sheetA4 = {
-  num: 'A4', id: 'self-shipped', rev: 'D',
+  num: 'A4', id: 'self-shipped', rev: 'E',
   head: 'APPENDIX A4 · META',
   appendix: true,
   title: 'THE ATLAS, SHIPPED',

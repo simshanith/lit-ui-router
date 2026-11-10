@@ -482,15 +482,23 @@ function coreSpot(build, core, b, via, taken, skip) {
   if (via) fail(build, `brick ${b.n} finds no seam to straddle`);
   return seatSpot(core, [ws, ds], taken, onClient ? 0 : skip) ?? fail(build, `brick ${b.n} finds no room on ${CORE}`);
 }
+// the bricks a brick stands on, down to its seat
+const underOf = (build, b) => {
+  const under = [];
+  for (let on = b.on; on !== null; on = build.bricks.find((x) => x.n === on).on) under.push(on);
+  return under;
+};
 // core is the baseplate; a brick on it straddles the right-hand seam onto a flat runtime plate it peers when it is two studs
 // wide or more, and that plate abuts core under it
 function placeCore(build, kit, core, skip) {
   const straddleOf = (b) => (core.rt.plates === 1 && footprint(b)[0] >= 2 ? b.reach.find((r) => r.plates === 1) ?? null : null);
   const taken = [];
-  // the straddler first, then the bricks at sheet 2's places, then the packed ones lowest first, so a low brick takes the front
+  // the straddler first, then the bricks at sheet 2's places, then the packed ones tallest first: a tall brick has the fewest spots clear of what overhangs brick 1
   const placedOn = (b) => modelOf(b.n)?.on === 'P1';
-  for (const link of core.links.filter((l) => l.kind === 'seat').sort((a, c) => !!straddleOf(c.b) - !!straddleOf(a.b) || placedOn(c.b) - placedOn(a.b) || a.b.courses - c.b.courses || a.b.n - c.b.n)) {
-    const b = link.b, via = straddleOf(b), spot = coreSpot(build, core, b, via, taken, skip);
+  for (const link of core.links.filter((l) => l.kind === 'seat').sort((a, c) => !!straddleOf(c.b) - !!straddleOf(a.b) || placedOn(c.b) - placedOn(a.b) || c.b.courses - a.b.courses || a.b.n - c.b.n)) {
+    // a brick standing on another keeps the plan under it from any later brick taller than what it stands on
+    const b = link.b, via = straddleOf(b);
+    const spot = coreSpot(build, core, b, via, taken.filter((t) => t[4] === undefined || t[4] < b.courses), skip);
     taken.push([spot[0], spot[1], ...footprint(b)]);
     const part = kit.brickAt(b, spot[0] * U, spot[1] * U, core.z0 + core.h + LIFT);
     kit.seatOn(core, link, part);
@@ -502,6 +510,7 @@ function placeCore(build, kit, core, skip) {
       checkStraddle(build, core, p, part);
     }
     kit.standers(b);
+    for (const o of build.bricks.filter((x) => underOf(build, x).includes(b.n)).map((x) => build.parts_.get(x.n))) taken.push([Math.floor(o.x / U), Math.floor(o.y / U), o.ws, o.ds, underOf(build, build.bricks.find((x) => x.n === o.id)).reduce((sum, n) => sum + build.bricks.find((x) => x.n === n).courses, 0)]);
   }
 }
 // a plate's places against core, never behind it: a stack taller than core along its left or right side, a flat plate along
@@ -512,12 +521,6 @@ function edgeSpots(core, p, [ax, ay]) {
   const near = ([x, y]) => Math.hypot(x + p.w / 2 - ax, y + p.d / 2 - ay);
   return sides.sort((a, c) => a[1] - c[1]).flatMap(([e]) => (e === 'front' ? along(core.w, p.w).map((x) => [x, core.d]) : along(core.d, p.d).map((y) => [e === 'left' ? -p.w : core.w, y])).sort((a, c) => near(a) - near(c)));
 }
-// the bricks a brick stands on, down to its seat
-const underOf = (build, b) => {
-  const under = [];
-  for (let on = b.on; on !== null; on = build.bricks.find((x) => x.n === on).on) under.push(on);
-  return under;
-};
 // a brick's free top studs, each with its top point: none a brick stands on, and none another cord leaves from
 const topStuds = (build, part) => {
   const on = [...build.parts_.values()].filter((o) => build.bricks.find((x) => x.n === o.id)?.on === part.id), keys = [];
@@ -1049,7 +1052,7 @@ ${panels}
 </svg>`;
 
 export const sheet2c = {
-  num: '2C', id: 'companions-runtimes', rev: 'D',
+  num: '2C', id: 'companions-runtimes', rev: 'E',
   title: 'THE ALTERNATE BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of ${WORD[FAMILY.length]} family bricks at sheet 2’s mould and ${WORD[RUNTIMES.length]} runtimes as stacks of baseplates sized from one shipped build at the same scale, and the ${WORD[BUILT.length]} alternate models the repository’s own consumers build from it, and ${anOrd(MODELS.length)} the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ ${PEERS.sha}`,
   scale: SHEET2C_SCALE,

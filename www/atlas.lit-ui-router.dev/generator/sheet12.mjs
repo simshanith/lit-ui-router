@@ -43,9 +43,9 @@ const phantomPct = (p) => Math.round(((p.nodes - p.real) / p.nodes) * 100);
 // column order = pipeline stage, not fan; every fanned name in the plate must be placed here
 const COLS = [
   'transit', 'build:types', 'types:worker', 'build:js', 'build', 'docs:api',
-  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:worker', 'typecheck:lit2', 'typecheck:mobx6', 'typecheck:effect3',
+  'typecheck', 'typecheck:tsc', 'typecheck:src', 'typecheck:worker', 'typecheck:lit2', 'typecheck:mobx6', 'typecheck:effect3', 'typecheck:vite7',
   'lint', 'lint:oxlint', 'format:check', 'format:check:oxfmt',
-  'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'test:effect3-compat', 'check:bundle', 'check:dev-split',
+  'test', 'test:coverage', 'test:lit2-compat', 'test:mobx6-compat', 'test:effect3-compat', 'test:vite7-compat', 'check:bundle', 'check:dev-split',
   'ci:pull_request', 'ci',
 ];
 const FANNED = CI.names.filter((n) => n.nodes > 1).map((n) => n.name);
@@ -64,7 +64,7 @@ if ([...ALLP].sort().join() !== ['transit', ...UMBRELLAS, 'ci:pull_request', 'ci
 const UPPER = ['NO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN'];
 const LOWER = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen'];
 const PRODUCERS = LOWER[Object.values(CELLS).filter((c) => c['docs:api'] === 'r').length] ?? (() => { throw new Error('sheet 12: no word for the docs:api producer count — extend LOWER'); })();
-const STAGES = [[0, 0, 'GATHER'], [1, 5, 'EMIT'], [6, 16, 'CHECK'], [17, 23, 'PROVE'], [24, 25, 'ROLL-UP']];
+const STAGES = [[0, 0, 'GATHER'], [1, 5, 'EMIT'], [6, 17, 'CHECK'], [18, 25, 'PROVE'], [26, 27, 'ROLL-UP']];
 // each stage opens where the last closes, and the five cover every column
 if (STAGES.some(([a, b], i) => b < a || a !== (i ? STAGES[i - 1][1] + 1 : 0)) || STAGES.at(-1)[1] !== COLS.length - 1 || COLS[STAGES[1][0]] !== 'build:types' || COLS[STAGES[2][0]] !== 'typecheck' || COLS[STAGES[3][0]] !== 'test' || COLS[STAGES[4][0]] !== 'ci:pull_request')
   throw new Error(`sheet 12: STAGES [${STAGES.map(([a, b, l]) => `${l} ${a}–${b}`)}] do not tile the ${COLS.length} columns at build:types, typecheck, test and ci:pull_request`);
@@ -159,6 +159,7 @@ const UNCACHED = [
   ['lit-ui-router.dev#wrangler:dev', 'persistent server'],
   ['lit-ui-router.dev#docs', 'persistent server'],
   ['release#resolve:published', 'reads the LIVE registry'],
+  ['release-diffs.lit-ui-router.dev#test:npm-diff', 'LIVE registry'],
   ['workers-builds#check', 'reads the LIVE deploy API'],
   ['lit-ui-router.dev#check:embeds', 'reads the HOST'],
   ['sample-app-lit-e2e#test:e2e:a11y', 'reads the HOST'],
@@ -180,9 +181,9 @@ const LEDGER = [
 // ---------------------------------------------------------------------------
 const LX = 252;              // right edge of the row-label gutter
 // the pitch keeps the overlay frame west of the RX annotation column; the guard under ox() holds it
-const CX0 = 268, CP = 17;    // first column centre, column pitch
+const CX0 = 268, CP = 16;    // first column centre, column pitch
 const RP = 16;               // row pitch
-const CW = 15, CH = 10;      // card-hole size
+const CW = 14, CH = 10;      // card-hole size
 const RX = 810;              // right annotation column
 const cx = (i) => CX0 + i * CP;
 const OX0 = cx(COLS.length - 1) + 32; // overlay first column centre, clear of the plate
@@ -395,7 +396,7 @@ const HOME = {
 };
 
 export const sheet12 = {
-  num: 12, id: 'graph', rev: 'G',
+  num: 12, id: 'graph', rev: 'H',
   title: 'THE REGISTER PLATE',
   sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${BASIS}`,
   scale: 'PR CI GRAPH',

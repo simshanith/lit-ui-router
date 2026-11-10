@@ -45,7 +45,7 @@ const HOME = {
   v8: 'https://vitest.dev/guide/coverage',
   lcov: 'https://github.com/linux-test-project/lcov',
   happyDom: 'https://github.com/capricorn86/happy-dom',
-  cypress: 'https://www.cypress.io',
+  playwright: 'https://playwright.dev',
 };
 const fmt = (v) => (v == null ? '—' : v.toLocaleString('en-US'));
 const pct1 = (h, f) => (f ? ((h / f) * 100).toFixed(1) : '—');
@@ -131,7 +131,7 @@ function member(n) {
     return `${R(x, y, s, s, 'class="sk fp"')}${R(x, y, s, s, `fill="url(#${P}-sh)"`)}${R(x, y, s, s, 'class="sk fnone"')}`;
   }
   if (cat === 'e') {
-    // real light from the cypress rig, but no meter reads it — accent wash
+    // real light from the playwright rig, but no meter reads it — accent wash
     return `${cone}${R(x, y, s, s, 'class="sk fp"')}${R(x, y, s, s, `fill="url(#${P}-se)"`)}
 ${R(x, y, s, s, 'class="ska fnone" stroke-dasharray="5 4"')}`;
   }
@@ -167,7 +167,8 @@ function furniture(n) {
 <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="8.5" class="${t.badge}"/>
 ${txt(bx.toFixed(1), (by + 3.2).toFixed(1), String(n), t.num, 'middle')}`;
 }
-const BADGE_LIFT = {};
+// 40 stands under the release tower: its badge sits on its own north edge
+const BADGE_LIFT = { 40: -22 };
 // 16 stands under the release tower's south-west corner: its badge steps west of it
 const BADGE_DX = { 16: -9 };
 
@@ -245,12 +246,12 @@ const E_DEMOS = `${['no', 'one', 'two', 'three', 'four', 'five'][E_APPS.length -
 // prose only — every figure in the schedule is computed from the two plates
 const NOTE = {
   1: 'in shadow: barrels + interface.ts',
-  2: 'whole footprint fully lit',
+  2: SH.get(2).shadow?.join() === 'src/prerender-thread.ts' ? 'all but the prerender worker thread lit' : guardFail(2, 'only the prerender worker thread is in shadow'),
   3: SH.get(3).shadow?.join() === 'src/index.ts,src/router-store.ts' ? 'in shadow: the barrel and the router-store.ts re-export' : guardFail(3, 'the barrel and the router-store.ts re-export are in shadow'),
   4: NAV_FULL === 3 ? 'all three meters read 100' : `${['no', 'one', 'two'][NAV_FULL]} of three meters read 100`,
   5: 'tests pass · no provider in browser mode',
-  6: 'lit only by the cypress rig',
-  7: 'lit only by the cypress rig',
+  6: 'lit only by the playwright rig',
+  7: 'lit only by the playwright rig',
   8: 'route table lit (no functions to meter)',
   9: 'the rig itself — its sloc are support code',
   10: 'worker lit · the site sees only e2e light',
@@ -258,14 +259,14 @@ const NOTE = {
   12: 'cores lit, CLI wrappers in shadow',
   13: 'builds the API pages, tests nothing',
   14: 'no self-suite — it IS the d.ts test',
-  15: '3 wrappers in shadow, the cores lit',
+  15: SH.get(15).shadow?.join() === 'src/branch-ci-gate.ts,src/upload-bundle-stats.ts' ? 'the gate\'s core lit, both CLI wrappers in shadow' : guardFail(15, 'both CLI wrappers are in shadow and the gate\'s core is lit'),
   16: 'pale: exec.ts and workspace.ts',
   17: 'trigger wrapper in shadow',
   18: 'size probe, advisory · its cores lit',
   19: 'ranges.ts lit; the CI guards unmetered',
   20: 'the check lane, lit by its own suite',
   21: 'config only',
-  22: 'wrapper only',
+  22: SH.get(22).shadow?.length === 0 ? 'the template checker, lit wall to wall' : guardFail(22, 'lit wall to wall'),
   23: 'the spec helpers lit, the setup in shadow',
   24: 'wrapper only',
   25: 'rebase.ts lit · CLI wrapper in shadow',
@@ -294,8 +295,13 @@ const NOTE = {
   49: SH.get(49).shadow?.length === 0 && SH.get(49).litFiles === 2 ? 'private · both halves of the gate lit' : guardFail(49, 'both halves are lit'),
   50: SH.get(50).cat === 'n' ? 'types only, dark by design — its type tests run under typecheck' : guardFail(50, 'no test script'),
   51: SH.get(51).shadow?.length === 0 ? 'the ledger model and its fixtures, lit wall to wall' : guardFail(51, 'lit wall to wall'),
-  52: SH.get(52).cat === 'n' ? 'a 404 worker — no test script' : guardFail(52, 'no test script'),
+  52: SH.get(52).shadow?.length === 0 ? 'the diff worker, every file lit' : guardFail(52, 'every file is lit'),
   53: SH.get(53).shadow?.length === 0 ? 'the ledger worker, every file lit' : guardFail(53, 'every file is lit'),
+  54: SH.get(54).shadow?.length === 0 ? 'private · the status mirror, lit wall to wall' : guardFail(54, 'lit wall to wall'),
+  55: SH.get(55).shadow?.length && SH.get(55).shadow.every((f) => !f.endsWith('.core.ts')) ? `${SH.get(55).shadow.length} CLI wrappers in shadow, the cores lit` : guardFail(55, 'only CLI wrappers are in shadow'),
+  56: SH.get(56).shadow?.length === 0 ? 'private · the syntax, lit wall to wall' : guardFail(56, 'lit wall to wall'),
+  57: SH.get(57).shadow?.length === 0 ? 'the example checker, every file lit' : guardFail(57, 'every file is lit'),
+  58: `${SH.get(58).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
 };
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 // №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
@@ -320,9 +326,11 @@ const TOTAL_LINE = `TOTAL — ${T.metered} members metered: ${fmt(T.linesHit)} o
 const SCHEDULE = schedule('SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files',
   ['#', 'member', 'files lit', 'sloc lit', 'extent', 'L', 'B', 'F', 'note'], M.map(schedRow), TOTAL_LINE);
 // the figure ends 20 px under the lowest of the district edges, the yard's lettering and №12's callout
-const VH = Math.ceil(Math.max(...Object.values(EDGE).map((d) => d.y2), 899, C12.y.at(-1))) + 20;
+// the yard's lettering and №16's callout stand under the yard's south edge
+const YARD_Y = EDGE.tool.y2 + 18;
+const VH = Math.ceil(Math.max(...Object.values(EDGE).map((d) => d.y2), YARD_Y + 25, C12.y.at(-1))) + 20;
 
-const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, is lit by a canary spec pointed at happy-dom itself, which lights only the workaround it guards and leaves the rest in shadow. A shadow schedule below the drawing gives exact per-member figures.">
+const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Playwright host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, is lit by a canary spec pointed at happy-dom itself, which lights only the workaround it guards and leaves the rest in shadow. A shadow schedule below the drawing gives exact per-member figures.">
 ${defs(P)}
 <defs>
   <!-- shadow must darken in BOTH themes: a black wash (never ink, which is light
@@ -353,33 +361,35 @@ ${bodies}
 ${furn}
 
 <!-- district lettering + aggregates -->
-<!-- every line stops short of member 3, whose block and halo reach x 327 and y 334 at this ref -->
-${txt(140, 304, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(140, 316, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
-${txt(140, 328, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines, branches ${pct1(DP.branchesHit, DP.branches)}%`, 'lblf')}
-${txt(140, 340, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
-${leader(150, 292, 160, 282)}
+<!-- over the district's north edge: the district is full to its walls -->
+${txt(120, EDGE.pkg.y1 - 45, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(120, EDGE.pkg.y1 - 33, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
+${txt(120, EDGE.pkg.y1 - 21, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines, branches ${pct1(DP.branchesHit, DP.branches)}%`, 'lblf')}
+${txt(120, EDGE.pkg.y1 - 9, `bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
 
 <!-- over the district's north edge: the shopfront's north row leaves no air under it -->
 ${txt(1110, EDGE.app.y1 - 27, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1110, EDGE.app.y1 - 15, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · ${E_DEMOS} + the rig`, 'lblf', 'end')}
 ${txt(1110, EDGE.app.y1 - 3, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
-${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
-${txt(1146, 585, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit, the copies dark`, 'lblf')}
-${leader(1140, 569, EDGE.site.x2, 569)}
+<!-- east of the district's edge, under the №5 callout -->
+${txt(EDGE.site.x2 + 14, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(EDGE.site.x2 + 14, 573, 'the worker: fully lit —', 'lblf')}
+${txt(EDGE.site.x2 + 14, 585, `a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
+${txt(EDGE.site.x2 + 14, 597, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit,`, 'lblf')}
+${txt(EDGE.site.x2 + 14, 609, 'the copies dark', 'lblf')}
+${leader(EDGE.site.x2 + 8, 569, EDGE.site.x2, 569)}
 
-${txt(96, 874, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(96, 887, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
-${txt(96, 899, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
-${leader(140, 840, 152, 826)}
+<!-- under the district's south edge -->
+${txt(96, YARD_Y, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(96, YARD_Y + 13, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
+${txt(96, YARD_Y + 25, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
 
 <!-- callouts -->
-${txt(620, 82, `№1 lit-ui-router — ${pctS(g(1).r[12])} of the footprint lit, ${pctS(g(1).r[13])} bright`, 'lbla')}
-${txt(620, 94, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(1).r[11])} sloc — the barrels`, 'lblf')}
-${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
-${leader(612, 110, 305, 136)}
+${txt(620, 58, `№1 lit-ui-router — ${pctS(g(1).r[12])} of the footprint lit, ${pctS(g(1).r[13])} bright`, 'lbla')}
+${txt(620, 70, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(1).r[11])} sloc — the barrels`, 'lblf')}
+${txt(620, 82, 'and interface.ts, which is type declarations', 'lblf')}
+${leader(612, 78, X(g(1).ax + g(1).sa * 0.4), Y(g(1).ay + 20))}
 
 ${txt(1144, 349, '№5 sample-app-shared — an outline of light:', 'lbls')}
 ${txt(1144, 361, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
@@ -390,19 +400,19 @@ ${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lbl
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}
 ${txt(30, 454, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26).r[7]} sloc;`, 'lblf')}
 ${txt(30, 466, 'append.ts is lit from №1’s lamp instead', 'lblf')}
-${leader(250, 474, 272, 522)}
+${leader(250, 474, X(g(26).x) - 3, Y(g(26).y) - 3)}
 
 ${C12.lines.map(([s, cls], i) => txt(C12.x, C12.y[i], s, cls)).join('\n')}
 ${leader(C12.x - 6, C12.y[1] + 5, X(g(12).ax + g(12).sa), Y(g(12).ay + g(12).sa / 2))}
 
-${txt(700, 852, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lbls')}
-${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
-${leader(694, 850, 125, 772)}
+${txt(600, YARD_Y, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lbls')}
+${txt(600, YARD_Y + 13, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
+${leader(594, YARD_Y - 4, X(g(16).x + g(16).s / 2), +Y(g(16).y + g(16).s) + 2)}
 
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'I',
+  num: '7A', id: 'shadow', rev: 'J',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
@@ -414,7 +424,7 @@ export const sheet7a = {
 <p><strong>Method — one meter per member, nothing installed by hand, nothing left behind.</strong> Footprints, annexes and districts are sheet 7's own plate (<a href="${PLATES}/census-city.json"><code>census-city.json</code></a>); the light is <a href="${PLATES}/census-shadow.json"><code>census-shadow.json</code></a>, ${BASIS}, so meter and census read one tree at one ref. ${T.metered} of the ${M.length} members carry a meter. The probe never edits a repo file: members that declare <code>test:coverage</code> are metered by the tree's own unmodified <a href="${HOME.turbo}"><code>turbo run test:coverage</code></a>; <a href="${HOME.nodeTest}"><code>node:test</code></a> members by their own <code>test</code> script re-run with <code>--experimental-test-coverage</code> and the <a href="${HOME.lcov}">lcov</a> reporter; the <a href="${HOME.vitest}"><code>vitest</code></a> members by their own script with <a href="${HOME.v8}"><code>--coverage.enabled --coverage.provider=v8</code></a>. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and are never summed across meters in the drawing — only the schedule's grand total does, and says so. LIT means a source file the suite actually executed; extent is those files' sloc over the member's src sloc, both from the same ref. One honest wobble found by re-running the probe four times over: <code>node --test</code>'s branch <em>denominator</em> for №31 came back 213 on two runs and 215 on two more, with 191 hit either way — a 0.9-point swing on one member's branch figure and nothing else in the plate moved. Branch discovery under V8 is not perfectly repeatable, and this plate says so rather than pretending the last run is the only one.</p>
 <p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light.${DARK_PKG.map((r) => ` ${dirLink(PLACED.find((p) => p[0] === r[0])[2], `<code>${r[1]}</code>`)} stands dark for the same reason: it ships types only, has no test script, and its type tests run under <code>typecheck</code>, where no meter reads.`).join('')} This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at ${ANNEX_RANGE} their buildings turn out to buy near-total light.</p>
 <p><strong>The yard's habit: bright cores, dark wrappers.</strong> The instruments repeat one pattern — ${dirLink('tools/release', '<code>@tools/release</code>')}, ${dirLink('tools/build_and_test', '<code>build_and_test</code>')}, ${dirLink('tools/workers-builds', '<code>workers-builds</code>')}, ${dirLink('tools/lcov-rebase', '<code>lcov-rebase</code>')}: the <code>.core.ts</code> logic is lit and the command-line file in front of it is not. ${fmt(wrapperSloc)} sloc across ${wrapperFiles} files of process-edge code is never loaded by any suite, while the logic behind it meters ${pct1(DT.linesHit, DT.lines)}%. ${dirLink('tools/compat-guards', '<code>compat-guards</code>')} is the pattern at its extreme: only ${srcLink('tools/compat-guards/src/ranges.ts', '<code>ranges.ts</code>')} is unit-lit; its guard lanes run for real in CI, where no meter follows. ${dirLink('tools/happy-dom', '<code>@tools/happy-dom</code>')} splits its light: its spec is a conformance canary pointed at <a href="${HOME.happyDom}">happy-dom upstream</a>, and it lights the one workaround it guards, ${srcLink('tools/happy-dom/src/inner-html.ts', '<code>inner-html.ts</code>')}, while ${srcLink('tools/happy-dom/src/append.ts', '<code>append.ts</code>')} is lit only from ${dirLink('packages/lit-ui-router', '<code>lit-ui-router</code>')}'s lamp, as borrowed light.</p>
-<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the <a href="${HOME.cypress}">Cypress</a> host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. That judgement is the only one in the probe, and it is verified rather than assumed: the run throws if the rig has stopped being a Cypress suite. ${dirLink('apps/sample-app-shared', '<code>sample-app-shared</code>')} runs its unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed; its light is an outline, and the probe proves it by running the suite a second time without the meter. The members that are dark are dark because nothing tests them, and two of them (${dirLink('tools/dts-backtest', '<code>dts-backtest</code>')}, ${dirLink('tools/lit-test-env', '<code>lit-test-env</code>')}) spend their working lives inside other members' suites.</p>`,
+<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the <a href="${HOME.playwright}">Playwright</a> host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. That judgement is the only one in the probe, and it is verified rather than assumed: the run throws if the rig has stopped being a Playwright suite. ${dirLink('apps/sample-app-shared', '<code>sample-app-shared</code>')} runs its unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed; its light is an outline, and the probe proves it by running the suite a second time without the meter. The members that are dark are dark because nothing tests them, and two of them (${dirLink('tools/dts-backtest', '<code>dts-backtest</code>')}, ${dirLink('tools/lit-test-env', '<code>lit-test-env</code>')}) spend their working lives inside other members' suites.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member’s footprint — sheet 7’s census, plan view'),
     keyRow('<rect x="14" y="3" width="18" height="12" class="sks fhalo"/>', 'its spec annex — the LAMP: the light falls from the tests'),

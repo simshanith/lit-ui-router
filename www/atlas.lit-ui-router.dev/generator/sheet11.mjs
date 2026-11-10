@@ -87,6 +87,7 @@ const ORDER = [
   ['lit-ui-router-ssr', './client'],
   ['lit-ui-router-ssr', './register'],
   ['lit-ui-router-ssr', './testing'],
+  ['lit-ui-router-ssr', './vite'],
   ['ui-router-navigation-location-plugin', '.'],
   ['ui-router-server', '.'],
   ['ui-router-server', './redirects'],
@@ -121,8 +122,8 @@ const REG_X = 436, REG_Y = -260;
 // Manual plan: one quarter per package, tall doors in back. [pkg + door → x, y]
 const PLAN = {
   // set back from the plate's top edge: the bare door stands 234 px tall at this
-  // ref and its badge left the viewBox from [30, 15], then from [26, 46], then at 240 px from [26, 74]
-  'lit-ui-router|.': [26, 86],
+  // ref and its badge left the viewBox from [30, 15], then from [26, 46], then at 240 px from [26, 74], then at 248 px from [26, 86]
+  'lit-ui-router|.': [26, 100],
   'lit-ui-router|./pure': [98, 45],
   'lit-ui-router|./register': [185, 60],
   'lit-ui-router|./ui-router.register': [252, 92],
@@ -136,15 +137,16 @@ const PLAN = {
   'ui-router-signals|.': [178, 494],
   'ui-router-effect|.': [208, 596],
   'ui-router-mobx|.': [345, 520],
-  // four doors in the bridge quarter: the prerender index and client in back, the
+  // five doors in the bridge quarter: the prerender index, the client and the Vite plugin in back, the
   // served <ui-view> registration and the test counter in front
   'lit-ui-router-ssr|.': [592, 262],
   'lit-ui-router-ssr|./client': [632, 262],
   'lit-ui-router-ssr|./register': [652, 300],
   'lit-ui-router-ssr|./testing': [600, 300],
+  'lit-ui-router-ssr|./vite': [675, 262],
   'ui-router-navigation-location-plugin|.': [460, 370],
   'ui-router-server|.': [425, 15],
-  'ui-router-server|./redirects': [495, 40],
+  'ui-router-server|./redirects': [488, 40],
   'ui-router-server|./matcher': [565, 70],
   'ui-router-server|./hono': [640, 95],
   'ui-router-server|./fetch': [445, 120],
@@ -218,8 +220,9 @@ const SSR = at('lit-ui-router-ssr', '.');
 const SSR_CLIENT = at('lit-ui-router-ssr', './client');
 const SSR_REG = at('lit-ui-router-ssr', './register');
 const SSR_TEST = at('lit-ui-router-ssr', './testing');
+const SSR_VITE = at('lit-ui-router-ssr', './vite');
 const SSR_DOORS = all.filter((r) => r.pkg === 'lit-ui-router-ssr');
-if (SSR_DOORS.length !== 4) throw new Error(`sheet 11: the ssr paragraph tells four doors, and the plate carries ${SSR_DOORS.length}`);
+if (SSR_DOORS.length !== 5) throw new Error(`sheet 11: the ssr paragraph tells five doors, and the plate carries ${SSR_DOORS.length}`);
 const NAV = at('ui-router-navigation-location-plugin', '.');
 const LINT = at('eslint-plugin-lit-ui-router', '.');
 const REG = at('ui-router-registry', '.');
@@ -297,6 +300,7 @@ const NOTE = {
   'lit-ui-router-ssr|./client': 'the browser half — hydrateRoot',
   'lit-ui-router-ssr|./register': 'the served <ui-view>, registered',
   'lit-ui-router-ssr|./testing': 'counts the served elements a boot kept, for tests',
+  'lit-ui-router-ssr|./vite': 'the Vite plugin — the prerender worker set up for Lit',
   'ui-router-navigation-location-plugin|.': 'the whole plugin',
   'ui-router-server|.': `${SRV_GAP} gz shy of the flagship`,
   'ui-router-server|./redirects': 'redirect machinery',
@@ -331,7 +335,7 @@ const LINT_FACE = isoPt(OX, OY, LINT.x + LINT.s / 2, LINT.y + LINT.s, LINT.h * 0
 const HONO = at('ui-router-server', './hono');
 const HONO_FACE = isoPt(OX, OY, HONO.x + HONO.s, HONO.y + HONO.s / 2, HONO.h / 2);
 
-const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a ${word(SRV_DOORS.length)}-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect, ui-router-signals and ui-router-mobx stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds ${word(SSR_DOORS.length)} doors, its index, its client half, its register entry and its testing entry; a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, and a ${word(REG_DOORS.length)}-door quarter in the open ground north of the server storefront holds ui-router-registry, whose doors are empty emits drawn at the sheet's smallest lot; those ${word(COMPILED.length)} doors are the only ones on the sheet no browser ever loads. A schedule below the drawing lists every entry with exact byte counts.">
+const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a ${word(SRV_DOORS.length)}-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and signals companions, the navigation-location plugin, ui-router-effect, ui-router-signals and ui-router-mobx stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds ${word(SSR_DOORS.length)} doors, its index, its client half, its register entry, its testing entry and its Vite plugin; a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, and a ${word(REG_DOORS.length)}-door quarter in the open ground north of the server storefront holds ui-router-registry, whose doors are empty emits drawn at the sheet's smallest lot; those ${word(COMPILED.length)} doors are the only ones on the sheet no browser ever loads. A schedule below the drawing lists every entry with exact byte counts.">
 ${defs(P)}
 
 ${quarter(20, 0, 330, 200, `lit-ui-router — ${doorsOf('lit-ui-router')}`, 628, 222)}
@@ -340,7 +344,7 @@ ${quarter(0, 345, 110, 415, 'lit-ui-router-effect', 176, 445, 'end')}
 ${quarter(120, 290, 260, 380, 'lit-ui-router-mobx', 240, 478, 'end')}
 ${quarter(290, 240, 400, 320, 'eslint-plugin-lit-ui-router', 450, 528, 'end')}
 ${quarter(420, 350, 570, 440, 'navigation-location-plugin', 455, 700)}
-${quarter(580, 250, 700, 335, `lit-ui-router-ssr — ${doorsOf('lit-ui-router-ssr')}`, 694, 716)}
+${quarter(580, 250, 715, 335, `lit-ui-router-ssr — ${doorsOf('lit-ui-router-ssr')}`, 694, 733)}
 ${quarter(-170, 170, -90, 240, 'lit-ui-router-signals', 125, 288)}
 ${quarter(150, 470, 220, 530, 'ui-router-signals', 145, 540, 'end')}
 ${quarter(180, 570, 250, 630, 'ui-router-effect', 210, 614)}
@@ -374,7 +378,7 @@ ${PLATE.used.split(' + ').map((stage, i) => txt(1120, 40 + i * 14, i ? `+ ${stag
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'N',
+  num: 11, id: 'entries', rev: 'O',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
   scale: `${word(PKG_N).toUpperCase()} PACKAGES`,
@@ -386,7 +390,7 @@ export const sheet11 = {
 <p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the ${PKG_N} publishable packages bundled alone with <a href="${HOME.rolldown}">rolldown</a> — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to <a href="${HOME.codecov}">codecov</a>. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code> — ${BASIS}, probed as <code>${PLATE.used}</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>
 <p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./pure</code> differ by ${REG_COST} gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to ${fmt(ELEM_SUM)} gz while the umbrella <code>./register</code> is ${fmt(UMB.gz)}, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
 <p><strong>The server is a storefront, not a tower.</strong> ${word(SRV_DOORS.length).replace(/^./, (c) => c.toUpperCase())} doors: an index at ${fmt(SRV.gz)} gz, ${fmt(SRV_GAP)} under the client flagship; redirect and matcher wings at ${fmt(at('ui-router-server', './redirects').gz)} and ${fmt(at('ui-router-server', './matcher').gz)}; four framework adapters — <a href="${HOME.hono}">hono</a>, <a href="${HOME.fetch}">fetch</a>, <a href="${HOME.vite}">vite</a>, <a href="${HOME.connect}">connect</a> — packed within ${ADAPTER_SPREAD} bytes of one another, which is what thin skins over one core look like priced; and ${word(SMALL.length)} doors that barely register, ${SMALL.map((d, i) => `${i === SMALL.length - 1 ? 'and ' : ''}<code>${d.door}</code> at ${d.gz}${i ? '' : ' bytes'}`).join(SMALL.length > 2 ? ', ' : ' ')}, ${SMALL_TAIL}.</p>
-<p><strong>${Cap(word(TOLD.pair.length))} more quarters, and one of them sits between the other two.</strong> ${npmLink('lit-ui-router-effect')} enters at ${fmt(EFF.gz)} gz through its one door. ${npmLink('lit-ui-router-ssr')} has ${word(SSR_DOORS.length)}: the prerender index at ${fmt(SSR.gz)} gz, <code>./client</code> — the browser half that adopts a served render — at ${fmt(SSR_CLIENT.gz)}, <code>./register</code>, which defines <code>&lt;ui-router&gt;</code> and a served <code>&lt;ui-view&gt;</code> in place of <code>lit-ui-router/register</code>, at ${fmt(SSR_REG.gz)}, and <code>./testing</code>, which stamps the served elements before the boot and counts the ones it kept, at ${fmt(SSR_TEST.gz)}. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both ${npmLink('lit-ui-router')} and ${npmLink('ui-router-server')} (sheet 4 draws that bridge). npm serves it under <code>latest</code> at <code>${SSR_NPM.version}</code>, the version its <a href="${HOME.repo}/blob/main/packages/lit-ui-router-ssr/package.json"><code>package.json</code></a> carries at this ref.</p>
+<p><strong>${Cap(word(TOLD.pair.length))} more quarters, and one of them sits between the other two.</strong> ${npmLink('lit-ui-router-effect')} enters at ${fmt(EFF.gz)} gz through its one door. ${npmLink('lit-ui-router-ssr')} has ${word(SSR_DOORS.length)}: the prerender index at ${fmt(SSR.gz)} gz, <code>./client</code> — the browser half that adopts a served render — at ${fmt(SSR_CLIENT.gz)}, <code>./register</code>, which defines <code>&lt;ui-router&gt;</code> and a served <code>&lt;ui-view&gt;</code> in place of <code>lit-ui-router/register</code>, at ${fmt(SSR_REG.gz)}, <code>./testing</code>, which stamps the served elements before the boot and counts the ones it kept, at ${fmt(SSR_TEST.gz)}, and <code>./vite</code>, the server's Vite plugin with the prerender worker set up for Lit, at ${fmt(SSR_VITE.gz)}. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both ${npmLink('lit-ui-router')} and ${npmLink('ui-router-server')} (sheet 4 draws that bridge). npm serves it under <code>latest</code> at <code>${SSR_NPM.version}</code>, the version its <a href="${HOME.repo}/blob/main/packages/lit-ui-router-ssr/package.json"><code>package.json</code></a> carries at this ref.</p>
 <p><strong>${Cap(word(TOLD.alone.length))} more one-door quarters, the signals pair, the renderer-free effect ref and the mobx store.</strong> ${npmLink('lit-ui-router-signals')} binds the router to a Lit host at ${fmt(SIG.gz)} gz; ${npmLink('ui-router-signals')}, ${npmLink('ui-router-effect')} and ${npmLink('ui-router-mobx')}, the renderer-free halves that hold one hook per router, enter at ${fmt(USG.gz)}, ${fmt(UEF.gz)} and ${fmt(UMX.gz)} — each under the ${fmt(ELEM_GAP)}-byte element-door gap. npm serves them under <code>latest</code> at <code>${latest('lit-ui-router-signals')}</code>, <code>${latest('ui-router-signals')}</code>, <code>${latest('ui-router-effect')}</code> and <code>${latest('ui-router-mobx')}</code>, the versions their <code>package.json</code> files carry at this ref.</p>
 <p><strong>Plugins price like footnotes.</strong> The ${npmLink('lit-ui-router-mobx', 'mobx Lit binding')} enters at ${fmt(MOBX.gz)} gz and its store at ${fmt(UMX.gz)}, the ${npmLink('ui-router-navigation-location-plugin', 'navigation-location plugin')} at ${fmt(NAV.gz)} — each cheaper than the ${fmt(ELEM_GAP)}-byte gap between <code>./register</code> and its two element doors — and the effect and ssr index doors (${fmt(EFF.gz)} and ${fmt(SSR.gz)}) each cost under half the flagship's own <code>.</code> door at ${fmt(FLAG.gz)}. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's ${npmLink('@uirouter/core')}) is external here by design.</p>
 <p><strong>Door ${LINT.n} is not a door a browser opens.</strong> ${npmLink('eslint-plugin-lit-ui-router')} (<a href="${HOME.repo}/issues/676">#676</a>) is one of the family's ${word(COMPILED_PKGS.length)} non-runtime published packages, so its quarter is drawn but its number means something different: ${fmt(LINT.m)} minified, ${fmt(LINT.gz)} gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs ${LINT_SHARE}% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers <a href="${HOME.eslint}">ESLint</a> alone — oxlint loads it as a <a href="${HOME.jsPlugins}">JS plugin</a>, unpeered — never ${npmLink('@uirouter/core')} (sheet 2 leaves it off the plate for the same reason).</p>

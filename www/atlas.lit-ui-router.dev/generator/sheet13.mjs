@@ -65,92 +65,65 @@ const X = (x) => OX + K * x, Y = (y) => OY + K * y;
 
 // [n, name, plate member dir, district, x, y] — every number comes from the plates
 const PLACED = [
+  // sheet 7's lots; the yard and the shopfront stand 30 south of them and the release-diffs worker east of examples, so the
+  // lettering between the districts and the sheet's east edge both clear; 9 and 40 a step south, their badges clear of 45 and 12
   [1, 'lit-ui-router', 'packages/lit-ui-router', 'pkg', 0, 20],
-  // the packages district is recomposed here, not copied: sheet 7's lots for 3, 4,
-  // 31, 37 and 38 land under the reading box or on each other once the flagship's
-  // annex reaches 233.9 × 132.0. Row one: 2 on sheet 7's lot, 3 and 37 in the strip
-  // under its annex, which ends 5.4 short of the box. Row two, west to east: 31, 38,
-  // 4 — the plugin last, so its callout's leader drops straight to the lettering;
-  // nudged east off ssr's annex when #1010/#1020 grew it to 2,578 spec sloc, and
-  // south off the effect bindings' annex when it reached 340.4 at the 4dc0cbb7 refresh
-  // north off y 20 when its annex reached 108.4 at the eb1162da refresh
-  // east off 250 at the b499e2a5 refresh, when the flagship's annex reached its west wall
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 257, 6],
-  // east off 248 at the b499e2a5 refresh, with the server, off the flagship's annex
-  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 257, 104],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 362, 191],
-  [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
-  [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
-  [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
-  [8, 'sample-app-routes', 'apps/sample-app-routes', 'app', 700, 150],
-  [9, 'sample-app-lit-e2e', 'apps/sample-app-lit-e2e', 'app', 580, 150],
-  [10, 'docs', 'www/lit-ui-router.dev', 'site', 660, 340],
-  // south off 430 when docs reached 2,145 sloc at the 85e0ce5c refresh: its callout stands between docs' annex and this block
-  [11, 'examples', 'examples', 'site', 660, 452],
-  [12, '@tools/release', 'tools/release', 'tool', 20, 430],
-  [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 206, 430],
-  [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 350],
-  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 241, 430],
-  [16, '@tools/shared', 'tools/shared', 'tool', 20, 550],
-  [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 550],
-  [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 336, 550],
-  [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 550],
-  [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 230, 350],
-  [21, '@tools/release-config', 'tools/release-config', 'tool', 310, 350],
-  [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 368, 350],
-  [23, '@tools/lit-test-env', 'tools/lit-test-env', 'tool', 85, 350],
-  [24, '@tools/vue-check', 'tools/vue-check', 'tool', 460, 350],
-  [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 418, 350],
-  [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 163, 350],
-  [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 208, 350],
-  // nudged east with sheet 7, off bundle-probe's grown annex
-  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 408, 550],
-  [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
-  // --- the fifth published package (#676): row two's west lot ---------------------
-  // south off 149 at the b499e2a5 refresh, off the flagship's grown annex
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 16, 153],
-  // moved with sheet 7 when the hygiene block took the yard's east end
-  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 449, 462],
-  // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) — sheet 7's slots ---
-  [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 490, 350],
-  [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 530],
-  [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 449, 385],
-  // --- the effect pair, born 2026-09-11/12 (#721, #833): the app on sheet 7's slot,
-  //     the bindings in row one east of the mobx quarter ----------------------------
-  [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
-  // north off the CHURN key when its annex reached 340.4 at the 4dc0cbb7 refresh, and
-  // east of ssr's annex, which reaches 618.4 at the 3f55e419 refresh
-  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 358, 134],
-  // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
-  // south off 156 at the b499e2a5 refresh, off the flagship's grown annex
-  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 172, 174],
-  // --- born 2026-10-01 (#1056): sheet 7's lot -----------------------------------
-  [39, '@tools/crap', 'tools/crap', 'tool', 584, 430],
-  // --- born 2026-10-09 (#1143): sheet 7's lot -----------------------------------
-  [40, '@tools/oxlint-anti-slop', 'tools/oxlint-anti-slop', 'tool', 520, 575],
-  // --- born 2026-10-12/13 (#1185): the packages lots are this sheet's own, clear of the
-  //     reading box and both callouts; the bindings and the snapshot take the strip
-  //     under ssr's annex, the agnostic cores the north-east corner east of 2's annex ---
-  [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 184, 275],
-  // the agnostic cores and the private gate stand in one column east of 2's annex, which reaches 825.5 at the 3f55e419 refresh
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 488, 10],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 488, 90],
-  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 270, 263],
-  // --- sheet 7's lots -------------------------------------------------------------
-  [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 590, 100],
-  [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 472],
-  // the cores' column, under 42
-  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 488, 50],
-  // --- born 2026-10-15/16 (#1388, #1409): the tool on the yard's south edge, clear of the
-  //     winter-wall callout; the private gate at the foot of the cores' column ----------
-  [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 300, 640],
-  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 488, 120],
-  // --- born 2026-10-22/24: the registry east of the snapshot, clear of the plugin callout's leader;
-  //     the ledger model on the yard's south edge east of ci-logs; the two workers north of docs ---
-  [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 406, 232],
-  [51, '@tools/release-ledger', 'tools/release-ledger', 'tool', 400, 630],
-  [52, 'release-diffs', 'www/release-diffs.lit-ui-router.dev', 'site', 820, 280],
-  [53, 'release-ledger', 'www/release-ledger.lit-ui-router.dev', 'site', 660, 250],
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 266, 20],
+  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 30, 152],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 504, 246],
+  [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 640, 10],
+  [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 790, 10],
+  [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 790, 90],
+  [8, 'sample-app-routes', 'apps/sample-app-routes', 'app', 770, 150],
+  [9, 'sample-app-lit-e2e', 'apps/sample-app-lit-e2e', 'app', 650, 156],
+  [10, 'docs', 'www/lit-ui-router.dev', 'site', 680, 400],
+  [11, 'examples', 'examples', 'site', 680, 512],
+  [12, '@tools/release', 'tools/release', 'tool', 0, 482],
+  [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 486, 630],
+  [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 380],
+  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 208, 524],
+  [16, '@tools/shared', 'tools/shared', 'tool', 200, 633],
+  [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 580],
+  [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 336, 580],
+  [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 580],
+  [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 234, 380],
+  [21, '@tools/release-config', 'tools/release-config', 'tool', 316, 380],
+  [22, '@tools/lit-template-lint', 'tools/lit-template-lint', 'tool', 446, 380],
+  [23, '@tools/lit-test-env', 'tools/lit-test-env', 'tool', 85, 380],
+  [24, '@tools/vue-check', 'tools/vue-check', 'tool', 376, 380],
+  [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 180, 425],
+  [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 174, 380],
+  [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 214, 380],
+  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 408, 580],
+  [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 380],
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 346, 170],
+  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 476, 538],
+  [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 394, 380],
+  [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 582],
+  [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 440, 464],
+  [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 730, 100],
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 30, 200],
+  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 130, 178],
+  [39, '@tools/crap', 'tools/crap', 'tool', 560, 630],
+  [40, '@tools/oxlint-anti-slop', 'tools/oxlint-anti-slop', 'tool', 0, 592],
+  [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 504, 180],
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 528, -2],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 528, 92],
+  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 528, 122],
+  [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 660, 100],
+  [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 538],
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 528, 58],
+  [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 295, 633],
+  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 528, 27],
+  [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 436, 256],
+  [51, '@tools/release-ledger', 'tools/release-ledger', 'tool', 380, 620],
+  [52, 'release-diffs', 'www/release-diffs.lit-ui-router.dev', 'site', 842, 570],
+  [53, 'release-ledger', 'www/release-ledger.lit-ui-router.dev', 'site', 764, 282],
+  [54, '@repo/transition-status', 'packages/shared/transition-status', 'pkg', 528, 146],
+  [55, '@tools/turbo-summary', 'tools/turbo-summary', 'tool', 236, 430],
+  [56, 'postcss-lit-html', 'packages/postcss-lit-html', 'pkg', 346, 256],
+  [57, '@tools/doc-example-check', 'tools/doc-example-check', 'tool', 292, 524],
+  [58, '@tools/md-content-mapper', 'tools/md-content-mapper', 'tool', 366, 524],
 ];
 // every census member stands on a lot, so the totals and the blocks cannot disagree
 const UNPLACED = CITY.rows.filter((r) => !PLACED.some((p) => p[2] === r.member)).map((r) => r.member);
@@ -217,7 +190,8 @@ const g = (n) => geom.get(n);
 // this sheet keeps its own copy of the placements: assert its plots on their own
 assertPlots('sheet 13', D.flatMap(([n, name]) => plotsOf({ n, name, ...g(n) })));
 
-const BADGE_LIFT = { 2: 12, 6: 14, 21: 14, 23: 14, 24: 14, 27: 14 };
+// 16 and 48 stand close under 17 and its annex: their badges sit on their own north edges
+const BADGE_LIFT = { 2: 12, 6: 14, 16: -12, 21: 14, 23: 14, 24: 14, 27: 14, 48: -12 };
 const bodies = D.map((r) => {
   const [n, , , , , , , src, spec, , , , sealed] = r;
   const b = g(n);
@@ -307,7 +281,7 @@ const TOUCH = PLATE.months;
 const total = (mo) => (TOUCH[mo] ? TOUCH[mo].pkg + TOUCH[mo].app + TOUCH[mo].site + TOUCH[mo].tool : 0);
 // ROWH clears the tallest bar plus its value label — no bar climbs into the row above:
 // each scale is capped by the plate's own busiest month, and the four districts share one
-const TLX = 232, TLW = 82, TLY = 1262, ROWH = 56, BAR_MAX = ROWH - 22;
+const TLX = 232, TLW = 75, TLY = 1296, ROWH = 56, BAR_MAX = ROWH - 22;
 const DIST_PEAK = Math.max(...MONTHS.flatMap((mo) => ['pkg', 'app', 'site', 'tool'].map((k) => TOUCH[mo]?.[k] ?? 0)));
 const ALL_PEAK = Math.max(...MONTHS.map(total));
 const SC_ALL = Math.min(0.075, BAR_MAX / ALL_PEAK), SC_DIST = Math.min(0.19, BAR_MAX / DIST_PEAK);
@@ -381,9 +355,9 @@ const HOT_ORD = ['the hottest', 'the second-hottest', 'the third-hottest', 'the 
 const DOCS_HOT = HOT_ORD[MULTI.indexOf(10)];
 if (!DOCS_HOT) throw new Error(`sheet 13: the notes rank docs among the hottest multi-file block-averages, and the plate ranks it ${MULTI.indexOf(10) + 1} — extend HOT_ORD`);
 if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
-// the examples callout stands in the air north-east of its block, keyed to the block's top edge
+// the examples callout hangs under its block, below the district's frame
 const EXB = g(11);
-const EX_X = 1266, EX_Y = EXB.y - 20;
+const EX_X = EXB.x, EX_Y = EXB.y2 + 70;
 const EX_LINES = [
   [EX_Y - 26, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls'],
   [EX_Y - 12, `${NUMW[SEALED_VITE]} vite configs sealed ${days(SOLAR.last)} days,`, 'lblf'],
@@ -391,40 +365,47 @@ const EX_LINES = [
 ];
 // no bbox helper exists: each line's rect is estimated at 6.3 px per character, a margin over the data face
 const LINE_H = { lbls: 10.5, lblf: 10 };
-for (const [y, s, cls] of EX_LINES) {
-  const r = { x1: EX_X, y1: y - LINE_H[cls], x2: EX_X + s.length * 6.3, y2: y + 3 };
+// the docs callout stands inside the shopfront's frame, in the band between the ledger worker and docs
+const SITE_B = D.filter((r) => r[2] === 'site').map((r) => g(r[0]));
+const SITE_LEFT = Math.min(...SITE_B.map((b) => b.x)) - 18, SITE_TOP = Math.min(...SITE_B.map((b) => b.y1)) - 32;
+// the apps lettering hangs under its district's frame
+const APP_BOTTOM = Math.max(...D.filter((r) => r[2] === 'app').map((r) => g(r[0]).y2)) + 28;
+const DOC_X = SITE_LEFT + 6, DOC_Y = g(10).y - 54;
+const DOC_LINES = [
+  [DOC_Y, `.vitepress/config.ts ×${DCFG.touches}`, 'lblr'],
+  [DOC_Y + 14, 'the most-weathered wall in the city —', 'lblf'],
+  [DOC_Y + 26, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf'],
+];
+if (shortPath(DCFG.path, 'www/lit-ui-router.dev') !== '.vitepress/config.ts') throw new Error('sheet 13: the docs callout letters .vitepress/config.ts, and the plate names another wall');
+for (const [x, set, what] of [[EX_X, EX_LINES, 'examples'], [DOC_X, DOC_LINES, 'docs']]) for (const [y, s, cls] of set) {
+  const r = { x1: x, y1: y - (LINE_H[cls] ?? 10.5), x2: x + s.length * 6.3, y2: y + 3 };
   const hit = D.find(([n]) => { const b = g(n); return r.x1 < b.x2 && b.x < r.x2 && r.y1 < b.y2 && b.y1 < r.y2; });
-  if (hit) throw new Error(`sheet 13: the examples callout line "${s}" lands on №${hit[0]} ${hit[1]} — move EX_X/EX_Y`);
+  if (hit) throw new Error(`sheet 13: the ${what} callout line "${s}" lands on №${hit[0]} ${hit[1]} — move it`);
 }
-// the shopfront's lettering stands east of docs' annex, whichever reaches further
-const DX = Math.max(1250, Math.ceil(g(10).x2 + 8));
 const callouts = `
-${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
-${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
-${txt(60, 526, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
-${txt(60, 538, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
-${leader(58, 490, 56, 242)}
+${txt(60, 534, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
+${txt(60, 548, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
+${txt(60, 560, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
+${txt(60, 572, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
+${leader(58, 524, 56, 242)}
 
-${txt(DX, 700, `www/lit-ui-router.dev/.vitepress/config.ts ×${DCFG.touches}`, 'lblr')}
-${txt(DX, 714, 'the most-weathered wall in the city —', 'lblf')}
-${txt(DX, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
-${leader(DX - 4, 710, 1188, 702)}
+${DOC_LINES.map(([y, s, cls]) => txt(DOC_X, y, s, cls)).join('\n')}
+${leader(DOC_X + 2, DOC_Y + 31, g(10).x + 5, g(10).y - 2)}
 
 ${EX_LINES.map(([y, s, cls]) => txt(EX_X, y, s, cls)).join('\n')}
-${leader(EX_X - 4, EX_Y - 16, EXB.x + EXB.s * 0.4, EXB.y + 2)}
+${leader(EX_X + 60, EX_Y - 38, EXB.x + EXB.s * 0.4, EXB.y2 + 14)}
 
-${txt(584, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
-${txt(584, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
-${leader(580, 1080, 470, 1058)}
+${txt(g(13).x2, g(13).y2 + 26, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls', 'end')}
+${txt(g(13).x2, g(13).y2 + 40, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf', 'end')}
 
-${txt(60, 1078, `@tools/release — ${filesOf(row(12))} walls, every one summer-built`, 'lbl')}
-${txt(60, 1092, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
-${leader(130, 1064, 146, 1044)}
+${txt(60, g(12).y - 67, `@tools/release — ${filesOf(row(12))} walls, every one summer-built`, 'lbl')}
+${txt(60, g(12).y - 53, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
+${leader(150, g(12).y - 48, 166, g(12).y - 2)}
 
-${txt(545, 552, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
-${txt(545, 566, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
-${txt(545, 578, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
-${leader(549, 540, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
+${txt(g(4).x - 92, 620, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
+${txt(g(4).x - 92, 634, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
+${txt(g(4).x - 92, 646, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
+${leader(g(4).x + g(4).s / 2, 609, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
 
 // ---- assemble --------------------------------------------------------------------
 // the figure ends 20 px under the timeline's season lettering
@@ -451,15 +432,13 @@ ${txt(X(0), Y(20) - 54, 'packages/ — THE PRODUCT', 'lblb')}
 ${txt(X(0), Y(20) - 41, 'the only district with stone', 'lblf')}
 ${txt(X(0), Y(20) - 29, 'from all three seasons', 'lblf')}
 
-${txt(X(570) + 6, 436, 'apps/ — THE PROVING GROUND', 'lblb')}
-${txt(X(570) + 6, 448, 'port-born shell, summer-rebuilt interior', 'lblf')}
+${txt(X(640) - 14, APP_BOTTOM + 14, 'apps/ — THE PROVING GROUND', 'lblb')}
+${txt(X(640) - 14, APP_BOTTOM + 26, 'port-born shell, summer-rebuilt interior', 'lblf')}
 
-${txt(DX, 652, 'www/ + examples/ —', 'lblb')}
-${txt(DX, 666, 'THE SHOPFRONT', 'lblb')}
-${leader(DX - 4, 658, 1210, 668)}
+${txt(SITE_LEFT + 6, SITE_TOP - 7, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 
-${txt(60, 606, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(60, 620, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
+${txt(60, 652, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(60, 666, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
 
 ${timeline}
 </svg>`;
@@ -471,7 +450,7 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'J',
+  num: 13, id: 'weathering', rev: 'K',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',

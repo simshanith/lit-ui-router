@@ -124,6 +124,7 @@ The cover carries no `sub` line and no REV of its own. Its history lives in two 
 - 2026-11-03, the route status, no rev clause: the app is on `lit-ui-router-effect@0.7.0`, `ui-router-effect@0.3.0` and `ui-router-registry@0.4.0`, and the shell carries `<atlas-status>`, one `RefController` over `pendingRef` and `errorRef`: a slow fragment letters LOADING SHEET N… off the content's corner, a refused one letters SHEET N DID NOT LOAD with the reason and a TRY AGAIN link, and idle it renders nothing. `check-scenes.mjs` refuses sheet 7's fragment and reads the three states.
 - 2026-11-04, the prerender pins, no rev clause: the app is on `ui-router-server@0.8.1` and `lit-ui-router-ssr@0.8.1`, which flush the worker's output before the result and type `definePrerender`'s entry over the lit result, so `prerender.ts` loses its drain await and its pages cast. `SSR-VERDICT.md` records it.
 - 2026-11-09, the 0.9 pins, no rev clause: the app is on `ui-router-server@0.9.0`, `lit-ui-router-ssr@0.9.0` and `lit-ui-router@1.19.1` with no change to its source; the signature on each shell page lists the views it drew. `SSR-VERDICT.md` records it.
+- 2026-11-09, the twenty-seventh cabinet, no rev clause: the cabinet refreshed to origin/main @ 6ae72d27 ("Release 0.9.0", #1993, commit 2026-11-09), 145 commits past the twenty-sixth (3f55e419). Five members were born, so the members stand at 57, twelve of them published: №54 `@repo/transition-status` (#1793, private, 1 file / 30 sloc), №55 `@tools/turbo-summary` (#1840, split out of `@tools/build_and_test`, 10 files / 2,447 sloc), №56 `postcss-lit-html` (#1956, private and unpublished, 5 files / 454 sloc), №57 `@tools/doc-example-check` (#1769, 4 files / 537 sloc) and №58 `@tools/md-content-mapper` (#1663, 6 files / 424 sloc); none is on npm. `examples/hellosolarsystem-eleventy` (#1935) is a directory of the `examples` member and the twenty-first consumer in the cabinet's tree. npm's `latest` moved for ten: `lit-ui-router` 1.19.1, `lit-ui-router-effect` 0.7.0, `lit-ui-router-mobx` 1.5.0, `lit-ui-router-signals` 0.4.0, `lit-ui-router-ssr` 0.9.0, `ui-router-server` 0.9.0, `ui-router-registry` 0.4.0 and the three agnostic cores at 0.3.0. Four things on main went false under the probes and were re-read: the e2e rig runs Playwright where it ran Cypress, so `census-shadow.mjs`'s rig guard, the yard's instrument and the lettering on 3, 7 and 7A name Playwright; `lit-analyzer` left the tree and `@tools/lit-template-lint` is its own checker (8 files / 2,491 sloc), so `census-mass3b.mjs` cites `check.ts` for `//#lint:templates`, with rows for `//#lint:doc-examples`, `//#lint:md-examples` and the vite 7 guard; the docs deploy carries a release-diff client (`/release-diff.js` and 189 highlighter chunks, 1,181,286 gz) the walk filed, with an example's `_redirects`, as 191 orphans, so `census-shipped.mjs` seeds the script the worker addresses and files a `release diff` district, sixteen in all; and `census-nm.mjs` followed `ui-router-server`'s optional peers through the workspace member's own devDependencies, which with `vite` named a peer drew nineteen build-tool packages into one app's closure, so the walk follows required peers only and `hono` left the plate with them. `census-yard.mjs` throws on an orphan; `census-handoff.mjs` reads `tools/turbo-summary/mise.toml` as a fifth home; `census-upstream.mjs` reads `owner/repo` and `example/repo` as stand-ins, not citations; `census-document.mjs` passes an untracked recording under `apps/`; `survey-shipped.mjs` files `/colour/` with the routed pages; `census-loop.mjs` relocated 43 of 52 cites and re-texted one, `routed-view.ts:45`, whose assignment spans two lines. The chain: scc 1,568 tracked / 1,513 classified; city 548 / 52,033 src, 310 / 55,665 spec; yard 446 files / 39,300 sloc, orphans 0; doors 36 at 267,348 / 98,639 gz; bundle 127,022 gz in 18 chunks; deploy 2,160 files / 10,921,371 gz in 16 districts, 0 orphans; mass3b 363 real tasks, 27,828 hashes, 7,168 command sloc, the two DRIFT lines (`cf`, `stylelint`) as before; ci 1,482 / 363 / 6,386 edges; couplings 41 contracts, 27 drawn, 37 peers, 7 optional; loop 30 evidence lines over 52 cites in eight files; steam 908 commits; weather 858 dated files; 7A 32,767 of 33,951 lines lit (96.5%) over 43 metered members; nm 33 packages, 156,321 code / 36,990 d.ts; upstream 46 yards and 106 consignments, 16 sent; peers 10, `vite` 8.1.7 among them; consumers 21 in 10 builds (22 in 11 with the atlas app), 146 files / 14,738 sloc; 47 pins (55 with the atlas), two trailing, both the Eleventy example's `^0.8.1` on the server and the bridge; mise 64 tasks in 5 homes; survey-self 339 tracked and survey-shipped 308 files / 9,343,482 gz at www/atlas @ 9f8479c4. census-shadow passed on its first run. The guards that threw and their fixes are in each sheet's record: 2 (REV L), 2C (REV E), 2E (REV E), 2F (REV D), 3 (REV J), 3A (REV G), 3B (REV N), 4 (REV K), 7 (REV L), 7A (REV J), 7B (REV K), 8 (REV G), 9 (REV J), 11 (REV O), 12 (REV H), 13 (REV K), 14 (REV F), A3, A4 (REV E), and the city and the plant in the round. The app prerenders 75 pages + 404.html, the scoped router 76/76; check-scenes 114 checks hold, its shadow probe under member 34 reading eight samples down the cap where it read one; the frame audit reads escapes 0 · hits>1px 0 · text-on-text 129 over the set, the twelve above the twenty-sixth's 121 all on sheet 12, whose two vite 7 columns and 16-px pitch add slanted column heads over one another, with sheet 4's four gone; 37 card pictures re-shot × 2 themes · 4,118,866 bytes.
 - 2026-10-12, no rev clause (the cover narrates in prose only): the cabinet refreshed to origin/main @ eb72c568 (commit 2026-10-12), the seventeenth refresh, all 18 plates re-run at the one ref. Between bd10638a and the ref main took ten commits. They include the `lit-ui-router` 1.16.4 release (#1200), which follows the placeholder router's upgrade in the router directives (#1190), and the `ui-router-navigation-location-plugin` 1.1.0 release (#1201), which defaults `focusReset` to `'manual'` (#1162) and adds `interceptTraverse` (#1181). The examples moved to ^1.16.4 (#1203). NO member was born — 40 members, seven published — and no checklist table took a row; the yard reads `orphans 0`. The general survey holds at 920 tracked paths, 884 classified. The registry serves all seven releases under `latest` and no other tag: `lit-ui-router` 1.16.4 and the plugin 1.1.0, both published 2026-10-12 (was 1.16.3 and 1.0.2). The loop relocated 11 cites and re-texted 1. Three guards threw, and the frame audit stopped twice: the plugin's brick went from 1×1 to 1×2, and the flagship's and the plugin's annexes grew. Four plates re-filed without a figure moving: couplings (ranges only, versions re-lettered), handoff, mass3b and plate. The packages moved: city 29,173 sloc (was 29,023), spec 29,019 (was 28,535); the flagship 2,854 sloc (was 2,776), the plugin 208 (was 147); 7A's extent 12,648 of 20,178 (was 12,509 of 20,039); doors 186,158 min / 65,724 gz (was 182,512 / 65,108); the bundle 125,137 gz (was 124,625); shipped 32,064,856 raw / 5,028,259 gz (was 32,024,161 / 5,019,989); nm 174,690 lines (was 174,501). Steam reads 594 window commits (was 597): the window slid to 2026-07-14..2026-10-12 with the commit date. Weather reads 2,451 touches (was 2,434). The upstream plate holds at 81 consignments to 33 works, 14 sent, 67 watched, 76 tracked; only stars, downloads and three home-item states moved. The frame audit reads 0 viewBox escapes, 0 lettering-over-mass hits above 1 px and text-on-text 99 across 24 plates, the record. `build.mjs` exits 0. The app prerenders 61 pages plus the 404 with 52 redirects, and 62/62 renders are scoped. The 84 scene checks hold. Thumbs were re-shot for all 30 plates in both themes, 3,519,934 bytes. The T3 chain took 4 min 11 s.
 - 2026-10-11, no rev clause (the cover narrates in prose only): the cabinet refreshed to origin/main @ bd10638a (commit 2026-10-10), the sixteenth refresh, all 18 plates re-run at the one ref. Between 76ccefc0 and the ref main took one commit, #1196, which blends the docs site's hero logo in every browser: 2 files, `www/lit-ui-router.dev/.vitepress/theme/custom.css` and `index.ts`. NO member was born — 40 members, seven published — and no checklist table took a row; the yard reads `orphans 0`. The general survey holds at 920 tracked paths, 884 classified. The registry is unmoved, all seven releases under `latest` and no other tag; `census-npm.mjs` filed 0 leaf changes. Ten plates re-filed without a figure moving — bricks, bundle, couplings, doors, handoff, loop, mass3b, nm, plate and yard — and the loop's 52 cites hold, 0 relocated. The docs member moved: city 29,023 sloc (was 29,029), docs 751 (was 757); 7A's metered extent 12,509 of 20,039 (was 20,045); steam 597 window commits (was 596), the honest +1 now that the window opens at UTC midnight; weather 2,434 touches (was 2,433); shipped 32,024,161 raw / 5,019,989 gz (was 32,024,314 / 5,019,761). The upstream plate took the browser bugs the home record now cites: 81 consignments to 33 works (was 59 to 30), 14 sent, 67 watched, 76 tracked (was 11 / 48 / 55). The frame audit reads 0 viewBox escapes and 0 lettering-over-mass hits above 1 px, text-on-text 82 across 23 plates, sheet 14 included at 0 / 0 / 0. `build.mjs` exits 0, the app prerenders 33 pages plus the 404 with 26 redirects and 34/34 renders scoped, and the 84 scene checks hold. Thumbs re-shot for all 29 plates in both themes, 3,694,918 bytes. The T3 chain took 4 min 03 s.
 - 2026-10-11, later, no rev clause: the rail spells the client out. The user: "at this size i think i like it left aligned, maybe with an equation spelled out -- lit-ui-router.dev = ui-router + lit" and "in logos + links with title and/or alt". The rail head's first row is the equation in the docs site's own marks: the lit-ui-router logo over its flame, an equals sign, the UI-Router mark, a plus sign, the Lit flame, each logo a link with a title and an alt (lit-ui-router.dev, UI-Router, Lit) to the docs site, ui-router.github.io and lit.dev. The row is start-aligned; the operands are 1.5rem beside the 3rem mark, the operators in the data face. `generator/brand/ui-router.svg` joins the brand folder and `UIROUTER_URL` the generated module. The phone bar keeps the mark alone. A design review of the rail ran on the staged set before the commit, and its ranked list landed with it: the operators are set at the root size in the ink so the row reads as an equation; the mark carries no padding, so the operands and operators centre on the logo (the head's own padding takes the glow's overhang); the operands are sized by height, so the flame's letterbox no longer widens the plus's gap; the flame operand brightens in the dark; the row is a labelled group, "lit-ui-router.dev equals ui-router plus lit"; the sheets checkbox exists only in the phone layout, so it no longer takes the first tab stop or pops the collapsed rail open; the collapsed rail keeps the mark at 1.75rem in its strip and fades only the lettering; INDEX · ABOUT and the section kickers start on the entries' text edge; the phone bar's head inset is 16px like the list; the logo links give under the pointer. Left as the reviewer's optional items: an external-link cue on the logo links, larger coarse-pointer targets, and the head's air above the row.
@@ -262,7 +263,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## Sheet 2 — THE BRICK ASSEMBLY
 
-- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** K
+- **file** `diagrams/generator/sheet2.mjs` · **id** `companions` · **current rev** L
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 2 — one baseplate, six bricks, 51 authored files
@@ -351,9 +352,16 @@ resolved →
 
 > REV K 2026-10-28: the structure and stud schedules set as tables under the drawing, and the drawing ends at the finished band
 
+### REV L — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV L 2026-11-09: the bridge seats on both caps whichever stands taller: each level is one course of ground and the level under the shorter brick makes up the difference
+
 **Record notes**
 
 - 2026-10-30, no rev clause: the model in the round (`/bricks`) stands isometric: its `<model-viewer>` takes `fovAttrs` from `mv-kit.mjs`, a 3° field of view (was 14°) with the wheel’s limits at 1° and 4.5° (were 5° and 18°); the corners’ 88% radius is framed from the field, so the model fills the stage as before. The user: "the 3d models have lost their isometric perspective for a while now. even on the even 45 degree snaps, buildings bow outwards somewhat fisheye lens".
+- 2026-11-09, the twenty-seventh cabinet, REV L at origin/main @ 6ae72d27: `sheet2: brick 4’s cap would stand above brick 1’s` threw: `ui-router-server` 0.9.0 is 29 files / 3,756 sloc, 26 studs over ten courses, one course over `lit-ui-router`'s nine. The landscape had raised the server shelf by the difference and had no answer for a taller server; each level is one course at least, and the browser ground stands two courses so both caps meet, lettered off the plate ("one course lower"). `lit-ui-router-ssr` is 23 files / 1,917 sloc, 13 studs over eight courses, and its cap reached its lettering (four audit hits to 45 px): the block stands east of the cap at x 812. `ui-router-effect` took a second course and its cap met the plugin's red line by 5.2 px: brick 8 hovers at 126 (was 150). `bricks.glb` is re-cut. The parts callout had stood the ten-course server and the eight-course bridge over the rows above them, hiding bricks 3 and 5: each row is as tall as its own brick, drawn at an 8-unit stud and a 3-px course, and a guard throws when the callout passes its floor at 452.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays K), at origin/main @ 3f55e419: `ui-router-server` 0.7.1 is 21 files / 3,006 sloc, 21 studs over seven courses (was 18 studs), and `lit-ui-router-ssr` 0.7.0 is 18 files / 1,485 sloc, 10 studs over six courses (was 9 over five); every seat held and no guard threw. `bricks.glb` is re-cut with them.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays K), at origin/main @ 08ee3c27: `sheet 2C: build VI: brick 6 would sink into brick 1` threw: `lit-ui-router` 1.19.0 rose to nine courses (25 files / 3,262 sloc, 22 studs), so its cap at a z 144 hover reached 360, above the bridge's 340. Brick 1 hovers at z 120 (was 144), its cap at 336 as before, and a guard holds bricks 3, 5, 6 and 7 above that cap. The ninth course put brick 1's parts icon into the PARTS heading: the callout's rows drop 8 (brick 1 at 126, from 118). `ui-router-server` 0.6.0 is 21 files / 2,563 sloc, 18 studs, 7 courses (was 19 / 1,922, 13); `lit-ui-router-ssr` 0.6.0 is 15 files / 1,218 sloc, 9 studs, 5 courses (was 12 / 1,044, 7 and 4), and the server shelf stands two courses up. `bricks.glb` 609,032 bytes.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays K), at origin/main @ 8dfa5311: the bricks re-read at the new moulds and every seating guard held. `lit-ui-router` 1.18.0, 24 files / 3,180 sloc, 22 studs (was 3,127 and 21); `ui-router-server` 0.5.0, 19 files / 1,922 sloc, 13 studs, 7 courses (was 15 / 1,670, 12 and 5); `lit-ui-router-ssr` 0.5.0, 12 files / 1,044 sloc, 7 studs, 4 courses (was 13 / 1,127, 8 and 5); `ui-router-registry` 0.3.0 at 362 sloc, its 2×2 unchanged. `bricks.glb` 609,304 bytes.
@@ -561,7 +569,7 @@ No `sub` clause at this rev (the bench's `REV` is G too); its record is the 2026
 
 ## Sheet 2C — THE ALTERNATE BUILDS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet2c.mjs` · **id** `companions-runtimes` · **current rev** D
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet2c.mjs` · **id** `companions-runtimes` · **current rev** E
 - **basis** (source): `data/census-builds.json` in two readings (the cabinet's tree, and with the atlas app at www/atlas @ 7a3cf7c0), `data/census-peers.json`, `data/census-bricks.json` and `data/census-couplings.json` at origin/main @ 108456af
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -589,9 +597,16 @@ No `sub` clause; the sheet enters the set at rev A.
 
 > REV D 2026-10-29: a stack rings the full plate under its top where every top stud is ringed, so effect’s nineteen-plate stack carries two cords in builds III and XI
 
+### REV E — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV E 2026-11-09: the packed bricks seat tallest first, and a brick standing on another keeps the plan under it from any taller brick
+
 **Record notes**
 
 - 2026-10-30, no rev clause: the builds in the round (`/builds`) stand isometric: the `<model-viewer>` takes `fovAttrs` from `mv-kit.mjs`, a 3° field of view (was 14°) with the wheel’s limits at 1° and 4.5° (were 5° and 18°), the 88% radius framed from the field. The user: "the 3d models have lost their isometric perspective for a while now. even on the even 45 degree snaps, buildings bow outwards somewhat fisheye lens".
+- 2026-11-09, the twenty-seventh cabinet, REV E at origin/main @ 6ae72d27: in build XI the server brick, ten courses, stood under `lit-ui-router-effect`'s one-stud overhang off brick 1's nine-course cap: the two met in the seated model, which 2E's guard found (`brick 4 and brick 5 overlap in plan on one level`). A brick standing on another keeps its plan from any later brick taller than what it stands on, and the packed bricks seat tallest first, since the first rule alone seated brick 4 where it hid brick 12 from every cord. Brick 4 stands at 160, 80 and the registry at 80, 160 in build XI; the other ten builds are unmoved. `builds/the-atlas.glb` measured 118,580 bytes against 112 KiB; the budget is 120 KiB.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays D), at origin/main @ 3f55e419: the models follow sheet 2's re-studded server and ssr bricks: `ssr-server.glb`, `typed-effect.glb` and `the-atlas.glb` are re-cut; no seat moved and the census-builds counts are unchanged (10 builds, 11 with the atlas app).
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays D), at origin/main @ 08ee3c27: the models follow sheet 2's explosion with brick 1 at its lower hover; no seat moved and the census-builds counts are unchanged (10 builds, 11 with the atlas app).
 - 2026-10-29, the twenty-fourth cabinet, REV D at origin/main @ 8dfa5311: effect 4.1.0 ships one build of 572 files / 129,641 sloc, 865 studs: eighteen full baseplates and a 1×1 top, "19 plates · 18 of 8×6 + a 1×1" (was 4.0.7, 816 studs, 17 of 8×6). Build III threw `brick 8 has no pair of free studs whose cord to effect clears every brick and stack`: the 1×1 top holds one stud, brick 5's hanging cord rings it, and brick 8 found none. A stack's ring key counts from its top plate's corner; where every top stud is ringed, `plateStuds` offers the bare studs of the full plate under it, `ringOn` drops such a ring one plate, and `stack()` draws its ringed stud on the body's top; two guards hold a bare ring to a top whose studs are all ringed and count the bare studs drawn. Builds III and XI (THE ATLAS) ring D at `0,0` and at `0,-2` / `0,-3`. `builds-glb.mjs` stands the bare ringed stud on the body node; typed-effect.glb 62,608 B (was 64,312), the-atlas.glb 106,304 B (was 108,008), under the 112 KiB budget. The builds page's lead reads "studs on its top plate and one ringed stud per brick coupled to it, on the full plate under a top whose every stud is ringed". The census-builds counts are unchanged (10 builds, 11 with the atlas app); audit 0 / 0 / 0 on the sheet.
@@ -615,7 +630,7 @@ No `sub` clause; the sheet enters the set at rev A.
 
 ## Sheet 2E — THE CONSUMER BUILDS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet2e.mjs` · **id** `companions-consumers` · **current rev** D
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet2e.mjs` · **id** `companions-consumers` · **current rev** E
 - **basis** (source): `data/census-consumers.json` in two readings (the cabinet's tree, and with the atlas app at www/atlas @ 7ba404cb), `data/census-builds.json` and `data/census-bricks.json` at origin/main @ 108456af, and sheet 2C's `BUILD_MODELS`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -643,8 +658,15 @@ No `sub` clause; the sheet enters the set at rev A.
 
 > REV D 2026-10-28: the consumer schedule set as a table under the drawing, and the grid starts at the sheet’s corner
 
+### REV E — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV E 2026-11-09: twenty-two consumers: the Eleventy example joins the docs site on the ssr-server build, both over brick 4
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV E at origin/main @ 6ae72d27: `sheet 2E: the notes call lit-ui-router the hub its 20 consumers hover over` threw. `examples/hellosolarsystem-eleventy` is the twenty-second consumer, pinning `lit-ui-router`, `lit-ui-router-ssr` and `ui-router-server`, and the server is the heaviest part it pins, as it is the docs site's and the atlas app's since 0.9.0 passed the flagship (3,756 sloc against 3,303). The guard holds the hub to a majority of its pinners; the paragraph tells how many pin nothing heavier and names each consumer seated elsewhere with its reason. The overlap guard names the pair it finds.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays D), at origin/main @ 8dfa5311: consumers 20 in 10 builds, 134 files / 12,738 sloc / 94 studs (was 128 / 12,648); with the atlas app 21 in 11, 153 files / 17,456 sloc / 126 studs (was 147 / 17,362), the atlas app 19 files / 4,718 sloc (was 4,714). No seat moved.
 - 2026-10-28, the design pass, REV D: The user: "let's do the fixes" (the diagram-design review). The consumers box and the CONSUMER SCHEDULE leave the SVG, where every label sat under 5.5 px on screen, for one HTML table under the figure at 12 px in the data face: #, consumer, kind, authored files, sloc, studs, mould, build and a note carrying the consumer's directories, its pins, the part it drops onto and its cords, with the TOTAL line as before. The panels take the box's 390 px column and the SCALE band: the grid starts at x 20, y 20, the four columns and the seating unchanged, so the viewBox goes from 1988 × 2175 to 1598 × 1675 and the brick hues are no longer the only signal that reads. The SCALE and accent lines, which restated the key, are cut.
 
@@ -657,7 +679,7 @@ No `sub` clause; the sheet enters the set at rev A.
 
 ## Sheet 2F — THE PINNED BUILDS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet2f.mjs` · **id** `companions-pins` · **current rev** C
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet2f.mjs` · **id** `companions-pins` · **current rev** D
 - **basis** (source): `data/census-pins.json` in two readings (the cabinet's tree, and with the atlas app at www/atlas @ 2011c945), `data/census-builds.json` and `data/census-bricks.json` at origin/main @ eb1162da, sheet 2C's `BUILD_MODELS` and sheet 2E's `SHEET2E_TAGS`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -679,8 +701,15 @@ No `sub` clause; the sheet enters the set at rev A.
 
 > REV C 2026-10-28: the pin schedule set as a table under the drawing
 
+### REV D — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV D 2026-11-09: twenty-two consumers, two pins trailing: the Eleventy example holds the server and the bridge at ^0.8.1
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV D at origin/main @ 6ae72d27: the Eleventy example entered with three pins; its lockfile resolves `ui-router-server` and `lit-ui-router-ssr` at 0.8.1 against npm's 0.9.0, the sheet's two trailing pins. 47 pins in the tree, 55 with the atlas app, none ahead. No guard threw.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays C), at origin/main @ 8dfa5311: the pins follow npm's `latest`: `lit-ui-router` ^1.18.0, `ui-router-registry` ^0.3.0, `lit-ui-router-ssr` ^0.5.0, `ui-router-server` ^0.5.0. 44 pins (52 with the atlas), 18 from the tree, none trailing, none ahead, unchanged in count.
 - 2026-10-28, the design pass, REV C: The user: "let's do the fixes" (the diagram-design review). The PIN SCHEDULE leaves the SVG, where the figure set it at 6.8 px on screen, for an HTML table under the figure at 12 px in the data face: #, consumer, kind, directory, install, family pins, runtime, and overrides · patches, numbered as sheet 2E tags it, with the TOTAL line as before. The two SCALE lines, which restated the sub and the key, are cut and the panels start at y 20. The viewBox ends 20 px under the panels: 1480 × 2984 → 1480 × 2132.
 
@@ -690,7 +719,7 @@ No `sub` clause; the sheet enters the set at rev A.
 
 ## Sheet 3 — THE INSTRUMENT YARD
 
-- **file** `diagrams/generator/sheet3.mjs` · **id** `monorepo` · **current rev** I
+- **file** `diagrams/generator/sheet3.mjs` · **id** `monorepo` · **current rev** J
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers
@@ -765,8 +794,15 @@ resolved →
 
 > REV I 2026-10-28: the structure schedule set as a table under the drawing, the task-manager inset at the top right clear of block 1, and the gate-severity box gone — the key carries the tiers
 
+### REV J — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV J 2026-11-09: the anti-slop rules stand east of the fleet, south of row A, and the e2e structure reads Playwright
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV J at origin/main @ 6ae72d27: the yard read `orphans 20`: three tools were born, and the fleet took them (60 files / 8,536 sloc, was 47 / 5,313), lettered "templates · doc examples · axe · CI summary". The src slab grew to 129 files / 12,499 sloc, so the run to the build shed fell under its trims and the fleet met the slab: 2 moves x 244 → 258, 3 x 334 → 340, the fleet to 10, 207, and the anti-slop rules east of it to 162, 309, since south of it they left the sheet; row B steps east of them (12 → 266, 13 → 298, 15 → 322, 16 → 366) and readers 9 and 10 east of the slab (165 → 230, 215 → 276). Structure 17 is `e2e — playwright` (the rig left Cypress on main) and 8 letters its four compat lanes. The material's lettering lifts 30 off the fleet's roof (8.6 px).
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays I), at origin/main @ 3f55e419: `assertPlots` met the src slab (109 files / 10,708 sloc, was 106 / 9,998) against the lint & probe fleet by 5.0 units. Pushing 14 and 20 south ran 20 out of the yard by 6.9, so they hold at y 191 and 309 and the slab moves [50, 30.45] → [45, 24]: its leg to the build block had shrunk to 28.4 px against 31.2 of trims, and x 45 gives it back.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays I), at origin/main @ 08ee3c27: `assertPlots` met the src slab (106 files / 9,998 sloc, was 100 / 9,101) against the lint & probe fleet by 6.4 units: 14 moves y 184 → 191 and 20 y 304 → 309, inside the yard's air. The conveyor's first leg then threw `a leg of 29.0px cannot clear 31.225px of trims`: 1 moves x 55 → 50. The fleet reads 47 files / 5,313 sloc (was 50 / 5,427); the yard 411 files / 33,089 sloc.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays I), at origin/main @ 8dfa5311: `assertPlots` met the src slab (100 files / 9,101 sloc, was 97 / 8,839) against the lint & probe fleet by 1.1 units: 14 moves y 182 → 184. The yard reads 408 files / 32,306 sloc (was 392 / 31,667); dts-backtest 9 files / 619 lines (was 2 / 350), sample apps 84 / 4,502. The audit reads six slack touches of 0.2 px on the sample-apps lettering, under the 1 px gate.
@@ -808,7 +844,7 @@ resolved →
 
 ## Sheet 3A — THE HANDOFF WORKS
 
-- **file** `diagrams/generator/sheet3a.mjs` · **id** `handoff` · **current rev** F
+- **file** `diagrams/generator/sheet3a.mjs` · **id** `handoff` · **current rev** G
 - **basis** (source): `const BASIS = `counted at ${HANDOFF.ref} @ ${HANDOFF.sha} (${HANDOFF.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -870,8 +906,15 @@ resolved →
 
 > REV F 2026-10-28: the seam schedule set as a table under the drawing, and the title box and the one-line summaries gone
 
+### REV G — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV G 2026-11-09: five mise homes: tools/turbo-summary holds the four summary tasks, and tools/build_and_test its four
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV G at origin/main @ 6ae72d27: the plate read 60 tasks in four homes while `tools/turbo-summary/mise.toml` held four more (#1840): the probe reads it as a fifth home, 64 tasks. The build-and-test compartment lettered twelve names, eight of them gone, among them the dead `playwright_deps` the notes told; both compartments letter their plate's names and throw on any other, the aria counts each home off the plate, and the notes tell one curiosity. `deflake-e2e` stands seventh of the calling workflows, so door 1's run left its row through seam A's caption: the caption starts 22 under the run. The remaining compartments' lists and the file:line cites are as they were.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays F), at origin/main @ 8dfa5311: the handoff re-read: mise 65 tasks (was 63), 34 with arg specs (was 32); `.config/mise/tasks/*` 15 (was 13). Workflows (14, 55 call sites) and turbo (153 definitions) unchanged.
 - 2026-10-28, the design pass, REV F: The user: "let's do the fixes" (the diagram-design review). The SEAM SCHEDULE leaves the SVG and is set as an HTML table under the figure at 12 px: seam, crossing, count, what crosses, what the boundary buys, cite, with "—" where a row never stated a cell, and the TOTALS line unchanged. The in-figure title box ("PLATE 3A — THE SHEET-3 INSET, PROMOTED TO A FULL SHEET" and its two lines) is deleted, as the sheet title and sub say it; so are the EMPHASIS line, whose digits and doors the key carries, and THE MACHINE IN ONE LINE, whose counts the sub carries. READ LEFT TO RIGHT stays. The aria reads "a seam schedule below the drawing". viewBox 1400 × 998 → 1400 × 808, 20 px under the service doors' box (`VH = BAND_Y + 156`).
 
@@ -901,7 +944,7 @@ resolved →
 
 ## Sheet 3B — THE WATCHED CITY
 
-- **file** `diagrams/generator/sheet3b.mjs` · **id** `graphcity` · **current rev** M
+- **file** `diagrams/generator/sheet3b.mjs` · **id** `graphcity` · **current rev** N
 - **basis** (source): `const BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1013,8 +1056,15 @@ resolved →
 
 > REV M 2026-10-29: the root yard’s fifth slab is //#lint:css, one stylelint line on the shared surface; the custom-element lane runs inside the root oxlint task
 
+### REV N — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV N 2026-11-09: the root yard holds nine slabs, and the tower is //#lint:templates, standing at the yard's north-east corner
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV N at origin/main @ 6ae72d27: `sheet 3B: task //#lint:templates has no cite 1` threw, then the tower guard. `//#lint:templates` runs a 660-sloc `check.ts` over the 1,565-file root surface, the tallest command in the city (was `@tools/dts-backtest#test`); `//#lint:doc-examples` (283) and `//#lint:md-examples` (87) are structures 39 and 40, and `//#lint:package-json` watches the whole surface: nine equal slabs at a 49 pitch, the three tall ones along the north edge's east end. The origin drops 80 (`OY` 170 → 250) so the tower's roof stays in the frame, and the lettering rides it. `postcss-lit-html` (37) and `@repo/transition-status` (38) are the fifteenth and sixteenth quarters, in a second row with the private and the small quarters; the row re-spaces for the server's 44.3 side. The terrace holds 25 tools. The guard house names its tallest guard off the plate (`check-graph-edges.ts`, 131). 40 massed structures reconcile 363 real tasks, 27,828 hashes, 7,168 command sloc.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays M), at origin/main @ 3f55e419: the root glob grew to 1,350 files (was 1,341), so its slabs, 1.2 · √files a side, reached 44.1 and met at the 44 pitch: the root yard re-pitches to 46 (8 x 44 → 46, 13 x 88 → 92, 5 x 132 → 138, 10 x 176 → 184; 7 and 14 y 48 → 50, 14 x 104 → 106). `lit-ui-router-ssr`'s quarter grew into the signals binding's lot by 2.2, so quarters 30 to 35 step 4 east (30 x 456 → 460, 31 481 → 485, 32 499 → 503, 33 519 → 523, 34 529 → 533, 35 549 → 553). 332 real tasks, 21,118 hashes, 5,870 command sloc; the two DRIFT lines as before.
 - 2026-10-29, the twenty-fifth cabinet, REV M at origin/main @ 08ee3c27: `census-mass3b: CITES names tools/lint-elements/src/lint-elements.ts, absent at this ref` threw: #1662 deleted the script and `//#lint:elements` with it, and the CITES row is gone. Then `task //#lint:elements is missing from census-mass3b.json` threw on №5: it is `//#lint:css` at the same lot, "one stylelint line · the same 1,341-file surface", one of the seven equal slabs (derived). `@tools/lint-elements#test` joins the terrace through its package. `assertPlots` met the server quarter's grown block against №17 by 0.7 units: 17 moves x 353 → 355. 332 real tasks in 36 structures (was 331), 20,945 task-file hashes, 5,874 command sloc, 919 phantom plots. census-mass3b prints a second DRIFT, `//#lint:css: unrecognised executable stylelint`, beside `cf`.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays L), at origin/main @ 8dfa5311: the counts re-read at the ref; no block moved.
@@ -1054,7 +1104,7 @@ resolved →
 
 ## Sheet 4 — THE FAMILY SPINE
 
-- **file** `diagrams/generator/sheet4.mjs` · **id** `family` · **current rev** J
+- **file** `diagrams/generator/sheet4.mjs` · **id** `family` · **current rev** K
 - **subject line / lead** (resolved, present-state — not history):
 
 > ALTITUDE 4 — one core, four living adapters, four dormant instruments
@@ -1103,8 +1153,15 @@ No `sub` clause at this rev; its record is the 2026-10-15 line under Record note
 
 > REV J 2026-10-28: the structure schedule set as a table under the drawing
 
+### REV K — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV K 2026-11-09: the bay stands in three columns, the first as wide as the server's block
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV K at origin/main @ 6ae72d27: `sheet 4: the bay's column 1 runs past its floor at lit-ui-router-mobx` threw: the server is 29 files and the bridge 23, and the server's block, 165.5 px wide, had outgrown its 155-px column. Two columns could not hold the ten rows above the gate, so the bay stands in three (server and bridge; plugin, mobx pair, registry; effect and signals pairs), the first 205 wide; the sheet is 1555 wide (was 1350) and the rail and the provenance run with it. A block wider than its column throws.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays J), at origin/main @ 3f55e419: the bay's column 1 ran past its floor at `lit-ui-router-mobx`: `lit-ui-router-ssr` 0.7.0 is 18 files (was 15), and the column's last step reached 251.4 against `BAY_B` 250. The floor moves to 252; the last block's foot stands at 240.4. The spine re-read: `lit-ui-router-ssr` peers `ui-router-server` at `^0.7.0` and `lit-ui-router` at `^1.19.0`, and ssr 0.7.0 and the server 0.7.1 carry their versions. Contracts and bridges unchanged.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays J), at origin/main @ 08ee3c27: the spine re-read: `lit-ui-router-ssr` → `ui-router-server` is one `^0.6.0` leg, and lit-ui-router 1.19.0, ssr 0.6.0 and the server 0.6.0 carry their versions. Contracts and bridges unchanged.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays J), at origin/main @ 8dfa5311: the spine re-read: `lit-ui-router-ssr` → `ui-router-server` is one `^0.5.0` leg (was three), and lit-ui-router 1.18.0, ssr 0.5.0, the registry 0.3.0 and the server 0.5.0 carry their versions. Contracts and bridges unchanged.
@@ -1196,7 +1253,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## Sheet 7 — THE MEASURED CITY
 
-- **file** `diagrams/generator/sheet7.mjs` · **id** `census` · **current rev** K
+- **file** `diagrams/generator/sheet7.mjs` · **id** `census` · **current rev** L
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1274,8 +1331,15 @@ resolved →
 
 > REV K 2026-10-28: the structure schedule and the road register set as tables under the drawing, the title box and the gate-severity box gone, and every leader dashed with a landing dot
 
+### REV L — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV L 2026-11-09: fifty-seven members: the packages district recomposed around the grown annexes, the proving ground 50 east
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV L at origin/main @ 6ae72d27: `assertPlots` would have thrown on 21 pairs before any birth: the flagship's annex is 9,726 spec sloc, the server's 8,313 beside a 3,756-sloc block, the bridge's 6,370. The packages district is recomposed: the server at x 266; the three cores and the three private shared packages in one column east of its annex at x 528; the mobx and effect bindings under the flagship; the bridge at 130, 178; the eslint plugin at 346, 170 over №56 `postcss-lit-html` and the registry; the signals bindings and the plugin at the column's foot. The proving ground moves 50 east for the column, road F's trunk to x 615, road B's lane to 750. Docs is 30 files / 3,595 sloc and release-diffs a worker with tests (8 / 510, annex 701), so the ledger worker stands north of docs and release-diffs east of its annex. The yard: №55 `@tools/turbo-summary` (10 / 2,447, annex 2,820) on the lot build_and_test held, №57 and №58 beside the gate, `@tools/lit-template-lint` (8 / 2,491) at the 350 row's east end, repo-checks under it, the typedoc plugin and crap in the south-east corner, clear of the examples tower that had hidden crap. №54 `@repo/transition-status` stands at the foot of the private column. Road B reads "all twelve published packages and the private postcss-lit-html", off the plate's graph. Notes that went false and were re-read: №9 Playwright, №15 the gate and the upload, №22 the checker, №52 the diff worker. Road tags ride their roads. 548 authored files / 52,033 sloc plus 310 spec files / 55,665.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays K), at origin/main @ 3f55e419: `assertPlots` met the server's annex (spec 26 files / 6,856, reaching x 487.2) against №44 `@repo/route-snapshot`, then №50 `ui-router-registry`: 44 and 49 move x 476 → 490 and 44 y 88 → 91 off №47's annex, the registry y 125 → 133 under the server's annex, and №31 the eslint plugin y 170 → 176 so the registry clears its annex. A first try that set the registry east at x 491 left the packages and apps districts 3.6 units apart, under the 16-unit air.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays K), at origin/main @ 08ee3c27: `assertPlots` met the flagship's annex (spec 33 files / 9,354) against №2 `ui-router-server` by 1.1 units: 2 moves x 255 → 257. The server's annex (spec 25 / 6,056) then reached x 472.5 over №44 and №49: both move x 454 → 476, and 49 y 62 → 48, off №47. №28 `@tools/lint-elements` reads "the custom-element rules as an oxlint jsPlugins config the root extends", guarded on its zero source files; №34 `@tools/eslint` reads "the repo rule plugin, the complexity ceiling and the Actions formatter root eslint.config.ts composes". City 474 / 42,254 src, 248 / 44,913 spec.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays K), at origin/main @ 8dfa5311: `assertPlots` met `ui-router-server`'s annex (19 files / 1,922 sloc, spec 24 / 5,211; was 15 / 1,670 and 22 / 4,587), which reaches x 450.6, against №44 `@repo/route-snapshot` and №49 `@repo/dev-gate` at x 440: both move x 440 → 454. City 472 / 41,476 src, 238 / 42,569 spec (was 456 / 40,837 and 233 / 41,833); dts-backtest 9 files, sample-app-routes 7.
@@ -1324,7 +1388,7 @@ resolved →
 
 ## Sheet 7A — THE SHADOW SURVEY
 
-- **file** `diagrams/generator/sheet7a.mjs` · **id** `shadow` · **current rev** I
+- **file** `diagrams/generator/sheet7a.mjs` · **id** `shadow` · **current rev** J
 - **basis** (source): `const BASIS = `metered at ${SHADOW.ref} @ ${SHADOW.sha} (${SHADOW.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1402,8 +1466,15 @@ resolved →
 
 > REV I 2026-10-28: the shadow schedule set as a table under the drawing, the title box, the brightness ladder and the verdict box gone with the key carrying every band, and every leader dashed with a landing dot
 
+### REV J — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV J 2026-11-09: fifty-seven members under their lamps; the district lettering stands outside the walls it names
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV J at origin/main @ 6ae72d27: `sheet 7A: member 54 has no NOTE row` threw. 43 members metered (was 37); 32,767 of 33,951 lines lit, 96.5%. NOTE rows 54 to 58 are guarded against the plate, and five that went false are too: №2 (the prerender worker thread alone in shadow), №15 (the gate's core lit, both wrappers dark), №22 (lit wall to wall), №52 (every file lit), №6 and №7 (the Playwright rig). The lots follow sheet 7's, and the audit found 32 hits where the lettering had stood inside the districts: the packages lines stand over the north edge, the shopfront's east of its edge, the yard's and №16's under the south edge; №16's and №26's leaders end on their blocks, which they had left.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays I), at origin/main @ 3f55e419: 24,994 of 25,839 lines lit (96.7%; was 24,151 of 24,999); `lit-ui-router-ssr` 15 of 18 files, L 98.9, and `ui-router-server` 21 of 21, L 99.9. The lots follow sheet 7's.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays I), at origin/main @ 08ee3c27: 24,151 of 24,999 lines lit (96.6%; was 22,956 of 23,795); `lit-ui-router-ssr` 12 of 15 files, L 98. №28 reads "an oxlint config and its glob test — no source to light", guarded on category z; №34 reads "the Actions formatter lit · the repo rules and the complexity ceiling in shadow", guarded on its one lit file.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays I), at origin/main @ 8dfa5311: 22,956 of 23,795 lines lit (96.5%; was 22,388 of 23,227); `ui-router-server` 19 of 19 files lit, `sample-app-routes` 7 of 7. The FAIL lanes stay `sample-app-shared` and `@tools/repo-checks`.
@@ -1450,7 +1521,7 @@ resolved →
 
 ## Sheet 7B — THE WORKING CITY
 
-- **file** `diagrams/generator/sheet7b.mjs` · **id** `working` · **current rev** J
+- **file** `diagrams/generator/sheet7b.mjs` · **id** `working` · **current rev** K
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1560,8 +1631,15 @@ resolved →
 
 > REV J 2026-10-28: the plant schedule set as a table under the drawing with the telemetry printed in the key, the title box gone, and every leader dashed with a landing dot
 
+### REV K — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV K 2026-11-09: fifty-seven machines; the shopfront lettering sets flush right and the typedoc callout hangs under the yard
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV K at origin/main @ 6ae72d27: the plant follows sheet 7's lots. The shopfront's third line left the frame by 28 px: the three lines set flush right at 1540. The typedoc plugin's callout met its own plant, moved to the yard's south-east corner (16 hits): it hangs under the yard's south edge. The flagship callout lifts 26 off the release tower, 58 files tall. `plant.glb` is re-cut.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays J), at origin/main @ 3f55e419: the lots follow sheet 7's (№44 and №49 at x 490, №50 at y 133, №31 at y 176); no guard threw.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays J), at origin/main @ 08ee3c27: the lots follow sheet 7's. Badge 1 left the frame's top by 1.2 px: `OY` 96 → 98. The server's cap met the packages lettering's third line by 3.28 px: the three lines move x 794 → 802 and the leader's end 788 → 796. The plant row's bases reach y 648: the typedoc caption moves y 652 → 655. mass3b 332 real tasks, 20,945 hashes, 5,874 command sloc.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays J), at origin/main @ 8dfa5311: the working city re-read: mass3b 331 real tasks, 20,629 task-file hashes, 5,908 command sloc (was 20,168 and 5,781); the lots follow sheet 7's.
@@ -1605,7 +1683,7 @@ resolved →
 
 ## Sheet 8 — THE DELIVERED CITY
 
-- **file** `diagrams/generator/sheet8.mjs` · **id** `delivered` · **current rev** F
+- **file** `diagrams/generator/sheet8.mjs` · **id** `delivered` · **current rev** G
 - **basis** (source): `const BASIS = `measured at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)}), closure of ${PLATE.app}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1659,8 +1737,15 @@ resolved →
 
 > REV F 2026-10-28: the structure schedule set as a table under the drawing, and the leaders dashed with a landing dot
 
+### REV G — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV G 2026-11-09: the closure follows required peers only: hono leaves the city and escape-html enters it
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV G at origin/main @ 6ae72d27: `sheet 8: plate carries undrawn packages` threw on nineteen: `ui-router-server` 0.9.0 names `vite` an optional peer, and the probe followed it through the workspace member's own devDependencies into vite, rolldown, esbuild and their peers. An optional peer is never auto-installed, so the walk follows required peers; `hono`, which had stood here by the same path, leaves, and `escape-html`, the server's one registry dependency, enters. 33 packages, 156,321 lines of code / 36,990 d.ts (was 180,509 / 43,999). The paragraph that called hono the oddest building tells the server's dependency and names the optional peers left out, off `census-couplings.json`; lodash-es's rank derives. The 84-px badge lift that cleared hono's wall is gone.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays F), at origin/main @ 8dfa5311: nm 33 packages, 179,500 code / 43,147 d.ts lines (was 178,820 / 42,879): lit-ui-router 1.18.0, ui-router-server 0.5.0 (42 files), sample-app-routes 11 files.
 - 2026-10-28, the design pass, REV F: The user: "let's do the fixes" (the diagram-design review). The structure schedule leaves the drawing for a table under it: # · package · district · files · lines · d.ts lines, one row per building (34), the TOTAL line unchanged; the viewBox ends 20 px under the consumer district's near corner, 1160 × 1329 → 1160 × 815, and a throw keeps the app's callout above that foot. Both callout leaders go through `leader()` (dashed, a landing dot) on their computed ends. The one-lit callout steps down from accent to body, so accent holds two callouts. The SCALE line keeps only what the sub does not say: 1 px of height ≈ 250 lines (sheet 7: ≈ 34).
 
@@ -1688,7 +1773,7 @@ resolved →
 
 ## Sheet 9 — THE SHIPPED CITY
 
-- **file** `diagrams/generator/sheet9.mjs` · **id** `shipped` · **current rev** I
+- **file** `diagrams/generator/sheet9.mjs` · **id** `shipped` · **current rev** J
 - **basis** (source): `const BASIS = `measured at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.commitDate.slice(0, 10)}) · ${PLATE.wasGeneratedBy}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1768,8 +1853,15 @@ resolved →
 
 > REV I 2026-10-28: the district schedule set as a table under the drawing, the three leaderless callouts folded into the notes, and the leaders dashed with a landing dot
 
+### REV J — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV J 2026-11-09: sixteen districts: the release diff client stands in the site's back row, and the apps in front of the chunks
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV J at origin/main @ 6ae72d27: `sheet 9: district release diff has no PLAN placement` threw. The district is 190 files / 1,181,286 gz, third on the skyline. Html pages grew to 432 files / 4,553,636 gz, a 1,059-px tower, so `OY` 716 → 950; the page chunks are 842 files on a 290-unit lot. The plan is re-laid: the tower and the diff client along the back, the Markdown mirror in front of the client, the chunks at 290, 250 so their roof leaves the vacant lot in view, the examples at 162, 30 and the images at 24, 150 either side of the lot at 30, 8, which shows whole, the small towers in front of the mirror, the five shells in a group in front of the chunks. The lettering sentence had said only the examples outrank the fonts among script districts; it lists them off the plate (examples, release diff, page chunks), and the guards hold "mostly prose and typography" and the empty orphan list. 2,160 files / 10,921,371 gz.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays I), at origin/main @ 3f55e419: html pages grew to 389 files / 3,755,626 gz, the Markdown mirror to 378 files and the page chunks to 756. The mirror met the fonts row at y 200 and the chunks met the inter fonts: the fonts row moves y 200 → 204, the mirror [524, 10] → [524, 4], the chunks [290, 204] → [282, 204], and html pages [330, 10] → [324, 2] off both. Its cap then left the frame at y −63.4: `OY` 647 → 716. The photograph showed "the routed apps" touching the chunks' corner, which the audit does not flag: its lettering moves x 540 → 526. 1,771 files / 8,407,620 gz in 15 districts.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays I), at origin/main @ 08ee3c27: html pages grew to 364 files / 3,406,286 gz and its cap left the frame at y −76.2: `OY` 546 → 647. Its lot then met the Markdown mirror (353 files) and the page chunks (706 files): the mirror [520, 12] → [524, 10], the chunks [305, 194] → [290, 204], west of inter fonts, and the documentation site's outline x 290 → 275. The chunks' face covered "the routed apps": the label drops to `OY + 515`. The deploy reads 1,671 files / 7,971,884 gz (was 1,539 / 7,424,760).
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays I), at origin/main @ 8dfa5311: html pages grew to 331 files / 2,974,684 gz and its cap left the frame at y −16.8: `OY` 505 → 546. It then met page chunks (640 files / 634,011 gz) by 1.9 units, and the chunks met app: vanilla by 3.0: page chunks [310, 190] → [305, 194]. The deploy reads 1,539 files / 7,424,760 gz (was 1,474 / 7,162,208).
@@ -1892,7 +1984,7 @@ resolved →
 
 ## Sheet 11 — THE ENTRY QUARTERS
 
-- **file** `diagrams/generator/sheet11.mjs` · **id** `entries` · **current rev** N
+- **file** `diagrams/generator/sheet11.mjs` · **id** `entries` · **current rev** O
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.commitDate.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1978,8 +2070,15 @@ No `sub` clause at this rev; its record is the 2026-10-18 line under Record note
 
 > REV N 2026-10-30: door 13, lit-ui-router-ssr «./testing», stands in the bridge quarter’s front row, and the storefront paragraph names the doors that undercut its cheapest
 
+### REV O — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV O 2026-11-09: door 14, lit-ui-router-ssr «./vite», stands in the bridge quarter's back row
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV O at origin/main @ 6ae72d27: `census-doors.json carries 36 doors; sheet 11 places 35` threw. `lit-ui-router-ssr` 0.9.0 ships `./vite` at 6,743 / 3,207, the server's Vite plugin with the prerender worker set up for Lit: door 14 at [675, 262], the quarter's east edge 700 → 715, doors 14–35 renumbered 15–36. The flagship's bare door is 9,937 gz, 248 px, and its badge left the frame by 3.5: it stands at [26, 100]. `./redirects` steps x 495 → 488, its badge clear of the prerender tower's wall, and the bridge quarter's lettering hangs under its south corner at y 733 (was 716, where the grown quarter's edge ran through it). 36 doors at 267,348 / 98,639 gz.
 - 2026-10-30, the twenty-sixth cabinet, REV N at origin/main @ 3f55e419: `census-doors.json carries 35 doors; sheet 11 places 34` threw. `lit-ui-router-ssr` 0.7.0 ships `./testing` at 473 / 254, the stamp-and-count pair a test runs over a served page before and after the boot (#1710): it follows `./register` in `ORDER` as door 13 at [600, 300] in the ssr quarter's front row with its NOTE, and doors 13–34 renumber 14–35. The ssr paragraph and the aria label read the quarter's four doors, derived and guarded. Then the storefront guard threw: `./testing` (254 gz) undercuts `./url-config` (363), so the cheapest door a browser opens is not the server's; the paragraph ends "the last the storefront’s cheapest — only lit-ui-router-ssr’s ./testing (254) and ui-router-registry’s (20, an empty emit) undercut it", the list read off the plate. The server's doors grew with 0.7.1: `.` 20,495 / 7,949, `./prerender` 20,290 / 7,836, `./ssr` 3,201 / 1,494; 35 doors at 236,891 / 85,519 gz.
 - 2026-10-29, the twenty-fifth cabinet, REV M at origin/main @ 08ee3c27: `census-doors.json carries 34 doors; sheet 11 places 33` threw. `ui-router-server` 0.6.0 ships `./prerender` at 18,955 / 7,508, the prerender loop the server took from `lit-ui-router-ssr` (#1657): it follows `./ssr/client` in `ORDER` as door 26, so the effect, signals and mobx doors, the registry's four and the lint plugin renumber 27–34, at PLAN [540, 4], labelled "the prerender loop — a static site from a mount table, no renderer". `WORD` takes thirteen and fourteen for "ui-router-server — thirteen doors". The tower stood over the registry's lettering: "ui-router-registry" moves from [1016, 324] end to [1083, 366] middle. The server's index grew to 19,843 / 7,826 and its cap met the register callout by 8.29 px; the callout breaks as "the one-element doors sum to / 6,200 gz — «./register» ships / the shared core once, at 4,370" at x 628. 34 doors, 228,401 min / 82,628 gz (was 33, 200,858 / 72,053);lit-ui-router-ssr's index 3,774 / 1,834 and `./client` 7,031 / 2,815.
 - 2026-10-29, the twenty-fourth cabinet, REV L at origin/main @ 8dfa5311: `census-doors.json carries 33 doors; sheet 11 places 31` threw. `ui-router-server` 0.5.0 ships `./ssr` 2,050 / 1,077 and `./ssr/client` 1,153 / 672, the renderer-free halves of server rendering: they follow `./url-config` in `ORDER` as doors 24 and 25, so the effect, signals and mobx doors, the registry's four and the lint plugin renumber 26–33, at PLAN [690, 100] and [705, 140] on the quarter's east edge, labelled "settle and dehydrate, for any renderer" and "seed the boot transition, for any renderer". The server's index grew to 18,043 / 7,315 (was 17,627 / 7,188) and its cap met the register callout by 3.24 px: the `lit-ui-router — six doors` label, the three callout lines and the leader's end move x 640 → 628 (636 → 624). 33 doors, 200,858 min / 72,053 gz (was 31, 197,769 / 70,491); lit-ui-router-ssr's index 5,066 / 2,433 (was 6,010 / 2,876).
@@ -2020,7 +2119,7 @@ No `sub` clause at this rev; its record is the 2026-10-18 line under Record note
 
 ## Sheet 12 — THE REGISTER PLATE
 
-- **file** `diagrams/generator/sheet12.mjs` · **id** `graph` · **current rev** F
+- **file** `diagrams/generator/sheet12.mjs` · **id** `graph` · **current rev** H
 - **basis** (source): `const BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)}) · ${TURBO}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2078,8 +2177,15 @@ resolved →
 
 > REV G 2026-10-24: types:worker and typecheck:worker take columns in the emit and check stages, the overlay stands west of the register, and the uncacheable fifteen read off the handoff plate
 
+### REV H — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV H 2026-11-09: twenty-eight columns at a 16-px pitch: typecheck:vite7 and test:vite7-compat
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV H at origin/main @ 6ae72d27: `sheet 12: fanned task name test:vite7-compat has no column` threw. Two columns joined CHECK and PROVE, 28 in all, and the overlay frame ran into the annotation column, so the pitch is 16 (was 17) and the holes 14. 57 packages; the uncacheable list takes `release-diffs.lit-ui-router.dev#test:npm-diff`, sixteen. 1,482 nodes, 363 real, 6,386 edges. The audit's text-on-text on this sheet reads 83 (was 71), every pair two slanted column heads.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays F), at origin/main @ 8dfa5311: the plate re-read: ci 1,251 nodes / 331 real / 5,203 edges, real←real 235 (was 5,188 and 231); ci:main 5,562, build 683, lint 1,255, pack:all 302 edges.
 - 2026-10-24, the twenty-second cabinet, REV G at origin/main @ 85e0ce5c: The user: "ok the registry package shipped 0.1.0 new birth yay". The sheet threw behind the census-consumers pin guard until that plate refiled. The two release workers carry `types:worker` and `typecheck:worker`: `COLS` places `types:worker` after build:types (emit) and `typecheck:worker` after typecheck:src (check), 26 columns; `STAGES` EMIT 1–5, CHECK 6–16, PROVE 17–23, ROLL-UP 24–25, guarded to tile. At pitch 18 the overlay frame reached 820, past `RX` 810: the pitch is 17, the frame's right edge 792, and a guard holds the right edge + 12 at or under `RX`. "names its eleven producers" derives from the plate's docs:api cells. The uncacheable list derives from census-handoff.json (15: 8 at root, 7 in member files), guarded against both counts and against any being reachable from ci; it gains `bench` and `sample-app-lit-e2e#test:e2e:a11y` and reads `format:oxfmt` where it listed the stale `format`. The build row's "four fifths placeholder" against a plate of 75% derives as a percentage. ci 1,251 nodes, 331 real, 5,111 edges, chain 14.
 - 2026-10-11: links — the notes link turbo flags to turborepo.dev and #693, #703 to the repo.
@@ -2142,7 +2248,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## Sheet 13 — THE WEATHERING MAP
 
-- **file** `diagrams/generator/sheet13.mjs` · **id** `weathering` · **current rev** J
+- **file** `diagrams/generator/sheet13.mjs` · **id** `weathering` · **current rev** K
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2226,8 +2332,15 @@ resolved →
 
 > REV J 2026-10-28: the structure schedule set as a table under the drawing, the title box and the reading box gone with the key carrying the seasons, and every leader dashed with a landing dot
 
+### REV K — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV K 2026-11-09: the map takes sheet 7's lots, the yard and the shopfront 30 south, and its callouts stand in the air that leaves
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV K at origin/main @ 6ae72d27: the sheet had kept lots of its own since the eighth cabinet for a reading box the design pass removed; 22 pairs overlapped at this ref. It takes sheet 7's lots, with the yard and the shopfront 30 south, release-diffs east of examples (sheet 7's lot leaves the 1560 sheet), №9 and №40 a step south for their badges, №16 and №48 carrying theirs on their own north edges under №17. The callouts re-seat: the masonry under the bridge's block, clear of its ticks, the plugin's in the gap under the district, docs' between the ledger worker and docs with its wall lettered `.vitepress/config.ts`, examples' under its block, the typedoc plugin's under its block, the release tower's over it. The seasons took a seventeenth month and ran off the sheet: the month pitch is 75 (was 82). 858 dated files.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays J), at origin/main @ 3f55e419: `assertPlots` threw through the packages district as the server's annex (to x 825.5, y 295.8) and ssr's (to x 618.4, y 529.0) grew. №42 `ui-router-signals` and №47 `ui-router-mobx` move x 484 → 488, and №43 `ui-router-effect` and №49 `@repo/dev-gate` join them in one column east of the server's annex ([533, 10] → [488, 90], [533, 50] → [488, 120]), since a step east put 43's annex into sample-app-shared at x 958. №37 the effect bindings [330, 122] → [358, 134], east of ssr's annex; №41 y 268 → 275 and №44 y 256 → 263 under it; №4 the plugin [342, 178] → [362, 191] and №50 the registry [342, 229] → [406, 232]. The audit then met the plugin's lettering with №44's annex by 7.8 px: the callout moves x 526 → 545 and its leader's foot 530 → 549.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays J), at origin/main @ 08ee3c27: `assertPlots` threw through the packages district as the flagship's, the server's and ssr's annexes grew: 2 and 3 move x 255 → 257, 37 y 114 → 122, 38 y 160 → 174, 4 [332, 172] → [342, 178], 41 y 248 → 268, 44 y 236 → 256, 50 x 324 → 342, 42 and 47 x 460 → 484, and 43 and 49 x 514 → 533, west of the apps. The plugin's callout met 44's annex: its three lines and leader drop 4. Weather 722 dated files (was 710); `lit-ui-router-ssr` 34 files, hot `prerender.ts` ×18.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays J), at origin/main @ 8dfa5311: `assertPlots` met `ui-router-server`'s annex, which reaches x 457 in this sheet's plan, against №42 `ui-router-signals`: 42 and 47 move x 440 → 460, and 43 and 49 x 500 → 514, off 42's annex. Weather 710 dated files (was 689); `ui-router-registry` hot `registry.ts` ×9, `ui-router-server` 43 files.
@@ -2273,7 +2386,7 @@ resolved →
 
 ## Sheet 14 — THE UPSTREAM WORKS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet14.mjs` · **id** `upstream` · **current rev** E
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet14.mjs` · **id** `upstream` · **current rev** F
 - **basis** (source): `const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2309,8 +2422,15 @@ resolved →
 
 > REV E 2026-10-30: the river and the wharf run to x 1810, so forty-five yards stand in five rows
 
+### REV F — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV F 2026-11-09: the river and the wharf run to x 1830, so forty-six yards stand in five rows
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV F at origin/main @ 6ae72d27: `sheet 14: the north bank cannot hold 48 yards in 5 rows` threw. Two of the 48 were `owner/repo` and `example/repo`, stand-in slugs in a commit and in #1420; the probe reads them as no citation. npm/cli, eps1lon/dom-accessibility-api and 43081j/postcss-lit joined as yards, the first with a consignment the city sent (npm/cli#10230). The river ends at `RXE` 1830 and the sheet is `W` 1870 (was 1810 and 1850); a wharf block at the river's last days holds 3 px inside the wharf's frame, and the sheet throws on one across it. 106 consignments, 16 sent, 70 in the window.
 - 2026-10-30, the twenty-sixth cabinet, REV E at origin/main @ 3f55e419: `sheet 14: the north bank cannot hold 45 yards in 5 rows` threw, the last yard reaching 4,683, 2,644, 1,986, 1,857 and 1,800 by row count against the river's end at 1,660. nuxt/nuxt and gatsbyjs/gatsby joined as yards, each with one consignment cited by #1689: nuxt/nuxt#35779, a merged pull request inside the window, and gatsbyjs/gatsby#25723, from before the first commit. The river ends at `RXE` 1810 and the sheet is `W` 1850 (was 1660 and 1700). 99 consignments, 15 sent, 67 in the window.
 - 2026-10-29, the twenty-fourth cabinet, REV D at origin/main @ 8dfa5311: `sheet 14: the north bank cannot hold 43 yards in 5 rows` threw, the last yard reaching 4,483, 2,546, 1,948, 1,701 and 1,654 by row count against the river's end at 1,520; at six to ten rows it reached 1,641–1,636, so rows do not help. The river ends at `RXE` 1660 and the sheet is `W` 1700 (was 1520 and 1560); the time axis, the wharf and the bank spread to the new width, and `MAX_ROWS` and `PIER_AIR` are unchanged. The plate takes four yards and six consignments, every one cited by #1340: rust-lang/rust (★ 120,892, rust#144476, a merged PR), rust-lang/mdBook (★ 22,251, mdBook#704), vuejs/vitepress (#3873, #4621, #5077) and lucaong/minisearch (★ 6,187, minisearch#261). 96 consignments to 43 works, 14 sent, 65 in the window (was 90 / 39 / 14 / 63).
 - 2026-10-28, the design pass, REV C: The user: "let's do the fixes" (the diagram-design review). The consignment schedule leaves the drawing: three tables under it, the in-window consignments (63 rows), the items cited from before the first commit (22) and the unreadable ones (5), each # · filed · work · kind · number · author · sent or watched · title · state · returns home, titles whole; the TOTAL line rides the first. The third heading reads UNREADABLE UPSTREAM. The SVG drops from 1,238 text nodes to 332 and the viewBox ends 20 px under the wharf, 1560 × 3262 → 1560 × 1546. The in-figure title box (THE UPSTREAM WORKS — … and its bank line) is gone, since the sheet title and sub stand above the figure, and the stars line drops the basis the sub already carries.
@@ -2493,6 +2613,7 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, no rev clause (rev stays C), at origin/main @ 6ae72d27: `appendix A3: the main row needs 1630 px even at 0.8× sheet 7's ruler` threw: the codebase is 548 files / 52,033 sloc in four districts. The floor is 0.7 and the sheet draws at 0.74×. The atlas: 339 tracked at www/atlas @ 9f8479c4.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays C), at origin/main @ 8dfa5311: the codebase ground reads city 472 / 41,476 src; the atlas ground survey-self 317 tracked paths at www/atlas @ e3229754 (was 318 at 7523ff1d).
 - 2026-10-28, the design pass, REV C: The user: "let's do the fixes" (the diagram-design review). Both registers leave the drawing for tables under it: the structure schedule (# · block · files · sloc · annex · ground, 8 rows, the TOTAL line unchanged) and EXCLUDED (# · rule or path · why it stands outside · files · lines scc counts, 17 rows, each off-ruler path its own row). The viewBox ends 20 px under the atlas's near corner, 1560 × 1838 → 1560 × 1528. The in-figure title box (THE ATLAS, MEASURED — … and its sub line) is gone.
 
@@ -2521,7 +2642,7 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 ## Sheet A4 — THE ATLAS, SHIPPED
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheetA4.mjs` · **id** `self-shipped` · **current rev** D
+- **file** `www/atlas.lit-ui-router.dev/generator/sheetA4.mjs` · **id** `self-shipped` · **current rev** E
 - **basis** (source): `data/census-shipped.json` for the docs deploy and `data/survey-shipped.json` for the atlas, two grounds named on the plate
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2545,8 +2666,15 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 > REV D 2026-10-28: both structure schedules and the wire set as tables under the drawing, WHAT THE DRAWING SAYS cut to its headline, and the title box gone
 
+### REV E — 2026-11-09
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV E 2026-11-09: the docs deploy stands in sixteen districts, the release diff client in its back row, at 0.78× sheet 9's ruler
+
 **Record notes**
 
+- 2026-11-09, the twenty-seventh cabinet, REV E at origin/main @ 6ae72d27: `appendix A4: census-shipped.json carries a district this plate does not lot` threw; `release diff` stands in the back row. The rows then needed 1,529 and 1,546 px at the 0.8× floor: the floor is 0.7 and the sheet draws at 0.78×. The atlas deploy: 308 files / 9,343,482 gz at www/atlas @ 9f8479c4, `/colour/` filed with the routed pages.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays D), at origin/main @ 8dfa5311: the docs deploy 1,539 files / 7,424,760 gz (was 1,474 / 7,162,208); the atlas deploy survey-shipped 290 files / 8,882,369 gz at www/atlas @ e3229754 (was 291 / 9,564,075).
 - 2026-10-28, the design pass, REV D: The user: "let's do the fixes" (the diagram-design review). Both structure schedules and THE WIRE leave the drawing for three tables under it: west and east as # · block · files · gzipped · largest tenant · tenant gzipped · role (21 and 11 rows), THE WIRE as six numbered readings, the TOTAL line on the first. WHAT THE DRAWING SAYS keeps its heading and the size line; the other five claims are the notes' "What the drawing says" paragraph, which already carries each. The viewBox ends 20 px under that line, 1560 × 3586 → 1560 × 3017, and the frame guard reads that height. The in-figure title box (THE ATLAS, SHIPPED — … and its sub line) is gone.
 
@@ -2680,6 +2808,7 @@ Two source comments in `city-scene.mjs` describe how `revBlock` files a rev's ba
 **Record notes**
 
 - 2026-10-30, no rev clause (rev stays H): the city stands isometric. The user: "the 3d models have lost their isometric perspective for a while now. even on the even 45 degree snaps, buildings bow outwards somewhat fisheye lens". The home field of view is `FOV.home` from `mv-kit.mjs`, 3° (was 14°), the wheel’s limits 1° and 4.5° (were 4° and 20°), the pin field a 1.8th of home as before; `home()` reads the field back and fits the radius to the plan’s span, so the home radius is 20,827 at the 1440 px stage (was 4,417) at the same framing. The CAMERA note reads "narrow enough that the verticals stand parallel". `check-scenes.mjs` pulls back to `FOV.max` for the dots check.
+- 2026-11-09, the twenty-seventh cabinet, no rev clause (rev stays H), at origin/main @ 6ae72d27: `city-glb: a grid vertex lies outside the int16 range` threw: with the shopfront's east row the ground runs past what 64 steps a unit hold in an int16, so positions quantise at 60 steps a unit. `city.glb` measured 298,864 bytes against 272 KiB; the budget is 304 KiB. The lots follow sheet 7's.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays H), at origin/main @ 3f55e419: `city.glb` 267,356 bytes, inside its budget; the lots follow sheet 7's (№44 and №49 at x 490, №50 at y 133, №31 at y 176).
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays H), at origin/main @ 08ee3c27: `city.glb` 267,352 bytes, inside its budget; the lots follow sheet 7's (№2 at x 257, №44 and №49 at x 476).
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays H), at origin/main @ 8dfa5311: `city.glb` 265,584 bytes, inside its budget; the lots follow sheet 7's (№44 and №49 at x 454).
@@ -2726,6 +2855,7 @@ Two source comments in `city-scene.mjs` describe how `revBlock` files a rev's ba
 **Record notes**
 
 - 2026-10-30, no rev clause (rev stays B): the plant stands isometric with the city: the home field of view is `FOV.home`, 3° (was 14°), the limits 1° and 4.5°. The user: "the 3d models have lost their isometric perspective for a while now. even on the even 45 degree snaps, buildings bow outwards somewhat fisheye lens".
+- 2026-11-09, the twenty-seventh cabinet, no rev clause (rev stays B), at origin/main @ 6ae72d27: `plant.glb` measured 571,628 bytes against 496 KiB; the budget is 576 KiB. check-scenes read one pixel 14 under member 34's pin for its shadow and found a wall at the smaller scale; it reads eight samples down the cap and asks two in shadow. 114 checks hold.
 - 2026-10-30, the twenty-sixth cabinet, no rev clause (rev stays B), at origin/main @ 3f55e419: `plant.glb` 504,092 bytes, inside its budget. 112 checks hold.
 - 2026-10-29, the twenty-fifth cabinet, no rev clause (rev stays B), at origin/main @ 08ee3c27: `plant.glb` 503,364 bytes, inside its budget. 112 checks hold.
 - 2026-10-29, the twenty-fourth cabinet, no rev clause (rev stays B), at origin/main @ 8dfa5311: `plant.glb` 500,972 bytes, inside its budget. check-scenes threw `/plant light under member 1's pin: its pixel is plant-p's factor in sRGB ±2, shaded down to 0.78 — 177,177,168,255 vs 152,153,145..171,172,162`: the crown under the pin now lands the probe on a 2 px run of plant-p between two parts, where the pixel is antialiased. `probePixel` in `check-scenes.mjs` reads a run of 5 px or more: under that it steps down to the next run of a wanted material within 16 px and reads its middle; the ±2 tolerance and the foot shading are unchanged, and the city's 10 px runs read as before. 112 checks hold.

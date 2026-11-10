@@ -43,12 +43,12 @@ const INSTRUMENTS = [
   ['dts-backtest', [/^tools\/dts-backtest\//]],
   ['tests — vitest harness', [/^tools\/lit-test-env\//, /^tools\/happy-dom\//, /^tools\/wintercg-globals\//]],
   ['anti-slop — vendored oxlint rules', [/^tools\/oxlint-anti-slop\//]],
-  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//, /^tools\/ci-logs\//]],
+  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//, /^tools\/ci-logs\//, /^tools\/doc-example-check\//, /^tools\/md-content-mapper\//, /^tools\/turbo-summary\//]],
   ['repo checks — graph edges, task inputs, knip, patches', [/^tools\/repo-checks\//]],
   ['bootstrap — pre-install manifest reads', [/^tools\/bootstrap\//]],
   ['@tools/shared', [/^tools\/shared\//]],
   ['typedoc plugin', [/^tools\/typedoc-plugin/]],
-  ['e2e — cypress', [/^apps\/sample-app-lit-e2e\//]],
+  ['e2e — playwright', [/^apps\/sample-app-lit-e2e\//]],
   ['sample apps', [/^apps\//]],
 ];
 
@@ -74,6 +74,8 @@ for (const [n] of INSTRUMENTS) {
   console.log(n.padEnd(30), String(a.files).padStart(4), String(a.sloc).padStart(7));
 }
 console.log('orphans', orphans.length, orphans.join(' '));
+// a file no rule claims is a member the yard has not been taught
+if (orphans.length) throw new Error(`census-yard: ${orphans.length} file(s) no instrument claims — ${[...new Set(orphans.map((p) => p.split('/').slice(0, 2).join('/')))].join(', ')}`);
 console.log('TOTAL', rows.reduce((a, r) => a + r[1], 0), 'files', rows.reduce((a, r) => a + r[2], 0), 'sloc');
 console.log(JSON.stringify(rows));
 

@@ -151,8 +151,8 @@ const lanes = (items, span) => {
 };
 
 // ---- geometry: the river's west mouth takes the cited items older than the window ----
-// the river runs to 1810, where five rows of the 3f55e419 refresh's 45 yards reach 1,800
-const W = 1850, RXS = 140, RXE = 1810, CR = 7, BADGE_DX = 10, LP = 26, MOUTH_PITCH = 34;
+// the river runs to 1830, where five rows of the 6ae72d27 refresh's 46 yards reach 1,824
+const W = 1870, RXS = 140, RXE = 1830, CR = 7, BADGE_DX = 10, LP = 26, MOUTH_PITCH = 34;
 const badgeW = (c) => tw(String(c.n), 'lbls');
 // lanes are counted on a provisional axis; the mouth's width then sets the axis itself
 const laneCount = (rx0) => {
@@ -264,12 +264,14 @@ const months = [];
 const WY = RIV_B + 44;
 const RB_H = 16;
 const RELEASE = /^Release\b/;
-for (const r of RETURNS) { r.release = r.kind === 'pr' && RELEASE.test(r.title ?? ''); r.label = r.ref; r.w = r.release ? 6 : tw(r.label, 'lbls') + 10; r.x = X(r.t); }
+for (const r of RETURNS) { r.release = r.kind === 'pr' && RELEASE.test(r.title ?? ''); r.label = r.ref; r.w = r.release ? 6 : tw(r.label, 'lbls') + 10; r.x = Math.min(Math.max(X(r.t), RXS + r.w / 2 + 3), RXE - r.w / 2 - 3); }
 const RELEASES = RETURNS.filter((r) => r.release).length;
 const WLANES = lanes(RETURNS, (r) => [r.x - r.w / 2, r.x + r.w / 2]);
 for (const r of RETURNS) r.y = WY + 14 + r.lane * (RB_H + 8);
 const WH = 14 + WLANES * (RB_H + 8) + 6;
 assertPlots('sheet 14', RETURNS.map((r) => ({ n: r.key, name: r.label, part: 'return', x: r.x - r.w / 2, y: r.y, w: r.w, d: RB_H })));
+// a block at the river's last days stands inside the wharf's frame, not across it
+for (const r of RETURNS) if (r.x - r.w / 2 < RXS + 2 || r.x + r.w / 2 > RXE - 2) throw new Error(`sheet 14: wharf block ${r.label} stands across the wharf's frame`);
 
 // ---- drawing ----------------------------------------------------------------------
 // state is the fill; a sent consignment flies the city's pennant from its west edge
@@ -408,7 +410,7 @@ const topLine = TOP
   : 'no work takes a consignment';
 
 export const sheet14 = {
-  num: 14, id: 'upstream', rev: 'E',
+  num: 14, id: 'upstream', rev: 'F',
   title: 'THE UPSTREAM WORKS',
   sub: `ALTITUDE 14 — the city among the commons it builds on · ${consWord} to ${yardsWord} cited by the city's own record, ${fmt(SENT)} sent and ${fmt(WATCHED)} watched, ${fmt(TRACKED)} tracked, ${fmt(RETURNED)} returned home, ${fmt(OFF_RIVER)} off the river${GONE.length ? ` (${fmt(GONE.length)} missing)` : ''} · ${BASIS}`,
   scale: 'CITY × COMMONS',

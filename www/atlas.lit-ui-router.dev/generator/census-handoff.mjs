@@ -76,6 +76,7 @@ try {
 
   const homes = [
     { home: 'tools/build_and_test/mise.toml', label: 'tools/build_and_test', tasks: tomlTasks('tools/build_and_test/mise.toml') },
+    { home: 'tools/turbo-summary/mise.toml', label: 'tools/turbo-summary', tasks: tomlTasks('tools/turbo-summary/mise.toml') },
     { home: '.config/mise/tasks/*', label: '.config/mise/tasks/*', tasks: fileTasks },
     { home: 'tools/release/mise.toml', label: 'tools/release', tasks: tomlTasks('tools/release/mise.toml') },
     { home: '.config/mise/config.toml', label: 'config.toml inline', tasks: tomlTasks('.config/mise/config.toml') },

@@ -102,13 +102,15 @@ const BUG_RES = [
 ];
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const external = (owner) => owner.toLowerCase() !== HOME_OWNER.toLowerCase();
+// a slug a text writes as a stand-in for any repository cites none
+const PLACEHOLDER = new Set(['owner/repo', 'example/repo']);
 const ghKey = (owner, repo, n) => `${owner}/${repo.replace(/\.git$/, '')}#${Number(n)}`;
 const bareCites = (text, slugs) => slugs.flatMap(([owner, repo]) =>
   [...text.matchAll(new RegExp(`(?<![\\w./-])${esc(repo)}#(\\d+)(?!\\d)`, 'gi'))].map((m) => ghKey(owner, repo, m[1])));
 const citesIn = (text) => {
   const urls = [...text.matchAll(GH_URL)].map((m) => [m[1], m[2], m[3]]);
   const slugs = [...text.matchAll(GH_SLUG)].map((m) => [m[1], m[2], m[3]]);
-  const named = [...urls, ...slugs].filter(([o]) => external(o));
+  const named = [...urls, ...slugs].filter(([o, r]) => external(o) && !PLACEHOLDER.has(`${o}/${r}`.toLowerCase()));
   const gh = [...named.map(([o, r, n]) => ghKey(o, r, n)), ...bareCites(text, named)];
   const bugs = BUG_RES.flatMap(([re, host]) => [...text.matchAll(re)].map((m) => `${host}#${Number(m[1])}`));
   return new Set([...gh, ...bugs]);

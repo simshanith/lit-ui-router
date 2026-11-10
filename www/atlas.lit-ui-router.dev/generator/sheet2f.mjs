@@ -213,7 +213,7 @@ ${laid.map(panelSvg).join('\n')}
 </svg>`;
 
 export const sheet2f = {
-  num: '2F', id: 'companions-pins', rev: 'C',
+  num: '2F', id: 'companions-pins', rev: 'D',
   title: 'THE PINNED BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE PINS: the ${word(CAB.consumers)} consumers in the cabinet’s tree and the atlas’s own app as stacks of what they pin, a course per family part and a plate per runtime dependency, each read where its installer reads it — the tree for a pnpm member, its own lockfile for an npm consumer — against npm’s latest · rows read census-pins.json, both readings, @ ${PINS.sha}`,
   scale: SHEET2F_SCALE,

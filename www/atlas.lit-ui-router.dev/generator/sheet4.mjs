@@ -51,8 +51,9 @@ const peerRange = (from, to) => {
 };
 // this repo's router limbs: the flagship and the bay, each column top to bottom
 const BAY_COLS = [
-  ['ui-router-server', 'lit-ui-router-ssr', 'ui-router-mobx', 'lit-ui-router-mobx'],
-  ['ui-router-navigation-location-plugin', 'ui-router-effect', 'lit-ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals', 'ui-router-registry'],
+  ['ui-router-server', 'lit-ui-router-ssr'],
+  ['ui-router-navigation-location-plugin', 'ui-router-mobx', 'lit-ui-router-mobx', 'ui-router-registry'],
+  ['ui-router-effect', 'lit-ui-router-effect', 'ui-router-signals', 'lit-ui-router-signals'],
 ];
 const COMP_NAMES = BAY_COLS.flat();
 const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
@@ -205,13 +206,16 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 }).join('\n');
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
-const BAY_X = 1030, BAY_R = 1340, BAY_T = 10, BAY_B = 252, BAY_CX = 1185, BAY_COL = 155;
-// Two columns; rows stack by their own DRAWN height: name, version line, then the
+// the first column is as wide as the server's block; a block wider than its column throws
+const COL_X = [1030, 1235, 1390];
+const BAY_X = COL_X[0], BAY_R = 1545, BAY_T = 10, BAY_B = 252, BAY_CX = 1288;
+const colW = (c) => (COL_X[c + 1] ?? BAY_R) - COL_X[c];
+// Three columns; rows stack by their own DRAWN height: name, version line, then the
 // mass block itself, and the next name clears it by 11 px, a row's step 26 + its block's height; the bay's top rose 14 → 10 for the registry's row. The header is one line, so rows start 34 under the bay's top.
 const bayY = new Map(), bayX = new Map();
 const bayRows = BAY_COLS.map((col, c) => {
   let y = BAY_T + 34;
-  const x0 = BAY_X + c * BAY_COL;
+  const x0 = COL_X[c];
   return col.map((n) => {
     const [name, ver, , files, sloc, , , , href] = COMPANIONS[COMP_NAMES.indexOf(n)];
     const w = W(sloc), h = H(files), at = y;
@@ -219,6 +223,7 @@ const bayRows = BAY_COLS.map((col, c) => {
     bayX.set(n, x0);
     y += 26 + h;
     if (y > BAY_B) throw new Error(`sheet 4: the bay's column ${c + 1} runs past its floor at ${n} — relay the bay`);
+    if (12 + w + 24 > colW(c)) throw new Error(`sheet 4: ${n}'s block is ${w.toFixed(1)} wide, past its ${colW(c)}-px bay column — relay the bay`);
     return `${link(href, txt(x0 + 12, at, name, 'lbla'))}
 ${txt(x0 + 12, at + 11, `${ver} · ${files}f`, 'lblf')}
 <rect x="${x0 + 12}" y="${(at + 15).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="ska fa"/>
@@ -230,7 +235,7 @@ ${LIT_PEERS.has(n) ? `<path d="M${x0 - 8},${(at - 3).toFixed(1)} H${x0 + 6}" cla
 // gutter, unlettered — the key and the notes carry the ranges. The lower row peers the upper.
 const bridge = BRIDGES.map(([from, to]) => {
   if (bayX.get(from) !== bayX.get(to) || bayY.get(to) > bayY.get(from)) throw new Error(`sheet 4: ${from} must stand under ${to} in one bay column`);
-  const gx = bayX.get(from) + BAY_COL - 12;
+  const gx = bayX.get(from) + colW(COL_X.indexOf(bayX.get(from))) - 12;
   return `<path d="M${gx},${(bayY.get(to) - 8).toFixed(1)} V${(bayY.get(from) - 5).toFixed(1)}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>`;
 }).join('\n');
 
@@ -246,7 +251,7 @@ ${txt(BAY_CX + 18, 288, `all ${word(COMPANIONS.length)}`, 'lblf')}`;
 // each Lit binding's bay column, read off the drawn bay: the bindings named by their short names, column by column
 const ORDINAL = ['first', 'second', 'third'];
 const BOUND_COLS = [...BOUND.reduce((m, [a]) => {
-  const c = (bayX.get(a) - BAY_X) / BAY_COL;
+  const c = COL_X.indexOf(bayX.get(a));
   return m.set(c, [...(m.get(c) ?? []), `the ${short(a)} pair`]);
 }, new Map())].sort(([x], [y]) => x - y);
 
@@ -264,7 +269,7 @@ export const SHEET4_VERDICT = `every limb re-massed from sloc × files — ${RED
 // ---- the spine ------------------------------------------------------------------
 const CORE_W = W(CORE[4]), CORE_H = H(CORE[3]);
 const CORE_X = 96, CORE_Y = RAIL_Y - CORE_H / 2;
-const spine = `<rect x="70" y="${RAIL_T}" width="1240" height="${RAIL_H}" class="sks fp2"/>
+const spine = `<rect x="70" y="${RAIL_T}" width="1445" height="${RAIL_H}" class="sks fp2"/>
 <rect x="${CORE_X}" y="${CORE_Y.toFixed(1)}" width="${CORE_W.toFixed(1)}" height="${CORE_H.toFixed(1)}" class="sk2 fp2"/>
 <rect x="${CORE_X}" y="${CORE_Y.toFixed(1)}" width="${CORE_W.toFixed(1)}" height="${CORE_H.toFixed(1)}" fill="url(#${P}-hx)" opacity="0.3"/>
 ${link(CORE[8], txt(CORE_X, 406, `${CORE[0]} ${CORE[1]}`, 'lblb'))}
@@ -283,7 +288,7 @@ const SCHEDULE = schedule(
 const VUE_NOTE = ['no @uirouter/vue was ever published:', 'the vue seat has zero mass —', 'the one name absent from the registry plate'];
 const VH = 540 + (VUE_NOTE.length - 1) * 12 + 20;
 
-const svg = `<svg viewBox="0 0 1350 ${VH}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's ${word(COMPANIONS.length)} companion packages in two columns behind a single shared gate; ${word(LIT_PEERS.size)} of them take a second dashed arrow from lit-ui-router, and ${listOf(BRIDGES.map(([a, b]) => `${a} takes a third from ${b}`))} — the companions that bridge two others. A structure schedule below the drawing lists every member with exact file and line counts.">
+const svg = `<svg viewBox="0 0 1555 ${VH}" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's ${word(COMPANIONS.length)} companion packages in ${word(BAY_COLS.length)} columns behind a single shared gate; ${word(LIT_PEERS.size)} of them take a second dashed arrow from lit-ui-router, and ${listOf(BRIDGES.map(([a, b]) => `${a} takes a third from ${b}`))} — the companions that bridge two others. A structure schedule below the drawing lists every member with exact file and line counts.">
 ${defs(P)}
 
 ${txt(70, 96, 'ADAPTERS — one per renderer, standing on the spine', 'lbls')}
@@ -301,15 +306,15 @@ ${lines(70, 540, VUE_NOTE, 'lblf', 'start', 12)}
 ${txt(1016, 26, 'SCALE — block width = 2.7 · √sloc · block height = 2.2 px per authored file · gates and rail not to scale', 'lbls', 'end')}
 ${txt(1016, 40, 'mass ranks by code volume, not downloads · authored src, tests and d.ts excluded', 'lblf', 'end')}
 
-${txt(1310, 508, 'PROVENANCE — three plates and one set of hand-carried counts', 'lbls', 'end')}
-${txt(1310, 522, `every version and last-publish date on this sheet: census-npm.json · ${REGISTRY}`, 'lblf', 'end')}
-${txt(1310, 534, `@uirouter/core and this repo — files and sloc: census-bricks.json · ${COUNTED}`, 'lblf', 'end')}
-${txt(1310, 558, `this repo's gates: census-couplings.json · ${COUPLINGS.ref} @ ${COUPLINGS.sha}`, 'lblf', 'end')}
-${txt(1310, 546, `upstream adapters and instruments — files and sloc: no plate · ${CLONED} of the ui-router org repos`, 'lblf', 'end')}
+${txt(1515, 508, 'PROVENANCE — three plates and one set of hand-carried counts', 'lbls', 'end')}
+${txt(1515, 522, `every version and last-publish date on this sheet: census-npm.json · ${REGISTRY}`, 'lblf', 'end')}
+${txt(1515, 534, `@uirouter/core and this repo — files and sloc: census-bricks.json · ${COUNTED}`, 'lblf', 'end')}
+${txt(1515, 558, `this repo's gates: census-couplings.json · ${COUPLINGS.ref} @ ${COUPLINGS.sha}`, 'lblf', 'end')}
+${txt(1515, 546, `upstream adapters and instruments — files and sloc: no plate · ${CLONED} of the ui-router org repos`, 'lblf', 'end')}
 </svg>`;
 
 export const sheet4 = {
-  num: 4, id: 'family', rev: 'J',
+  num: 4, id: 'family', rev: 'K',
   title: 'THE FAMILY SPINE',
   sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions ${REGISTRY}, mass ${COUNTED}`,
   scale: 'UI-ROUTER ECOSYSTEM',

@@ -43,10 +43,10 @@ const REF = PINNED ? CABINET.sha : refFromArgv();
 const DRY = process.argv.slice(2).includes('--dry');
 
 // ---- editorial judgements (the only two in this probe) ----------------------
-// (1) e2e light: members no meter reads, but the cypress rig demonstrably
-//     drives — the two demo apps it mounts, and the rig itself.  Cypress emits
+// (1) e2e light: members no meter reads, but the playwright rig demonstrably
+//     drives — the two demo apps it mounts, and the rig itself.  Playwright emits
 //     no lcov, so this cannot be derived from a coverage artifact; it is
-//     declared, and verified below against the rig's own cypress scripts.
+//     declared, and verified below against the rig's own playwright scripts.
 const E2E = new Set([
   'apps/sample-app-lit-vanilla',
   'apps/sample-app-lit-mobx',
@@ -58,7 +58,7 @@ const E2E = new Set([
 const RUNNER = (cmd) =>
   /(^|\s)node\s+(--\S+\s+)*--test(\s|$)/.test(cmd) ? 'node'
     : /(^|\s)vitest\s+run(\s|$)/.test(cmd) ? 'vitest'
-      : /(^|\s)cypress(\s|$)|start-server-and-test/.test(cmd) ? 'cypress' : null;
+      : /(^|\s)playwright\s+test(\s|$)|start-server-and-test/.test(cmd) ? 'playwright' : null;
 
 // ---- basis ------------------------------------------------------------------
 const basis = materialize(REF);
@@ -96,16 +96,16 @@ const { members, files } = cityUniverse(snap);
 
 const pkgJson = (dir) => JSON.parse(readFileSync(join(basis.dir, dir, 'package.json'), 'utf8'));
 
-// the e2e judgement is verified, never assumed: the rig must still be a cypress
+// the e2e judgement is verified, never assumed: the rig must still be a playwright
 // suite at this ref, and every member it is claimed to light must still exist
 for (const d of E2E) {
   if (!members.some((m) => m.dir === d)) throw new Error(`census-shadow: E2E names ${d}, absent at this ref — update the table`);
 }
-// the rig has no `test` script: its lanes are `test:e2e:*`, vanilla being bare cypress
+// the rig's lanes are `test:e2e:*`, vanilla being a bare playwright project
 const e2eLanes = (dir) => Object.entries(pkgJson(dir).scripts ?? {}).filter(([k]) => k.startsWith('test:e2e:'));
 const RIG_LANES = e2eLanes('apps/sample-app-lit-e2e');
-if (!RIG_LANES.length || RUNNER(Object.fromEntries(RIG_LANES)['test:e2e:vanilla'] ?? '') !== 'cypress') {
-  throw new Error('census-shadow: apps/sample-app-lit-e2e no longer runs a cypress suite — the e2e judgement needs re-reading');
+if (!RIG_LANES.length || RUNNER(Object.fromEntries(RIG_LANES)['test:e2e:vanilla'] ?? '') !== 'playwright') {
+  throw new Error('census-shadow: apps/sample-app-lit-e2e no longer runs a playwright suite — the e2e judgement needs re-reading');
 }
 
 // ---- lcov ------------------------------------------------------------------
@@ -269,12 +269,12 @@ for (const m of members) {
         ? `suite passes, no meter attaches — ${r.err}`
         : (r.err ?? plain.err);
     }
-  } else if (runner === 'cypress' || E2E.has(m.dir)) {
+  } else if (runner === 'playwright' || E2E.has(m.dir)) {
     cat = 'e';
     const lanes = e2eLanes(m.dir).map(([k]) => k);
-    recipe = cmd ? `cypress (${cmd}) — emits no lcov`
-      : lanes.length ? `cypress (${lanes.join(', ')}) — emits no lcov`
-        : 'driven by the cypress rig — emits no lcov';
+    recipe = cmd ? `playwright (${cmd}) — emits no lcov`
+      : lanes.length ? `playwright (${lanes.join(', ')}) — emits no lcov`
+        : 'driven by the playwright rig — emits no lcov';
   } else {
     cat = 'n';
     recipe = cmd ? `\`${cmd}\` is not a self-suite` : 'no test script';

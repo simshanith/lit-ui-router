@@ -35,7 +35,7 @@ const HOME = {
   dtsBacktest: `${REPO}/tree/main/tools/dts-backtest`,
   vitest: 'https://vitest.dev/',
   compatGuards: `${REPO}/tree/main/tools/compat-guards`,
-  cypress: 'https://www.cypress.io/',
+  playwright: 'https://playwright.dev/',
   shared: `${REPO}/tree/main/tools/shared`,
   typedocPlugin: `${REPO}/tree/main/tools/typedoc-plugin-lit-ui-router`,
   pr449: `${REPO}/pull/449`,
@@ -91,33 +91,31 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  // east off 25, then 33 at the b499e2a5 refresh
   [1,  'src — packages/*/src',      'line',    45,    24, ...C('src — packages/*/src'), null, null, SRC_NOTE],
-  // east off 201.1, then 222, with the src slab: the run between them needs 31.2 px of trims
-  [2,  'build — @tools/oxc-emit',   'line',   244,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
-  [3,  'pack — packPublishTarball', 'line',   334,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
+  // east of the src slab by the run's trims: 9 px off the slab and the shed's height plus 13.2 at its wall
+  [2,  'build — @tools/oxc-emit',   'line',   258,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
+  [3,  'pack — packPublishTarball', 'line',   340,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
   [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
   [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
   // --- instrument yard, row A: the checks that stop a pull request --------------
   [7,  'tests — vitest harness',    'pr',     358,   215,    ...C('tests — vitest harness'), null, null, 'lit-test-env + happy-dom · 3 real browsers'],
-  [8,  'compat-guards',             'pr',     399,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
-  [9,  'dts-backtest',              'pr',     165,   215,    ...C('dts-backtest'), null, null, `${C('dts-backtest')[0]} file${C('dts-backtest')[0] === 1 ? '' : 's'} · ${C('dts-backtest')[1]} lines hold the TS 5.0 floor`],
-  [10, 'check:exports',             'pr',     215,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
+  [8,  'compat-guards',             'pr',     399,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / effect 3 / vite 7 lanes'],
+  [9,  'dts-backtest',              'pr',     230,   215,    ...C('dts-backtest'), null, null, `${C('dts-backtest')[0]} file${C('dts-backtest')[0] === 1 ? '' : 's'} · ${C('dts-backtest')[1]} lines hold the TS 5.0 floor`],
+  [10, 'check:exports',             'pr',     276,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
   [11, 'published-diff',            'halt',   313.9, 215,    ...C('published-diff'), null, null, 'vs the LIVE npm tarball · halts publishing'],
   // --- instrument yard, row B: the gates that fire later, and the reporters -----
-  [12, 'peer-floor tier-2',         'late',   160,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
-  [13, 'peer-floor tier-1',         'report', 205,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
-  // the two big reporters (14, 20) stand west of every gate's lot, so every gate stands in front of them;
-  // the fleet south off 182 at the 8dfa5311 refresh, as the src slab grew to 100 files
-  [14, 'lint & probe fleet',        'report',  14,   191,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · axe · CI gate'],
-  [15, '@tools/shared',             'report', 250,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
-  [16, 'typedoc plugin',            'report', 352,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
+  [12, 'peer-floor tier-2',         'late',   266,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
+  [13, 'peer-floor tier-1',         'report', 298,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
+  // the fleet stands at the yard's west end, south of the src slab; the anti-slop rules east of it, south of row A's gates
+  [14, 'lint & probe fleet',        'report',  10,   207,    ...C('lint & probe fleet'), null, null, 'templates · doc examples · axe · CI summary'],
+  [15, '@tools/shared',             'report', 322,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
+  [16, 'typedoc plugin',            'report', 366,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
-  [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
+  [17, 'e2e — playwright',          'pr',     377.8, 420,    ...C('e2e — playwright'), null, null, 'drives the sample apps · stops the PR line'],
   [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, APP_NOTE],
   [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
-  [20, 'anti-slop rules',           'report',  14,   309,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
+  [20, 'anti-slop rules',           'report',  162,   309,    ...C('anti-slop — vendored oxlint rules'), null, null, 'vendored upstream · loaded by every oxlint lane'],
 ];
 const F = (n) => M.find((r) => r[0] === n);      // [.., files, sloc, ..] by structure number
 const nf = (n) => F(n)[5];                       // authored files of structure n
@@ -354,10 +352,10 @@ ${drive}
 ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
-${txt(32, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(32, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(32, 225, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
-<line x1="244" y1="212" x2="276" y2="238" class="skf"/>
+${txt(32, 170, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(32, 183, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(32, 195, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
+<line x1="244" y1="182" x2="276" y2="208" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}
 ${txt(742, 411, 'one packer · many readers · never re-packed', 'lblf')}
@@ -380,7 +378,7 @@ ${txt(600, 658, `the ${rankOf(18)} mass on the sheet`, 'lblf')}
 ${txt(600, 670, 'gates nothing at all', 'lblf')}
 <line x1="594" y1="652" x2="582" y2="712" class="skf"/>
 
-${txt(90, 555, 'e2e — cypress · stops the line', 'lblr')}
+${txt(90, 555, 'e2e — playwright · stops the line', 'lblr')}
 ${txt(90, 568, 'and drives the apps beside it', 'lblf')}
 <line x1="278" y1="559" x2="300" y2="588" class="skf"/>
 
@@ -395,7 +393,7 @@ ${txt(700, 830, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'I',
+  num: 3, id: 'monorepo', rev: 'J',
   title: 'THE INSTRUMENT YARD',
   sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · every mass ${COUNTED} from www/atlas.lit-ui-router.dev/data/census-yard.json on scc Code lines — ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures, with the task-manager inset reading the same two plates sheet 3A draws`,
   scale: 'THE MONOREPO',
@@ -406,7 +404,7 @@ export const sheet3 = {
   notes: `
 <p><strong>Method — one basis, shared with sheet 4.</strong> Every massed structure was counted from this repo's authored source, ${COUNTED} and read from <code>www/atlas.lit-ui-router.dev/data/census-yard.json</code>: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is <a href="${HOME.scc}"><code>scc</code></a>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. <a href="${HOME.release}"><code>@tools/release</code></a> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. ${M.length} structures, ${massed.length} of them massed: ${TOT_F} authored files, ${fmt(TOT_L)} lines. One member is massed nowhere: <a href="${HOME.wintercg}"><code>@tools/wintercg-globals</code></a> is a single <code>globals.d.ts</code>, and declaration files are outside this basis. The tarball, the registry and the boundary are diagrammatic.</p>
 <p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The three heaviest masses on the sheet gate nothing: ${HEAVY.map((n) => `${heavyName(n)} (${nfl(n)})`).join(', ')}. The ${PR_GATES.length} structures that can stop a pull request total ${PR_GATES.reduce((a, n) => a + nf(n), 0)} files between them, and one of them — <a href="${HOME.dtsBacktest}"><code>dts-backtest</code></a> — is a single ${nl(9)}-line <code>run.ts</code>. Encoding severity as height would imply the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
-<p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the <a href="${HOME.vitest}">vitest</a> harness (7), <a href="${HOME.compatGuards}"><code>compat-guards</code></a> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and <a href="${HOME.cypress}">Cypress</a> <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <a href="${HOME.shared}"><code>@tools/shared</code></a>, <a href="${HOME.typedocPlugin}">the typedoc plugin</a> and the vendored anti-slop rules (20) are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
+<p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the <a href="${HOME.vitest}">vitest</a> harness (7), <a href="${HOME.compatGuards}"><code>compat-guards</code></a> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and <a href="${HOME.playwright}">Playwright</a> <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <a href="${HOME.shared}"><code>@tools/shared</code></a>, <a href="${HOME.typedocPlugin}">the typedoc plugin</a> and the vendored anti-slop rules (20) are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
 <p><strong>One packer, many readers (<a href="${HOME.pr449}">#449</a>).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (<a href="${HOME.publint}">publint</a> + <a href="${HOME.attw}">attw</a>), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
 <p><strong>Two task managers, one re-entrant loop.</strong> The inset at top right is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. <a href="${HOME.actions}">GitHub Actions</a> enters <a href="${HOME.mise}">mise</a> at ${HW.callSites} call sites across ${HW.calling} workflows (${HW.targets} distinct tasks); mise itself is almost graphless — ${HM.tasks} tasks with exactly ${HM.withDepends} of them declaring <code>depends</code> (${HM.dependsEdges} edges), among them <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_pin_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell <a href="${HOME.turbo}">turbo</a>, whose <code>ci</code> graph alone expands to ${CI_NODES} task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>//#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/<a href="${HOME.aqua}">aqua</a> owns the versions of the non-node tools (<a href="${HOME.rumdl}">rumdl</a>, <a href="${HOME.taplo}">taplo</a>, <a href="${HOME.shellcheck}">shellcheck</a>, <a href="${HOME.actionlint}">actionlint</a>, <a href="${HOME.zizmor}">zizmor</a>), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>`,
   key: [

@@ -298,7 +298,7 @@ const bodies = depthSort(M.flatMap(([n]) => {
   + '\n' + M.map(([n]) => badge(n)).join('\n');
 
 // the flagship callout stands at the plate's top left, north-west of №12's badge, at a 14 px pitch
-const FLAG_X = 60, FLAG_Y = 100;
+const FLAG_X = 60, FLAG_Y = 74;
 const FLAG_LINES = [
   [FLAG_Y, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla'],
   [FLAG_Y + 14, `3 puffs (${g(1).steam} commits/90d) · ${g(1).lamps} lamps (${g(1).eff}% lit) · rust ${RUST_T[g(1).rust]}`, 'lblf'],
@@ -334,7 +334,7 @@ const SCHEDULE = schedule(`PLANT SCHEDULE — per member: rust step (median idle
   ['#', 'member', 'rust', 'commits/90d', 'puffs', 'lamps', 'pipes'], M.map(schedRow),
   `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha} · steam ${BASIS}; lamps carry 7A's own base`);
 // the figure ends 20 px under the nearest district corner or the typedoc-plugin callout, whichever is lower
-const VH = Math.ceil(Math.max(...Object.values(DISTRICT_BOUNDS).map(([, , x2, y2]) => pt(x2, y2)[1]), 668)) + 20;
+const VH = Math.ceil(Math.max(...Object.values(DISTRICT_BOUNDS).map(([, , x2, y2]) => pt(x2, y2)[1]), 734)) + 20;
 
 const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} ${rustN(0) === 1 ? 'plant stands' : 'plants stand'} clean, ${names(atStep(DEEPEST))} ${atStep(DEEPEST).length === 1 ? 'carries' : 'carry'} the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: no gate task in the workspace is failing at HEAD, and the key's struck triangle is the channel's legend rather than an alarm. A plant schedule below the drawing lists every member's channel values.">
 ${defs(P)}
@@ -353,44 +353,44 @@ ${districts}
 ${bodies}
 
 <!-- district lettering -->
-<!-- east off 772, then 786 at the b499e2a5 refresh, then 794 at the 08ee3c27 refresh: the server's cap reaches x 798 at the third line -->
-${txt(802, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(802, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(802, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-${leader(796, 90, 742, 168)}
+<!-- east of the flagship annex's roof edge, which reaches x 804 at the third line -->
+${txt(812, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
+${txt(812, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
+${txt(812, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+${leader(806, 90, 742, 168)}
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
 ${txt(1540, 413, `no meter reads it · rust: vanilla ${RUST_T[g(6).rust]}, mobx ${RUST_T[g(7).rust]}`, 'lblf', 'end')}
 ${lead(1292, 420, DISTRICT_BOUNDS.app[2], DISTRICT_BOUNDS.app[1])}
 
-${txt(SITE_NE[0] + 14, SITE_NE[1] + 18, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(SITE_NE[0] + 14, SITE_NE[1] + 31, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf')}
-${txt(SITE_NE[0] + 14, SITE_NE[1] + 45, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf')}
-${lead(SITE_NE[0] + 8, SITE_NE[1] + 14, DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1])}
+${txt(1540, SITE_NE[1] + 18, 'www/ + examples/ — THE SHOPFRONT', 'lblb', 'end')}
+${txt(1540, SITE_NE[1] + 31, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), ${lampsNote(g(10))} — ${dimOf(10)} metered light`, 'lblf', 'end')}
+${txt(1540, SITE_NE[1] + 45, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), ${lampsNote(g(11))}, rust ${RUST_T[g(11).rust]} — ${PUFFS(g(11).steam) === 3 ? 'at full steam' : 'steaming'}, ${g(11).lamps ? 'barely lit' : 'unlit'}`, 'lblf', 'end')}
+${lead(SITE_NE[0] + 78, SITE_NE[1] + 12, DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1])}
 
-${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(60, 573, `${dsteam('tool')} commits/90d across ${TOOLN} machines · pipes all green`, 'lblf')}
-${txt(60, 585, `rust: ${TOOLRUST} of the ${TOOLN} carry any at all, the rest stand at ${RUST_T[0]}`, 'lblf')}
-${leader(300, 552, 330, 522)}
+${txt(60, 576, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(60, 589, `${dsteam('tool')} commits/90d across ${TOOLN} machines · pipes all green`, 'lblf')}
+${txt(60, 601, `rust: ${TOOLRUST} of the ${TOOLN} carry any at all, the rest stand at ${RUST_T[0]}`, 'lblf')}
+${leader(300, 568, 330, 538)}
 
 <!-- callouts -->
 ${FLAG_LINES.map(([y, s, cls]) => txt(FLAG_X, y, s, cls)).join('\n')}
 ${leader(388, FLAG_Y + 9, 526, 132)}
 
-<!-- west of the plant row the caption passes under, whose bases reach y 648 -->
-${txt(356, 655, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
-${txt(356, 667, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf')}
-${leader(372, 638, 440, 492)}
+<!-- under the yard's south edge, below the plugin's plant -->
+${txt(495, 722, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr', 'end')}
+${txt(495, 734, TDP_SPLIT ? `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d` : `${TDP.files} files, each touched within ${TDP.idlestDays}d`, 'lblf', 'end')}
+${leader(490, 710, ...pt(g(13).x + g(13).s / 2, g(13).y + g(13).s + 3))}
 
-${txt(20, 620, '@tools/happy-dom — a spec annex lit by its own canary:', 'lbls')}
-${txt(20, 633, `it lights the workaround it guards, ${g(26).eff}% of its ${g(26).sl} lines`, 'lblf')}
-${leader(20, 606, 146, 418)}
+${txt(20, 626, '@tools/happy-dom — a spec annex lit by its own canary:', 'lbls')}
+${txt(20, 639, `it lights the workaround it guards, ${g(26).eff}% of its ${g(26).sl} lines`, 'lblf')}
+${leader(20, 612, 146, 418)}
 
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'J',
+  num: '7B', id: 'working', rev: 'K',
   title: 'THE WORKING CITY',
   sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window ${WINDOW} · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

@@ -48,7 +48,7 @@ const HOME = {
   pr655: `${REPO}/pull/655`,
   scc: 'https://github.com/boyter/scc',
   turbo: 'https://turborepo.dev',
-  cypress: 'https://www.cypress.io',
+  playwright: 'https://playwright.dev',
 };
 
 // ---- scale rule ----------------------------------------------------------------
@@ -80,96 +80,86 @@ const TIER_TEXT = {
 export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
-  // east of lit-ui-router's annex, which reaches x 251.3 at the b499e2a5 refresh
-  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   257,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
-  // south of the flagship's annex, which reaches y 140.6 at the b499e2a5 refresh
-  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 153, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
-  [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
+  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   266,   20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
+  // the bindings stand in one column under the flagship, each core in the north-east column beside the server's annex
+  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   30,  152, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
+  [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   504,  246, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
   // --- apps/ — the proving ground ----------------------------------------------
-  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   590,  10, 'the routes + views every sample app mounts'],
-  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   740,  10, 'the plain-lit demo'],
-  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   740,  90, 'the mobx demo'],
-  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   720, 150, 'the shared route table, server-side too'],
-  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     600, 150, 'cypress · drives the docs build'],
+  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   640,   10, 'the routes + views every sample app mounts'],
+  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   790,   10, 'the plain-lit demo'],
+  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   790,   90, 'the mobx demo'],
+  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   770,  150, 'the shared route table, server-side too'],
+  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     650,  150, 'playwright · drives the docs build'],
   // --- www/ + examples/ — the shopfront ---------------------------------------
-  [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   680, 320, 'vitepress + the worker that serves it'],
-  [11, 'examples',                 'examples',                           'site', 'line',   680, 410, 'stackblitz-ready copies, own lockfiles'],
+  [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   680,  340, 'vitepress + the worker that serves it'],
+  [11, 'examples',                 'examples',                           'site', 'line',   680,  452, 'stackblitz-ready copies, own lockfiles'],
   // --- tools/ — the instrument yard --------------------------------------------
   // south-west off 20, 430, where the 150 px tower stands in front of dts-backtest,
   // eslint-ts-parser and lit-test-env on the 350 row; at y 452 it still hides none of them
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',     0, 452, 'hosts published-diff — the one publish halt'],
-  [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 190, 430, 'builds the API pages, gates nothing'],
+  [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 486,  600, 'builds the API pages, gates nothing'],
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `${DTS.srcFiles} file${DTS.srcFiles === 1 ? '' : 's'} · ${DTS.srcSloc} lines hold the TS 5.0 floor`],
-  // west off 300, then 270, as its annex grew into repo-checks and embed-heights (to 419.3 at the eb1162da refresh)
-  [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 230, 430, 'the CI graph helper — and its error summary'],
+  [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 208,  494, 'the branch CI gate and the bundle-stats upload'],
   // south of workers-builds, so road G runs west and then north between 40 and compat-guards
   [16, '@tools/shared',            'tools/shared',                       'tool', 'report', 200, 603, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 336, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
-  [20, '@tools/oxc-emit',          'tools/oxc-emit',                     'tool', 'line',   230, 350, 'both build passes, one emitter'],
-  // east off 280, 288, then 298, as oxc-emit's annex grew (to 302.3 at the eb1162da refresh)
-  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   310, 350, 'the shared release-it config'],
-  [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 368, 350, 'the lit-analyzer wrapper'],
+  [20, '@tools/oxc-emit',          'tools/oxc-emit',                     'tool', 'line',   234,  350, 'both build passes, one emitter'],
+  [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   316,  350, 'the shared release-it config'],
+  [22, '@tools/lit-template-lint', 'tools/lit-template-lint',            'tool', 'report', 446,  350, 'lit templates lowered to TypeScript and type-checked'],
   [23, '@tools/lit-test-env',      'tools/lit-test-env',                 'tool', 'pr',      85, 350, 'the browser harness every suite loads'],
-  [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 470, 350, 'vue-tsc over the docs components'],
-  // off the 350 row's east end, where repo-checks' roof and badge stand over it
+  [24, '@tools/vue-check',         'tools/vue-check',                    'tool', 'report', 376,  350, 'vue-tsc over the docs components'],
   [25, '@tools/lcov-rebase',       'tools/lcov-rebase',                  'tool', 'report', 180, 395, 'coverage path rewriting'],
-  // east off 125 when lit-test-env took a spec annex at the 9e656ab3 refresh
-  [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     163, 350, 'the node-side DOM the unit suites run in'],
-  [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    208, 350,'ambient types only — nothing to mass'],
+  [26, '@tools/happy-dom',         'tools/happy-dom',                    'tool', 'pr',     174,  350, 'the node-side DOM the unit suites run in'],
+  [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    214,  350,'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
   // east off 380, 388 and 394 as bundle-probe's annex grew (to 398.2 at the c1b759a4 refresh)
   [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     408, 550, 'the custom-element rules as an oxlint jsPlugins config the root extends'],
   [30, '@tools/eslint-ts-parser',  'tools/eslint-ts-parser',             'tool', 'report',  54, 350, 'a one-line parser shim — the smallest thing in the yard'],
   // --- the fifth published package (#676) — first drawn here --------------------
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 350, 176, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 346,  170, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
   // --- born 2026-09-04 (#703) ------------------------------------------------------
-  // moved off the 430 row when the hygiene block below took the yard's east end:
-  // its old lot left 10.9 units to build_and_test's annex, the sheet's tightest pair
-  [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 449, 462, 'docs embed heights, measured in Chromium — outside ci'],
+  [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 476,  508, 'docs embed heights, measured in Chromium — outside ci'],
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) --------------------
-  [33, '@tools/bootstrap',         'tools/bootstrap',                    'tool', 'report', 490, 350, 'zero-dep manifest reads — the one thing that runs before pnpm install'],
-  [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514, 530, 'the repo rule plugin, the complexity ceiling and the Actions formatter root eslint.config.ts composes'],
-  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     449, 385, 'graph edges, inputs, versions, coverage, patches, deps'],
+  [33, '@tools/bootstrap',         'tools/bootstrap',                    'tool', 'report', 394,  350, 'zero-dep manifest reads — the one thing that runs before pnpm install'],
+  [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514,  552, 'the repo rule plugin, the complexity ceiling and the Actions formatter root eslint.config.ts composes'],
+  [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     440,  434, 'graph edges, inputs, versions, coverage, patches, deps'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
-  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   680, 100, 'the effect demo — the fourth app shell the docs site serves'],
-  // south of the flagship, east of road C at x 20 and west of the prerender bridge
-  [37, 'lit-ui-router-effect',     'packages/lit-ui-router-effect',      'pkg',  'line',    30, 210, `the effect bindings · annex ${ratio('packages/lit-ui-router-effect')}×`],
+  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   730,  100, 'the effect demo — the fourth app shell the docs site serves'],
+  [37, 'lit-ui-router-effect',     'packages/lit-ui-router-effect',      'pkg',  'line',    30,  200, `the effect bindings · annex ${ratio('packages/lit-ui-router-effect')}×`],
   // --- the prerender package, born 2026-09-14 (#806) -------------------------------
-  // the district's south row, east of the effect bindings: a lot with nothing tall
-  // in front of it; its annex spans x 215–288, so the oxc-emit lane ends here
-  [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   160, 210, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
-  // --- born 2026-10-01 (#1056) -----------------------------------------------------
-  // east off 560, then 570, as repo-checks' annex grew (to 579.8 at the c1b759a4 refresh)
-  [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 584, 430, 'CRAP hotspots from coverage — reports, gates nothing'],
+  [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   130,  178, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
+  // --- born 2026-10-01 (#1056): the yard's south-east corner, west of the shopfront's towers ---
+  [39, '@tools/crap',              'tools/crap',                         'tool', 'report', 560,  600, 'CRAP hotspots from coverage — reports, gates nothing'],
   // --- born 2026-10-09 (#1143): the yard's south-west corner, in front of the tower ---
-  [40, '@tools/oxlint-anti-slop',  'tools/oxlint-anti-slop',             'tool', 'report',   0, 540, 'the vendored anti-slop rules every oxlint lane loads'],
+  [40, '@tools/oxlint-anti-slop',  'tools/oxlint-anti-slop',             'tool', 'report',   0,  556, 'the vendored anti-slop rules every oxlint lane loads'],
   // --- the signals trio and the shared snapshot, born 2026-10-12/13 (#1185) ---------
-  // a new south row under 31, east of ssr's annex and west of road F's x 540 leg
-  [41, 'lit-ui-router-signals',    'packages/lit-ui-router-signals',     'pkg',  'line',   350, 262, `the signals bindings · annex ${ratio('packages/lit-ui-router-signals')}×`],
-  [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   440, 262, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
-  [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   494, 262, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
-  // north-east, between road A at y 45 and road F at y 115; east off 440 as the server's annex grew (to 487.2 at the 3f55e419 refresh)
-  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   490,  91, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
-  // the gap between sample-app-shared and e2e
-  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   610, 100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
-  // the yard's middle: south of repo-checks' annex, north-east of @tools/eslint's badge
-  [46, '@tools/a11y',              'tools/a11y',                         'tool', 'report', 540, 472, 'axe over the docs pages and app mounts — acceptance, gates nothing'],
-  // north-east beside the snapshot, between road A at y 45 and road F at y 115
-  [47, 'ui-router-mobx',           'packages/ui-router-mobx',            'pkg',  'line',   490,  70, `the framework-agnostic MobX store · annex ${ratio('packages/ui-router-mobx')}×`],
+  [41, 'lit-ui-router-signals',    'packages/lit-ui-router-signals',     'pkg',  'line',   504,  180, `the signals bindings · annex ${ratio('packages/lit-ui-router-signals')}×`],
+  // the cores and the private shared packages: one column east of the server's annex, clear of road A at y 45 and road F at y 115
+  [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   528,   -2, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
+  [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   528,   92, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
+  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   528,  122, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
+  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   660,  100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
+  [46, '@tools/a11y',              'tools/a11y',                         'tool', 'report', 540,  508, 'axe over the docs pages and app mounts — acceptance, gates nothing'],
+  [47, 'ui-router-mobx',           'packages/ui-router-mobx',            'pkg',  'line',   528,   58, `the framework-agnostic MobX store · annex ${ratio('packages/ui-router-mobx')}×`],
   // --- born 2026-10-15/16 (#1388, #1409) --------------------------------------------
   // the yard's south row, east of @tools/shared's annex and south of bundle-probe
   [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 603, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
-  // north of the route snapshot, between road A at y 45 and the snapshot; east off 440 with it
-  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   490,  48, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
-  // --- born 2026-10-22/24: the registry east of the plugin's annex, south of road F at y 115 ---
-  [50, 'ui-router-registry',       'packages/ui-router-registry',        'pkg',  'line',   455, 133, `typed state names and params · types only · annex ${ratio('packages/ui-router-registry')}×`],
+  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   528,   27, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
+  [50, 'ui-router-registry',       'packages/ui-router-registry',        'pkg',  'line',   436,  256, `typed state names and params · types only · annex ${ratio('packages/ui-router-registry')}×`],
   // the yard's south-east lot, east of ci-logs' annex and south of bundle-probe's
   [51, '@tools/release-ledger',    'tools/release-ledger',               'tool', 'report', 380, 590, 'the ledger\'s model — one fold over npm and GitHub'],
-  // north of docs, either side of road B's x 700 leg
-  [52, 'release-diffs',            'www/release-diffs.lit-ui-router.dev', 'site', 'line',  682, 280, 'a worker that answers 404 · no test script'],
-  [53, 'release-ledger',           'www/release-ledger.lit-ui-router.dev', 'site', 'line', 712, 245, 'OIDC claims in, a D1 ledger of every release out'],
+  [52, 'release-diffs',            'www/release-diffs.lit-ui-router.dev', 'site', 'line',  885,  340, 'npm diff between two published versions, built once and kept in R2'],
+  [53, 'release-ledger',           'www/release-ledger.lit-ui-router.dev', 'site', 'line', 756,  252, 'OIDC claims in, a D1 ledger of every release out'],
+  // --- born 2026-11-01/09 (#1793, #1840, #1956, #1769, #1663) ---------------------------
+  [54, '@repo/transition-status',  'packages/shared/transition-status',  'pkg',  'line',   528, 146, `private · the newest transition's status, inlined into each agnostic core by oxc-emit · annex ${ratio('packages/shared/transition-status')}×`],
+  // the yard's middle, on the lot build_and_test held before the summary left it
+  [55, '@tools/turbo-summary',     'tools/turbo-summary',                'tool', 'report', 236, 400, 'every CI turbo run reported to the step summary — reports, gates nothing'],
+  // under the eslint plugin, west of the registry
+  [56, 'postcss-lit-html',         'packages/postcss-lit-html',          'pkg',  'line',   346, 256, `private · the PostCSS syntax stylelint reads lit templates through · annex ${ratio('packages/postcss-lit-html')}×`],
+  [57, '@tools/doc-example-check', 'tools/doc-example-check',            'tool', 'report', 292,  494, 'type-checks the @example blocks in the packages\' doc comments'],
+  [58, '@tools/md-content-mapper', 'tools/md-content-mapper',            'tool', 'report', 366,  494, 'type-checks the Markdown ts fences flagged check'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -187,11 +177,13 @@ const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', impor
 const MEMBER = new Map(FILES.members.map((m) => [m.dir, m]));
 const PUB = PLACED.filter((p) => p[3] === 'pkg' && MEMBER.get(p[2]) && !MEMBER.get(p[2]).private);
 const PUBLISHED_PKGS = PUB.length;
-const PRIV_PKGS = PLACED.filter((p) => p[3] === 'pkg' && MEMBER.get(p[2])?.private).length;
-// road B: oxc-emit builds every published package and nothing else in the district
+const PRIV_SHARED = PLACED.filter((p) => p[2].startsWith('packages/shared/') && MEMBER.get(p[2])?.private).length;
+// road B: oxc-emit builds every published package, and the private packages that carry a build of their own
 const OXC_BUILT = new Set(CIG.graphNodes.filter((n) => n.real && n.task === 'build:js').map((n) => n.pkg));
 const PUB_NAMES = PUB.map((p) => MEMBER.get(p[2]).name);
-if (PUB_NAMES.some((n) => !OXC_BUILT.has(n)) || PLACED.some((p) => p[3] === 'pkg' && MEMBER.get(p[2])?.private && OXC_BUILT.has(MEMBER.get(p[2]).name))) throw new Error('sheet 7: road B says oxc-emit builds exactly the published packages, and the plate says otherwise');
+if (PUB_NAMES.some((n) => !OXC_BUILT.has(n))) throw new Error('sheet 7: road B says oxc-emit builds every published package, and the plate says otherwise');
+const BUILT_PRIVATE = PLACED.filter((p) => p[3] === 'pkg' && MEMBER.get(p[2])?.private && OXC_BUILT.has(MEMBER.get(p[2]).name)).map((p) => p[1]);
+const OXC_ALSO = BUILT_PRIVATE.length ? ` and the private ${BUILT_PRIVATE.join(', ')}` : '';
 // every census member stands on a lot, so no member drops silently off the city
 const UNPLACED = PLATE.rows.filter((r) => !PLACED.some((p) => p[2] === r.member)).map((r) => r.member);
 if (UNPLACED.length) throw new Error(`sheet 7: census-city.json carries ${UNPLACED.join(', ')} and PLACED gives ${UNPLACED.length === 1 ? 'it' : 'them'} no lot`);
@@ -265,7 +257,7 @@ ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`
 // badges that would land on a neighbouring roof edge get lifted into clear air
 const BADGE_LIFT = { 1: 20, 2: 30, 6: 35, 10: 28, 16: 30, 20: 26, 21: 34, 23: 34, 27: 34 };
 // badges whose air above is a neighbour's mass sit centred on their own roof instead
-const BADGE_ON_ROOF = new Set([16, 19, 32, 40]);
+const BADGE_ON_ROOF = new Set([16, 19, 32, 34, 40]);
 
 // ---- roads ----------------------------------------------------------------------
 // Routed on the iso grid and trimmed in SCREEN space at both ends.  A block's roof
@@ -299,17 +291,18 @@ const roads = [
   road([[g(2).x2, 45], [g(5).x, 45]], { ...BUILDS, t1: g(5).y + g(5).s - 45 + 8 }),
   // 2 · apps ship into the shopfront: docs depends on sample-app-lit-vanilla,
   //    -mobx and -routes (and on ui-router-server).  turbo: docs dependsOn ^build.
-  road([[700, g(8).y2], [700, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
+  road([[750, g(8).y2], [750, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
   // 3 · @tools/oxc-emit is a devDependency of every packages/ member and runs both
   //    build passes (turbo build:js / build:types); drawn to the nearest of them,
-  //    the prerender bridge, turning west under its annex to reach the src block.
-  road([[238, g(20).y], [238, 335], [g(38).x + g(38).s / 2, 335], [g(38).x + g(38).s / 2, g(38).y + g(38).s]], { ...BUILDS, t0: 0, to: 38 }),
+  //    the prerender bridge, turning west under its annex to reach the src block,
+  //    east of the harness lane's turn on the same row.
+  road([[238, g(20).y], [238, 335], [g(38).x + g(38).s - 4, 335], [g(38).x + g(38).s - 4, g(38).y + g(38).s]], { ...BUILDS, t0: 0, to: 38 }),
   // 4 · typecheck reads BOTH series: turbo typecheck dependsOn ^build:types, and
   //    its inputs are $TURBO_DEFAULT$ — every tracked file of the package, src and
   //    specs alike.  Two stubs, one trunk, into the consumer that reads the types.
   road([[27, g(1).y + g(1).s], [27, 115]], { ...READS, from: 1, mk: null }),
   road([[108, g(1).ay + g(1).sa], [108, 115]], { ...READS, t0: clr(1, 9, true), mk: null }),
-  road([[27, 115], [540, 115], [540, 345], [g(10).x, 345]], { ...READS, t0: 0, to: 10 }),
+  road([[27, 115], [615, 115], [615, 345], [g(10).x, 345]], { ...READS, t0: 0, to: 10 }),
   // 5 · @tools/dts-backtest depends on the four runtime packages and backtests
   //    their emitted d.ts against the TS 5.0 floor (turbo: #test dependsOn ^build).
   //    the lane moved 33 -> 20 when member 37 took the lot at x 30: the old lane ran
@@ -317,12 +310,13 @@ const roads = [
   road([[20, g(1).y + g(1).s], [20, g(14).y]], { ...TESTS, from: 1, to: 14 }),
   // 6 · the harness under the annexes: every vitest package devDepends on
   //    @tools/lit-test-env and @tools/happy-dom (turbo test inputs vitest.setup.ts).
-  road([[91, g(23).y], [91, 335], [104, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
-  road([[g(26).x + 6, g(26).y], [g(26).x + 6, 335], [106, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
-  road([[105, 335], [105, g(1).ay + g(1).sa]], { ...TESTS, t0: 0, to: 1, toAnnex: true }),
-  // 7 · the docs build is what cypress drives: sample-app-lit-e2e depends on docs;
+  //    the lane runs north between the bindings' annexes and the prerender bridge.
+  road([[91, g(23).y], [91, 335], [123, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
+  road([[g(26).x + 6, g(26).y], [g(26).x + 6, 335], [125, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
+  road([[124, 335], [124, g(1).ay + g(1).sa]], { ...TESTS, t0: 0, to: 1, toAnnex: true }),
+  // 7 · the docs build is what playwright drives: sample-app-lit-e2e depends on docs;
   //    turbo e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev.
-  road([[g(10).x, 352], [626, 352], [626, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
+  road([[g(10).x, 352], [g(9).x + 26, 352], [g(9).x + 26, g(9).y2]], { ...TESTS, t0: 9, to: 9, toAnnex: true }),
   // 8 · @tools/shared has SHARED_IMP.length dependents; the road to the largest,
   //    run north between member 40 and compat-guards into the tower's annex.
   road([[g(16).x - 6, g(16).y + 15], [115, g(16).y + 15], [115, g(12).ay + g(12).sa]], { ...LIB, t0: 9, to: 12, toAnnex: true }),
@@ -406,7 +400,7 @@ const SCHEDULES = [
     ['road', 'kind', 'the edge in the repo'],
     [
       ['A', 'builds into', 'packages/* → the sample apps · lit-ui-router → 4 of them, ui-router-server → routes'],
-      ['B', 'builds into', `@tools/oxc-emit → all ${wordn(PUBLISHED_PKGS)} published packages · devDep of each · runs build:js + build:types`],
+      ['B', 'builds into', `@tools/oxc-emit → all ${wordn(PUBLISHED_PKGS)} published packages${OXC_ALSO} · devDep of each · runs build:js + build:types`],
       ['C', 'tests exercise', '@tools/dts-backtest → the runtime packages it deps on, and ui-router-registry · #test dependsOn ^build'],
       ['D', 'tests exercise', '@tools/lit-test-env + @tools/happy-dom → the annex · devDep of lit-ui-router + -mobx'],
       ['E', 'tests exercise', 'sample-app-lit-e2e → docs · workspace dep · e2e dependsOn ^build, with @www/lit-ui-router.dev#wrangler:dev'],
@@ -418,9 +412,9 @@ const SCHEDULES = [
 
 // the figure ends 24 px under the nearest district corner; the yard's lettering must stand above it
 const VH = Math.ceil(Math.max(...Object.values(DISTRICT_BOUNDS).map(([, , x2, y2]) => pt(x2, y2)[1]))) + 24;
-if (VH < 600) throw new Error(`sheet 7: the figure ends at y ${VH}, above the yard's lettering at 587`);
+if (VH < 616) throw new Error(`sheet 7: the figure ends at y ${VH}, above the yard's lettering at 603`);
 
-const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the eslint plugin stands below them at the district's near corner, the effect bindings and the prerender bridge stand on the row south of the flagship, and the signals bindings and two framework-agnostic cores take the district's south row, and the third core stands with the ${wordn(PRIV_PKGS)} private shared packages in its north-east corner, with the types-only registry on the district's east edge above the plugin's annex. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs, its two release workers and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below the drawing lists all ${M.length} members with exact file and line counts, their annex, and their gate tier, and a road register names the repository edge behind each lettered road.">
+const svg = `<svg viewBox="0 0 1560 ${VH}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, the mobx and effect bindings stand in a column under the flagship with the prerender bridge beside them, the eslint plugin stands south of the server over the private PostCSS syntax and the types-only registry, the three framework-agnostic cores and the ${wordn(PRIV_SHARED)} private shared packages stand in one column east of the server's annex, and the signals bindings and the location plugin stand at the foot of that column. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs, its two release workers and examples — examples the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below the drawing lists all ${M.length} members with exact file and line counts, their annex, and their gate tier, and a road register names the repository edge behind each lettered road.">
 ${defs(P)}
 
 ${txt(1520, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 3 px per authored file · mass = sloc × files', 'lbls', 'end')}
@@ -431,15 +425,15 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the road register under the figure -->
-${[['A', 1017, 358], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 894, 535], ['F', 879, 498], ['G', 196, 470]]
-  .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
+${[['A', ...pt(614, 45), -4, -8], ['B', ...pt(196, 275), -12, 3], ['C', ...pt(20, 250), -11, 4], ['D', ...pt(124, 300), 7, 4], ['E', ...pt(g(9).x + 26, 235), -12, 2], ['F', ...pt(615, 200), 8, 4], ['G', 196, 470, 0, 0]]
+  .map(([k, x, y, dx, dy]) => txt((x + dx).toFixed(0), (y + dy).toFixed(0), k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
-<!-- east of the flagship annex's roof corner at this height, off 824 at the b499e2a5 refresh with the server's cap -->
-${txt(832, 110, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(832, 123, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
-${txt(832, 137, BIG_ANNEX === DP.n ? 'every one carries a bigger annex than itself' : `${BIG_ANNEX} of ${DP.n} carry a bigger annex than themselves`, 'lblf')}
-${lead(826, 126, g(1).x2, g(1).ay + 0.32 * g(1).sa, 0.87 * g(1).ha)}
+<!-- east of the server's roof corner at this height -->
+${txt(848, 96, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(848, 109, `${DP.n} members, ${PUBLISHED_PKGS} published · ${DP.f} files · ${fmt(DP.sl)} sloc`, 'lblf')}
+${txt(848, 123, BIG_ANNEX === DP.n ? 'every one carries a bigger annex than itself' : `${BIG_ANNEX} of ${DP.n} carry a bigger annex than themselves`, 'lblf')}
+${lead(842, 112, g(2).x + 0.5 * g(2).s, g(2).y + 0.2 * g(2).s, g(2).h)}
 
 ${txt(1540, 300, `sample-app-shared — ${g(5).sf}f · ${fmt(g(5).sl)} sloc`, 'lblb', 'end')}
 ${txt(1540, 313, 'the proving ground’s broadest block —', 'lblf', 'end')}
@@ -456,17 +450,17 @@ ${txt(SITE_NE[0] + 24, SITE_NE[1] + 27, `${DS.n} members · ${DS.f} files · ${f
 ${txt(SITE_NE[0] + 24, SITE_NE[1] + 41, `docs, its ${wordn(RELEASE_WORKERS.length)} release workers and examples`, 'lblf')}
 ${lead(SITE_NE[0] + 18, SITE_NE[1] + 10, DISTRICT_BOUNDS.site[2], DISTRICT_BOUNDS.site[1])}
 
-${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(60, 573, `${DT.n} members · ${DT.f} files · ${fmt(DT.sl)} sloc`, 'lblf')}
-${txt(60, 587, `${M.filter((r) => r[2] === 'tool' && S(r[7]) === MIN).length} of its masses sit on this drawing’s minimum footprint`, 'lblf')}
-${leader(300, 552, 330, 522)}
+${txt(60, 576, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(60, 589, `${DT.n} members · ${DT.f} files · ${fmt(DT.sl)} sloc`, 'lblf')}
+${txt(60, 603, `${M.filter((r) => r[2] === 'tool' && S(r[7]) === MIN).length} of its masses sit on this drawing’s minimum footprint`, 'lblf')}
+${leader(300, 568, 330, 538)}
 
 <!-- callouts -->
-${txt(60, 114, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
-${txt(60, 128, `${g(1).sf} authored files · ${fmt(g(1).sl)} sloc`, 'lblf')}
-${txt(60, 142, `its annex — ${g(1).pf} files · ${fmt(g(1).pl)} sloc, ${ratio('packages/lit-ui-router')}× the source`, 'lblf')}
-${txt(60, 156, 'the biggest thing this district ever built is a test', 'lblf')}
-${lead(346, 122, g(1).x + 0.24 * g(1).s, g(1).y + g(1).s, 0.41 * g(1).h)}
+${txt(60, 84, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
+${txt(60, 98, `${g(1).sf} authored files · ${fmt(g(1).sl)} sloc`, 'lblf')}
+${txt(60, 112, `its annex — ${g(1).pf} files · ${fmt(g(1).pl)} sloc, ${ratio('packages/lit-ui-router')}× the source`, 'lblf')}
+${txt(60, 126, 'the biggest thing this district ever built is a test', 'lblf')}
+${lead(346, 92, g(1).x + 0.24 * g(1).s, g(1).y + g(1).s, 0.41 * g(1).h)}
 
 ${txt(20, 502, `@tools/release — ${g(12).sf}f · ${fmt(g(12).sl)} sloc`, 'lblr')}
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
@@ -475,7 +469,7 @@ ${lead(178, 497, g(12).x + g(12).s, g(12).y + g(12).s / 2, (g(12).ha + g(12).h) 
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'K',
+  num: 7, id: 'census', rev: 'L',
   title: 'THE MEASURED CITY',
   sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
@@ -486,8 +480,8 @@ export const sheet7 = {
   notes: `
 <p><strong>Method — one basis, two series.</strong> Every count on this sheet is read at build time from the checked-in plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-city.json</code></a>, ${BASIS}: <code>.ts/.tsx/.js/.jsx/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, fixtures, <code>dist/</code> and <code>node_modules/</code>; <em>sloc</em> is <a href="${HOME.scc}"><code>scc</code></a>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. Sheet 3 throws test code away; this sheet does not — anything matching <code>*.{spec,test,cy}.*</code> or living under <code>specs/ test/ tests/ __tests__/ cypress/</code> is counted into a second series and drawn as that member's annex. ${M.length} members: ${TOT_SF} authored files and ${fmt(TOT_SL)} sloc of source, plus ${TOT_PF} files and ${fmt(TOT_PL)} sloc of spec. The packages district's ${DP.n} buildings reconcile exactly with sheet 3's source slab — ${DP.f} files, ${fmt(DP.sl)} lines — because both are queries over one census rather than two hand counts.</p>
 <p><strong>Every shipped building${SMALL_ANNEX.length ? ` but ${SMALL_ANNEX.map((p) => `<code>${p[1]}</code>`).join(' and ')}` : ''} carries an annex bigger than itself.</strong> ${dirLink('packages/lit-ui-router', '<code>lit-ui-router</code>')}: ${fmt(g(1).sl)} authored lines against ${fmt(g(1).pl)} of spec (${ratio('packages/lit-ui-router')}×). ${dirLink('packages/ui-router-server', '<code>ui-router-server</code>')}: ${fmt(g(2).sl)} vs ${fmt(g(2).pl)} (${ratio('packages/ui-router-server')}×). ${dirLink('packages/lit-ui-router-mobx', '<code>lit-ui-router-mobx</code>')}: ${g(3).sl} vs ${g(3).pl} (${ratio('packages/lit-ui-router-mobx')}×). ${dirLink('packages/eslint-plugin-lit-ui-router', '<code>eslint-plugin-lit-ui-router</code>')}: ${g(31).sl} vs ${g(31).pl} (${ratio('packages/eslint-plugin-lit-ui-router')}×). ${dirLink('packages/lit-ui-router-effect', '<code>lit-ui-router-effect</code>')}: ${g(37).sl} vs ${g(37).pl} (${ratio('packages/lit-ui-router-effect')}×). ${dirLink('packages/lit-ui-router-ssr', '<code>lit-ui-router-ssr</code>')}: ${g(38).sl} vs ${g(38).pl} (${ratio('packages/lit-ui-router-ssr')}×). ${dirLink('packages/navigation-location-plugin', '<code>navigation-location-plugin</code>')}: ${g(4).sl} lines in ${g(4).sf} file${g(4).sf === 1 ? '' : 's'} under ${g(4).pf} spec files (${ratio('packages/navigation-location-plugin')}×). ${[41, 42, 43, 47].map((n) => `${dirLink(PLACED.find((p) => p[0] === n)[2], `<code>${g(n).name}</code>`)}: ${g(n).sl} vs ${g(n).pl} (${ratio(PLACED.find((p) => p[0] === n)[2])}×)`).join('. ')}. ${SMALL_ANNEX.map((p) => `${dirLink(p[2], `<code>${p[1]}</code>`)} is types only: ${row(p[2]).srcSloc} lines against a ${row(p[2]).specSloc}-line fixture (${ratio(p[2])}×), because its tests are <code>*.test-d.ts</code> type assertions, which the census leaves out`).join('. ')}${SMALL_ANNEX.length ? '. ' : ''}The test budget lives exactly where the repo says it should — in <code>packages/*</code>, and nowhere else at that ratio.</p>
-<p><strong>Every road is citable.</strong> Solid roads are build edges: <code>packages/*</code> into the sample apps, the apps into ${dirLink('www/lit-ui-router.dev', '<code>docs</code>')}, ${dirLink('tools/oxc-emit', '<code>@tools/oxc-emit</code>')} into all ${wordn(PUBLISHED_PKGS)} published packages — each a <code>workspace:</code> dependency, each backed by <a href="${HOME.turbo}">turbo</a>'s <code>build</code>/<code>docs</code> tasks depending on <code>^build</code>. Dashed soft roads are the test lane: ${dirLink('tools/dts-backtest', '<code>@tools/dts-backtest</code>')} depends on the runtime packages of the district and backtests their emitted <code>d.ts</code> against the TS 5.0 floor; ${dirLink('tools/lit-test-env', '<code>@tools/lit-test-env</code>')} and ${dirLink('tools/happy-dom', '<code>@tools/happy-dom</code>')} run up into <code>lit-ui-router</code>'s annex because they are its devDependencies and the harness its suites load; ${dirLink('apps/sample-app-lit-e2e', '<code>sample-app-lit-e2e</code>')} depends on <code>docs</code>, and turbo's <code>e2e</code> depends on <code>^build</code> and runs with <code>@www/lit-ui-router.dev#wrangler:dev</code>, so <a href="${HOME.cypress}">Cypress</a> drives the built shopfront under its worker rather than a vite dev server. The accent road is the one that leaves a member twice — once from the source block and once from the spec annex — because the package's <code>typecheck</code> reads both: <code>tsconfig.json</code> includes <code>src/**</code>, specs and all (only the narrower <code>typecheck:src</code> excludes them), while the <code>^build:types</code> dependency is what carries the result into the next district. One faint road stands for ${SHARED_IMP.length}: that many members depend on ${dirLink('tools/shared', '<code>@tools/shared</code>')}, ${SHARED_TOOLS} of them instruments, and its <a href="${HOME.globs}"><code>src/globs.ts</code></a> (<a href="${HOME.pr655}">#655</a>) holds the custom-element glob three lanes share. Only the road to the largest is drawn, because drawing all ${SHARED_IMP.length} would turn the yard into hatching.</p>
-<p><strong>Severity in colour, mass in geometry — and they disagree.</strong> The tiers are sheet 3's, applied to whole members: ${dirLink('tools/release', '<code>@tools/release</code>')} is solid red because it hosts <code>published-diff</code>, the only structure that halts a publish; red hatch marks the seven members that can stop a pull request — Cypress <code>e2e</code>, <code>dts-backtest</code>, ${dirLink('tools/compat-guards', '<code>compat-guards</code>')}, <code>lit-test-env</code>, <code>happy-dom</code>, ${dirLink('tools/lint-elements', '<code>lint-elements</code>')}, whose eslint lane runs at <code>--max-warnings 0</code>, and ${dirLink('tools/repo-checks', '<code>repo-checks</code>')}, whose six checks — graph edges, task inputs, single version, patches, knip and dedupe — ride the lint lane; accent hatch marks ${dirLink('tools/workers-builds', '<code>@tools/workers-builds</code>')}, which gates the docs deploy and nothing earlier. Here the two encodings happen to agree once, on <code>release</code>, and disagree everywhere else: the harness that can stop every pull request in the repo is ${g(26).sl} authored lines of <code>@tools/happy-dom</code>, sitting on the drawing's minimum footprint.</p>
+<p><strong>Every road is citable.</strong> Solid roads are build edges: <code>packages/*</code> into the sample apps, the apps into ${dirLink('www/lit-ui-router.dev', '<code>docs</code>')}, ${dirLink('tools/oxc-emit', '<code>@tools/oxc-emit</code>')} into all ${wordn(PUBLISHED_PKGS)} published packages${OXC_ALSO} — each a <code>workspace:</code> dependency, each backed by <a href="${HOME.turbo}">turbo</a>'s <code>build</code>/<code>docs</code> tasks depending on <code>^build</code>. Dashed soft roads are the test lane: ${dirLink('tools/dts-backtest', '<code>@tools/dts-backtest</code>')} depends on the runtime packages of the district and backtests their emitted <code>d.ts</code> against the TS 5.0 floor; ${dirLink('tools/lit-test-env', '<code>@tools/lit-test-env</code>')} and ${dirLink('tools/happy-dom', '<code>@tools/happy-dom</code>')} run up into <code>lit-ui-router</code>'s annex because they are its devDependencies and the harness its suites load; ${dirLink('apps/sample-app-lit-e2e', '<code>sample-app-lit-e2e</code>')} depends on <code>docs</code>, and turbo's <code>e2e</code> depends on <code>^build</code> and runs with <code>@www/lit-ui-router.dev#wrangler:dev</code>, so <a href="${HOME.playwright}">Playwright</a> drives the built shopfront under its worker rather than a vite dev server. The accent road is the one that leaves a member twice — once from the source block and once from the spec annex — because the package's <code>typecheck</code> reads both: <code>tsconfig.json</code> includes <code>src/**</code>, specs and all (only the narrower <code>typecheck:src</code> excludes them), while the <code>^build:types</code> dependency is what carries the result into the next district. One faint road stands for ${SHARED_IMP.length}: that many members depend on ${dirLink('tools/shared', '<code>@tools/shared</code>')}, ${SHARED_TOOLS} of them instruments, and its <a href="${HOME.globs}"><code>src/globs.ts</code></a> (<a href="${HOME.pr655}">#655</a>) holds the custom-element glob three lanes share. Only the road to the largest is drawn, because drawing all ${SHARED_IMP.length} would turn the yard into hatching.</p>
+<p><strong>Severity in colour, mass in geometry — and they disagree.</strong> The tiers are sheet 3's, applied to whole members: ${dirLink('tools/release', '<code>@tools/release</code>')} is solid red because it hosts <code>published-diff</code>, the only structure that halts a publish; red hatch marks the seven members that can stop a pull request — Playwright <code>e2e</code>, <code>dts-backtest</code>, ${dirLink('tools/compat-guards', '<code>compat-guards</code>')}, <code>lit-test-env</code>, <code>happy-dom</code>, ${dirLink('tools/lint-elements', '<code>lint-elements</code>')}, whose eslint lane runs at <code>--max-warnings 0</code>, and ${dirLink('tools/repo-checks', '<code>repo-checks</code>')}, whose six checks — graph edges, task inputs, single version, patches, knip and dedupe — ride the lint lane; accent hatch marks ${dirLink('tools/workers-builds', '<code>@tools/workers-builds</code>')}, which gates the docs deploy and nothing earlier. Here the two encodings happen to agree once, on <code>release</code>, and disagree everywhere else: the harness that can stop every pull request in the repo is ${g(26).sl} authored lines of <code>@tools/happy-dom</code>, sitting on the drawing's minimum footprint.</p>
 <p><strong>What the districts say.</strong> The product is ${DP.n} modest buildings — ${fmt(DP.sl)} lines — against ${fmt(DT.sl)} in the instrument yard and ${fmt(DA.sl)} in the proving ground. The broadest source block on the sheet is ${dirLink('examples', '<code>examples</code>')} — ${fmt(g(11).sl)} lines of stackblitz copies — ${SRC_RANK[1][0] === 5 ? `with ${dirLink('apps/sample-app-shared', '<code>sample-app-shared</code>')}, which ships to nobody and gates nothing, just behind at ${fmt(g(5).sl)}` : `with <code>${SRC_RANK[1][1]}</code> just behind at ${fmt(SRC_RANK[1][7])} and ${dirLink('apps/sample-app-shared', '<code>sample-app-shared</code>')}, which ships to nobody and gates nothing, ${SAS_RANK} at ${fmt(g(5).sl)}`}; ${OVER_EX.length === 1 ? `the only footprint that outbuilds <code>examples</code> is <code>${OVER_EX[0]}</code>'s spec annex` : `${wordn(OVER_EX.length)} spec annexes outbuild <code>examples</code>`}. ${dirLink('tools/wintercg-globals', '<code>@tools/wintercg-globals</code>')} is drawn on the floor with no mass at all: it is ambient types, and a census that hides its empty members is not a census.</p>
 <p><strong>Numbers by import, not by paste.</strong> Every count above and on the drawing is read from <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-city.json</code></a>, the snapshot <a href="${HOME.probe}"><code>census-city.mjs</code></a> writes out of the master per-file census; this module holds placement, tiers and prose only. The plate is measured at a named ref rather than at whatever a working tree happens to hold — ${BASIS} — so every number here is citable to a committed file, and a member the sheet draws but the plate does not carry is a build error rather than a stale constant.</p>`,
   key: [

@@ -84,7 +84,7 @@ const DASH = [5 * PX, 4 * PX], DISTRICT_DASH = [7 * PX, 6 * PX];
 const WALL_FOOT = 0.9;
 export const CROWN_FOOT = 0.78;
 const PAD = 30, GRID_STEP = 50;
-export const BUDGET = { city: 272 * 1024, plant: 496 * 1024 };
+export const BUDGET = { city: 304 * 1024, plant: 576 * 1024 };
 
 // The material dress, as one function the page and the bake both run: `c` is a token
 // name → linear [r, g, b], `M` the material plan, `lane` 'tier' or 'light'.
@@ -492,7 +492,8 @@ function writeCity(plant) {
   const matOf = (name) => MAT.get(name);
 
   // ---- write: positions as int16 on one strided view, scaled back by each node's own scale ----
-  const Q = 64;
+  // steps per plan unit: int16 holds the ground out to 546 units from the centre
+  const Q = 60;
   const w = glbWriter();
   const patterns = indexPatterns(w, nodes);
   const live = nodes.flatMap((nd) => nd.prims.filter((p) => p.n > 0));

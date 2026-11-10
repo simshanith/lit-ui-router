@@ -3,7 +3,9 @@
 // measured inside a MATERIALIZED, INSTALLED, BUILT archive of the ref
 // (basis.mjs materialize + installDeps + the tree's own .bin/turbo run build),
 // never the working tree.  Writes www/atlas.lit-ui-router.dev/data/census-nm.json.
-// BFS over package.json `dependencies` (+ peerDependencies when installed),
+// BFS over package.json `dependencies` (+ required peerDependencies when installed:
+// an optional peer is never auto-installed, and a workspace member resolves one
+// through its own devDependencies, which a registry install would not carry),
 // resolving each dep by walking node_modules dirs upward from the dependent's
 // real path (pnpm layout: .pnpm/<pkg>@<v>/node_modules/<dep> siblings).
 // Measures delivered code: .js/.mjs/.cjs/.ts/.mts/.cts/.css/.html, with .d.ts/.d.mts/.d.cts
@@ -60,7 +62,8 @@ const queue = [[realpathSync(APP), '(app)', true]];
 while (queue.length) {
   const [dir, name, isRoot] = queue.shift();
   const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
-  const deps = { ...(manifest.dependencies ?? {}), ...(manifest.peerDependencies ?? {}) };
+  const optional = (dep) => manifest.peerDependenciesMeta?.[dep]?.optional === true && !(dep in (manifest.dependencies ?? {}));
+  const deps = Object.fromEntries(Object.entries({ ...(manifest.peerDependencies ?? {}), ...(manifest.dependencies ?? {}) }).filter(([dep]) => !optional(dep)));
   for (const dep of Object.keys(deps)) {
     const real = resolvePkg(dep, dir);
     if (!real) { if (!isRoot) console.error('UNRESOLVED', dep, 'from', name); continue; }

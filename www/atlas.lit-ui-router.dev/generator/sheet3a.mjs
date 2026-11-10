@@ -141,11 +141,17 @@ ${lf(GX + 12, NOTE_Y, [
 ])}`;
 
 // ---- SEAM A — workflow → mise ---------------------------------------------------
+// door 1 leaves its workflow's row across the corridor: the caption starts under that run where the row stands this low
+const D1_ROW = WF.findIndex((w) => w.name === 'deflake-e2e');
+if (D1_ROW < 0) throw new Error('sheet3a: door 1 leaves deflake-e2e, which no longer calls mise');
+const D1_Y = wfRowY(D1_ROW) + 13; // the door sits on the panel edge, mid-row
+const SEAM_A_Y = D1_Y > 340 ? D1_Y + 22 : 362;
+if (SEAM_A_Y + 9 * 12.5 > MACH_BOT - 8) throw new Error('sheet3a: seam A\'s caption runs past the machines\' floor under door 1');
 const seamA = `${arrow(P, `M${GX + GW},285 L${MX - 8},285`, 'ai', 'sk2')}
 <path d="M${GX + GW},291 L${MX - 8},291" class="ska" stroke-dasharray="3 3" fill="none"/>
 ${txt(GX + GW + 14, 278, '①', 'lbla')}
 ${gasket(SEAM_A - 10, 240, 90)}
-${clines(SEAM_A, 362, [
+${clines(SEAM_A, SEAM_A_Y, [
   ['SEAM A', 'lbla'], ['WORKFLOW → MISE', 'lbls'],
   [`${W.callSites} call sites`, 'lblf'], [`${W.targets} distinct targets`, 'lblf'],
   ['args cross as env —', 'lblf'], ['step env: satisfies', 'lblf'],
@@ -154,6 +160,14 @@ ${clines(SEAM_A, 362, [
 ])}`;
 
 // ---- MISE machine ---------------------------------------------------------------
+// a compartment that letters its home's tasks one by one names every task the plate carries, and no other
+const named = (home, rows) => {
+  const drawn = rows.flatMap(([s]) => s.split(' · ')).sort().join();
+  if (drawn !== [...H(home).names].sort().join()) throw new Error(`plate 3A: the ${home} compartment letters [${drawn}], and the plate carries [${[...H(home).names].sort()}]`);
+  return rows;
+};
+const HOME_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
+if (!HOME_WORD[M.homes]) throw new Error(`plate 3A: no number word for ${M.homes} mise homes`);
 const comp = (x, y, w, rows, head) =>
   `${box(x, y, w, compH(rows.length), 'sk fp')}
 ${txt(x + 8, y + 14, head, 'lbls')}
@@ -166,13 +180,14 @@ ${box(MX + 12, 155, MW - 24, 48, 'sk fp2')}
 ${txt(MX + 20, 169, 'TOOL BELT — aqua pins, mise.lock checksums', 'lbls')}
 ${txt(MX + 20, 183, '⑥ taplo 0.10.0 · rumdl · shellcheck · pnpm (bootstrap)', 'lblf')}
 ${txt(MX + 20, 195, 'actionlint · zizmor — node never installs these', 'lblf')}
-${comp(MX + 12, 212, C1, [
-  ['xvfb · branch_ci_gate', 'lblf'], ['turbo_summary · cypress', 'lblf'],
-  ['playwright_version', 'lblf'], ['cypress_version', 'lblf'],
+${comp(MX + 12, 212, C1, named('tools/build_and_test/mise.toml', [
+  ['branch_ci_gate', 'lblf'], ['playwright_version', 'lblf'],
   ['playwright', 'lblf'], ['playwright_deps_engines', 'lblf'],
-  ['✕ playwright_deps — DEAD', 'lblr'], ['no caller; superseded', 'lblr'],
-  ['(mise.toml:93-97)', 'lblr'],
-], `${H('tools/build_and_test/mise.toml').label} — ${H('tools/build_and_test/mise.toml').count}`)}
+]), `${H('tools/build_and_test/mise.toml').label} — ${H('tools/build_and_test/mise.toml').count}`)}
+${comp(MX + 12, 296, C1, named('tools/turbo-summary/mise.toml', [
+  ['mark_session · format_patch', 'lblf'], ['turbo_summary', 'lblf'],
+  ['bench_summary', 'lblf'],
+]), `${H('tools/turbo-summary/mise.toml').label} — ${H('tools/turbo-summary/mise.toml').count}`)}
 ${comp(MX + 12 + C1 + CGAP, 212, C2, [
   ['⑤ taplo · rumdl', 'lblf'], ['shellcheck · read_secret', 'lblf'],
   ['turbo_login', 'lblf'], ['turbo_pin_worktree', 'lblf'],
@@ -261,9 +276,6 @@ ${clines(SEAM_B, 474, [
 
 // ---- door 1 route (bare turbo over the umbrella) --------------------------------
 const D1_X = GX + GW + 28;
-const D1_ROW = WF.findIndex((w) => w.name === 'deflake-e2e');
-if (D1_ROW < 0) throw new Error('sheet3a: door 1 leaves deflake-e2e, which no longer calls mise');
-const D1_Y = wfRowY(D1_ROW) + 13; // the door sits on the panel edge, mid-row
 const door1 = `${box(GX + GW - 8, D1_Y - 7, 8, 14, 'skr fp')}<rect x="${GX + GW - 8}" y="${D1_Y - 7}" width="8" height="14" fill="url(#${P}-hr)"/>
 ${arrow(P, `M${GX + GW},${D1_Y} L${D1_X},${D1_Y} L${D1_X},102 L${DUCT_X},102 L${DUCT_X},108`, 'ar', 'skr', '6 4')}
 ${txt((D1_X + DUCT_X) / 2, 94, 'DOOR 1 — deflake-e2e.yml:75 · bare `turbo run build --filter=…` — over the umbrella, straight into turbo (PATH still mise)', 'lblr', 'middle')}`;
@@ -323,7 +335,7 @@ const SCHEDULE = schedule('SEAM SCHEDULE — every crossing between the two mach
 const VH = BAND_Y + 156;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists ${W.files} workflows, ${W.calling} of which call mise for a total of ${W.callSites} call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing ${M.tasks} tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of ${CI.real} tasks inside a hatched phantom shroud representing the ${PHANTOM} nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule below the drawing lists every crossing with counts and citations.">
+const svg = `<svg viewBox="0 0 1400 ${VH}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists ${W.files} workflows, ${W.calling} of which call mise for a total of ${W.callSites} call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing ${M.tasks} tasks in ${HOME_WORD[M.homes]} compartments under a tool belt of aqua-pinned binaries: ${HANDOFF.miseHomes.map((h) => `${h.count} in ${h.label}`).join(', ')}. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of ${CI.real} tasks inside a hatched phantom shroud representing the ${PHANTOM} nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule below the drawing lists every crossing with counts and citations.">
 ${defs(P)}
 
 ${txt(1360, 34, 'READ LEFT TO RIGHT — every PR enters at a workflow, crosses two gaskets, and returns through the cache gasket', 'lbls', 'end')}
@@ -345,7 +357,7 @@ ${doorsBox}
 export const SHEET3A_VERDICT = `turbo caches mise — and the loop is a DAG in a loop costume: the ${SHELLS} tasks that shell turbo and the ${REENTERS} turbo re-enters never touch; every count imported, turbo at ${T.definitions} definitions in ${T.files} files`;
 
 export const sheet3a = {
-  num: '3A', id: 'handoff', rev: 'F',
+  num: '3A', id: 'handoff', rev: 'G',
   title: 'THE HANDOFF WORKS',
   sub: `ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: ${W.calling} of ${W.files} workflows · ${M.tasks} mise tasks in ${M.homes} homes · turbo ci ${CI.nodes} nodes, ${CI.real} real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from www/atlas.lit-ui-router.dev/data/census-handoff.json + census-plate.json · ${BASIS}`,
   scale: 'TWO TASK MANAGERS',
@@ -358,7 +370,7 @@ export const sheet3a = {
 <p><strong>The star fitting: turbo caches mise.</strong> Six root <code>//#</code> scripts in the ci graph have <code>mise run …</code> as their literal command, and their turbo <code>inputs</code> explicitly hash <code>.config/mise/tasks/*</code> and <code>.config/mise/mise.lock</code> (<a href="${HOME.turboJson}">turbo.json</a>:327-331, 343-351, 356-362); a seventh port, <code>@tools/release#check:release-closure</code>, re-enters from a member script and hashes <code>config.toml</code> the same way (<a href="${HOME.releaseTurbo}">tools/release/turbo.json</a>:50-62). That is the whole trade drawn as one gasket on the return duct: mise owns the tool versions (<a href="${HOME.taplo}">taplo</a>, <a href="${HOME.rumdl}">rumdl</a>, <a href="${HOME.shellcheck}">shellcheck</a>, <a href="${HOME.actionlint}">actionlint</a>, <a href="${HOME.zizmor}">zizmor</a> — none installable by node), turbo owns the cache, and the gasket hashes one machine against the other, so a taplo pin bump invalidates exactly the taplo lane and nothing else.</p>
 <p><strong>A DAG in a loop costume.</strong> The circuit workflow → mise → turbo → mise looks re-entrant, but the ${M.tasks} tasks partition cleanly: the seven that shell turbo (★ — <code>ci</code>, <code>ci_main</code>, <code>build</code>, <code>codecov_bundle</code>, <code>dts_backtest_matrix</code>, <code>check_pack</code>, <code>published_diff</code>) are reachable only from workflows and humans, while the eight turbo re-enters (↩ — the lint and format tasks, and <code>check_release_closure</code>) only exec pinned binaries, file tasks or a manifest reader. No edge leads from the second set back to the first. The deepest chain is six hops and runs on every PR, four tool lanes in parallel: workflow YAML → <code>mise run ci</code> → <code>turbo run ci</code> → <code>//#lint:toml</code> → <code>mise run lint_toml</code> → the <code>taplo</code> file task → the pinned binary.</p>
 <p><strong>Three service doors, all deliberate.</strong> <a href="${HOME.deflake}">deflake-e2e.yml</a>:75 runs bare <code>turbo run build --filter=…</code> — over the umbrella, though mise still supplies the PATH; deflake-e2e.yml:89 runs the flake attempts through pnpm <em>outside</em> turbo, because a cached test task would replay attempt 1’s logs; and the production docs deploy never sees mise at all — <a href="${HOME.workersBuilds}">Cloudflare Workers Builds</a> clears <a href="${HOME.corepack}">corepack</a>’s shims and installs the <code>packageManager</code> pin of pnpm globally through npm before <code>npx turbo @www/lit-ui-router.dev#build</code> (<a href="${HOME.cloudflareBuild}">tools/workers-builds/cloudflare-build.ts</a>:71-76), because the hosted image’s corepack shim cannot materialize pnpm 12. The doors are drawn red and hatched because each one gives up something the machines provide — and each was opened on purpose.</p>
-<p><strong>Two curiosities the census surfaced.</strong> One task in the whole machine is dead: <code>//tools/build_and_test:playwright_deps</code> (<a href="${HOME.buildAndTest}">mise.toml</a>:93-97) has no caller anywhere, superseded by <code>playwright_deps_engines</code>. And one umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, <a href="${HOME.configToml}">config.toml</a>:154-158) and turbo <code>//#lint:workflows</code> (an umbrella whose <code>dependsOn</code> fans out to the four, <a href="${HOME.turboJson}">turbo.json</a>:316-324) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — ${PHANTOM} of ${CI.nodes} nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>`,
+<p><strong>One curiosity the census surfaced.</strong> One umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, <a href="${HOME.configToml}">config.toml</a>:154-158) and turbo <code>//#lint:workflows</code> (an umbrella whose <code>dependsOn</code> fans out to the four, <a href="${HOME.turboJson}">turbo.json</a>:316-324) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — ${PHANTOM} of ${CI.nodes} nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>`,
   key: [
     keyRow(`<path d="M2,9 L40,9" class="sk2" marker-end="url(#${P}-ai)"/>`, 'trunk — the handoff, in flow direction'),
     keyRow('<rect x="14" y="2" width="4" height="14" class="sk fp2"/><rect x="26" y="2" width="4" height="14" class="sk fp2"/><circle cx="16" cy="1" r="2" class="skf fnone"/><circle cx="28" cy="17" r="2" class="skf fnone"/>', 'coupling gasket — a seam between the machines'),

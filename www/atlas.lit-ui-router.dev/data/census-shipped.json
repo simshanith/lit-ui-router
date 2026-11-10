@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "3f55e419",
-  "commitDate": "2026-10-30T22:33:40-07:00",
-  "generatedAtTime": "2026-10-31T06:15:09.351Z",
+  "sha": "6ae72d27",
+  "commitDate": "2026-11-09T16:00:39-08:00",
+  "generatedAtTime": "2026-11-10T00:43:58.604Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 3f55e419 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 6ae72d27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -21,29 +21,32 @@
     "_headers",
     "robots.txt",
     "sitemap.xml",
-    "release-pages.css"
+    "release-pages.css",
+    "release-diff.js",
+    "examples/*/_redirects"
   ],
   "totals": {
-    "files": 1771,
-    "rawBytes": 77976117,
-    "gzBytes": 8407620
+    "files": 2160,
+    "rawBytes": 99503767,
+    "gzBytes": 10921371
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":869033,"top":{"name":"assets/inter-italic-latin-ext.DvFXn_K6.woff2","gz":141152}},
-    {"district":"html pages","files":389,"gz":3755626,"top":{"name":"guides/server-route-matching.html","gz":43085}},
-    {"district":"markdown pages","files":378,"gz":538763,"top":{"name":"llms-full.txt","gz":204502}},
-    {"district":"examples","files":36,"gz":1559165,"top":{"name":"examples/hellogalaxy-signals/assets/model-viewer-C953Kw6z.js","gz":282315}},
-    {"district":"page chunks","files":756,"gz":739427,"top":{"name":"assets/guides_server-route-matching.md.BUkWwkbt.js","gz":26596}},
-    {"district":"vp framework","files":15,"gz":276116,"top":{"name":"assets/chunks/@localSearchIndexroot.BcicmCqL.js","gz":150667}},
-    {"district":"images","files":103,"gz":157545,"top":{"name":"images/lit-ui-router.png","gz":68708}},
-    {"district":"diagrams","files":14,"gz":21423,"top":{"name":"diagrams/about-this-site-architecture.svg","gz":3495}},
-    {"district":"app: vanilla","files":19,"gz":132598,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
-    {"district":"app: mobx","files":10,"gz":73097,"top":{"name":"assets/decorate-Q6cTiZDo.js","gz":26910}},
-    {"district":"app: effect","files":10,"gz":86594,"top":{"name":"assets/index-DPkUBi7d.js","gz":30829}},
-    {"district":"app: hash","files":4,"gz":16857,"top":{"name":"assets/main-PqzwnBo7.js","gz":8457}},
-    {"district":"app: signals","files":13,"gz":100916,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
+    {"district":"html pages","files":432,"gz":4553636,"top":{"name":"guides/server-route-matching.html","gz":44576}},
+    {"district":"markdown pages","files":421,"gz":619979,"top":{"name":"llms-full.txt","gz":236334}},
+    {"district":"examples","files":51,"gz":1632859,"top":{"name":"examples/hellogalaxy/assets/model-viewer-P2Xo2YJ_.js","gz":282315}},
+    {"district":"page chunks","files":842,"gz":877316,"top":{"name":"assets/guides_server-route-matching.md.C2rijThd.js","gz":26899}},
+    {"district":"vp framework","files":10,"gz":293061,"top":{"name":"assets/chunks/@localSearchIndexroot.33yMaMmm.js","gz":172264}},
+    {"district":"release diff","files":190,"gz":1181286,"top":{"name":"assets/release-diff/highlights-CpZm9DAR.BaERgbKm.js","gz":200842}},
+    {"district":"images","files":106,"gz":343510,"top":{"name":"images/social-card.png","gz":167486}},
+    {"district":"diagrams","files":28,"gz":55356,"top":{"name":"diagrams/prerender-with-vite-build-flow.svg","gz":4359}},
+    {"district":"app: vanilla","files":19,"gz":132911,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
+    {"district":"app: mobx","files":10,"gz":73442,"top":{"name":"assets/decorate-Di6tBUTn.js","gz":26915}},
+    {"district":"app: effect","files":10,"gz":86935,"top":{"name":"assets/index-Cuxsft4G.js","gz":30984}},
+    {"district":"app: hash","files":4,"gz":16810,"top":{"name":"assets/main-at5v9ci3.js","gz":8444}},
+    {"district":"app: signals","files":13,"gz":101255,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":4,"gz":29721,"top":{"name":"assets/style.DqVikY2K.css","gz":21846}}
+    {"district":"site css","files":4,"gz":33243,"top":{"name":"assets/style.CsCjW7PW.css","gz":23282}}
   ],
   "orphans": [
 

@@ -73,7 +73,9 @@ const contacts = JSON.parse(src(CONTACTS));
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).trim();
 const HEAD = git('rev-parse', '--short', 'HEAD');
 const drift = git('diff', '--name-only', basis.sha, 'HEAD', '--', 'apps', 'packages');
-const dirty = git('status', '--porcelain', '--', 'apps', 'packages');
+// an untracked recording or screenshot cannot reach a build; an untracked source file can
+const dirty = git('status', '--porcelain', '--untracked-files=all', '--', 'apps', 'packages')
+  .split('\n').filter((l) => l && !(l.startsWith('??') && /\.(mp4|webm|png|jpe?g|zip)$/.test(l))).join(' ');
 if (drift || dirty) stop(`the worktree's apps/ and packages/ differ from ${basis.sha}: ${drift || dirty}`);
 const lastSrc = Number(git('log', '-1', '--format=%ct', 'HEAD', '--', 'apps', 'packages')) * 1000;
 const cssOf = (app) => {

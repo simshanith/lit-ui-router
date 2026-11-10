@@ -8,8 +8,8 @@ const OX = 500, OY = 130;
 
 // ---- census: every delivered number below comes from www/atlas.lit-ui-router.dev/data/census-nm.json ----
 // The plate is the checked-in snapshot written by census-nm.mjs: the production
-// closure of one app (BFS over dependencies + installed peers; pnpm auto-installs
-// peers), resolved and measured inside an installed and built archive of a named
+// closure of one app (BFS over dependencies + installed required peers; pnpm auto-installs
+// those, never an optional one), resolved and measured inside an installed and built archive of a named
 // ref rather than in a working tree. Delivered code = .js/.mjs/.cjs/.ts/.css/.html
 // lines on disk; d.ts counted separately (the annex). Workspace-linked packages
 // measure dist/ — their registry-delivered shape. This file holds the drawing
@@ -28,12 +28,12 @@ const ORDER = {
     'sample-app-routes', 'ui-router-navigation-location-plugin',
   ],
   registry: [
-    'lodash-es', 'dompurify', 'hono', '@uirouter/core', 'marked', 'lit-html',
+    'lodash-es', 'dompurify', '@uirouter/core', 'marked', 'lit-html',
     '@uirouter/visualizer', '@oxc-project/runtime', '@lit/reactive-element', 'preact',
     'd3-hierarchy', '@uirouter/dsr', '@lit/context', 'tslib', '@uirouter/sticky-states',
     'd3-interpolate', 'd3-color', '@lit-labs/ssr-dom-shim', 'lit-element', 'lit',
     'lit-dialog', '@api-viewer/docs', '@api-viewer/tabs', '@api-viewer/common',
-    'custom-elements-manifest', '@types/marked', '@types/dompurify', '@types/trusted-types',
+    'custom-elements-manifest', 'escape-html', '@types/marked', '@types/dompurify', '@types/trusted-types',
   ],
 };
 
@@ -67,6 +67,15 @@ const missed = PLATE.rows.filter((r) => !ORDER.workspace.includes(r.name) && !OR
 if (missed.length) throw new Error(`sheet 8: plate carries undrawn packages — ${missed.map((r) => r.name).join(', ')}`);
 
 const DELIVERED = PLATE.rows.length;
+// the buildings taller than lodash-es, and the server's optional peers the closure leaves out, both off the plates
+const TALLER = PLATE.rows.filter((r) => r.l > ROW.get('lodash-es').l).sort((a, b) => b.l - a.l).map((r) => r.name);
+const TALL_ORD = ['tallest', 'second-tallest', 'third-tallest', 'fourth-tallest', 'fifth-tallest'];
+if (!TALL_ORD[TALLER.length]) throw new Error(`sheet 8: lodash-es ranks ${TALLER.length + 1} by height — extend TALL_ORD`);
+const COUPLINGS = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
+const SERVER_OPT = COUPLINGS.rows.filter((r) => r.from === 'ui-router-server' && r.kind === 'peer' && r.optional).map((r) => r.to);
+const SERVER_OPT_OUT = SERVER_OPT.filter((n) => !ROW.has(n));
+if (!SERVER_OPT_OUT.length) throw new Error('sheet 8: the notes say the server\'s optional peers stay out of the closure, and the plate carries every one');
+const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const TOT_L = PLATE.rows.reduce((a, r) => a + r.l, 0);
 const TOT_DL = PLATE.rows.reduce((a, r) => a + r.dl, 0);
 const APP_L = DATA.consumer[0].l, APP_F = DATA.consumer[0].f;
@@ -124,8 +133,7 @@ const badges = all.map(({ it, x, y, s, n, district }) => {
   const accent = it.name === 'lit-ui-router' || district === 'consumer';
   const [bx, by] = isoPt(OX, OY, x + s / 2, y, HT(it.l));
   // badges that otherwise land on a roof edge or the district outline
-  // 14 (dompurify's slender tower) floats high to clear hono's wall edges behind it
-  const lift = n === 14 ? 84 : [12, 33].includes(n) ? 26 : [23, 29, 30, 31, 32].includes(n) ? 20 : 14;
+  const lift = [12, 33].includes(n) ? 26 : [23, 29, 30, 31, 32].includes(n) ? 20 : 14;
   // 3, 5, 6 stand against a neighbour's wall; slide them clear
   const shift = n === 3 ? -16 : n === 5 ? -16 : n === 6 ? 18 : 0;
   return `<circle cx="${(bx + shift).toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${accent ? 'ska fp' : 'sk fp'}"/>
@@ -188,17 +196,17 @@ export const sheet8 = {
   num: 8, id: 'delivered',
   title: 'THE DELIVERED CITY',
   sub: `ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · ${DELIVERED} delivered packages, ${fmt(TOT_L)} lines of code and ${fmt(TOT_DL)} d.ts lines on disk, footprint from files and height from lines — ${BASIS}`,
-  rev: 'F',
+  rev: 'G',
   scale: 'ONE CONSUMER',
   form: 'DELIVERED CITY',
   svg,
   schedule: SCHEDULE,
   caption: `The production dependency closure of one sample app, surveyed on disk: every delivered package as a building — footprint from file count, height from lines — with the consumer’s own ${APP_L}-line building standing in the city it summoned.`,
   notes: `
-<p><strong>Method:</strong> the production closure of <a href="${REPO}/tree/main/${PLATE.app}"><code>${PLATE.app}</code></a> (dependencies plus installed peers — pnpm <a href="${HOME.pnpmPeers}">auto-installs peers</a>, so they are genuinely on disk), resolved through the pnpm store and measured as delivered: lines of <code>.js/.ts/.css/.html</code> per package directory, source maps and prose excluded, <code>.d.ts</code> drawn separately as the hatched annex. Workspace-linked members are measured by their built <code>dist/</code> — the shape a registry install would deliver. Plenty of prior art measures this differently — <a href="${HOME.bundlephobia}">bundlephobia</a> and <a href="${HOME.packagephobia}">packagephobia</a> weigh tarballs and install bytes, <a href="${HOME.npmgraph}">npmgraph</a> draws the dependency graph — but this sheet measures what actually lands on disk, in files and lines, and stages it as a city with the consumer's own building standing in it for scale. Every count on the drawing and in these notes is read at build time from the plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-nm.json</code></a> — ${BASIS} — written after installing and building the ref itself, never the working tree. A package the drawing places that the plate does not carry, or a package the plate carries that no district draws, is a build error rather than a stale constant.</p>
+<p><strong>Method:</strong> the production closure of <a href="${REPO}/tree/main/${PLATE.app}"><code>${PLATE.app}</code></a> (dependencies plus required peers — pnpm <a href="${HOME.pnpmPeers}">auto-installs</a> those, so they are genuinely on disk; an optional peer arrives only where the consumer adds it), resolved through the pnpm store and measured as delivered: lines of <code>.js/.ts/.css/.html</code> per package directory, source maps and prose excluded, <code>.d.ts</code> drawn separately as the hatched annex. Workspace-linked members are measured by their built <code>dist/</code> — the shape a registry install would deliver. Plenty of prior art measures this differently — <a href="${HOME.bundlephobia}">bundlephobia</a> and <a href="${HOME.packagephobia}">packagephobia</a> weigh tarballs and install bytes, <a href="${HOME.npmgraph}">npmgraph</a> draws the dependency graph — but this sheet measures what actually lands on disk, in files and lines, and stages it as a city with the consumer's own building standing in it for scale. Every count on the drawing and in these notes is read at build time from the plate <a href="${HOME.plate}"><code>www/atlas.lit-ui-router.dev/data/census-nm.json</code></a> — ${BASIS} — written after installing and building the ref itself, never the working tree. A package the drawing places that the plate does not carry, or a package the plate carries that no district draws, is a build error rather than a stale constant.</p>
 <p><strong>The consumer is a doormat in its own city.</strong> The app brings ${APP_L} lines of its own and receives ${fmt(TOT_L)} delivered lines of code plus ${fmt(TOT_DL)} of type declarations — ${times}× its own mass. The router this repo exists to ship, ${npmLink('lit-ui-router')}, delivers ${fmt(pkg('lit-ui-router').l)} lines over ${pkg('lit-ui-router').f} files: one of the smaller buildings on the skyline it anchors, and ${(TOT_L / pkg('lit-ui-router').l).toFixed(0)}× smaller than the city it stands in.</p>
-<p><strong>Four imports, ${fmt(pkg('lodash-es').l)} lines.</strong> ${npmLink('lodash-es')} is delivered whole — ${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files — so the app can call <code>isEqual</code>, <code>cloneDeep</code>, <code>get</code> and <code>set</code>. The bundler tree-shakes almost all of it away, and sheet 9 charts what survives to the wire; the delivered city is the other measure, the one that installs, audits and updates. It is the fourth-tallest building here, behind ${npmLink('dompurify', 'dompurify')}, ${npmLink('hono', 'hono')} and ${npmLink('@uirouter/core')}.</p>
-<p><strong>One lit, and a server in a client demo.</strong> Scoped <a href="${HOME.pnpmOverrides}">pnpm overrides</a> (<code>${npmLink('@api-viewer/docs', '@api-viewer/docs')}&gt;lit</code>, <code>${npmLink('@api-viewer/common', '@api-viewer/common')}&gt;lit</code>, <code>${npmLink('lit-dialog', 'lit-dialog')}&gt;lit</code> → ^3.3.3) hold the demo chrome to one lit major, so ${npmLink('lit', 'lit')}, ${npmLink('lit-html', 'lit-html')}, ${npmLink('lit-element', 'lit-element')} and ${npmLink('@lit/reactive-element')} each stand once in this city. The oddest building is ${npmLink('hono')} at ${fmt(pkg('hono').l)} lines: ${npmLink('ui-router-server')} names it a peer, so peer auto-install delivers a server framework into a client demo.</p>
+<p><strong>Four imports, ${fmt(pkg('lodash-es').l)} lines.</strong> ${npmLink('lodash-es')} is delivered whole — ${fmt(pkg('lodash-es').l)} lines across ${pkg('lodash-es').f} files — so the app can call <code>isEqual</code>, <code>cloneDeep</code>, <code>get</code> and <code>set</code>. The bundler tree-shakes almost all of it away, and sheet 9 charts what survives to the wire; the delivered city is the other measure, the one that installs, audits and updates. It is the ${TALL_ORD[TALLER.length]} building here${TALLER.length ? `, behind ${listOf(TALLER.map((n) => npmLink(n)))}` : ''}.</p>
+<p><strong>One lit, and a server router with one dependency.</strong> Scoped <a href="${HOME.pnpmOverrides}">pnpm overrides</a> (<code>${npmLink('@api-viewer/docs', '@api-viewer/docs')}&gt;lit</code>, <code>${npmLink('@api-viewer/common', '@api-viewer/common')}&gt;lit</code>, <code>${npmLink('lit-dialog', 'lit-dialog')}&gt;lit</code> → ^3.3.3) hold the demo chrome to one lit major, so ${npmLink('lit', 'lit')}, ${npmLink('lit-html', 'lit-html')}, ${npmLink('lit-element', 'lit-element')} and ${npmLink('@lit/reactive-element')} each stand once in this city. ${npmLink('ui-router-server')} brings one registry dependency of its own, ${npmLink('escape-html')}, at ${pkg('escape-html').l} lines; its optional peers ${listOf(SERVER_OPT_OUT.map((n) => `<code>${n}</code>`))} are a consumer's to add, so ${SERVER_OPT_OUT.length === 1 ? 'it stands' : 'they stand'} outside this city.</p>
 <p><strong>Note the vertical scale:</strong> 1 px ≈ 250 lines against sheet 7's ≈ 34. Drawn at the workspace's own scale, <code>lodash-es</code> alone would stand ${Math.round(pkg('lodash-es').l / 34)} px tall — the compression <em>is</em> the finding.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'delivered code — height = lines on disk'),

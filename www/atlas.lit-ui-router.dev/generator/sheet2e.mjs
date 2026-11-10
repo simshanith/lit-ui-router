@@ -355,8 +355,9 @@ function guard(where, family, placed, strings) {
   for (const p of placed) for (const [x, y, , n] of p.drops) if (!ringedAt(family.find((o) => o.part?.n === n), x, y)) throw new Error(`sheet 2E: ${where}: ${p.consumer.name} drops onto no ringed stud`);
   for (const t of strings) if (!ringedAt(t.box, t.to[0], t.to[1])) throw new Error(`sheet 2E: ${where}: a cord ends on no ringed stud`);
   const boxes = [...family.filter((o) => !o.ground), ...placed];
-  const clash = boxes.some((a, i) => boxes.slice(i + 1).some((b) => overlap(a, b) && a.z0 < top(b) - 0.01 && b.z0 < top(a) - 0.01));
-  if (clash) throw new Error(`sheet 2E: ${where}: two bricks overlap in plan on one level`);
+  const idOf = (o) => (o.consumer ? o.consumer.name : `brick ${o.part.n}`);
+  const clash = boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b) => overlap(a, b) && a.z0 < top(b) - 0.01 && b.z0 < top(a) - 0.01).map((b) => `${idOf(a)} and ${idOf(b)}`));
+  if (clash.length) throw new Error(`sheet 2E: ${where}: ${clash.join(', ')} overlap in plan on one level`);
 }
 
 // ---- drawing a seated scene: family bricks and consumers back to front with their drops, the cords over them, then marks ----
@@ -499,8 +500,8 @@ const CAB = CONS.totals, ALL = CONS.withAtlas.totals;
 const ON_ANCHOR = (b) => CONSUMERS.filter((c) => c.anchor === b);
 // the part a consumer drops onto: its heaviest pin, unless a straddle or a clear cord seats it on another
 const seatOf = (c) => (c.seatedOn && !c.seatedOn.includes(c.anchor) ? c.seatedOn[0] : c.anchor);
-// the notes name lit-ui-router the hub, and every consumer that pins it hovers over it
-if (HUB.b.name !== 'lit-ui-router' || ON_ANCHOR(HUB.b).length !== HUB.by.length || HUB.by.length * 2 <= CONSUMERS.length) throw new Error(`sheet 2E: the notes call lit-ui-router the hub its ${HUB.by.length} consumers hover over, but the plate says otherwise`);
+// the notes name lit-ui-router the hub: most consumers pin it, and most of those pin nothing heavier
+if (HUB.b.name !== 'lit-ui-router' || ON_ANCHOR(HUB.b).length * 2 <= HUB.by.length || HUB.by.length * 2 <= CONSUMERS.length) throw new Error(`sheet 2E: the notes call lit-ui-router the hub most of its ${HUB.by.length} consumers hover over, but the plate says otherwise`);
 // read once the panels seat: the builds with no consumer on the hub, and the hub's consumers seated elsewhere
 const OFF_HUB = () => BUILD_MODELS.filter((m) => !CONSUMERS.some((c) => c.model === m && seatOf(c) === HUB.b));
 const OFF_SEAT = () => HUB.by.filter((c) => seatOf(c) !== HUB.b);
@@ -597,7 +598,7 @@ ${ART}
 </svg>`;
 
 export const sheet2e = {
-  num: '2E', id: 'companions-consumers', rev: 'D',
+  num: '2E', id: 'companions-consumers', rev: 'E',
   title: 'THE CONSUMER BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE CONSUMERS: the ${WORD[CAB.consumers]} consumers in the cabinet’s tree and the atlas’s own app as bricks at sheet 2’s mould, each seated on the family parts it pins · rows read census-consumers.json, both readings, @ ${CONS.sha}`,
   scale: SHEET2E_SCALE,
@@ -607,7 +608,7 @@ export const sheet2e = {
   caption: `The repository's own consumers drawn as bricks on the family they pin. ${Cap(WORD[HUB.by.length])} of ${WORD[CONSUMERS.length]} pin ${HUB.b.name}, brick ${HUB.b.n}; ${listOf(BARE.map((c) => c.name))} pins no family part; the atlas app, on its own branch, is the heaviest at ${plural(HEAVIEST.studs, 'stud')}.`,
   notes: `
 <p><strong>Up from the family.</strong> Sheet 2 seats the family on <code>@uirouter/core</code>; sheet 2C goes down to the runtimes the family peers. This plate goes up: the sample apps, the docs site, the embedded examples and the atlas's own app, each massed at sheet 2's mould from its authored source — the city ruler's files under its <code>src/</code> (the docs site's <code>.vitepress/</code>, <code>worker/</code> and <code>src/</code>), specs aside — and seated on the parts its manifest pins.</p>
-<p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, ${OFF_SEAT().length ? `it is the heaviest part each pins, and ${WORD[HUB.by.length - OFF_SEAT().length]} of them hover over it; ${listOf(OFF_SEAT().map((c) => `${c.name} hovers over brick ${seatOf(c).n}, ${seatOf(c).name}, since from over brick ${HUB.b.n} no cord to it runs clear`))}` : 'and every one of them hovers over it, since it is the heaviest part each pins'}: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB().map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
+<p><strong>One hub.</strong> ${Cap(WORD[HUB.by.length])} of the ${WORD[CONSUMERS.length]} consumers pin ${npmLink(HUB.b.name)}, ${OFF_SEAT().length ? `it is the heaviest part ${ON_ANCHOR(HUB.b).length === HUB.by.length ? 'each pins' : `${WORD[ON_ANCHOR(HUB.b).length]} of them pin`}, and ${WORD[HUB.by.length - OFF_SEAT().length]} of them hover over it; ${listOf(OFF_SEAT().map((c) => `${c.name} hovers over brick ${seatOf(c).n}, ${seatOf(c).name}, ${seatOf(c) === c.anchor ? 'the heaviest part it pins' : `since from over brick ${c.anchor.n} no cord to it runs clear`}`))}` : 'and every one of them hovers over it, since it is the heaviest part each pins'}: the builds split the ${WORD[HUB.by.length]} into their panels, and every build but ${listOf(OFF_HUB().map((m) => m.name.toUpperCase()))} stands its consumers on brick ${HUB.b.n}. Of the other parts, ${listOf(CARRY.filter((x) => x.by.length && x !== HUB).map((x) => `${x.b.name} is pinned by ${WORD[x.by.length]}`))}${UNPINNED.length ? `, and ${listOf(UNPINNED.map((b) => b.name))} by none` : ''}.</p>
 <p><strong>Cords.</strong> A consumer seats on the heaviest part it pins — or, where no cord runs clear from over it, on the pinned part that lets every cord run — and reaches each other part by a string with end studs, a 1×1 round plate at either end and a cord between. Every consumer hovers, so a string hangs from a free stud of its underside where the cord drops clear, and otherwise leaves a ringed stud of its top; the far plate seats on a ringed stud of the pinned part. The sheet draws ${plural(CORDS.length, 'cord')}, one for every pin past a consumer's seat: ${WORD[HUNG.length]} hang, ${WORD[CORDS.length - HUNG.length]} ${CORDS.length - HUNG.length === 1 ? 'leaves' : 'leave'} the top${WOUND.length ? `, and where no straight cord passes every mass above or in front of it the string bends and winds round what stands in its way, as ${WORD[WOUND.length]} do — ${listOf(WOUND.map((t) => `${t.part.consumer.name} to brick ${t.b.n}`))}` : ''}.${SHARED_CAPS.length ? ` ${Cap(listOf(SHARED_CAPS.map((x) => `brick ${x.n}`)))} ${SHARED_CAPS.length === 1 ? 'has' : 'have'} fewer free studs than cords to take, so two cords share one round plate there.` : ''}</p>
 <p><strong>The examples are thin.</strong> An embedded example is a file or two under <code>examples/&lt;key&gt;/src/</code>, so most mould a single course; ${TALLEST.name}, at ${plural(TALLEST.files, 'file')}, stands ${plural(TALLEST.courses, 'course')} tall.</p>`,
   key: [
