@@ -6,8 +6,10 @@ import {
   type UserConfig,
 } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
+import { PACKAGES, ROLES, type PackageName } from '../catalog/packages.ts';
 import { guideGroups } from './guides-sidebar.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
+import { companionGroups } from './packages-sidebar.ts';
 import { STUB_DIR } from './release-stubs.ts';
 import { renderForSearch } from './search-render.ts';
 import { stripInlineSvgStyles } from './svg-style.ts';
@@ -160,6 +162,31 @@ function apiReference(
   return { text: pkg, link, collapsed: true, items };
 }
 
+// Keyed by package, so a new catalog entry fails typecheck until it has a reference or null.
+const API_REFERENCES: Record<
+  PackageName,
+  [link: string, items: DefaultTheme.SidebarItem[]] | null
+> = {
+  'lit-ui-router': ['/api/reference/', typedocSidebarItems],
+  'ui-router-effect': ['/api/ui-router-effect/', uiRouterEffectSidebarItems],
+  'lit-ui-router-effect': ['/api/lit-ui-router-effect/', effectSidebarItems],
+  'ui-router-mobx': ['/api/ui-router-mobx/', uiRouterMobxSidebarItems],
+  'lit-ui-router-mobx': ['/api/lit-ui-router-mobx/', mobxSidebarItems],
+  'ui-router-signals': ['/api/ui-router-signals/', uiRouterSignalsSidebarItems],
+  'lit-ui-router-signals': ['/api/lit-ui-router-signals/', signalsSidebarItems],
+  'ui-router-navigation-location-plugin': [
+    '/api/navigation-location-plugin/',
+    navigationSidebarItems,
+  ],
+  'ui-router-server': ['/api/ui-router-server/', serverSidebarItems],
+  'lit-ui-router-ssr': ['/api/lit-ui-router-ssr/', ssrSidebarItems],
+  'ui-router-registry': [
+    '/api/ui-router-registry/',
+    uiRouterRegistrySidebarItems,
+  ],
+  'eslint-plugin-lit-ui-router': null,
+};
+
 function makeSidebar() {
   return [
     {
@@ -195,174 +222,28 @@ function makeSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview', link: '/packages/' },
-        {
-          text: 'Reactivity',
+        ...companionGroups.map(({ text, items }) => ({
+          text,
           collapsed: false,
-          items: [
-            {
-              text: 'Effect',
-              link: '/packages/effect',
-              collapsed: true,
-              items: [
-                {
-                  text: 'ui-router-effect',
-                  link: '/packages/ui-router-effect',
-                },
-                {
-                  text: 'lit-ui-router-effect',
-                  link: '/packages/lit-ui-router-effect',
-                },
-              ],
-            },
-            {
-              text: 'MobX',
-              link: '/packages/mobx',
-              collapsed: true,
-              items: [
-                { text: 'ui-router-mobx', link: '/packages/ui-router-mobx' },
-                {
-                  text: 'lit-ui-router-mobx',
-                  link: '/packages/lit-ui-router-mobx',
-                },
-              ],
-            },
-            {
-              text: 'Signals',
-              link: '/packages/signals',
-              collapsed: true,
-              items: [
-                {
-                  text: 'ui-router-signals',
-                  link: '/packages/ui-router-signals',
-                },
-                {
-                  text: 'lit-ui-router-signals',
-                  link: '/packages/lit-ui-router-signals',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          text: 'Location',
-          collapsed: false,
-          items: [
-            {
-              text: 'Navigation API Plugin',
-              link: '/packages/navigation-plugin',
-            },
-          ],
-        },
-        {
-          text: 'Server',
-          collapsed: false,
-          items: [
-            { text: 'Server', link: '/packages/server' },
-            { text: 'Server-Side Rendering (SSR)', link: '/packages/ssr' },
-          ],
-        },
-        {
-          text: 'DX',
-          collapsed: false,
-          items: [
-            { text: 'Registry', link: '/packages/ui-router-registry' },
-            { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
-          ],
-        },
+          items,
+        })),
       ],
     },
     { text: 'Sample App', collapsed: true, items: sampleAppItems },
     {
-      // Role groups mirror Companion Packages; eslint-plugin has no reference.
       text: 'API',
       collapsed: true,
       items: [
         { text: 'Overview', link: '/api/' },
-        {
-          text: 'Renderer',
+        ...ROLES.map(({ id, label }) => ({
+          text: label,
           collapsed: false,
-          items: [
-            apiReference(
-              'lit-ui-router',
-              '/api/reference/',
-              typedocSidebarItems,
-            ),
-          ],
-        },
-        {
-          text: 'Reactivity',
-          collapsed: false,
-          items: [
-            apiReference(
-              'ui-router-effect',
-              '/api/ui-router-effect/',
-              uiRouterEffectSidebarItems,
-            ),
-            apiReference(
-              'lit-ui-router-effect',
-              '/api/lit-ui-router-effect/',
-              effectSidebarItems,
-            ),
-            apiReference(
-              'ui-router-mobx',
-              '/api/ui-router-mobx/',
-              uiRouterMobxSidebarItems,
-            ),
-            apiReference(
-              'lit-ui-router-mobx',
-              '/api/lit-ui-router-mobx/',
-              mobxSidebarItems,
-            ),
-            apiReference(
-              'ui-router-signals',
-              '/api/ui-router-signals/',
-              uiRouterSignalsSidebarItems,
-            ),
-            apiReference(
-              'lit-ui-router-signals',
-              '/api/lit-ui-router-signals/',
-              signalsSidebarItems,
-            ),
-          ],
-        },
-        {
-          text: 'Location',
-          collapsed: false,
-          items: [
-            apiReference(
-              'ui-router-navigation-location-plugin',
-              '/api/navigation-location-plugin/',
-              navigationSidebarItems,
-            ),
-          ],
-        },
-        {
-          text: 'Server',
-          collapsed: false,
-          items: [
-            apiReference(
-              'ui-router-server',
-              '/api/ui-router-server/',
-              serverSidebarItems,
-            ),
-            apiReference(
-              'lit-ui-router-ssr',
-              '/api/lit-ui-router-ssr/',
-              ssrSidebarItems,
-            ),
-          ],
-        },
-        {
-          text: 'DX',
-          collapsed: false,
-          items: [
-            apiReference(
-              'ui-router-registry',
-              '/api/ui-router-registry/',
-              uiRouterRegistrySidebarItems,
-            ),
-          ],
-        },
+          items: PACKAGES.flatMap(({ name, role }) => {
+            const reference = role === id ? API_REFERENCES[name] : null;
+
+            return reference ? [apiReference(name, ...reference)] : [];
+          }),
+        })),
       ],
     },
     {
