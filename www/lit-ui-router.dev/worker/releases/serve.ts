@@ -176,7 +176,7 @@ const redirect = (location: string, status: number, url: URL): Response =>
 
 // Pages and misses may be cached briefly; an outage never is.
 const cacheControl = (status: number): string =>
-  status === 503 ? 'no-store' : 'public, max-age=300';
+  status === 503 ? 'no-store' : 'public, max-age=60';
 
 const withoutBody = (response: Response): Response =>
   new Response(null, { status: response.status, headers: response.headers });
