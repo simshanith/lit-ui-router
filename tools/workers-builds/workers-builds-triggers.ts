@@ -39,13 +39,13 @@ import {
   upsertTriggersEnvironmentVariable,
 } from '@distilled.cloud/cloudflare/workers_builds';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { messageOf } from '@tools/shared/errors.ts';
-
-import { type CloudflareApi, call } from './cloudflare-api.ts';
 import {
   getWorkerBuildSettings,
   updateWorkerBuildSettings,
-} from './builds-settings.ts';
+} from '@tools/cloudflare-api/builds-settings.ts';
+import { type CloudflareApi, call } from '@tools/cloudflare-api/call.ts';
+import { messageOf } from '@tools/shared/errors.ts';
+
 import {
   CF_CONFIG,
   type DesiredWorker,

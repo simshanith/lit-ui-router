@@ -16,6 +16,7 @@ import { describe, it } from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { Json } from '@tools/bootstrap/types.ts';
+import type { CloudflareApi } from '@tools/cloudflare-api/call.ts';
 import * as v from 'valibot';
 
 import {
@@ -44,7 +45,6 @@ import {
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
-import type { CloudflareApi } from './cloudflare-api.ts';
 import {
   applyDrift,
   getTriggers,

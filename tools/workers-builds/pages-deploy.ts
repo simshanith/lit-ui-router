@@ -10,8 +10,8 @@
 // needs "Pages: Read". All decisions live in pages-deploy.core.ts.
 
 import { listProjectDeployments } from '@distilled.cloud/cloudflare/pages';
+import { type CloudflareApi, call } from '@tools/cloudflare-api/call.ts';
 
-import { type CloudflareApi, call } from './cloudflare-api.ts';
 import {
   type Deployment,
   PAGES_PROJECT,
