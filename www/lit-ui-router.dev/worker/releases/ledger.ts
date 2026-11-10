@@ -1,21 +1,11 @@
 // The ledger reads the release pages make, each a `(params) => query` over the LedgerReader service binding.
-import type {
-  GhState,
-  NpmState,
-  Status,
-  VersionRow,
-} from '@tools/release-ledger';
+import type { LedgerVersion } from '@tools/release-ledger';
 import compare from 'semver/functions/compare.js';
 import prerelease from 'semver/functions/prerelease.js';
 import valid from 'semver/functions/valid.js';
 import rcompare from 'semver/functions/rcompare.js';
 
-/** A `versions` row with the states the ledger's `version_states` view derives. */
-export interface LedgerVersion extends VersionRow {
-  npm_state: NpmState;
-  gh_state: GhState;
-  status: Status;
-}
+export type { LedgerVersion };
 
 /** A package the ledger has recorded, with the version its npm `latest` dist-tag points at. */
 export interface LedgerPackage {

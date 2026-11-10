@@ -1,57 +1,19 @@
 // Reads decode through SqlSchema; the consumer's writes are the statements in
 // ledger-statements.ts.
 import {
-  GH_STATES,
-  NPM_STATES,
-  STATUSES,
-  type VersionRow,
+  DistTagRowSchema,
+  type LedgerSnapshot,
+  type LedgerVersion,
+  LedgerVersionSchema,
+  VersionRowSchema,
 } from '@tools/release-ledger';
 import { Effect, Schema } from 'effect';
 import { SqlClient, SqlSchema } from 'effect/sql';
 
 import type { Statement } from './ledger-statements.ts';
 
-const NullableString = Schema.NullOr(Schema.String);
-
-const NullableNumber = Schema.NullOr(Schema.Number);
-
-const VersionRowSchema = Schema.Struct({
-  name: Schema.String,
-  version: Schema.String,
-  first_seen_at: Schema.String,
-  git_sha: NullableString,
-  tag_conflict: NullableString,
-  npm_integrity: NullableString,
-  npm_published_at: NullableString,
-  npm_deprecated: NullableString,
-  npm_conflict: NullableString,
-  gh_release_id: NullableNumber,
-  gh_url: NullableString,
-  gh_prerelease: NullableNumber,
-  gh_body: NullableString,
-  gh_published_at: NullableString,
-  gh_conflict: NullableString,
-}) satisfies Schema.Schema<VersionRow>;
-
-/** A `versions` row with the states `version_states` derives from it. */
-const LedgerVersionSchema = Schema.Struct({
-  ...VersionRowSchema.fields,
-  npm_state: Schema.Literals(NPM_STATES),
-  gh_state: Schema.Literals(GH_STATES),
-  status: Schema.Literals(STATUSES),
-});
-
-export type LedgerVersion = typeof LedgerVersionSchema.Type;
-
 const LEDGER_VERSIONS = `SELECT versions.*, npm_state, gh_state, status
   FROM versions JOIN version_states USING (name, version)`;
-
-const DistTagRowSchema = Schema.Struct({
-  name: Schema.String,
-  tag: Schema.String,
-  version: Schema.String,
-  updated_at: Schema.String,
-});
 
 const NameVersion = Schema.Struct({
   name: Schema.String,
@@ -163,10 +125,8 @@ export const findLedger = Effect.gen(function* () {
     execute: () => sql`SELECT * FROM dist_tags ORDER BY name, tag`,
   })(undefined);
 
-  return { versions, distTags };
+  return { versions, distTags } satisfies LedgerSnapshot;
 });
-
-export type LedgerSnapshot = Effect.Success<typeof findLedger>;
 
 export const findClaim = (request: typeof MessageId.Type) =>
   Effect.gen(function* () {
