@@ -453,7 +453,7 @@ Cloudflare's `html_handling` answers before the worker runs, shadowing that
 verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
 
-[How this site runs](../about-this-site) maps the rest of lit-ui-router.dev
+[How this site runs](../site/) maps the rest of lit-ui-router.dev
 around this worker: the static assets and the release-ledger worker.
 
 The routing side stays light in production, too: the deployed worker —

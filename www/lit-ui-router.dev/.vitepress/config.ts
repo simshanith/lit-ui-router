@@ -3,6 +3,7 @@ import {
   defineConfig,
   HeadConfig,
   type DefaultTheme,
+  type SiteConfig,
   type UserConfig,
 } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
@@ -10,6 +11,7 @@ import { PACKAGES, ROLES, type PackageName } from '../catalog/packages.ts';
 import { guideGroups } from './guides-sidebar.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { companionGroups } from './packages-sidebar.ts';
+import { writeRedirects } from './redirects.ts';
 import { STUB_DIR } from './release-stubs.ts';
 import { renderForSearch } from './search-render.ts';
 import { stripInlineSvgStyles } from './svg-style.ts';
@@ -249,7 +251,7 @@ function makeSidebar() {
     {
       text: 'Site',
       collapsed: true,
-      items: [{ text: 'How this site runs', link: '/about-this-site' }],
+      items: [{ text: 'How this site runs', link: '/site/' }],
     },
   ];
 }
@@ -268,6 +270,8 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
+  // After the sitemap and the llms copies, so the check sees every emitted file.
+  buildEnd: ({ outDir }: SiteConfig) => writeRedirects(outDir),
   sitemap: {
     hostname: baseUrl,
     // The release stubs exist for local search only.
