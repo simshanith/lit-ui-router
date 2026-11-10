@@ -1,10 +1,10 @@
 // GET /ledger: the versions and dist-tags for the release-signals reconcile
 // check, behind a read policy that shares nothing with /claims but the pins.
+import type { LedgerSnapshot } from '@tools/release-ledger';
 import { Effect, Schema } from 'effect';
 import type { JWTVerifyGetKey } from 'jose';
 
 import { bearerOf, readClaims, text, unauthorized } from './auth.ts';
-import type { LedgerSnapshot } from './ledger-sql.ts';
 import { ForbiddenClaim, InvalidToken, runForbiddenReason } from './oidc.ts';
 
 export interface ReadEnv {

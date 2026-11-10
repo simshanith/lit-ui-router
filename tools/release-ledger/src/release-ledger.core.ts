@@ -2,6 +2,8 @@
 // `<pkg>@<version>` into its `versions` row, region by region. The queue
 // consumer owns the IO: it reads the row, observes the sources and calls `fold`.
 
+import { Schema } from 'effect';
+
 /**
  * Each region's facts. Fixed facts never change once recorded; mutable facts
  * follow the source. A region's state is derived from its facts, never stored,
@@ -49,33 +51,59 @@ export const STATUSES = [
 
 export type Status = (typeof STATUSES)[number];
 
+const NullableString = Schema.NullOr(Schema.String);
+
+const NullableNumber = Schema.NullOr(Schema.Number);
+
 /** One `versions` row, as D1 returns it. */
-export interface VersionRow {
-  name: string;
-  version: string;
-  first_seen_at: string;
-  git_sha: string | null;
+export const VersionRowSchema = Schema.Struct({
+  name: Schema.String,
+  version: Schema.String,
+  first_seen_at: Schema.String,
+  git_sha: NullableString,
   /** The observation that contradicts the region's fixed facts, as JSON; `null` when clean. */
-  tag_conflict: string | null;
-  npm_integrity: string | null;
-  npm_published_at: string | null;
-  npm_deprecated: string | null;
-  npm_conflict: string | null;
-  gh_release_id: number | null;
-  gh_url: string | null;
-  gh_prerelease: number | null;
-  gh_body: string | null;
-  gh_published_at: string | null;
-  gh_conflict: string | null;
-}
+  tag_conflict: NullableString,
+  npm_integrity: NullableString,
+  npm_published_at: NullableString,
+  npm_deprecated: NullableString,
+  npm_conflict: NullableString,
+  gh_release_id: NullableNumber,
+  gh_url: NullableString,
+  gh_prerelease: NullableNumber,
+  gh_body: NullableString,
+  gh_published_at: NullableString,
+  gh_conflict: NullableString,
+});
+
+export type VersionRow = typeof VersionRowSchema.Type;
+
+/** A `versions` row with the states `version_states` derives from it. */
+export const LedgerVersionSchema = Schema.Struct({
+  ...VersionRowSchema.fields,
+  npm_state: Schema.Literals(NPM_STATES),
+  gh_state: Schema.Literals(GH_STATES),
+  status: Schema.Literals(STATUSES),
+});
+
+export type LedgerVersion = typeof LedgerVersionSchema.Type;
 
 /** One `dist_tags` row. */
-export interface DistTagRow {
-  name: string;
-  tag: string;
-  version: string;
-  updated_at: string;
-}
+export const DistTagRowSchema = Schema.Struct({
+  name: Schema.String,
+  tag: Schema.String,
+  version: Schema.String,
+  updated_at: Schema.String,
+});
+
+export type DistTagRow = typeof DistTagRowSchema.Type;
+
+/** The body of the ledger worker's GET /ledger: every version with its states, and every dist-tag. */
+export const LedgerSnapshotSchema = Schema.Struct({
+  versions: Schema.Array(LedgerVersionSchema),
+  distTags: Schema.Array(DistTagRowSchema),
+});
+
+export type LedgerSnapshot = typeof LedgerSnapshotSchema.Type;
 
 /** One `ledger_events` row, less the id D1 assigns and the `claim_id` the statements resolve. */
 export interface LedgerEventRow {

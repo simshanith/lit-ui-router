@@ -27,6 +27,7 @@
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
     "@types/semver": "catalog:",
+    "effect": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "pacote": "catalog:",

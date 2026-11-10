@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import {
+  type LedgerSnapshot,
+  LedgerSnapshotSchema,
+  type LedgerVersion,
+} from '@tools/release-ledger';
 import { GH, NPM, OTHER_SHA, ROWS, SHA } from '@tools/release-ledger/fixtures';
-import * as v from 'valibot';
+import { Schema } from 'effect';
 
 import {
   type GitHubRelease,
@@ -10,10 +15,8 @@ import {
   type Inputs,
   LAG_MS,
   LEDGER_CHECK_RUN_NAME,
-  type LedgerSnapshot,
   type Packument,
   digestFinding,
-  LedgerSnapshotSchema,
   reconcile,
   releaseOf,
   toLedgerCheckRun,
@@ -62,8 +65,15 @@ const packument = (
         },
 });
 
+const LEDGER_VERSION: LedgerVersion = {
+  ...ROWS.released,
+  npm_state: 'active',
+  gh_state: 'final',
+  status: 'released',
+};
+
 const LEDGER: LedgerSnapshot = {
-  versions: [{ ...ROWS.released, status: 'released' }],
+  versions: [LEDGER_VERSION],
   distTags: [
     { name: NAME, tag: 'latest', version: VERSION, updated_at: 'then' },
   ],
@@ -79,9 +89,9 @@ const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   ...overrides,
 });
 
-const rows = (row: Partial<LedgerSnapshot['versions'][number]>) => ({
+const rows = (row: Partial<LedgerVersion>): LedgerSnapshot => ({
   ...LEDGER,
-  versions: [{ ...ROWS.released, status: 'released', ...row }],
+  versions: [{ ...LEDGER_VERSION, ...row }],
 });
 
 const summary = (findings: ReturnType<typeof reconcile>) =>
@@ -104,24 +114,20 @@ describe('releaseOf', () => {
 });
 
 describe('LedgerSnapshotSchema', () => {
+  const decode = Schema.decodeUnknownSync(LedgerSnapshotSchema);
+
   it('keeps the fields the check reads and drops the rest', () => {
     const body = {
-      versions: [
-        {
-          ...ROWS.released,
-          npm_state: 'active',
-          gh_state: 'final',
-          status: 'released',
-        },
-      ],
-      distTags: LEDGER.distTags,
+      versions: [{ ...LEDGER_VERSION, served_at: 'now' }],
+      distTags: [{ ...LEDGER.distTags[0], served_at: 'now' }],
+      served_at: 'now',
     };
 
-    assert.deepEqual(v.parse(LedgerSnapshotSchema, body), LEDGER);
+    assert.deepEqual(decode(body), LEDGER);
   });
 
   it('throws on a body that is not the ledger', () => {
-    assert.throws(() => v.parse(LedgerSnapshotSchema, { versions: [{}] }));
+    assert.throws(() => decode({ versions: [{}] }));
   });
 });
 
@@ -259,7 +265,14 @@ describe('reconcile', () => {
   it('applies the pipeline lag rules', () => {
     const tagged = inputs({
       ledger: {
-        versions: [{ ...ROWS.tagged, status: 'tagged' }],
+        versions: [
+          {
+            ...ROWS.tagged,
+            npm_state: 'absent',
+            gh_state: 'none',
+            status: 'tagged',
+          },
+        ],
         distTags: [],
       },
       releases: [],
@@ -272,7 +285,14 @@ describe('reconcile', () => {
 
     const ahead = inputs({
       ledger: {
-        versions: [{ ...ROWS.releasedFirst, status: 'tagged' }],
+        versions: [
+          {
+            ...ROWS.releasedFirst,
+            npm_state: 'absent',
+            gh_state: 'final',
+            status: 'tagged',
+          },
+        ],
         distTags: [],
       },
       releases: [{ ...GITHUB_RELEASE, publishedAt: RECENT }],
@@ -286,7 +306,13 @@ describe('reconcile', () => {
     const prereleaseAhead = inputs({
       ledger: {
         versions: [
-          { ...ROWS.releasedFirst, gh_prerelease: 1, status: 'tagged' },
+          {
+            ...ROWS.releasedFirst,
+            gh_prerelease: 1,
+            npm_state: 'absent',
+            gh_state: 'final',
+            status: 'tagged',
+          },
         ],
         distTags: [],
       },
@@ -336,7 +362,14 @@ describe('reconcile', () => {
 
     const tagged = inputs({
       ledger: {
-        versions: [{ ...ROWS.tagged, status: 'tagged' }],
+        versions: [
+          {
+            ...ROWS.tagged,
+            npm_state: 'absent',
+            gh_state: 'none',
+            status: 'tagged',
+          },
+        ],
         distTags: [],
       },
       releases: [],

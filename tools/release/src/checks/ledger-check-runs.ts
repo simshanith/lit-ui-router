@@ -7,6 +7,11 @@ import { defaultCapture, defaultExec } from '@tools/shared/exec.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
+import {
+  type LedgerSnapshot,
+  LedgerSnapshotSchema,
+} from '@tools/release-ledger';
+import { Schema } from 'effect';
 import * as v from 'valibot';
 
 import { withRetry } from '../lib/retry.ts';
@@ -16,12 +21,10 @@ import {
   GitHubReleaseSchema,
   type GitTag,
   GitTagSchema,
-  type LedgerSnapshot,
   type Packument,
   PackumentSchema,
   digestFinding,
   packagesOf,
-  LedgerSnapshotSchema,
   reconcile,
   releaseOf,
   toLedgerCheckRun,
@@ -86,7 +89,7 @@ async function readLedger(origin: string): Promise<LedgerSnapshot> {
     );
   }
 
-  return v.parse(LedgerSnapshotSchema, await response.json());
+  return Schema.decodeUnknownSync(LedgerSnapshotSchema)(await response.json());
 }
 
 const TAGS_QUERY = `query($owner: String!, $name: String!, $endCursor: String) {

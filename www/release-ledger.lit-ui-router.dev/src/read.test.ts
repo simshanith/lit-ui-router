@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { before, describe, it } from 'node:test';
 
+import type { LedgerSnapshot } from '@tools/release-ledger';
 import { ROWS } from '@tools/release-ledger/fixtures';
 import { Effect } from 'effect';
 import {
@@ -14,7 +15,6 @@ import {
 
 import type { OidcClaims } from './claim.ts';
 import { type IngestEnv, ingest } from './ingest.ts';
-import type { LedgerSnapshot } from './ledger-sql.ts';
 import { ISSUER } from './oidc.ts';
 import { type ReadEnv, readLedger } from './read.ts';
 
