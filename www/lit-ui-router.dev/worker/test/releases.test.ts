@@ -180,7 +180,7 @@ describe('the /releases verdicts', () => {
       response?.headers.get('Location'),
       '/releases/lit-ui-router/1.10.0/?ref=badge',
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('passes paths outside the mounts to the host', async () => {
@@ -271,7 +271,7 @@ describe('the /releases/<pkg>/diff redirects', () => {
       response?.headers.get('Location'),
       `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   const without = (field: 'git_sha' | 'npm_integrity'): LedgerReader => ({
@@ -379,7 +379,7 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
       response?.headers.get('Content-Type'),
       'text/html; charset=utf-8',
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
     assert.equal(doc.title, 'lit-ui-router 1.9.0...1.10.0 | Lit UI Router');
 
     const shell = getByRole(doc.body, 'region', { name: 'Changed files' });
@@ -607,7 +607,7 @@ describe('the /gh verdicts', () => {
       level: 1,
       name: 'Not found',
     });
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('answers 503 while the ledger cannot be read', async () => {
