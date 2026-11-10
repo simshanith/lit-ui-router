@@ -1,6 +1,8 @@
 ---
 title: Server-Side Routing
 description: Serve routing verdicts at the edge with ui-router-server - the spectrum from zero server requirements to a shared router, every level live on this site
+type: guide
+topic: server
 ---
 
 # Server-Side Routing

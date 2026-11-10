@@ -1,6 +1,7 @@
 ---
 title: ui-router-mobx
 description: A framework-agnostic MobX observable store of the router's current state with ui-router-mobx
+type: package
 ---
 
 # ui-router-mobx

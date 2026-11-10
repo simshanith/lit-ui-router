@@ -1,6 +1,8 @@
 ---
 title: Location Plugins
 description: Choosing a URL strategy - hash, pushState, or the Navigation API
+type: guide
+topic: urls
 ---
 
 # Location Plugins

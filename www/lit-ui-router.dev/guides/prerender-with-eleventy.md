@@ -1,6 +1,8 @@
 ---
 title: Prerender with Eleventy
 description: Let Eleventy write the pages and the layout while lit-ui-router-ssr's prerender decides what each path is and renders it
+type: guide
+topic: server
 ---
 
 # Prerender with Eleventy

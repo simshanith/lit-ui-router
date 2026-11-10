@@ -1,6 +1,8 @@
 ---
 title: Routed Components
 description: Read a state's params in its routed component, code-split the component's element module with a resolve or a lazyLoad future state, and reach the element a view rendered
+type: guide
+topic: transitions
 ---
 
 # Routed Components

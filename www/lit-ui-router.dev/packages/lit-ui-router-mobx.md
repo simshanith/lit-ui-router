@@ -1,6 +1,7 @@
 ---
 title: lit-ui-router-mobx
 description: Observable router state and reaction-based controllers with lit-ui-router-mobx
+type: package
 ---
 
 # lit-ui-router-mobx

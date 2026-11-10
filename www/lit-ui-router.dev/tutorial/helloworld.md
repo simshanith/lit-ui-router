@@ -1,6 +1,7 @@
 ---
 title: Hello World
 description: Getting started with lit-ui-router
+type: tutorial
 ---
 
 # Hello World

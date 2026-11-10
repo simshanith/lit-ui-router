@@ -1,6 +1,8 @@
 ---
 title: Unmatched URLs (404)
 description: Route unmatched URLs to a 404 state with urlService.rules.otherwise
+type: guide
+topic: urls
 ---
 
 # Unmatched URLs (404)

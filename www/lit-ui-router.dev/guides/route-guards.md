@@ -1,6 +1,8 @@
 ---
 title: Route Guards
 description: Protect states with transition hooks - the requiresAuth pattern
+type: guide
+topic: transitions
 ---
 
 # Route Guards

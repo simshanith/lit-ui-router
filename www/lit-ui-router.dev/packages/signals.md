@@ -1,6 +1,7 @@
 ---
 title: Signals
 description: The TC39 Signals packages for UI-Router — ui-router-signals mirrors the router's state into signals, and lit-ui-router-signals builds Lit controllers on that mirror
+type: package
 ---
 
 # Signals

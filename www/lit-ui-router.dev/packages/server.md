@@ -1,6 +1,7 @@
 ---
 title: Server
 description: Honest HTTP verdicts for a static SPA with ui-router-server — the client's route table, running on the server or the edge
+type: package
 ---
 
 # ui-router-server

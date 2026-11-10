@@ -1,6 +1,8 @@
 ---
 title: Loading and Error Views
 description: Show a pending indicator while a transition runs, render NOWAIT resolves behind a skeleton, and route failed transitions to an error view
+type: guide
+topic: transitions
 ---
 
 # Loading and Error Views

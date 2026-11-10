@@ -1,6 +1,8 @@
 ---
 title: View Fallback Content
 description: What <ui-view> renders when no routed component is active — the capture rules, the master/detail idiom, and prerendered shells
+type: guide
+topic: markup
 ---
 
 # View Fallback Content

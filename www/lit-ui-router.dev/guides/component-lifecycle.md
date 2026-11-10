@@ -1,6 +1,8 @@
 ---
 title: Component Lifecycle Hooks
 description: React to routing events from inside routed components with uiCanExit and uiOnParamsChanged
+type: guide
+topic: transitions
 ---
 
 # Component Lifecycle Hooks

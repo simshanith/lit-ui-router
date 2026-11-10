@@ -1,6 +1,7 @@
 ---
 title: How this site runs
 description: lit-ui-router.dev on Cloudflare — static assets, the docs worker that routes the sample apps and release pages, and the release-ledger and release-diffs workers behind them
+type: site
 ---
 
 # How this site runs

@@ -1,6 +1,7 @@
 ---
 title: lit-ui-router-effect
 description: A SubscriptionRef of the route and ref-following Lit controllers with lit-ui-router-effect
+type: package
 ---
 
 # lit-ui-router-effect
