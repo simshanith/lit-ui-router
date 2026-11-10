@@ -138,23 +138,24 @@ describe('catalog/surfaces.ts', () => {
 describe('surfaceIn', () => {
   const table = [
     row('docs', '/*'),
-    row('api', '/api/*'),
-    row('page', '/api/page'),
-    row('other', '/api/a/*'),
+    row('reference', '/reference/*'),
+    row('page', '/reference/page'),
+    row('other', '/reference/a/*'),
   ];
 
   it('gives a path to the matching glob with the longest text before its first *, and a bare glob to any wildcard', () => {
     assert.equal(surfaceIn(table, '/guide').id, 'docs');
-    assert.equal(surfaceIn(table, '/api/a').id, 'api');
-    assert.equal(surfaceIn(table, '/api/page').id, 'page');
-    assert.equal(surfaceIn(table, '/api/a/x').id, 'other');
-    assert.equal(surfaceIn(table, '/api/b/x').id, 'api');
+    assert.equal(surfaceIn(table, '/reference/a').id, 'reference');
+    assert.equal(surfaceIn(table, '/reference/page').id, 'page');
+    assert.equal(surfaceIn(table, '/reference/a/x').id, 'other');
+    assert.equal(surfaceIn(table, '/reference/b/x').id, 'reference');
   });
 
   it('throws when two rows tie on a path, or none matches', () => {
     assert.throws(
-      () => surfaceIn([...table, row('twin', '/api/*/y')], '/api/b/y'),
-      /\/api\/b\/y: claimed by api, twin/,
+      () =>
+        surfaceIn([...table, row('twin', '/reference/*/y')], '/reference/b/y'),
+      /\/reference\/b\/y: claimed by reference, twin/,
     );
     assert.throws(() => surfaceIn(table, 'guide'), /guide: no surface/);
   });
@@ -172,7 +173,7 @@ describe('sourceGlob', () => {
   it('maps a folder to its index page and a trailing * to any depth', () => {
     assert.equal(sourceGlob('/site/'), 'site/index.md');
     assert.equal(sourceGlob('/package-releases/*'), 'package-releases/**');
-    assert.equal(sourceGlob('/api/*/*'), 'api/*/**');
+    assert.equal(sourceGlob('/reference/*/*'), 'reference/*/**');
   });
 });
 

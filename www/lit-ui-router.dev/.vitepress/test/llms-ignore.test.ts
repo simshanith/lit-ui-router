@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 import { LLMS_TXT_IGNORE } from '../llms.ts';
 
 describe('LLMS_TXT_IGNORE', () => {
-  // Mirrors the plugin: page paths (`api/<pkg>/index.md` becomes `api/<pkg>.md`), with `!` patterns as exceptions.
+  // Mirrors the plugin: page paths (`reference/<pkg>/index.md` becomes `reference/<pkg>.md`), with `!` patterns as exceptions.
   const ignored = (pagePath: string) => {
     const matches = (pattern: string) =>
       path.posix.matchesGlob(pagePath, pattern.replace(/^!/, ''));
@@ -18,11 +18,11 @@ describe('LLMS_TXT_IGNORE', () => {
 
   it('keeps each API index page', () => {
     for (const pagePath of [
-      'api.md',
-      'api/reference.md',
-      'api/ui-router-server.md',
-      'api/ui-router-registry.md',
-      'api/lit-ui-router-ssr.md',
+      'reference.md',
+      'reference/lit-ui-router.md',
+      'reference/ui-router-server.md',
+      'reference/ui-router-registry.md',
+      'reference/lit-ui-router-ssr.md',
     ]) {
       assert.equal(ignored(pagePath), false, pagePath);
     }
@@ -30,9 +30,9 @@ describe('LLMS_TXT_IGNORE', () => {
 
   it("drops a multi-entry reference's root module, which matches the same sidebar link as its index", () => {
     for (const pagePath of [
-      'api/ui-router-server/index.md',
-      'api/ui-router-registry/index.md',
-      'api/lit-ui-router-ssr/index.md',
+      'reference/ui-router-server/index.md',
+      'reference/ui-router-registry/index.md',
+      'reference/lit-ui-router-ssr/index.md',
     ]) {
       assert.equal(ignored(pagePath), true, pagePath);
     }
@@ -40,8 +40,8 @@ describe('LLMS_TXT_IGNORE', () => {
 
   it('drops member pages', () => {
     for (const pagePath of [
-      'api/ui-router-server/connect.md',
-      'api/reference/classes/UIRouterLit.md',
+      'reference/ui-router-server/connect.md',
+      'reference/lit-ui-router/classes/UIRouterLit.md',
     ]) {
       assert.equal(ignored(pagePath), true, pagePath);
     }

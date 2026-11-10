@@ -39,7 +39,7 @@ names and urls with their components, and `page(router)`, the template
 view.
 
 `vite.config.ts` adds one option to
-[`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
+[`serverRouterPlugin`](/reference/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
 from `lit-ui-router-ssr/vite`:
 
 ```ts
@@ -70,9 +70,9 @@ list its setup modules in the plugin's `shim` option, which replaces
 
 `src/prerender.ts` is the prerender script, and it imports everything
 statically. Its default export comes from
-[`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender),
+[`definePrerender`](/reference/lit-ui-router-ssr/vite/functions/definePrerender),
 whose callback receives `site` and returns the options for
-[`lit-ui-router-ssr`'s `prerender()`](/api/lit-ui-router-ssr/index/functions/prerender):
+[`lit-ui-router-ssr`'s `prerender()`](/reference/lit-ui-router-ssr/index/functions/prerender):
 
 - `site.outDir`: Vite's output directory, absolute.
 - `site.shellHtml`: the built `index.html`, as a string.
@@ -253,7 +253,7 @@ to the plugin replaces this.
 </DiagramEmbed>
 
 **Other renderers.** `serverRouterPlugin` and `definePrerender` from
-[`ui-router-server/vite`](/api/ui-router-server/vite/functions/serverRouterPlugin)
+[`ui-router-server/vite`](/reference/ui-router-server/vite/functions/serverRouterPlugin)
 are the same pair without Lit: the plugin preloads only what
 `prerender: { entry, preload }` lists, and the script's default export calls
 a `prerender()` itself and returns its result. For an app that does not

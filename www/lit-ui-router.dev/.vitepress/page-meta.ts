@@ -19,7 +19,7 @@ export const PAGE_TYPES = {
 export type PageType = keyof typeof PAGE_TYPES;
 
 /** Page sources a generator writes; they carry no page type. */
-export const GENERATED_PAGES = ['api/*/**', `${STUB_DIR}/**`];
+export const GENERATED_PAGES = ['reference/*/**', `${STUB_DIR}/**`];
 
 const pageTypes = Object.keys(PAGE_TYPES).filter(
   (type): type is Exclude<PageType, 'guide'> => type !== 'guide',

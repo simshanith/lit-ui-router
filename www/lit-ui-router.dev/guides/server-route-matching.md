@@ -404,13 +404,13 @@ this path but nothing matched" from "no mount at all".
 
 To catch an unclaimed bare base in CI rather than in a log, assert in a test
 that
-[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+[`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns an empty array for a router built from the table. It returns the
 findings the warning prints, in every build; `apps/sample-app-routes` runs that
 assertion over the tables above.
 
 A mount that means its bare base to 404 turns the finding off with
-[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics);
+[`ignoreDiagnostics`](/reference/ui-router-server/index/interfaces/MountConfig#ignorediagnostics);
 the warning and `diagnoseMounts` both skip it for that mount.
 
 ## The worker: verdicts → HTTP
@@ -719,16 +719,16 @@ are the correct degrade for what the server can't know.
 
 Everything above is the verdict for one URL. The links the page ships are the
 other half, and the two directive forms differ there.
-[`uiSref`](/api/reference/directives/uiSref) and
-[`uiSrefActive`](/api/reference/directives/uiSrefActive) are element parts:
+[`uiSref`](/reference/lit-ui-router/directives/uiSref) and
+[`uiSrefActive`](/reference/lit-ui-router/directives/uiSrefActive) are element parts:
 they sit on the element and write to it from the outside, which only a live
 browser does. A server renderer runs `render()` and never `update()`, so what
 it emits is an `<a>` with no `href` — and a static analyser reading the
 template sees the same thing.
 
-[`srefHref`](/api/reference/directives/srefHref),
-[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
-[`srefActiveClass`](/api/reference/directives/srefActiveClass) bind from
+[`srefHref`](/reference/lit-ui-router/directives/srefHref),
+[`srefAriaCurrent`](/reference/lit-ui-router/directives/srefAriaCurrent) and
+[`srefActiveClass`](/reference/lit-ui-router/directives/srefActiveClass) bind from
 inside the attribute they affect, so the `href` is a real attribute in the
 template. A whole nav:
 
@@ -757,7 +757,7 @@ While the router sits at `users`, that link is
 `<a href="/users" class="nav-link active" aria-current="page">`; at
 `users.detail` the `active` class stays and `aria-current` is gone, because
 the token is exact-match only. The three are covered in
-[Attribute-part forms](/api/#attribute-part-forms).
+[Attribute-part forms](/reference/#attribute-part-forms).
 
 `srefHref`'s `render()` is a function of the router and its arguments alone —
 it returns the `href` string, or `nothing` for a state with no url — and it
@@ -887,7 +887,7 @@ the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
 pass the same relaxation as the mount's `config`: keep one config object and
 hand it to both the mount and
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+[`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
 on the client router, which throws if a state's url already compiled. A
 static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory — see

@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-[`SrefStatusController`](https://lit-ui-router.dev/api/reference/controllers/SrefStatusController) is the third way a link learns it is active, and the only one that hands the status to the host rather than to the template. Its getters — `active`, `exact`, `entering`, `exiting`, `status` — exist so a component can compose them itself, usually with lit's `classMap`:
+[`SrefStatusController`](https://lit-ui-router.dev/reference/lit-ui-router/controllers/SrefStatusController) is the third way a link learns it is active, and the only one that hands the status to the host rather than to the template. Its getters — `active`, `exact`, `entering`, `exiting`, `status` — exist so a component can compose them itself, usually with lit's `classMap`:
 
 ```js
 class=${classMap({ 'nav-link': true, active: this.users.active })}

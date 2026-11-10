@@ -23,7 +23,7 @@ export default {
     'apps/sample-app-lit-e2e/test-results/**',
     'www/lit-ui-router.dev/.vitepress/cache/**',
     'www/lit-ui-router.dev/.vitepress/.temp/**',
-    'www/lit-ui-router.dev/api/**',
+    'www/lit-ui-router.dev/reference/*/**',
   ],
   rules: {
     'function-no-unknown': true,

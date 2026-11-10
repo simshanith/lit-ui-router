@@ -76,12 +76,12 @@ test.describe('docs site', () => {
   });
 
   test('renders the generated api reference', async ({ page }) => {
-    await page.goto('/api/');
+    await page.goto('/reference/');
     await expect(page).toHaveTitle(/^API \| /);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     // A typedoc-authored page must list real exports; an empty or stale
     // generation would render the shell without them.
-    await page.goto('/api/reference/');
+    await page.goto('/reference/lit-ui-router/');
     // Scoped to main: the sidebar also links UIRouterLit, but collapsed.
     await expect(
       page

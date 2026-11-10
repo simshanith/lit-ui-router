@@ -9,8 +9,12 @@ import { SURFACES } from '../../catalog/surfaces.ts';
 import {
   builtProblems,
   matchRedirect,
+  movedProblems,
+  movedUrls,
   redirectLines,
   redirectsFileBody,
+  RESERVED_PREFIX,
+  reservedProblems,
   spellings,
   tableProblems,
   workerFirstProblems,
@@ -35,8 +39,44 @@ describe('catalog/redirects.ts', () => {
         '/packages/navigation-plugin -> /packages/ui-router-navigation-location-plugin',
         '/packages/server -> /packages/ui-router-server',
         '/packages/ssr -> /packages/lit-ui-router-ssr',
+        '/api/ -> /reference/',
+        '/api/reference/* -> /reference/lit-ui-router/:splat',
+        '/api/* -> /reference/:splat',
       ],
       'released npm READMEs and homepage fields link these sources and cannot be republished; keep each rule, and retarget one only where its page moves again',
+    );
+  });
+
+  it('sends every URL the API reference served to its page under /reference/<npm-name>/, in one hop', () => {
+    const renamed = (url: string) =>
+      url
+        .replace(/^\/api\.md$/, '/reference.md')
+        .replace(/^\/api\/reference(?=[/.])/, '/reference/lit-ui-router')
+        .replace(
+          /^\/api\/navigation-location-plugin(?=[/.])/,
+          '/reference/ui-router-navigation-location-plugin',
+        )
+        .replace(/^\/api\//, '/reference/');
+
+    const urls = movedUrls();
+
+    assert.ok(urls.length > 0);
+
+    for (const url of urls) {
+      const redirect = matchRedirect(lines, url);
+
+      assert.ok(redirect, url);
+      assert.deepEqual(redirect, { location: renamed(url), status: 301 }, url);
+      assert.equal(matchRedirect(lines, redirect.location), null, url);
+    }
+  });
+
+  it('leaves no moved URL outside the reserved prefix and the old reference', () => {
+    assert.deepEqual(
+      movedUrls().filter(
+        (url) => !url.startsWith(RESERVED_PREFIX) && url !== '/api.md',
+      ),
+      [],
     );
   });
 
@@ -207,5 +247,53 @@ describe('builtProblems', () => {
         '/old /page 301: a built file still answers the source',
       ],
     );
+  });
+});
+
+describe('movedProblems', () => {
+  const outDir = mkdtempSync(join(tmpdir(), 'moved-'));
+
+  for (const file of ['new/page.html', 'new/index.html', 'old/stale.html']) {
+    mkdirSync(dirname(join(outDir, file)), { recursive: true });
+    writeFileSync(join(outDir, file), '');
+  }
+
+  const rules = [
+    { from: '/old/*', to: '/new/:splat', status: 301 },
+    { from: '/older/*', to: '/new/:splat', status: 301 },
+  ];
+
+  it('passes a moved URL whose rule lands on a built file', () => {
+    assert.deepEqual(
+      movedProblems(rules, ['/old/page', '/old/', '/older/page'], outDir),
+      [],
+    );
+  });
+
+  it('flags a URL no rule catches, a dead target and a source still built', () => {
+    assert.deepEqual(
+      movedProblems(rules, ['/gone', '/old/missing', '/old/stale'], outDir),
+      [
+        '/gone: no rule',
+        '/old/missing -> /new/missing: no built file at the target',
+        '/old/stale -> /new/stale: no built file at the target',
+        '/old/stale: a built file still answers it',
+      ],
+    );
+  });
+});
+
+describe('reservedProblems', () => {
+  it('flags a built file under the reserved prefix', () => {
+    const outDir = mkdtempSync(join(tmpdir(), 'reserved-'));
+
+    writeFileSync(join(outDir, 'index.html'), '');
+    assert.deepEqual(reservedProblems(outDir), []);
+
+    mkdirSync(join(outDir, RESERVED_PREFIX));
+    writeFileSync(join(outDir, RESERVED_PREFIX, 'index.html'), '');
+    assert.deepEqual(reservedProblems(outDir), [
+      '/api/: built files sit under the reserved prefix',
+    ]);
   });
 });

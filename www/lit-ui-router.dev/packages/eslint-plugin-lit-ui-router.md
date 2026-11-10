@@ -15,7 +15,7 @@ type: package
 is a small set of ESLint rules that understand lit-ui-router's directives.
 
 A lit-ui-router anchor carries no static `href` — the
-[`uiSref`](/api/reference/directives/uiSref) element part assigns one at
+[`uiSref`](/reference/lit-ui-router/directives/uiSref) element part assigns one at
 runtime — so stock accessibility rules report every correct call site. The
 usual escape is to disable the rule, which costs its real coverage. This
 plugin instead ships its own copy of the base rule, taught that the directive
@@ -81,11 +81,11 @@ statically: they report at author time, across the whole codebase, and in a
 production build — where the runtime says nothing at all.
 
 Three of them are one concern seen from three angles. A link can learn it is
-active from the [`uiSrefActive`](/api/reference/directives/uiSrefActive)
+active from the [`uiSrefActive`](/reference/lit-ui-router/directives/uiSrefActive)
 element part, from a
-[`srefActiveClass`](/api/reference/directives/srefActiveClass) attribute part,
+[`srefActiveClass`](/reference/lit-ui-router/directives/srefActiveClass) attribute part,
 or from a
-[`SrefStatusController`](/api/reference/controllers/SrefStatusController) the
+[`SrefStatusController`](/reference/lit-ui-router/controllers/SrefStatusController) the
 host composes with `classMap` — and only the first writes `aria-current`
 itself. `sref-active-aria-current` protects the authored
 attribute from the element part's takeover, `sref-active-class-aria-current`
@@ -194,10 +194,10 @@ example:
 [`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md),
 [`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md)
 and `directive-position`'s attribute rows match only
-[`srefHref`](/api/reference/directives/srefHref),
-[`srefActiveClass`](/api/reference/directives/srefActiveClass),
-[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
-[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+[`srefHref`](/reference/lit-ui-router/directives/srefHref),
+[`srefActiveClass`](/reference/lit-ui-router/directives/srefActiveClass),
+[`srefAriaCurrent`](/reference/lit-ui-router/directives/srefAriaCurrent) and
+[`SrefStatusController`](/reference/lit-ui-router/controllers/SrefStatusController)
 imported from `lit-ui-router`, all new in `lit-ui-router@1.14`. A codebase on
 an earlier router cannot trip them, which is why they arrive in `1.1` rather
 than `2.0`.
@@ -222,5 +222,5 @@ tightening, and pin accordingly.
 
 - [Design System Links](/guides/design-system-links) — what `uiSref` does to
   an anchor, and why the href only exists at runtime
-- [`uiSref` API](/api/reference/directives/uiSref) — the directive itself,
+- [`uiSref` API](/reference/lit-ui-router/directives/uiSref) — the directive itself,
   including `assignHref`

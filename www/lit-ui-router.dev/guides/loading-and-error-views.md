@@ -93,7 +93,7 @@ indicator only starts once that fetch settles and never shows for it. For
 EAGER resolves, register the same hook with `onBefore`.
 
 Inside a Lit element, a
-[`TransitionController`](/api/reference/controllers/TransitionController)
+[`TransitionController`](/reference/lit-ui-router/controllers/TransitionController)
 observing `onStart` registers the same hook for as long as the element is
 connected, and hands its callback the transition:
 

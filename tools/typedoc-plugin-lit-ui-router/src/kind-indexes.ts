@@ -16,6 +16,8 @@ import { Application, RendererEvent } from 'typedoc';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { resolveBaseLink } from './base-link.js';
+
 /** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
 interface SidebarItem {
   text: string;
@@ -43,24 +45,6 @@ export function load(app: Application): void {
     linkSidebarGroups(outDir, baseLink, app);
     retitleRootModule(outDir, app);
   });
-}
-
-/**
- * Resolve the site-absolute link of the output directory from the
- * typedoc-vitepress-theme `docsRoot` option (e.g. `/api/lit-ui-router-mobx/`).
- */
-/** `docsRoot` is another plugin's option, so typedoc hands it over untyped. */
-const isDocsRoot = (value: unknown): value is string =>
-  typeof value === 'string';
-
-function resolveBaseLink(outDir: string, app: Application): string {
-  const docsRootValue = app.options.getValue('docsRoot');
-  const docsRoot = isDocsRoot(docsRootValue) ? docsRootValue : '';
-
-  if (!docsRoot) return './';
-  const relative = path.relative(path.resolve(docsRoot), outDir);
-
-  return `/${relative.split(path.sep).join('/')}/`;
 }
 
 /**

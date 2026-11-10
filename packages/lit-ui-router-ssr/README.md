@@ -775,7 +775,7 @@ expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
 ## Documentation
 
 - [Guide](https://lit-ui-router.dev/packages/lit-ui-router-ssr)
-- [API reference](https://lit-ui-router.dev/api/lit-ui-router-ssr/)
+- [API reference](https://lit-ui-router.dev/reference/lit-ui-router-ssr/)
 
 ## License
 

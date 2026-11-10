@@ -170,4 +170,4 @@ of [Server-Side Routing](./server-route-matching) for where that axis stands.
 - [Component Lifecycle Hooks](./component-lifecycle)
 - [Server-Side Routing](./server-route-matching)
 - [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr)
-- [`<ui-view>` API reference](/api/reference/components/UiView)
+- [`<ui-view>` API reference](/reference/lit-ui-router/components/UiView)

@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { RedirectLine } from 'ui-router-server/prerender';
@@ -12,6 +12,15 @@ export const LIMITS = { static: 2000, dynamic: 100, lineLength: 1000 } as const;
 
 /** The frozen 1.x snapshot's prefix: no redirect may claim a path under it. */
 export const SNAPSHOT_PREFIX = '/v1/';
+
+/** Kept free for a future HTTP API at `/api/v<N>/`: no built file may sit under it. */
+export const RESERVED_PREFIX = '/api/';
+
+/** Every URL the site once served at a path that now redirects, one per line. */
+export const movedUrls = (): string[] =>
+  readFileSync(new URL('../catalog/api-urls.txt', import.meta.url), 'utf8')
+    .split('\n')
+    .filter(Boolean);
 
 const PLACEHOLDER = /:([A-Za-z]\w*)/g;
 
@@ -185,10 +194,45 @@ export function builtProblems(
     ]);
 }
 
-/** The build's `buildEnd`: fails on a dead target or a live source, then writes `_redirects`. */
+/** Moved URLs no rule catches, that land on no built file, or that a built file still answers. */
+export function movedProblems(
+  rules: readonly RedirectLine[],
+  urls: readonly string[],
+  outDir: string,
+): string[] {
+  const served = (path: string) =>
+    servedFiles(outDir, path).some((file) => existsSync(file));
+
+  return urls.flatMap((url) => {
+    const redirect = matchRedirect(rules, url);
+
+    if (!redirect) return [`${url}: no rule`];
+
+    return [
+      ...(served(redirect.location.split(/[?#]/)[0])
+        ? []
+        : [`${url} -> ${redirect.location}: no built file at the target`]),
+      ...(served(url) ? [`${url}: a built file still answers it`] : []),
+    ];
+  });
+}
+
+/** A built file under the reserved prefix. */
+export const reservedProblems = (outDir: string): string[] =>
+  existsSync(join(outDir, RESERVED_PREFIX))
+    ? [`${RESERVED_PREFIX}: built files sit under the reserved prefix`]
+    : [];
+
+/** The build's `buildEnd`: fails on a dead target, a live source or a lost moved URL, then writes `_redirects`. */
 export async function writeRedirects(outDir: string): Promise<void> {
   const lines = redirectLines(REDIRECTS);
-  const problems = [...tableProblems(lines), ...builtProblems(lines, outDir)];
+
+  const problems = [
+    ...tableProblems(lines),
+    ...builtProblems(lines, outDir),
+    ...movedProblems(lines, movedUrls(), outDir),
+    ...reservedProblems(outDir),
+  ];
 
   if (problems.length > 0)
     throw new Error(`catalog/redirects.ts:\n  ${problems.join('\n  ')}`);

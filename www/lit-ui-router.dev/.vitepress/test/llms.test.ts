@@ -76,9 +76,9 @@ describe('llmsSidebar', () => {
           items: [
             {
               text: 'lit-ui-router',
-              link: '/api/reference/',
+              link: '/reference/lit-ui-router/',
               collapsed: true,
-              items: [{ text: 'Core', link: '/api/reference/core/' }],
+              items: [{ text: 'Core', link: '/reference/lit-ui-router/core/' }],
             },
           ],
         },
@@ -95,7 +95,11 @@ describe('llmsSidebar', () => {
         {
           text: 'API',
           items: [
-            { text: 'lit-ui-router', link: '/api/reference/', collapsed: true },
+            {
+              text: 'lit-ui-router',
+              link: '/reference/lit-ui-router/',
+              collapsed: true,
+            },
           ],
         },
       ],
