@@ -177,6 +177,7 @@ function makeSidebar() {
         { text: 'Overview', link: '/guides/' },
         {
           text: 'URLs & Location',
+          collapsed: false,
           items: [
             { text: 'Location Plugins', link: '/guides/location-plugins' },
             { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
@@ -184,6 +185,7 @@ function makeSidebar() {
         },
         {
           text: 'Server-side',
+          collapsed: false,
           items: [
             {
               text: 'Server-Side Routing',
@@ -201,6 +203,7 @@ function makeSidebar() {
         },
         {
           text: 'Transitions & Guards',
+          collapsed: false,
           items: [
             { text: 'Route Guards', link: '/guides/route-guards' },
             {
@@ -216,6 +219,7 @@ function makeSidebar() {
         },
         {
           text: 'Links & Markup',
+          collapsed: false,
           items: [
             { text: 'Named Views', link: '/guides/named-views' },
             {
@@ -230,6 +234,7 @@ function makeSidebar() {
         },
         {
           text: 'Builds & Diagnostics',
+          collapsed: false,
           items: [
             {
               text: 'Development and Production Builds',
@@ -239,6 +244,7 @@ function makeSidebar() {
         },
         {
           text: 'Reactivity',
+          collapsed: false,
           items: [
             {
               text: 'Reactive Components',
@@ -251,14 +257,17 @@ function makeSidebar() {
     { text: 'Releases', link: '/releases/', target: '_self', items: [] },
     {
       text: 'Companion Packages',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/packages/' },
         {
           text: 'Reactivity',
+          collapsed: false,
           items: [
             {
               text: 'Effect',
               link: '/packages/effect',
+              collapsed: true,
               items: [
                 {
                   text: 'ui-router-effect',
@@ -273,6 +282,7 @@ function makeSidebar() {
             {
               text: 'MobX',
               link: '/packages/mobx',
+              collapsed: true,
               items: [
                 { text: 'ui-router-mobx', link: '/packages/ui-router-mobx' },
                 {
@@ -284,6 +294,7 @@ function makeSidebar() {
             {
               text: 'Signals',
               link: '/packages/signals',
+              collapsed: true,
               items: [
                 {
                   text: 'ui-router-signals',
@@ -299,6 +310,7 @@ function makeSidebar() {
         },
         {
           text: 'Location',
+          collapsed: false,
           items: [
             {
               text: 'Navigation API Plugin',
@@ -308,6 +320,7 @@ function makeSidebar() {
         },
         {
           text: 'Server',
+          collapsed: false,
           items: [
             { text: 'Server', link: '/packages/server' },
             { text: 'Server-Side Rendering (SSR)', link: '/packages/ssr' },
@@ -315,6 +328,7 @@ function makeSidebar() {
         },
         {
           text: 'DX',
+          collapsed: false,
           items: [
             { text: 'Registry', link: '/packages/ui-router-registry' },
             { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
@@ -326,10 +340,12 @@ function makeSidebar() {
     {
       // Role groups mirror Companion Packages; eslint-plugin has no reference.
       text: 'API',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/api/' },
         {
           text: 'Renderer',
+          collapsed: false,
           items: [
             apiReference(
               'lit-ui-router',
@@ -340,6 +356,7 @@ function makeSidebar() {
         },
         {
           text: 'Reactivity',
+          collapsed: false,
           items: [
             apiReference(
               'ui-router-effect',
@@ -375,6 +392,7 @@ function makeSidebar() {
         },
         {
           text: 'Location',
+          collapsed: false,
           items: [
             apiReference(
               'ui-router-navigation-location-plugin',
@@ -385,6 +403,7 @@ function makeSidebar() {
         },
         {
           text: 'Server',
+          collapsed: false,
           items: [
             apiReference(
               'ui-router-server',
@@ -400,6 +419,7 @@ function makeSidebar() {
         },
         {
           text: 'DX',
+          collapsed: false,
           items: [
             apiReference(
               'ui-router-registry',
@@ -412,6 +432,7 @@ function makeSidebar() {
     },
     {
       text: 'Site',
+      collapsed: true,
       items: [{ text: 'How this site runs', link: '/about-this-site' }],
     },
   ];
