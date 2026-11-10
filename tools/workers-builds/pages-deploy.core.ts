@@ -1,6 +1,6 @@
 // Pure verdict logic for pages-deploy.ts; no network here.
 
-import type { Json } from '@tools/bootstrap/types.ts';
+import type { ListProjectDeploymentsResponse } from '@distilled.cloud/cloudflare/pages';
 import * as v from 'valibot';
 
 import type { Report } from './workers-builds-triggers.core.ts';
@@ -24,19 +24,20 @@ const timestamp = v.pipe(
 );
 
 // looseObject throughout: a deployment carries far more than this check reads.
+// The SDK camelCases wire names but, lenient by default, validates none of them.
 // https://developers.cloudflare.com/api/resources/pages/subresources/projects/subresources/deployments/methods/list/
 const DeploymentSchema = v.looseObject({
   id: v.pipe(v.string(), v.nonEmpty()),
-  created_on: timestamp,
+  createdOn: timestamp,
   environment: v.string(),
   url: v.nullish(v.string()),
-  latest_stage: v.looseObject({ name: v.string(), status: v.string() }),
-  deployment_trigger: v.looseObject({
+  latestStage: v.looseObject({ name: v.string(), status: v.string() }),
+  deploymentTrigger: v.looseObject({
     type: v.string(),
     metadata: v.nullish(
       v.looseObject({
         branch: v.nullish(v.string()),
-        commit_hash: v.nullish(v.string()),
+        commitHash: v.nullish(v.string()),
       }),
     ),
   }),
@@ -47,7 +48,9 @@ const DeploymentsSchema = v.array(DeploymentSchema);
 export type Deployment = v.InferOutput<typeof DeploymentSchema>;
 
 /** The deployments list `result`, validated; throws with every issue's path. */
-export function deploymentsFromApi(result: Json | undefined): Deployment[] {
+export function deploymentsFromApi(
+  result: ListProjectDeploymentsResponse['result'],
+): Deployment[] {
   const parsed = v.safeParse(DeploymentsSchema, result);
 
   if (!parsed.success) {
@@ -76,9 +79,9 @@ export function liveProductionDeployment(
     .filter(
       (deployment) =>
         deployment.environment === 'production' &&
-        deployment.latest_stage.status === 'success',
+        deployment.latestStage.status === 'success',
     )
-    .sort((a, b) => Date.parse(b.created_on) - Date.parse(a.created_on))[0];
+    .sort((a, b) => Date.parse(b.createdOn) - Date.parse(a.createdOn))[0];
 }
 
 /** Compare the live production deployment's commit with the branch head. */
@@ -104,14 +107,14 @@ export function deployVerdict(
     };
   }
 
-  const metadata = live.deployment_trigger.metadata;
-  const deployed = metadata?.commit_hash ?? '';
+  const metadata = live.deploymentTrigger.metadata;
+  const deployed = metadata?.commitHash ?? '';
 
   const lines = [
     ...header,
     `deployed commit: ${deployed || '(none recorded)'}`,
     `deployed branch: ${metadata?.branch || '(none recorded)'}`,
-    `deployment: ${live.id} (${live.created_on})${live.url ? ` ${live.url}` : ''}`,
+    `deployment: ${live.id} (${live.createdOn})${live.url ? ` ${live.url}` : ''}`,
     '',
   ];
 

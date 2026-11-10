@@ -6,14 +6,15 @@ import { describe, it } from 'node:test';
 
 import type { Json } from '@tools/bootstrap/types.ts';
 
+import type { CloudflareApi } from './cloudflare-api.ts';
 import {
   type Deployment,
   PAGES_PROJECT,
   deployVerdict,
-  deploymentsFromApi,
   isCommitSha,
   liveProductionDeployment,
 } from './pages-deploy.core.ts';
+import { productionDeployments } from './pages-deploy.ts';
 
 // Expected values live in the fixture so it doubles as documentation of the
 // API deployment shape.
@@ -34,25 +35,59 @@ const fixtures = JSON.parse(
 
 const { liveCommit, branchAhead, forbidden } = fixtures;
 
-const deployments = deploymentsFromApi(fixtures.deployments);
+/** An API whose fetch answers each request with one envelope, and records it. */
+const answering = (result: Json) => {
+  const requests: Request[] = [];
 
-describe('deploymentsFromApi', () => {
+  const api: CloudflareApi = {
+    token: 'test-token',
+    accountId: 'test-account',
+    fetch: (input, init) => {
+      requests.push(new Request(input, init));
+
+      return Promise.resolve(
+        Response.json({ success: true, errors: [], messages: [], result }),
+      );
+    },
+  };
+
+  return { api, requests };
+};
+
+const fetched = answering(fixtures.deployments);
+
+const deployments = await productionDeployments(fetched.api);
+
+describe('productionDeployments', () => {
+  it('lists production deployments with the token', () => {
+    assert.deepEqual(
+      fetched.requests.map(({ method, url }) => `${method} ${url}`),
+      [
+        `GET https://api.cloudflare.com/client/v4/accounts/test-account/pages/projects/${PAGES_PROJECT}/deployments?env=production`,
+      ],
+    );
+    assert.equal(
+      fetched.requests[0]?.headers.get('authorization'),
+      'Bearer test-token',
+    );
+  });
+
   it('accepts the documented deployment shape', () => {
     assert.equal(deployments.length, fixtures.deployments.length);
   });
 
-  it('names the path of a field the check cannot read', () => {
-    assert.throws(
-      () =>
-        deploymentsFromApi([
-          { ...fixtures.deployments[0], latest_stage: null },
-        ]),
-      /0\.latest_stage/,
-    );
+  it('names the path of a field the check cannot read', async () => {
+    const { api } = answering([
+      { ...fixtures.deployments[0], latest_stage: null },
+    ]);
+
+    await assert.rejects(productionDeployments(api), /0\.latestStage/);
   });
 
-  it('rejects an envelope result that is not a list', () => {
-    assert.throws(() => deploymentsFromApi(null), /unexpected Pages/);
+  it('rejects an envelope result that is not a list', async () => {
+    const { api } = answering({ items: [] });
+
+    await assert.rejects(productionDeployments(api), /unexpected Pages/);
   });
 });
 
@@ -103,7 +138,7 @@ describe('deployVerdict', () => {
     assert.ok(live);
 
     const report = deployVerdict(
-      [{ ...live, deployment_trigger: { type: 'ad_hoc', metadata: null } }],
+      [{ ...live, deploymentTrigger: { type: 'ad_hoc', metadata: null } }],
       liveCommit,
     );
 
@@ -191,7 +226,7 @@ describe('pages-deploy CLI', () => {
     });
 
     assert.equal(status, 2, output);
-    assert.match(output, /HTTP 403/);
+    assert.match(output, /failed — Unauthorized/);
     assert.match(output, /Authentication error/);
     assert.doesNotMatch(output, /test-token/);
     assert.doesNotMatch(output, /test-account/);

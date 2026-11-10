@@ -24,6 +24,7 @@ catalog:
   '@commitlint/types': ^21.2.3
   '@custom-elements-manifest/analyzer': ^0.11.0
   '@distilled.cloud/cloudflare': 1.0.0-rc.18
+  '@distilled.cloud/core': 1.0.0-rc.18
   '@effect/sql-d1': ^4.1.2
   '@iconify-json/lucide': ^1.2.152
   '@lit-labs/signals': ^0.3.0

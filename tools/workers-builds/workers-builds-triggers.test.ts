@@ -44,7 +44,13 @@ import {
   selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
-import { workerName } from './workers-builds-triggers.ts';
+import type { CloudflareApi } from './cloudflare-api.ts';
+import {
+  applyDrift,
+  getTriggers,
+  workerName,
+  workerTag,
+} from './workers-builds-triggers.ts';
 
 const siteAt = (root: string, key: string): Site => {
   const resolved = resolveSite(root, key);
@@ -947,6 +953,215 @@ describe('cloudflare-deploy', () => {
       } finally {
         rmSync(root, { force: true, recursive: true });
       }
+    });
+  });
+});
+
+const ACCOUNT = 'test-account';
+
+const API_BASE = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}`;
+
+/** An API answering `<METHOD> <path>` routes under the account with envelopes, recording each request. */
+const answering = (routes: Record<string, Json>) => {
+  const requests: { route: string; body: Json | undefined }[] = [];
+
+  const api: CloudflareApi = {
+    token: 'test-token',
+    accountId: ACCOUNT,
+    fetch: async (input, init) => {
+      const request = new Request(input, init);
+      const route = `${request.method} ${request.url.replace(API_BASE, '')}`;
+      const text = await request.text();
+
+      assert.equal(request.headers.get('authorization'), 'Bearer test-token');
+      // SAFETY: the SDK sends JSON request bodies
+      requests.push({
+        route,
+        body: text ? (JSON.parse(text) as Json) : undefined,
+      });
+
+      const result = routes[route];
+
+      if (result === undefined) assert.fail(`unexpected ${route}`);
+
+      return Response.json({ success: true, errors: [], messages: [], result });
+    },
+  };
+
+  return { api, requests };
+};
+
+/** JSON, its optional members possibly unset. */
+type Unset = Json | undefined | Unset[] | { [key: string]: Unset };
+
+const plain = (value: Unset): Json =>
+  // SAFETY: a JSON round trip yields JSON
+  JSON.parse(JSON.stringify(value)) as Json;
+
+/** A trigger as the list endpoint returns it: its variables live on a sub-resource. */
+const listed = (trigger: Trigger): Json =>
+  plain({ ...trigger, environment_variables: undefined });
+
+/** A variable map as the sub-resource returns it, secrets without values. */
+const variables = (trigger: Trigger): Json =>
+  plain(
+    Object.fromEntries(
+      Object.entries(trigger.environment_variables ?? {}).map(
+        ([key, { value = null, is_secret }]) => [
+          key,
+          { value, is_secret, created_on: '2026-10-01T00:00:00Z' },
+        ],
+      ),
+    ),
+  );
+
+describe('Cloudflare API calls', () => {
+  const triggerRoutes = {
+    'GET /builds/workers/tag-1/triggers': [
+      listed(triggers.production),
+      listed(triggers.preview),
+    ],
+    'GET /builds/triggers/prod-uuid/environment_variables': variables(
+      triggers.production,
+    ),
+    'GET /builds/triggers/preview-uuid/environment_variables': variables(
+      triggers.preview,
+    ),
+  };
+
+  it('finds the worker tag by name, or none', async () => {
+    const { api } = answering({
+      'GET /workers/scripts': [
+        { id: 'other', tag: 'tag-0' },
+        { id: 'docs', tag: 'tag-1' },
+      ],
+    });
+
+    assert.equal(await workerTag(api, 'docs'), 'tag-1');
+    assert.equal(await workerTag(api, 'absent'), undefined);
+  });
+
+  it('reads triggers and their variables in the wire shape the diff reads', async () => {
+    const { api } = answering({
+      ...triggerRoutes,
+      'GET /builds/workers/tag-1': { previews_enabled: false },
+    });
+
+    const live = await getTriggers(api, 'tag-1');
+
+    assert.deepEqual(
+      plain(live),
+      plain([triggers.production, triggers.preview]),
+    );
+    assert.equal(diffTriggers(live, desired).report.ok, true);
+  });
+
+  it('reads an enabled Previews base config as the preview trigger', async () => {
+    const base = {
+      build_command: triggers.preview.build_command,
+      deploy_command: triggers.preview.deploy_command,
+      environment_variables: triggers.preview.environment_variables,
+    };
+
+    const { api } = answering({
+      ...triggerRoutes,
+      'GET /builds/workers/tag-1/triggers': [listed(triggers.production)],
+      'GET /builds/workers/tag-1': plain({
+        previews_enabled: true,
+        previews_base_config: {
+          ...base,
+          environment_variables: variables(triggers.preview),
+        },
+      }),
+    });
+
+    const live = await getTriggers(api, 'tag-1');
+
+    assert.deepEqual(
+      plain(live),
+      plain([triggers.production, previewsBaseTrigger(base)]),
+    );
+  });
+
+  it('PATCHes a drifted trigger and its declared variables with wire bodies', async () => {
+    const { api, requests } = answering({
+      'PATCH /builds/triggers/preview-uuid': listed(triggers.preview),
+      'PATCH /builds/triggers/preview-uuid/environment_variables': {},
+    });
+
+    await applyDrift(api, 'tag-1', {
+      trigger_uuid: 'preview-uuid',
+      kind: 'preview',
+      patch: { deploy_command: 'deploy', path_includes: ['a/*'] },
+      environmentPatch: { HUSKY: { value: '0', is_secret: false } },
+    });
+
+    assert.deepEqual(requests, [
+      {
+        route: 'PATCH /builds/triggers/preview-uuid',
+        body: { deploy_command: 'deploy', path_includes: ['a/*'] },
+      },
+      {
+        route: 'PATCH /builds/triggers/preview-uuid/environment_variables',
+        body: { HUSKY: { value: '0', is_secret: false } },
+      },
+    ]);
+  });
+
+  it('PATCHes Previews base config drift onto the Worker', async () => {
+    const { api, requests } = answering({
+      'PATCH /builds/workers/tag-1': { previews_enabled: true },
+    });
+
+    await applyDrift(api, 'tag-1', {
+      trigger_uuid: PREVIEWS_BASE_CONFIG,
+      kind: 'preview',
+      patch: { build_command: 'build' },
+      environmentPatch: { HUSKY: { value: '0', is_secret: false } },
+    });
+
+    assert.deepEqual(requests, [
+      {
+        route: 'PATCH /builds/workers/tag-1',
+        body: {
+          previews_base_config: {
+            build_command: 'build',
+            environment_variables: { HUSKY: { value: '0', is_secret: false } },
+          },
+        },
+      },
+    ]);
+  });
+
+  it('fails with the API error, redacting the account id and the token', async () => {
+    const api: CloudflareApi = {
+      token: 'test-token',
+      accountId: ACCOUNT,
+      fetch: () =>
+        Promise.resolve(
+          Response.json(
+            {
+              success: false,
+              errors: [
+                {
+                  code: 10000,
+                  message: `no access to ${ACCOUNT} with test-token`,
+                },
+              ],
+            },
+            { status: 403 },
+          ),
+        ),
+    };
+
+    await assert.rejects(workerTag(api, 'docs'), (error: Error) => {
+      assert.match(
+        error.message,
+        /^Cloudflare API GET \/\{account_id\}\/workers\/scripts failed — /,
+      );
+      assert.doesNotMatch(error.message, /test-account|test-token/);
+
+      return true;
     });
   });
 });

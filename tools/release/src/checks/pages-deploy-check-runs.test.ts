@@ -69,12 +69,12 @@ describe('toPagesDeployCheckRun', () => {
     const payload = toPagesDeployCheckRun({
       exitCode: 2,
       output:
-        'Cloudflare API GET /x/pages/projects/altitude-atlas/deployments?env=production failed (HTTP 403) — 10000: Authentication error',
+        'Cloudflare API GET /{account_id}/pages/projects/altitude-atlas/deployments?env=production failed — Unauthorized: Authentication error',
     });
 
     assert.equal(payload.conclusion, 'neutral');
     assert.match(payload.title, /observer error/);
-    assert.match(payload.summary, /HTTP 403/);
+    assert.match(payload.summary, /Unauthorized: Authentication error/);
   });
 
   it('treats any unexpected exit code as an observer failure', () => {

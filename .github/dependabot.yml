@@ -45,6 +45,10 @@ updates:
         patterns:
           - 'vitest'
           - '@vitest/*'
+      # @distilled.cloud/cloudflare pins @distilled.cloud/core exactly, so both move together
+      distilled:
+        patterns:
+          - '@distilled.cloud/*'
       # majors excluded — breaking changes get individual PRs
       minor-and-patch:
         patterns:
@@ -52,6 +56,7 @@ updates:
         exclude-patterns:
           - 'vitest'
           - '@vitest/*'
+          - '@distilled.cloud/*'
         update-types:
           - 'minor'
           - 'patch'
