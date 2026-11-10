@@ -102,7 +102,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 
 - `src/prerender.ts` default-exports `definePrerender(...)`, whose options go to `lit-ui-router-ssr`'s `prerender()`. `document` puts each rendered page into the built `index.html` at its `<!--app-->` marker.
 - `redirectPages({ base, redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
-- The plugin doesn't read Vite's `base`, so `vite.config.ts` keys the route table's mount by the `--base=` it was given, and the prerender script reads the same base from the built `index.html`'s `<base href>`.
+- The plugin doesn't hand the script Vite's `base`, so the script reads it from the built `index.html`'s `<base href>`, uses it as the router's `baseHref`, and puts it in front of each redirect line, as the Eleventy example's templates do.
 - `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page.
 
 ### hellogalaxy

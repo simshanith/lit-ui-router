@@ -11,22 +11,35 @@ import { installServerLocation } from 'ui-router-server/location';
 import { redirectPages } from 'ui-router-server/prerender';
 
 import { configure, page } from './app.ts';
-import { mountsAt, pathsAt } from './route-table.ts';
+import { mounts, paths } from './route-table.ts';
 
 export default definePrerender((site) => {
-  // The build hands over the shell, not Vite's `base`; index.html carries it in <base href>.
+  // The plugin hands over the built shell, not Vite's `base`; the shell's <base href> carries it.
   const base = /<base href="([^"]*)"/.exec(site.shellHtml)?.[1] ?? '/';
+
+  const under = (path: string): string => `${base}${path.replace(/^\//, '')}`;
 
   const router = configure(
     installServerLocation(new UIRouterLit(), { baseHref: base }),
   );
 
+  // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
+  const writeRedirects = redirectPages({ base, redirectsFile: true });
+
   return {
-    mounts: mountsAt(base),
+    mounts,
     router,
-    paths: pathsAt(base),
-    // `_redirects` for hosts that read it, and a page per redirect for those that don't.
-    rules: redirectPages({ base, redirectsFile: true }),
+    paths,
+    // The route table's lines are site-absolute; the host serves them under `base`.
+    rules: (lines, context) =>
+      writeRedirects(
+        lines.map((line) => ({
+          ...line,
+          from: under(line.from),
+          to: under(line.to),
+        })),
+        context,
+      ),
     // The default omits LitElementRenderer, which <app-root>'s shadow root needs.
     elementRenderers: [
       UiViewRenderer,
@@ -35,9 +48,8 @@ export default definePrerender((site) => {
     ],
     // Each page carries its resolves, so the client boots without fetching them again.
     dehydrate: {},
-    renderShell: async (_verdict, { subpath }) => {
-      // The router reads urls under its baseHref, so it settles on the path inside the mount.
-      await settle(router, subpath || '/');
+    renderShell: async (_verdict, { path }) => {
+      await settle(router, path);
 
       return page(router);
     },
