@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { appendExampleSources, llmsSidebar } from '../llms.ts';
+import { appendExampleSources, LLMS_RELEASES, llmsSidebar } from '../llms.ts';
 
 const ID = '/docs/tutorial/helloworld.md';
 
@@ -63,6 +63,7 @@ describe('llmsSidebar', () => {
             { text: 'How this site runs', link: '/about-this-site' },
           ],
         },
+        { text: 'Releases', link: '/releases/', target: '_self', items: [] },
         {
           text: 'Sample App',
           items: [
@@ -98,6 +99,21 @@ describe('llmsSidebar', () => {
           ],
         },
       ],
+    );
+  });
+});
+
+describe('LLMS_RELEASES', () => {
+  it('lists the releases index the sidebar filter drops, and names the package pages', () => {
+    assert.ok(
+      LLMS_RELEASES.startsWith(
+        '- [Releases](https://lit-ui-router.dev/releases/): ',
+      ),
+    );
+    assert.ok(
+      LLMS_RELEASES.includes(
+        '`https://lit-ui-router.dev/releases/<npm-name>/`',
+      ),
     );
   });
 });

@@ -12,4 +12,5 @@ api/ui-router-mobx
 api/ui-router-registry
 api/ui-router-server
 api/ui-router-signals
+package-releases
 worker/worker-configuration.d.ts
