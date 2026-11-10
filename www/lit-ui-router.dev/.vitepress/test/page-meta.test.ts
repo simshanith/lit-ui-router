@@ -7,8 +7,8 @@ import matter from '@11ty/gray-matter';
 import MarkdownIt from 'markdown-it';
 import * as v from 'valibot';
 
-import { guideGroups } from '../guides-sidebar.ts';
-import { GENERATED_PAGES, GUIDE_TOPICS, PageMeta } from '../page-meta.ts';
+import { GUIDE_TOPICS, guideGroups } from '../../catalog/navigation.ts';
+import { GENERATED_PAGES, PageMeta } from '../page-meta.ts';
 
 const site = join(import.meta.dirname, '../..');
 

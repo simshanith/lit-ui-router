@@ -5,6 +5,7 @@ import type { RedirectLine } from 'ui-router-server/prerender';
 import type { Plugin } from 'vite';
 
 import { REDIRECTS } from '../catalog/redirects.ts';
+import { globPattern } from './surfaces.ts';
 
 // https://developers.cloudflare.com/workers/static-assets/redirects/
 export const LIMITS = { static: 2000, dynamic: 100, lineLength: 1000 } as const;
@@ -133,9 +134,6 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
 const sampleSource = (from: string): string =>
   from.replace(/\*/g, 'x').replace(PLACEHOLDER, 'x');
 
-const workerFirstPattern = (pattern: string): RegExp =>
-  new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`);
-
 /** Rules whose source `run_worker_first` (`true` read as `['/*']`) sends to the worker, where Cloudflare never applies `_redirects`. */
 export function workerFirstProblems(
   rules: readonly RedirectLine[],
@@ -148,7 +146,7 @@ export function workerFirstProblems(
   );
 
   const matches = (list: readonly string[], path: string) =>
-    list.some((pattern) => workerFirstPattern(pattern).test(path));
+    list.some((pattern) => globPattern(pattern).test(path));
 
   return rules.flatMap((rule) => {
     const path = sampleSource(rule.from);

@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { type ParseError, parse } from 'jsonc-parser';
-import * as v from 'valibot';
-
 import { REDIRECTS } from '../../catalog/redirects.ts';
+import { SURFACES } from '../../catalog/surfaces.ts';
 import {
   builtProblems,
   matchRedirect,
@@ -18,35 +16,6 @@ import {
   workerFirstProblems,
 } from '../redirects.ts';
 
-const WranglerAssets = v.object({
-  assets: v.object({
-    run_worker_first: v.optional(
-      v.union([
-        v.pipe(
-          v.boolean(),
-          v.transform((all) => (all ? ['/*'] : [])),
-        ),
-        v.array(v.string()),
-      ]),
-      [],
-    ),
-  }),
-});
-
-function runWorkerFirst(): string[] {
-  const errors: ParseError[] = [];
-
-  const config: unknown = parse(
-    readFileSync(join(import.meta.dirname, '../../wrangler.jsonc'), 'utf8'),
-    errors,
-    { allowTrailingComma: true },
-  );
-
-  assert.deepEqual(errors, []);
-
-  return v.parse(WranglerAssets, config).assets.run_worker_first;
-}
-
 describe('catalog/redirects.ts', () => {
   const lines = redirectLines(REDIRECTS);
 
@@ -54,8 +23,11 @@ describe('catalog/redirects.ts', () => {
     assert.deepEqual(tableProblems(lines), []);
   });
 
+  // surfaces.test.ts holds the worker rows to wrangler.jsonc's run_worker_first.
   it('sends no source to the worker, where _redirects never applies', () => {
-    const patterns = runWorkerFirst();
+    const patterns = SURFACES.flatMap(({ renderer, paths }) =>
+      renderer === 'worker' ? paths : [],
+    );
 
     assert.ok(patterns.length > 0);
     assert.deepEqual(workerFirstProblems(lines, patterns), []);

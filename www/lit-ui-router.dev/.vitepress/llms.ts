@@ -9,7 +9,8 @@ import {
   githubTreeSrc,
   stackblitzOpenSrc,
 } from './theme/components/examples.ts';
-import { RELEASES_PATH, STUB_DIR } from './release-stubs.ts';
+import { RELEASES_PATH } from './release-stubs.ts';
+import { pageGlobs, surfaceOf } from './surfaces.ts';
 
 const LIVE_EXAMPLE = /^<LiveExample\s([^>]*?)\/>[ \t]*$/gm;
 
@@ -66,23 +67,27 @@ export function liveExampleSourcesPlugin(): Plugin {
   };
 }
 
-const EXCLUDED_PAGE = { link: '/site/', file: 'site/index.md' } as const;
+/** The llms.txt listing of a sidebar link: external links stay, and the catalog decides for site paths. */
+const llmsOf = (link: string | undefined) =>
+  link?.startsWith('/') ? surfaceOf(link).llms : 'pages';
 
-/** Keeps each API reference's index page, and drops its member pages, the excluded page and the sample-app shells. */
+/** Keeps the pages the catalog lists, and only the index page of an `index` row such as an API reference. */
 export function llmsSidebar(
   items: DefaultTheme.SidebarItem[],
 ): DefaultTheme.SidebarItem[] {
   return items.flatMap(({ items: children, ...item }) => {
-    if (item.link === EXCLUDED_PAGE.link || item.target === '_self') return [];
+    const llms = llmsOf(item.link);
 
-    if (item.link?.startsWith('/api/') || !children) return [item];
+    if (llms !== 'pages' && llms !== 'index') return [];
+
+    if (llms === 'index' || !children) return [item];
 
     return [{ ...item, items: llmsSidebar(children) }];
   });
 }
 
-/** Page paths llms.txt leaves out: the members of each API reference, including a multi-entry reference's root module (`api/<pkg>/index.md`), which matches the same sidebar link as the package index (`api/<pkg>.md`). */
-export const LLMS_TXT_IGNORE = ['api/*/**'];
+/** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`api/<pkg>/index.md`), which matches the same sidebar link as the package index (`api/<pkg>.md`). */
+export const LLMS_TXT_IGNORE = pageGlobs(({ llms }) => llms === 'index');
 
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.
 
@@ -131,8 +136,8 @@ export function llmsPlugins(): Plugin[] {
         details: LLMS_DETAILS,
         releases: LLMS_RELEASES,
       },
-      // The stubs exist for local search; the Releases section covers them here.
-      ignoreFiles: [EXCLUDED_PAGE.file, `${STUB_DIR}/**`],
+      // The release stubs exist for local search; the Releases section covers them here.
+      ignoreFiles: pageGlobs(({ llms }) => llms === false),
       // Member pages the sidebar filter drops would otherwise land under "Other".
       ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
       sidebar: (sidebar) => {

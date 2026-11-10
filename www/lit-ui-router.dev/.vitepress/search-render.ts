@@ -1,5 +1,7 @@
 import type { DefaultTheme, MarkdownEnv } from 'vitepress';
 
+import { pageUrl, surfaceOf } from './surfaces.ts';
+
 type SearchRender = NonNullable<DefaultTheme.LocalSearchOptions['_render']>;
 
 type Markdown = Parameters<SearchRender>[2];
@@ -26,9 +28,6 @@ const DROPPED_COLUMNS = new Set(['Defined in', 'Inherited from', 'Overrides']);
 
 // Source locations and re-export pointers.
 const GENERATED_LINE = /^(Defined in:|Re-exports|Renames and re-exports) /;
-
-// typedoc-vitepress-theme writes each package under api/<package>/; api/index.md is authored.
-const TYPEDOC_PAGE = /^api\/[^/]+\//;
 
 interface Heading {
   open: number;
@@ -279,7 +278,11 @@ export const renderForSearch: SearchRender = async (
   env: MarkdownEnv,
   md: Markdown,
 ) => {
-  if (!TYPEDOC_PAGE.test(env.relativePath)) {
+  const { renderer, search } = surfaceOf(pageUrl(env.relativePath));
+
+  if (!search) return '';
+
+  if (renderer !== 'typedoc') {
     const html = await md.renderAsync(src, env);
 
     return env.frontmatter?.search === false ? '' : html;
