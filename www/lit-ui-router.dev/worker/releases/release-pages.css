@@ -36,6 +36,12 @@ h1 {
   line-height: 1.2;
   margin-block: 0.5rem 1rem;
 }
+h2 {
+  text-wrap: balance;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  margin-block: 2rem 0.5rem;
+}
 code {
   font-family: var(--vp-font-family-mono);
   font-size: 0.875em;
@@ -171,6 +177,13 @@ main {
 table {
   border-collapse: collapse;
   inline-size: 100%;
+}
+/* Fixed columns line the role tables up with each other. */
+.by-role {
+  table-layout: fixed;
+}
+.by-role thead th:first-child {
+  inline-size: 50%;
 }
 th,
 td {

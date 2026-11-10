@@ -847,6 +847,48 @@ describe('the /releases pages', () => {
     assert.equal(doc.title, 'Releases | Lit UI Router');
   });
 
+  it('groups the packages by role, in catalog order, unknown ones last', async () => {
+    const [lit, server] = await fixtureLedger.packages();
+    assert.ok(lit && server);
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      packages: () =>
+        Promise.resolve([
+          { name: 'a-new-package', latest: null },
+          lit,
+          { name: 'lit-ui-router-signals', latest: null },
+          server,
+          { name: 'ui-router-signals', latest: null },
+        ]),
+    };
+
+    const doc = parseHtml(
+      (await (await serve('/releases/', undefined, ledger))?.text()) ?? '',
+    );
+
+    const groups = getAllByRole(doc.body, 'heading', { level: 2 }).map(
+      (heading) => heading.textContent,
+    );
+
+    assert.deepEqual(groups, ['Renderer', 'Reactivity', 'Server', 'Other']);
+
+    const packagesIn = (group: string) =>
+      getAllByRole(
+        getByRole(doc.body, 'table', { name: group }),
+        'rowheader',
+      ).map((cell) => cell.textContent?.trim());
+
+    assert.deepEqual(packagesIn('Renderer'), ['lit-ui-router']);
+    assert.deepEqual(packagesIn('Reactivity'), [
+      'ui-router-signals',
+      'lit-ui-router-signals',
+    ]);
+    assert.deepEqual(packagesIn('Server'), ['ui-router-server']);
+    assert.deepEqual(packagesIn('Other'), ['a-new-package']);
+    assert.equal(hrefOf(doc.body, 'a-new-package'), '/releases/a-new-package/');
+  });
+
   it("lists a package's versions, each linking to its GitHub release", async () => {
     const doc = await page('/releases/lit-ui-router/');
 

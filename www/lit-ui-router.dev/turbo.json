@@ -11,6 +11,8 @@
         "package.json",
         "worker/**",
         "!worker/dist/**",
+        // the worker imports the package catalog from outside worker/
+        "catalog/**",
         // types:worker output; esbuild bundles, it never typechecks, so
         // regenerating the d.ts must not bust this key
         "!worker/worker-configuration.d.ts",
