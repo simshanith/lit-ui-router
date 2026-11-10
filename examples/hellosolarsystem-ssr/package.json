@@ -1,0 +1,34 @@
+{
+  "name": "lit-ui-router-example-hellosolarsystem-ssr",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build && vite preview",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@lit-labs/ssr": "^4.1.0",
+    "@lit-labs/ssr-client": "^1.1.8",
+    "@uirouter/core": "^6.1.2",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.19.1",
+    "lit-ui-router-ssr": "^0.9.0",
+    "ui-router-server": "^0.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}

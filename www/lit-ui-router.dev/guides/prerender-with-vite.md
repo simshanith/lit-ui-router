@@ -11,6 +11,12 @@ same route table the app runs decides which path gets which, so a static host
 answers a deep link, a redirect and a typo the way the
 [server](/guides/server-route-matching) would.
 
+The example below is the Hello Solar System rung built this way: its pages,
+404 page and redirect come from `vite build`, and the client adopts the
+served page on boot.
+
+<LiveExample name="hellosolarsystem-ssr" />
+
 Three terms carry the rest of this page:
 
 - The **route table** is the `mounts` object
