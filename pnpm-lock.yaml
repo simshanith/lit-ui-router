@@ -266,8 +266,8 @@ catalogs:
       specifier: 0.158.0
       version: 0.158.0
     oxc-project-runtime:
-      specifier: npm:@oxc-project/runtime@0.156.0
-      version: 0.156.0
+      specifier: npm:@oxc-project/runtime@0.158.0
+      version: 0.158.0
     oxc-transform:
       specifier: 0.158.0
       version: 0.158.0
@@ -464,7 +464,7 @@ catalogs:
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
-      version: 0.156.0
+      version: 0.158.0
     escape-html:
       specifier: ^1.0.3
       version: 1.0.3
@@ -1203,7 +1203,7 @@ importers:
     dependencies:
       '@oxc-project/runtime':
         specifier: catalog:publishedDependencies
-        version: 0.156.0
+        version: 0.158.0
     devDependencies:
       '@custom-elements-manifest/analyzer':
         specifier: 'catalog:'
@@ -1276,7 +1276,7 @@ importers:
         version: lit@2.8.0
       oxc-project-runtime:
         specifier: 'catalog:'
-        version: '@oxc-project/runtime@0.156.0'
+        version: '@oxc-project/runtime@0.158.0'
       oxfmt:
         specifier: 'catalog:'
         version: 0.78.0
@@ -1612,7 +1612,7 @@ importers:
     dependencies:
       '@oxc-project/runtime':
         specifier: catalog:publishedDependencies
-        version: 0.156.0
+        version: 0.158.0
     devDependencies:
       '@lit-labs/ssr':
         specifier: 'catalog:'
@@ -4848,8 +4848,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@oxc-project/runtime@0.156.0':
-    resolution: {integrity: sha512-6C8Bl8OZJJKYJFbo2l9Qjn8WGi0OW1mmiErR0b+n8684ZLXegZZ2Ul4LW5aoapIX0a2ri2nIDz4RpCgRleb04w==}
+  '@oxc-project/runtime@0.158.0':
+    resolution: {integrity: sha512-OYWBlK/wnZHyol5jkvBJadD8KTR6DJfFDRClqrU6kBDQKHd4bXNZALg3qfXk0aFl6F5loSxMT24EZurNWE4MKQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   '@oxc-project/runtime@0.50.0':
@@ -11155,7 +11155,7 @@ snapshots:
   '@oxc-parser/binding-win32-x64-msvc@0.158.0':
     optional: true
 
-  '@oxc-project/runtime@0.156.0': {}
+  '@oxc-project/runtime@0.158.0': {}
 
   '@oxc-project/runtime@0.50.0': {}
 
@@ -14131,13 +14131,13 @@ snapshots:
 
   lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
-      '@oxc-project/runtime': 0.156.0
+      '@oxc-project/runtime': 0.158.0
       '@uirouter/core': 6.1.2
       lit: 3.3.3
 
   lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
-      '@oxc-project/runtime': 0.156.0
+      '@oxc-project/runtime': 0.158.0
       '@uirouter/core': 6.1.2
       lit: 3.3.3
 
