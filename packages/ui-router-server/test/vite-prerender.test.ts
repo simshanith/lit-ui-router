@@ -264,6 +264,12 @@ describe('serverRouterPlugin under a base, keyed or relative', () => {
       prerender: './src/prerender-keyed.ts',
     });
 
+  // The keyed table again, its paths listed with the base under pathsIncludeBase.
+  const keyedFull = () =>
+    serverRouterPlugin(createServerRouter({ base, mounts: keyedMounts }), {
+      prerender: './src/prerender-keyed-full.ts',
+    });
+
   const buildWith = async (
     plugin: ReturnType<typeof serverRouterPlugin>,
     viteBase?: string,
@@ -310,17 +316,20 @@ describe('serverRouterPlugin under a base, keyed or relative', () => {
   });
 
   it('builds the same dist and previews the same answers', async () => {
-    const [relativeDir, keyedDir] = await Promise.all([
+    const [relativeDir, keyedDir, keyedFullDir] = await Promise.all([
       buildWith(relative(), base),
       buildWith(keyed()),
+      buildWith(keyedFull()),
     ]);
 
-    const [relativeTree, keyedTree] = await Promise.all([
+    const [relativeTree, keyedTree, keyedFullTree] = await Promise.all([
       tree(relativeDir),
       tree(keyedDir),
+      tree(keyedFullDir),
     ]);
 
     assert.deepEqual(keyedTree, relativeTree);
+    assert.deepEqual(keyedFullTree, relativeTree);
     assert.equal(
       relativeTree.get('_redirects'),
       '/app/legacy /app/about 302\n/app/legacy/ /app/about 302\n',

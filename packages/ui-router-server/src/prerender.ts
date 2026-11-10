@@ -15,6 +15,7 @@ import {
   carriesBase,
   checkUndeclaredBase,
   mountsUnder,
+  stripBase,
   withBase,
 } from './base-path.ts';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
@@ -110,8 +111,23 @@ export interface PrerenderOptions {
    * policies come with it. Any other resolver is read as `'as-requested'`.
    */
   resolver?: ServerRouter;
-  /** Every path to ask for a verdict. Redirect and notFound paths belong here too. */
+  /**
+   * Every path to ask for a verdict. Redirect and notFound paths belong here
+   * too. They lie under {@link PrerenderOptions.base | base} with it taken
+   * off, unless {@link PrerenderOptions.pathsIncludeBase | pathsIncludeBase}
+   * says they spell it.
+   */
   paths: Iterable<string> | AsyncIterable<string>;
+  /**
+   * Whether each of {@link PrerenderOptions.paths | paths} spells the
+   * {@link PrerenderOptions.base | base}, as a host serves it: `/app/about`
+   * under `/app/`. `false` by default, when a path is read as given, even one
+   * that starts with the base. When `true`, the base is taken off each path
+   * once, before anything else sees it, so the output matches the base-free
+   * listing; a path outside the base throws. `pages`, `warnings` and
+   * `delegated` report each path as listed. Under base `/` it changes nothing.
+   */
+  pathsIncludeBase?: boolean;
   /** Directory the files are written under. */
   outDir: string;
   /**
@@ -454,6 +470,7 @@ export async function prerender(
     extraRules = [],
     write,
     dryRun = false,
+    pathsIncludeBase = false,
   } = options;
 
   const base = baseFor(options.resolver ?? {}, options.base, 'prerender');
@@ -481,6 +498,7 @@ export async function prerender(
     path: string,
     subpath: string,
     file: string,
+    listed = path,
   ): Promise<'shell' | 'redirect'> => {
     const html = await render(verdict, { path, subpath, file });
 
@@ -492,7 +510,7 @@ export async function prerender(
 
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({
-      path,
+      path: listed,
       file,
       verdict,
       bytes: new TextEncoder().encode(html).length,
@@ -504,6 +522,7 @@ export async function prerender(
   const answer = async (
     verdict: ResponseVerdict,
     path: string,
+    listed: string,
   ): Promise<void> => {
     const subpath = subpathIn(verdict.mount, path);
     const file = responseFileFor(subpath);
@@ -531,7 +550,7 @@ export async function prerender(
 
     if (!dryRun) await write(joinPath(outDir, file), body);
     pages.push({
-      path,
+      path: listed,
       file,
       verdict,
       bytes: new TextEncoder().encode(body).length,
@@ -543,7 +562,21 @@ export async function prerender(
 
   let slashProbed = false;
 
-  const visit = async (path: string): Promise<void> => {
+  // The listed path as the mounts see it: the base taken off once, when the caller listed it on.
+  const baseFree = (listed: string): string => {
+    if (!pathsIncludeBase) return listed;
+    const path = stripBase(base, listed);
+
+    if (path === undefined)
+      throw new Error(
+        `prerender: '${listed}' lies outside base '${base}', and pathsIncludeBase lists every path under it`,
+      );
+
+    return path;
+  };
+
+  const visit = async (listed: string): Promise<void> => {
+    const path = baseFree(listed);
     const verdict = await resolver.resolve(path);
     // Read before narrowing: a structural resolver may return a kind the Verdict union lacks.
     const kind: string = verdict.kind;
@@ -563,7 +596,14 @@ export async function prerender(
         await warnStrictSlash(resolver, path);
       }
 
-      const emitted = await emit(verdict, path, subpath, fileFor(subpath));
+      const emitted = await emit(
+        verdict,
+        path,
+        subpath,
+        fileFor(subpath),
+        listed,
+      );
+
       tally[emitted] += 1;
 
       if (emitted === 'shell')
@@ -580,15 +620,15 @@ export async function prerender(
     }
 
     if (verdict.kind === 'response') {
-      await answer(verdict, path);
+      await answer(verdict, path, listed);
 
       return;
     }
 
     if (verdict.kind === 'notFound') {
       tally.notFound += 1;
-      warnings.push(path);
-      warnUnclaimed(path);
+      warnings.push(listed);
+      warnUnclaimed(listed);
 
       return;
     }
@@ -600,7 +640,7 @@ export async function prerender(
     }
 
     tally.delegate += 1;
-    delegated.push(path);
+    delegated.push(listed);
   };
 
   for await (const path of paths) await visit(path);

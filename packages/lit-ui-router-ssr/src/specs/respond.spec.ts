@@ -203,31 +203,44 @@ describe('prerender responses', () => {
     );
   });
 
-  it('hands the handler a request under the base, and writes the base into rules lines once', async () => {
-    const badge = vi.spyOn(responses, 'pkg.badge');
-    const router = serverRouter('/solar/');
+  it.each([
+    { pathsIncludeBase: false, paths: ['/lit/badge.svg', '/lit/latest'] },
+    {
+      pathsIncludeBase: true,
+      paths: ['/solar/lit/badge.svg', '/solar/lit/latest'],
+    },
+  ])(
+    'hands the handler a request under the base, and writes the base into rules lines once, with pathsIncludeBase $pathsIncludeBase',
+    async ({ pathsIncludeBase, paths }) => {
+      const badge = vi.spyOn(responses, 'pkg.badge');
+      const router = serverRouter('/solar/');
 
-    const result = await prerender({
-      mounts: { '/': { routes, config: { strict: false } } },
-      router,
-      base: '/solar/',
-      outDir: 'dist',
-      paths: ['/lit/badge.svg', '/lit/latest'],
-      notFound: false,
-      elementRenderers: [],
-      renderShell: () => '',
-      responses,
-      write: () => {},
-    });
+      const result = await prerender({
+        mounts: { '/': { routes, config: { strict: false } } },
+        router,
+        base: '/solar/',
+        pathsIncludeBase,
+        outDir: 'dist',
+        paths,
+        notFound: false,
+        elementRenderers: [],
+        renderShell: () => '',
+        responses,
+        write: () => {},
+      });
 
-    expect(badge.mock.calls.at(-1)?.[0].request.url).toBe(
-      'http://lit-ui-router-ssr/solar/lit/badge.svg',
-    );
-    expect(result.rules).toEqual([
-      { from: '/solar/lit/latest', to: '/solar/v/lit@1.0.0', status: 302 },
-      { from: '/solar/lit/latest/', to: '/solar/v/lit@1.0.0', status: 302 },
-    ]);
-  });
+      expect(badge.mock.calls.at(-1)?.[0].request.url).toBe(
+        'http://lit-ui-router-ssr/solar/lit/badge.svg',
+      );
+      expect(result.rules).toEqual([
+        { from: '/solar/lit/latest', to: '/solar/v/lit@1.0.0', status: 302 },
+        { from: '/solar/lit/latest/', to: '/solar/v/lit@1.0.0', status: 302 },
+      ]);
+      expect(result.pages.map((page) => [page.path, page.file])).toEqual([
+        [paths[0], 'lit/badge.svg'],
+      ]);
+    },
+  );
 
   it.each([
     { baseHref: undefined, linked: '/' },
