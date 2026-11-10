@@ -34,11 +34,11 @@ covers the rest.
 
 All of them live in the site package, `www/lit-ui-router.dev/`:
 
-| File              | Purpose                                                                                                                                                                                                                                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                                                              |
-| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`, and renders the `/gh` release pages; everything else serves static assets, misses fall back to `404.html` |
-| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP) and a `Link` header advertising `/llms.txt`                                                                                                                                                                                 |
+| File              | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - runs first for the paths `run_worker_first` lists in `wrangler.jsonc`: it renders the release pages and answers the `/gh` redirects from the tables in `worker/releases/routes.ts`, serves `ui-router-server` verdicts (shell, 302, or 404) for the sample-app and exhibit mounts in `sample-app-routes` (`apps/sample-app-routes/src/routes.ts`), and serves the shell unrouted under `/not-found-naive`; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP) and a `Link` header advertising `/llms.txt`                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Wrangler Setup
 
@@ -107,7 +107,7 @@ provides everything after that. There is no mise, so none of the repo's mise-man
 turbo target is `@www/<site>#build`; `build` is defined at the root, so a site with no build
 script of its own (wrangler bundles it at deploy) builds only its dependencies and succeeds.
 Anything that target reaches has to run on workspace binaries alone. It does today: for the
-docs site that closure is 133 tasks, 39 of which run a command, and every one of those is a
+docs site that closure is 151 tasks, 44 of which run a command, and every one of those is a
 package `devDependency` or node itself. Nothing enforces this, because nothing needs to — a
 violation turns the Workers Builds check red on the branch that introduces it, before any merge.
 
@@ -137,8 +137,9 @@ the merge.
 It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
 type stripping like every other tool script, and it exports its commands so the trigger
 test checks each site's wrangler invocations by importing them instead of grepping the source. The
-build script stays bash — it is the bootstrap, and runs before there is anything to run it
-with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
+build script is TypeScript too, though it is the bootstrap and runs before the install: type
+stripping needs nothing installed, and its imports are held to what resolves without
+`node_modules`. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
 code and signals are the script's; execve does not search `PATH`, so the script asks the
 shell (`command -v npx`) for the path before handing over.
 
@@ -337,9 +338,9 @@ and leaves every other variable on the trigger untouched.
   `cloudflare-build.ts`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
-- `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs
-  deploy never runs. Without it, the install downloads and unzips it every build (~15s).
-  `mise run setup` sets the same thing locally.
+- `CYPRESS_INSTALL_BINARY=0` — skips the Cypress binary download during the install. No
+  workspace package depends on Cypress now that the e2e suite runs on Playwright, so the
+  variable has no effect on a current checkout.
 - `HUSKY=0` — the root `prepare` script installs git hooks, which mean nothing in a build
   container. Matches the `env: HUSKY: 0` every CI workflow sets.
 
