@@ -307,7 +307,11 @@ describe('tableProblems on dynamic rules', () => {
         { from: '/old/*', to: '/new/:splat', status: 301 },
         { from: '/other/:page', to: '/new/:page', status: 301 },
       ]),
-      ['/old/a/* /new/a/:splat 301: overlaps another dynamic rule'],
+      [
+        '/old/a/* /new/a/:splat 301: overlaps another dynamic rule',
+        '/old/* /new/:splat 301: overlaps another dynamic rule',
+        '/other/:page /new/:page 301: dynamic source is not a literal prefix ending in /*',
+      ],
     );
   });
 });

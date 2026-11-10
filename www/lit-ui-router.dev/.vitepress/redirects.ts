@@ -66,7 +66,7 @@ const sourcePattern = (from: string): RegExp =>
       .join('(?<splat>.*)')}$`,
   );
 
-/** The first rule matching the path, with its target's placeholders filled; `null` when none does. */
+/** The first rule matching the path, with its target's placeholders filled; `null` when none does. Matches Cloudflare only for tables `tableProblems` passes. */
 export function matchRedirect(
   rules: readonly RedirectLine[],
   path: string,
@@ -91,6 +91,12 @@ export function matchRedirect(
 /** A path inside the source, standing in for its splat and placeholders. */
 const sampleSource = (from: string): string =>
   from.replace(/\*/g, 'x').replace(PLACEHOLDER, 'x');
+
+/** The only dynamic source shape: a literal path prefix and a trailing splat, so overlap is a prefix test. */
+const PREFIX_SPLAT = /^\/[^*:]*\/\*$/;
+
+/** A dynamic source without its splat. */
+const splatPrefix = ({ from }: RedirectLine): string => from.replace(/\*$/, '');
 
 /** Problems with the table on its own: Cloudflare's limits and ordering, and the site's anchoring, snapshot and chain rules. */
 export function tableProblems(rules: readonly RedirectLine[]): string[] {
@@ -131,13 +137,18 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
         matchRedirect(rules, rule.to.split(/[?#]/)[0]) !== null,
         'target is redirected again',
       ],
-      // Cloudflare does not apply dynamic rules in file order, so a request may match only one.
+      [
+        isDynamic(rule) && !PREFIX_SPLAT.test(rule.from),
+        'dynamic source is not a literal prefix ending in /*',
+      ],
+      // Deployed Cloudflare does not apply overlapping dynamic rules in file order, so no path may match two.
       [
         isDynamic(rule) &&
           dynamicRules.some(
             (other) =>
               other !== rule &&
-              matchRedirect([other], sampleSource(rule.from)) !== null,
+              (other.from.startsWith(splatPrefix(rule)) ||
+                rule.from.startsWith(splatPrefix(other))),
           ),
         'overlaps another dynamic rule',
       ],

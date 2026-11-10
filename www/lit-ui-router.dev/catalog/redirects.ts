@@ -64,7 +64,7 @@ const API_PAGES: Redirect[] = apiDirs.map(([name, dir]) => ({
   ...linked(PAGE_LINKS[name]),
 }));
 
-/** Moved docs URLs, in `_redirects` order: static rules first, first match wins. */
+/** Moved docs URLs, in `_redirects` order: an exact static rule beats any dynamic one, and no two dynamic sources overlap. */
 export const REDIRECTS: readonly Redirect[] = [
   { from: '/about-this-site', to: '/site/', status: 301 },
   {
