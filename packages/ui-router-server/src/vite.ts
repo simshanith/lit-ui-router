@@ -22,6 +22,7 @@
 import { nodeConditions } from '#node-conditions';
 import { drainOutput } from '#node-output';
 
+import { normalizeBase, stripBase, withBase } from './base-path.ts';
 import { createConnectMiddleware } from './connect.ts';
 import type {
   ConnectAdapterOptions,
@@ -48,6 +49,8 @@ export interface ViteMiddlewareServer {
 export interface ViteResolvedConfig {
   /** The project root; the prerender entry and `build.outDir` resolve against it. */
   root: string;
+  /** The public base path; the middleware strips it and the prerender writes it into rules lines. */
+  base: string;
   /** `'build'` for `vite build`; the build step runs only then. */
   command: 'build' | 'serve';
   /** The mode, passed on to the module runner that loads the prerender entry. */
@@ -81,6 +84,8 @@ export interface ViteBuildContext {
 export interface PrerenderBuild {
   /** Vite's resolved output directory, absolute. */
   outDir: string;
+  /** Vite's resolved `base`, the url path `outDir` is served at. */
+  base: string;
   /** The built `index.html` as a string, read before any page is written. */
   shellHtml: string;
   /** Writes a file over `node:fs`, creating its directory. */
@@ -115,8 +120,10 @@ export function definePrerender(entry: PrerenderEntry): PrerenderEntry {
   return entry;
 }
 
-/** Options for {@link serverRouterPlugin}: the Connect adapter's, plus the build step. */
+/** Options for {@link serverRouterPlugin}: the Connect adapter's, plus the build step; the base comes from Vite's config. */
 export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
+  /** Not an option here: the plugin reads Vite's resolved `base`. */
+  base?: never;
   /**
    * Prerenders the app after `vite build`. `entry` names the prerender
    * script, resolved against Vite's root, whose default export is a
@@ -246,6 +253,7 @@ const fileUrl = (mount: string, file: string): string =>
 const previewShell =
   (
     config: () => ViteResolvedConfig | undefined,
+    base: string,
     shellPath: (mount: string) => string,
   ) =>
   (
@@ -255,7 +263,8 @@ const previewShell =
     next: ConnectNext,
     verdict: ShellVerdict,
   ): void => {
-    const pathname = (req.url ?? '/').replace(/[?#].*$/, '');
+    const url = stripBase(base, req.url ?? '/') ?? '/';
+    const pathname = url.replace(/[?#].*$/, '');
 
     const file =
       verdict.status === undefined
@@ -276,7 +285,7 @@ const previewShell =
     };
 
     emitted().then((found) => {
-      req.url = found ? fileUrl(mount, file) : shellPath(mount);
+      req.url = withBase(base, found ? fileUrl(mount, file) : shellPath(mount));
       next();
     }, next);
   };
@@ -347,6 +356,7 @@ const runPrerender = async (
   { entry, preload = [] }: PrerenderOptions,
   config: ViteResolvedConfig,
 ): Promise<void> => {
+  const base = normalizeBase(config.base, 'serverRouterPlugin: prerender');
   const [fs, path] = await Promise.all([nodeFs(), nodePath()]);
   const outDir = path.resolve(config.root, config.build.outDir);
 
@@ -363,6 +373,7 @@ const runPrerender = async (
     entry: path.resolve(config.root, entry),
     preload,
     outDir,
+    base,
     shellHtml,
   });
 
@@ -419,19 +430,29 @@ export function serverRouterPlugin(
     // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the option's own union: a string is shorthand for `{ entry }`
     typeof prerender === 'string' ? { entry: prerender } : prerender;
 
+  // Built now so a misconfigured router throws at plugin construction; the base arrives later.
   const middleware = createConnectMiddleware(router, adapter);
   let resolved: ViteResolvedConfig | undefined;
 
-  const preview =
-    job !== undefined && adapter.serveShell === undefined
-      ? createConnectMiddleware(router, {
-          ...adapter,
-          serveShell: previewShell(
-            () => resolved,
-            adapter.shellPath ?? ((mount) => mount),
-          ),
-        })
-      : middleware;
+  const served = (): ConnectMiddleware =>
+    resolved === undefined || resolved.base === '/'
+      ? middleware
+      : createConnectMiddleware(router, { ...adapter, base: resolved.base });
+
+  const preview = (): ConnectMiddleware => {
+    if (job === undefined || adapter.serveShell !== undefined) return served();
+    const base = normalizeBase(resolved?.base, 'serverRouterPlugin');
+
+    return createConnectMiddleware(router, {
+      ...adapter,
+      base,
+      serveShell: previewShell(
+        () => resolved,
+        base,
+        adapter.shellPath ?? ((mount) => mount),
+      ),
+    });
+  };
 
   return {
     name: 'ui-router-server',
@@ -439,10 +460,10 @@ export function serverRouterPlugin(
       resolved = config;
     },
     configureServer(server) {
-      server.middlewares.use(middleware);
+      server.middlewares.use(served());
     },
     configurePreviewServer(server) {
-      server.middlewares.use(preview);
+      server.middlewares.use(preview());
     },
     closeBundle: {
       order: 'post',

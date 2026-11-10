@@ -10,6 +10,7 @@
 // Verdicts turned into files and host rules; the page body comes from the caller's render.
 import { devGate } from '#dev-gate';
 
+import { normalizeBase, withBase } from './base-path.ts';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
@@ -78,6 +79,8 @@ export interface RulesContext {
   write: FileWriter;
   /** The run's {@link PrerenderOptions.outDir | outDir}. */
   outDir: string;
+  /** The run's {@link PrerenderOptions.base | base}, already on every generated line. */
+  base: string;
   /** Every page the run wrote, the 404 document included. */
   pages: readonly EmittedPage[];
 }
@@ -105,6 +108,14 @@ export interface PrerenderOptions {
   paths: Iterable<string> | AsyncIterable<string>;
   /** Directory the files are written under. */
   outDir: string;
+  /**
+   * The url path `outDir` is served at, such as Vite's `base`; `/` by
+   * default. The mounts stay at `/` and page files don't move: the base goes
+   * once onto each generated rules line's `from` and host-absolute `to`.
+   * {@link PrerenderOptions.extraRules | extraRules} are written as given.
+   * A relative or full-URL base throws.
+   */
+  base?: string;
   /**
    * Renders one shell verdict to the file's full text, document included, or
    * answers a {@link RenderedRedirect} for a page whose render found it
@@ -367,7 +378,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * `href()` formats it under {@link url-config!applyUrlConfig | `applyUrlConfig`}.
  * Under `'as-requested'` neither spelling gets a line. A redirect's line is
  * written for both spellings of its path, since a static host may append the
- * slash.
+ * slash. Under a {@link PrerenderOptions.base | base}, every generated line
+ * carries it.
  *
  * It knows no renderer: `render` turns each shell verdict into the file's
  * text, so any template engine, or a `settle` and a string, can fill it.
@@ -376,6 +388,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @param options - the mount table, the paths, the render, and the hooks
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
+ * @throws an `Error` when `base` is relative or a full URL
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
  * @throws an `Error` when the 404 document's render answers a redirect
@@ -424,6 +437,7 @@ export async function prerender(
     dryRun = false,
   } = options;
 
+  const base = normalizeBase(options.base, 'prerender');
   const resolver = resolverOf(options);
 
   const tally: PrerenderTally = {
@@ -585,9 +599,16 @@ export async function prerender(
       );
   }
 
-  const lines = [...extraRules, ...uniqueLines(generated)];
+  const lines = [
+    ...extraRules,
+    ...uniqueLines(generated).map((line) => ({
+      ...line,
+      from: withBase(base, line.from),
+      to: withBase(base, line.to),
+    })),
+  ];
 
-  if (!dryRun) await writeRules(lines, rules, { write, outDir, pages });
+  if (!dryRun) await writeRules(lines, rules, { write, outDir, base, pages });
 
   return { tally, pages, rules: lines, warnings, delegated };
 }

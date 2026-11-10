@@ -297,6 +297,30 @@ whose `Accept` includes `text/html` — so module and asset fetches pass
 through untouched. Override with `() => true` when the adapter sits behind
 the static layer and should judge everything.
 
+### Serving under a base path
+
+Every adapter takes `base`, the url path the site is served at, such as
+Vite's `base`; it is `/` by default. The mount table stays at `/`: the
+adapter matches each request with the base taken off, passes a request
+outside the base on (`null` from fetch, `next()` from Connect and Hono), and
+puts the base back on what it writes: redirect `Location`s, the canonical
+`Link`, and the shell url it hands on.
+
+```ts
+createFetchHandler(router, {
+  base: '/solar/',
+  serveShell: (mount, request) => env.ASSETS.fetch(request),
+});
+// GET /solar/legacy → 302 Location: /solar/about
+// GET /legacy       → null
+```
+
+A delegate or response handler gets the original request, base included.
+A relative base (`./`) or a full-URL base throws at construction.
+`serverRouterPlugin` sets `base` from Vite's resolved config, so it takes no
+`base` option of its own; [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+covers the build.
+
 ### fetch — the edge
 
 A minimal Cloudflare Worker, with each mount's shell at its base and a
@@ -819,6 +843,11 @@ Either is counted in `result.tally.response`; another status throws, as does
 a response state with no `respond`. A verdict kind the loop doesn't know
 throws instead of being counted.
 
+`base` is the url path `outDir` is served at, `/` by default, as for the
+[adapters](#serving-under-a-base-path). The mounts and the page files stay
+where they are; the base goes once onto each generated rules line's `from`
+and onto its `to` when that is a path. `extraRules` are written as given.
+
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -851,7 +880,7 @@ render, and writes through `node:fs` by default.
 `rules` decides what happens to the redirect lines: `'_redirects'` (the
 default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
 them in `result.rules`, and a function receives them with the run's `write`,
-`outDir` and written `pages`. A host with no redirect rules, such as GitHub
+`outDir`, `base` and written `pages`. A host with no redirect rules, such as GitHub
 Pages or a plain bucket, takes
 [`redirectPages()`](/api/ui-router-server/prerender/functions/redirectPages):
 each line becomes a page at `<from>/index.html` that sends the browser to its
@@ -883,7 +912,8 @@ await prerender({
   would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
   spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
   throws.
-- **Options.** `base` is the url path `outDir` is served at, `/` by default.
+- **Options.** `base` is the url path `outDir` is served at, `prerender()`'s
+  `base` by default.
   `redirectsFile: true` also writes `_redirects`, for a site deployed to both
   kinds of host.
 - **Your own page.** `page` builds each page's HTML from its line (`from`,

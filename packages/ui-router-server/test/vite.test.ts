@@ -131,6 +131,50 @@ describe('serverRouterPlugin', () => {
     assert.deepEqual(link, ['</app>; rel="canonical"']);
   });
 
+  it("strips the resolved config's base in dev and puts it back on the Location", async () => {
+    const plugin = serverRouterPlugin(
+      createServerRouter({
+        mounts: {
+          '/': {
+            routes: [
+              { name: 'about', url: '/about' },
+              { name: 'legacy', url: '/legacy', redirectTo: 'about' },
+            ],
+          },
+        },
+      }),
+    );
+
+    plugin.configResolved(configOf('/nonexistent', { base: '/solar/' }));
+    const server = fakeServer();
+    plugin.configureServer(server);
+    const [middleware] = server.installed;
+    assert.ok(middleware);
+
+    const answer = (url: string) =>
+      new Promise<{ status?: number; location?: string; url?: string }>(
+        (resolve) => {
+          const req = { url, method: 'GET', headers: { accept: 'text/html' } };
+
+          const res = {
+            writeHead: (status: number, headers?: { Location?: string }) =>
+              resolve({ status, location: headers?.Location }),
+            setHeader: () => {},
+            end: () => {},
+          };
+
+          middleware(req, res, () => resolve({ url: req.url }));
+        },
+      );
+
+    assert.deepEqual(await answer('/solar/legacy'), {
+      status: 302,
+      location: '/solar/about',
+    });
+    assert.deepEqual(await answer('/solar/about'), { url: '/solar/' });
+    assert.deepEqual(await answer('/legacy'), { url: '/legacy' });
+  });
+
   it('never reports mount diagnostics; construction does', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
 
@@ -166,6 +210,7 @@ const configOf = (
 
   return {
     root,
+    base: '/',
     command: 'build',
     mode: 'production',
     build: { outDir: 'dist', ssr: false },
@@ -213,6 +258,26 @@ describe('serverRouterPlugin prerender build step', () => {
       '<main></main>!',
     );
     assert.match(config.logged[0] ?? '', /prerendered 0 files and 0 rules/);
+  });
+
+  it('hands the entry the resolved base, and fails a relative base before it runs', async (t) => {
+    const root = await buildRoot(
+      t,
+      `export default async ({ outDir, base, write }) => {
+        await write(outDir + '/base.txt', base);
+        return { ${RESULT}, outDir };
+      };`,
+    );
+
+    await runHook(configOf(root, { base: '/solar/' }));
+    assert.equal(
+      await readFile(path.join(root, 'dist/base.txt'), 'utf8'),
+      '/solar/',
+    );
+    await assert.rejects(
+      runHook(configOf(root, { base: './' })),
+      /serverRouterPlugin: prerender: base '.\/' is relative/,
+    );
   });
 
   it('takes the entry path as a string', async (t) => {

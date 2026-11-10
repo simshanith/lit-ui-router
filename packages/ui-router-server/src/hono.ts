@@ -24,6 +24,9 @@
  * Response is returned. The middleware forwards `c.env` and `c.executionCtx`
  * after the original request, its url unchanged, so `delegates: { ledger: ledger.fetch }`
  * fits bare and a route reads the match with `delegateContext(c.req.raw, 'ledger')`.
+ *
+ * {@link FetchAdapterOptions.base} serves the site under a url path: a
+ * request outside it goes to `next()`.
  */
 
 import { createFetchHandler } from './fetch.ts';

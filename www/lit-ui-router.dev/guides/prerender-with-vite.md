@@ -73,6 +73,7 @@ whose callback receives `site` and returns the options for
 [`lit-ui-router-ssr`'s `prerender()`](/api/lit-ui-router-ssr/index/functions/prerender):
 
 - `site.outDir`: Vite's output directory, absolute.
+- `site.base`: Vite's resolved `base`, the url path `outDir` is served at.
 - `site.shellHtml`: the built `index.html`, as a string.
 - `site.write`: writes a file, creating its directory.
 
@@ -102,7 +103,8 @@ export default definePrerender((site) => ({
 ```
 
 `definePrerender` spreads `site` under the options and calls `prerender()`,
-so an option the script returns, such as `outDir`, wins over the build's.
+so an option the script returns, such as `outDir` or `base`, wins over the
+build's.
 
 `paths` lists every path to visit. `renderShell` moves the router to the path
 and returns the page's template, and `document` puts the rendered body into
@@ -133,6 +135,43 @@ Next to Vite's own `assets/`, `dist/` gains:
 `about/index.html` at `/about/`, so both the route table and the browser
 router need to
 [accept the trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
+
+## Serving under a base path
+
+A site built with `vite build --base=/solar/` keeps its route table at `/`.
+Vite's `base` is a prefix the host adds in front of the site, and
+`ui-router-server` takes it off on the way in and puts it back on the way
+out ([adapter options](/packages/server#serving-under-a-base-path)). Three
+places name it:
+
+- `index.html` declares `<base href="%BASE_URL%">` in its `<head>`, which
+  Vite fills in, so the browser router builds its hrefs under the base.
+- The prerender script builds its router with the base, so the server render
+  does too. `prerender()` throws when the router's `baseHref()` lies
+  outside `site.base`.
+- Nothing else: the plugin reads `base` from Vite's config.
+
+```ts
+export default definePrerender((site) => {
+  const router = installServerLocation(new UIRouterLit(), {
+    baseHref: site.base,
+  });
+  for (const state of states) router.stateRegistry.register(state);
+  router.urlService.rules.otherwise({ state: 'notFound' });
+
+  return { mounts, router, paths, renderShell, document };
+});
+```
+
+The pages land in `dist/` as they do without a base, since `dist/` is what
+the host serves at `/solar/`. `_redirects` carries the base:
+`/solar/legacy /solar/about 302`. Lines in `extraRules` are written as given.
+A relative base (`./`) or a full-URL base fails the build.
+
+`vite preview --base=/solar/` serves the build as the host would: `/solar/`
+and `/solar/about` answer their pages, `/solar/legacy` answers 302 to
+`/solar/about`, and a path outside `/solar/` gets Vite's own 404. `vite dev`
+with the same `base` answers the same redirects and 404s.
 
 ## How it runs
 

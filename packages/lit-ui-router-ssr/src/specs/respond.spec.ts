@@ -51,9 +51,10 @@ const responses = {
   }
 >;
 
-const serverRouter = () => {
+const serverRouter = (baseHref?: string) => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
+    baseHref,
   });
 
   for (const route of routes)
@@ -199,6 +200,48 @@ describe('prerender responses', () => {
 
     expect(badge.mock.calls.at(-1)?.[0].request.url).toBe(
       'http://lit-ui-router-ssr/lit/badge.svg',
+    );
+  });
+
+  it('hands the handler a request under the base, and writes the base into rules lines once', async () => {
+    const badge = vi.spyOn(responses, 'pkg.badge');
+    const router = serverRouter('/solar/');
+
+    const result = await prerender({
+      mounts: { '/': { routes, config: { strict: false } } },
+      router,
+      base: '/solar/',
+      outDir: 'dist',
+      paths: ['/lit/badge.svg', '/lit/latest'],
+      notFound: false,
+      elementRenderers: [],
+      renderShell: () => '',
+      responses,
+      write: () => {},
+    });
+
+    expect(badge.mock.calls.at(-1)?.[0].request.url).toBe(
+      'http://lit-ui-router-ssr/solar/lit/badge.svg',
+    );
+    expect(result.rules).toEqual([
+      { from: '/solar/lit/latest', to: '/solar/v/lit@1.0.0', status: 302 },
+      { from: '/solar/lit/latest/', to: '/solar/v/lit@1.0.0', status: 302 },
+    ]);
+  });
+
+  it("throws when the router's baseHref lies outside the base", async () => {
+    await expect(
+      prerender({
+        mounts: { '/': { routes } },
+        router: serverRouter(),
+        base: '/solar/',
+        outDir: 'dist',
+        paths: [],
+        renderShell: () => '',
+        write: () => {},
+      }),
+    ).rejects.toThrow(
+      /the router's baseHref '\/' lies outside base '\/solar\/'; build the router with installServerLocation\(router, \{ baseHref: site.base \}\)/,
     );
   });
 

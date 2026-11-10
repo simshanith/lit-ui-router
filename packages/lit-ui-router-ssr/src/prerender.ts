@@ -60,6 +60,19 @@ interface NodeFsPromises {
   writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
+const slashed = (base: string): string =>
+  base.endsWith('/') ? base : `${base}/`;
+
+// The router's hrefs carry its baseHref, so it must lie under the base the site is served at.
+const checkBaseHref = (router: UIRouterLit, base: string): void => {
+  const baseHref = slashed(router.urlService.config.baseHref());
+
+  if (!baseHref.startsWith(slashed(base)))
+    throw new Error(
+      `prerender: the router's baseHref '${baseHref}' lies outside base '${base}'; build the router with installServerLocation(router, { baseHref: site.base })`,
+    );
+};
+
 const dirOf = (file: string): string => {
   const cut = file.lastIndexOf('/');
 
@@ -141,7 +154,8 @@ export interface PrerenderOptions extends Omit<
    * {@link responder} takes them. A path that matches one settles
    * {@link PrerenderOptions.router | router} on it and writes what its
    * handler answers: a 2xx body at the path its url spells, or a 3xx as a
-   * rules line. The handler's request is a GET for the path at
+   * rules line. The handler's request is a GET for the path under
+   * {@link PrerenderOptions.base | base} at
    * {@link PrerenderOptions.origin | origin}. Without this option, a response
    * state throws.
    */
@@ -262,6 +276,7 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when both `dehydrate` and `payload` are supplied
+ * @throws an `Error` when the router's `baseHref()` lies outside `base`
  *
  * @example
  * ```ts
@@ -304,6 +319,9 @@ export async function prerender(
     origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
+
+  const base = site.base ?? '/';
+  checkBaseHref(router, base);
 
   if (dehydrateOptions && payload)
     throw new Error(
@@ -400,7 +418,7 @@ export async function prerender(
 
       return responder(router, responses)(
         verdict,
-        new Request(new URL(path, origin)),
+        new Request(new URL(`${base.replace(/\/+$/, '')}${path}`, origin)),
       );
     };
 

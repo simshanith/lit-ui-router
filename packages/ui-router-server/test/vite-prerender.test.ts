@@ -116,6 +116,86 @@ describe('serverRouterPlugin prerender, end to end', () => {
   });
 });
 
+// The same fixture built and previewed under `--base=/solar/`.
+describe('serverRouterPlugin prerender under a base, end to end', () => {
+  const base = '/solar/';
+  let outDir = '';
+  let server: PreviewServer | undefined;
+
+  before(async () => {
+    outDir = await mkdtemp(path.join(tmpdir(), 'ui-router-server-vite-base-'));
+    await build({
+      root,
+      base,
+      configFile: false,
+      logLevel: 'silent',
+      build: { outDir, emptyOutDir: true },
+      plugins: [plugin()],
+    });
+  });
+
+  after(async () => {
+    await server?.close();
+    await rm(outDir, { recursive: true, force: true });
+  });
+
+  it('writes the pages where they were, and the base into _redirects', async () => {
+    const about = await readFile(path.join(outDir, 'about/index.html'), 'utf8');
+
+    const script = paragraph(about, '/about 200').ownerDocument.querySelector(
+      'script[src]',
+    );
+
+    assert.match(script?.getAttribute('src') ?? '', /^\/solar\/assets\//);
+    assert.equal(
+      await readFile(path.join(outDir, '_redirects'), 'utf8'),
+      '/solar/legacy /solar/about 302\n/solar/legacy/ /solar/about 302\n',
+    );
+  });
+
+  it('previews the pages and redirects under the base', async () => {
+    server = await preview({
+      root,
+      base,
+      configFile: false,
+      logLevel: 'silent',
+      build: { outDir },
+      preview: { port: 0, open: false },
+      plugins: [plugin()],
+    });
+    const origin = server.resolvedUrls?.local[0];
+    assert.ok(origin);
+
+    const page = (url: string) =>
+      fetch(new URL(url, origin), {
+        headers: { accept: 'text/html' },
+        redirect: 'manual',
+      });
+
+    const home = await page('/solar/');
+    assert.equal(home.status, 200);
+    assert.ok(paragraph(await home.text(), '/ 200'));
+
+    const about = await page('/solar/about');
+    assert.equal(about.status, 200);
+    assert.ok(paragraph(await about.text(), '/about 200'));
+
+    const missing = await page('/solar/nowhere');
+    assert.equal(missing.status, 404);
+    assert.ok(
+      paragraph(await missing.text(), '/__ui-router-server-probe__ 404'),
+    );
+
+    const legacy = await page('/solar/legacy');
+    assert.equal(legacy.status, 302);
+    assert.equal(legacy.headers.get('location'), '/solar/about');
+
+    const outside = await page('/legacy');
+    assert.equal(outside.status, 404);
+    assert.equal(outside.headers.get('location'), null);
+  });
+});
+
 const tempDir = async (t: TestContext) => {
   const dir = await mkdtemp(path.join(tmpdir(), 'ui-router-server-vite-'));
   t.after(() => rm(dir, { recursive: true, force: true }));

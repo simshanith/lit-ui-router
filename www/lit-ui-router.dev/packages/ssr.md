@@ -401,6 +401,17 @@ your host reads, such as
 [`redirectPages()`](/packages/server#hosts-without-redirect-rules) for a host
 with no redirect rules.
 
+## Under a base path
+
+`base` is the url path the site is served at, `/` by default, as for
+[`ui-router-server`'s prerender](/packages/server#emitting-a-static-site).
+The router builds its hrefs under its own `baseHref`, so build it with
+`installServerLocation(router, { baseHref: site.base })`; `prerender()`
+throws when the router's `baseHref()` lies outside `base`. A response state's handler gets a request for
+the path under the base, and a redirect `renderShell` lands on gets the base
+once in its rules line. [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+shows the setup.
+
 ## After `vite build`
 
 `lit-ui-router-ssr/vite` prerenders the built app after `vite build`. Its
