@@ -14,7 +14,7 @@ catalog:
   '@arethetypeswrong/core': ^0.18.5
   '@axe-core/playwright': 4.14.0
   '@babel/parser': ^7.29.9
-  '@babel/types': ^7.29.8
+  '@babel/types': ^8.1.0
   '@cloudflare/config': 0.30.2
   '@codecov/bundle-analyzer': ^2.0.1
 
