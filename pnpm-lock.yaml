@@ -3325,6 +3325,9 @@ importers:
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../../tools/bootstrap
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test

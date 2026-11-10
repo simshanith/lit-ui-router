@@ -364,9 +364,11 @@
         "**/*.md",
         "!**/node_modules/**",
         // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
-        // the sample apps stage READMEs into dist, typedoc writes www api/
+        // the sample apps stage READMEs into dist, typedoc writes www api/,
+        // docs:release-stubs writes www package-releases/
         "!**/dist/**",
         "!www/lit-ui-router.dev/api/**",
+        "!www/lit-ui-router.dev/package-releases/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
