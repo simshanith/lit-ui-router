@@ -1,5 +1,4 @@
-// GET/PATCH /accounts/{account_id}/builds/workers/{external_script_id}, which
-// @distilled.cloud/cloudflare does not generate, declared in its generated shape.
+// GET/PATCH /accounts/{account_id}/builds/workers/{external_script_id}, missing from distilled.
 
 import {
   CloudflareError,

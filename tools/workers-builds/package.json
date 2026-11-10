@@ -15,11 +15,10 @@
   "devDependencies": {
     "@cloudflare/config": "catalog:",
     "@distilled.cloud/cloudflare": "catalog:",
-    "@distilled.cloud/core": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/cloudflare-api": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
-    "effect": "catalog:",
     "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

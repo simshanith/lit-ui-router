@@ -1,14 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { listQueues } from '@distilled.cloud/cloudflare/queues';
+import type { CloudflareApi } from '@tools/cloudflare-api/call.ts';
 import { Schema } from 'effect';
 
 import { Claim } from './claim.ts';
 import {
   batchesOf,
-  call,
-  type CloudflareApi,
   manualClaims,
   parseEnqueueArgs,
   publish,
@@ -211,36 +209,7 @@ describe('resolveQueueId', () => {
   });
 });
 
-describe('call', () => {
-  it("waits out a 429's Retry-After, then exponentially", async () => {
-    const limited = () =>
-      new Response('{}', { status: 429, headers: { 'Retry-After': '2' } });
-
-    const { api, sleeps } = apiAnswering(
-      limited,
-      () => new Response('{}', { status: 429 }),
-      () => envelope([]),
-    );
-
-    assert.deepEqual(
-      await call(api, 'GET /queues', listQueues({ accountId: ACCOUNT })),
-      {
-        ok: true,
-        result: {
-          result: [],
-          resultInfo: {
-            page: 1,
-            perPage: 100,
-            count: 0,
-            totalCount: 0,
-            totalPages: 1,
-          },
-        },
-      },
-    );
-    assert.deepEqual(sleeps, [2000, 2000]);
-  });
-
+describe('Cloudflare API errors', () => {
   it("returns the API's errors without the account id or the token", async () => {
     const { api } = apiAnswering(() =>
       Response.json(

@@ -505,6 +505,9 @@ catalogs:
     '@tools/bundle-probe':
       specifier: workspace:*
       version: workspace:*
+    '@tools/cloudflare-api':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/compat-guards':
       specifier: workspace:*
       version: workspace:*
@@ -2468,6 +2471,34 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  tools/cloudflare-api:
+    dependencies:
+      '@distilled.cloud/cloudflare':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18(effect@4.1.2)
+      '@distilled.cloud/core':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18(effect@4.1.2)
+      effect:
+        specifier: 'catalog:'
+        version: 4.1.2
+    devDependencies:
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.77.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.92.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/compat-guards:
     devDependencies:
       '@tools/bootstrap':
@@ -3193,21 +3224,18 @@ importers:
       '@distilled.cloud/cloudflare':
         specifier: 'catalog:'
         version: 1.0.0-rc.18(effect@4.1.2)
-      '@distilled.cloud/core':
-        specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.2)
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cloudflare-api':
+        specifier: catalog:workspace
+        version: link:../cloudflare-api
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
-      effect:
-        specifier: 'catalog:'
-        version: 4.1.2
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -3405,6 +3433,9 @@ importers:
       '@effect/sql-d1':
         specifier: 'catalog:'
         version: 4.1.2(effect@4.1.2)
+      '@tools/cloudflare-api':
+        specifier: catalog:workspace
+        version: link:../../tools/cloudflare-api
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger

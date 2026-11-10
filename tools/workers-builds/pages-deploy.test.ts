@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import type { Json } from '@tools/bootstrap/types.ts';
+import type { CloudflareApi } from '@tools/cloudflare-api/call.ts';
 
-import type { CloudflareApi } from './cloudflare-api.ts';
 import {
   type Deployment,
   PAGES_PROJECT,
