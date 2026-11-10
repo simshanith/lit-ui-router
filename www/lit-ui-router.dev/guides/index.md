@@ -17,6 +17,9 @@ client deployed across every point on the server-support spectrum.
   the `initial` rule
 - [Unmatched URLs (404)](./unmatched-urls) — route URLs that match no state
   to a deliberate 404 state with `urlService.rules.otherwise`
+
+## Server-side
+
 - [Server-Side Routing](./server-route-matching) — serve routing verdicts
   at the edge with `ui-router-server`: the app shell for real routes, 302
   entry redirects, and real 404s for everything else, across the full

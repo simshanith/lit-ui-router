@@ -1,3 +1,4 @@
+import type { mounts } from 'sample-app-routes';
 import { defineConfig, HeadConfig, type DefaultTheme } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
@@ -24,7 +25,7 @@ const typedocSidebarItems =
 // The companion references are small, and their kind categories (Classes,
 // Interfaces, …) are generic — unlike the flagship's semantic categories
 // (Core, Components, …). Flatten them into a single member list under the
-// package-name API node; the grouped listing still lives on the reference's
+// package-name node; the grouped listing still lives on the reference's
 // index page and the kind-index pages stay reachable by URL.
 function flattenGroups(
   items: DefaultTheme.SidebarItem[],
@@ -123,14 +124,40 @@ const uiRouterRegistrySidebarItems = entrySidebar(
 
 const baseUrl = 'https://lit-ui-router.dev';
 
+type AppMount = Extract<keyof typeof mounts, `/app${string}`>;
+
+// Keyed by mount, so a new /app* mount fails typecheck until it has a label.
+const SAMPLE_APP_LABELS: Record<AppMount, string> = {
+  '/app': 'Vanilla',
+  '/app-mobx': 'MobX',
+  '/app-effect': 'Effect',
+  '/app-signals': 'Signals',
+  '/app-hash': 'Hash',
+};
+
+// The top nav and the sidebar both list these.
+const sampleAppItems = [
+  { text: 'Overview', link: '/sample-app' },
+  ...Object.entries(SAMPLE_APP_LABELS).map(([link, text]) => ({
+    text,
+    link,
+    target: '_self',
+  })),
+];
+
+function apiReference(
+  pkg: string,
+  link: string,
+  items: DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem {
+  return { text: pkg, link, collapsed: true, items };
+}
+
 function makeSidebar() {
   return [
     {
       text: 'Introduction',
-      items: [
-        { text: 'What is Lit UI Router?', link: '/introduction' },
-        { text: 'How this site runs', link: '/about-this-site' },
-      ],
+      items: [{ text: 'What is Lit UI Router?', link: '/introduction' }],
     },
     {
       text: 'Tutorial',
@@ -143,227 +170,270 @@ function makeSidebar() {
       ],
     },
     {
+      // Groups and membership mirror guides/index.md.
       text: 'Guides',
       collapsed: true,
       items: [
         { text: 'Overview', link: '/guides/' },
-        { text: 'Location Plugins', link: '/guides/location-plugins' },
-        { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
         {
-          text: 'Server-Side Routing',
-          link: '/guides/server-route-matching',
-        },
-        { text: 'Prerender with Vite', link: '/guides/prerender-with-vite' },
-        {
-          text: 'Prerender with Eleventy',
-          link: '/guides/prerender-with-eleventy',
-        },
-        { text: 'Route Guards', link: '/guides/route-guards' },
-        {
-          text: 'Loading and Error Views',
-          link: '/guides/loading-and-error-views',
+          text: 'URLs & Location',
+          collapsed: false,
+          items: [
+            { text: 'Location Plugins', link: '/guides/location-plugins' },
+            { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
+          ],
         },
         {
-          text: 'Component Lifecycle Hooks',
-          link: '/guides/component-lifecycle',
+          text: 'Server-side',
+          collapsed: false,
+          items: [
+            {
+              text: 'Server-Side Routing',
+              link: '/guides/server-route-matching',
+            },
+            {
+              text: 'Prerender with Vite',
+              link: '/guides/prerender-with-vite',
+            },
+            {
+              text: 'Prerender with Eleventy',
+              link: '/guides/prerender-with-eleventy',
+            },
+          ],
         },
-        { text: 'Routed Components', link: '/guides/routed-components' },
-        { text: 'Named Views', link: '/guides/named-views' },
         {
-          text: 'View Fallback Content',
-          link: '/guides/view-fallback-content',
+          text: 'Transitions & Guards',
+          collapsed: false,
+          items: [
+            { text: 'Route Guards', link: '/guides/route-guards' },
+            {
+              text: 'Loading and Error Views',
+              link: '/guides/loading-and-error-views',
+            },
+            {
+              text: 'Component Lifecycle Hooks',
+              link: '/guides/component-lifecycle',
+            },
+            { text: 'Routed Components', link: '/guides/routed-components' },
+          ],
         },
-        { text: 'Reactive Components', link: '/guides/reactive-components' },
-        { text: 'Design System Links', link: '/guides/design-system-links' },
         {
-          text: 'Development and Production Builds',
-          link: '/guides/development-builds',
+          text: 'Links & Markup',
+          collapsed: false,
+          items: [
+            { text: 'Named Views', link: '/guides/named-views' },
+            {
+              text: 'View Fallback Content',
+              link: '/guides/view-fallback-content',
+            },
+            {
+              text: 'Design System Links',
+              link: '/guides/design-system-links',
+            },
+          ],
+        },
+        {
+          text: 'Builds & Diagnostics',
+          collapsed: false,
+          items: [
+            {
+              text: 'Development and Production Builds',
+              link: '/guides/development-builds',
+            },
+          ],
+        },
+        {
+          text: 'Reactivity',
+          collapsed: false,
+          items: [
+            {
+              text: 'Reactive Components',
+              link: '/guides/reactive-components',
+            },
+          ],
         },
       ],
     },
     { text: 'Releases', link: '/releases/', target: '_self', items: [] },
     {
       text: 'Companion Packages',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/packages/' },
         {
-          text: 'Effect',
-          link: '/packages/effect',
-          collapsed: true,
+          text: 'Reactivity',
+          collapsed: false,
           items: [
             {
-              text: 'ui-router-effect',
-              link: '/packages/ui-router-effect',
+              text: 'Effect',
+              link: '/packages/effect',
               collapsed: true,
               items: [
                 {
-                  text: 'ui-router-effect API',
-                  link: '/api/ui-router-effect/',
-                  collapsed: false,
-                  items: uiRouterEffectSidebarItems,
+                  text: 'ui-router-effect',
+                  link: '/packages/ui-router-effect',
+                },
+                {
+                  text: 'lit-ui-router-effect',
+                  link: '/packages/lit-ui-router-effect',
                 },
               ],
             },
             {
-              text: 'lit-ui-router-effect',
-              link: '/packages/lit-ui-router-effect',
+              text: 'MobX',
+              link: '/packages/mobx',
               collapsed: true,
               items: [
+                { text: 'ui-router-mobx', link: '/packages/ui-router-mobx' },
                 {
-                  text: 'lit-ui-router-effect API',
-                  link: '/api/lit-ui-router-effect/',
-                  collapsed: false,
-                  items: effectSidebarItems,
-                },
-              ],
-            },
-          ],
-        },
-        // Lint rules, not a runtime API — no typedoc reference to nest.
-        { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
-        {
-          text: 'MobX',
-          link: '/packages/mobx',
-          collapsed: true,
-          items: [
-            {
-              text: 'ui-router-mobx',
-              link: '/packages/ui-router-mobx',
-              collapsed: true,
-              items: [
-                {
-                  text: 'ui-router-mobx API',
-                  link: '/api/ui-router-mobx/',
-                  collapsed: false,
-                  items: uiRouterMobxSidebarItems,
+                  text: 'lit-ui-router-mobx',
+                  link: '/packages/lit-ui-router-mobx',
                 },
               ],
             },
             {
-              text: 'lit-ui-router-mobx',
-              link: '/packages/lit-ui-router-mobx',
+              text: 'Signals',
+              link: '/packages/signals',
               collapsed: true,
               items: [
                 {
-                  text: 'lit-ui-router-mobx API',
-                  link: '/api/lit-ui-router-mobx/',
-                  collapsed: false,
-                  items: mobxSidebarItems,
+                  text: 'ui-router-signals',
+                  link: '/packages/ui-router-signals',
+                },
+                {
+                  text: 'lit-ui-router-signals',
+                  link: '/packages/lit-ui-router-signals',
                 },
               ],
             },
           ],
         },
         {
-          text: 'Navigation API Plugin',
-          link: '/packages/navigation-plugin',
-          collapsed: true,
+          text: 'Location',
+          collapsed: false,
           items: [
             {
-              text: 'navigation-location-plugin API',
-              link: '/api/navigation-location-plugin/',
-              collapsed: false,
-              items: navigationSidebarItems,
-            },
-          ],
-        },
-        {
-          text: 'Registry',
-          link: '/packages/ui-router-registry',
-          collapsed: true,
-          items: [
-            {
-              text: 'ui-router-registry API',
-              link: '/api/ui-router-registry/',
-              collapsed: false,
-              items: uiRouterRegistrySidebarItems,
+              text: 'Navigation API Plugin',
+              link: '/packages/navigation-plugin',
             },
           ],
         },
         {
           text: 'Server',
-          link: '/packages/server',
-          collapsed: true,
+          collapsed: false,
           items: [
-            {
-              text: 'ui-router-server API',
-              link: '/api/ui-router-server/',
-              collapsed: false,
-              items: serverSidebarItems,
-            },
+            { text: 'Server', link: '/packages/server' },
+            { text: 'Server-Side Rendering (SSR)', link: '/packages/ssr' },
           ],
         },
         {
-          text: 'Signals',
-          link: '/packages/signals',
-          collapsed: true,
+          text: 'DX',
+          collapsed: false,
           items: [
-            {
-              text: 'ui-router-signals',
-              link: '/packages/ui-router-signals',
-              collapsed: true,
-              items: [
-                {
-                  text: 'ui-router-signals API',
-                  link: '/api/ui-router-signals/',
-                  collapsed: false,
-                  items: uiRouterSignalsSidebarItems,
-                },
-              ],
-            },
-            {
-              text: 'lit-ui-router-signals',
-              link: '/packages/lit-ui-router-signals',
-              collapsed: true,
-              items: [
-                {
-                  text: 'lit-ui-router-signals API',
-                  link: '/api/lit-ui-router-signals/',
-                  collapsed: false,
-                  items: signalsSidebarItems,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          text: 'Server-Side Rendering (SSR)',
-          link: '/packages/ssr',
-          collapsed: true,
-          items: [
-            {
-              text: 'lit-ui-router-ssr API',
-              link: '/api/lit-ui-router-ssr/',
-              collapsed: false,
-              items: ssrSidebarItems,
-            },
+            { text: 'Registry', link: '/packages/ui-router-registry' },
+            { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
           ],
         },
       ],
     },
+    { text: 'Sample App', collapsed: true, items: sampleAppItems },
     {
-      text: 'Sample App',
-      collapsed: true,
-      items: [
-        { text: 'Overview', link: '/sample-app' },
-        { text: 'Vanilla', link: '/app', target: '_self' },
-        { text: 'MobX', link: '/app-mobx', target: '_self' },
-        { text: 'Effect', link: '/app-effect', target: '_self' },
-        { text: 'Signals', link: '/app-signals', target: '_self' },
-        { text: 'Hash', link: '/app-hash', target: '_self' },
-      ],
-    },
-    {
+      // Role groups mirror Companion Packages; eslint-plugin has no reference.
       text: 'API',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/api/' },
         {
-          text: 'lit-ui-router',
-          link: '/api/reference/',
-          collapsed: true,
-          items: typedocSidebarItems,
+          text: 'Renderer',
+          collapsed: false,
+          items: [
+            apiReference(
+              'lit-ui-router',
+              '/api/reference/',
+              typedocSidebarItems,
+            ),
+          ],
+        },
+        {
+          text: 'Reactivity',
+          collapsed: false,
+          items: [
+            apiReference(
+              'ui-router-effect',
+              '/api/ui-router-effect/',
+              uiRouterEffectSidebarItems,
+            ),
+            apiReference(
+              'lit-ui-router-effect',
+              '/api/lit-ui-router-effect/',
+              effectSidebarItems,
+            ),
+            apiReference(
+              'ui-router-mobx',
+              '/api/ui-router-mobx/',
+              uiRouterMobxSidebarItems,
+            ),
+            apiReference(
+              'lit-ui-router-mobx',
+              '/api/lit-ui-router-mobx/',
+              mobxSidebarItems,
+            ),
+            apiReference(
+              'ui-router-signals',
+              '/api/ui-router-signals/',
+              uiRouterSignalsSidebarItems,
+            ),
+            apiReference(
+              'lit-ui-router-signals',
+              '/api/lit-ui-router-signals/',
+              signalsSidebarItems,
+            ),
+          ],
+        },
+        {
+          text: 'Location',
+          collapsed: false,
+          items: [
+            apiReference(
+              'ui-router-navigation-location-plugin',
+              '/api/navigation-location-plugin/',
+              navigationSidebarItems,
+            ),
+          ],
+        },
+        {
+          text: 'Server',
+          collapsed: false,
+          items: [
+            apiReference(
+              'ui-router-server',
+              '/api/ui-router-server/',
+              serverSidebarItems,
+            ),
+            apiReference(
+              'lit-ui-router-ssr',
+              '/api/lit-ui-router-ssr/',
+              ssrSidebarItems,
+            ),
+          ],
+        },
+        {
+          text: 'DX',
+          collapsed: false,
+          items: [
+            apiReference(
+              'ui-router-registry',
+              '/api/ui-router-registry/',
+              uiRouterRegistrySidebarItems,
+            ),
+          ],
         },
       ],
+    },
+    {
+      text: 'Site',
+      collapsed: true,
+      items: [{ text: 'How this site runs', link: '/about-this-site' }],
     },
   ];
 }
@@ -425,15 +495,7 @@ const config = {
           { text: 'API', link: '/api/' },
         ],
       },
-      {
-        text: 'Sample App',
-        items: [
-          { text: 'Overview', link: '/sample-app' },
-          { text: 'Vanilla', link: '/app', target: '_self' },
-          { text: 'MobX', link: '/app-mobx', target: '_self' },
-          { text: 'Hash', link: '/app-hash', target: '_self' },
-        ],
-      },
+      { text: 'Sample App', items: sampleAppItems },
       { text: 'Atlas', link: 'https://atlas.lit-ui-router.dev' },
     ],
     sidebar: makeSidebar(),
