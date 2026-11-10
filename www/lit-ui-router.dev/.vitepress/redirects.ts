@@ -88,9 +88,14 @@ export function matchRedirect(
   return null;
 }
 
+/** A path inside the source, standing in for its splat and placeholders. */
+const sampleSource = (from: string): string =>
+  from.replace(/\*/g, 'x').replace(PLACEHOLDER, 'x');
+
 /** Problems with the table on its own: Cloudflare's limits and ordering, and the site's anchoring, snapshot and chain rules. */
 export function tableProblems(rules: readonly RedirectLine[]): string[] {
-  const dynamic = rules.filter(isDynamic).length;
+  const dynamicRules = rules.filter(isDynamic);
+  const dynamic = dynamicRules.length;
   const firstDynamic = rules.findIndex(isDynamic);
 
   const tableChecks: [boolean, string][] = [
@@ -126,6 +131,16 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
         matchRedirect(rules, rule.to.split(/[?#]/)[0]) !== null,
         'target is redirected again',
       ],
+      // Cloudflare does not apply dynamic rules in file order, so a request may match only one.
+      [
+        isDynamic(rule) &&
+          dynamicRules.some(
+            (other) =>
+              other !== rule &&
+              matchRedirect([other], sampleSource(rule.from)) !== null,
+          ),
+        'overlaps another dynamic rule',
+      ],
     ];
 
     return checks.map(([failed, problem]): [boolean, string] => [
@@ -138,10 +153,6 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
     failed ? [problem] : [],
   );
 }
-
-/** A path inside the source, standing in for its splat and placeholders. */
-const sampleSource = (from: string): string =>
-  from.replace(/\*/g, 'x').replace(PLACEHOLDER, 'x');
 
 /** Rules whose source `run_worker_first` (`true` read as `['/*']`) sends to the worker, where Cloudflare never applies `_redirects`. */
 export function workerFirstProblems(

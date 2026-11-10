@@ -40,8 +40,9 @@ describe('catalog/redirects.ts', () => {
         '/packages/server -> /packages/ui-router-server',
         '/packages/ssr -> /packages/lit-ui-router-ssr',
         '/api/ -> /reference/',
+        '/api/lit-ui-router-ssr/ -> /reference/lit-ui-router-ssr/',
         '/api/reference/* -> /reference/lit-ui-router/:splat',
-        '/api/* -> /reference/:splat',
+        '/api/ui-router-server/* -> /reference/ui-router-server/:splat',
       ],
       'released npm READMEs and homepage fields link these sources and cannot be republished; keep each rule, and retarget one only where its page moves again',
     );
@@ -295,5 +296,18 @@ describe('reservedProblems', () => {
     assert.deepEqual(reservedProblems(outDir), [
       '/api/: built files sit under the reserved prefix',
     ]);
+  });
+});
+
+describe('tableProblems on dynamic rules', () => {
+  it('flags dynamic sources that overlap, whatever their order', () => {
+    assert.deepEqual(
+      tableProblems([
+        { from: '/old/a/*', to: '/new/a/:splat', status: 301 },
+        { from: '/old/*', to: '/new/:splat', status: 301 },
+        { from: '/other/:page', to: '/new/:page', status: 301 },
+      ]),
+      ['/old/a/* /new/a/:splat 301: overlaps another dynamic rule'],
+    );
   });
 });
