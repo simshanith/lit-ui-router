@@ -60,5 +60,5 @@ jobs:
           push: disabled
           timeout: 20m
         env:
-          # The only provider credential; a second one is a later rollout phase
+          # The only provider credential; the OpenCode workspace decides what it can run
           OPENCODE_API_KEY: ${{ steps.opencode.outputs.token }}
