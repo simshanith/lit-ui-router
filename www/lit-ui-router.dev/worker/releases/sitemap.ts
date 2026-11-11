@@ -1,5 +1,6 @@
 // The /releases sitemap: the index, each package's page and each version's page; diff pages stay out.
-import { html } from 'hono/html';
+// Aliased: oxfmt formats templates tagged `html` as embedded HTML.
+import { html as xml } from 'hono/html';
 
 import { SURFACES } from '../../catalog/surfaces.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
@@ -66,19 +67,17 @@ export const sitemapEntries = (
   return [index, ...perPackage.flat()].slice(0, MAX_URLS);
 };
 
-// oxfmt-ignore
 const urlXml = (origin: string, { path, lastmod }: SitemapEntry) =>
-  html`<url><loc>${origin}${path}</loc>${lastmod === undefined ? '' : html`<lastmod>${lastmod}</lastmod>`}</url>`;
+  xml`<url><loc>${origin}${path}</loc>${lastmod === undefined ? '' : xml`<lastmod>${lastmod}</lastmod>`}</url>`;
 
 /** A sitemap of `entries`, each absolute on `origin`. */
 export const sitemapXml = (origin: string, entries: SitemapEntry[]): string => {
   // The template escapes every interpolated value.
-  // oxfmt-ignore
-  const xml = html`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.map((entry) => urlXml(origin, entry))}</urlset>`;
+  const body = xml`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.map((entry) => urlXml(origin, entry))}</urlset>`;
 
-  if (xml instanceof Promise) {
+  if (body instanceof Promise) {
     throw new TypeError('the sitemap template resolved asynchronously');
   }
 
-  return xml.toString();
+  return body.toString();
 };
