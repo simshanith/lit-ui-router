@@ -3,7 +3,7 @@ import type { RedirectLine } from 'ui-router-server/prerender';
 
 import type { PackageName } from './packages.ts';
 
-/** A `_redirects` row, with the released packages whose README or `homepage` links its source. */
+/** A `_redirects` row, with the released packages that link its source; `catalog/published-urls.txt` lists every such link. */
 export interface Redirect extends RedirectLine {
   /** Published tarballs keep these links forever, so the rule is permanent. */
   linkedFrom?: readonly PackageName[];
@@ -82,6 +82,12 @@ export const REDIRECTS: readonly Redirect[] = [
   },
   {
     from: '/packages/navigation-plugin',
+    to: '/packages/ui-router-navigation-location-plugin',
+    status: 301,
+    linkedFrom: ['ui-router-navigation-location-plugin'],
+  },
+  {
+    from: '/plugins/navigation-location',
     to: '/packages/ui-router-navigation-location-plugin',
     status: 301,
     linkedFrom: ['ui-router-navigation-location-plugin'],
