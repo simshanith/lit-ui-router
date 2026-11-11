@@ -77,7 +77,7 @@ following [clig.dev](https://clig.dev/#output):
 - JSON on stdout is the only thing on stdout; the human report moves to stderr
   or is dropped. JSON to a file leaves the human report on stdout.
 
-[`tools/shared/src/json-output.ts`](../tools/shared/src/json-output.ts) parses
+[`tools/cli/src/json-output.ts`](../tools/cli/src/json-output.ts) parses
 the flags and writes the document; new scripts use it.
 
 ## Running Tests

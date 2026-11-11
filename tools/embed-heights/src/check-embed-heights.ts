@@ -21,7 +21,7 @@ import {
   type JsonOutput,
   jsonOutput,
   writeJsonOutput,
-} from '@tools/shared/json-output.ts';
+} from '@tools/cli/json-output.ts';
 
 import { measureExamples, serveExamples, serverOrigin } from './measure.ts';
 import {

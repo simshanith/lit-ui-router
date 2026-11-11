@@ -1,0 +1,23 @@
+{
+  "name": "@tools/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Conventions shared by the repo's command-line scripts",
+  "type": "module",
+  "exports": {
+    "./json-output.ts": "./src/json-output.ts"
+  },
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

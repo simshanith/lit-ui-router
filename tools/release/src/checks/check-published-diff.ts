@@ -55,7 +55,7 @@ import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { jsonOutput, writeJsonOutput } from '@tools/shared/json-output.ts';
+import { jsonOutput, writeJsonOutput } from '@tools/cli/json-output.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 import { failMain } from '../lib/fail-main.ts';
 

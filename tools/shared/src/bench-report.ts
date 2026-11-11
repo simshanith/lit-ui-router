@@ -5,8 +5,8 @@ import { Console } from 'node:console';
 
 import { defaultExec } from './exec.ts';
 import type { Exec } from './exec.ts';
-import { jsonOutput, writeJsonOutput } from './json-output.ts';
-import type { JsonOutput } from './json-output.ts';
+import { jsonOutput, writeJsonOutput } from '@tools/cli/json-output.ts';
+import type { JsonOutput } from '@tools/cli/json-output.ts';
 
 /** The latency slice of a tinybench result; tinybench reports milliseconds. */
 export interface BenchLatency {
