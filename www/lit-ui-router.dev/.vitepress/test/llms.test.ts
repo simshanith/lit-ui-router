@@ -60,7 +60,7 @@ describe('llmsSidebar', () => {
           text: 'Introduction',
           items: [
             { text: 'Intro', link: '/introduction' },
-            { text: 'How this site runs', link: '/about-this-site' },
+            { text: 'How this site runs', link: '/site/' },
           ],
         },
         { text: 'Releases', link: '/releases/', target: '_self', items: [] },

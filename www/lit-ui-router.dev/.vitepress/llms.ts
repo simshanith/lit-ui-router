@@ -66,14 +66,14 @@ export function liveExampleSourcesPlugin(): Plugin {
   };
 }
 
-const EXCLUDED_PAGE = 'about-this-site';
+const EXCLUDED_PAGE = { link: '/site/', file: 'site/index.md' } as const;
 
 /** Keeps each API reference's index page, and drops its member pages, the excluded page and the sample-app shells. */
 export function llmsSidebar(
   items: DefaultTheme.SidebarItem[],
 ): DefaultTheme.SidebarItem[] {
   return items.flatMap(({ items: children, ...item }) => {
-    if (item.link === `/${EXCLUDED_PAGE}` || item.target === '_self') return [];
+    if (item.link === EXCLUDED_PAGE.link || item.target === '_self') return [];
 
     if (item.link?.startsWith('/api/') || !children) return [item];
 
@@ -132,7 +132,7 @@ export function llmsPlugins(): Plugin[] {
         releases: LLMS_RELEASES,
       },
       // The stubs exist for local search; the Releases section covers them here.
-      ignoreFiles: [`${EXCLUDED_PAGE}.md`, `${STUB_DIR}/**`],
+      ignoreFiles: [EXCLUDED_PAGE.file, `${STUB_DIR}/**`],
       // Member pages the sidebar filter drops would otherwise land under "Other".
       ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
       sidebar: (sidebar) => {

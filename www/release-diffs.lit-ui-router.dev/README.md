@@ -5,7 +5,7 @@ versions of a package, built once per version pair and kept in R2. It has no
 hostname; the docs worker reaches it through a service binding. The directory
 takes a domain-shaped name because every `www/` package is keyed by one (see
 [`www/README.md`](../README.md)). The docs site draws it in
-[How this site runs](https://lit-ui-router.dev/about-this-site#the-release-diffs-worker).
+[How this site runs](https://lit-ui-router.dev/site/#the-release-diffs-worker).
 
 - [`cloudflare.config.ts`](./cloudflare.config.ts): a
   [`cf` project config](https://developers.cloudflare.com/cf/projects/cloudflare-config/)
