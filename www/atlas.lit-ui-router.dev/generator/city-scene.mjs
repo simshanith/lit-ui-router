@@ -705,7 +705,7 @@ function markup(plant) {
 ${swatchCss}</style>
 <section class="sheet cs" id="${meta.id}-scene" aria-label="${plant ? 'The Working City in the round — sheet 7 in three dimensions, each mass crowned by a working plant' : 'The City in the round — sheet 7 in three dimensions'}, with a second material lane that relights it from sheet 7A's shadow survey">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
-  <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
+  <h1 class="sheet-title">${articleTitle(meta.title)}</h1>
   <p class="sheet-sub">${meta.sub}</p>
   <div class="cs-frame fillable" id="cs-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="cs-bar">

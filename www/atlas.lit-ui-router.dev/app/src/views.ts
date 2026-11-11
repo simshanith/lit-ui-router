@@ -918,7 +918,7 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
               <img src=${UIROUTER_URL} alt="UI-Router" />
             </a>
           </div>
-          <h1><a href=${srefHref('atlas.gallery')}>THE ALTITUDE ATLAS</a></h1>
+          <p><a href=${srefHref('atlas.gallery')}>THE ALTITUDE ATLAS</a></p>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
@@ -1329,7 +1329,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
       <!-- THE WORDMARK — the same plain uppercase name the rail head and the
            sheet-head line above carry, in the display face, so every site reads
            as one mark; only the size changes. -->
-      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
+      <h1 class="cover-title">THE ALTITUDE ATLAS</h1>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
@@ -1413,7 +1413,7 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">ISSUE LOG</span>
       </div>
-      <h2 class="sheet-title">${THE}ISSUE LOG</h2>
+      <h1 class="sheet-title">${THE}ISSUE LOG</h1>
       <p class="sheet-sub">
         EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD,
         READ FROM www/atlas.lit-ui-router.dev/HISTORY.md AT BUILD TIME; THE SHEETS THEMSELVES DESCRIBE
@@ -1624,7 +1624,7 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">TYPE SPECIMEN</span>
       </div>
-      <h2 class="sheet-title">${THE}TYPE SPECIMEN</h2>
+      <h1 class="sheet-title">${THE}TYPE SPECIMEN</h1>
       <p class="sheet-sub">
         SIX PAIRINGS ON ONE MOCK SHEET — IT OPENS ON THE ONE THE SET SHIPS · SITE FACES
         COME FROM ADOBE FONTS WHEN THE KIT IS STAGED, GOOGLE STAND-INS OTHERWISE · THE
@@ -1651,7 +1651,7 @@ export const ColourView: RoutedLitTemplate<ColourResolves> = (props) => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">COLOUR STANDARDS</span>
       </div>
-      <h2 class="sheet-title">${THE}COLOUR STANDARDS</h2>
+      <h1 class="sheet-title">${THE}COLOUR STANDARDS</h1>
       <p class="sheet-sub">
         EVERY TOKEN THE SHEETS ARE INKED IN, READ OUT OF THE CHROME · ITS ROLE, THE GROUNDS IT
         MAY STAND ON AND ITS CONTRAST IN LIGHT, DARK AND PRINT · THE NUMBERS ARE THE BUILD GUARD'S OWN
@@ -1697,7 +1697,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           />
           <figcaption>lit-ui-router.dev equals lit plus ui-router — the equation card: the lockup on a framed pane over sheet 7's census city.</figcaption>
         </figure>
-        <h2>THE SET, ROUTED</h2>
+        <h1>THE SET, ROUTED</h1>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         ${ARTIFACT
           ? html`<p>
@@ -1802,7 +1802,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
       <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
       <span class="shno">NO SUCH SHEET</span>
     </div>
-    <h2 class="sheet-title">NOT IN THE SET</h2>
+    <h1 class="sheet-title">NOT IN THE SET</h1>
     <p class="sheet-sub">
       THE URL IS UNCHANGED ON PURPOSE — A URL-LESS <code>otherwise</code> STATE, WHICH IS
       WHAT <code>ui-router-server</code> PROJECTS AS AN HTTP 404

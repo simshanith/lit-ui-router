@@ -126,7 +126,8 @@ the ONE base constant (`MOUNT`, `BASE`, and the
 `href` table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`),
 the generator's fragment links and the staged `_redirects` all derive from it.
 `generator/stage-site.mjs` assembles `dist/`: this app at the root and one merged `_redirects` (the
-prerender's lines, each retired standalone url → its bare plate, and `/app/*` → `/:splat`).
+prerender's lines, each retired standalone url → its bare plate, and `/app/*` → `/:splat`). It also writes `sitemap.xml` from the pages' own canonical links, a
+`robots.txt` that names it, and a `_headers` that caches the content-hashed `/assets/*` as immutable.
 
 ## Base vs experimental
 
@@ -315,7 +316,9 @@ its hydration signature: `prerender()`'s `dehydrate` option draws it from the tr
 `settle()` lands, and the signature block carries the `resolves` beside `version`, `state` and
 `params`. The payload carries the per-page `sheet` and `extra`, 14 to 1,859 bytes added to the
 signature as written. `shouldDehydrate` keeps three tokens out: `fragment`, the page's own
-HTML, which the body already holds; `specimen`, a stand-in on the server for the bench the client
+HTML, which the body already holds and which the page's head preloads (`prerender.ts` writes a
+`<link rel="preload" as="fetch" crossorigin>` for the fragment each plate page's client reads);
+`specimen`, a stand-in on the server for the bench the client
 imports; and `manifest`, the 146 KB index every page shares, which the shell's
 `<link rel="preload" as="fetch" crossorigin>` in `index.html` starts beside the document and the
 browser keeps in its cache between pages. `viewer` resolves `undefined` and `dehydrate()` lists it

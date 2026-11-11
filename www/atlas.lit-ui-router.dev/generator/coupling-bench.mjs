@@ -433,7 +433,7 @@ export function couplingBenchSection({ caption = '' } = {}) {
   return `<style>${CSS}</style>
 <section class="sheet cb" id="coupling-bench" aria-label="The Coupling Bench, interactive">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET 2B · REV ${REV}</span></div>
-  <h2 class="sheet-title">${articleTitle('THE COUPLING BENCH')}</h2>
+  <h1 class="sheet-title">${articleTitle('THE COUPLING BENCH')}</h1>
   <p class="sheet-sub">EVERY EDGE IS A PUBLISHED CONTRACT · ${C.totals.nodes} NODES · ${C.totals.drawnContracts} DRAWN CONTRACTS OF ${C.totals.contracts} · ${C.totals.peers} PEERS / ${C.totals.deps} DEPENDENCIES · ${C.totals.optional} OPTIONAL</p>
   <div class="cb-bar">
     <div class="cb-legend">

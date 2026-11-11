@@ -288,6 +288,15 @@ const titles = new Map<string, string>([
   ...PLATES.map((row: SheetRow): [string, string] => [href.plate(row.num), sheetTitle(row)]),
 ]);
 
+/** The fragment each plate page's client fetches, by path. */
+const fragmentFileOf = new Map<string, string>([
+  ...PLATES.map((row: SheetRow): [string, string] => [href.sheet(row.num), row.file]),
+  ...(cityRow ? ([[href.city, cityRow.file]] as [string, string][]) : []),
+  ...(plantRow ? ([[href.plant, plantRow.file]] as [string, string][]) : []),
+  ...(bricksRow ? ([[href.bricks, bricksRow.file]] as [string, string][]) : []),
+  ...(buildsRow ? ([[href.builds, buildsRow.file]] as [string, string][]) : []),
+]);
+
 // Verdict-only: /office is a redirect, a bare mount (when the mount is not the
 // root) redirects to the gallery, and a lowercase or aliased sheet id redirects
 // to its cased page. None gets a page; each gets a _redirects line.
@@ -356,10 +365,13 @@ const site = definePrerender(({ shellHtml }) => {
       const canonical = titles.has(path)
         ? `<link rel="canonical" href="${SITE}${path}"><meta property="og:url" content="${SITE}${path}">`
         : '';
+      // The payload leaves the fragment out, so the page asks for it beside the script that reads it.
+      const file = fragmentFileOf.get(path);
+      const preload = file ? `<link rel="preload" as="fetch" href="${BASE}${file}" crossorigin>` : '';
       return describe(shellHtml)
         .replace(HEAD_TAGS.title, () => `<title>${title}</title>`)
         .replace(HEAD_TAGS.ogTitle, (_all, open: string, close: string) => `${open}${attr(title)}${close}`)
-        .replace('</head>', () => `${canonical}</head>`)
+        .replace('</head>', () => `${canonical}${preload}</head>`)
         .replace(ROOT_RE, () => `<div id="root">${body}</div>`);
     },
   };

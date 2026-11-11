@@ -102,7 +102,7 @@ export const sheet12i = {
 export function register12iSection() {
   return `<section class="sheet rg" id="sheet-${sheet12i.num}" aria-label="Sheet ${sheet12i.num}: ${sheet12i.title}">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET ${sheet12i.num} / ${TOTAL}</span></div>
-  <h2 class="sheet-title">${articleTitle(sheet12i.title)}</h2>
+  <h1 class="sheet-title">${articleTitle(sheet12i.title)}</h1>
   <p class="sheet-sub">${sheet12i.sub}</p>
   ${registerLane()}
   <figure><figcaption><span class="figno">FIG. ${sheet12i.num}</span>${sheet12i.caption}</figcaption></figure>

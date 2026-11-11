@@ -709,7 +709,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
   const schedules = sheet.schedules ?? (sheet.schedule ? [sheet.schedule] : []);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
-  ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
+  ${headline ? `<h1 class="sheet-title">${articleTitle(sheet.title)}</h1>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
     <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}${ar && Number(ar) < TALL_RATIO ? ' data-tall' : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
     ${schedules.map((sc) => `${scheduleTable(sc)}\n    `).join('')}<figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>

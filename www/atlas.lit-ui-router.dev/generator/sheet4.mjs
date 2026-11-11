@@ -165,7 +165,10 @@ const blockCls = (status) =>
 const nameCls = (status) => (status === 'dormant' ? 'lbls' : status === 'this' ? 'lbla' : 'lblb');
 
 // ---- column layout -------------------------------------------------------------
-const COL_X0 = 320, COL_GAP = 100;
+// the adapters stand west of the bay: the flagship's halo ends AIR short of the tail of the bay's first arrow
+const COL_X0 = 320, BAY_X = 1030, PEER_TAIL = 8, HALO = 8, AIR = 10, MIN_GAP = 72;
+const COL_GAP = (BAY_X - PEER_TAIL - AIR - HALO - COL_X0 - ADAPTERS.reduce((a, m) => a + W(m[4]), 0)) / (ADAPTERS.length - 1);
+if (COL_GAP < MIN_GAP) throw new Error(`sheet 4: the adapters stand ${COL_GAP.toFixed(1)} px apart between x ${COL_X0} and the bay at ${BAY_X} — relay the spine`);
 let cursor = COL_X0;
 const cols = ADAPTERS.map((m) => {
   const w = W(m[4]);
@@ -181,7 +184,7 @@ const adapterArt = cols
     const [name, ver, date, files, sloc, range, kind, status, href] = m;
     const h = H(files), top = BASE_UP - h;
     const halo = status === 'this'
-      ? `<rect x="${(x - 8).toFixed(1)}" y="${(top - 8).toFixed(1)}" width="${(w + 16).toFixed(1)}" height="${(h + 16).toFixed(1)}" rx="6" class="fhalo"/>`
+      ? `<rect x="${(x - HALO).toFixed(1)}" y="${(top - HALO).toFixed(1)}" width="${(w + 2 * HALO).toFixed(1)}" height="${(h + 2 * HALO).toFixed(1)}" rx="6" class="fhalo"/>`
       : '';
     return `${stem(cx.toFixed(1), BASE_UP + 8, RAIL_T - 7, strokeFor(status), status === 'dormant' ? '5 4' : '', status === 'this' ? 'aa' : 'ai')}
 ${gate(cx, 262, range, kind)}
@@ -207,8 +210,8 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
 // the first column is as wide as the server's block; a block wider than its column throws
-const COL_X = [1030, 1235, 1390];
-const BAY_X = COL_X[0], BAY_R = 1545, BAY_T = 10, BAY_B = 252, BAY_CX = 1288;
+const COL_X = [BAY_X, 1235, 1390];
+const BAY_R = 1545, BAY_T = 10, BAY_B = 252, BAY_CX = 1288;
 const colW = (c) => (COL_X[c + 1] ?? BAY_R) - COL_X[c];
 // Three columns; rows stack by their own DRAWN height: name, version line, then the
 // mass block itself, and the next name clears it by 11 px, a row's step 26 + its block's height; the bay's top rose 14 → 10 for the registry's row. The header is one line, so rows start 34 under the bay's top.
@@ -227,7 +230,7 @@ const bayRows = BAY_COLS.map((col, c) => {
     return `${link(href, txt(x0 + 12, at, name, 'lbla'))}
 ${txt(x0 + 12, at + 11, `${ver} · ${files}f`, 'lblf')}
 <rect x="${x0 + 12}" y="${(at + 15).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" class="ska fa"/>
-${LIT_PEERS.has(n) ? `<path d="M${x0 - 8},${(at - 3).toFixed(1)} H${x0 + 6}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>` : ''}`;
+${LIT_PEERS.has(n) ? `<path d="M${x0 - PEER_TAIL},${(at - 3).toFixed(1)} H${x0 + 6}" class="ska" stroke-dasharray="4 3" marker-end="url(#${P}-aa)"/>` : ''}`;
   }).join('\n');
 }).join('\n');
 

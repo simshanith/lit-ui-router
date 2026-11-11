@@ -14,6 +14,9 @@
 //   /app, /app/*          → /, /:splat                                   301
 // Cloudflare Pages reads at most 2,000 static rules; the count is printed.
 //
+// sitemap.xml lists every url a page's canonical link names, robots.txt names
+// the sitemap, and _headers caches the content-hashed /assets/* as immutable.
+//
 // The staged pages also get a content hash on their one fixed stylesheet url
 // (sheets/atlas.css?v=<sha>), so a chrome change can never be served from a
 // stale cache.
@@ -191,6 +194,30 @@ for (const p of walkHtml(dist)) {
   }
 }
 console.log(`sheets/atlas.css?v=${cssHash} on ${String(busted)} pages`);
+
+// --- sitemap.xml, robots.txt, _headers ---------------------------------------
+// A page is listed where its canonical link names it; a bare plate names its sheet and the 404 names none.
+const CANONICAL = /<link rel="canonical" href="([^"]+)">/;
+const canonicals = [...new Set(walkHtml(dist).flatMap((p) => readFileSync(p, 'utf8').match(CANONICAL)?.[1] ?? []))].sort();
+if (canonicals.length === 0) throw new Error('sitemap: no page carries a canonical link');
+const origin = new URL(canonicals[0]).origin;
+for (const url of canonicals) {
+  const { pathname } = new URL(url);
+  if (!existsSync(join(dist, pathname, 'index.html'))) throw new Error(`sitemap: ${url} is not a staged page`);
+}
+writeFileSync(
+  join(dist, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${canonicals.map((url) => `<url><loc>${url}</loc></url>`).join('\n')}\n</urlset>\n`,
+);
+writeFileSync(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${origin}/sitemap.xml\n`);
+// /assets holds only content-hashed names (vite), so a year-long immutable cache can never go stale.
+const HASHED = /-[\w-]{8}\.\w+$/;
+const unhashed = readdirSync(join(dist, 'assets'), { recursive: true, withFileTypes: true })
+  .filter((e) => e.isFile() && !HASHED.test(e.name))
+  .map((e) => e.name);
+if (unhashed.length > 0) throw new Error(`_headers: /assets carries unhashed files: ${unhashed.join(', ')}`);
+writeFileSync(join(dist, '_headers'), `${BASE}assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
+console.log(`sitemap.xml: ${canonicals.length} urls · robots.txt · _headers: ${BASE}assets/* immutable`);
 
 const routedPages = walkHtml(dist).length;
 console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);

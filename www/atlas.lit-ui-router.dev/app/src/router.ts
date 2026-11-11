@@ -239,6 +239,19 @@ if (NAVIGATION_API) {
   );
 }
 
+/** Focus the routed page's title once its view has drawn, so a screen reader reads the page it landed on. */
+async function focusTitle(transition: Transition): Promise<void> {
+  for (let frames = 30; frames > 0; frames -= 1) {
+    await new Promise(requestAnimationFrame);
+    if (transition.router.globals.transition) return; // a later navigation owns the focus
+    const title = document.querySelector<HTMLElement>('main.content h1');
+    if (!title || title === document.activeElement) continue;
+    title.tabIndex = -1;
+    title.focus({ preventScroll: true });
+    if (title === document.activeElement) return;
+  }
+}
+
 /** A new page starts at the top. */
 export function scrollToTop(): void {
   if (traversing) return;
@@ -334,6 +347,8 @@ export function createRouter(): UIRouterLit {
     if (!isInPlaceChange(transition)) {
       scrollToTop();
       void document.querySelector('ui-view')?.updateComplete.then(holdTop);
+      // The boot keeps the browser's own focus; every routed page after it lands on its title.
+      if (transition.from().name !== '') void focusTitle(transition);
     }
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;

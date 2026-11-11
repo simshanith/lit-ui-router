@@ -246,7 +246,13 @@ assertPlots('sheet 14', YARDS.flatMap((y) => [
 // THE RIVER — every consignment a crate at its day, stacked where days crowd
 const RIV_T = RT, RIV_B = RT + 26 + RLANES * LP;
 for (const c of DRAWN) c.y = RIV_T + 26 + c.lane * LP;
-assertPlots('sheet 14', DRAWN.map((c) => ({ n: `c${c.n}`, name: `${c.yard}#${c.number}`, part: 'crate', x: c.x - CR, y: c.y - CR - 9, w: CR + BADGE_DX + badgeW(c), d: 2 * CR + 9 })));
+// a numeral's placard: the east part of its crate's plot, so no neighbour's crate stands on it
+const NUM_PAD = 2;
+const numBox = (c) => ({ x: c.x + BADGE_DX - NUM_PAD, y: c.y - CR - 1, w: badgeW(c) + 2 * NUM_PAD, h: 2 * CR + 1 });
+assertPlots('sheet 14', DRAWN.map((c) => ({ n: `c${c.n}`, name: `${c.yard}#${c.number}`, part: 'crate', x: c.x - CR, y: c.y - CR - 9, w: CR + BADGE_DX + badgeW(c) + NUM_PAD, d: 2 * CR + 9 })));
+// the mouth's line stands east of its last column's numerals and west of the first day's crate
+const MOUTH_LINE = Math.max(MOUTH_X1, ...OFF.map((c) => numBox(c).x + numBox(c).w + 3));
+if (OFF.length && MOUTH_LINE > RX0 - CR - 2) throw new Error(`sheet 14: the mouth's line at x ${MOUTH_LINE.toFixed(1)} stands in the first day's crate at ${RX0.toFixed(1)}`);
 
 // THE SOUTH BANK — month ticks, then the wharf with one block per return
 const months = [];
@@ -295,8 +301,10 @@ const placard = (cx, top, rows) => {
   const w = Math.max(...rows.map(([s, c]) => tw(s, c))) * 1.08 + 10;
   return `<rect x="${(cx - w / 2).toFixed(1)}" y="${(top - 12).toFixed(1)}" width="${w.toFixed(1)}" height="${rows.length * LINE + 3}" class="fp"/>`;
 };
-const piers = YARDS.filter((y) => y.cons.length)
-  .map((y) => `<line x1="${y.cx.toFixed(1)}" y1="${(y.y + YH).toFixed(1)}" x2="${y.cx.toFixed(1)}" y2="${RT}" class="sk"/>`).join('\n');
+// every straight stroke is [x1, y1, x2, y2], drawn and tested from the one row
+const seg = ([x1, y1, x2, y2], cls) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="${cls}"/>`;
+const PIERS = YARDS.filter((y) => y.cons.length).map((y) => [y.cx, y.y + YH, y.cx, RT]);
+const piers = PIERS.map((s) => seg(s, 'sk')).join('\n');
 const yardSvg = YARDS.map((y) => {
   const x = y.x.toFixed(1), w = y.w.toFixed(1), yy = y.y.toFixed(1);
   const mass = y.host === 'bugzilla'
@@ -316,24 +324,43 @@ ${txt(BX1.toFixed(1), BY + 39, `runs on ${BERTHS.length === 1 ? 'this engine' : 
 ${txt(BX1.toFixed(1), BY + 52, `in ${plural(ENGINE_PKGS.length, 'package')}`, 'lblf', 'end')}` : '';
 
 const yardOf = (c) => YARDS.find((y) => y.id === c.yard);
-const moorings = DRAWN.map((c) => {
-  const y = yardOf(c);
-  return `<line x1="${y.cx.toFixed(1)}" y1="${RT}" x2="${c.x.toFixed(1)}" y2="${(c.y - CR).toFixed(1)}" class="sks"/>`;
+const MOORINGS = DRAWN.map((c) => [yardOf(c).cx, RT, c.x, c.y - CR]);
+const moorings = MOORINGS.map((s) => seg(s, 'sks')).join('\n');
+
+const ROADS = RETURNS.flatMap((r) => r.from.filter((c) => c.fate !== 'missing').map((c) => [c.x, c.y + CR, r.x, r.y - 2]));
+const roads = ROADS.map(([x1, y1, x2, y2]) => arrow(P, `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`, 'as', 'skf')).join('\n');
+
+// a numeral stands on a placard in the river's fill, so a mooring or a road passes behind it
+const placards = DRAWN.map((c) => {
+  const b = numBox(c);
+  return `<rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h}" class="fp2"/>`;
 }).join('\n');
-
-const roads = RETURNS.flatMap((r) => r.from.filter((c) => c.fate !== 'missing').map((c) =>
-  arrow(P, `M${c.x.toFixed(1)},${(c.y + CR).toFixed(1)} L${r.x.toFixed(1)},${(r.y - 2).toFixed(1)}`, 'as', 'skf'))).join('\n');
-
 const crates = DRAWN.map((c) => `${c.sent ? pennant(c.x, c.y) : ''}${glyphOf(c.kind, c.fate, c.x, c.y)}${c.tracked ? tag(c.x + CR, c.y - CR) : ''}
 ${txt((c.x + BADGE_DX).toFixed(1), (c.y + 3.6).toFixed(1), String(c.n), 'lbls')}`).join('\n');
 
-const mouth = OFF.length ? `<line x1="${MOUTH_X1}" y1="${RIV_T}" x2="${MOUTH_X1}" y2="${RIV_B}" class="sks" stroke-dasharray="3 3"/>
+const MOUTH = [MOUTH_LINE, RIV_T, MOUTH_LINE, RIV_B];
+const TIME = [RX1 - 60, RIV_B - 8, RX1 + 12, RIV_B - 8];
+// a stroke no placard knocks out clears every numeral
+const crosses = ([x1, y1, x2, y2], b) => {
+  let t0 = 0, t1 = 1;
+  for (const [p, q] of [[x1 - x2, x1 - b.x], [x2 - x1, b.x + b.w - x1], [y1 - y2, y1 - b.y], [y2 - y1, b.y + b.h - y1]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) t0 = Math.max(t0, r); else t1 = Math.min(t1, r);
+  }
+  return t0 < t1;
+};
+for (const [kind, strokes] of [['the mouth\'s line', OFF.length ? [MOUTH] : []], ['the TIME arrow', [TIME]], ['a pier', PIERS]]) {
+  for (const c of DRAWN) if (strokes.some((s) => crosses(s, numBox(c)))) throw new Error(`sheet 14: ${kind} strikes through numeral ${c.n} (${c.yard}#${c.number})`);
+}
+
+const mouth = OFF.length ? `<line x1="${MOUTH_LINE.toFixed(1)}" y1="${RIV_T}" x2="${MOUTH_LINE.toFixed(1)}" y2="${RIV_B}" class="sks" stroke-dasharray="3 3"/>
 ${txt(((RXS + MOUTH_X1) / 2).toFixed(1), RIV_B + 19, 'earlier', 'lblf', 'middle')}` : '';
 
 const river = `<rect x="${RXS}" y="${RIV_T}" width="${RXE - RXS}" height="${RIV_B - RIV_T}" class="fp2"/>
 <line x1="${RXS}" y1="${RIV_T}" x2="${RXE}" y2="${RIV_T}" class="sk"/>
 <line x1="${RXS}" y1="${RIV_B}" x2="${RXE}" y2="${RIV_B}" class="sk"/>
-${arrow(P, `M${RX1 - 60},${RIV_B - 8} L${RX1 + 12},${RIV_B - 8}`, 'as', 'sks')}
+${arrow(P, `M${TIME[0]},${TIME[1]} L${TIME[2]},${TIME[3]}`, 'as', 'sks')}
 ${txt(RX1 - 66, RIV_B - 4.5, 'TIME', 'lblf', 'end')}
 ${mouth}
 ${months.map((t) => {
@@ -378,6 +405,12 @@ const SCHEDULES = [
 ];
 
 // ---- assemble ---------------------------------------------------------------------
+// back to front; a mooring or a road painted over the placards strikes through a numeral
+const LAYERS = [['river', river], ['moorings', moorings], ['roads', roads], ['placards', placards], ['crates', crates], ['piers', piers], ['yards', yardSvg], ['engine note', engineNote], ['wharf', wharf], ['banks', banks]];
+{
+  const at = (name) => LAYERS.findIndex(([n]) => n === name);
+  for (const under of ['moorings', 'roads']) if (!(at(under) < at('placards') && at('placards') < at('crates'))) throw new Error(`sheet 14: the ${under} are painted over the numerals' placards`);
+}
 // the wharf is the plate's lowest structure
 const H = WY + WH + 20;
 const yardsWord = plural(WORKS.length, 'work');
@@ -391,15 +424,7 @@ ${txt(RXE, 34, `TIME RUNS EAST — ${day(SINCE)}, the first commit, to ${day(UNT
 ${txt(RXE, 48, 'yard footprint grows with log₁₀ of stars · ★ GitHub stars · npm downloads per week', 'lblf', 'end')}
 ${txt(RXE, 62, 'pennant = sent by the city · a road across the river = a return: a home PR, issue or commit that cites it', 'lblf', 'end')}
 
-${river}
-${moorings}
-${roads}
-${crates}
-${piers}
-${yardSvg}
-${engineNote}
-${wharf}
-${banks}
+${LAYERS.map(([, art]) => art).join('\n')}
 </svg>`;
 
 const L = once();

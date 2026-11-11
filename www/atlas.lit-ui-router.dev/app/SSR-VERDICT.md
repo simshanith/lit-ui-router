@@ -874,3 +874,14 @@ it lands on cannot loop. Read in a preview: `/sheet/7` 308s, `/sheet/7a`
 302s to `/sheet/7A/`, `/office` 302s to `/sheet/A2/`, a card click, a
 cross-reference, back and the lightbox all hold the slash, and a redirect
 lands booted `adopted:matched`.
+
+**Update, 2026-11-10, the fragment.** The resolve payload leaves `fragment`
+out, since the body already holds it, so a hard-loaded plate page fetched
+its 17 to 33 KB fragment once the module script reached the resolve.
+Seeding the resolve from the served DOM is not open: lit's hydration checks
+the template it adopts against the string it is handed, and a serialised
+subtree is not that string. Each plate page's head carries a
+`<link rel="preload" as="fetch" crossorigin>` for its own fragment beside
+the manifest's, so the request starts with the document and the resolve
+reads it from the preload: one request for `/sheets/7.html` on a hard load
+of `/sheet/7/`, booted `adopted:matched`.

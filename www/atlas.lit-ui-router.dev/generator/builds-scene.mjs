@@ -224,7 +224,7 @@ export function buildsMarkup() {
   return `<style>${laneCss('bd')}${CSS}</style>
 <section class="sheet bd" id="${meta.id}-scene" aria-label="The Builds in the round — each of sheet 2C's alternate builds as a three-dimensional model that explodes and reassembles">
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${meta.head} · REV ${meta.rev}</span></div>
-  <h2 class="sheet-title">${articleTitle(meta.title)}</h2>
+  <h1 class="sheet-title">${articleTitle(meta.title)}</h1>
   <p class="sheet-sub">${meta.sub}</p>
   <div class="bd-frame fillable" id="bd-frame"><button type="button" class="fill" data-fill aria-label="Enlarge this figure, or leave it"></button>
     <div class="bd-stage">
