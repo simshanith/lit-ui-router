@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 // Runs axe-core over the served docs site and its sample-app mounts; any violation fails.
-// Usage: check-a11y <origin> [--json]   (origin: the wrangler dev server, e.g. http://localhost:8787)
+// Usage: check-a11y <origin> [--json | --json-out <path>]   (origin: the wrangler dev server, e.g. http://localhost:8787)
 
 import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
+import {
+  type JsonOutput,
+  jsonOutput,
+  withoutJsonFlags,
+  writeJsonOutput,
+} from '@tools/shared/json-output.ts';
 import { chromium } from 'playwright';
 
 import {
@@ -36,11 +43,11 @@ const APPS: readonly AppMount[] = [
   { mount: '/app-hash', hash: true },
 ];
 
+const USAGE = 'usage: check-a11y <origin> [--json | --json-out <path>]';
+
 const args = process.argv.slice(2);
 
-const asJson = args.includes('--json');
-
-const origin = args.find((arg) => arg !== '--json');
+const [origin] = withoutJsonFlags(args);
 
 function fail(message: string): void {
   console.error(`check-a11y: ${message}`);
@@ -65,8 +72,18 @@ async function htmlPaths(): Promise<string[]> {
 }
 
 const main = async (): Promise<void> => {
+  let output: JsonOutput;
+
+  try {
+    output = jsonOutput(args, { positionals: true });
+  } catch (error) {
+    fail(`${messageOf(error)}\n${USAGE}`);
+
+    return;
+  }
+
   if (origin === undefined || !URL.canParse(origin)) {
-    fail('usage: check-a11y <origin> [--json]');
+    fail(USAGE);
 
     return;
   }
@@ -125,9 +142,9 @@ const main = async (): Promise<void> => {
       a.rule.localeCompare(b.rule),
   );
 
-  if (asJson) {
-    console.log(JSON.stringify(audit, null, 2));
-  } else {
+  await writeJsonOutput(output, `${JSON.stringify(audit, null, 2)}\n`);
+
+  if (output.kind !== 'stdout') {
     console.log(
       `axe-core ${audit.axeVersion}: ${audit.scans} scans over ${docsPaths.length} docs pages ` +
         `(light, dark) and ${APPS.length} sample-app mounts`,

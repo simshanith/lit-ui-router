@@ -91,22 +91,40 @@ describe('benchEntries', () => {
 });
 
 describe('benchReportPath', () => {
-  it('defaults without --json', () => {
+  it('defaults without --json-out', () => {
     assert.equal(benchReportPath(['node', 'x.ts'], '/d.json'), '/d.json');
   });
 
-  it('takes the --json path', () => {
+  it('takes the --json-out path', () => {
     assert.equal(
-      benchReportPath(['node', 'x.ts', '--json', '/o.json'], '/d.json'),
+      benchReportPath(['node', 'x.ts', '--json-out', '/o.json'], '/d.json'),
       '/o.json',
     );
   });
 
-  it('rejects --json without a path', () => {
-    assert.throws(() => benchReportPath(['--json'], '/d.json'), /--json/);
+  it('rejects --json-out without a path', () => {
     assert.throws(
-      () => benchReportPath(['--json', '--other'], '/d.json'),
-      /--json/,
+      () => benchReportPath(['--json-out'], '/d.json'),
+      /--json-out/,
+    );
+    assert.throws(
+      () => benchReportPath(['--json-out', '--other'], '/d.json'),
+      /--json-out/,
+    );
+  });
+
+  it('points the old --json <path> spelling at --json-out', () => {
+    assert.throws(
+      () => benchReportPath(['node', 'x.ts', '--json', '/o.json'], '/d.json'),
+      /--json-out \/o\.json/,
+    );
+  });
+
+  it('refuses stdout, which carries the table', () => {
+    assert.throws(() => benchReportPath(['--json'], '/d.json'), /--json-out/);
+    assert.throws(
+      () => benchReportPath(['--json-out', '-'], '/d.json'),
+      /--json-out/,
     );
   });
 });

@@ -9,13 +9,19 @@
 // content column and fails when a declared height no longer covers it, or
 // exceeds the cap past which content scrolls inside the embed.
 //
-// Usage: check-embed-heights [--json] [--verbose]
+// Usage: check-embed-heights [--json | --json-out <path>] [--verbose]
 
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { messageOf } from '@tools/shared/errors.ts';
+import {
+  type JsonOutput,
+  jsonOutput,
+  writeJsonOutput,
+} from '@tools/shared/json-output.ts';
 
 import { measureExamples, serveExamples, serverOrigin } from './measure.ts';
 import {
@@ -30,11 +36,9 @@ const MANIFEST = join(workspaceRoot, 'examples/embeds.ts');
 
 const EXAMPLES_DIR = join(workspaceRoot, 'examples');
 
-const args = new Set(process.argv.slice(2));
+const args = process.argv.slice(2);
 
-const asJson = args.has('--json');
-
-const verbose = args.has('--verbose');
+const verbose = args.includes('--verbose');
 
 function fail(message: string): void {
   console.error(`check-embed-heights: ${message}`);
@@ -78,6 +82,16 @@ function problem(name: string, verdict: Verdict): string {
 }
 
 const main = async (): Promise<void> => {
+  let output: JsonOutput;
+
+  try {
+    output = jsonOutput(args);
+  } catch (error) {
+    fail(messageOf(error));
+
+    return;
+  }
+
   // SAFETY: examples/embeds.ts exports EXAMPLES as a record of this entry shape
   const manifest = (await import(pathToFileURL(MANIFEST).href)) as {
     EXAMPLES: Record<string, { title: string; height: string }>;
@@ -142,23 +156,24 @@ const main = async (): Promise<void> => {
     );
   }
 
-  if (asJson) {
-    console.log(
-      JSON.stringify(
-        {
-          columnWidth: COLUMN_WIDTH_PX,
-          examples: Object.fromEntries(
-            built.map((name) => [
-              name,
-              { ...verdicts.get(name)!, ...measured.get(name)! },
-            ]),
-          ),
-        },
-        null,
-        2,
-      ),
-    );
-  } else {
+  await writeJsonOutput(
+    output,
+    `${JSON.stringify(
+      {
+        columnWidth: COLUMN_WIDTH_PX,
+        examples: Object.fromEntries(
+          built.map((name) => [
+            name,
+            { ...verdicts.get(name)!, ...measured.get(name)! },
+          ]),
+        ),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  if (output.kind !== 'stdout') {
     const pad = Math.max(...built.map((name) => name.length));
     console.log(
       `content measured at the docs ${COLUMN_WIDTH_PX}px column; reservations cap at ${MAX_HEIGHT_PX}px\n`,

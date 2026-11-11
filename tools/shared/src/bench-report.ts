@@ -6,6 +6,7 @@ import { dirname } from 'node:path';
 
 import { defaultExec } from './exec.ts';
 import type { Exec } from './exec.ts';
+import { jsonOutput } from './json-output.ts';
 
 /** The latency slice of a tinybench result; tinybench reports milliseconds. */
 export interface BenchLatency {
@@ -87,21 +88,19 @@ export function benchEntries(
   });
 }
 
-/** `--json <path>` when given, else `defaultPath`. */
+/** `--json-out <path>` when given, else `defaultPath`; a bench prints its table on stdout, so stdout is refused. */
 export function benchReportPath(
   argv: readonly string[],
   defaultPath: string,
 ): string {
-  const flag = argv.indexOf('--json');
+  const output = jsonOutput(argv, { defaultPath });
 
-  if (flag === -1) return defaultPath;
+  if (output.kind === 'stdout')
+    throw new Error(
+      'a bench prints its table on stdout; write the report with --json-out <path>',
+    );
 
-  const path = argv[flag + 1];
-
-  if (!path || path.startsWith('--'))
-    throw new Error('--json requires a file path argument');
-
-  return path;
+  return output.path;
 }
 
 /** This run's metadata; `sha` is GITHUB_SHA, else the checkout's HEAD, else null. */
@@ -157,7 +156,7 @@ export function benchBudget(
 
 /** Options for {@link writeBenchReport}. */
 export interface BenchReportOptions {
-  /** Where the file lands without `--json <path>`: the package's gitignored `.cache/`. */
+  /** Where the file lands without `--json-out <path>`: the package's gitignored `.cache/`. */
   defaultPath: string;
   /** Route-table size per task; defaults to {@link sizeFromName}. */
   sizeOf?: (name: string) => number;

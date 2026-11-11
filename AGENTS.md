@@ -20,7 +20,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
 - Cloudflare account changes go through the `cf` CLI: find the command with `cf cli search "<task>"` (no names or IDs in the query) and run it with `--dry-run` first.
-- CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`.
+- CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`. JSON output takes `--json`/`--json-out` ([CONTRIBUTING: JSON output from tools scripts](docs/CONTRIBUTING.md#json-output-from-tools-scripts)).
 - A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
 - pnpm links a package's `bin` into its dependents only, never its own `.bin`. A package's own task execs the file directly (0755 plus shebang), as `tools/build_and_test/mise.toml` does.
 - `.config/` holds config only for tools that search it natively (mise, rumdl, taplo). Others keep their conventional location.
