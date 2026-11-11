@@ -1,24 +1,24 @@
 {
   "ref": "origin/main",
-  "sha": "6ae72d27",
-  "commitDate": "2026-11-09T16:00:39-08:00",
-  "generatedAtTime": "2026-11-10T00:31:07.935Z",
+  "sha": "33cd7ce1",
+  "commitDate": "2026-11-10T23:54:03-08:00",
+  "generatedAtTime": "2026-11-11T18:32:23.925Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 6ae72d27",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 33cd7ce1",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":129,"sloc":12499},
+    {"instrument":"src — packages/*/src","files":130,"sloc":12742},
     {"instrument":"build — @tools/oxc-emit","files":7,"sloc":543},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
     {"instrument":"published-diff","files":5,"sloc":481},
     {"instrument":"check:exports","files":2,"sloc":141},
     {"instrument":"peer-floor tier-1","files":2,"sloc":144},
     {"instrument":"peer-floor tier-2","files":4,"sloc":274},
-    {"instrument":"docs deploy watch","files":9,"sloc":1000},
-    {"instrument":"publish — release-it","files":37,"sloc":2920},
+    {"instrument":"docs deploy watch","files":10,"sloc":1318},
+    {"instrument":"publish — release-it","files":37,"sloc":2936},
     {"instrument":"compat-guards","files":9,"sloc":294},
     {"instrument":"dts-backtest","files":9,"sloc":643},
     {"instrument":"tests — vitest harness","files":8,"sloc":554},
@@ -27,7 +27,7 @@
     {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1553},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":58},
     {"instrument":"@tools/shared","files":12,"sloc":607},
-    {"instrument":"typedoc plugin","files":2,"sloc":350},
+    {"instrument":"typedoc plugin","files":3,"sloc":363},
     {"instrument":"e2e — playwright","files":2,"sloc":99},
     {"instrument":"sample apps","files":84,"sloc":4498}
   ]

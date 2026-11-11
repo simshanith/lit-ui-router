@@ -88,12 +88,13 @@ const TIER_TEXT = {
   report: 'never gates', line: 'the line itself', art: 'the artifact', off: 'not massed',
 };
 
+// the shed stands east of the src slab by the run's trims and a unit of leg: 9 px off the slab, the shed's height plus 1.15 × 11.5 at its wall
+const SHED_X = Math.ceil(45 + S(C('src — packages/*/src')[1]) + 9 + H(C('build — @tools/oxc-emit')[0]) + 1.15 * 11.5 + 1);
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
   [1,  'src — packages/*/src',      'line',    45,    24, ...C('src — packages/*/src'), null, null, SRC_NOTE],
-  // east of the src slab by the run's trims: 9 px off the slab and the shed's height plus 13.2 at its wall
-  [2,  'build — @tools/oxc-emit',   'line',   258,    63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
+  [2,  'build — @tools/oxc-emit',   'line',   SHED_X, 63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   340,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
   [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
@@ -370,8 +371,8 @@ ${txt(560, 535, 'published-diff — the only halt', 'lblr')}
 ${txt(560, 548, `${nf(11)} files, ${fmt(nl(11))} sloc`, 'lblf')}
 <line x1="554" y1="532" x2="455" y2="499" class="skf"/>
 
-${txt(490, 806, 'docs deploy — gates the site', 'lbls')}
-<line x1="566" y1="793" x2="578" y2="768" class="skf"/>
+${txt(490, 812, 'docs deploy — gates the site', 'lbls')}
+<line x1="566" y1="799" x2="578" y2="768" class="skf"/>
 
 ${txt(600, 645, `SAMPLE APPS — ${nf(18)}f · ${fmt(nl(18))} sloc`, 'lblb')}
 ${txt(600, 658, `the ${rankOf(18)} mass on the sheet`, 'lblf')}

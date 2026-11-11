@@ -209,9 +209,10 @@ ${txt(cx.toFixed(1), (bot + 44).toFixed(1), `quiet since ${date}`, 'lblf', 'midd
 }).join('\n');
 
 // ---- companions bay (this repo's own limbs, right of the adapters) ---------------
-// the first column is as wide as the server's block; a block wider than its column throws
-const COL_X = [BAY_X, 1235, 1390];
+// the first column is as wide as its widest block with the row's margins, the other two share the rest; a block wider than its column throws
 const BAY_R = 1545, BAY_T = 10, BAY_B = 252, BAY_CX = 1288;
+const COL1_W = Math.ceil(12 + Math.max(...BAY_COLS[0].map((n) => W(COMPANIONS[COMP_NAMES.indexOf(n)][4]))) + 24) + 1;
+const COL_X = [BAY_X, BAY_X + COL1_W, BAY_X + COL1_W + Math.floor((BAY_R - BAY_X - COL1_W) / 2)];
 const colW = (c) => (COL_X[c + 1] ?? BAY_R) - COL_X[c];
 // Three columns; rows stack by their own DRAWN height: name, version line, then the
 // mass block itself, and the next name clears it by 11 px, a row's step 26 + its block's height; the bay's top rose 14 → 10 for the registry's row. The header is one line, so rows start 34 under the bay's top.

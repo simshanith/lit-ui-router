@@ -71,20 +71,20 @@ const PLACED = [
   [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 266, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 30, 152],
   [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 504, 246],
-  [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 640, 10],
-  [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 790, 10],
-  [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 790, 90],
-  [8, 'sample-app-routes', 'apps/sample-app-routes', 'app', 770, 150],
-  [9, 'sample-app-lit-e2e', 'apps/sample-app-lit-e2e', 'app', 650, 156],
+  [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 648, 10],
+  [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 798, 10],
+  [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 798, 90],
+  [8, 'sample-app-routes', 'apps/sample-app-routes', 'app', 778, 150],
+  [9, 'sample-app-lit-e2e', 'apps/sample-app-lit-e2e', 'app', 658, 156],
   [10, 'docs', 'www/lit-ui-router.dev', 'site', 680, 400],
   [11, 'examples', 'examples', 'site', 680, 512],
   [12, '@tools/release', 'tools/release', 'tool', 0, 482],
   [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 486, 630],
   [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 380],
   [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 208, 524],
-  [16, '@tools/shared', 'tools/shared', 'tool', 200, 633],
+  [16, '@tools/shared', 'tools/shared', 'tool', 200, 642],
   [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 580],
-  [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 336, 580],
+  [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 346, 580],
   [19, '@tools/compat-guards', 'tools/compat-guards', 'tool', 130, 580],
   [20, '@tools/oxc-emit', 'tools/oxc-emit', 'tool', 234, 380],
   [21, '@tools/release-config', 'tools/release-config', 'tool', 316, 380],
@@ -94,36 +94,38 @@ const PLACED = [
   [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 180, 425],
   [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 174, 380],
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 214, 380],
-  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 408, 580],
+  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 426, 580],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 380],
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 346, 170],
   [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 476, 538],
   [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 394, 380],
   [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 582],
   [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 440, 464],
-  [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 730, 100],
+  [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 738, 100],
   [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 30, 200],
   [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 130, 178],
   [39, '@tools/crap', 'tools/crap', 'tool', 560, 630],
   [40, '@tools/oxlint-anti-slop', 'tools/oxlint-anti-slop', 'tool', 0, 592],
   [41, 'lit-ui-router-signals', 'packages/lit-ui-router-signals', 'pkg', 504, 180],
-  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 528, -2],
-  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 528, 92],
-  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 528, 122],
-  [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 660, 100],
+  [42, 'ui-router-signals', 'packages/ui-router-signals', 'pkg', 538, -2],
+  [43, 'ui-router-effect', 'packages/ui-router-effect', 'pkg', 538, 92],
+  [44, '@repo/route-snapshot', 'packages/shared/route-snapshot', 'pkg', 538, 122],
+  [45, 'sample-app-lit-signals', 'apps/sample-app-lit-signals', 'app', 668, 100],
   [46, '@tools/a11y', 'tools/a11y', 'tool', 540, 538],
-  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 528, 58],
-  [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 295, 633],
-  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 528, 27],
+  [47, 'ui-router-mobx', 'packages/ui-router-mobx', 'pkg', 538, 58],
+  [48, '@tools/ci-logs', 'tools/ci-logs', 'tool', 295, 642],
+  [49, '@repo/dev-gate', 'packages/shared/dev-gate', 'pkg', 538, 27],
   [50, 'ui-router-registry', 'packages/ui-router-registry', 'pkg', 436, 256],
-  [51, '@tools/release-ledger', 'tools/release-ledger', 'tool', 380, 620],
+  [51, '@tools/release-ledger', 'tools/release-ledger', 'tool', 392, 620],
   [52, 'release-diffs', 'www/release-diffs.lit-ui-router.dev', 'site', 842, 570],
   [53, 'release-ledger', 'www/release-ledger.lit-ui-router.dev', 'site', 764, 282],
-  [54, '@repo/transition-status', 'packages/shared/transition-status', 'pkg', 528, 146],
+  [54, '@repo/transition-status', 'packages/shared/transition-status', 'pkg', 538, 146],
   [55, '@tools/turbo-summary', 'tools/turbo-summary', 'tool', 236, 430],
   [56, 'postcss-lit-html', 'packages/postcss-lit-html', 'pkg', 346, 256],
   [57, '@tools/doc-example-check', 'tools/doc-example-check', 'tool', 292, 524],
   [58, '@tools/md-content-mapper', 'tools/md-content-mapper', 'tool', 366, 524],
+  // a step south of sheet 7's lot, its badge clear of 19's ticks
+  [59, '@tools/cloudflare-api', 'tools/cloudflare-api', 'tool', 130, 633],
 ];
 // every census member stands on a lot, so the totals and the blocks cannot disagree
 const UNPLACED = CITY.rows.filter((r) => !PLACED.some((p) => p[2] === r.member)).map((r) => r.member);
@@ -351,7 +353,7 @@ const NAV_SIZE_RANK = D.filter((r) => r[2] === 'pkg').sort((a, b) => a[5] - b[5]
 const NAV_SIZE_TXT = SIZE_ORD[NAV_SIZE_RANK];
 if (!NAV_SIZE_TXT) throw new Error(`sheet 13: navigation-location-plugin ranks ${NAV_SIZE_RANK + 1} by size among the packages — extend SIZE_ORD`);
 const MULTI = D.filter((r) => r[7] && r[7][0] > 1).sort((a, b) => b[7][2] / b[7][0] - a[7][2] / a[7][0]).map((r) => r[0]);
-const HOT_ORD = ['the hottest', 'the second-hottest', 'the third-hottest', 'the fourth-hottest', 'the fifth-hottest', 'the sixth-hottest', 'the seventh-hottest', 'the eighth-hottest'];
+const HOT_ORD = ['the hottest', 'the second-hottest', 'the third-hottest', 'the fourth-hottest', 'the fifth-hottest', 'the sixth-hottest', 'the seventh-hottest', 'the eighth-hottest', 'the ninth-hottest', 'the tenth-hottest', 'the eleventh-hottest', 'the twelfth-hottest'];
 const DOCS_HOT = HOT_ORD[MULTI.indexOf(10)];
 if (!DOCS_HOT) throw new Error(`sheet 13: the notes rank docs among the hottest multi-file block-averages, and the plate ranks it ${MULTI.indexOf(10) + 1} — extend HOT_ORD`);
 if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
@@ -395,8 +397,8 @@ ${leader(DOC_X + 2, DOC_Y + 31, g(10).x + 5, g(10).y - 2)}
 ${EX_LINES.map(([y, s, cls]) => txt(EX_X, y, s, cls)).join('\n')}
 ${leader(EX_X + 60, EX_Y - 38, EXB.x + EXB.s * 0.4, EXB.y2 + 14)}
 
-${txt(g(13).x2, g(13).y2 + 26, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls', 'end')}
-${txt(g(13).x2, g(13).y2 + 40, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf', 'end')}
+${txt(g(13).x2, g(13).y2 + 40, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls', 'end')}
+${txt(g(13).x2, g(13).y2 + 54, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf', 'end')}
 
 ${txt(60, g(12).y - 67, `@tools/release — ${filesOf(row(12))} walls, every one summer-built`, 'lbl')}
 ${txt(60, g(12).y - 53, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
@@ -450,7 +452,7 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'K',
+  num: 13, id: 'weathering', rev: 'L',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',

@@ -85,11 +85,11 @@ export const PLACED = [
   [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   30,  152, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   504,  246, `the location seat, core's pushStateLocation swapped out · annex ${ratio('packages/navigation-location-plugin')}×`],
   // --- apps/ — the proving ground ----------------------------------------------
-  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   640,   10, 'the routes + views every sample app mounts'],
-  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   790,   10, 'the plain-lit demo'],
-  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   790,   90, 'the mobx demo'],
-  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   770,  150, 'the shared route table, server-side too'],
-  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     650,  150, 'playwright · drives the docs build'],
+  [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   648,   10, 'the routes + views every sample app mounts'],
+  [6,  'sample-app-lit-vanilla',   'apps/sample-app-lit-vanilla',        'app',  'line',   798,   10, 'the plain-lit demo'],
+  [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   798,   90, 'the mobx demo'],
+  [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   778,  150, 'the shared route table, server-side too'],
+  [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     658,  150, 'playwright · drives the docs build'],
   // --- www/ + examples/ — the shopfront ---------------------------------------
   [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   680,  340, 'vitepress + the worker that serves it'],
   [11, 'examples',                 'examples',                           'site', 'line',   680,  452, 'stackblitz-ready copies, own lockfiles'],
@@ -101,9 +101,9 @@ export const PLACED = [
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, `${DTS.srcFiles} file${DTS.srcFiles === 1 ? '' : 's'} · ${DTS.srcSloc} lines hold the TS 5.0 floor`],
   [15, '@tools/build_and_test',   'tools/build_and_test',               'tool', 'report', 208,  494, 'the branch CI gate and the bundle-stats upload'],
   // south of workers-builds, so road G runs west and then north between 40 and compat-guards
-  [16, '@tools/shared',            'tools/shared',                       'tool', 'report', 200, 603, 'the library under the instruments'],
+  [16, '@tools/shared',            'tools/shared',                       'tool', 'report', 200, 612, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
-  [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 336, 550, 'size probe, advisory'],
+  [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 346, 550, 'size probe, advisory'],
   [19, '@tools/compat-guards',     'tools/compat-guards',                'tool', 'pr',     130, 550, 'the lit 2 / mobx 6 / peer-floor lanes'],
   [20, '@tools/oxc-emit',          'tools/oxc-emit',                     'tool', 'line',   234,  350, 'both build passes, one emitter'],
   [21, '@tools/release-config',    'tools/release-config',               'tool', 'line',   316,  350, 'the shared release-it config'],
@@ -115,7 +115,7 @@ export const PLACED = [
   [27, '@tools/wintercg-globals',  'tools/wintercg-globals',             'tool', 'off',    214,  350,'ambient types only — nothing to mass'],
   // --- born 2026-08-31 (#639) and 2026-08-16 (#557) --------------------------------
   // east off 380, 388 and 394 as bundle-probe's annex grew (to 398.2 at the c1b759a4 refresh)
-  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     408, 550, 'the custom-element rules as an oxlint jsPlugins config the root extends'],
+  [28, '@tools/lint-elements',     'tools/lint-elements',                'tool', 'pr',     426, 550, 'the custom-element rules as an oxlint jsPlugins config the root extends'],
   [30, '@tools/eslint-ts-parser',  'tools/eslint-ts-parser',             'tool', 'report',  54, 350, 'a one-line parser shim — the smallest thing in the yard'],
   // --- the fifth published package (#676) — first drawn here --------------------
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 346,  170, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
@@ -126,7 +126,7 @@ export const PLACED = [
   [34, '@tools/eslint',            'tools/eslint',                       'tool', 'report', 514,  552, 'the repo rule plugin, the complexity ceiling and the Actions formatter root eslint.config.ts composes'],
   [35, '@tools/repo-checks',       'tools/repo-checks',                  'tool', 'pr',     440,  434, 'graph edges, inputs, versions, coverage, patches, deps'],
   // --- the effect pair, born 2026-09-11/12 (#721, #833) ----------------------------
-  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   730,  100, 'the effect demo — the fourth app shell the docs site serves'],
+  [36, 'sample-app-lit-effect',    'apps/sample-app-lit-effect',         'app',  'line',   738,  100, 'the effect demo — the fourth app shell the docs site serves'],
   [37, 'lit-ui-router-effect',     'packages/lit-ui-router-effect',      'pkg',  'line',    30,  200, `the effect bindings · annex ${ratio('packages/lit-ui-router-effect')}×`],
   // --- the prerender package, born 2026-09-14 (#806) -------------------------------
   [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   130,  178, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
@@ -137,29 +137,31 @@ export const PLACED = [
   // --- the signals trio and the shared snapshot, born 2026-10-12/13 (#1185) ---------
   [41, 'lit-ui-router-signals',    'packages/lit-ui-router-signals',     'pkg',  'line',   504,  180, `the signals bindings · annex ${ratio('packages/lit-ui-router-signals')}×`],
   // the cores and the private shared packages: one column east of the server's annex, clear of road A at y 45 and road F at y 115
-  [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   528,   -2, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
-  [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   528,   92, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
-  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   528,  122, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
-  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   660,  100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
+  [42, 'ui-router-signals',        'packages/ui-router-signals',         'pkg',  'line',   538,   -2, `the framework-agnostic signal mirror · annex ${ratio('packages/ui-router-signals')}×`],
+  [43, 'ui-router-effect',         'packages/ui-router-effect',          'pkg',  'line',   538,   92, `the framework-agnostic SubscriptionRef · annex ${ratio('packages/ui-router-effect')}×`],
+  [44, '@repo/route-snapshot',     'packages/shared/route-snapshot',     'pkg',  'line',   538,  122, `private · inlined into each consumer's dist by oxc-emit · annex ${ratio('packages/shared/route-snapshot')}×`],
+  [45, 'sample-app-lit-signals',   'apps/sample-app-lit-signals',        'app',  'line',   668,  100, 'the signals demo — no test script, the fifth app shell the docs site serves'],
   [46, '@tools/a11y',              'tools/a11y',                         'tool', 'report', 540,  508, 'axe over the docs pages and app mounts — acceptance, gates nothing'],
-  [47, 'ui-router-mobx',           'packages/ui-router-mobx',            'pkg',  'line',   528,   58, `the framework-agnostic MobX store · annex ${ratio('packages/ui-router-mobx')}×`],
+  [47, 'ui-router-mobx',           'packages/ui-router-mobx',            'pkg',  'line',   538,   58, `the framework-agnostic MobX store · annex ${ratio('packages/ui-router-mobx')}×`],
   // --- born 2026-10-15/16 (#1388, #1409) --------------------------------------------
   // the yard's south row, east of @tools/shared's annex and south of bundle-probe
-  [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 603, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
-  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   528,   27, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
+  [48, '@tools/ci-logs',           'tools/ci-logs',                      'tool', 'report', 295, 612, 'a CI run\'s task logs fetched into one file — run by hand, gates nothing'],
+  [49, '@repo/dev-gate',           'packages/shared/dev-gate',           'pkg',  'line',   538,   27, `private · both halves of each package's #dev-gate import, inlined by oxc-emit · annex ${ratio('packages/shared/dev-gate')}×`],
   [50, 'ui-router-registry',       'packages/ui-router-registry',        'pkg',  'line',   436,  256, `typed state names and params · types only · annex ${ratio('packages/ui-router-registry')}×`],
   // the yard's south-east lot, east of ci-logs' annex and south of bundle-probe's
-  [51, '@tools/release-ledger',    'tools/release-ledger',               'tool', 'report', 380, 590, 'the ledger\'s model — one fold over npm and GitHub'],
+  [51, '@tools/release-ledger',    'tools/release-ledger',               'tool', 'report', 392, 590, 'the ledger\'s model — one fold over npm and GitHub'],
   [52, 'release-diffs',            'www/release-diffs.lit-ui-router.dev', 'site', 'line',  885,  340, 'npm diff between two published versions, built once and kept in R2'],
-  [53, 'release-ledger',           'www/release-ledger.lit-ui-router.dev', 'site', 'line', 756,  252, 'OIDC claims in, a D1 ledger of every release out'],
+  [53, 'release-ledger',           'www/release-ledger.lit-ui-router.dev', 'site', 'line', 764,  252, 'OIDC claims in, a D1 ledger of every release out'],
   // --- born 2026-11-01/09 (#1793, #1840, #1956, #1769, #1663) ---------------------------
-  [54, '@repo/transition-status',  'packages/shared/transition-status',  'pkg',  'line',   528, 146, `private · the newest transition's status, inlined into each agnostic core by oxc-emit · annex ${ratio('packages/shared/transition-status')}×`],
+  [54, '@repo/transition-status',  'packages/shared/transition-status',  'pkg',  'line',   538, 146, `private · the newest transition's status, inlined into each agnostic core by oxc-emit · annex ${ratio('packages/shared/transition-status')}×`],
   // the yard's middle, on the lot build_and_test held before the summary left it
   [55, '@tools/turbo-summary',     'tools/turbo-summary',                'tool', 'report', 236, 400, 'every CI turbo run reported to the step summary — reports, gates nothing'],
   // under the eslint plugin, west of the registry
   [56, 'postcss-lit-html',         'packages/postcss-lit-html',          'pkg',  'line',   346, 256, `private · the PostCSS syntax stylelint reads lit templates through · annex ${ratio('packages/postcss-lit-html')}×`],
   [57, '@tools/doc-example-check', 'tools/doc-example-check',            'tool', 'report', 292,  494, 'type-checks the @example blocks in the packages\' doc comments'],
   [58, '@tools/md-content-mapper', 'tools/md-content-mapper',            'tool', 'report', 366,  494, 'type-checks the Markdown ts fences flagged check'],
+  // south of compat-guards, north of road G
+  [59, '@tools/cloudflare-api',    'tools/cloudflare-api',               'tool', 'report', 130,  596, 'the Cloudflare client under the deploy watch and the ledger worker — a redacting call and the Workers Builds settings'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -257,7 +259,7 @@ ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`
 // badges that would land on a neighbouring roof edge get lifted into clear air
 const BADGE_LIFT = { 1: 20, 2: 30, 6: 35, 10: 28, 16: 30, 20: 26, 21: 34, 23: 34, 27: 34 };
 // badges whose air above is a neighbour's mass sit centred on their own roof instead
-const BADGE_ON_ROOF = new Set([16, 19, 32, 34, 40]);
+const BADGE_ON_ROOF = new Set([16, 19, 32, 34, 40, 59]);
 
 // ---- roads ----------------------------------------------------------------------
 // Routed on the iso grid and trimmed in SCREEN space at both ends.  A block's roof
@@ -291,7 +293,7 @@ const roads = [
   road([[g(2).x2, 45], [g(5).x, 45]], { ...BUILDS, t1: g(5).y + g(5).s - 45 + 8 }),
   // 2 · apps ship into the shopfront: docs depends on sample-app-lit-vanilla,
   //    -mobx and -routes (and on ui-router-server).  turbo: docs dependsOn ^build.
-  road([[750, g(8).y2], [750, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
+  road([[758, g(8).y2], [758, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
   // 3 · @tools/oxc-emit is a devDependency of every packages/ member and runs both
   //    build passes (turbo build:js / build:types); drawn to the nearest of them,
   //    the prerender bridge, turning west under its annex to reach the src block,
@@ -425,7 +427,7 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the road register under the figure -->
-${[['A', ...pt(614, 45), -4, -8], ['B', ...pt(196, 275), -12, 3], ['C', ...pt(20, 250), -11, 4], ['D', ...pt(124, 300), 7, 4], ['E', ...pt(g(9).x + 26, 235), -12, 2], ['F', ...pt(615, 200), 8, 4], ['G', 196, 470, 0, 0]]
+${[['A', ...pt(614, 45), -4, -8], ['B', ...pt(196, 275), -12, 3], ['C', ...pt(20, 250), -11, 4], ['D', ...pt(124, 300), 7, 4], ['E', ...pt(g(9).x + 26, 222), -12, 2], ['F', ...pt(615, 200), 8, 4], ['G', ...pt(165, g(16).y + 15), -3, 13]]
   .map(([k, x, y, dx, dy]) => txt((x + dx).toFixed(0), (y + dy).toFixed(0), k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
@@ -469,7 +471,7 @@ ${lead(178, 497, g(12).x + g(12).s, g(12).y + g(12).s / 2, (g(12).ha + g(12).h) 
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'L',
+  num: 7, id: 'census', rev: 'M',
   title: 'THE MEASURED CITY',
   sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

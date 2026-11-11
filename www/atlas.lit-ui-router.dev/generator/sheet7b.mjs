@@ -390,7 +390,7 @@ ${leader(20, 612, 146, 418)}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'K',
+  num: '7B', id: 'working', rev: 'L',
   title: 'THE WORKING CITY',
   sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window ${WINDOW} · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

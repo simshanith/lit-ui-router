@@ -91,13 +91,13 @@ const hashmapSeeds = () => {
 // Trees copied wholesale by docs/.vitepress/vite.config.ts and addressed at
 // runtime by COMPUTED paths (`/images/${w}/${name}.png`, corpus names out of
 // a JSON index): no regex can see those edges, so the trees are seeded rather
-// than reported as hundreds of false orphans. `_headers` is a Cloudflare
-// deploy directive, read by the platform and never fetched. Orphan detection
+// than reported as hundreds of false orphans. `_headers` and `_redirects` are Cloudflare
+// deploy directives, read by the platform and never fetched. Orphan detection
 // is therefore a statement about HASHED BUILD OUTPUT.
 // absolute URLs (llms.txt, Link headers), crawlers and the worker's /releases pages address these, never a dist file;
 // an example's own `_redirects` is a deploy directive for the example hosted alone
 const MIRROR = (f) => f.endsWith('.md') || /^llms(-full)?\.txt$/.test(f);
-const PLATFORM = new Set(['_headers', 'robots.txt', 'sitemap.xml', 'release-pages.css', 'release-diff.js']);
+const PLATFORM = new Set(['_headers', '_redirects', 'robots.txt', 'sitemap.xml', 'release-pages.css', 'release-diff.js']);
 const DIRECTIVE = (f) => /^examples\/[^/]+\/_redirects$/.test(f);
 const SEEDED = (f) => f.startsWith('images/') || f.startsWith('static/') || f.startsWith('diagrams/') || MIRROR(f) || PLATFORM.has(f) || DIRECTIVE(f);
 
@@ -140,7 +140,7 @@ const PATTERNS = [
   ['markdown pages', /\.md$|^llms(-full)?\.txt$/],
   ['site css', /\.css$/],
   ['release diff', /^release-diff\.js$|^assets\/release-diff\//],
-  ['vp framework', /^assets\/chunks\/|^assets\/app\.[\w-]+\.js$|^hashmap\.json$|^_headers$|^robots\.txt$|^sitemap\.xml$/],
+  ['vp framework', /^assets\/chunks\/|^assets\/app\.[\w-]+\.js$|^hashmap\.json$|^_headers$|^_redirects$|^robots\.txt$|^sitemap\.xml$/],
   ['page chunks', /^assets\/[\w-]+\.md\.[\w-]+(\.lean)?\.js$/],
 ];
 const ORDER = [

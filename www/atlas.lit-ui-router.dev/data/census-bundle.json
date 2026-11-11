@@ -1,22 +1,22 @@
 {
   "ref": "origin/main",
-  "sha": "6ae72d27",
-  "commitDate": "2026-11-09T16:00:39-08:00",
-  "generatedAtTime": "2026-11-10T00:34:39.153Z",
+  "sha": "33cd7ce1",
+  "commitDate": "2026-11-10T23:54:03-08:00",
+  "generatedAtTime": "2026-11-11T18:38:02.373Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ 6ae72d27 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ 33cd7ce1 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
-    "vite 8.3.5"
+    "vite 8.3.7"
   ],
   "app": "apps/sample-app-lit-vanilla",
   "method": "generateBundle: module renderedLength scaled by its chunk gz/rendered ratio",
   "totals": {
     "chunks": 18,
-    "kept": 697133,
-    "emitted": 390989,
-    "gz": 127022
+    "kept": 697351,
+    "emitted": 391085,
+    "gz": 127056
   },
   "otherIds": [],
   "rows": [
@@ -24,14 +24,14 @@
     {"group":"@uirouter/visualizer","rendered":119622,"estGz":24734,"modules":1},
     {"group":"dompurify","rendered":65455,"estGz":12312,"modules":1},
     {"group":"lodash-es","rendered":64812,"estGz":7703,"modules":135},
-    {"group":"sample-app-shared","rendered":62165,"estGz":13301,"modules":41},
+    {"group":"sample-app-shared","rendered":62165,"estGz":13302,"modules":41},
     {"group":"marked","rendered":59541,"estGz":11200,"modules":1},
-    {"group":"lit-ui-router","rendered":43885,"estGz":8292,"modules":18},
-    {"group":"lit","rendered":34605,"estGz":8943,"modules":20},
+    {"group":"lit-ui-router","rendered":43885,"estGz":8293,"modules":18},
+    {"group":"lit","rendered":34605,"estGz":8944,"modules":20},
     {"group":"@api-viewer","rendered":25062,"estGz":4714,"modules":12},
     {"group":"router plugins","rendered":21344,"estGz":4324,"modules":5},
-    {"group":"app own src","rendered":11448,"estGz":2448,"modules":8},
-    {"group":"runtime helpers","rendered":5438,"estGz":1269,"modules":4},
+    {"group":"app own src","rendered":11448,"estGz":2449,"modules":8},
+    {"group":"runtime helpers","rendered":5656,"estGz":1300,"modules":4},
     {"group":"lit-dialog","rendered":2816,"estGz":608,"modules":1},
     {"group":"sample-app-routes","rendered":2346,"estGz":529,"modules":5}
   ]

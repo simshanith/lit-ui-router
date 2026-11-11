@@ -261,7 +261,7 @@ const NOTE = {
   14: 'no self-suite — it IS the d.ts test',
   15: SH.get(15).shadow?.join() === 'src/branch-ci-gate.ts,src/upload-bundle-stats.ts' ? 'the gate\'s core lit, both CLI wrappers in shadow' : guardFail(15, 'both CLI wrappers are in shadow and the gate\'s core is lit'),
   16: 'pale: exec.ts and workspace.ts',
-  17: 'trigger wrapper in shadow',
+  17: SH.get(17).shadow?.length === 0 ? 'the deploy watch, every file lit' : guardFail(17, 'every file is lit'),
   18: 'size probe, advisory · its cores lit',
   19: 'ranges.ts lit; the CI guards unmetered',
   20: 'the check lane, lit by its own suite',
@@ -302,6 +302,7 @@ const NOTE = {
   56: SH.get(56).shadow?.length === 0 ? 'private · the syntax, lit wall to wall' : guardFail(56, 'lit wall to wall'),
   57: SH.get(57).shadow?.length === 0 ? 'the example checker, every file lit' : guardFail(57, 'every file is lit'),
   58: `${SH.get(58).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
+  59: SH.get(59).shadow?.length === 0 ? 'the Cloudflare client, every file lit' : guardFail(59, 'every file is lit'),
 };
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 // №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
@@ -412,7 +413,7 @@ ${leader(594, YARD_Y - 4, X(g(16).x + g(16).s / 2), +Y(g(16).y + g(16).s) + 2)}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'J',
+  num: '7A', id: 'shadow', rev: 'K',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
