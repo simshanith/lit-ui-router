@@ -136,6 +136,40 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.headers.Link, '</app/a%3Cb%3E%22c%20d>; rel="canonical"');
   });
 
+  it('names the root canonical for a request target that carries no path', async () => {
+    const mw = createConnectMiddleware(
+      createServerRouter({
+        mounts: {
+          '/': {
+            routes: [
+              { name: 'home', url: '' },
+              { name: 'about', url: '/about' },
+            ],
+          },
+        },
+      }),
+    );
+
+    // An absolute-form target (a proxy's request line) may end at the authority.
+    for (const url of [
+      'http://example.test',
+      'http://example.test?ref=email',
+      '?ref=email',
+      '',
+    ]) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.headers.Link, '</>; rel="canonical"', url);
+      assert.deepEqual(h.nextArgs, [[]], url);
+    }
+
+    const h = harness({ url: 'http://example.test/about?ref=email#team' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.headers.Link, '</about>; rel="canonical"');
+  });
+
   it('strips validators and relabels the downstream status for a status’d shell', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app', status: 404 }),
