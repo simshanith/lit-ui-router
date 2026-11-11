@@ -76,7 +76,8 @@ CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm --filter @www/release-le
 ```
 
 Pass `<name>@<version>` releases in place of `--all` to claim only those, and
-`--dry-run` to print the claims without sending them. The token needs the
+`--dry-run` to print the claims without sending them, one JSON claim per line
+on stdout. The token needs the
 Queues Edit permission, which is what vouches for the claim; `--actor` is a
 label recorded in `claims.actor`, not checked. `/claims` never accepts a manual
 claim: it builds every claim's origin from the verified OIDC token.
