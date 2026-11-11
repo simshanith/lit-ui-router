@@ -51,7 +51,6 @@ customElements.define('routed-card', RoutedCard);
 
 /** A {@link PropsCard} declaring only `_uiViewProps`, the member's name before lit-ui-router 1.20. */
 export class UnderscoreCard extends PropsCard {
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps?: UIViewInjectedProps;
 

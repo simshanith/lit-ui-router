@@ -41,7 +41,6 @@ class NamedView extends StarView {
 /** Declares only the name earlier 1.x releases wrote. */
 @customElement('props-underscore-view')
 class UnderscoreView extends StarView {
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false }) _uiViewProps?: UIViewInjectedProps;
 
   get props() {
