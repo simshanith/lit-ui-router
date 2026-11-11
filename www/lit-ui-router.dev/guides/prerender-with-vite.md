@@ -143,7 +143,7 @@ router need to
 A site built with `vite build --base=/solar/` keeps its route table at `/`.
 Vite's `base` is a prefix the host adds in front of the site, and
 `ui-router-server` takes it off on the way in and puts it back on the way
-out ([adapter options](/packages/server#serving-under-a-base-path)). Three
+out ([adapter options](/packages/ui-router-server#serving-under-a-base-path)). Three
 places name it:
 
 - `index.html` declares `<base href="%BASE_URL%">` in its `<head>`, which
@@ -162,7 +162,7 @@ at `/` lists them base-free, so its script builds the same at any base;
 `pathsIncludeBase` overrides either default. Keying the table by the base
 without declaring it fails the build and `vite preview` with a message naming
 `createServerRouter({ base, mounts })`
-([both forms](/packages/server#serving-under-a-base-path)).
+([both forms](/packages/ui-router-server#serving-under-a-base-path)).
 
 ```ts
 export default definePrerender((site) => {

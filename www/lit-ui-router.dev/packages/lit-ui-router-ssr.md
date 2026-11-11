@@ -405,7 +405,7 @@ with no redirect rules.
 ## Under a base path
 
 `base` is the url path the site is served at, `/` by default, as for
-[`ui-router-server`'s prerender](/packages/server#emitting-a-static-site).
+[`ui-router-server`'s prerender](/packages/ui-router-server#emitting-a-static-site).
 The router builds its hrefs under its own `baseHref`, so build it with
 `installServerLocation(router, { baseHref: site.base })`; `prerender()`
 throws when a render settles the router where its links don't reach the page: `baseHref()` plus the router's url has to spell `base` plus the path. A response state's handler gets a request for
