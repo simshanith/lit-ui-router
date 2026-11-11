@@ -411,6 +411,15 @@ discussion (see the tool README).
 
 ### Automated review
 
+[Pullfrog](https://docs.pullfrog.com) is the first reviewer. Its GitHub App
+dispatches [`pullfrog.yml`](../.github/workflows/pullfrog.yml), which runs the
+review on a free OpenCode Zen model named in that workflow; no other provider
+key reaches the job, so nothing metered can run. Which PRs it reviews is set in
+the Pullfrog console, and what it looks for in
+[`.github/pullfrog/review.md`](../.github/pullfrog/review.md). Comment
+`@pullfrog` on a PR to ask for a run; only collaborators can. It comments and
+cannot push or approve, and like CodeRabbit it is advisory.
+
 [CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
 the free OSS tier meters reviews, so they are worth spending deliberately. Label
 a PR `coderabbit:review` to ask for one; it is one-shot, and
