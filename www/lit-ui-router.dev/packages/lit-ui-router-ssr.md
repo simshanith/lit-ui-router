@@ -830,6 +830,41 @@ await bootstrap(router, root, page(router), {
 });
 ```
 
+### Tracing hydration
+
+`@uirouter/core`'s trace logs hydration too, so `router.trace.enable(...)` is the one switch for watching a page wake:
+
+- **`UIVIEW`:** each served view logs its outcome once, through core's `traceUIViewEvent`: `Adopted`, `Fell back` with the cause, or `Rendered cold` for a view with nothing to adopt.
+- **`TRANSITION`:** `bootstrap` logs how the boot compared with the document's hydration signature, the state it was drawn for and the state it booted into, and each view's outcome.
+- **`RESOLVE`:** `bootstrap` logs which resolves the boot transition adopted from the payload and which re-run on the client.
+
+```ts
+router.trace.enable('UIVIEW', 'TRANSITION', 'RESOLVE');
+await bootstrap(router, root, page(router));
+```
+
+```text
+Transition #0-0:         Seeded from payload: adopted [app.contacts.contacts], re-runs []
+ui-view: Adopted                        [ui-view#0 lit:$default ($default@(root))] for state='app'
+ui-view: Adopted                        [ui-view#1 lit:$default.$default ($default@app)] for state='app.contacts'
+bootstrap: adopted, signature matched (drawn for 'app.contacts', booted into 'app.contacts'), views: $default=adopted $default.$default=adopted
+```
+
+Core's own lines for those categories interleave with these. Like them, these lines are gated at runtime rather than folded out of the production build, so a deployed page can turn them on.
+
+The trace is a module singleton, so it reaches the prerender script's router too. With `TRANSITION` on there, `prerender` logs one line per listed path: its verdict kind, the state its render landed on, any redirect, and the resolves it dehydrated:
+
+```ts
+router.trace.enable('TRANSITION');
+await prerender({ router, mounts, paths, outDir, renderShell, dehydrate: {} });
+```
+
+```text
+prerender: '/contacts' shell, landed 'app.contacts', dehydrated [app.contacts.contacts]
+prerender: '/old' redirect, redirect 302 '/contacts'
+prerender: '/api/health' delegate
+```
+
 ### Routed class views
 
 [`UiViewRenderer`](/reference/lit-ui-router-ssr/index/classes/UiViewRenderer) draws a

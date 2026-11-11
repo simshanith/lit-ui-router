@@ -8,7 +8,13 @@
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
-import { isFunction, isString, RejectType } from '@uirouter/core';
+import {
+  isFunction,
+  isString,
+  RejectType,
+  stringify,
+  trace,
+} from '@uirouter/core';
 import type { StateObject, Transition } from '@uirouter/core';
 import { noChange, render } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
@@ -19,7 +25,11 @@ import { provideContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import type { UIRouterLit } from 'lit-ui-router/pure';
 import { seed } from 'ui-router-server/ssr/client';
-import type { ResolvePayload, SeedOptions } from 'ui-router-server/ssr/client';
+import type {
+  ResolvePayload,
+  SeedOptions,
+  SeedReport,
+} from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
 import type { AdoptableView } from './adopt-context.js';
@@ -280,6 +290,8 @@ const report = (
   // `onAdopt` reports views; a light element's outcome is its event alone.
   if (light) return;
 
+  traceAdopt(view, outcome, cause);
+
   try {
     reporter?.(view, outcome, cause);
   } catch (thrown) {
@@ -289,6 +301,37 @@ const report = (
 
     globalThis.reportError(thrown);
   }
+};
+
+/** A thrown value as a trace line shows it: an `Error` by its message, anything else as core's trace writes it. */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a thrown value, as the platform reports one
+const traceString = (value: unknown): string =>
+  value instanceof Error ? value.toString() : stringify(value);
+
+/** The event core's `UIVIEW` trace names each wake outcome by. */
+const adoptTraceEvent = {
+  adopted: 'Adopted',
+  'fell-back': 'Fell back',
+  none: 'Rendered cold',
+} as const;
+
+const traceAdopt = (
+  view: Element,
+  outcome: AdoptOutcome,
+  cause: unknown,
+): void => {
+  if (!(view instanceof UiView) || !trace.enabled('UIVIEW')) return;
+  const { uiViewData, viewContext } = view;
+
+  if (!uiViewData) return;
+  const state = viewContext?.name;
+
+  trace.traceUIViewEvent(
+    adoptTraceEvent[outcome],
+    uiViewData,
+    (state === undefined ? '' : ` for state='${state}'`) +
+      (outcome === 'fell-back' ? `, cause: ${traceString(cause)}` : ''),
+  );
 };
 
 const warnMismatch = (
@@ -954,7 +997,7 @@ export interface BootstrapResult {
 
 /**
  * {@link bootstrap}'s options: {@link HydrateRootOptions}, plus the boot
- * transition's seed and the `transport` handed to `seed` with it.
+ * transition's seed, and the `transport` and `onSeed` handed to `seed` with it.
  */
 export interface BootstrapOptions extends HydrateRootOptions, SeedOptions {
   /**
@@ -1295,9 +1338,17 @@ export async function bootstrap(
   value: unknown,
   options: BootstrapOptions = {},
 ): Promise<BootstrapResult> {
-  const { onAdopt, payload, transport, ...renderOptions } = options;
+  const { onAdopt, onSeed, payload, transport, ...renderOptions } = options;
   const served = readHydrationSignature(container);
-  const disarm = seed(router, payload ?? payloadIn(served), { transport });
+
+  const disarm = seed(router, payload ?? payloadIn(served), {
+    transport,
+    onSeed: (transition, report) => {
+      traceSeed(transition, report);
+      onSeed?.(transition, report);
+    },
+  });
+
   const signature = readAdoptable(container);
 
   if (!signature) {
@@ -1306,26 +1357,64 @@ export async function bootstrap(
     disarm();
     await nextTask();
 
-    return {
+    return traceBoot(router, served, {
       outcome: 'cold',
       signature: compareSignature(served, landing, router),
       views: new Map(),
       ...pickError(landing),
-    };
+    });
   }
 
   const rearm = holdAsleepWarnings(container);
 
   try {
-    return await bootServed(router, container, value, signature, {
-      onAdopt,
-      renderOptions,
-      disarm,
-    });
+    return traceBoot(
+      router,
+      served,
+      await bootServed(router, container, value, signature, {
+        onAdopt,
+        renderOptions,
+        disarm,
+      }),
+    );
   } finally {
     rearm();
   }
 }
+
+/** Logs what the seed adopted under core's `RESOLVE` trace, beside core's own resolve lines. */
+const traceSeed = (
+  transition: Transition,
+  { matched, adopted, rerun }: SeedReport,
+): void => {
+  if (!trace.enabled('RESOLVE')) return;
+  console.log(
+    `Transition #${transition.$id}-${transition.router.$id}:         Seeded from payload: ` +
+      (matched
+        ? `adopted [${adopted.join(', ')}], re-runs [${rerun.join(', ')}]`
+        : `drawn for another transition, re-runs [${rerun.join(', ')}]`),
+  );
+};
+
+/** Logs the boot's comparison with the document's signature when core's `TRANSITION` trace is on. */
+const traceBoot = (
+  router: UIRouterLit,
+  served: HydrationSignature | null,
+  result: BootstrapResult,
+): BootstrapResult => {
+  if (!trace.enabled('TRANSITION')) return result;
+  const { outcome, signature, views, error } = result;
+  const drawn = served ? `drawn for '${String(served.state)}', ` : '';
+  const viewList = [...views].map(([fqn, view]) => `${fqn}=${view.outcome}`);
+
+  console.log(
+    `bootstrap: ${outcome}, signature ${signature} (${drawn}booted into '${router.globals.current.name || '(root)'}')` +
+      (viewList.length > 0 ? `, views: ${viewList.join(' ')}` : '') +
+      (error === undefined ? '' : `, error: ${traceString(error)}`),
+  );
+
+  return result;
+};
 
 /** {@link bootstrap} over a document it adopts: the boot transition, then the walk, then the views it woke. */
 const bootServed = async (

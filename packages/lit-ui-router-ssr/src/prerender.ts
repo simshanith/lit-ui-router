@@ -10,6 +10,7 @@ import { prerender as prerenderSite } from 'ui-router-server/prerender';
 import type {
   EmittedPage,
   FileWriter,
+  PathReport,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
@@ -38,6 +39,7 @@ import type { BoundResponses } from './respond.js';
 export type {
   EmittedPage,
   FileWriter,
+  PathReport,
   PrerenderTally,
   RedirectLine,
   RenderedRedirect,
@@ -83,6 +85,32 @@ const checkSettled = (
 
   throw new Error(
     `prerender: the router settled '${path}' at '${linked}', but the page is served at '${served}'; build the router with installServerLocation(router, { baseHref: ${suggested === undefined ? 'site.base' : `'${suggested}'`} })`,
+  );
+};
+
+/** What the trace adds to a path's report: where its render landed and what it dehydrated. */
+interface Landing {
+  state?: string;
+  tokens?: string[];
+}
+
+const tokensOf = ({ resolves }: ResolvePayload): string[] =>
+  Object.entries(resolves).flatMap(([state, tokens]) =>
+    Object.keys(tokens).map((token) => `${state}.${token}`),
+  );
+
+// One line per path under core's `TRANSITION` trace, in core's `console.log` style.
+const tracePath = (
+  router: UIRouterLit,
+  { path, verdict, redirect }: PathReport,
+  { state, tokens }: Landing,
+): void => {
+  if (!router.trace.enabled('TRANSITION')) return;
+  console.log(
+    `prerender: '${path}' ${verdict.kind}` +
+      (state === undefined ? '' : `, landed '${state}'`) +
+      (redirect ? `, redirect ${redirect.status} '${redirect.location}'` : '') +
+      (tokens ? `, dehydrated [${tokens.join(', ')}]` : ''),
   );
 };
 
@@ -433,17 +461,18 @@ export async function prerender(
 
   const reports = new Map<string, PagePayload>();
 
+  // The path being handled; renders run one at a time, and `onPath` follows each.
+  let landing: Landing = {};
+
   const renderTemplate = (
     body: TemplateResult,
     context: RenderContext,
   ): string => {
-    const page = renderDrawn(
-      body,
-      router,
-      root,
-      elementRenderers,
-      drawLanded(context),
-    );
+    const drawn = drawLanded(context);
+
+    if (drawn.payload) landing.tokens = tokensOf(drawn.payload);
+
+    const page = renderDrawn(body, router, root, elementRenderers, drawn);
 
     if (page.payload) reports.set(context.file, page.payload);
 
@@ -457,6 +486,10 @@ export async function prerender(
     const context: RenderContext = { ...siteContext, root };
     const before = lastLanded();
     const body = await renderShell(verdict, context);
+    const landed = lastLanded();
+
+    if (landed !== before) landing.state = landed?.$to().name;
+
     const redirect = redirectOf(verdict, before);
 
     if (redirect) return redirect;
@@ -480,10 +513,18 @@ export async function prerender(
           `prerender: '${path}' matched response state '${verdict.state}'; pass \`responses\` to answer it`,
         );
 
+      landing.state = verdict.state;
+
       return responder(router, responses)(
         verdict,
         new Request(new URL(`${base.replace(/\/+$/, '')}${path}`, origin)),
       );
+    };
+
+    const onPath = (report: PathReport): void => {
+      tracePath(router, report, landing);
+      landing = {};
+      site.onPath?.(report);
     };
 
     const result = await prerenderSite({
@@ -491,6 +532,7 @@ export async function prerender(
       render: renderLit,
       respond,
       write,
+      onPath,
     });
 
     const pages = result.pages.map((page): PrerenderedPage => {

@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
 import { getByRole, getByText } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
@@ -13,6 +13,7 @@ import {
   shadowRoot,
   text,
 } from '@tools/lit-test-env/ssr-tree.ts';
+import { trace } from '@uirouter/core';
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
@@ -1178,6 +1179,55 @@ describe('the dehydrate option', () => {
     await expect(
       plates(['/plate/7B'], { dehydrate: {}, payload: () => undefined }),
     ).rejects.toThrow('pass `dehydrate` or `payload`, not both');
+  });
+});
+
+describe('the TRANSITION trace', () => {
+  afterEach(() => {
+    trace.disable();
+    vi.restoreAllMocks();
+  });
+
+  it('logs each path once: its verdict, landing state, redirect and dehydrated tokens', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const reported: string[] = [];
+    trace.enable('TRANSITION');
+
+    await plates(['/plate/7B', '/plain', '/old', '/nowhere'], {
+      dehydrate: { shouldDehydrate: ({ token }) => token === 'title' },
+      mounts: {
+        '/': {
+          routes: [
+            { name: 'plate', url: '/plate/:num' },
+            { name: 'plain', url: '/plain' },
+            { name: 'old', url: '/old', redirectTo: 'plain' },
+          ],
+          config: { strict: false },
+        },
+      },
+      onPath: ({ path }) => reported.push(path),
+    });
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.startsWith('prerender: ')),
+    ).toEqual([
+      "prerender: '/plate/7B' shell, landed 'plate', dehydrated [plate.title]",
+      "prerender: '/plain' shell, landed 'plain'",
+      "prerender: '/old' redirect, redirect 302 '/plain'",
+      "prerender: '/nowhere' notFound",
+    ]);
+    expect(reported).toEqual(['/plate/7B', '/plain', '/old', '/nowhere']);
+  });
+
+  it('logs nothing with the trace off', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await plates(['/plate/7B'], { dehydrate: {} });
+
+    expect(log).not.toHaveBeenCalled();
   });
 });
 
