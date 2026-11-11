@@ -31,7 +31,7 @@ export default definePrerender((site) => {
       LightElementRenderer,
       LitElementRenderer,
     ],
-    // `{}` turns dehydration on with its defaults: each page embeds its resolved data, which the client adopts instead of running the resolves again.
+    // `{}` dehydrates with defaults: each page embeds its resolved data; client adopts the resolves instead of rerunning
     dehydrate: {},
     renderShell: async (_verdict, { path }) => {
       await settle(router, path);
