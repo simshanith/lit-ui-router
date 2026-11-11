@@ -44,6 +44,10 @@ export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
 
 export { routeTrie } from './route-trie.ts';
 
+export { routesFromStates } from './state-routes.ts';
+
+export type { StateRoutes } from './state-routes.ts';
+
 declare module '@uirouter/core' {
   interface StateDeclaration {
     /** The host handler key a server adapter answers this state's url with (see {@link RouteDeclaration.delegate}). */

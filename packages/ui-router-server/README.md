@@ -53,6 +53,41 @@ owns but no state matches is that mount's 404, which `serveNotFound` can answer 
 404 page. See
 [when to use it](https://lit-ui-router.dev/packages/ui-router-server#when-to-use-it).
 
+## Sharing states with the client
+
+Keep one data-only module of names, urls and redirects. The client spreads each entry into a state
+and adds its component and resolves; the server compiles its mount from the same module with
+`routesFromStates`:
+
+```ts
+// states.ts: data only, so vite.config.ts and a Worker can import it.
+import type { StateDeclaration } from '@uirouter/core';
+
+export const states = [
+  { name: 'planets', url: '/' },
+  { name: 'planet', url: '/planets/:planetId' },
+  { name: 'legacy', url: '/legacy', redirectTo: 'planets' },
+  { name: 'notFound' },
+] as const satisfies readonly StateDeclaration[];
+```
+
+```ts
+// vite.config.ts
+import { createServerRouter, routesFromStates } from 'ui-router-server';
+
+import { states } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': { routes: routesFromStates(states), otherwise: { state: 'notFound' } },
+  },
+});
+```
+
+Each route keeps only the fields a mount reads, and a function or `TargetState` `redirectTo`, or an
+abstract state with a url, throws at the call. See
+[sharing states with the client](https://lit-ui-router.dev/packages/ui-router-server#sharing-states-with-the-client).
+
 ## After `vite build`
 
 `serverRouterPlugin` prerenders the built app after `vite build`, through a prerender script whose
