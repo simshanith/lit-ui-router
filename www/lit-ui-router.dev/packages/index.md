@@ -6,7 +6,7 @@ type: index
 
 # Companion Packages
 
-`lit-ui-router` is the core package. **Companion packages** layer optional
+[`lit-ui-router`](/packages/lit-ui-router) is the core package. **Companion packages** layer optional
 integrations on top of it — each is published and versioned independently and
 depends on the core only as a peer, so you add exactly the ones you need and
 nothing you don't.

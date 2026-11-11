@@ -14,6 +14,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { llmsPlugins } from './llms.ts';
 import { redirectsPlugin } from './redirects.ts';
+import { referenceIndexPlugin } from './reference-index.ts';
 
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
@@ -268,6 +269,8 @@ function diffHighlighterPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
+    // Ahead of the llms plugin, which reads each page's source.
+    referenceIndexPlugin(),
     ...llmsPlugins(),
     chunkSizePlugin(),
     releasePagesStylesheetPlugin(),

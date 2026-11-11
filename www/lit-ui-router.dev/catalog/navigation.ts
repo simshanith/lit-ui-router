@@ -77,8 +77,9 @@ export const guideGroups = GUIDE_TOPICS.map(({ id, label }) => ({
   items: GUIDES[id],
 }));
 
-// Keyed by role, so a new role fails typecheck until it has a group; the renderer is no companion.
-const COMPANIONS: Record<Exclude<Role, 'renderer'>, SidebarEntry[]> = {
+// Keyed by role, so a new role fails typecheck until it has a group.
+const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
+  renderer: [{ text: 'lit-ui-router', link: '/packages/lit-ui-router' }],
   reactivity: [
     {
       text: 'Effect',
@@ -133,10 +134,12 @@ const COMPANIONS: Record<Exclude<Role, 'renderer'>, SidebarEntry[]> = {
   ],
 };
 
-/** The Companion Packages sidebar groups, labelled and ordered by the catalog's roles. */
-export const companionGroups = ROLES.flatMap(({ id, label }) =>
-  id === 'renderer' ? [] : [{ role: id, text: label, items: COMPANIONS[id] }],
-);
+/** The Packages sidebar groups, labelled and ordered by the catalog's roles. */
+export const packageGroups = ROLES.map(({ id, label }) => ({
+  role: id,
+  text: label,
+  items: PACKAGE_PAGES[id],
+}));
 
 type AppMount = Extract<keyof typeof mounts, `/app${string}`>;
 
@@ -207,11 +210,11 @@ export const SIDEBAR: SidebarEntry[] = [
   },
   { text: 'Releases', link: '/releases/', target: '_self', items: [] },
   {
-    text: 'Companion Packages',
+    text: 'Packages',
     collapsed: true,
     items: [
       { text: 'Overview', link: '/packages/' },
-      ...companionGroups.map(({ text, items }) => ({
+      ...packageGroups.map(({ text, items }) => ({
         text,
         collapsed: false,
         items,
