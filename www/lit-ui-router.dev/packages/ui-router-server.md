@@ -905,6 +905,12 @@ router that declares one, and lie under it with it taken off otherwise;
 `pathsIncludeBase` overrides that
 ([serving under a base path](#serving-under-a-base-path)).
 
+`result.pages` and the reports `onPath` receives carry no base: a path is as
+it was listed, and a redirect's `location` is as the route table spells it.
+`withBase(base, path)`, exported from this entry, spells one as the host
+serves it. `base` ends with its slash; under `/`, and for a full url or a
+relative path, the path comes back as written.
+
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
