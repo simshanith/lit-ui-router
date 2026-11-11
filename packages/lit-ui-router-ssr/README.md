@@ -684,6 +684,8 @@ prerender: '/old' redirect, redirect 302 '/contacts'
 prerender: '/api/health' delegate
 ```
 
+The path is as it was listed. A redirect's target is as the host serves it, so under a `base` other than `/` it carries the base and the line says so: `prerender: '/old' redirect, redirect 302 '/solar/contacts' (with base '/solar/')`. The report the caller's own `onPath` receives stays base-free.
+
 ### Light-DOM elements
 
 A consumer's own `LitElement` that renders into its light DOM opts in to the same sleep-then-adopt

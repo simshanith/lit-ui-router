@@ -6,7 +6,10 @@ import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter } from 'lit-ui-router/context';
 import { isString } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
-import { prerender as prerenderSite } from 'ui-router-server/prerender';
+import {
+  prerender as prerenderSite,
+  withBase,
+} from 'ui-router-server/prerender';
 import type {
   EmittedPage,
   FileWriter,
@@ -99,9 +102,19 @@ const tokensOf = ({ resolves }: ResolvePayload): string[] =>
     Object.keys(tokens).map((token) => `${state}.${token}`),
   );
 
+// The report's target is base-free; the line names it as the host serves it, and says so when the base changed it.
+const servedTarget = (base: string, location: string): string => {
+  const served = withBase(`${trimmed(base)}/`, location);
+
+  return served === location
+    ? `'${location}'`
+    : `'${served}' (with base '${trimmed(base)}/')`;
+};
+
 // One line per path under core's `TRANSITION` trace, in core's `console.log` style.
 const tracePath = (
   router: UIRouterLit,
+  base: string,
   { path, verdict, redirect }: PathReport,
   { state, tokens }: Landing,
 ): void => {
@@ -109,7 +122,9 @@ const tracePath = (
   console.log(
     `prerender: '${path}' ${verdict.kind}` +
       (state === undefined ? '' : `, landed '${state}'`) +
-      (redirect ? `, redirect ${redirect.status} '${redirect.location}'` : '') +
+      (redirect
+        ? `, redirect ${redirect.status} ${servedTarget(base, redirect.location)}`
+        : '') +
       (tokens ? `, dehydrated [${tokens.join(', ')}]` : ''),
   );
 };
@@ -522,7 +537,7 @@ export async function prerender(
     };
 
     const onPath = (report: PathReport): void => {
-      tracePath(router, report, landing);
+      tracePath(router, base, report, landing);
       landing = {};
       site.onPath?.(report);
     };

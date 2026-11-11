@@ -1222,6 +1222,35 @@ describe('the TRANSITION trace', () => {
     expect(reported).toEqual(['/plate/7B', '/plain', '/old', '/nowhere']);
   });
 
+  it('names a redirect target as the host serves it under a base, the listed path and the report as written', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const reported: unknown[] = [];
+    trace.enable('TRANSITION');
+
+    await plates(['/old'], {
+      base: '/solar/',
+      mounts: {
+        '/': {
+          routes: [
+            { name: 'plain', url: '/plain' },
+            { name: 'old', url: '/old', redirectTo: 'plain' },
+          ],
+          config: { strict: false },
+        },
+      },
+      onPath: ({ path, redirect }) => reported.push([path, redirect?.location]),
+    });
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.startsWith('prerender: ')),
+    ).toEqual([
+      "prerender: '/old' redirect, redirect 302 '/solar/plain' (with base '/solar/')",
+    ]);
+    expect(reported).toEqual([['/old', '/plain']]);
+  });
+
   it('logs nothing with the trace off', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 

@@ -865,6 +865,8 @@ prerender: '/old' redirect, redirect 302 '/contacts'
 prerender: '/api/health' delegate
 ```
 
+The path is as it was listed. A redirect's target is as the host serves it, so under a `base` other than `/` it carries the base and the line says so: `prerender: '/old' redirect, redirect 302 '/solar/contacts' (with base '/solar/')`. The report the caller's own `onPath` receives stays base-free.
+
 ### Routed class views
 
 [`UiViewRenderer`](/reference/lit-ui-router-ssr/index/classes/UiViewRenderer) draws a
