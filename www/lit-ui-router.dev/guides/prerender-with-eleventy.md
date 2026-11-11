@@ -21,11 +21,15 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
 - [`src/app.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/app.ts)
   holds the components, the states, `configure(router)` and `page(router)`,
   the template both halves render.
-- [`src/route-table.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/route-table.ts)
-  is the route table: the same names and urls as plain data, and the paths to
-  emit.
+- [`src/routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/routes.ts)
+  holds the states as data: names, urls, the redirect, `otherwise` and
+  `strict`. `src/app.ts` spreads it into the states it registers, and the
+  server's mount compiles it, so the two halves can't drift.
+- [`src/bodies.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/bodies.ts)
+  holds the solar-system data.
 - [`src/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/prerender.ts)
-  runs one `prerender()` over those paths and returns the pages and rules.
+  runs one `prerender()` over a path per body, plus `/` and `/legacy`, and
+  returns the pages and rules.
 - [`site/`](https://github.com/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-eleventy/site)
   is Eleventy's input: a template per output kind, and the layout.
 - [`src/client.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/client.ts)
@@ -49,7 +53,7 @@ skips the `_redirects` file, leaving the redirect lines on the result:
 const result = await prerender({
   mounts,
   router,
-  paths,
+  paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
   outDir: '',
   rules: 'none',
   dehydrate: {},
