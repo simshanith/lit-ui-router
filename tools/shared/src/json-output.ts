@@ -95,11 +95,12 @@ export function withoutJsonFlags(argv: readonly string[]): string[] {
 export async function writeJsonOutput(
   output: JsonOutput,
   text: string,
+  stdout: NodeJS.WritableStream = process.stdout,
 ): Promise<void> {
   if (output.kind === 'none') return;
 
   if (output.kind === 'stdout') {
-    process.stdout.write(text);
+    stdout.write(text);
 
     return;
   }

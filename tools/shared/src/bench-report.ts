@@ -1,12 +1,12 @@
 // Bench result files in github-action-benchmark's customSmallerIsBetter shape.
 // Typed structurally against tinybench so this package needs no tinybench dependency.
 
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { Console } from 'node:console';
 
 import { defaultExec } from './exec.ts';
 import type { Exec } from './exec.ts';
-import { jsonOutput } from './json-output.ts';
+import { jsonOutput, writeJsonOutput } from './json-output.ts';
+import type { JsonOutput } from './json-output.ts';
 
 /** The latency slice of a tinybench result; tinybench reports milliseconds. */
 export interface BenchLatency {
@@ -88,21 +88,6 @@ export function benchEntries(
   });
 }
 
-/** `--json-out <path>` when given, else `defaultPath`; a bench prints its table on stdout, so stdout is refused. */
-export function benchReportPath(
-  argv: readonly string[],
-  defaultPath: string,
-): string {
-  const output = jsonOutput(argv, { defaultPath });
-
-  if (output.kind === 'stdout')
-    throw new Error(
-      'a bench prints its table on stdout; write the report with --json-out <path>',
-    );
-
-  return output.path;
-}
-
 /** This run's metadata; `sha` is GITHUB_SHA, else the checkout's HEAD, else null. */
 export async function benchRun(
   exec: Exec = defaultExec,
@@ -154,33 +139,54 @@ export function benchBudget(
   return { time, warmupTime: time / 4 };
 }
 
-/** Options for {@link writeBenchReport}. */
+/** Options for {@link benchReport}. */
 export interface BenchReportOptions {
-  /** Where the file lands without `--json-out <path>`: the package's gitignored `.cache/`. */
+  /** Where the file lands without `--json` or `--json-out`: the package's gitignored `.cache/`. */
   defaultPath: string;
   /** Route-table size per task; defaults to {@link sizeFromName}. */
   sizeOf?: (name: string) => number;
   argv?: readonly string[];
   exec?: Exec;
   env?: NodeJS.ProcessEnv;
+  stdout?: NodeJS.WritableStream;
+  stderr?: NodeJS.WritableStream;
 }
 
-/** Writes the entries as a JSON array and returns the path written. */
-export async function writeBenchReport(
-  tasks: readonly BenchTask[],
-  {
-    defaultPath,
-    sizeOf,
-    argv = process.argv,
-    exec = defaultExec,
-    env = process.env,
-  }: BenchReportOptions,
-): Promise<string> {
-  const path = benchReportPath(argv, defaultPath);
-  const entries = benchEntries(tasks, await benchRun(exec, env), sizeOf);
+/** A bench's report destination, read from its arguments before the bench runs. */
+export interface BenchReport {
+  output: Exclude<JsonOutput, { kind: 'none' }>;
+  /** The human output: stdout, or stderr when the report takes stdout. */
+  console: Console;
+  /** Writes the entries as a JSON array, naming the file on {@link BenchReport.console}. */
+  write(tasks: readonly BenchTask[]): Promise<void>;
+}
 
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(entries, null, 2)}\n`);
+/** Resolves `--json` / `--json-out` up front, so a bad flag fails before the bench runs. */
+export function benchReport({
+  defaultPath,
+  sizeOf,
+  argv = process.argv,
+  exec = defaultExec,
+  env = process.env,
+  stdout = process.stdout,
+  stderr = process.stderr,
+}: BenchReportOptions): BenchReport {
+  const output = jsonOutput(argv, { defaultPath });
+  const human = new Console(output.kind === 'stdout' ? stderr : stdout);
 
-  return path;
+  return {
+    output,
+    console: human,
+    async write(tasks) {
+      const entries = benchEntries(tasks, await benchRun(exec, env), sizeOf);
+
+      await writeJsonOutput(
+        output,
+        `${JSON.stringify(entries, null, 2)}\n`,
+        stdout,
+      );
+
+      if (output.kind === 'file') human.log(`wrote ${output.path}`);
+    },
+  };
 }

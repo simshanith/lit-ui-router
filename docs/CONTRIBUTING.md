@@ -386,7 +386,7 @@ resolves the sample app's route table through `ui-router-server`.
   it times stale code.
 - Alternate the versions on one machine (A, B, A, B) and keep every run's
   report. Each run overwrites `apps/sample-app-routes/.cache/routes-bench.json`
-  unless given `--json-out <path>`; `BENCH_TIME_MS` sets tinybench's time budget
+  unless given `--json-out <path>`, or `--json` for stdout; `BENCH_TIME_MS` sets tinybench's time budget
   per task. A single run, or a CI run compared against a local one, is not
   evidence.
 - Judge a gap against how much the same task moves between runs, not against
