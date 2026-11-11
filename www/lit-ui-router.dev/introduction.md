@@ -116,7 +116,7 @@ you need to start; the companions are optional layers.
 
 | Package                                                                                                 | What it is                                                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`lit-ui-router`](https://npmx.dev/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./reference/lit-ui-router/)                                            |
+| [`lit-ui-router`](https://npmx.dev/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [Guide →](./packages/lit-ui-router) [API →](./reference/lit-ui-router/)        |
 | [`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/lit-ui-router-mobx)                                                   |
 | [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)                                 | [Effect](https://effect.website) bindings: a `SubscriptionRef` of the route and ref-following controllers. [Guide →](./packages/lit-ui-router-effect)                                        |
 | [`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)                               | [TC39 Signals](https://github.com/tc39/proposal-signals) bindings: watcher-based controllers over `ui-router-signals`. [Guide →](./packages/lit-ui-router-signals)                           |
@@ -146,7 +146,7 @@ the page url has `?visualizer`, as in
   ([Hello Galaxy](./tutorial/hellogalaxy)). Each step runs live on StackBlitz.
 - **[Guides](./guides/)** — focused, task-oriented pages on URLs and location,
   transitions and guards, and reactivity.
-- **[API](./reference/)** — an overview plus a generated reference for each runtime
+- **[API](./reference/)** — a generated reference for each runtime
   package; the ESLint plugin's rules are documented on its
   [package page](./packages/eslint-plugin-lit-ui-router).
 - **[Sample app](./sample-app)** — one non-trivial application written in four
