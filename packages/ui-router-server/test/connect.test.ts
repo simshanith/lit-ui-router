@@ -385,3 +385,90 @@ describe('createConnectMiddleware', () => {
     }
   });
 });
+
+describe('createConnectMiddleware under a base', () => {
+  const router = createServerRouter({
+    mounts: {
+      '/': {
+        routes: [
+          { name: 'home', url: '/' },
+          { name: 'about', url: '/about' },
+          { name: 'legacy', url: '/legacy', redirectTo: 'about' },
+        ],
+      },
+    },
+  });
+
+  const mw = createConnectMiddleware(router, { base: '/solar/' });
+
+  it('matches the url with the base taken off and serves the shell at the base', async () => {
+    const h = harness({ url: '/solar/about?x=1' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.req.url, '/solar/');
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.equal(h.headers.Link, '</solar/>; rel="canonical"');
+  });
+
+  it('serves the base itself, with or without its trailing slash', async () => {
+    for (const url of ['/solar/', '/solar']) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.req.url, '/solar/');
+    }
+  });
+
+  it('puts the base back on a redirect Location', async () => {
+    const h = harness({ url: '/solar/legacy?ref=x' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.writeHead, [
+      { status: 302, rest: [{ Location: '/solar/about?ref=x' }] },
+    ]);
+  });
+
+  it('passes a request outside the base through untouched', async () => {
+    for (const url of ['/legacy', '/solarium/about']) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.req.url, url);
+      assert.deepEqual(h.nextArgs, [[]]);
+      assert.deepEqual(h.writeHead, []);
+    }
+  });
+
+  it('leaves an absolute redirect target as written', async () => {
+    const away = createConnectMiddleware(
+      routerOf({
+        kind: 'redirect',
+        mount: '/',
+        location: 'https://example.com/x',
+        status: 301,
+      }),
+      { base: '/solar' },
+    );
+
+    const h = harness({ url: '/solar/x' });
+    away(h.req, h.res, h.next);
+    await h.done;
+    assert.deepEqual(h.writeHead, [
+      { status: 301, rest: [{ Location: 'https://example.com/x' }] },
+    ]);
+  });
+
+  it('rejects a relative or full-URL base', () => {
+    for (const base of ['./', '', 'solar/'])
+      assert.throws(
+        () => createConnectMiddleware(router, { base }),
+        /is relative/,
+      );
+
+    for (const base of ['https://cdn.example.com/solar/', '//cdn/solar/'])
+      assert.throws(
+        () => createConnectMiddleware(router, { base }),
+        /is a full URL/,
+      );
+  });
+});

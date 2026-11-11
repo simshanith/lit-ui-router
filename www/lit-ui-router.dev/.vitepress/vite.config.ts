@@ -13,6 +13,7 @@ import { build, defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { llmsPlugins } from './llms.ts';
+import { redirectsPlugin } from './redirects.ts';
 
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
@@ -284,6 +285,7 @@ export default defineConfig({
         next();
       },
     }),
+    redirectsPlugin(),
     examplesIndexPlugin(),
     // static-copy v4 matches files only and always preserves source directory
     // structure; stripBase drops the node_modules/<app>/dist/<variant>/<dir> prefix.

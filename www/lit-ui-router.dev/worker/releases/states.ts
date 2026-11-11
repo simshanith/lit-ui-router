@@ -125,7 +125,7 @@ const publishedPairIn = (
 const versionPath = ({ name, version }: LedgerVersion): string =>
   `${RELEASES_MOUNT}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/`;
 
-const found = (location: string, maxAge = 300): Response =>
+const found = (location: string, maxAge = 60): Response =>
   new Response(null, {
     status: 302,
     headers: {

@@ -4,6 +4,7 @@
 // service binding.
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
+import type { LedgerVersion } from '@tools/release-ledger';
 import { makeCloudflareTracer } from 'cloudflare-effect-tracer';
 import { Effect, Layer, Option, Tracer } from 'effect';
 import { FetchHttpClient } from 'effect/http';
@@ -17,7 +18,6 @@ import {
   findTagged,
   findVersions,
   type LedgerPackage,
-  type LedgerVersion,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
 import { LEDGER_PATH, readLedger } from '../src/read.ts';

@@ -11,6 +11,8 @@
     "types": []
   },
   "include": [
+    // The whole catalog, not just what the worker imports today, so it stays importable here.
+    "../catalog/*.ts",
     "index.ts",
     "test/ledger-stub/index.ts",
     "test/release-diffs-stub/index.ts",

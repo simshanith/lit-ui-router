@@ -2,7 +2,7 @@
 // packuments, as findings, then one Checks API payload. Report only; the IO
 // lives in ./ledger-check-runs.ts.
 
-import type { DistTagRow, VersionRow } from '@tools/release-ledger';
+import type { LedgerSnapshot } from '@tools/release-ledger';
 import semver from 'semver';
 import * as v from 'valibot';
 
@@ -12,44 +12,6 @@ export const LEDGER_CHECK_RUN_NAME = 'release-ledger';
 
 /** #1430's lag rule: a step missing for longer than this means a run stopped partway. */
 export const LAG_MS = 60 * 60 * 1000;
-
-const LedgerVersionSchema = v.object({
-  name: v.string(),
-  version: v.string(),
-  first_seen_at: v.string(),
-  git_sha: v.nullable(v.string()),
-  tag_conflict: v.nullable(v.string()),
-  npm_integrity: v.nullable(v.string()),
-  npm_published_at: v.nullable(v.string()),
-  npm_deprecated: v.nullable(v.string()),
-  npm_conflict: v.nullable(v.string()),
-  gh_release_id: v.nullable(v.number()),
-  gh_url: v.nullable(v.string()),
-  gh_prerelease: v.nullable(v.number()),
-  gh_body: v.nullable(v.string()),
-  gh_published_at: v.nullable(v.string()),
-  gh_conflict: v.nullable(v.string()),
-  status: v.string(),
-});
-
-/** The body of the ledger worker's GET /ledger. */
-export const LedgerSnapshotSchema: v.GenericSchema<unknown, LedgerSnapshot> =
-  v.object({
-    versions: v.array(LedgerVersionSchema),
-    distTags: v.array(
-      v.object({
-        name: v.string(),
-        tag: v.string(),
-        version: v.string(),
-        updated_at: v.string(),
-      }),
-    ),
-  });
-
-export type LedgerSnapshot = {
-  versions: (VersionRow & { status: string })[];
-  distTags: DistTagRow[];
-};
 
 /** One `{ name, sha, at }` line of the tag listing, `sha` the peeled commit. */
 export const GitTagSchema = v.object({

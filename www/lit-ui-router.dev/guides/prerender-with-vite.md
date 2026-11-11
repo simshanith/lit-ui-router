@@ -1,6 +1,8 @@
 ---
 title: Prerender with Vite
 description: Emit one HTML page per route, a 404.html and a _redirects file from vite build, decided by the route table the app runs
+type: guide
+topic: server
 ---
 
 # Prerender with Vite
@@ -14,7 +16,7 @@ answers a deep link, a redirect and a typo the way the
 Three terms carry the rest of this page:
 
 - The **route table** is the `mounts` object
-  [`ui-router-server`](/packages/server#quick-start) compiles. Each key is a
+  [`ui-router-server`](/packages/ui-router-server#quick-start) compiles. Each key is a
   mount, the url prefix an app is served under (`/` here), and holds that
   app's route names and urls as plain data, with no components, so
   `vite.config.ts` and a server can import it.
@@ -32,12 +34,12 @@ url-less `notFound` state that the mount's `otherwise` rule sends every
 unmatched path to. Its `src/app.ts` holds the Lit side: `states`, the same
 names and urls with their components, and `page(router)`, the template
 `src/main.ts` renders in the browser. That template's `<ui-view>` holds
-[`uiViewSlot()`](/packages/ssr#the-hydration-model) from
+[`uiViewSlot()`](/packages/lit-ui-router-ssr#the-hydration-model) from
 `lit-ui-router-ssr/client`, the hole the server render fills with the routed
 view.
 
 `vite.config.ts` adds one option to
-[`serverRouterPlugin`](/api/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
+[`serverRouterPlugin`](/reference/lit-ui-router-ssr/vite/functions/serverRouterPlugin)
 from `lit-ui-router-ssr/vite`:
 
 ```ts
@@ -59,7 +61,7 @@ export default defineConfig({
 `prerender` names the prerender script, resolved against Vite's root. The
 plugin is `ui-router-server/vite`'s, set up for Lit: before the script it
 loads `@lit-labs/ssr`'s DOM shim, then
-[`lit-ui-router-ssr/register`](/packages/ssr#a-prerendered-app), which
+[`lit-ui-router-ssr/register`](/packages/lit-ui-router-ssr#a-prerendered-app), which
 defines the elements in the registry the shim installed. Modules of your own
 to load before the script go in `prerender: { entry, preload: [...] }`, and
 load after those two; a module listed twice loads once. To use another DOM,
@@ -68,11 +70,12 @@ list its setup modules in the plugin's `shim` option, which replaces
 
 `src/prerender.ts` is the prerender script, and it imports everything
 statically. Its default export comes from
-[`definePrerender`](/api/lit-ui-router-ssr/vite/functions/definePrerender),
+[`definePrerender`](/reference/lit-ui-router-ssr/vite/functions/definePrerender),
 whose callback receives `site` and returns the options for
-[`lit-ui-router-ssr`'s `prerender()`](/api/lit-ui-router-ssr/index/functions/prerender):
+[`lit-ui-router-ssr`'s `prerender()`](/reference/lit-ui-router-ssr/index/functions/prerender):
 
 - `site.outDir`: Vite's output directory, absolute.
+- `site.base`: Vite's resolved `base`, the url path `outDir` is served at.
 - `site.shellHtml`: the built `index.html`, as a string.
 - `site.write`: writes a file, creating its directory.
 
@@ -102,7 +105,8 @@ export default definePrerender((site) => ({
 ```
 
 `definePrerender` spreads `site` under the options and calls `prerender()`,
-so an option the script returns, such as `outDir`, wins over the build's.
+so an option the script returns, such as `outDir` or `base`, wins over the
+build's.
 
 `paths` lists every path to visit. `renderShell` moves the router to the path
 and returns the page's template, and `document` puts the rendered body into
@@ -114,7 +118,7 @@ the built `index.html`, where the app's container holds a marker:
 
 The shim must finish installing before anything defines an element, which
 is why the plugin preloads it rather than the script importing it:
-[`lit-ui-router-ssr`](/packages/ssr#a-prerendered-app) explains the order a
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr#a-prerendered-app) explains the order a
 script that imports the shim itself has to follow. A page whose `<ui-view>`
 leaves out `uiViewSlot()` renders that view empty, with no error.
 
@@ -132,7 +136,55 @@ Next to Vite's own `assets/`, `dist/` gains:
 `_redirects`, the file Cloudflare Pages and Netlify read. Those hosts serve
 `about/index.html` at `/about/`, so both the route table and the browser
 router need to
-[accept the trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash).
+[accept the trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash).
+
+## Serving under a base path
+
+A site built with `vite build --base=/solar/` keeps its route table at `/`.
+Vite's `base` is a prefix the host adds in front of the site, and
+`ui-router-server` takes it off on the way in and puts it back on the way
+out ([adapter options](/packages/ui-router-server#serving-under-a-base-path)). Three
+places name it:
+
+- `index.html` declares `<base href="%BASE_URL%">` in its `<head>`, which
+  Vite fills in, so the browser router builds its hrefs under the base.
+- The prerender script builds its router with the base, so the server render
+  does too. `prerender()` throws when a page's router settles where its links
+  don't reach the page: `baseHref()` plus the router's url has to spell
+  `site.base` plus the path.
+- Nothing else: the plugin reads `base` from Vite's config.
+
+A route table keyed by the base, such as `{ '/solar/': ... }`, declares it
+instead: `createServerRouter({ base: '/solar/', mounts })`. The plugin then
+sets Vite's `base` from the router, and the prerender script passes the same
+keyed `mounts`, and its `paths` spell the base, as `/solar/about`. A table
+at `/` lists them base-free, so its script builds the same at any base;
+`pathsIncludeBase` overrides either default. Keying the table by the base
+without declaring it fails the build and `vite preview` with a message naming
+`createServerRouter({ base, mounts })`
+([both forms](/packages/ui-router-server#serving-under-a-base-path)).
+
+```ts
+export default definePrerender((site) => {
+  const router = installServerLocation(new UIRouterLit(), {
+    baseHref: site.base,
+  });
+  for (const state of states) router.stateRegistry.register(state);
+  router.urlService.rules.otherwise({ state: 'notFound' });
+
+  return { mounts, router, paths, renderShell, document };
+});
+```
+
+The pages land in `dist/` as they do without a base, since `dist/` is what
+the host serves at `/solar/`. `_redirects` carries the base:
+`/solar/legacy /solar/about 302`. Lines in `extraRules` are written as given.
+A relative base (`./`) or a full-URL base fails the build.
+
+`vite preview --base=/solar/` serves the build as the host would: `/solar/`
+and `/solar/about` answer their pages, `/solar/legacy` answers 302 to
+`/solar/about`, and a path outside `/solar/` gets Vite's own 404. `vite dev`
+with the same `base` answers the same redirects and 404s.
 
 ## How it runs
 
@@ -251,12 +303,12 @@ to the plugin replaces this.
 </DiagramEmbed>
 
 **Other renderers.** `serverRouterPlugin` and `definePrerender` from
-[`ui-router-server/vite`](/api/ui-router-server/vite/functions/serverRouterPlugin)
+[`ui-router-server/vite`](/reference/ui-router-server/vite/functions/serverRouterPlugin)
 are the same pair without Lit: the plugin preloads only what
 `prerender: { entry, preload }` lists, and the script's default export calls
 a `prerender()` itself and returns its result. For an app that does not
 render with Lit, call `prerender` from
-[`ui-router-server/prerender`](/packages/server#emitting-a-static-site) with a
+[`ui-router-server/prerender`](/packages/ui-router-server#emitting-a-static-site) with a
 `render` of your own, which receives each page verdict and returns the file's
 text:
 
@@ -278,7 +330,7 @@ export default definePrerender((site) =>
 ```
 
 **Delegating states on Workers.** A path that matches a
-[delegating state](/packages/server#delegating-states) gets no file, and the
+[delegating state](/packages/ui-router-server#delegating-states) gets no file, and the
 result lists it in `delegated`. On Cloudflare Workers, list those paths in
 [`assets.run_worker_first`](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/#run-worker-first-for-selective-paths)
 so the Worker answers them before the asset layer does.

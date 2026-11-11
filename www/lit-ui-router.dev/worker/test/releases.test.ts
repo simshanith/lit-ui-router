@@ -180,7 +180,7 @@ describe('the /releases verdicts', () => {
       response?.headers.get('Location'),
       '/releases/lit-ui-router/1.10.0/?ref=badge',
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('passes paths outside the mounts to the host', async () => {
@@ -271,7 +271,7 @@ describe('the /releases/<pkg>/diff redirects', () => {
       response?.headers.get('Location'),
       `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   const without = (field: 'git_sha' | 'npm_integrity'): LedgerReader => ({
@@ -379,7 +379,7 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
       response?.headers.get('Content-Type'),
       'text/html; charset=utf-8',
     );
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
     assert.equal(doc.title, 'lit-ui-router 1.9.0...1.10.0 | Lit UI Router');
 
     const shell = getByRole(doc.body, 'region', { name: 'Changed files' });
@@ -607,7 +607,7 @@ describe('the /gh verdicts', () => {
       level: 1,
       name: 'Not found',
     });
-    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=300');
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
   it('answers 503 while the ledger cannot be read', async () => {
@@ -845,6 +845,48 @@ describe('the /releases pages', () => {
       '/releases/lit-ui-router/1.10.0/',
     );
     assert.equal(doc.title, 'Releases | Lit UI Router');
+  });
+
+  it('groups the packages by role, in catalog order, unknown ones last', async () => {
+    const [lit, server] = await fixtureLedger.packages();
+    assert.ok(lit && server);
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      packages: () =>
+        Promise.resolve([
+          { name: 'a-new-package', latest: null },
+          lit,
+          { name: 'lit-ui-router-signals', latest: null },
+          server,
+          { name: 'ui-router-signals', latest: null },
+        ]),
+    };
+
+    const doc = parseHtml(
+      (await (await serve('/releases/', undefined, ledger))?.text()) ?? '',
+    );
+
+    const groups = getAllByRole(doc.body, 'heading', { level: 2 }).map(
+      (heading) => heading.textContent,
+    );
+
+    assert.deepEqual(groups, ['Renderer', 'Reactivity', 'Server', 'Other']);
+
+    const packagesIn = (group: string) =>
+      getAllByRole(
+        getByRole(doc.body, 'table', { name: group }),
+        'rowheader',
+      ).map((cell) => cell.textContent?.trim());
+
+    assert.deepEqual(packagesIn('Renderer'), ['lit-ui-router']);
+    assert.deepEqual(packagesIn('Reactivity'), [
+      'ui-router-signals',
+      'lit-ui-router-signals',
+    ]);
+    assert.deepEqual(packagesIn('Server'), ['ui-router-server']);
+    assert.deepEqual(packagesIn('Other'), ['a-new-package']);
+    assert.equal(hrefOf(doc.body, 'a-new-package'), '/releases/a-new-package/');
   });
 
   it("lists a package's versions, each linking to its GitHub release", async () => {

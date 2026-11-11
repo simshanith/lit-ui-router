@@ -1,6 +1,8 @@
 ---
 title: Development and Production Builds
 description: How lit-ui-router ships a separate development build, what warnings it carries, and why production bundles never contain them
+type: guide
+topic: builds
 ---
 
 # Development and Production Builds
@@ -86,13 +88,13 @@ that renders once with its initial value and never again.
 | a mount answers its bare base with a 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/` |
 
 It is a development-only warning, but the check is not.
-[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+[`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns the same findings as data in every build, so asserting it is empty in
 a test catches the problem in CI, whichever build the test resolves. See
 [Server Route Matching](./server-route-matching).
 
 A mount that answers its bare base with a 404 on purpose lists the kind in its
-[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
+[`ignoreDiagnostics`](/reference/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
 which turns it off for that mount in the warning and in `diagnoseMounts` alike.
 
 ## Server runtimes
@@ -184,7 +186,7 @@ than an authoring mistake.
 ## Catching the same problems at author time
 
 Two of the warnings above have static counterparts in
-[`eslint-plugin-lit-ui-router`](/packages/eslint-plugin) — the inert `href` and
+[`eslint-plugin-lit-ui-router`](/packages/eslint-plugin-lit-ui-router) — the inert `href` and
 the silent `aria-current` takeover — alongside a rule for the directives'
 element-part-only constructor throw, which is unconditional and fires in both
 builds. Lint reports all three across the whole codebase at author time,

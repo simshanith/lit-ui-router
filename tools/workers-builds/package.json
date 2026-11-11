@@ -14,7 +14,9 @@
   },
   "devDependencies": {
     "@cloudflare/config": "catalog:",
+    "@distilled.cloud/cloudflare": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/cloudflare-api": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "jsonc-parser": "catalog:",

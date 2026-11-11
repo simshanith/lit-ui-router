@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-[`uiSrefActive`](https://lit-ui-router.dev/api/reference/directives/uiSrefActive) sets `aria-current` while its state is active and **removes** the attribute when the state goes inactive — including an `aria-current` the author wrote. Taking over is deliberate (restoring the old value would leave an inactive link asserting `aria-current="page"`), but it is silent, and the loss only surfaces a navigation later. The runtime warns once in lit's development build; this rule says the same thing at author time.
+[`uiSrefActive`](https://lit-ui-router.dev/reference/lit-ui-router/directives/uiSrefActive) sets `aria-current` while its state is active and **removes** the attribute when the state goes inactive — including an `aria-current` the author wrote. Taking over is deliberate (restoring the old value would leave an inactive link asserting `aria-current="page"`), but it is silent, and the loss only surfaces a navigation later. The runtime warns once in lit's development build; this rule says the same thing at author time.
 
 The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute under the app's control, and the directive stops touching it.
 

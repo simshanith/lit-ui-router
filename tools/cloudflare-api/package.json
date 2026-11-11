@@ -1,0 +1,30 @@
+{
+  "name": "@tools/cloudflare-api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Our Cloudflare client code in the shape of @distilled.cloud/cloudflare: the redacting call helper and the operations distilled does not generate yet",
+  "type": "module",
+  "exports": {
+    "./builds-settings.ts": "./src/builds-settings.ts",
+    "./call.ts": "./src/call.ts"
+  },
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@distilled.cloud/cloudflare": "catalog:",
+    "@distilled.cloud/core": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tools/shared": "catalog:workspace",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

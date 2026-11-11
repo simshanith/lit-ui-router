@@ -118,7 +118,7 @@ docs
 - Every build output lives under a `dist/` dir, so every traversal ignore is one `**/dist/**` glob (no sibling `dist-*` patterns): single-output packages use plain `dist/`; multi-output packages namespace each variant as `dist/<variant>/` (disjoint outputs globs, each vite build empties only its own subdir)
 - Nothing writes machinery under `dist/` — probe/scratch output lives in gitignored `.cache/` dirs (e.g. `.cache/bundle-stats/`), because anything under a `dist/` can be captured by build caching or pack staging mid-graph; shipped packages keep the `!dist/.*/**` files negation as a backstop, and `check:published-diff` backstops the boundary
 
-Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a bundle output) and `tools/release/.cache/**` (turbo-hashed input cache).
+Exceptions: `www/lit-ui-router.dev/reference/*/**` (generated VitePress content, not a bundle output) and `tools/release/.cache/**` (turbo-hashed input cache).
 
 **Graph notes:**
 

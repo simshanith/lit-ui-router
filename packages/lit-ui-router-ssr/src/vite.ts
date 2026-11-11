@@ -42,15 +42,15 @@ export interface ServerRouterPluginOptions extends SiteRouterPluginOptions {
 
 /**
  * What a prerender script's callback returns: this package's
- * {@link PrerenderOptions}, less what the build supplies. `outDir` and
- * `write` come from the build, so a script may still pass either to
- * override it.
+ * {@link PrerenderOptions}, less what the build supplies. `outDir`, `base`
+ * and `write` come from the build, so a script may still pass any of them
+ * to override it.
  */
 export type PrerenderScriptOptions = Omit<
   PrerenderOptions,
-  'outDir' | 'write'
+  'outDir' | 'base' | 'write'
 > &
-  Partial<Pick<PrerenderOptions, 'outDir' | 'write'>>;
+  Partial<Pick<PrerenderOptions, 'outDir' | 'base' | 'write'>>;
 
 /**
  * The default export {@link definePrerender} returns: it resolves to this
@@ -77,7 +77,7 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
 /**
  * Turns a callback that returns this package's prerender options into a
  * prerender script's default export. The export spreads the build's values
- * (`outDir`, `shellHtml`, `write`) under the options and calls this
+ * (`outDir`, `base`, `shellHtml`, `write`) under the options and calls this
  * package's `prerender()`, so the script never calls it itself.
  *
  * @param script - returns the prerender options; handed the build's values

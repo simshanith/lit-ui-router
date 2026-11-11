@@ -15,6 +15,7 @@
   // The diff page's client is browser code; the worker tsconfig never reaches it.
   "include": [
     ".vitepress/**/*",
+    "catalog/**/*",
     "dev-port.ts",
     "scripts/**/*",
     "worker/releases/release-diff.ts"

@@ -21,6 +21,8 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { resolveBaseLink } from './base-link.js';
+
 /** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
 interface SidebarItem {
   text: string;
@@ -86,13 +88,18 @@ export function load(app: Application): void {
 
   // Post-process output to reorganize by category
   app.renderer.on(RendererEvent.END, (event: RendererEvent) => {
-    generateCategoryIndexFiles(event.outputDirectory, app);
-    updateSidebarJson(event.outputDirectory, app);
+    const baseLink = resolveBaseLink(event.outputDirectory, app);
+    generateCategoryIndexFiles(event.outputDirectory, baseLink, app);
+    updateSidebarJson(event.outputDirectory, baseLink, app);
   });
 }
 
 /** Generate an index.md for each category folder. */
-function generateCategoryIndexFiles(outDir: string, app: Application): void {
+function generateCategoryIndexFiles(
+  outDir: string,
+  baseLink: string,
+  app: Application,
+): void {
   for (const category of CATEGORIES) {
     const categoryDir = path.join(outDir, category);
 
@@ -123,7 +130,7 @@ next:
   link: ./${next}
 prev:
   text: API Reference
-  link: /api/reference
+  link: ${baseLink}
 ---
 # ${meta.title}
 
@@ -275,7 +282,11 @@ function aggregateCemTags(comment: Comment): void {
 }
 
 /** Retitle and relink the sidebar's category entries. */
-function updateSidebarJson(outDir: string, app: Application): void {
+function updateSidebarJson(
+  outDir: string,
+  baseLink: string,
+  app: Application,
+): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
 
   if (!fs.existsSync(sidebarPath)) return;
@@ -296,7 +307,7 @@ function updateSidebarJson(outDir: string, app: Application): void {
     item.text =
       metaByCategory.get(category)?.title ??
       category.charAt(0).toUpperCase() + category.slice(1);
-    item.link = `/api/reference/${category}`;
+    item.link = `${baseLink}${category}`;
     delete item.collapsed;
 
     if (category === 'types') {

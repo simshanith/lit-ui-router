@@ -8,25 +8,12 @@ import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 import {
-  type Credentials,
-  fromApiToken,
-} from '@distilled.cloud/cloudflare/Credentials';
-import {
   bulkPushMessages,
   listQueues,
 } from '@distilled.cloud/cloudflare/queues';
-import * as Retry from '@distilled.cloud/cloudflare/Retry';
-import {
-  Clock,
-  Duration,
-  Effect,
-  identity,
-  Layer,
-  Redacted,
-  Schema,
-  Stream,
-} from 'effect';
-import { FetchHttpClient, type HttpClient } from 'effect/http';
+import { type CloudflareApi, callResult } from '@tools/cloudflare-api/call.ts';
+import { Effect, Schema, Stream } from 'effect';
+import { FetchHttpClient } from 'effect/http';
 import { parse } from 'jsonc-parser';
 
 import { Claim } from './claim.ts';
@@ -149,86 +136,6 @@ export function batchesOf(claims: readonly Claim[]): QueueBatch[] {
   return batches;
 }
 
-export interface CloudflareApi {
-  readonly token: string;
-  readonly accountId: string;
-  readonly fetch: typeof globalThis.fetch;
-  readonly sleep?: (ms: number) => Promise<void>;
-}
-
-/** Attempts per call; only throttling retries, since nothing was accepted. */
-const MAX_ATTEMPTS = 4;
-
-// Retry-After wins (capped at 60 s by the SDK); otherwise 1 s, 2 s, 4 s
-const ONLY_THROTTLING: Retry.Policy = {
-  while: Retry.throttlingOptions.while,
-  backoff: {
-    baseMs: 1000,
-    factor: 2,
-    capMs: 8000,
-    maxRetries: MAX_ATTEMPTS - 1,
-    serverHint: true,
-  },
-};
-
-type CallResult<T> =
-  | { readonly ok: true; readonly result: T }
-  | { readonly ok: false; readonly error: string };
-
-/** The live clock, its sleeps handed to `sleep`. */
-const sleepingWith = (sleep: (ms: number) => Promise<void>) => {
-  const live = Clock.Clock.defaultValue();
-
-  return Effect.provideService(Clock.Clock, {
-    currentTimeMillisUnsafe: () => live.currentTimeMillisUnsafe(),
-    currentTimeMillis: live.currentTimeMillis,
-    currentTimeNanosUnsafe: () => live.currentTimeNanosUnsafe(),
-    currentTimeNanos: live.currentTimeNanos,
-    monotonicTimeNanosUnsafe: () => live.monotonicTimeNanosUnsafe(),
-    monotonicTimeNanos: live.monotonicTimeNanos,
-    sleep: (duration) =>
-      Effect.promise(() => sleep(Duration.toMillis(duration))),
-  });
-};
-
-/** One SDK call, retried on throttling only, its error redacted of the account id and token. */
-export async function call<
-  T,
-  E extends { readonly _tag: string; readonly message: string },
->(
-  api: CloudflareApi,
-  shown: string,
-  operation: Effect.Effect<T, E, Credentials | HttpClient.HttpClient>,
-): Promise<CallResult<T>> {
-  const redact = (text: string): string =>
-    text
-      .replaceAll(api.accountId, '{account_id}')
-      .replaceAll(api.token, '{token}');
-
-  return Effect.runPromise(
-    operation.pipe(
-      Retry.policy(ONLY_THROTTLING),
-      Effect.map((result): CallResult<T> => ({ ok: true, result })),
-      Effect.catch((error) =>
-        Effect.succeed<CallResult<T>>({
-          ok: false,
-          error: redact(
-            `Cloudflare API ${shown} failed — ${error._tag}: ${error.message}`,
-          ),
-        }),
-      ),
-      Effect.provide(
-        Layer.mergeAll(
-          fromApiToken({ apiToken: Redacted.make(api.token) }),
-          FetchHttpClient.layer,
-        ),
-      ),
-      Effect.provideService(FetchHttpClient.Fetch, api.fetch),
-      api.sleep === undefined ? identity : sleepingWith(api.sleep),
-    ),
-  );
-}
-
 export async function resolveQueueId(
   api: CloudflareApi,
   name: string,
@@ -236,7 +143,7 @@ export async function resolveQueueId(
   | { readonly ok: true; readonly queueId: string }
   | { readonly ok: false; readonly error: string }
 > {
-  const listed = await call(
+  const listed = await callResult(
     api,
     'GET /{account_id}/queues',
     listQueues.items({ accountId: api.accountId }).pipe(Stream.runCollect),
@@ -264,7 +171,7 @@ export async function publish(
   let sent = 0;
 
   for (const [index, batch] of batches.entries()) {
-    const pushed = await call(
+    const pushed = await callResult(
       api,
       `POST /{account_id}/queues/${queueId}/messages/batch`,
       bulkPushMessages({ accountId: api.accountId, queueId, ...batch }),

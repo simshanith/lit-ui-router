@@ -37,7 +37,7 @@
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "floor-guard && check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
-    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-mobx && typedoc",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/ui-router-mobx && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",

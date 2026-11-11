@@ -17,6 +17,7 @@
   "dependencies": {
     "@distilled.cloud/cloudflare": "catalog:",
     "@effect/sql-d1": "catalog:",
+    "@tools/cloudflare-api": "catalog:workspace",
     "@tools/release-ledger": "catalog:workspace",
     "cloudflare-effect-tracer": "catalog:",
     "effect": "catalog:",

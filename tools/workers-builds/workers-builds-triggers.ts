@@ -31,16 +31,27 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { loadAndParseConfig } from '@cloudflare/config';
+import { listScripts } from '@distilled.cloud/cloudflare/workers';
+import {
+  listTriggers,
+  listTriggersEnvironmentVariables,
+  updateTrigger,
+  upsertTriggersEnvironmentVariable,
+} from '@distilled.cloud/cloudflare/workers_builds';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import {
+  getWorkerBuildSettings,
+  updateWorkerBuildSettings,
+} from '@tools/cloudflare-api/builds-settings.ts';
+import { type CloudflareApi, call } from '@tools/cloudflare-api/call.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 
-import { cf } from './cloudflare-api.ts';
 import {
   CF_CONFIG,
   type DesiredWorker,
   type Drift,
+  type EnvironmentPatch,
   PREVIEWS_BASE_CONFIG,
-  type PreviewsBaseConfig,
   type Trigger,
   desiredWorkersFromConfig,
   diffTriggers,
@@ -87,81 +98,167 @@ async function loadDesired(): Promise<DesiredWorker[]> {
   }
 }
 
-// undefined when the account has no such worker yet.
-async function workerTag(
-  token: string,
-  accountId: string,
-  name: string,
-): Promise<string | undefined> {
-  // SAFETY: workers/scripts results are script objects carrying id and tag
-  const scripts = (await cf(token, `/${accountId}/workers/scripts`)) as {
-    id?: string;
-    tag?: string;
-  }[];
+// The SDK's camelCase shapes as the wire's snake_case ones the diff reports in.
+type SdkBuildFields = {
+  buildCommand?: string | null;
+  deployCommand?: string | null;
+  rootDirectory?: string | null;
+  pathIncludes?: readonly string[] | null;
+  pathExcludes?: readonly string[] | null;
+};
 
-  return scripts.find((candidate) => candidate.id === name)?.tag;
-}
+type SdkEnvironment = Record<
+  string,
+  { isSecret?: boolean | null; value?: string | null } | undefined
+>;
 
-// Build environment variables live on a sub-resource; the trigger list may or
-// may not inline them, so fetch only when it doesn't.
-async function getTriggers(
-  token: string,
-  accountId: string,
-  tag: string,
-): Promise<Trigger[]> {
-  // SAFETY: the triggers endpoint returns trigger objects; Trigger is a subset
-  const triggers = (await cf(
-    token,
-    `/${accountId}/builds/workers/${tag}/triggers`,
-  )) as Trigger[];
+const listOf = (list: readonly string[] | null | undefined) =>
+  list ? [...list] : undefined;
 
-  const withEnvironment = await Promise.all(
-    triggers.map(async (trigger) =>
-      trigger.environment_variables
-        ? trigger
-        : {
-            ...trigger,
-            // SAFETY: this sub-resource returns the trigger's variable map
-            environment_variables: (await cf(
-              token,
-              `/${accountId}/builds/triggers/${trigger.trigger_uuid}/environment_variables`,
-            )) as Trigger['environment_variables'],
-          },
+const wireBuildFields = (fields: SdkBuildFields) => ({
+  build_command: fields.buildCommand ?? undefined,
+  deploy_command: fields.deployCommand ?? undefined,
+  root_directory: fields.rootDirectory ?? undefined,
+  path_includes: listOf(fields.pathIncludes),
+  path_excludes: listOf(fields.pathExcludes),
+});
+
+const wireEnvironment = (
+  environment: SdkEnvironment,
+): NonNullable<Trigger['environment_variables']> =>
+  Object.fromEntries(
+    Object.entries(environment).flatMap(([key, variable]) =>
+      variable
+        ? [
+            [
+              key,
+              {
+                value: variable.value ?? undefined,
+                is_secret: variable.isSecret ?? undefined,
+              },
+            ],
+          ]
+        : [],
     ),
   );
 
-  // SAFETY: the Worker's build configuration; only these two fields are read
-  const worker = (await cf(token, `/${accountId}/builds/workers/${tag}`)) as {
-    previews_enabled?: boolean;
-    previews_base_config?: PreviewsBaseConfig | null;
-  };
+const sdkBuildFields = (patch: Drift['patch']) => ({
+  buildCommand: patch.build_command,
+  deployCommand: patch.deploy_command,
+  rootDirectory: patch.root_directory,
+  pathIncludes: patch.path_includes,
+  pathExcludes: patch.path_excludes,
+});
 
-  return worker.previews_enabled && worker.previews_base_config
-    ? [...withEnvironment, previewsBaseTrigger(worker.previews_base_config)]
-    : withEnvironment;
+const sdkEnvironment = (environment: EnvironmentPatch) =>
+  Object.fromEntries(
+    Object.entries(environment).map(([key, { value, is_secret }]) => [
+      key,
+      { value, isSecret: is_secret },
+    ]),
+  );
+
+/** The tag of the named worker; undefined when the account has none yet. */
+export async function workerTag(
+  api: CloudflareApi,
+  name: string,
+): Promise<string | undefined> {
+  const { result } = await call(
+    api,
+    'GET /{account_id}/workers/scripts',
+    listScripts({ accountId: api.accountId }),
+  );
+
+  return result.find((candidate) => candidate.id === name)?.tag ?? undefined;
 }
 
-async function applyDrift(
-  token: string,
-  accountId: string,
+/** The worker's triggers, its Workers Previews base config standing in as one when enabled. */
+export async function getTriggers(
+  api: CloudflareApi,
+  tag: string,
+): Promise<Trigger[]> {
+  const { accountId } = api;
+
+  const listed = await call(
+    api,
+    `GET /{account_id}/builds/workers/${tag}/triggers`,
+    listTriggers({ accountId, externalScriptId: tag }),
+  );
+
+  // Build environment variables live on a sub-resource the SDK's trigger list does not model.
+  const triggers = await Promise.all(
+    listed.map(async (trigger): Promise<Trigger> => {
+      if (!trigger.triggerUuid) {
+        throw new Error(`a trigger of worker ${tag} has no trigger_uuid`);
+      }
+
+      const environment = await call(
+        api,
+        `GET /{account_id}/builds/triggers/${trigger.triggerUuid}/environment_variables`,
+        listTriggersEnvironmentVariables({
+          accountId,
+          triggerUuid: trigger.triggerUuid,
+        }),
+      );
+
+      return {
+        trigger_uuid: trigger.triggerUuid,
+        trigger_name: trigger.triggerName ?? undefined,
+        branch_includes: listOf(trigger.branchIncludes),
+        branch_excludes: listOf(trigger.branchExcludes),
+        ...wireBuildFields(trigger),
+        environment_variables: wireEnvironment(environment),
+      };
+    }),
+  );
+
+  const worker = await call(
+    api,
+    `GET /{account_id}/builds/workers/${tag}`,
+    getWorkerBuildSettings({ accountId, externalScriptId: tag }),
+  );
+
+  const base = worker.previewsBaseConfig;
+
+  return worker.previewsEnabled && base
+    ? [
+        ...triggers,
+        previewsBaseTrigger({
+          ...wireBuildFields(base),
+          ...(base.environmentVariables && {
+            environment_variables: wireEnvironment(base.environmentVariables),
+          }),
+        }),
+      ]
+    : triggers;
+}
+
+/** PATCHes one drift: the trigger and its variables, or the Worker's Previews base config. */
+export async function applyDrift(
+  api: CloudflareApi,
   tag: string,
   drift: Drift,
 ): Promise<void> {
+  const { accountId } = api;
+
   if (drift.trigger_uuid === PREVIEWS_BASE_CONFIG) {
     console.log(
       `\nPATCHing ${PREVIEWS_BASE_CONFIG}: ${[...Object.keys(drift.patch), ...Object.keys(drift.environmentPatch)].join(', ')}`,
     );
-    await cf(token, `/${accountId}/builds/workers/${tag}`, {
-      method: 'PATCH',
-      body: {
-        [PREVIEWS_BASE_CONFIG]: {
-          ...drift.patch,
+    await call(
+      api,
+      `PATCH /{account_id}/builds/workers/${tag}`,
+      updateWorkerBuildSettings({
+        accountId,
+        externalScriptId: tag,
+        previewsBaseConfig: {
+          ...sdkBuildFields(drift.patch),
           ...(Object.keys(drift.environmentPatch).length > 0 && {
-            environment_variables: drift.environmentPatch,
+            environmentVariables: sdkEnvironment(drift.environmentPatch),
           }),
         },
-      },
-    });
+      }),
+    );
 
     return;
   }
@@ -170,10 +267,15 @@ async function applyDrift(
     console.log(
       `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
     );
-    await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
-      method: 'PATCH',
-      body: drift.patch,
-    });
+    await call(
+      api,
+      `PATCH /{account_id}/builds/triggers/${drift.trigger_uuid}`,
+      updateTrigger({
+        accountId,
+        triggerUuid: drift.trigger_uuid,
+        ...sdkBuildFields(drift.patch),
+      }),
+    );
   }
 
   // Declared keys only — undeclared live vars are never in this body.
@@ -181,10 +283,14 @@ async function applyDrift(
     console.log(
       `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
     );
-    await cf(
-      token,
-      `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
-      { method: 'PATCH', body: drift.environmentPatch },
+    await call(
+      api,
+      `PATCH /{account_id}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
+      upsertTriggersEnvironmentVariable({
+        accountId,
+        triggerUuid: drift.trigger_uuid,
+        body: sdkEnvironment(drift.environmentPatch),
+      }),
     );
   }
 }
@@ -218,6 +324,7 @@ async function main() {
     return;
   }
 
+  const api: CloudflareApi = { token, accountId, fetch: globalThis.fetch };
   const selected = selectWorkers(await loadDesired(), sites);
 
   if (!selected.ok) {
@@ -234,7 +341,7 @@ async function main() {
     // workerConfig that names no file throws, and the run exits 2.
     const name = await workerName(join(workspaceRoot, worker.workerConfig));
 
-    const tag = await workerTag(token, accountId, name);
+    const tag = await workerTag(api, name);
 
     // A configured site whose worker the dashboard hasn't created yet is
     // drift the dashboard owes, not an observer error: it must not mask the
@@ -249,7 +356,7 @@ async function main() {
     }
 
     const { report, drifts } = diffTriggers(
-      await getTriggers(token, accountId, tag),
+      await getTriggers(api, tag),
       worker,
     );
 
@@ -261,13 +368,10 @@ async function main() {
       continue;
     }
 
-    for (const drift of drifts) await applyDrift(token, accountId, tag, drift);
+    for (const drift of drifts) await applyDrift(api, tag, drift);
 
     // Re-read so the confirmation reflects what the API stored, not what we sent.
-    const after = diffTriggers(
-      await getTriggers(token, accountId, tag),
-      worker,
-    );
+    const after = diffTriggers(await getTriggers(api, tag), worker);
 
     console.log(`\nAfter --apply:\n\n${after.report.text}`);
 

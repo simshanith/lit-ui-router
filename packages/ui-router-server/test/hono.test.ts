@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import { Hono } from 'hono';
 import type { ExecutionContext } from 'hono';
 
+import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
 import { delegateContext, serverRouterHono } from '../src/hono.ts';
 
@@ -145,5 +146,47 @@ describe('serverRouterHono', () => {
 
     const withCtx = await app.request('/app/ctx', {}, { queue }, executionCtx);
     assert.equal(await bodyText(withCtx), 'ctx-props');
+  });
+});
+
+describe('serverRouterHono under a base', () => {
+  const app = new Hono();
+
+  app.use(
+    '*',
+    serverRouterHono(
+      createServerRouter({
+        mounts: {
+          '/': {
+            routes: [
+              { name: 'about', url: '/about' },
+              { name: 'legacy', url: '/legacy', redirectTo: 'about' },
+            ],
+          },
+        },
+      }),
+      {
+        base: '/solar/',
+        serveShell: (_mount, request) =>
+          new Response(`shell:${new URL(request.url).pathname}`),
+      },
+    ),
+  );
+  app.all('*', (c) => c.text('downstream', 200));
+
+  it('serves the shell at the base for a path under it', async () => {
+    const res = await navigate(app, '/solar/about');
+    assert.equal(await bodyText(res), 'shell:/solar/');
+  });
+
+  it('puts the base back on a redirect Location', async () => {
+    const res = await navigate(app, '/solar/legacy');
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.get('Location'), '/solar/about');
+  });
+
+  it('passes a request outside the base to the downstream handler', async () => {
+    const res = await navigate(app, '/legacy');
+    assert.equal(await bodyText(res), 'downstream');
   });
 });

@@ -1,6 +1,7 @@
 ---
 title: What is Lit UI Router?
 description: What is Lit UI Router? State-based routing for Lit web components
+type: concept
 ---
 
 # What is Lit UI Router?
@@ -113,20 +114,20 @@ resolves. `lit-ui-router` layers the Lit integration on top:
 This repository publishes a small family of packages. The core router is all
 you need to start; the companions are optional layers.
 
-| Package                                                                                                 | What it is                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`lit-ui-router`](https://npmx.dev/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/)                                        |
-| [`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/lit-ui-router-mobx)                                     |
-| [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)                                 | [Effect](https://effect.website) bindings: a `SubscriptionRef` of the route and ref-following controllers. [Guide →](./packages/lit-ui-router-effect)                          |
-| [`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)                               | [TC39 Signals](https://github.com/tc39/proposal-signals) bindings: watcher-based controllers over `ui-router-signals`. [Guide →](./packages/lit-ui-router-signals)             |
-| [`ui-router-navigation-location-plugin`](https://npmx.dev/package/ui-router-navigation-location-plugin) | A location plugin built on the modern browser Navigation API. [Guide →](./packages/navigation-plugin)                                                                          |
-| [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (early `0.x`). [Guide →](./packages/server)                                                      |
-| [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr)                                       | Static prerendering: a `ui-router-server` mount table in, an emitted site out. [Guide →](./packages/ssr)                                                                       |
-| [`ui-router-signals`](https://npmx.dev/package/ui-router-signals)                                       | [TC39 Signals](https://github.com/tc39/proposal-signals) for UI-Router: a framework-agnostic mirror of the router's state. [Guide →](./packages/ui-router-signals)             |
-| [`ui-router-effect`](https://npmx.dev/package/ui-router-effect)                                         | [Effect](https://effect.website) for UI-Router: a framework-agnostic `SubscriptionRef` of the router's state. [Guide →](./packages/ui-router-effect)                           |
-| [`ui-router-mobx`](https://npmx.dev/package/ui-router-mobx)                                             | [MobX](https://mobx.js.org) for UI-Router: a framework-agnostic observable store of the router's state. [Guide →](./packages/ui-router-mobx)                                   |
-| [`ui-router-registry`](https://npmx.dev/package/ui-router-registry)                                     | Typed state names and params for UI-Router: a types-only registry for `@uirouter/core`. [Guide →](./packages/ui-router-registry)                                               |
-| [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)                   | ESLint rules that understand the router's directives — hrefless anchors, inert `href`s, `aria-current` conflicts and misplaced directives. [Guide →](./packages/eslint-plugin) |
+| Package                                                                                                 | What it is                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`lit-ui-router`](https://npmx.dev/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./reference/lit-ui-router/)                                            |
+| [`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/lit-ui-router-mobx)                                                   |
+| [`lit-ui-router-effect`](https://npmx.dev/package/lit-ui-router-effect)                                 | [Effect](https://effect.website) bindings: a `SubscriptionRef` of the route and ref-following controllers. [Guide →](./packages/lit-ui-router-effect)                                        |
+| [`lit-ui-router-signals`](https://npmx.dev/package/lit-ui-router-signals)                               | [TC39 Signals](https://github.com/tc39/proposal-signals) bindings: watcher-based controllers over `ui-router-signals`. [Guide →](./packages/lit-ui-router-signals)                           |
+| [`ui-router-navigation-location-plugin`](https://npmx.dev/package/ui-router-navigation-location-plugin) | A location plugin built on the modern browser Navigation API. [Guide →](./packages/ui-router-navigation-location-plugin)                                                                     |
+| [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (early `0.x`). [Guide →](./packages/ui-router-server)                                                          |
+| [`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr)                                       | Static prerendering: a `ui-router-server` mount table in, an emitted site out. [Guide →](./packages/lit-ui-router-ssr)                                                                       |
+| [`ui-router-signals`](https://npmx.dev/package/ui-router-signals)                                       | [TC39 Signals](https://github.com/tc39/proposal-signals) for UI-Router: a framework-agnostic mirror of the router's state. [Guide →](./packages/ui-router-signals)                           |
+| [`ui-router-effect`](https://npmx.dev/package/ui-router-effect)                                         | [Effect](https://effect.website) for UI-Router: a framework-agnostic `SubscriptionRef` of the router's state. [Guide →](./packages/ui-router-effect)                                         |
+| [`ui-router-mobx`](https://npmx.dev/package/ui-router-mobx)                                             | [MobX](https://mobx.js.org) for UI-Router: a framework-agnostic observable store of the router's state. [Guide →](./packages/ui-router-mobx)                                                 |
+| [`ui-router-registry`](https://npmx.dev/package/ui-router-registry)                                     | Typed state names and params for UI-Router: a types-only registry for `@uirouter/core`. [Guide →](./packages/ui-router-registry)                                                             |
+| [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)                   | ESLint rules that understand the router's directives — hrefless anchors, inert `href`s, `aria-current` conflicts and misplaced directives. [Guide →](./packages/eslint-plugin-lit-ui-router) |
 
 Because `lit-ui-router` is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
@@ -143,9 +144,9 @@ tool.
   ([Hello Galaxy](./tutorial/hellogalaxy)). Each step runs live on StackBlitz.
 - **[Guides](./guides/)** — focused, task-oriented pages on URLs and location,
   transitions and guards, and reactivity.
-- **[API](./api/)** — an overview plus a generated reference for each runtime
+- **[API](./reference/)** — an overview plus a generated reference for each runtime
   package; the ESLint plugin's rules are documented on its
-  [package page](./packages/eslint-plugin).
+  [package page](./packages/eslint-plugin-lit-ui-router).
 - **[Sample app](./sample-app)** — one non-trivial application written in four
   reactivity idioms, <a href="/app" target="_self">vanilla Lit</a>,
   <a href="/app-mobx" target="_self">MobX</a>,

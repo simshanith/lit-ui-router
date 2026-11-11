@@ -1,6 +1,8 @@
 ---
 title: Named Views
 description: Fill several <ui-view> viewports from one state with views, and target a view another state created with name@state, relative ^ anchors and absolute ! paths
+type: guide
+topic: markup
 ---
 
 # Named Views

@@ -1,13 +1,15 @@
 ---
 title: Prerender with Eleventy
 description: Let Eleventy write the pages and the layout while lit-ui-router-ssr's prerender decides what each path is and renders it
+type: guide
+topic: server
 ---
 
 # Prerender with Eleventy
 
 [Eleventy](https://www.11ty.dev) can write a lit-ui-router app as a static
 site. Eleventy owns the files, the layout around each page and the host rules.
-[`prerender()`](/packages/ssr#quick-start) from `lit-ui-router-ssr` owns
+[`prerender()`](/packages/lit-ui-router-ssr#quick-start) from `lit-ui-router-ssr` owns
 everything routing decides: which paths are pages, which redirect, what the
 404 page holds, and the server render of each page. The client then adopts the
 served page instead of rendering it again.
@@ -28,7 +30,7 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
   is Eleventy's input: a template per output kind, and the layout.
 - [`src/client.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/client.ts)
   boots the client with
-  [`bootstrap()`](/packages/ssr#the-hydration-model).
+  [`bootstrap()`](/packages/lit-ui-router-ssr#the-hydration-model).
 - [`eleventy.config.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/eleventy.config.js)
   builds both halves with Vite and runs
   [`render.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/render.js),
@@ -83,7 +85,7 @@ rebuilt module again would define the app's custom elements a second time.
 ## The page, then the client
 
 `dehydrate: {}` puts each page's resolved data into its
-[hydration signature](/packages/ssr#adopting-the-resolves-on-boot), so the
+[hydration signature](/packages/lit-ui-router-ssr#adopting-the-resolves-on-boot), so the
 client boots on the served data instead of running the resolves again.
 `bootstrap()` then adopts the served `<ui-view>` and its routed component,
 keeping the server's nodes.
@@ -94,7 +96,7 @@ an `<a>` with no `href` until the client boots.
 
 `<app-root>` renders into a shadow root, so the render lists
 `LitElementRenderer` beside the package's own renderers. The
-[default](/packages/ssr#property-bindings-on-the-server) leaves it out, and
+[default](/packages/lit-ui-router-ssr#property-bindings-on-the-server) leaves it out, and
 `<app-root>` would render empty.
 
 ## Details
@@ -108,11 +110,11 @@ shows the empty one. Keep the routed pages out of the plugin's reach.
 
 **One render at a time.** `prerender()` renders pages one after another, so a
 build waits on every page's resolves in turn. See
-[One render at a time](/packages/ssr#one-render-at-a-time).
+[One render at a time](/packages/lit-ui-router-ssr#one-render-at-a-time).
 
 **Trailing slashes.** Each page lands at `<path>/index.html`, which hosts serve
 at the slashed url. The browser router and the route table both relax strict
-mode, as [Static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)
+mode, as [Static hosts add a trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash)
 describes.
 
 **With Vite alone.** [Prerender with Vite](./prerender-with-vite) does the same

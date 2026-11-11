@@ -36,6 +36,14 @@ updates:
       # vite pins rolldown to a tilde range, so a rolldown minor waits for the vite release that adopts it
       - dependency-name: 'rolldown'
         update-types: ['version-update:semver-minor']
+      # postcss-lit hands its babel 7 AST to postcss-lit-html, so babel 8 waits for a postcss-lit release on it
+      - dependency-name: '@babel/parser'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@babel/types'
+        update-types: ['version-update:semver-major']
+      # typedoc and vitepress-plugin-llms pin markdown-it 14; md-content-mapper moves with them
+      - dependency-name: 'markdown-it'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
@@ -45,6 +53,10 @@ updates:
         patterns:
           - 'vitest'
           - '@vitest/*'
+      # @distilled.cloud/cloudflare pins @distilled.cloud/core exactly, so both move together
+      distilled:
+        patterns:
+          - '@distilled.cloud/*'
       # majors excluded — breaking changes get individual PRs
       minor-and-patch:
         patterns:
@@ -52,6 +64,7 @@ updates:
         exclude-patterns:
           - 'vitest'
           - '@vitest/*'
+          - '@distilled.cloud/*'
         update-types:
           - 'minor'
           - 'patch'

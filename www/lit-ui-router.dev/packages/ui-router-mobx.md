@@ -1,6 +1,7 @@
 ---
 title: ui-router-mobx
 description: A framework-agnostic MobX observable store of the router's current state with ui-router-mobx
+type: package
 ---
 
 # ui-router-mobx
@@ -28,7 +29,7 @@ supported (`mobx@^6.0.0 || ^7.0.0`), and the store's API is the same on either.
 
 ## RouterStore
 
-[`RouterStore.for(router)`](/api/ui-router-mobx/classes/RouterStore#for)
+[`RouterStore.for(router)`](/reference/ui-router-mobx/classes/RouterStore#for)
 returns the router's observable store. The first call for a router creates its
 one store and registers its transition hooks: `onSuccess` updates the settled
 fields, and `onStart` feeds `pending` and `error`. Later calls return the same store. The
@@ -84,13 +85,13 @@ const dispose = reaction(
 ```
 
 To manage a store yourself, call
-[`attach(router)`](/api/ui-router-mobx/classes/RouterStore#attach) on a
+[`attach(router)`](/reference/ui-router-mobx/classes/RouterStore#attach) on a
 `new RouterStore()`. It returns the hooks' deregistration function, and it
 throws if the store already mirrors a different router.
 
 ## Typed stores
 
-[`RouteTypes`](/api/ui-router-mobx/interfaces/RouteTypes) is empty, and the
+[`RouteTypes`](/reference/ui-router-mobx/interfaces/RouteTypes) is empty, and the
 store's `current` is a `StateDeclaration`, its `params` are `RawParams`,
 and `includes` takes any `StateOrName`. Filling it in by module augmentation
 types the store:
@@ -117,7 +118,7 @@ declare module 'ui-router-mobx' {
 
 ## Further reading
 
-- [API reference](/api/ui-router-mobx/)
+- [API reference](/reference/ui-router-mobx/)
 - [lit-ui-router-mobx](/packages/lit-ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-mobx) — this package as
