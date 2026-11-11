@@ -517,6 +517,9 @@ catalogs:
     '@tools/bundle-probe':
       specifier: workspace:*
       version: workspace:*
+    '@tools/cli':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/cloudflare-api':
       specifier: workspace:*
       version: workspace:*
@@ -2361,6 +2364,9 @@ importers:
       '@axe-core/playwright':
         specifier: 'catalog:'
         version: 4.14.0(playwright-core@1.65.0)
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
@@ -2469,6 +2475,21 @@ importers:
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.78.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.93.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/cli:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -2681,6 +2702,9 @@ importers:
         specifier: catalog:workspace
         version: link:../bootstrap
     devDependencies:
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
@@ -2988,6 +3012,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../release-ledger
@@ -3143,6 +3170,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2

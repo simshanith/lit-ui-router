@@ -12,7 +12,7 @@ import {
   jsonOutput,
   withoutJsonFlags,
   writeJsonOutput,
-} from '@tools/shared/json-output.ts';
+} from '@tools/cli/json-output.ts';
 import { chromium } from 'playwright';
 
 import {
