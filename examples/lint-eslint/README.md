@@ -1,6 +1,6 @@
 # lint-eslint
 
-The **ESLint-only** shape of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin): a standalone Vite project that installs the published plugin from npm, lints a small lit app whose anchors carry `uiSref` instead of a static `href`, and renders the lint result in the page.
+The **ESLint-only** shape of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin-lit-ui-router): a standalone Vite project that installs the published plugin from npm, lints a small lit app whose anchors carry `uiSref` instead of a static `href`, and renders the lint result in the page.
 
 `eslint.config.js` spreads `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended`. That order is required: ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid` in its place, so the anchors report as valid while the rest of the lit-a11y ruleset keeps running. One more entry declares `sp-link` in `settings.linkElements`: the design system's link element ([Spectrum Web Components](https://opensource.adobe.com/spectrum-web-components/components/link/), a custom element that declares `href`), which the plugin could not otherwise tell from any other custom element — so `anchor-is-valid` holds it to the `<a>` bar and `sref-assign-href` goes quiet on it, the way it is on `<a>`.
 

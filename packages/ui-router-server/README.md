@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/ui-router-server.svg)](https://npmx.dev/package/ui-router-server)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*)](https://lit-ui-router.dev/gh/releases/ui-router-server/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/server)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/ui-router-server)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-server)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-server)
 
 Server-side routing for ui-router state trees. Given per-mount routing config and a request URL, it resolves the path against the registered states and returns a plain routing verdict (render, redirect, or miss) — runtime-agnostic, with no fetch/Response or workers types in the core. Adapters turn verdicts into HTTP for Connect/Vite middleware and fetch/Hono handlers. Matcher-only mounts are dependency-free; `simulate` mounts lazily replay the path through a headless `@uirouter/core` router (an optional peer dependency). The routers `simulate` builds register copies of the mount's declarations, so inside a declaration's own functions (`redirectTo`, resolves, hooks) `transition.to()` and `state.self` are the copy, not the app's object; compare states by `name`, as UI-Router code does.
@@ -22,7 +22,7 @@ npm install ui-router-server
 `@uirouter/core` (only for `simulate` mounts and the `/location`, `/ssr` and
 `/ssr/client` entries) and `hono` are optional peer
 dependencies. Full docs:
-[lit-ui-router.dev/packages/server](https://lit-ui-router.dev/packages/server).
+[lit-ui-router.dev/packages/ui-router-server](https://lit-ui-router.dev/packages/ui-router-server).
 
 ## When to use it
 
@@ -51,7 +51,7 @@ outside every mount already pass through (the fetch adapter returns `null`, and 
 middleware call `next()`), so the host keeps its own fallthrough and 404 handling. A path a mount
 owns but no state matches is that mount's 404, which `serveNotFound` can answer with the app's own
 404 page. See
-[when to use it](https://lit-ui-router.dev/packages/server#when-to-use-it).
+[when to use it](https://lit-ui-router.dev/packages/ui-router-server#when-to-use-it).
 
 ## After `vite build`
 
@@ -98,7 +98,7 @@ const rules = redirectPages({
 ```
 
 See
-[hosts without redirect rules](https://lit-ui-router.dev/packages/server#hosts-without-redirect-rules).
+[hosts without redirect rules](https://lit-ui-router.dev/packages/ui-router-server#hosts-without-redirect-rules).
 
 ## Delegating states
 
@@ -121,7 +121,7 @@ throws for delegate keys unless you pass
 the path in `result.tally.delegate` and lists it in `result.delegated`, so route those paths to
 your server; on Cloudflare, list them in the Worker's `assets.run_worker_first` so the asset layer
 doesn't answer them first. See
-[delegating states](https://lit-ui-router.dev/packages/server#delegating-states).
+[delegating states](https://lit-ui-router.dev/packages/ui-router-server#delegating-states).
 
 ## Response states
 
@@ -136,12 +136,12 @@ make a row with both markers a compile error. A url whose pattern is sometimes a
 redirect needs a `redirectTo` function instead, answered after `settle` with `redirectedTo(router,
 transition)` from `ui-router-server/ssr` at the state's `redirectStatusCode` (`302` by default),
 which a data `redirectTo`'s verdict honors too; see
-[which decides when](https://lit-ui-router.dev/packages/ssr#page-response-state-or-redirect-which-decides-when). The fetch and Hono adapters pass a GET or HEAD of any
+[which decides when](https://lit-ui-router.dev/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when). The fetch and Hono adapters pass a GET or HEAD of any
 `Accept` that matches one to `serveResponse(verdict, request, ...args)` and answer other methods
 with a 405; the Connect adapter throws unless you pass `responses: 'next'`. `prerender()` hands a
 response state to its `respond` hook and writes a 2xx body at the path its url spells
 (`badge.svg`), or a 3xx as a `_redirects` line, counting it in `result.tally.response`. See
-[response states](https://lit-ui-router.dev/packages/server#response-states).
+[response states](https://lit-ui-router.dev/packages/ui-router-server#response-states).
 
 ## Trailing slashes
 
@@ -170,7 +170,7 @@ client router and on a server one built with `installServerLocation(router, { ur
 state's other spelling onto the canonical path it was listed at. A
 Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'always' }`, and
 `drop-trailing-slash` to `{ pages: 'never' }`. See
-[trailing slashes](https://lit-ui-router.dev/packages/server#trailing-slashes).
+[trailing slashes](https://lit-ui-router.dev/packages/ui-router-server#trailing-slashes).
 
 ## Values beyond plain JSON
 
@@ -197,7 +197,7 @@ export const transport = {
 The payload lists where each carried value sits, apart from the values, so a value of the app's
 own never passes for one. A resolve whose value the client can't rebuild, for want of a transporter
 or because `decode` throws, runs its function, and `seed` warns in development. See
-[values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json)
+[values beyond plain JSON](https://lit-ui-router.dev/packages/ui-router-server#values-beyond-plain-json)
 and [`dehydrate`](https://lit-ui-router.dev/api/ui-router-server/ssr/functions/dehydrate).
 
 ## Attribution

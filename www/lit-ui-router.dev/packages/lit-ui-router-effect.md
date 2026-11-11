@@ -125,7 +125,7 @@ new RouterRefController(host, selector, options?)
   connects. A thunk (`() => UIRouter | undefined`) is resolved at construction
   and again on every `hostConnected`; when it returns `undefined`, the
   controller discovers the router as if the option were omitted. Discovery
-  subscribes, so on a page served by [`lit-ui-router-ssr`](/packages/ssr) the
+  subscribes, so on a page served by [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) the
   host follows `<ui-router>` from its placeholder router to the app's when
   `hydrateRoot()` sets it. A `lit-ui-router` that does not hand that router to
   subscribers leaves the host on the placeholder; hand such a host its router

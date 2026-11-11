@@ -66,7 +66,7 @@ title tracks the route with no component at all.
 
 The same states and resolves, prerendered to static pages by
 [Eleventy](https://www.11ty.dev) and
-[`lit-ui-router-ssr`](/packages/ssr). One `prerender()` decides what each path
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr). One `prerender()` decides what each path
 is and renders it; Eleventy writes the pages, the 404 page and the redirect
 rules. The client adopts the served page instead of rendering it again.
 Walkthrough: [Prerender with Eleventy](/guides/prerender-with-eleventy).

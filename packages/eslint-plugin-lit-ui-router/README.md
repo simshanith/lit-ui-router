@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/eslint-plugin-lit-ui-router.svg)](https://npmx.dev/package/eslint-plugin-lit-ui-router)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=eslint-plugin-lit-ui-router@*)](https://lit-ui-router.dev/gh/releases/eslint-plugin-lit-ui-router/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/eslint-plugin)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/eslint-plugin-lit-ui-router)
 
 ESLint rules that understand [lit-ui-router](https://lit-ui-router.dev) directives.
 

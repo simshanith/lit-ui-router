@@ -45,7 +45,7 @@ leaves the ones before it unchanged:
    [`createServerRouter`](#quick-start), an [adapter](#adapters), and a
    `serveShell`.
 2. **Server-rendered pages.** The same states' resolves and views, rendered
-   with [`lit-ui-router-ssr`](/packages/ssr) on
+   with [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) on
    [`settle`](#settling-a-server-router) and
    [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
    after [`vite build`](/guides/prerender-with-vite).
@@ -99,7 +99,7 @@ This package closes the gap by giving the server the same route patterns the
 client matches, projected as pure data. That is **HTTP-semantics SEO** — the
 status, redirect, and 404 a URL earns — and deliberately not content SEO:
 the body is still the client-rendered shell. Rendering is a separate axis, and
-[`lit-ui-router-ssr`](/packages/ssr) is what turns these verdicts into
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) is what turns these verdicts into
 prerendered html.
 
 The [Server-Side Routing guide](/guides/server-route-matching) is the full
@@ -587,11 +587,11 @@ and its second parameter types each handler's resolves by state name.
   and `as const` routes make a row with both markers a compile error. A
   redirect may target a response state. A url whose pattern is sometimes a
   page and sometimes a redirect needs a `redirectTo` function instead:
-  [which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
+  [which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
   `<img>` reaches its badge, and answer other methods with a 405.
-  [`lit-ui-router-ssr`](/packages/ssr#response-states)'s `responder` settles
+  [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr#response-states)'s `responder` settles
   the state there and runs its handler; the `Response` goes out untouched. A typed router that declares response states requires
   `serveResponse` at compile time, and construction throws without it.
 - The Connect adapter throws for response states unless `responses: 'next'`.
@@ -707,7 +707,7 @@ It rejects rather than hangs: on a url no rule matches, on a failed
 transition, and past its
 [`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions). The entry
 imports `@uirouter/core` and no renderer, so it runs under any renderer.
-[`lit-ui-router-ssr`](/packages/ssr) builds its
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) builds its
 prerender on the same step.
 
 A `redirectTo` chain settles on its final state.
@@ -717,7 +717,7 @@ function's included: the mount-relative url it landed on, query included, and
 the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
 of the state the url matched, `302` by default. It returns `undefined` for any
 other transition, so a host answers a redirect found at settle as a 30x; see
-[which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
+[which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ### Handing resolves to the client
 
@@ -844,7 +844,7 @@ const result = await prerender({
 The loop never touches a filesystem itself: `write` receives each file with
 `outDir` joined on, so the same call emits through `node:fs`, a virtual fs, or
 a `Map`, under any runtime.
-[`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
 
 ### Hosts without redirect rules
@@ -938,7 +938,7 @@ as the mount's `config`, or share one object through
 along with any [trailing-slash policy](#trailing-slashes).
 A static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory
-([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
+([static hosts add a trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash)).
 Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
 ([parameterized routes and soft 404s](/guides/server-route-matching#parameterized-routes-and-soft-404s)).
@@ -953,7 +953,7 @@ matches any value, so narrow it to the known ids when the build can list them
   per subpath import
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts
-- [`lit-ui-router-ssr`](/packages/ssr) — these verdicts prerendered into a
+- [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) — these verdicts prerendered into a
   static site
 - [Unmatched URLs](/guides/unmatched-urls) — the client-side 404 state this
   pairs with

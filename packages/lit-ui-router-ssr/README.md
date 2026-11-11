@@ -3,11 +3,11 @@
 [![npm version](https://img.shields.io/npm/v/lit-ui-router-ssr.svg)](https://npmx.dev/package/lit-ui-router-ssr)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*)](https://lit-ui-router.dev/gh/releases/lit-ui-router-ssr/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/ssr)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-ssr)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-ssr)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-ssr)
 
 Static prerendering for [lit-ui-router](https://lit-ui-router.dev): a
-[`ui-router-server`](https://lit-ui-router.dev/packages/server) mount table in, an emitted site out.
+[`ui-router-server`](https://lit-ui-router.dev/packages/ui-router-server) mount table in, an emitted site out.
 
 `prerender()` asks the mount table for a verdict per path and turns each one into an artefact: a
 shell verdict becomes `<subpath>/index.html`, a redirect becomes a host rules line and no page, and
@@ -188,7 +188,7 @@ if (redirect)
 redirected, the path gets a rules line in place of a page, counted in `tally.redirect`. A url rule
 that rewrites the url, `when('/old', '/new')`, starts a new transition rather than redirecting one,
 so `redirectedTo` reports nothing for it; declare it in the mount's `redirects`. See
-[page, response state or redirect](https://lit-ui-router.dev/packages/ssr#page-response-state-or-redirect-which-decides-when).
+[page, response state or redirect](https://lit-ui-router.dev/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ## Rendering one page per request
 
@@ -228,14 +228,14 @@ The markup is collected into one string, synchronously. A streamed render would 
 
 ## Response states
 
-A [response state](https://lit-ui-router.dev/packages/server#response-states) answers with a
+A [response state](https://lit-ui-router.dev/packages/ui-router-server#response-states) answers with a
 `Response` built from its resolves instead of a page. `responder(router, responses)` settles
 `router` on the verdict's subpath, query included, runs the handler bound to the landed state's
 name with that transition's resolves (inherited ones included) and the request, and returns the
 `Response` as built; a HEAD gets it without its body. A resolve that throws rejects before any
 handler runs. It fits the fetch adapter's `serveResponse`, and `prerender` takes the same handlers
 as `responses`, writing a 2xx body at the path its url spells or a 3xx as a rules line. See
-[response states](https://lit-ui-router.dev/packages/ssr#response-states).
+[response states](https://lit-ui-router.dev/packages/lit-ui-router-ssr#response-states).
 
 ## Adopting the resolves on boot
 
@@ -261,12 +261,12 @@ function. Every other resolve runs as it would without one: a value `dehydrate` 
 `NOWAIT` resolve, every resolve of a boot that lands on another state or other parameters, and
 every resolve of a page whose block carries no `resolves`. Without `dehydrate` or a `payload` hook
 no page carries resolves. What `dehydrate` draws, and which values it leaves out, is in
-[its documentation](https://lit-ui-router.dev/packages/server#handing-resolves-to-the-client).
+[its documentation](https://lit-ui-router.dev/packages/ui-router-server#handing-resolves-to-the-client).
 
 A value plain JSON can't carry, such as a `Date`, travels through a transporter. Pass the same
 `transport` in `dehydrate` and to `bootstrap()`: the signature keeps the payload's `transported`
 marks, and `bootstrap()` hands `transport` to `seed`. See
-[values beyond plain JSON](https://lit-ui-router.dev/packages/server#values-beyond-plain-json).
+[values beyond plain JSON](https://lit-ui-router.dev/packages/ui-router-server#values-beyond-plain-json).
 
 The `payload` option takes the drawing over by hand: a hook handed each page's landed transition
 returns the payload to write, or `undefined` to write none. Pass one or the other; passing both
@@ -730,7 +730,7 @@ unchanged, and it lives here: `lit-ui-router-ssr/register` defines `<ui-view>` w
 so an app that never prerenders carries none of it — Qwik, which resumes rather than hydrates, is off
 the grid entirely.
 
-The [guide](https://lit-ui-router.dev/packages/ssr#how-this-compares) carries the longer discussion.
+The [guide](https://lit-ui-router.dev/packages/lit-ui-router-ssr#how-this-compares) carries the longer discussion.
 
 ## Measuring the round trip
 
@@ -774,7 +774,7 @@ expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
 
 ## Documentation
 
-- [Guide](https://lit-ui-router.dev/packages/ssr)
+- [Guide](https://lit-ui-router.dev/packages/lit-ui-router-ssr)
 - [API reference](https://lit-ui-router.dev/api/lit-ui-router-ssr/)
 
 ## License
