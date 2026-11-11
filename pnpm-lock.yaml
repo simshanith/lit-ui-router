@@ -109,6 +109,9 @@ catalogs:
     '@testing-library/dom':
       specifier: ^10.4.2
       version: 10.4.2
+    '@types/d3-hierarchy':
+      specifier: ^3.1.7
+      version: 3.1.7
     '@types/dom-navigation':
       specifier: ^1.0.7
       version: 1.0.7
@@ -184,6 +187,9 @@ catalogs:
     crap4ts:
       specifier: 2.0.0-rc.5
       version: 2.0.0-rc.5
+    d3-hierarchy:
+      specifier: ^3.1.2
+      version: 3.1.3
     diff:
       specifier: ^9.0.0
       version: 9.0.0
@@ -1927,6 +1933,70 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/ui-router-devtools:
+    dependencies:
+      d3-hierarchy:
+        specifier: 'catalog:'
+        version: 3.1.3
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+    devDependencies:
+      '@axe-core/playwright':
+        specifier: 'catalog:'
+        version: 4.14.0(playwright-core@1.65.0)
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../../tools/bootstrap
+      '@tools/lit-test-env':
+        specifier: catalog:workspace
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: catalog:workspace
+        version: link:../../tools/oxc-emit
+      '@types/d3-hierarchy':
+        specifier: 'catalog:'
+        version: 3.1.7
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@vitest/browser':
+        specifier: 'catalog:'
+        version: 5.1.0(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
+      '@vitest/browser-playwright':
+        specifier: 'catalog:'
+        version: 5.1.0(playwright@1.65.0)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.78.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.93.0(oxlint-tsgolint@7.0.2006)
+      playwright:
+        specifier: 'catalog:'
+        version: 1.65.0
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.18
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -6015,6 +6085,9 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
+  '@types/d3-hierarchy@3.1.7':
+    resolution: {integrity: sha512-tJFtNoYBtRtkNysX1Xq4sxtjK8YgoWUNpIiUee0/jHGRwqvzYxkq0hGVbbOGSz+JgFxxRu4K8nb3YpG3CMARtg==}
+
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
 
@@ -7165,6 +7238,10 @@ packages:
 
   d3-hierarchy@2.0.0:
     resolution: {integrity: sha512-SwIdqM3HxQX2214EG9GTjgmCc/mbSx4mQBn+DuEETubhOw6/U3fmnji4uCVrmzOydMHSO1nZle5gh6HB/wdOzw==}
+
+  d3-hierarchy@3.1.3:
+    resolution: {integrity: sha512-GRajN5ZcnEwYFWqqdzhG1qJ3+fDg6WWzk47TJg7ePY7yvYAgRfD2r1mUx+wviBOWuCwamCUzjwMSdato43jbGA==}
+    engines: {node: '>=12'}
 
   d3-interpolate@1.4.0:
     resolution: {integrity: sha512-V9znK0zc3jOPV4VD2zZn0sDhZU3WAE2bmlxdIwwQPPzPjvyLkd8B3JUVdS1IDUFDkWZ72c9qnv1GK2ZagTZ8EA==}
@@ -12086,6 +12163,8 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
+  '@types/d3-hierarchy@3.1.7': {}
+
   '@types/debug@4.1.13':
     dependencies:
       '@types/ms': 2.1.0
@@ -13165,6 +13244,8 @@ snapshots:
   d3-color@3.1.0: {}
 
   d3-hierarchy@2.0.0: {}
+
+  d3-hierarchy@3.1.3: {}
 
   d3-interpolate@1.4.0:
     dependencies:

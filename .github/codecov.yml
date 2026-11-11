@@ -70,6 +70,10 @@ component_management:
       name: postcss-lit-html
       paths:
         - packages/postcss-lit-html/src/**
+    - component_id: ui-router-devtools
+      name: ui-router-devtools
+      paths:
+        - packages/ui-router-devtools/src/**
     - component_id: dev-gate
       name: dev-gate
       paths:

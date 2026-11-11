@@ -1,0 +1,101 @@
+{
+  "name": "ui-router-devtools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Devtools for any @uirouter/core router: a transition recorder, a Lit panel, a router plugin and Performance and console reporters",
+  "homepage": "https://lit-ui-router.dev",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/ui-router-devtools"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "src/**/*.ts",
+    "!src/specs/**"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./dist/define.js",
+    "./dist/plugin.js"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./console": {
+      "types": "./dist/console.d.ts",
+      "default": "./dist/console.js"
+    },
+    "./define": {
+      "types": "./dist/define.d.ts",
+      "default": "./dist/define.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json",
+    "./performance": {
+      "types": "./dist/performance.d.ts",
+      "default": "./dist/performance.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    }
+  },
+  "scripts": {
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
+    "dev": "vite",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
+    "lint:oxlint": "oxlint .",
+    "shots": "node scripts/shots.ts",
+    "size": "node scripts/size.ts",
+    "test": "VITEST_BROWSER_API_PORT=63380 vitest run --project=node --project=chrome",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63385 vitest run --coverage --project=node --project=chrome",
+    "test:engines": "VITEST_BROWSER_API_PORT=63381 vitest run --project=firefox --project=safari",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "d3-hierarchy": "catalog:",
+    "lit": "catalog:"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@tools/bootstrap": "catalog:workspace",
+    "@tools/lit-test-env": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@types/d3-hierarchy": "catalog:",
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "playwright": "catalog:",
+    "rolldown": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:"
+  }
+}
