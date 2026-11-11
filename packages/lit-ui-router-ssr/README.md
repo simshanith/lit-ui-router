@@ -31,8 +31,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   rules line, the `_redirects` file, delegating states skipped, tally, warnings for paths that
   matched nothing — is
   `prerender` from `ui-router-server/prerender`, which takes any render. This package's `prerender`
-  supplies the lit one and takes the same options, plus `router`, `renderShell`, `document`,
-  `root`, `elementRenderers`, `dehydrate`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
+  supplies the lit one and takes the same options, plus `router`, `template` or `renderShell`,
+  `document`, `root`, `elementRenderers`, `dehydrate`, `payload`, `responses` and `origin`. No SPA catch-all is ever written: one
   turns every 404 into a 200.
 - **One page for a host that owns the request.** `renderToString` is that render alone, for a
   framework route or a worker that settles the router itself.
@@ -42,8 +42,10 @@ imports the pre-1.0 renderer or re-derives the incantation.
   `lit-ui-router-ssr/client` adopts what it drew.
 
 Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
-and an async `renderShell()` are the seams for them. `settle()` drives the router to each path
-inside `renderShell()`.
+and `template` or an async `renderShell()` are the seams for them. `template` takes the router and
+returns the page's template; `prerender` settles the router on each path with `settle()` before
+calling it. A `renderShell()` hook, for a page that needs the verdict or more than a settle, calls
+`settle()` itself. Pass one or the other; passing both throws.
 
 ## Installation
 
@@ -66,7 +68,7 @@ The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo` whe
 ## Quick Start
 
 ```typescript
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { prerender } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -74,10 +76,7 @@ const result = await prerender({
   outDir: 'dist',
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    return page();
-  },
+  template: page,
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
@@ -247,7 +246,7 @@ from `ui-router-server/ssr` on the page's landed transition with the options giv
 import { prerender } from 'lit-ui-router-ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   dehydrate: {
     shouldDehydrate: ({ token }) => token !== 'manifest',
   },
@@ -276,7 +275,7 @@ throws.
 import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   payload: (transition, { path }) =>
     path.startsWith('/drafts/')
       ? undefined
@@ -519,7 +518,7 @@ export default definePrerender((site) => ({
   mounts,
   router,
   paths,
-  renderShell,
+  template: page,
   document,
 }));
 ```

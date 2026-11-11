@@ -563,6 +563,83 @@ describe('renderShell return values', () => {
   });
 });
 
+describe('the template option', () => {
+  /** Prerenders `paths` with `template` and no renderShell. */
+  const templated = (
+    paths: string[],
+    template: (router: UIRouterLit) => TemplateResult,
+  ) => {
+    const { files, write } = memoryWriter();
+
+    return prerender({
+      mounts,
+      router: sheetRouter(),
+      outDir: 'dist',
+      paths,
+      notFound: false,
+      template,
+      write,
+    }).then((result) => ({ files, result }));
+  };
+
+  const sheetPage = (router: UIRouterLit): TemplateResult =>
+    html`<p>${router.globals.current.name} ${router.globals.params.num}</p>`;
+
+  it('settles the router on each path, then renders the template it returns', async () => {
+    const { files } = await templated(['/', '/sheet/7B'], sheetPage);
+    const page = files.get('dist/sheet/7B/index.html')!;
+
+    expect(
+      getByText(parseHtml(page).body, 'sheet 7B', { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(page)).toMatchObject({
+      state: 'sheet',
+      params: { num: '7B' },
+    });
+    expect(signatureIn(files.get('dist/index.html')!)).toMatchObject({
+      state: 'home',
+    });
+  });
+
+  it('writes the pages a renderShell that settles first writes', async () => {
+    const { files } = await templated(['/', '/sheet/7B'], sheetPage);
+    const router = sheetRouter();
+
+    const hooked = await run({
+      router,
+      paths: ['/', '/sheet/7B'],
+      notFound: false,
+      renderShell: async (_verdict, { path }) => {
+        await settle(router, path);
+
+        return sheetPage(router);
+      },
+    });
+
+    expect(files).toEqual(hooked.files);
+  });
+
+  it('throws when renderShell is passed too', async () => {
+    await expect(run({ template: () => html`<p>page</p>` })).rejects.toThrow(
+      'pass `template` or `renderShell`, not both',
+    );
+  });
+
+  it('throws when neither is passed', async () => {
+    const { write } = memoryWriter();
+
+    await expect(
+      prerender({
+        mounts,
+        router: sheetRouter(),
+        outDir: 'dist',
+        paths: ['/'],
+        write,
+      }),
+    ).rejects.toThrow('pass `template` or `renderShell`');
+  });
+});
+
 // --- the composition, the point of the package ---------------------------
 
 class RouterProbe extends LitElement {

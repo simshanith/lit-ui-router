@@ -81,7 +81,6 @@ whose callback receives `site` and returns the options for
 
 ```ts
 import { UIRouterLit } from 'lit-ui-router/pure';
-import { settle } from 'lit-ui-router-ssr';
 import { definePrerender } from 'lit-ui-router-ssr/vite';
 import { installServerLocation } from 'ui-router-server/location';
 
@@ -96,10 +95,7 @@ export default definePrerender((site) => ({
   mounts,
   router,
   paths: ['/', '/about', '/legacy'],
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    return page(router);
-  },
+  template: page,
   document: (body) => site.shellHtml.replace('<!--app-->', body),
 }));
 ```
@@ -108,8 +104,8 @@ export default definePrerender((site) => ({
 so an option the script returns, such as `outDir` or `base`, wins over the
 build's.
 
-`paths` lists every path to visit. `renderShell` moves the router to the path
-and returns the page's template, and `document` puts the rendered body into
+`paths` lists every path to visit. `prerender()` moves the router to each path,
+`template` returns the page's template for it, and `document` puts the rendered body into
 the built `index.html`, where the app's container holds a marker:
 
 ```html
@@ -172,7 +168,7 @@ export default definePrerender((site) => {
   for (const state of states) router.stateRegistry.register(state);
   router.urlService.rules.otherwise({ state: 'notFound' });
 
-  return { mounts, router, paths, renderShell, document };
+  return { mounts, router, paths, template: page, document };
 });
 ```
 
@@ -227,8 +223,8 @@ summary line.
 ### A page
 
 `/about` is the whole render path. The route table's verdict is a page, so
-`ui-router-server` asks `lit-ui-router-ssr` to render it. Your `renderShell`
-settles the router on the path and returns the page's template, Lit renders
+`ui-router-server` asks `lit-ui-router-ssr` to render it. It settles the router
+on the path, your `template` returns the page's template, Lit renders
 it to html, and your `document` puts that body into `shellHtml` in place of
 the marker. The finished document is written as `about/index.html`.
 

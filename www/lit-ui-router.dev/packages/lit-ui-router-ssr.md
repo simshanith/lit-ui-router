@@ -59,7 +59,7 @@ state's `redirectStatusCode`.
   [`prerender`](/packages/ui-router-server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
+  `template` or `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
   `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **One page for a host that owns the request.**
   [`renderToString`](#rendering-one-page-per-request) is that render alone,
@@ -69,14 +69,17 @@ state's `redirectStatusCode`.
   transition landed with.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
-`paths`, `document()`, and an async `renderShell()` are the seams for them.
-[`settle()`](#settling-the-router-on-each-path) drives the router to each path
-inside `renderShell()`.
+`paths`, `document()`, and `template` or an async `renderShell()` are the
+seams for them. `template` takes the router and returns the page's template;
+`prerender` [settles](#settling-the-router-on-each-path) the router on each path
+before calling it. A `renderShell()` hook, for a page that needs the verdict or
+more than a settle, calls `settle()` itself. Pass one or the other; passing
+both throws.
 
 ## Quick start
 
 ```ts
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { prerender } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -84,18 +87,16 @@ const result = await prerender({
   outDir: 'dist',
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    return page();
-  },
+  template: page,
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
 console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
-`renderShell` returns a template and this package renders it; return a string
-and it is written as-is. `dryRun: true` plans everything and writes nothing.
+`template` returns the page for the router `prerender` has settled; this
+package renders it. A `renderShell` hook returns a template the same way, or a
+string, which is written as-is. `dryRun: true` plans everything and writes nothing.
 
 ## Settling the router on each path
 
@@ -265,7 +266,7 @@ to draw every resolve:
 import { prerender } from 'lit-ui-router-ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   dehydrate: {
     shouldDehydrate: ({ token }) => token !== 'manifest',
   },
@@ -300,7 +301,7 @@ one or the other; passing both throws.
 import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   payload: (transition, { path }) =>
     path.startsWith('/drafts/')
       ? undefined
@@ -682,7 +683,7 @@ export default definePrerender((site) => ({
   mounts,
   router,
   paths,
-  renderShell,
+  template: page,
   document,
 }));
 ```

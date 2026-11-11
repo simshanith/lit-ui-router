@@ -53,11 +53,7 @@ const result = await prerender({
   outDir: '',
   rules: 'none',
   dehydrate: {},
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-
-    return page(router);
-  },
+  template: page,
   write: (file, body) => {
     bodies.set(file, body);
   },
