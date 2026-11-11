@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-Under the 1.x default (`assignHref: true`), [`uiSref`](https://lit-ui-router.dev/api/reference/directives/uiSref) writes the generated `href` to whatever element carries it. On a `<button>`, `<tr>` or `<div>` that attribute is inert: HTML gives those elements no `href`, so nothing reads it. The runtime notices and warns once, in lit's development build, naming `'auto'` as the fix. This rule is that warning at author time, on the whole codebase, with the fix applied for you.
+Under the 1.x default (`assignHref: true`), [`uiSref`](https://lit-ui-router.dev/reference/lit-ui-router/directives/uiSref) writes the generated `href` to whatever element carries it. On a `<button>`, `<tr>` or `<div>` that attribute is inert: HTML gives those elements no `href`, so nothing reads it. The runtime notices and warns once, in lit's development build, naming `'auto'` as the fix. This rule is that warning at author time, on the whole codebase, with the fix applied for you.
 
 `'auto'` writes the `href` only where HTML defines one — `<a>`, `<area>`, SVG `<a>` — and becomes the default in 2.0, so the fix is also the migration.
 

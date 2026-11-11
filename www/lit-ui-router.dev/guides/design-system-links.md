@@ -14,7 +14,7 @@ that declares its own `href` property and renders an anchor inside its shadow
 root. It is a link in every way that matters to a reader, and in no way that
 matters to `document.querySelector('a')`.
 
-[`uiSref`](/api/reference/directives/uiSref) drives it, but the `href` needs
+[`uiSref`](/reference/lit-ui-router/directives/uiSref) drives it, but the `href` needs
 one option: **`assignHref: true`**.
 
 ```ts check
@@ -30,7 +30,7 @@ html`<sp-link ${uiSref('components', {}, { assignHref: true })}
 
 ## Why `'auto'` refuses it
 
-[`assignHref`](/api/reference/types/UiSrefOptions) decides where the
+[`assignHref`](/reference/lit-ui-router/types/UiSrefOptions) decides where the
 generated `href` is written:
 
 | value    | behaviour                                                              |
@@ -66,7 +66,7 @@ the component behave like the link it renders:
 - middle-click and <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>-click open a new tab
 - "Copy link address" produces a working URL
 - assistive technology announces a link, and
-  [`uiSrefActive`](/api/reference/directives/uiSrefActive) can mark it with
+  [`uiSrefActive`](/reference/lit-ui-router/directives/uiSrefActive) can mark it with
   `aria-current`
 
 Most design-system link components forward `href` to their internal anchor, so
@@ -99,7 +99,7 @@ the property yourself if you would rather not see it in development.
 
 `assignHref` exists because `uiSref` is an **element part**: it sits on the
 element and writes the `href` from the outside, so it needs a rule for where
-to write. [`srefHref`](/api/reference/directives/srefHref) is the same link
+to write. [`srefHref`](/reference/lit-ui-router/directives/srefHref) is the same link
 bound as an **attribute part** — it _is_ the `href`, so there is no
 `assignHref` and no rule to pick. The attribute is written wherever it was
 bound:
@@ -129,10 +129,10 @@ reasons are in
 [Server-Side Routing](./server-route-matching#links-a-server-renderer-can-read).
 
 The active-status pair splits the same way.
-[`srefActiveClass`](/api/reference/directives/srefActiveClass) follows lit's
+[`srefActiveClass`](/reference/lit-ui-router/directives/srefActiveClass) follows lit's
 [`classMap`](https://lit.dev/docs/templates/directives/#classmap) contract —
 bound in `class`, toggling only the classes it names — and
-[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) covers the
+[`srefAriaCurrent`](/reference/lit-ui-router/directives/srefAriaCurrent) covers the
 `aria-current` a `class` binding cannot reach. A `class` attribute holds one
 toggling directive, so `srefActiveClass` cannot share it with `classMap`:
 pass what `classMap` would have taken as `classes` instead.
@@ -151,7 +151,7 @@ html`<sp-link
 ```
 
 When a component wants plain `classMap` and its own bindings,
-[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+[`SrefStatusController`](/reference/lit-ui-router/controllers/SrefStatusController)
 hands the status to the host instead of writing an attribute — see
 [Active-link status](./reactive-components#active-link-status).
 

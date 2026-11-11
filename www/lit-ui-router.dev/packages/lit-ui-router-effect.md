@@ -28,7 +28,7 @@ system, with automatic `requestUpdate()` and no manual refresh plumbing.
 ::: tip Not using Effect?
 You don't need this package to react to route changes. The core package's
 zero-dependency
-[`TransitionController`](/api/reference/controllers/TransitionController)
+[`TransitionController`](/reference/lit-ui-router/controllers/TransitionController)
 covers the same ground with transition hooks instead of refs.
 :::
 
@@ -80,20 +80,20 @@ No router configuration is required: the controller discovers the router from
 the enclosing `<ui-router>` element when the host connects, and the route ref
 lazily attaches its single transition hook on first use. On the server, where
 there is no element to seek, it reads the router
-[`withRouterSync`](/api/reference/core/withRouterSync) scoped at construction.
+[`withRouterSync`](/reference/lit-ui-router/core/withRouterSync) scoped at construction.
 
 ## The pieces
 
 ### routeRef
 
-[`routeRef(router)`](/api/lit-ui-router-effect/functions/routeRef) is the
+[`routeRef(router)`](/reference/lit-ui-router-effect/functions/routeRef) is the
 `SubscriptionRef<TypedRouteSnapshot>` for a router — memoized, one per router
 instance. The first call registers one `transitionService.onSuccess` hook that
 replaces the value per successful transition. It is `ui-router-effect`'s
 `routeRef`, re-exported, so code using either package shares one ref per
 router.
 
-A [`RouteSnapshot`](/api/lit-ui-router-effect/interfaces/RouteSnapshot) is a
+A [`RouteSnapshot`](/reference/lit-ui-router-effect/interfaces/RouteSnapshot) is a
 value taken once per successful transition. Every member answers for that
 moment, so a selector asking during a later transition gets the settled
 answer, not the in-flight one.
@@ -107,7 +107,7 @@ answer, not the in-flight one.
 
 ### RouterRefController
 
-[`RouterRefController`](/api/lit-ui-router-effect/classes/RouterRefController)
+[`RouterRefController`](/reference/lit-ui-router-effect/classes/RouterRefController)
 follows the route ref of the host's `<ui-router>` context:
 
 ```ts
@@ -116,7 +116,7 @@ new RouterRefController(host, selector, options?)
 
 - `selector: (route: TypedRouteSnapshot) => T` — the selected expression;
   the result is exposed as `.value`.
-  [`TypedRouteSnapshot`](/api/lit-ui-router-effect/type-aliases/TypedRouteSnapshot)
+  [`TypedRouteSnapshot`](/reference/lit-ui-router-effect/type-aliases/TypedRouteSnapshot)
   is the snapshot `routeRef` holds: typed when an app or a registry fills in
   [`ui-router-effect`'s `RouteTypes`](/packages/ui-router-effect#typed-snapshots),
   a `RouteSnapshot` otherwise
@@ -141,7 +141,7 @@ new RouterRefController(host, selector, options?)
   defaults to Effect's default runtime, and a `ManagedRuntime` satisfies it
   directly
 
-[`controller.setRouter(router)`](/api/lit-ui-router-effect/classes/RouterRefController#setrouter)
+[`controller.setRouter(router)`](/reference/lit-ui-router-effect/classes/RouterRefController#setrouter)
 hands the controller a router after construction, such as one that arrives as
 a host property. A connected host interrupts its fiber, re-seeds `.value` from
 the new router, re-forks, and updates; a disconnected one takes the router on
@@ -149,7 +149,7 @@ its next `hostConnected`. Passing the router already followed does nothing.
 
 ### RefController
 
-[`RefController`](/api/lit-ui-router-effect/classes/RefController) is the
+[`RefController`](/reference/lit-ui-router-effect/classes/RefController) is the
 generic primitive behind `RouterRefController` — the same selector/options
 contract over **any** `SubscriptionRef`s, not just the router's:
 
@@ -227,7 +227,7 @@ that reads refs during `render()`:
 
 The route ref mirrors `current`, `params` and `transition` — not resolves.
 Resolved data reaches a routed component exactly as it does without these
-bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+bindings: as [`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps)
 on `_uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the snapshot, and
@@ -262,7 +262,7 @@ is the galaxy tutorial rebuilt on these controllers, installed from npm.
 
 ## Further reading
 
-- [API reference](/api/lit-ui-router-effect/)
+- [API reference](/reference/lit-ui-router-effect/)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-effect) — this package as

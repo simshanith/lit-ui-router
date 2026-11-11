@@ -6,7 +6,7 @@
     "src/testing.ts",
     "src/vite.ts"
   ],
-  "out": "../../www/lit-ui-router.dev/api/lit-ui-router-ssr",
+  "out": "../../www/lit-ui-router.dev/reference/lit-ui-router-ssr",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",
@@ -38,13 +38,13 @@
       "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult"
     },
     "lit-ui-router": {
-      "UIRouterLit": "/api/reference/core/UIRouterLit"
+      "UIRouterLit": "/reference/lit-ui-router/core/UIRouterLit"
     },
     "ui-router-server": {
-      "MountConfig": "/api/ui-router-server/index/interfaces/MountConfig",
-      "ServerRouter": "/api/ui-router-server/index/interfaces/ServerRouter",
-      "Verdict": "/api/ui-router-server/index/type-aliases/Verdict",
-      "PrerenderOptions.preload": "/api/ui-router-server/vite/interfaces/PrerenderOptions#preload"
+      "MountConfig": "/reference/ui-router-server/index/interfaces/MountConfig",
+      "ServerRouter": "/reference/ui-router-server/index/interfaces/ServerRouter",
+      "Verdict": "/reference/ui-router-server/index/type-aliases/Verdict",
+      "PrerenderOptions.preload": "/reference/ui-router-server/vite/interfaces/PrerenderOptions#preload"
     }
   },
   "sidebar": {

@@ -198,7 +198,7 @@ The payload lists where each carried value sits, apart from the values, so a val
 own never passes for one. A resolve whose value the client can't rebuild, for want of a transporter
 or because `decode` throws, runs its function, and `seed` warns in development. See
 [values beyond plain JSON](https://lit-ui-router.dev/packages/ui-router-server#values-beyond-plain-json)
-and [`dehydrate`](https://lit-ui-router.dev/api/ui-router-server/ssr/functions/dehydrate).
+and [`dehydrate`](https://lit-ui-router.dev/reference/ui-router-server/ssr/functions/dehydrate).
 
 ## Attribution
 

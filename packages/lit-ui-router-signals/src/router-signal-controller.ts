@@ -13,10 +13,10 @@ export interface RouterSignalControllerOptions<
   /**
    * Explicit router instance, or a thunk returning one. When omitted (or the
    * thunk returns `undefined`), the controller takes the router an enclosing
-   * [`withRouterSync`](https://lit-ui-router.dev/api/reference/core/withRouterSync)
+   * [`withRouterSync`](https://lit-ui-router.dev/reference/lit-ui-router/core/withRouterSync)
    * scoped at construction (a server render), and otherwise asks the nearest
    * router provider on `hostConnected` over `context-request` (via
-   * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
+   * [requestRouter](https://lit-ui-router.dev/reference/lit-ui-router/core/requestRouter)
    * with `subscribe: true`). A discovered router is rebound when a subscribed
    * provider hands over the router that replaces its placeholder.
    *

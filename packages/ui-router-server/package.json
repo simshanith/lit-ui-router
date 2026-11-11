@@ -162,7 +162,7 @@
     "check:bundle": "floor-guard && check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
-    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/ui-router-server && typedoc",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/ui-router-server && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",

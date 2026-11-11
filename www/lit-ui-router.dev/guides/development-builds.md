@@ -88,13 +88,13 @@ that renders once with its initial value and never again.
 | a mount answers its bare base with a 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/` |
 
 It is a development-only warning, but the check is not.
-[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+[`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns the same findings as data in every build, so asserting it is empty in
 a test catches the problem in CI, whichever build the test resolves. See
 [Server Route Matching](./server-route-matching).
 
 A mount that answers its bare base with a 404 on purpose lists the kind in its
-[`ignoreDiagnostics`](/api/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
+[`ignoreDiagnostics`](/reference/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
 which turns it off for that mount in the warning and in `diagnoseMounts` alike.
 
 ## Server runtimes

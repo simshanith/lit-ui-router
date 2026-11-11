@@ -61,7 +61,7 @@ the enclosing `<ui-router>` element when the host connects, and
 
 ### RouterSignalController
 
-[`RouterSignalController`](/api/lit-ui-router-signals/classes/RouterSignalController)
+[`RouterSignalController`](/reference/lit-ui-router-signals/classes/RouterSignalController)
 watches the `RouterSignals` of a router and exposes the selector's result as
 `.value`. The router comes from the `router` option (a router or a thunk), a
 `withRouterSync` scope at construction, or the nearest provider on
@@ -70,7 +70,7 @@ watches the `RouterSignals` of a router and exposes the selector's result as
 
 ### SignalController
 
-[`SignalController`](/api/lit-ui-router-signals/classes/SignalController) is
+[`SignalController`](/reference/lit-ui-router-signals/classes/SignalController) is
 the generic primitive: it watches any selector over signals while the host is
 connected, and calls `requestUpdate()` only when the selected value changes
 under `equals` (default `Object.is`).
@@ -110,7 +110,7 @@ can be compared file-by-file to see exactly what the Signals idiom changes.
 
 ## Further reading
 
-- [API reference](/api/lit-ui-router-signals/)
+- [API reference](/reference/lit-ui-router-signals/)
 - [ui-router-signals](/packages/ui-router-signals)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

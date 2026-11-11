@@ -36,7 +36,7 @@ export const SURFACES = [
   },
   {
     id: 'api-references',
-    paths: ['/api/*/*'],
+    paths: ['/reference/*/*'],
     renderer: 'typedoc',
     sitemap: true,
     llms: 'index',

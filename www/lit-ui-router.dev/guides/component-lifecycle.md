@@ -13,10 +13,10 @@ two optional interfaces. Unlike
 these are declared on the component itself and only fire while that
 component is active inside a `<ui-view>`.
 
-| Interface                                                     | Method                                 | Called when…                                                     |
-| ------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------- |
-| [`UiOnExit`](/api/reference/hooks/UiOnExit)                   | `uiCanExit(trans?)`                    | a transition is about to exit the component's state              |
-| [`UiOnParamsChanged`](/api/reference/hooks/UiOnParamsChanged) | `uiOnParamsChanged(newParams, trans?)` | dynamic parameter values change without recreating the component |
+| Interface                                                               | Method                                 | Called when…                                                     |
+| ----------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------- |
+| [`UiOnExit`](/reference/lit-ui-router/hooks/UiOnExit)                   | `uiCanExit(trans?)`                    | a transition is about to exit the component's state              |
+| [`UiOnParamsChanged`](/reference/lit-ui-router/hooks/UiOnParamsChanged) | `uiOnParamsChanged(newParams, trans?)` | dynamic parameter values change without recreating the component |
 
 ## uiCanExit: confirm or block navigation
 
@@ -99,7 +99,7 @@ swaps in the new component in a Lit update scheduled after that. Code that
 needs the new DOM — a View Transition, a scroll restore, a focus move, a
 measurement — and reads it on the promise alone finds the outgoing view.
 
-[`viewRendered(router, transition)`](/api/reference/core/viewRendered)
+[`viewRendered(router, transition)`](/reference/lit-ui-router/core/viewRendered)
 resolves once the views have rendered the transition: every `<ui-view>` the
 router knows (nested views each swap in their own update), then each view's
 [`routedElement`](./routed-components#the-routed-element), whose own update
@@ -151,5 +151,5 @@ router.transitionService.onError({}, async (trans) => {
 - **Per-component concerns** (unsaved changes, reacting to a dynamic param)
   belong in these component lifecycle hooks.
 - **Re-rendering on navigation** doesn't need hooks at all — see the
-  [`TransitionController`](/api/reference/controllers/TransitionController)
+  [`TransitionController`](/reference/lit-ui-router/controllers/TransitionController)
   reactive controller.

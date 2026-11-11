@@ -8,7 +8,7 @@ topic: transitions
 # Routed Components
 
 A routed component gets its inputs from `<ui-view>`, which renders it with
-[`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps): the
+[`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps): the
 `router`, the `transition` that rendered the view, and the state's
 `resolves`. This guide covers three things every routed component meets:
 reading its state's params, loading its own element module only when the state
@@ -73,7 +73,7 @@ Reading `router.globals.params` from the component instead ties it to whatever
 state is current, not the state it was rendered for, and gives it no type.
 
 A template function can read `props.transition.params()` directly for a quick
-view; the [`RoutedLitTemplate`](/api/reference/types/RoutedLitTemplate)
+view; the [`RoutedLitTemplate`](/reference/lit-ui-router/types/RoutedLitTemplate)
 reference shows that form.
 
 ### Params that change without re-entering the state
@@ -149,7 +149,7 @@ markup they hold Lit's part markers and, while one component replaces
 another, the element on its way out. Reach the routed element through the view
 instead of `firstElementChild` or child selectors:
 
-- [`routedElement`](/api/reference/components/UiView) is the
+- [`routedElement`](/reference/lit-ui-router/components/UiView) is the
   element the routed component rendered: a class component's instance, or the
   first element a template component rendered. It is `null` while the view
   shows its [fallback content](./view-fallback-content).

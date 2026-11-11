@@ -86,7 +86,7 @@ export function llmsSidebar(
   });
 }
 
-/** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`api/<pkg>/index.md`), which matches the same sidebar link as the package index (`api/<pkg>.md`). */
+/** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`reference/<pkg>/index.md`), which matches the same sidebar link as the package index (`reference/<pkg>.md`). */
 export const LLMS_TXT_IGNORE = pageGlobs(({ llms }) => llms === 'index');
 
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.

@@ -161,17 +161,18 @@ const sampleAppItems: NavLink[] = [
 
 /** Each package's API reference index; keyed by package, so a new catalog entry fails typecheck until it has a link or null. */
 export const API_REFERENCES = {
-  'lit-ui-router': '/api/reference/',
-  'ui-router-effect': '/api/ui-router-effect/',
-  'lit-ui-router-effect': '/api/lit-ui-router-effect/',
-  'ui-router-mobx': '/api/ui-router-mobx/',
-  'lit-ui-router-mobx': '/api/lit-ui-router-mobx/',
-  'ui-router-signals': '/api/ui-router-signals/',
-  'lit-ui-router-signals': '/api/lit-ui-router-signals/',
-  'ui-router-navigation-location-plugin': '/api/navigation-location-plugin/',
-  'ui-router-server': '/api/ui-router-server/',
-  'lit-ui-router-ssr': '/api/lit-ui-router-ssr/',
-  'ui-router-registry': '/api/ui-router-registry/',
+  'lit-ui-router': '/reference/lit-ui-router/',
+  'ui-router-effect': '/reference/ui-router-effect/',
+  'lit-ui-router-effect': '/reference/lit-ui-router-effect/',
+  'ui-router-mobx': '/reference/ui-router-mobx/',
+  'lit-ui-router-mobx': '/reference/lit-ui-router-mobx/',
+  'ui-router-signals': '/reference/ui-router-signals/',
+  'lit-ui-router-signals': '/reference/lit-ui-router-signals/',
+  'ui-router-navigation-location-plugin':
+    '/reference/ui-router-navigation-location-plugin/',
+  'ui-router-server': '/reference/ui-router-server/',
+  'lit-ui-router-ssr': '/reference/lit-ui-router-ssr/',
+  'ui-router-registry': '/reference/ui-router-registry/',
   'eslint-plugin-lit-ui-router': null,
 } as const satisfies Record<PackageName, string | null>;
 
@@ -222,7 +223,7 @@ export const SIDEBAR: SidebarEntry[] = [
     text: 'API',
     collapsed: true,
     items: [
-      { text: 'Overview', link: '/api/' },
+      { text: 'Overview', link: '/reference/' },
       ...ROLES.map(({ id, label }) => ({
         text: label,
         collapsed: false,
@@ -252,7 +253,7 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       { text: 'Guides', link: '/guides/' },
       { text: 'Releases', link: '/releases/', target: '_self' },
       { text: 'Companion Packages', link: '/packages/' },
-      { text: 'API', link: '/api/' },
+      { text: 'API', link: '/reference/' },
     ],
   },
   { text: 'Sample App', items: sampleAppItems },

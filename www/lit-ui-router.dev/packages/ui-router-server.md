@@ -232,7 +232,7 @@ The longest matching mount base owns a pathname outright. A bare mount base
 construction [warns in development](/guides/development-builds#server-runtimes)
 for each mount other than `/` that leaves it to 404. To catch that in CI,
 assert in a test that
-[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+[`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns an empty array: it reports, as data and in every build, the findings
 the warning prints.
 
@@ -631,7 +631,7 @@ their declarations already.
 `baseHref` is the mount prefix: it is added to every href, and `url` is
 passed without it, exactly as a `<base href>` client matches. `urlConfig`
 takes the same object as a mount's `config` and goes through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+[`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
 first, so it throws, leaving the router as it was, if a state's url already
 compiled. For a
 [hash-location](/guides/location-plugins#hash-urls) client, pass
@@ -668,7 +668,7 @@ Each key takes `'always'`, `'never'` or `'as-requested'`.
   redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
   canonical spelling in one hop. A non-navigation request to a response state or a delegate is
   answered at either spelling.
-- **Formatting:** [`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+- **Formatting:** [`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
   installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition
   pushes come out canonical, on the client and on a server router built with
   `installServerLocation(router, { urlConfig })`.
@@ -685,7 +685,7 @@ match the static assets' `html_handling`: `force-trailing-slash` is `{ pages: 'a
 ## Settling a server router
 
 A server render reads the router only once its transition has landed.
-[`settle(router, path)`](/api/ui-router-server/ssr/functions/settle) from
+[`settle(router, path)`](/reference/ui-router-server/ssr/functions/settle) from
 `ui-router-server/ssr` sets the url, syncs the router to it, and resolves
 with the transition that landed, resolves included, so a synchronous render
 after it reads every value. A page loop calls it once per path on the same
@@ -705,16 +705,16 @@ for (const path of ['/', '/sheet/7B']) {
 
 It rejects rather than hangs: on a url no rule matches, on a failed
 transition, and past its
-[`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions). The entry
+[`timeout`](/reference/ui-router-server/ssr/interfaces/SettleOptions). The entry
 imports `@uirouter/core` and no renderer, so it runs under any renderer.
 [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) builds its
 prerender on the same step.
 
 A `redirectTo` chain settles on its final state.
-[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+[`redirectedTo(router, transition)`](/reference/ui-router-server/ssr/functions/redirectedTo)
 then returns `{ url, status }` for a transition a redirect moved, a `redirectTo`
 function's included: the mount-relative url it landed on, query included, and
-the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
+the [`redirectStatusCode`](/reference/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
 of the state the url matched, `302` by default. It returns `undefined` for any
 other transition, so a host answers a redirect found at settle as a 30x; see
 [which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
@@ -723,10 +723,10 @@ other transition, so a host answers a redirect found at settle as a 30x; see
 
 A client booting over a server-rendered page would run every resolve the
 server already ran.
-[`dehydrate(transition)`](/api/ui-router-server/ssr/functions/dehydrate)
+[`dehydrate(transition)`](/reference/ui-router-server/ssr/functions/dehydrate)
 draws the resolved values of a landed transition into a JSON payload, keyed by
 state and token, along with the state and url parameters it was drawn for.
-[`seed(router, payload)`](/api/ui-router-server/ssr-client/functions/seed)
+[`seed(router, payload)`](/reference/ui-router-server/ssr-client/functions/seed)
 from `ui-router-server/ssr/client`, called on the client router before it
 starts, makes the boot transition adopt those
 values instead of calling their resolve functions.
@@ -743,14 +743,14 @@ The boot is still a real transition, with every hook it fires. Every resolve
 the payload does not cover runs as usual:
 
 - **A value that is not
-  [plain JSON data](/api/ui-router-server/ssr/type-aliases/JsonValue).** A
+  [plain JSON data](/reference/ui-router-server/ssr/type-aliases/JsonValue).** A
   `Date`, a `Map`, a class instance or `undefined` would come back changed, so
   `dehydrate` lists it in `unserializable` instead, and the client runs its
   resolve. A [transporter](#values-beyond-plain-json) can carry more.
 - **A `NOWAIT` resolve.** `dehydrate` neither awaits nor draws it; it stays
   with the client.
 - **A resolve the call keeps out.**
-  [`shouldDehydrate`](/api/ui-router-server/ssr/interfaces/DehydrateOptions)
+  [`shouldDehydrate`](/reference/ui-router-server/ssr/interfaces/DehydrateOptions)
   decides per state and token, such as for data every page shares that the
   client loads once from a cacheable file. A resolve it declines is not
   listed in `unserializable`.
@@ -765,7 +765,7 @@ Where the payload goes in the document is the renderer's choice.
 #### Values beyond plain JSON
 
 `dehydrate` and `seed` take a `transport`: a record of
-[transporters](/api/ui-router-server/ssr/interfaces/Transporter), each
+[transporters](/reference/ui-router-server/ssr/interfaces/Transporter), each
 carrying one type of value plain JSON can't, keyed by a name both sides share.
 
 ```ts check
@@ -801,7 +801,7 @@ export const transport = {
 
 ## Emitting a static site
 
-[`prerender(options)`](/api/ui-router-server/prerender/functions/prerender) asks
+[`prerender(options)`](/reference/ui-router-server/prerender/functions/prerender) asks
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
@@ -854,7 +854,7 @@ default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
 them in `result.rules`, and a function receives them with the run's `write`,
 `outDir` and written `pages`. A host with no redirect rules, such as GitHub
 Pages or a plain bucket, takes
-[`redirectPages()`](/api/ui-router-server/prerender/functions/redirectPages):
+[`redirectPages()`](/reference/ui-router-server/prerender/functions/redirectPages):
 each line becomes a page at `<from>/index.html` that sends the browser to its
 `to`.
 
@@ -889,7 +889,7 @@ await prerender({
   kinds of host.
 - **Your own page.** `page` builds each page's HTML from its line (`from`,
   `to`, `status`), and may return a promise.
-  [`redirectPage`](/api/ui-router-server/prerender/functions/redirectPage) is
+  [`redirectPage`](/reference/ui-router-server/prerender/functions/redirectPage) is
   the default, exported so a template can wrap it. A template gets `to`
   unescaped: HTML-escape it in markup, with `escape-html` or the template's
   own escaper, and escape it as a script string too if it goes in a script.
@@ -934,7 +934,7 @@ same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
 as the mount's `config`, or share one object through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig),
+[`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig),
 along with any [trailing-slash policy](#trailing-slashes).
 A static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory
@@ -949,7 +949,7 @@ matches any value, so narrow it to the known ids when the build can list them
 
 ## Further reading
 
-- [API reference](/api/ui-router-server/) — every entry point, one module
+- [API reference](/reference/ui-router-server/) — every entry point, one module
   per subpath import
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts

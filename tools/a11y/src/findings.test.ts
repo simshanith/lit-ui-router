@@ -154,8 +154,8 @@ test('screenshotName sanitises the page label and scheme', () => {
   );
   assert.equal(screenshotName('/', 'dark', taken), 'dark.png');
   assert.equal(
-    screenshotName('/api/reference/types/A', 'dark', taken),
-    'api-reference-types-a-dark.png',
+    screenshotName('/reference/lit-ui-router/types/A', 'dark', taken),
+    'reference-lit-ui-router-types-a-dark.png',
   );
 });
 

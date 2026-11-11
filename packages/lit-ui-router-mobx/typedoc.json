@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "../../www/lit-ui-router.dev/api/lit-ui-router-mobx",
+  "out": "../../www/lit-ui-router.dev/reference/lit-ui-router-mobx",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",
@@ -46,8 +46,8 @@
       "IReactionDisposer": "https://mobx.js.org/reactions.html#reaction"
     },
     "lit-ui-router": {
-      "UIRouterLit": "/api/reference/core/UIRouterLit",
-      "UIRouterLitElement": "/api/reference/components/UIRouterLitElement"
+      "UIRouterLit": "/reference/lit-ui-router/core/UIRouterLit",
+      "UIRouterLitElement": "/reference/lit-ui-router/components/UIRouterLitElement"
     }
   },
   "sidebar": {

@@ -15,7 +15,7 @@
     "src/hono.ts",
     "src/vite.ts"
   ],
-  "out": "../../www/lit-ui-router.dev/api/ui-router-server",
+  "out": "../../www/lit-ui-router.dev/reference/ui-router-server",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",
