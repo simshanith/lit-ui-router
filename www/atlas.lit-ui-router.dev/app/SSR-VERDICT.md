@@ -885,3 +885,38 @@ subtree is not that string. Each plate page's head carries a
 the manifest's, so the request starts with the document and the resolve
 reads it from the preload: one request for `/sheets/7.html` on a hard load
 of `/sheet/7/`, booted `adopted:matched`.
+
+**Update, 2026-11-11.** The atlas is on `ui-router-server@0.10.0` and
+`lit-ui-router-ssr@0.10.0`, which carry a base path through the adapters,
+the plugin and the prerender. The app declares its base once:
+`createServerRouter({ base: BASE, mounts })` in `vite.config.ts` over the
+table `mountsFor()` keys by the same constant, with no `base` in the vite
+config, which the plugin sets from `router.base`; the prerender's router
+takes `baseHref: BASE` and the script throws when `site.base` differs. At
+the root nothing moves: against the 0.9 build `_redirects` is byte for
+byte the same, and each page differs in its bundle hash and the
+signature's `"version":"0.10.0"`; 75 pages and the 404, 76 of 76 renders.
+
+Read once under a prefix, `MOUNT = '/atlas'`, in a scratch build: 75 pages
+at the same files, all 150 rules under `/atlas/`, and `<base href>`, the
+bundle, both preloads and each canonical link spell the base. In
+`vite preview`, `/atlas/sheet/7` 308s, `/atlas/sheet/7a` 302s to
+`/atlas/sheet/7A/`, `/atlas/office` 302s, `/atlas/sheet/99` and `/sheet/7/`
+404, and a hard load, a rail click, back and both redirects land booted
+`adopted:matched` with focus on the title. Three things the read turned up:
+
+- **The hooks get the path with the base taken off.** A table keyed by the
+  base lists `paths` as urls, and `renderShell` and `document` are handed
+  `/sheet/7/` for `/atlas/sheet/7/`. The script's own tables are keyed by
+  url, so every lookup missed and its sheet count read 0 of 33; `served()`
+  puts the base back on the hook's path. `result.pages` reports each path as
+  listed.
+- **The bare mount needs no rule.** The table carried a `/^$/` redirect to
+  the gallery and the prerender listed the bare mount, for a move under a
+  prefix; with the base declared, `/atlas` answers the gallery's page and
+  the listed path wrote that page a second time. Both are gone.
+- **The adapter's canonical `Link` names the mount.** `vite preview` answers
+  every shell page with `Link: </>; rel="canonical"`, `</atlas/>` under the
+  prefix, beside the page's own `<link rel="canonical">` for its url. The
+  staged site is served by Pages with no adapter in front, so no deployed
+  page carries the header.

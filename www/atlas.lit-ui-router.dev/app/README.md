@@ -123,8 +123,10 @@ The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`,
 client bundle: a top-level `plate` state in the same route table, which `prerender.ts` answers with the
 sheet's fragment and the client knows only as the crumb's STANDALONE PLATE link. `src/routes.ts` holds
 the ONE base constant (`MOUNT`, `BASE`, and the
-`href` table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`),
-the generator's fragment links and the staged `_redirects` all derive from it.
+`href` table the views and the prerender share). The mount table is keyed by it and
+`createServerRouter({ base, mounts })` declares it, so the plugin sets vite's `base` from the router
+and the prerender writes it onto every `_redirects` line; `<base href>` (via `%BASE_URL%`) and
+the generator's fragment links derive from the same constant.
 `generator/stage-site.mjs` assembles `dist/`: this app at the root and one merged `_redirects` (the
 prerender's lines, each retired standalone url → its bare plate, and `/app/*` → `/:splat`). It also writes `sitemap.xml` from the pages' own canonical links, a
 `robots.txt` that names it, and a `_headers` that caches the content-hashed `/assets/*` as immutable.
@@ -277,7 +279,8 @@ is skipped in this mode. Nothing above changes the site build, which prerenders 
 `src/routes.ts` is the one route table. `ui-router-server` compiles it into a mount at the site root
 and is used twice:
 
-- **`vite.config.ts`** — `serverRouterPlugin` from `lit-ui-router-ssr/vite`, so `vite dev` and
+- **`vite.config.ts`** — `serverRouterPlugin` from `lit-ui-router-ssr/vite`, on a server router that
+  declares the base, which is where vite's `base` comes from; `vite dev` and
   `vite preview` answer the same 302 for `/office` and the same honest 404 for `/sheet/99` the
   deployed site does. Its `prerender` option names `prerender.ts`, which the plugin runs after the
   client build in a worker with the DOM shim and `lit-ui-router-ssr/register` loaded first.

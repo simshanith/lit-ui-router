@@ -31,7 +31,9 @@ const manifest = JSON.parse(
   readFileSync(join(HERE, 'public', 'manifest.json'), 'utf8'),
 ) as Manifest;
 
+// The table is keyed by the base (src/routes.ts) and declares it here; the plugin sets vite's `base` from it.
 const serverRouter = createServerRouter({
+  base: BASE,
   mounts: mountsFor(allSheets(manifest).map((sheet) => sheet.num)),
 });
 
@@ -105,7 +107,6 @@ export default defineConfig(({ mode }) => {
     };
   }
   return {
-    base: BASE,
     build: {
       target: 'esnext',
     },

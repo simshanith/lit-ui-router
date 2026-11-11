@@ -12,9 +12,11 @@ import type { RouterUrlConfig } from 'ui-router-server/url-config';
 import type { AssertNoCollisions, StatesOf } from 'ui-router-registry';
 
 /**
- * The mount base — THE ONE base constant. vite's `base`, `<base href>`,
- * every href in both template sets, the generator's fragment links and the
- * staged site's _redirects all derive from it. The app owns the site root.
+ * The mount base — THE ONE base constant. The mount table is keyed by it and
+ * `createServerRouter({ base, mounts })` declares it, which sets vite's `base`
+ * and puts it on every _redirects line; `<base href>`, every href in both
+ * template sets and the generator's fragment links derive from it. The app
+ * owns the site root.
  */
 export const MOUNT = '/';
 
@@ -224,11 +226,6 @@ export function mountsFor(
       redirects: [
         ...lowercased,
         ...aliased,
-        // A bare mount base (no trailing slash) resolves the empty subpath,
-        // which no route claims; send it to the gallery rather than 404ing
-        // the front door. Inert at a root mount — `/` is the gallery's own
-        // url — and kept so a move back under a prefix keeps working.
-        { pattern: /^$/, to: 'atlas.gallery' },
       ],
       otherwise: { state: 'atlas.notFound' },
       ...tier,

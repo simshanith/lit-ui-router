@@ -52,7 +52,7 @@ import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
-import { BASE, MOUNT, SHEET_ALIASES, SITE, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
+import { BASE, SHEET_ALIASES, SITE, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 import { ICON_SPRITE } from './src/generated/icons.js';
 import { CYTOSCAPE_URL, FILL_SCRIPT, PLATE_END_SCRIPT } from './src/generated/plate-page.js';
@@ -100,7 +100,7 @@ const PLATES = allSheets(manifest);
  * `globals.$current`, so it has to have entered the page's own state.
  */
 // The one url shape (src/routes.ts): the client router and the mount take the same object.
-const router: LitRouter = installServerLocation(new UIRouterLit(), { urlConfig: URL_CONFIG });
+const router: LitRouter = installServerLocation(new UIRouterLit(), { baseHref: BASE, urlConfig: URL_CONFIG });
 const cityRow = findExtra(manifest, 'city');
 const plantRow = findExtra(manifest, 'plant');
 const bricksRow = findExtra(manifest, 'bricks');
@@ -188,6 +188,9 @@ router.urlService.rules.initial((_match, parsed) => ({
   params: parsed?.search ?? {},
 }));
 router.urlService.rules.otherwise({ state: 'atlas.notFound' });
+
+/** A hook's path as its page is served: the hooks get each path with the base taken off, the tables below spell it. */
+const served = (path: string): string => `${BASE}${path.slice(1)}`;
 
 /** The sheet each `/sheet/*` page is, by path. */
 const sheetOf = new Map(PLATES.map((row): [string, string] => [href.sheet(row.num), row.num]));
@@ -297,12 +300,10 @@ const fragmentFileOf = new Map<string, string>([
   ...(buildsRow ? ([[href.builds, buildsRow.file]] as [string, string][]) : []),
 ]);
 
-// Verdict-only: /office is a redirect, a bare mount (when the mount is not the
-// root) redirects to the gallery, and a lowercase or aliased sheet id redirects
+// Verdict-only: /office is a redirect, and a lowercase or aliased sheet id redirects
 // to its cased page. None gets a page; each gets a _redirects line.
 const verdictOnly: string[] = [
   `${BASE}office`,
-  ...(MOUNT === BASE ? [] : [MOUNT]),
   ...PLATES.filter((row) => row.id !== row.num).map((row) => href.sheet(row.id)),
   ...Object.keys(SHEET_ALIASES).map((alias) => href.sheet(alias)),
   ...PLATES.filter((row) => row.id !== row.num).map((row) => href.plate(row.id)),
@@ -317,10 +318,12 @@ const megacanvas: RedirectLine[] = [
 ];
 
 // The route table's own diagnostics, on the matcher tier: a mount that 404s its bare base fails the build here.
-const findings = diagnoseMounts(createServerRouter({ mounts: mountsFor(PLATES.map((sheet) => sheet.num)) }));
+const findings = diagnoseMounts(createServerRouter({ base: BASE, mounts: mountsFor(PLATES.map((sheet) => sheet.num)) }));
 if (findings.length > 0) throw new Error(`prerender: ${findings.map((f) => `${f.mount} — ${f.message}`).join('; ')}`);
 
-const site = definePrerender(({ shellHtml }) => {
+const site = definePrerender(({ shellHtml, base }) => {
+  // The plugin hands over vite's resolved base, which it set from the server router's own.
+  if (base !== BASE) throw new Error(`prerender: vite's base is ${base}, the route table's is ${BASE}`);
   if (!ROOT_RE.test(shellHtml)) throw new Error('prerender: dist/index.html has no empty <div id="root">');
   for (const [name, tag] of Object.entries(HEAD_TAGS))
     if (!tag.test(shellHtml)) throw new Error(`prerender: dist/index.html has no ${name} tag to rewrite`);
@@ -341,15 +344,16 @@ const site = definePrerender(({ shellHtml }) => {
     // page that fails to land rejects, which fails the build.
     renderShell: async (_verdict, { path }) => {
       await settle(router, path);
-      checkRouteRef(path);
+      checkRouteRef(served(path));
       // A string is written as-is, with no hydration signature: the bare plate.
-      const plate = plateOf.get(path);
+      const plate = plateOf.get(served(path));
       if (plate) return fragmentOf(plate);
       return views.page(router);
     },
     // The landed transition's resolves, written into each shell page's signature block.
     dehydrate: { shouldDehydrate: ({ token }) => !LEFT_OUT.has(token) },
-    document: (body, { path }) => {
+    document: (body, context) => {
+      const path = served(context.path);
       const plate = plateOf.get(path);
       if (plate) return plateDocument(plate, body, fontLinks);
       const title = titles.get(path) ?? TITLES.notFound;
