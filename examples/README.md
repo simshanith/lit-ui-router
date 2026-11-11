@@ -195,6 +195,8 @@ npm install
 npm run dev
 ```
 
+Every example logs each transition to the browser console with `router.trace.enable('TRANSITION')`, called right after the location plugin. **hellosolarsystem**, **hellosolarsystem-signals**, **hellogalaxy**, **hellogalaxy-effect** and **hellogalaxy-signals** also load the [UI Router visualizer](https://github.com/ui-router/visualizer) when the page url has `?visualizer` before the `#`, as in `http://localhost:5173/?visualizer#/galaxy/stars`.
+
 The lint example runs the same way; `npm run lint` gives you the same report in the terminal, and `npm run lint:watch` re-lints on save without a browser.
 
 In the monorepo, a root `pnpm install` also installs each example's own npm dependencies via this package's `postinstall` hook. pnpm skips lifecycle scripts when the workspace is already up to date, so to restore a manually deleted `examples/<example-name>/node_modules` run the hook directly:
