@@ -1,5 +1,8 @@
 import { rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
+
+import { SitemapIndexStream, streamToPromise } from 'sitemap';
 
 import { SURFACES } from '../catalog/surfaces.ts';
 
@@ -18,14 +21,17 @@ export const childSitemaps = (): string[] => [
 ];
 
 /** A sitemap index of `paths`, each absolute on `hostname`. */
-export const sitemapIndexXml = (hostname: string, paths: string[]): string =>
-  [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...paths.map((path) => `<sitemap><loc>${hostname}${path}</loc></sitemap>`),
-    '</sitemapindex>',
-    '',
-  ].join('\n');
+export const sitemapIndexXml = async (
+  hostname: string,
+  paths: string[],
+): Promise<string> =>
+  String(
+    await streamToPromise(
+      Readable.from(paths.map((path) => `${hostname}${path}`)).pipe(
+        new SitemapIndexStream(),
+      ),
+    ),
+  );
 
 /** Moves VitePress's sitemap aside and writes the index in its place. */
 export async function writeSitemapIndex(
@@ -35,6 +41,6 @@ export async function writeSitemapIndex(
   await rename(join(outDir, SITEMAP_INDEX), join(outDir, PAGES_SITEMAP));
   await writeFile(
     join(outDir, SITEMAP_INDEX),
-    sitemapIndexXml(hostname, childSitemaps()),
+    await sitemapIndexXml(hostname, childSitemaps()),
   );
 }

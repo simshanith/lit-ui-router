@@ -1,4 +1,6 @@
 // The /releases sitemap: the index, each package's page and each version's page; diff pages stay out.
+import XMLBuilder from 'fast-xml-builder';
+
 import { SURFACES } from '../../catalog/surfaces.ts';
 import type { LedgerPackage, LedgerVersion } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
@@ -64,23 +66,17 @@ export const sitemapEntries = (
   return [index, ...perPackage.flat()].slice(0, MAX_URLS);
 };
 
-const escapeXml = (text: string): string =>
-  text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
-
-const urlXml = (origin: string, { path, lastmod }: SitemapEntry): string =>
-  `<url><loc>${escapeXml(`${origin}${path}`)}</loc>${lastmod === undefined ? '' : `<lastmod>${lastmod}</lastmod>`}</url>`;
+const builder = new XMLBuilder({ ignoreAttributes: false });
 
 /** A sitemap of `entries`, each absolute on `origin`. */
 export const sitemapXml = (origin: string, entries: SitemapEntry[]): string =>
-  [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...entries.map((entry) => urlXml(origin, entry)),
-    '</urlset>',
-    '',
-  ].join('\n');
+  builder.build({
+    '?xml': { '@_version': '1.0', '@_encoding': 'UTF-8' },
+    urlset: {
+      '@_xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+      url: entries.map(({ path, lastmod }) => ({
+        loc: `${origin}${path}`,
+        lastmod,
+      })),
+    },
+  });

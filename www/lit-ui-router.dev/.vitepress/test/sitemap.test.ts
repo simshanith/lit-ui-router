@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { Window } from 'happy-dom';
+import { XMLParser } from 'fast-xml-parser';
+import { SyntaxValidator } from 'fast-xml-validator';
 import { createServerRouter } from 'ui-router-server';
+import * as v from 'valibot';
 
 import { SURFACES } from '../../catalog/surfaces.ts';
 import { mounts } from '../../worker/releases/routes.ts';
@@ -19,25 +21,27 @@ import {
 
 const HOST = 'https://lit-ui-router.dev';
 
-/** The `<loc>` of each `<sitemap>` in a parsed index; a parse error fails the test. */
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  ignoreDeclaration: true,
+  parseTagValue: false,
+  isArray: (name) => name === 'sitemap',
+});
+
+const ParsedIndex = v.strictObject({
+  sitemapindex: v.strictObject({
+    '@_xmlns': v.literal('http://www.sitemaps.org/schemas/sitemap/0.9'),
+    sitemap: v.array(v.strictObject({ loc: v.string() })),
+  }),
+});
+
+/** The `<loc>` of each `<sitemap>` in a parsed index; invalid XML fails the test. */
 const indexLocs = (xml: string) => {
-  const doc = new new Window().DOMParser().parseFromString(
-    xml,
-    'application/xml',
-  );
+  assert.equal(SyntaxValidator.validate(xml), true);
 
-  assert.equal(doc.querySelector('parsererror'), null);
-  assert.equal(doc.documentElement.localName, 'sitemapindex');
-  assert.equal(
-    doc.documentElement.namespaceURI,
-    'http://www.sitemaps.org/schemas/sitemap/0.9',
-  );
-
-  return [...doc.documentElement.children].map((entry) => {
-    assert.equal(entry.localName, 'sitemap');
-
-    return entry.getElementsByTagName('loc')[0]?.textContent;
-  });
+  return v
+    .parse(ParsedIndex, parser.parse(xml))
+    .sitemapindex.sitemap.map(({ loc }) => loc);
 };
 
 describe('the sitemap index', () => {
@@ -67,8 +71,8 @@ describe('the sitemap index', () => {
     }
   });
 
-  it('writes absolute locs', () => {
-    assert.deepEqual(indexLocs(sitemapIndexXml(HOST, childSitemaps())), [
+  it('writes absolute locs', async () => {
+    assert.deepEqual(indexLocs(await sitemapIndexXml(HOST, childSitemaps())), [
       `${HOST}/sitemap-pages.xml`,
       `${HOST}/releases/sitemap.xml`,
     ]);

@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { Window } from 'happy-dom';
+import { XMLParser } from 'fast-xml-parser';
+import { SyntaxValidator } from 'fast-xml-validator';
+import * as v from 'valibot';
 
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
 import type { LedgerReader, LedgerVersion } from '../releases/ledger.ts';
 import { serveReleases } from '../releases/serve.ts';
-import { MAX_URLS, sitemapEntries } from '../releases/sitemap.ts';
+import { MAX_URLS, sitemapEntries, sitemapXml } from '../releases/sitemap.ts';
 import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 
@@ -24,25 +26,27 @@ const NO_DIFFS: ReleaseDiffs = { index: unread, files: unread, patch: unread };
 const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
   serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, NO_DIFFS);
 
-/** A sitemap's `<url>` entries, from the parsed XML; a parse error fails the test. */
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  ignoreDeclaration: true,
+  parseTagValue: false,
+  isArray: (name) => name === 'url',
+});
+
+const ParsedSitemap = v.strictObject({
+  urlset: v.strictObject({
+    '@_xmlns': v.literal(NS),
+    url: v.array(
+      v.strictObject({ loc: v.string(), lastmod: v.optional(v.string()) }),
+    ),
+  }),
+});
+
+/** A sitemap's `<url>` entries, from the parsed XML; invalid XML fails the test. */
 const urlsOf = (xml: string) => {
-  const doc = new new Window().DOMParser().parseFromString(
-    xml,
-    'application/xml',
-  );
+  assert.equal(SyntaxValidator.validate(xml), true);
 
-  assert.equal(doc.querySelector('parsererror'), null);
-  assert.equal(doc.documentElement.localName, 'urlset');
-  assert.equal(doc.documentElement.namespaceURI, NS);
-
-  return [...doc.documentElement.children].map((url) => {
-    assert.equal(url.localName, 'url');
-
-    return {
-      loc: url.getElementsByTagName('loc')[0]?.textContent,
-      lastmod: url.getElementsByTagName('lastmod')[0]?.textContent,
-    };
-  });
+  return v.parse(ParsedSitemap, parser.parse(xml)).urlset.url;
 };
 
 const sitemap = async (ledger = fixtureLedger) => {
@@ -90,7 +94,7 @@ describe('the /releases sitemap', () => {
 
   it('lists only pages that answer 200, and no diff page', async () => {
     for (const { loc } of await sitemap()) {
-      const path = new URL(loc ?? '').pathname;
+      const path = new URL(loc).pathname;
 
       assert.doesNotMatch(path, /\/diff(\/|$)/);
       assert.equal((await serve(path))?.status, 200, path);
@@ -117,7 +121,7 @@ describe('the /releases sitemap', () => {
 
     const lastmods = new Map(
       (await sitemap(ledger)).map(({ loc, lastmod }) => [
-        new URL(loc ?? '').pathname,
+        new URL(loc).pathname,
         lastmod,
       ]),
     );
@@ -138,6 +142,15 @@ describe('the /releases sitemap', () => {
     );
     assert.equal(lastmods.get('/releases/ui-router-server/'), PUBLISHED);
     assert.equal(lastmods.get('/releases/'), [gh, PUBLISHED].sort().at(-1));
+  });
+
+  it('escapes markup in a loc', () => {
+    const path = '/releases/?a=<1>&b="2"';
+
+    assert.deepEqual(
+      urlsOf(sitemapXml(ORIGIN, [{ path }])).map(({ loc }) => loc),
+      [`${ORIGIN}${path}`],
+    );
   });
 
   it('stops at the protocol limit of 50,000 urls', () => {
