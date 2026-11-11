@@ -31,5 +31,10 @@ Each entry lists its facets, read from the example's own files:
 
 ## Elsewhere
 
+This site is a consumer too: its worker answers each request with
+`ui-router-server`, and renders the release pages
+with `lit-ui-router-ssr`. [How this site runs](/site/) describes it, and the
+[server-side overview](/guides/server) lists it beside the other hosts.
+
 The [Altitude Atlas](https://atlas.lit-ui-router.dev) draws the packages and
 their sources as interactive models; it is built from this repository too.
