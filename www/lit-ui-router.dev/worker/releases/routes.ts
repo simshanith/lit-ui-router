@@ -16,6 +16,7 @@ export const urlConfig = {
 
 export const releaseRoutes = [
   { name: 'releases', url: '' },
+  { name: 'releases.sitemap', url: '/sitemap.xml', response: true },
   { name: 'releases.package', url: '/{pkg}' },
   { name: 'releases.package.latest', url: '/latest', response: true },
   {

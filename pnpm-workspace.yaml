@@ -83,6 +83,8 @@ catalog:
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.10
   eslint-plugin-wc: ^3.1.0
+  fast-xml-parser: ^5.12.0
+  fast-xml-validator: ^1.4.2
   happy-dom: ^21.0.4
   hono: ^4.13.17
   husky: ^9.1.7
@@ -113,6 +115,7 @@ catalog:
   rolldown: ~1.2.18
   semver: ^7.8.6
   signal-polyfill: ^0.2.2
+  sitemap: ^10.0.0
   start-server-and-test: ^3.0.13
   stylelint: ^18.0.0
   stylelint-config-recommended: ^19.0.0

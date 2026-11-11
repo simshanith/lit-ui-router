@@ -14,6 +14,8 @@ export interface PageHead {
   description: string;
   /** A module script the page loads. */
   script?: string;
+  /** Keeps the page out of search indexes. */
+  noindex?: boolean;
 }
 
 // @lit-labs/ssr's server-only `html`: it renders a doctype and binds inside `<title>`, where hydratable templates can't.
@@ -32,6 +34,7 @@ if (preference === 'auto' ? prefersDark : preference === 'dark') document.docume
 })()</script>
 <title>${head.title} | Lit UI Router</title>
 <meta name="description" content=${head.description}>
+${head.noindex ? html`<meta name="robots" content="noindex">` : ''}
 <link rel="icon" href="/favicon.ico">
 <link rel="stylesheet" href=${STYLESHEET}>
 ${head.script ? html`<script type="module" src=${head.script}></script>` : ''}
