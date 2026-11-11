@@ -92,7 +92,7 @@ const router = installServerLocation(new UIRouterLit());
 for (const state of states) router.stateRegistry.register(state);
 router.urlService.rules.otherwise({ state: 'notFound' });
 
-export default definePrerender((site) => ({
+export default definePrerender(() => ({
   mounts,
   router,
   paths: ['/', '/about', '/legacy'],
@@ -100,7 +100,6 @@ export default definePrerender((site) => ({
     await settle(router, path);
     return page(router);
   },
-  document: (body) => site.shellHtml.replace('<!--app-->', body),
 }));
 ```
 
@@ -109,12 +108,17 @@ so an option the script returns, such as `outDir` or `base`, wins over the
 build's.
 
 `paths` lists every path to visit. `renderShell` moves the router to the path
-and returns the page's template, and `document` puts the rendered body into
-the built `index.html`, where the app's container holds a marker:
+and returns the page's template. `definePrerender` then puts the rendered body
+into the built `index.html` in place of the `<!--app-->` marker in the app's
+container:
 
 ```html
 <div id="app"><!--app--></div>
 ```
+
+A shell without the marker fails the build with an error that names it. To
+fill another marker, or to build the page some other way, return a `document`
+hook built from `site.shellHtml`; it wins over the default.
 
 The shim must finish installing before anything defines an element, which
 is why the plugin preloads it rather than the script importing it:
@@ -172,7 +176,7 @@ export default definePrerender((site) => {
   for (const state of states) router.stateRegistry.register(state);
   router.urlService.rules.otherwise({ state: 'notFound' });
 
-  return { mounts, router, paths, renderShell, document };
+  return { mounts, router, paths, renderShell };
 });
 ```
 
@@ -229,8 +233,8 @@ summary line.
 `/about` is the whole render path. The route table's verdict is a page, so
 `ui-router-server` asks `lit-ui-router-ssr` to render it. Your `renderShell`
 settles the router on the path and returns the page's template, Lit renders
-it to html, and your `document` puts that body into `shellHtml` in place of
-the marker. The finished document is written as `about/index.html`.
+it to html, and `definePrerender`'s default `document` puts that body into
+`shellHtml` in place of the marker. The finished document is written as `about/index.html`.
 
 <DiagramEmbed src="/diagrams/prerender-with-vite-seq-2-page.svg">
 

@@ -74,15 +74,40 @@ export type PrerenderScript = (
 // Loaded on call, inside the worker: the plugin's process never evaluates lit.
 const loadPrerender = async () => (await import('./prerender.js')).prerender;
 
+/** The marker in the built `index.html` that the default `document` puts each page's body in place of. */
+const APP_MARKER = '<!--app-->';
+
+/** The default `document`: `shellHtml` with its first {@link APP_MARKER} replaced by the body. */
+const shellDocument = (shellHtml: string): ((body: string) => string) => {
+  const at = shellHtml.indexOf(APP_MARKER);
+
+  if (at === -1)
+    throw new Error(
+      `definePrerender: the built index.html has no ${APP_MARKER} marker; put ${APP_MARKER} where each page's body goes, or return a \`document\` hook`,
+    );
+
+  const before = shellHtml.slice(0, at);
+  const after = shellHtml.slice(at + APP_MARKER.length);
+
+  return (body) => `${before}${body}${after}`;
+};
+
 /**
  * Turns a callback that returns this package's prerender options into a
  * prerender script's default export. The export spreads the build's values
  * (`outDir`, `base`, `shellHtml`, `write`) under the options and calls this
  * package's `prerender()`, so the script never calls it itself.
  *
+ * Without a `document` hook in the options, each page's body goes into
+ * `shellHtml`, the built `index.html`, in place of its first `<!--app-->`
+ * marker, so the shell's `<head>` and client script carry over. A shell with
+ * no marker fails the build. A `document` the script returns wins, and can
+ * fill any other marker.
+ *
  * @param script - returns the prerender options; handed the build's values
  * @returns the default export for the prerender script, whose result's
  * pages carry their `payload` report
+ * @throws from the build step when no `document` is returned and `shellHtml` has no `<!--app-->` marker
  *
  * @example
  * ```ts
@@ -95,7 +120,7 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  * declare const router: UIRouterLit;
  * declare function page(router: UIRouterLit): TemplateResult;
  *
- * export default definePrerender((site) => ({
+ * export default definePrerender(() => ({
  *   mounts,
  *   router,
  *   paths: ['/', '/about'],
@@ -103,7 +128,6 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  *     await settle(router, path);
  *     return page(router);
  *   },
- *   document: (body) => site.shellHtml.replace('<!--app-->', body),
  * }));
  * ```
  */
@@ -118,6 +142,7 @@ export function definePrerender(script: PrerenderScript): PrerenderEntry {
     const { root: _root, ...result } = await prerender({
       ...build,
       ...options,
+      document: options.document ?? shellDocument(build.shellHtml),
     });
 
     return result;
