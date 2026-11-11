@@ -17,7 +17,7 @@ export class MessageList extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<MessageListResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<MessageListResolves>) {
     super();
   }
 
@@ -33,7 +33,7 @@ export class MessageList extends LitElement {
   private resolved?: readonly Message[];
 
   get folder() {
-    return this._uiViewProps.resolves.folder;
+    return this.uiViewProps.resolves.folder;
   }
 
   // discard a snapshot that landed after the folder moved on
@@ -44,9 +44,9 @@ export class MessageList extends LitElement {
     });
   }
 
-  // <ui-view> re-delivers _uiViewProps every update, so re-seed only on a new resolve
+  // <ui-view> re-delivers uiViewProps every update, so re-seed only on a new resolve
   willUpdate() {
-    const resolved = this._uiViewProps.resolves.messages ?? [];
+    const resolved = this.uiViewProps.resolves.messages ?? [];
 
     if (resolved !== this.resolved) {
       this.resolved = resolved;

@@ -43,7 +43,7 @@ export class EditContact extends LitElement {
   }
 
   get contact(): Contact | undefined {
-    return this._uiViewProps.resolves?.contact;
+    return this.uiViewProps.resolves?.contact;
   }
 
   @state()
@@ -52,7 +52,7 @@ export class EditContact extends LitElement {
   @state()
   updatedContact = cloneDeep(this.contact);
 
-  constructor(public _uiViewProps: UIViewInjectedProps<EditContactResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<EditContactResolves>) {
     super();
   }
 
@@ -72,7 +72,7 @@ export class EditContact extends LitElement {
 
   saveContact = () => {
     // Save the contact, then go to the parent state (either 'contacts' or 'contacts.contact')
-    const { stateService } = this._uiViewProps.router;
+    const { stateService } = this.uiViewProps.router;
     void ContactsStorage.save(this.updatedContact)
       .then(() => (this.canExit = true))
       .then(() => stateService.go('^', undefined, { reload: true }));
@@ -81,7 +81,7 @@ export class EditContact extends LitElement {
   removeContact = () => {
     // Ask for confirmation, then delete the contact, then go to the grandparent state ('contacts')
     const contact = this.updatedContact;
-    const { stateService } = this._uiViewProps.router;
+    const { stateService } = this.uiViewProps.router;
     DialogService.confirm(
       `Delete contact: ${contact?.name.first} ${contact?.name.last}`,
     )

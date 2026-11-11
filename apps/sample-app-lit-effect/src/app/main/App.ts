@@ -18,11 +18,11 @@ export class App extends LitElement {
 
   /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Follows the route ref of the enclosing <ui-router> and re-renders only
@@ -38,7 +38,7 @@ export class App extends LitElement {
   );
 
   get stateService() {
-    return this._uiViewProps.router.stateService;
+    return this.uiViewProps.router.stateService;
   }
 
   handleLogout = () => {

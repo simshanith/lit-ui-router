@@ -143,11 +143,11 @@ export const CardView: RoutedLitTemplate = (props) =>
 
 /** A routed class in the sample apps' light-DOM shape, opted in, taking its props through the constructor. */
 export class RoutedLightCard extends LightDomHydrating(LitElement) {
-  _uiViewProps?: UIViewInjectedProps;
+  uiViewProps?: UIViewInjectedProps;
 
   constructor(props?: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   protected override willUpdate(changed: PropertyValues<this>): void {
@@ -156,7 +156,7 @@ export class RoutedLightCard extends LightDomHydrating(LitElement) {
   }
 
   override render(): TemplateResult {
-    const label = String(this._uiViewProps?.resolves.label);
+    const label = String(this.uiViewProps?.resolves.label);
 
     return html`<p class="routed-light" data-label=${label}>${label}</p>`;
   }

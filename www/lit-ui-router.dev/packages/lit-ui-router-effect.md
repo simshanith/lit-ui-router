@@ -228,7 +228,7 @@ that reads refs during `render()`:
 The route ref mirrors `current`, `params` and `transition` — not resolves.
 Resolved data reaches a routed component exactly as it does without these
 bindings: as [`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps)
-on `_uiViewProps`, scoped to that component's own view.
+on `uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the snapshot, and
 `route.transition.injector().get(token)` is not a substitute: that is the
@@ -237,7 +237,7 @@ a different token set than the component's own view sees.
 
 The split the Effect sample app follows:
 
-- resolved data → `_uiViewProps.resolves`
+- resolved data → `uiViewProps.resolves`
 - active state, and anything that outlives a single activation → a
   `SubscriptionRef`, selected by ref controllers
 
