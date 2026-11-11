@@ -22,10 +22,11 @@ describe('the example facets', () => {
   it('take values from the vocabulary only', () => {
     for (const name of EXAMPLE_NAMES) {
       for (const [key, value] of Object.entries(exampleFacets(name))) {
-        const values: readonly string[] =
+        // SAFETY: exampleFacets builds its keys from the vocabulary; a stray key fails the lookup below
+        const values: readonly string[] | undefined =
           EXAMPLE_FACETS[key as keyof typeof EXAMPLE_FACETS];
 
-        assert.ok(values.includes(value), `${name}: ${key} ${value}`);
+        assert.ok(values?.includes(value), `${name}: ${key} ${value}`);
       }
     }
   });

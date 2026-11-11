@@ -12,6 +12,7 @@ import {
   type PackageName,
   ROLES,
 } from '../catalog/packages.ts';
+import { code, selfLink } from './index-markdown.ts';
 import { releasesPath } from './release-stubs.ts';
 
 /** Every manifest under packages/, keyed by package name. */
@@ -57,8 +58,6 @@ export function entryPoints({ name, exports = {} }: PackageManifest): string[] {
     );
 }
 
-const code = (text: string) => `\`${text}\``;
-
 const sentence = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`);
 
 /** One package's index entry: its description, facets, entry points and links. */
@@ -78,7 +77,7 @@ export function packageEntry(
   const links = [
     `[Package page](/packages/${name})`,
     ...(reference ? [`[API reference](${reference})`] : []),
-    `[Releases](${releasesPath(name)}){target="_self"}`,
+    selfLink('Releases', releasesPath(name)),
   ];
 
   return [

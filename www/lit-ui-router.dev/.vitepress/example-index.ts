@@ -3,7 +3,7 @@ import { extname, join } from 'node:path';
 
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import type { PackageManifest } from '@tools/bootstrap/types.ts';
+import type { DependencyMap, PackageManifest } from '@tools/bootstrap/types.ts';
 
 import { EXAMPLE_NAMES, type ExampleName } from 'examples/embeds';
 
@@ -14,6 +14,7 @@ import {
   type ExampleKind,
   SAMPLE_APPS,
 } from '../catalog/examples.ts';
+import { code, selfLink } from './index-markdown.ts';
 import { pageUrl } from './surfaces.ts';
 import {
   EXAMPLES,
@@ -27,8 +28,6 @@ const SITE = join(import.meta.dirname, '..');
 const GITHUB_APPS =
   'https://github.com/simshanith/lit-ui-router/tree/main/apps';
 
-type Deps = Record<string, string>;
-
 const manifestIn = (dir: string): PackageManifest => {
   const manifest = readManifest(dir);
 
@@ -37,7 +36,7 @@ const manifestIn = (dir: string): PackageManifest => {
   return manifest;
 };
 
-const depsOf = ({ dependencies, devDependencies }: PackageManifest): Deps => ({
+const depsOf = ({ dependencies, devDependencies }: PackageManifest) => ({
   ...dependencies,
   ...devDependencies,
 });
@@ -45,7 +44,7 @@ const depsOf = ({ dependencies, devDependencies }: PackageManifest): Deps => ({
 const BINDINGS = ['mobx', 'signals', 'effect'] as const;
 
 /** Facets an app's dependencies decide: its Lit bindings, prerendering, the registry and the lint plugin. */
-export function dependencyFacets(deps: Deps): ExampleFacets {
+export function dependencyFacets(deps: DependencyMap): ExampleFacets {
   const bindings = BINDINGS.filter((name) => `lit-ui-router-${name}` in deps);
 
   if (bindings.length > 1)
@@ -91,13 +90,13 @@ const KIND_PREFIXES = {
 
 /** An example's kind, from its package name. */
 export function kindOf(packageName = ''): ExampleKind {
-  const prefix = Object.keys(KIND_PREFIXES).find((key) =>
-    packageName.startsWith(key),
-  );
+  const kind = Object.entries(KIND_PREFIXES).find(([prefix]) =>
+    packageName.startsWith(prefix),
+  )?.[1];
 
-  if (!prefix) throw new Error(`${packageName}: no example kind prefix`);
+  if (!kind) throw new Error(`${packageName}: no example kind prefix`);
 
-  return KIND_PREFIXES[prefix as keyof typeof KIND_PREFIXES];
+  return kind;
 }
 
 const sourcesOf = (dir: string): string[] =>
@@ -159,10 +158,9 @@ export function embeddingPages(): Map<
   return pages;
 }
 
-const code = (text: string) => `\`${text}\``;
-
 /** A facet line in the vocabulary's key order. */
 export function facetLine(facets: ExampleFacets): string {
+  // SAFETY: EXAMPLE_FACETS is a const literal, so its own keys are exactly keyof ExampleFacets
   const keys = Object.keys(EXAMPLE_FACETS) as (keyof ExampleFacets)[];
 
   return keys
@@ -182,7 +180,7 @@ function exampleEntry(
   const { title, summary } = EXAMPLES[name];
 
   const links = [
-    `[Run it](${staticSrc(name)}){target="_self"}`,
+    selfLink('Run it', staticSrc(name)),
     `[Open in StackBlitz](${stackblitzOpenSrc(name)})`,
     `[Source](${githubTreeSrc(name)})`,
   ];
@@ -216,7 +214,7 @@ function sampleAppEntries(): string[] {
     `### ${label} sample app`,
     '',
     `- Facets: ${facetLine(sampleAppFacets(app))}`,
-    `- [Open ${code(mount)}](${mount}){target="_self"} · [Source](${GITHUB_APPS}/${app})`,
+    `- ${selfLink(`Open ${code(mount)}`, mount)} · [Source](${GITHUB_APPS}/${app})`,
     '',
   ]);
 }
@@ -224,6 +222,7 @@ function sampleAppEntries(): string[] {
 /** One section per kind, in vocabulary order: the embedded examples, then the live sample-app mounts. */
 export function exampleIndex(): string {
   const pages = embeddingPages();
+
   const facets = new Map(
     EXAMPLE_NAMES.map((name) => [name, exampleFacets(name)]),
   );

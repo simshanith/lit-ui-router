@@ -9,6 +9,7 @@ import {
   packageManifests,
   peerLayer,
 } from '../package-index.ts';
+import { stripLlmOnly } from '../index-markdown.ts';
 import { releasesPath } from '../release-stubs.ts';
 
 const manifests = packageManifests();
@@ -89,11 +90,13 @@ describe('entryPoints', () => {
 });
 
 describe('the package index', () => {
-  const list = packageIndex(manifests);
+  // The HTML half of each worker link; the Markdown half repeats it.
+  const list = stripLlmOnly(packageIndex(manifests));
 
   it('links each package page, API reference and releases page once', () => {
     for (const { name } of PACKAGES) {
       const reference = API_REFERENCES[name];
+
       const links = [
         `(/packages/${name})`,
         `(${releasesPath(name)})`,
