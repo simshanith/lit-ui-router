@@ -48,7 +48,7 @@ export async function renderSite(baseHref = '/'): Promise<Site> {
         LightElementRenderer,
         LitElementRenderer,
       ],
-      // Each page carries its resolves, so the client boots without fetching them again.
+      // `{}` dehydrates with defaults: each page embeds its resolved data; client adopts the resolves instead of rerunning
       dehydrate: {},
       renderShell: async (_verdict, { path }) => {
         await settle(router, path);

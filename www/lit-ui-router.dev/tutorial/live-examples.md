@@ -73,6 +73,16 @@ Walkthrough: [Prerender with Eleventy](/guides/prerender-with-eleventy).
 
 <LiveExample name="hellosolarsystem-eleventy" />
 
+## Hello Solar System (Vite SSR)
+
+The same prerender with Vite alone. `vite build` builds the client, then
+[`serverRouterPlugin`](/guides/prerender-with-vite) from
+`lit-ui-router-ssr/vite` runs one prerender script that writes a page per
+route into the built `index.html`, the 404 page, and the redirect rules and
+pages. Walkthrough: [Prerender with Vite](/guides/prerender-with-vite).
+
+<LiveExample name="hellosolarsystem-ssr" />
+
 ## Hello Galaxy
 
 Nested states and views: a star catalog in a three-level state tree, resolve
