@@ -35,7 +35,7 @@
     "@uirouter/core": "catalog:",
     "@www/release-diffs.lit-ui-router.dev": "catalog:workspace",
     "examples": "catalog:workspace",
-    "fast-xml-builder": "catalog:",
+    "hono": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "catalog:workspace",
     "lit-ui-router-ssr": "catalog:workspace",
