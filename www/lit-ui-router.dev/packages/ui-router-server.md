@@ -361,6 +361,8 @@ that owns it already carries it:
 The plugin fails at config time and `prerender()` before it writes anything;
 the adapters fail each request, through `next(error)` from Connect and a
 rejection from fetch and Hono.
+[Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+covers the build.
 
 ### fetch — the edge
 
