@@ -101,9 +101,9 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 **hellosolarsystem-eleventy** without Eleventy. `vite build` builds the client, then [`serverRouterPlugin`](https://lit-ui-router.dev/guides/prerender-with-vite) runs `src/prerender.ts` in a worker thread and writes the site into `dist/`.
 
 - `src/prerender.ts` default-exports `definePrerender(...)`, whose options go to `lit-ui-router-ssr`'s `prerender()`. `document` puts each rendered page into the built `index.html` at its `<!--app-->` marker.
-- `redirectPages({ base, redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
-- The plugin doesn't hand the script Vite's `base`, so the script reads it from the built `index.html`'s `<base href>`, uses it as the router's `baseHref`, and puts it in front of each redirect line, as the Eleventy example's templates do.
-- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page.
+- `redirectPages({ redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
+- The route table stays at `/`. The script builds its router with `baseHref: site.base`, Vite's `base`, and the rules lines and redirect pages carry the base on their own, so the same script builds the site at any base.
+- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page. `npm run dev:base` does the same under `--base=/solar/`: `/solar/` and `/solar/planets/3` answer their pages, `/solar/legacy` answers 302 to `/solar/`, a path outside `/solar/` gets a 404, and `_redirects` reads `/solar/legacy /solar/ 302`.
 
 ### hellogalaxy
 

@@ -14,32 +14,17 @@ import { configure, page } from './app.ts';
 import { mounts, paths } from './route-table.ts';
 
 export default definePrerender((site) => {
-  // The plugin hands over the built shell, not Vite's `base`; the shell's <base href> carries it.
-  const base = /<base href="([^"]*)"/.exec(site.shellHtml)?.[1] ?? '/';
-
-  const under = (path: string): string => `${base}${path.replace(/^\//, '')}`;
-
+  // Vite's `base`, so the server render builds its hrefs where the host serves the pages.
   const router = configure(
-    installServerLocation(new UIRouterLit(), { baseHref: base }),
+    installServerLocation(new UIRouterLit(), { baseHref: site.base }),
   );
-
-  // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
-  const writeRedirects = redirectPages({ base, redirectsFile: true });
 
   return {
     mounts,
     router,
     paths,
-    // The route table's lines are site-absolute; the host serves them under `base`.
-    rules: (lines, context) =>
-      writeRedirects(
-        lines.map((line) => ({
-          ...line,
-          from: under(line.from),
-          to: under(line.to),
-        })),
-        context,
-      ),
+    // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
+    rules: redirectPages({ redirectsFile: true }),
     // The default omits LitElementRenderer, which <app-root>'s shadow root needs.
     elementRenderers: [
       UiViewRenderer,
