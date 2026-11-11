@@ -19,8 +19,9 @@
 // a failing exit (default is an informational report — drift usually means "a
 // release is owed", not "the tree is broken"). The per-package machine
 // verdict (see summarizeResults) always lands at .cache/
-// published-diff-summary.json — the turbo task's output; `--json <path>`
-// overrides the destination ad hoc.
+// published-diff-summary.json — the turbo task's output; `--json-out <path>`
+// overrides the destination ad hoc, and `--json` prints it on stdout with the
+// report on stderr.
 //
 // Registry state arrives through published-versions.json, written by
 // resolve-published.ts just before this runs (the root script chains them) —
@@ -32,9 +33,9 @@
 
 import type { Json } from '@tools/bootstrap/types.ts';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { packTarballPath, publishedDiffSummaryPath } from './cache-paths.ts';
@@ -54,6 +55,7 @@ import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { jsonOutput, writeJsonOutput } from '@tools/shared/json-output.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 import { failMain } from '../lib/fail-main.ts';
 
@@ -109,25 +111,13 @@ async function diffAgainstPublished(
   }
 }
 
-// The summary always lands at the canonical .cache path (the turbo task's
-// declared output); --json is an ad-hoc override only.
-function summaryPathArg(): string {
-  const jsonFlag = process.argv.indexOf('--json');
-
-  if (jsonFlag === -1) return publishedDiffSummaryPath;
-  const jsonOverride = process.argv[jsonFlag + 1];
-
-  if (!jsonOverride || jsonOverride.startsWith('--')) {
-    throw new Error('--json requires a file path argument');
-  }
-
-  return jsonOverride;
-}
-
 async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
-  const jsonPath = summaryPathArg();
+
+  const output = jsonOutput(process.argv.slice(2), {
+    defaultPath: publishedDiffSummaryPath,
+  });
 
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
@@ -210,11 +200,10 @@ async function main() {
     });
   }
 
-  await mkdir(dirname(jsonPath), { recursive: true });
-  await writeFile(jsonPath, renderSummary(summarizeResults(results)));
+  await writeJsonOutput(output, renderSummary(summarizeResults(results)));
 
   const { ok, text } = formatReport(results, { strict });
-  (ok ? console.log : console.error)(text);
+  (ok && output.kind !== 'stdout' ? console.log : console.error)(text);
 
   if (!ok) process.exitCode = 1;
 }
