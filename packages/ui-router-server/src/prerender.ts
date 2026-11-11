@@ -38,6 +38,8 @@ export interface EmittedPage {
   file: string;
   /** The verdict that produced it; `status` carries the otherwise projection's 404. */
   verdict: Verdict;
+  /** Status the page answers with, as the adapters answer the same path. */
+  readonly status: number;
   /** Bytes written, or planned under `dryRun`. */
   bytes: number;
 }
@@ -524,6 +526,7 @@ export async function prerender(
       path: listed,
       file,
       verdict,
+      status: verdict.status ?? 200,
       bytes: new TextEncoder().encode(html).length,
     });
 
@@ -564,6 +567,7 @@ export async function prerender(
       path: listed,
       file,
       verdict,
+      status,
       bytes: new TextEncoder().encode(body).length,
     });
     generated.push(

@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { runInNewContext } from 'node:vm';
 import type { TestContext } from 'node:test';
 
+import { createFetchHandler } from '../src/fetch.ts';
 import { createServerRouter } from '../src/index.ts';
 import type {
   MountConfig,
@@ -418,6 +419,48 @@ describe('prerender', () => {
         [...files.keys()],
         ['dist/badge.svg', 'dist/welcome/index.html', 'dist/_redirects'],
       );
+    });
+
+    it("reports each page's status as the fetch adapter answers its path", async () => {
+      // A 203 badge proves the page keeps the answer's own 2xx.
+      const respond = (verdict: Verdict & { kind: 'response' }) =>
+        verdict.state === 'badge'
+          ? new Response('<svg/>', { status: 203 })
+          : answers.latest();
+
+      const { result } = await run({
+        mounts: responding,
+        paths: ['/', '/sheet/7B', '/app/badge.svg', '/app/latest'],
+        respond,
+      });
+
+      const handler = createFetchHandler(
+        createServerRouter({ mounts: responding }),
+        {
+          serveShell: () => new Response('shell'),
+          serveResponse: respond,
+        },
+      );
+
+      const answered = await Promise.all(
+        result.pages.map(async ({ path, status }) => {
+          const res = await handler(
+            new Request(`https://example.test${path}`, {
+              headers: { accept: 'text/html' },
+            }),
+          );
+
+          return [path, status, res?.status];
+        }),
+      );
+
+      assert.deepEqual(answered, [
+        ['/', 200, 200],
+        ['/sheet/7B', 200, 200],
+        ['/app/badge.svg', 203, 203],
+        [result.pages[3]?.path, 404, 404],
+      ]);
+      assert.equal(result.pages[3]?.file, '404.html');
     });
 
     it('throws when no respond is supplied', async () => {
