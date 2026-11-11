@@ -134,7 +134,9 @@ UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
 app</a> uses [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-states),
 [`@uirouter/dsr`](https://github.com/ui-router/dsr) (deep state redirect), and
 the [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) developer
-tool.
+tool. The Hello Solar System and Hello Galaxy examples load the visualizer when
+the page url has `?visualizer`, as in
+<a href="/examples/hellogalaxy/?visualizer" target="_self">Hello Galaxy</a>.
 
 ## How these docs are organized
 

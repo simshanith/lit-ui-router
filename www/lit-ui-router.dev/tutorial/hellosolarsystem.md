@@ -264,14 +264,17 @@ Note the graceful fallback: if the URL contains an unknown id (say `/planets/42`
 
 ## Router Setup
 
-The router configuration is the same as Hello World, plus the [UI Router visualizer](https://github.com/ui-router/visualizer) so you can watch states and transitions as you click around:
+The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [UI Router visualizer](https://github.com/ui-router/visualizer), a diagram of the state tree and its transitions, loaded only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?visualizer" target="_self">running example</a>.
 
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+router.trace.enable('TRANSITION');
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });

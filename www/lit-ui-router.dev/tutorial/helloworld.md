@@ -221,6 +221,7 @@ Configure and start the router:
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
+router.trace.enable('TRANSITION');
 router.stateRegistry.register(helloState);
 router.stateRegistry.register(aboutState);
 router.urlService.rules.initial({ state: 'hello' });
@@ -229,9 +230,10 @@ router.start();
 
 1. **Create router**: Instantiate `UIRouterLit`
 2. **Add plugins**: `hashLocationPlugin` enables hash-based URLs (`/#/hello`)
-3. **Register states**: Add each state to the registry
-4. **Set initial state**: Define where to navigate when the app loads with no URL
-5. **Start**: Begin listening for URL changes and processing state transitions
+3. **Trace transitions**: `router.trace.enable('TRANSITION')` logs each transition to the browser console, a cheap way to watch the router work
+4. **Register states**: Add each state to the registry
+5. **Set initial state**: Define where to navigate when the app loads with no URL
+6. **Start**: Begin listening for URL changes and processing state transitions
 
 ### Bootstrap
 
