@@ -106,12 +106,21 @@ export class UserElement
   }
 }
 
+export class UserBadgeElement extends LitElement {
+  uiViewProps?: UIViewInjectedProps<UserResolves>;
+
+  render(): TemplateResult {
+    return html`<span>${this.uiViewProps?.resolves.user.name}</span>`;
+  }
+}
+
 userTemplate satisfies RoutedLitTemplate<UserResolves>;
 
 export const states: LitStateDeclaration<UserResolves>[] = [
   { name: 'home', url: '/', component: () => html`<h1>Home</h1>` },
   { name: 'user', url: '/user/:id', component: UserElement },
   { name: 'user.detail', component: userTemplate },
+  { name: 'user.badge', component: UserBadgeElement },
 ];
 
 export function setupRouter(): UIRouterLit {

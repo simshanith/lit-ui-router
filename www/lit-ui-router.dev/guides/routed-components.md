@@ -67,6 +67,10 @@ class UserDetail extends LitElement {
 also assigns the same props to `_uiViewProps`, the deprecated name earlier 1.x
 releases wrote, so a class that declares only that name keeps working.
 
+The router owns both names on a routed class. It assigns them on every render,
+so a class cannot keep its own data there or define either as a getter without
+a setter.
+
 The same resolve can fetch the record instead of passing the id through, so
 the component renders with its data already loaded. The sample app's
 `contacts.contact` state

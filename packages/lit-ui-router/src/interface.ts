@@ -277,6 +277,10 @@ export type LitViewDeclarationTemplate<
  * The same props are assigned to `_uiViewProps`, the property's name before
  * 1.20, so a class that declares only that name keeps working.
  *
+ * The router owns both names on a routed class: it assigns them on every
+ * render, so a class cannot keep its own data there or define either as a
+ * getter without a setter.
+ *
  * @example Constructor injection
  * ```ts
  * import { html, LitElement } from 'lit';
