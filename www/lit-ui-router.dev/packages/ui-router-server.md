@@ -407,8 +407,9 @@ export default {
 
 The adapter owns the verdict → HTTP mechanics: status mapping, `mergeSearch`
 on redirect `Location`s, stripping validators and relabelling status'd
-shells, and the canonical `Link` header (status-less shells only — a 404 is
-not an alternate representation of anything).
+shells, and the canonical `Link` header, which names the request's own path
+with the base on and the query dropped (status-less shells only — a 404 is
+not a page to index).
 
 This site's Worker
 ([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
@@ -739,8 +740,8 @@ export const urlConfig = {
 Each key takes `'always'`, `'never'` or `'as-requested'`.
 
 - **Matching:** a navigation that matches a state in the other spelling verdicts as a `308`
-  redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
-  canonical spelling in one hop. A non-navigation request to a response state or a delegate is
+  redirect to the canonical one, on both strategies, so a shell's canonical `Link` names that
+  spelling. A data `redirectTo` lands in its target's canonical spelling in one hop. A non-navigation request to a response state or a delegate is
   answered at either spelling.
 - **Formatting:** [`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
   installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition

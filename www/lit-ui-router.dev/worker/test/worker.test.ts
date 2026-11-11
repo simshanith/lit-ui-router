@@ -151,8 +151,11 @@ describe('flagship mounts (/app, /app-mobx, /app-effect, /app-signals)', () => {
         // cy title check ("(MobX)" suffix) becomes the shell asset path.
         assert.deepEqual(assetCalls, [mount], `${mount}${path}`);
         assert.equal(await res.text(), ASSET_TABLE[mount].body);
-        // A matched route is canonical at the shell; flagships are indexable.
-        assert.equal(res.headers.get('Link'), `<${mount}>; rel="canonical"`);
+        // A matched route names its own path canonical; flagships are indexable.
+        assert.equal(
+          res.headers.get('Link'),
+          `<${mount}${path}>; rel="canonical"`,
+        );
         assert.equal(res.headers.get('X-Robots-Tag'), null, `${mount}${path}`);
       }
     }

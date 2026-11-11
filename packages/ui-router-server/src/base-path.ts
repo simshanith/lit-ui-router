@@ -114,3 +114,22 @@ export const checkUndeclaredBase = async (
       `${caller}: mount '${mount}' already carries base '${base}': declare createServerRouter({ base: '${base}', mounts }), or key the mount '/'`,
     );
 };
+
+/** `Link` naming the routed url's own path under the base as canonical; its origin, query and fragment drop. */
+export const canonicalLink = (base: string, url: string): string => {
+  const target = url.replace(/^[a-z][a-z\d+.-]*:\/\/[^/?#]*/i, '');
+  const cut = target.search(/[?#]/);
+
+  const path = (cut === -1 ? target : target.slice(0, cut)).replace(
+    /^\/{2,}/,
+    '/',
+  );
+
+  // A url-reference inside <…> cannot carry <, >, quotes or whitespace raw.
+  const href = withBase(base, path || '/').replace(
+    /[\s"<>]/g,
+    encodeURIComponent,
+  );
+
+  return `<${href}>; rel="canonical"`;
+};

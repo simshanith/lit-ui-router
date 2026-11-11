@@ -160,7 +160,7 @@ const urlConfig = {
 `pages` covers states answered with a page and `responses` covers response states, each
 `'always'`, `'never'` or `'as-requested'` (the default). A delegating state's url belongs to its
 host handler and keeps the spelling requested. A navigation in the other spelling verdicts as a
-`308` redirect to the canonical one, a data `redirectTo` lands in its target's canonical spelling,
+`308` redirect to the canonical one, so a shell's canonical `Link` names that spelling, a data `redirectTo` lands in its target's canonical spelling,
 and a non-navigation request to a response state or delegate is answered at either spelling. The
 policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
 `compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a

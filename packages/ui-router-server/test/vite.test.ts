@@ -131,7 +131,7 @@ describe('serverRouterPlugin', () => {
       middleware(req, res, () => resolve());
     });
     assert.equal(req.url, '/app'); // rewritten to the mount shell
-    assert.deepEqual(link, ['</app>; rel="canonical"']);
+    assert.deepEqual(link, ['</app/about>; rel="canonical"']);
   });
 
   it("strips the resolved config's base in dev and puts it back on the Location", async () => {
@@ -468,4 +468,62 @@ describe('serverRouterPlugin prerender build step', () => {
     });
     assert.equal(req.url, '/app');
   });
+
+  for (const base of ['/', '/atlas/'])
+    it(`names a prerendered page itself as canonical under base '${base}'`, async (t) => {
+      const root = await mkdtemp(path.join(tmpdir(), 'preview-canonical-'));
+      t.after(() => rm(root, { recursive: true, force: true }));
+      await mkdir(path.join(root, 'dist', 'sheet', '7'), { recursive: true });
+      await writeFile(path.join(root, 'dist', 'sheet', '7', 'index.html'), '');
+
+      const plugin = serverRouterPlugin(
+        createServerRouter({
+          base,
+          mounts: {
+            [base]: {
+              routes: [
+                { name: 'home', url: '/' },
+                { name: 'sheet', url: '/sheet/:id/' },
+              ],
+            },
+          },
+        }),
+        { prerender: { entry: './entry.mjs' } },
+      );
+
+      await plugin.configResolved(configOf(root, { base }));
+      const server = fakeServer();
+      plugin.configurePreviewServer(server);
+
+      const preview = async (url: string) => {
+        const req = { url, method: 'GET', headers: { accept: 'text/html' } };
+        const links: string[] = [];
+
+        const res = {
+          writeHead: () => res,
+          setHeader: (_name: string, value: string) => {
+            links.push(value);
+
+            return res;
+          },
+          end: () => res,
+        };
+
+        await new Promise<void>((resolve) => {
+          server.installed[0]?.(req, res, () => resolve());
+        });
+
+        return { url: req.url, links };
+      };
+
+      const prefix = base.slice(0, -1);
+      assert.deepEqual(await preview(`${prefix}/sheet/7/?view=full`), {
+        url: `${prefix}/sheet/7/index.html`,
+        links: [`<${prefix}/sheet/7/>; rel="canonical"`],
+      });
+      assert.deepEqual(await preview(`${prefix}/`), {
+        url: base,
+        links: [`<${base}>; rel="canonical"`],
+      });
+    });
 });

@@ -38,6 +38,7 @@ import type { RawParams } from '@uirouter/core';
 
 import {
   baseFor,
+  canonicalLink,
   checkUndeclaredBase,
   stripBase,
   withBase,
@@ -447,11 +448,12 @@ export function delegateContext<
  *   MERGED into the location via {@link mergeSearch} (targets that declare their
  *   own query keep it — never `?a=1?b=2`).
  * - `shell` -> {@link FetchAdapterOptions.serveShell | serveShell} on a Request rewritten to {@link FetchAdapterOptions.shellPath | shellPath}, the raw
- *   asset Response wrapped with a `Link: <mount>; rel="canonical"` header (the
- *   shell is the same representation at every route path).
+ *   asset Response wrapped with a `Link: <path>; rel="canonical"` header: the
+ *   request's own path with the base on and the query dropped (each route
+ *   path is its own page, prerendered or not).
  * - `shell` with status (the otherwise projection) -> validators stripped, the
  *   asset Response's status relabeled to the verdict's, no canonical Link (a
- *   404 is not an alternate representation of the mount root).
+ *   404 is not a page to index).
  * - `notFound` with a mount -> {@link FetchAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `delegate`, for any request -> the handler {@link FetchAdapterOptions.delegates | delegates} maps its key to,
  *   called with the original request and the handler's own extra arguments
@@ -551,6 +553,7 @@ export function createFetchHandler<
   const answer = async (
     verdict: Exclude<Verdict, MarkedVerdict>,
     request: Request,
+    url: string,
   ): Promise<Response | null> => {
     if (verdict.kind === 'redirect') {
       return new Response(null, {
@@ -574,13 +577,9 @@ export function createFetchHandler<
       const asset = await serveShell(verdict.mount, shellRequest);
       const headers = new Headers(asset.headers);
 
-      // No canonical Link on a status'd shell: a 404 is not an alternate
-      // representation of the mount root.
+      // No canonical Link on a status'd shell: a 404 is not a page to index.
       if (verdict.status === undefined)
-        headers.set(
-          'Link',
-          `<${withBase(base, verdict.mount)}>; rel="canonical"`,
-        );
+        headers.set('Link', canonicalLink(base, url));
 
       return new Response(asset.body, {
         status: verdict.status ?? asset.status,
@@ -617,6 +616,6 @@ export function createFetchHandler<
     if (verdict.kind === 'delegate' || verdict.kind === 'response')
       return answerMarked(verdict, request, args);
 
-    return answer(verdict, request);
+    return answer(verdict, request, url);
   };
 }

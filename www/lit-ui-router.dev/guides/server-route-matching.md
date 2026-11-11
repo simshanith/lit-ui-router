@@ -423,8 +423,8 @@ routed mount with a single call: `createFetchHandler` turns the router into a
 generic adapter can't know. The adapter owns the
 verdict → HTTP mechanics — status mapping, `mergeSearch` on redirect
 `Location`s, stripping validators and relabelling status'd shells, and the
-canonical `Link` header (status-less shells only — a 404 is not an alternate
-representation of anything). The worker supplies the host IO (`serveShell` /
+canonical `Link` header, which names the request's own path (status-less
+shells only — a 404 is not a page to index). The worker supplies the host IO (`serveShell` /
 `serveNotFound` over `env.ASSETS`) and the site policy the adapter has no seam
 for: the level-2 exhibit bypasses the adapter entirely (it demonstrates the
 _absence_ of server routing), `shellPath` points the vanilla pushState mounts
