@@ -70,10 +70,16 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
   ],
 };
 
+/** A topic's hub page, which its sidebar group heading links. */
+const GUIDE_HUBS: Partial<Record<GuideTopic, string>> = {
+  server: '/guides/server',
+};
+
 /** One Guides sidebar group per topic, labelled and ordered by the vocabulary. */
 export const guideGroups = GUIDE_TOPICS.map(({ id, label }) => ({
   topic: id,
   text: label,
+  link: GUIDE_HUBS[id],
   items: GUIDES[id],
 }));
 
@@ -201,8 +207,9 @@ export const SIDEBAR: SidebarEntry[] = [
     collapsed: true,
     items: [
       { text: 'Overview', link: '/guides/' },
-      ...guideGroups.map(({ text, items }) => ({
+      ...guideGroups.map(({ text, link, items }) => ({
         text,
+        link,
         collapsed: false,
         items,
       })),
