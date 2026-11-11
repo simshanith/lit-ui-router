@@ -381,6 +381,11 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
     );
     assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
     assert.equal(doc.title, 'lit-ui-router 1.9.0...1.10.0 | Lit UI Router');
+    // A meta element has no role.
+    assert.equal(
+      doc.querySelector('meta[name="robots"]')?.getAttribute('content'),
+      'noindex',
+    );
 
     const shell = getByRole(doc.body, 'region', { name: 'Changed files' });
 
@@ -845,6 +850,8 @@ describe('the /releases pages', () => {
       '/releases/lit-ui-router/1.10.0/',
     );
     assert.equal(doc.title, 'Releases | Lit UI Router');
+    // A meta element has no role.
+    assert.equal(doc.querySelector('meta[name="robots"]'), null);
   });
 
   it('groups the packages by role, in catalog order, unknown ones last', async () => {

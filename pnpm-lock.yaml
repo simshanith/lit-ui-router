@@ -3361,6 +3361,9 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
