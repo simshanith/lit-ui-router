@@ -5,23 +5,30 @@ import { describe, it } from 'node:test';
 
 import { API_REFERENCES } from '../../catalog/navigation.ts';
 import { PACKAGES } from '../../catalog/packages.ts';
-import {
-  expandReferenceIndex,
-  REFERENCE_INDEX_MARKER,
-  referenceIndex,
-} from '../reference-index.ts';
+import { expandIndexes, INDEX_MARKERS } from '../index-pages.ts';
+import { referenceIndex } from '../reference-index.ts';
 
-const page = readFileSync(
-  join(import.meta.dirname, '../../reference/index.md'),
-  'utf8',
-);
+const site = join(import.meta.dirname, '../..');
+
+/** The page each marker belongs on. */
+const PAGES = {
+  '<!-- reference-index -->': 'reference/index.md',
+  '<!-- package-index -->': 'packages/index.md',
+  '<!-- example-index -->': 'examples/index.md',
+} as const satisfies Record<keyof typeof INDEX_MARKERS, string>;
+
+describe('the generated index pages', () => {
+  for (const [marker, file] of Object.entries(PAGES)) {
+    it(`expand ${marker} in ${file}`, () => {
+      const page = readFileSync(join(site, file), 'utf8');
+
+      assert.ok(page.includes(marker));
+      assert.ok(!expandIndexes(page).includes(marker));
+    });
+  }
+});
 
 describe('the reference index', () => {
-  it('is generated into reference/index.md', () => {
-    assert.ok(page.includes(REFERENCE_INDEX_MARKER));
-    assert.ok(!expandReferenceIndex(page).includes(REFERENCE_INDEX_MARKER));
-  });
-
   it('links every API reference once', () => {
     const list = referenceIndex();
 

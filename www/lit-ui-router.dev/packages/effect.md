@@ -22,7 +22,7 @@ covers the one difference the bindings' callers see.
 
 ## In use
 
-- [Hello Galaxy (Effect)](/tutorial/live-examples#hello-galaxy-effect) runs
+- [Hello Galaxy (Effect)](/examples/#hello-galaxy-effect) runs
   the galaxy tutorial on `lit-ui-router-effect`.
 - The <a href="/app-effect" target="_self">Effect sample app</a> keeps its
   client state in `SubscriptionRef`s through the same bindings.

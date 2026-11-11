@@ -1,6 +1,6 @@
 import type { DefaultTheme, MarkdownEnv } from 'vitepress';
 
-import { expandReferenceIndex } from './reference-index.ts';
+import { expandIndexes } from './index-pages.ts';
 import { pageUrl, surfaceOf } from './surfaces.ts';
 
 type SearchRender = NonNullable<DefaultTheme.LocalSearchOptions['_render']>;
@@ -285,7 +285,7 @@ export const renderForSearch: SearchRender = async (
 
   if (renderer !== 'typedoc') {
     // Search reads the source from disk, past the vite transform.
-    const html = await md.renderAsync(expandReferenceIndex(src), env);
+    const html = await md.renderAsync(expandIndexes(src), env);
 
     return env.frontmatter?.search === false ? '' : html;
   }

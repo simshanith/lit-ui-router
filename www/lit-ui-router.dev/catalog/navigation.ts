@@ -1,6 +1,5 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
-import type { mounts } from 'sample-app-routes';
-
+import { SAMPLE_APPS } from './examples.ts';
 import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
 
 /** A page link, in VitePress's shape. */
@@ -147,21 +146,10 @@ export const packageGroups = ROLES.map(({ id, label }) => ({
   items: PACKAGE_PAGES[id],
 }));
 
-type AppMount = Extract<keyof typeof mounts, `/app${string}`>;
-
-// Keyed by mount, so a new /app* mount fails typecheck until it has a label.
-const SAMPLE_APP_LABELS: Record<AppMount, string> = {
-  '/app': 'Vanilla',
-  '/app-mobx': 'MobX',
-  '/app-effect': 'Effect',
-  '/app-signals': 'Signals',
-  '/app-hash': 'Hash',
-};
-
 // The top nav and the sidebar both list these.
 const sampleAppItems: NavLink[] = [
   { text: 'Overview', link: '/sample-app' },
-  ...Object.entries(SAMPLE_APP_LABELS).map(([link, text]) => ({
+  ...Object.entries(SAMPLE_APPS).map(([link, { label: text }]) => ({
     text,
     link,
     target: '_self',
@@ -198,7 +186,7 @@ export const SIDEBAR: SidebarEntry[] = [
       { text: 'Hello World', link: '/tutorial/helloworld' },
       { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
       { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-      { text: 'All Examples', link: '/tutorial/live-examples' },
+      { text: 'All Examples', link: '/examples/' },
     ],
   },
   {
@@ -262,7 +250,7 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'Guides', link: '/guides/' },
       { text: 'Releases', link: '/releases/', target: '_self' },
-      { text: 'Companion Packages', link: '/packages/' },
+      { text: 'Packages', link: '/packages/' },
       { text: 'API', link: '/reference/' },
     ],
   },
