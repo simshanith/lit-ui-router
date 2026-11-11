@@ -16,7 +16,7 @@ export class Login extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<LoginResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<LoginResolves>) {
     super();
   }
 
@@ -35,7 +35,7 @@ export class Login extends LitElement {
   errorMessage = '';
 
   login = () => {
-    const { router, resolves } = this._uiViewProps;
+    const { router, resolves } = this.uiViewProps;
 
     const returnTo = resolves?.returnTo;
 

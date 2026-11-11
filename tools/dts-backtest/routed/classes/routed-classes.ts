@@ -11,6 +11,7 @@ declare const $state: TypedStateService;
 
 // An un-annotated render() that reads the registry its own state is registered in.
 class ContactView extends LitElement {
+  declare uiViewProps?: UIViewInjectedProps;
   declare _uiViewProps?: UIViewInjectedProps;
 
   render() {

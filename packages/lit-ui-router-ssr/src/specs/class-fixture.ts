@@ -19,10 +19,9 @@ export const constructed: (UIViewInjectedProps | undefined)[] = [];
  * Without props it renders another template, so a hydrate that reaches the
  * element before its props throws a mismatch instead of passing silently.
  */
-export class RoutedCard extends LitElement {
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
-  @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps;
+abstract class PropsCard extends LitElement {
+  /** The props the router last assigned, under whichever member the class declares. */
+  abstract readonly props: UIViewInjectedProps | undefined;
 
   constructor(props?: UIViewInjectedProps) {
     super();
@@ -30,7 +29,7 @@ export class RoutedCard extends LitElement {
   }
 
   override render(): TemplateResult {
-    const props = this._uiViewProps;
+    const props = this.props;
 
     return props
       ? html`<p class="card">${props.resolves.detail}</p>`
@@ -38,7 +37,29 @@ export class RoutedCard extends LitElement {
   }
 }
 
+/** A {@link PropsCard} declaring `uiViewProps`. */
+export class RoutedCard extends PropsCard {
+  @property({ attribute: false })
+  uiViewProps?: UIViewInjectedProps;
+
+  override get props(): UIViewInjectedProps | undefined {
+    return this.uiViewProps;
+  }
+}
+
 customElements.define('routed-card', RoutedCard);
+
+/** A {@link PropsCard} declaring only `_uiViewProps`, the member's name before lit-ui-router 1.20. */
+export class UnderscoreCard extends PropsCard {
+  @property({ attribute: false })
+  _uiViewProps?: UIViewInjectedProps;
+
+  override get props(): UIViewInjectedProps | undefined {
+    return this._uiViewProps;
+  }
+}
+
+customElements.define('underscore-card', UnderscoreCard);
 
 /** The same card, bound once in its declaration and reused across visits. */
 export class StickyCard extends RoutedCard {
@@ -53,7 +74,7 @@ export const boundClicks: string[] = [];
 /** A shadow-DOM routed class whose render binds an attribute and a listener on an inner element. */
 export class BoundCard extends RoutedCard {
   override render(): TemplateResult {
-    const detail = String(this._uiViewProps?.resolves.detail);
+    const detail = String(this.uiViewProps?.resolves.detail);
 
     return html`<button
       class="bound"
@@ -69,11 +90,11 @@ customElements.define('bound-card', BoundCard);
 
 /** The sample apps' shape: light DOM, props through the constructor. */
 export class LightClassCard extends LitElement {
-  _uiViewProps?: UIViewInjectedProps;
+  uiViewProps?: UIViewInjectedProps;
 
   constructor(props?: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   override createRenderRoot(): this {
@@ -82,7 +103,7 @@ export class LightClassCard extends LitElement {
 
   override render(): TemplateResult {
     return html`<p class="light">
-      ${String(this._uiViewProps?.resolves.detail)}
+      ${String(this.uiViewProps?.resolves.detail)}
     </p>`;
   }
 }
@@ -98,9 +119,17 @@ export const makeClassRouter = (): UIRouterLit => {
   const states: LitStateDeclaration[] = [
     {
       name: 'card',
-      url: '/card',
+      url: '/card?rev',
+      params: { rev: { dynamic: true } },
       component: RoutedCard,
       resolve: { detail: () => 'card leaf' },
+    },
+    {
+      name: 'underscore',
+      url: '/underscore?rev',
+      params: { rev: { dynamic: true } },
+      component: UnderscoreCard,
+      resolve: { detail: () => 'underscore leaf' },
     },
     {
       name: 'sticky',

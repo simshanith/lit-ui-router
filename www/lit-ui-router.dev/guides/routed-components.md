@@ -56,13 +56,21 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 
 class UserDetail extends LitElement {
   @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps<UserResolves>;
+  uiViewProps?: UIViewInjectedProps<UserResolves>;
 
   render() {
-    return html`<h1>User ${this._uiViewProps?.resolves.userId}</h1>`;
+    return html`<h1>User ${this.uiViewProps?.resolves.userId}</h1>`;
   }
 }
 ```
+
+`uiViewProps` is the property's name from `lit-ui-router` 1.20. `<ui-view>`
+also assigns the same props to `_uiViewProps`, the deprecated name earlier 1.x
+releases wrote, so a class that declares only that name keeps working.
+
+The router owns both names on a routed class. It assigns them on every render,
+so a class cannot keep its own data there or define either as a getter without
+a setter.
 
 The same resolve can fetch the record instead of passing the id through, so
 the component renders with its data already loaded. The sample app's

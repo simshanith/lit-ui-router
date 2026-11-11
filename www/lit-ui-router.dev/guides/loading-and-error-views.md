@@ -169,11 +169,11 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 
 class ContactList extends LitElement {
   @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps<ContactResolves>;
+  uiViewProps?: UIViewInjectedProps<ContactResolves>;
 
   private contacts = new Task(this, {
     task: ([contacts]) => contacts,
-    args: () => [this._uiViewProps?.resolves.contacts],
+    args: () => [this.uiViewProps?.resolves.contacts],
   });
 
   render() {

@@ -179,10 +179,10 @@ export type UIViewResolves<
  * }
  *
  * class UserDetail extends LitElement {
- *   _uiViewProps?: UIViewInjectedProps<{ user: User }>;
+ *   uiViewProps?: UIViewInjectedProps<{ user: User }>;
  *
  *   render() {
- *     const user = this._uiViewProps?.resolves?.user;
+ *     const user = this.uiViewProps?.resolves?.user;
  *     return html`<h1>${user?.name}</h1>`;
  *   }
  * }
@@ -268,11 +268,18 @@ export type LitViewDeclarationTemplate<
  *
  * The class should extend LitElement. The router delivers {@link UIViewInjectedProps}
  * two ways: as a constructor argument on first render, and by assigning the
- * `_uiViewProps` property on every render (the only channel that fires when a
+ * `uiViewProps` property on every render (the only channel that fires when a
  * `sticky` instance is reused). Constructor args are optional — argless
  * constructors, as is typical for custom elements, work too. The `sticky`
  * property can be set to `true` to reuse the same component instance across
  * state transitions.
+ *
+ * The same props are assigned to `_uiViewProps`, the property's name before
+ * 1.20, so a class that declares only that name keeps working.
+ *
+ * The router owns both names on a routed class: it assigns them on every
+ * render, so a class cannot keep its own data there or define either as a
+ * getter without a setter.
  *
  * @example Constructor injection
  * ```ts
@@ -286,11 +293,11 @@ export type LitViewDeclarationTemplate<
  * declare const router: UIRouterLit;
  *
  * class UserList extends LitElement {
- *   _uiViewProps: UIViewInjectedProps;
+ *   uiViewProps: UIViewInjectedProps;
  *
  *   constructor(props: UIViewInjectedProps) {
  *     super();
- *     this._uiViewProps = props;
+ *     this.uiViewProps = props;
  *   }
  *
  *   render() {
@@ -314,10 +321,10 @@ export type LitViewDeclarationTemplate<
  *
  * class UserDetail extends LitElement {
  *   // reactive property: sticky reuse re-renders when props are reassigned
- *   @property({ attribute: false }) _uiViewProps?: UIViewInjectedProps;
+ *   @property({ attribute: false }) uiViewProps?: UIViewInjectedProps;
  *
  *   render() {
- *     return html`<h1>${this._uiViewProps?.transition?.params().id}</h1>`;
+ *     return html`<h1>${this.uiViewProps?.transition?.params().id}</h1>`;
  *   }
  * }
  * ```
@@ -333,6 +340,12 @@ export interface RoutedLitElement<
    */
   new (props: UIViewInjectedProps<T>): LitElement & {
     /** assigned on every render; declare it reactive to re-render when reused */
+    uiViewProps?: UIViewInjectedProps<T>;
+    /**
+     * assigned on every render, alongside `uiViewProps`
+     *
+     * @deprecated Declare `uiViewProps` instead. Removed in 2.0.
+     */
     _uiViewProps?: UIViewInjectedProps<T>;
   };
 
@@ -498,6 +511,12 @@ export type TypedLitViewComponent<
         keyof LitElement
       > & {
         /** assigned on every render; declare it reactive to re-render when reused */
+        uiViewProps?: UIViewInjectedProps<T>;
+        /**
+         * assigned on every render, alongside `uiViewProps`
+         *
+         * @deprecated Declare `uiViewProps` instead. Removed in 2.0.
+         */
         _uiViewProps?: UIViewInjectedProps<T>;
       };
 

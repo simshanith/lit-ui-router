@@ -104,7 +104,7 @@ When navigating to `planets`, the router:
 
 ### Accessing Resolved Data
 
-Components receive resolved data through `_uiViewProps`:
+Components receive resolved data through `uiViewProps`:
 
 ```typescript
 import type { UIViewInjectedProps } from 'lit-ui-router';
@@ -113,16 +113,16 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 class PlanetListComponent extends LitElement {
   // The router constructs routed components with injected props.
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this._uiViewProps.resolves!.planets;
+    return this.uiViewProps.resolves!.planets;
   }
 
   render() {
@@ -151,7 +151,7 @@ class PlanetListComponent extends LitElement {
 
 Key points:
 
-- **`_uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
+- **`uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
 - **Constructor parameter**: The props are passed to the constructor when the component is created
 - **`resolves.planets`**: Access data using the resolve's token name
 
@@ -212,16 +212,16 @@ The detail view renders a larger orb plus a definition list of facts:
 @customElement('planet-detail')
 class PlanetDetailComponent extends LitElement {
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this._uiViewProps.resolves!.planet;
+    return this.uiViewProps.resolves!.planet;
   }
 
   render() {

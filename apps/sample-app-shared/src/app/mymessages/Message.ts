@@ -40,20 +40,20 @@ export class MessageElement extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<MessageResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<MessageResolves>) {
     super();
   }
 
   get message(): Message {
-    return this._uiViewProps.resolves.message;
+    return this.uiViewProps.resolves.message;
   }
 
   get nextMessageGetter() {
-    return this._uiViewProps.resolves.nextMessageGetter;
+    return this.uiViewProps.resolves.nextMessageGetter;
   }
 
   get folder() {
-    return this._uiViewProps.resolves.folder;
+    return this.uiViewProps.resolves.folder;
   }
 
   get actions() {
@@ -65,7 +65,7 @@ export class MessageElement extends LitElement {
   }
 
   get stateService() {
-    return this._uiViewProps.router.stateService;
+    return this.uiViewProps.router.stateService;
   }
 
   /**

@@ -15,6 +15,7 @@ import type {
   LightClassCard,
   RoutedCard,
   StickyCard,
+  UnderscoreCard,
 } from './class-fixture.js';
 import { rootTemplate } from './fixture.js';
 import { drain, serve } from './round-trip.js';
@@ -83,7 +84,7 @@ describe('a prerendered routed LitElement class', () => {
     // the same node, so the element hydrated its served shadow root rather than rendering over it
     expect(servedLeaf(served)).toBe(leaf);
     expect(served?.shadowRoot?.querySelectorAll('p, span')).toHaveLength(1);
-    expect(served?._uiViewProps?.resolves.detail).toBe('card leaf');
+    expect(served?.uiViewProps?.resolves.detail).toBe('card leaf');
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(warn).not.toHaveBeenCalled();
   });
@@ -99,6 +100,40 @@ describe('a prerendered routed LitElement class', () => {
     expect(served.hasUpdated).toBe(true);
     expect(served.shadowRoot?.querySelector('.unrouted')).toBeNull();
   });
+
+  it.each([
+    ['uiViewProps', 'card', 'routed-card'],
+    ['_uiViewProps', 'underscore', 'underscore-card'],
+  ])(
+    'hands a class declaring only %s its props, served and after a transition',
+    async (_member, state, tag) => {
+      const { container } = serve(await drawClass(`/${state}`));
+      const served = container.querySelector<RoutedCard | UnderscoreCard>(tag)!;
+      // the server's own render read the props: without them the card writes `.unrouted`
+      expect(servedLeaf(served)?.textContent).toBe(`${state} leaf`);
+
+      const { outcomes, router, view } = await bootClass(
+        container,
+        `/${state}`,
+      );
+
+      await served.updateComplete;
+
+      expect(outcomes).toEqual(['adopted']);
+      expect(served.props?.router).toBe(router);
+      expect(served.shadowRoot?.querySelector('.unrouted')).toBeNull();
+      const adoptedWith = served.props;
+
+      await router.stateService.go(state, { rev: '2' });
+      await view.updateComplete;
+      await served.updateComplete;
+
+      expect(view.routedElement).toBe(served);
+      expect(served.props).not.toBe(adoptedWith);
+      expect(served.props?.transition?.params().rev).toBe('2');
+      expect(servedLeaf(served)?.textContent).toBe(`${state} leaf`);
+    },
+  );
 
   it('keeps the element a sticky class wrote', async () => {
     const { container } = serve(await drawClass('/sticky'));
