@@ -22,10 +22,9 @@ const compare = {
   },
 } satisfies Parameters<UIRouterLit['stateRegistry']['register']>[0];
 
-const pageRouter = (baseHref?: string): UIRouterLit => {
+const pageRouter = (): UIRouterLit => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
-    baseHref,
   });
 
   router.stateRegistry.register(compare);
@@ -108,31 +107,6 @@ describe('a redirectTo function found at settle', () => {
         '/releases/diff/2/1/ /releases/diff/1/2 308\n',
     );
     expect(result.tally).toMatchObject({ shell: 1, redirect: 1 });
-  });
-
-  it('writes the base once on the rules line under a base', async () => {
-    const router = pageRouter('/solar/');
-    const { files, write } = memoryWriter();
-
-    await prerender({
-      mounts,
-      router,
-      base: '/solar/',
-      outDir: 'dist',
-      paths: ['/releases/diff/2/1'],
-      notFound: false,
-      write,
-      renderShell: async (_verdict, { subpath }) => {
-        await settle(router, subpath);
-
-        return '';
-      },
-    });
-
-    expect(files.get('dist/_redirects')).toBe(
-      '/solar/releases/diff/2/1 /solar/releases/diff/1/2 308\n' +
-        '/solar/releases/diff/2/1/ /solar/releases/diff/1/2 308\n',
-    );
   });
 
   it('writes the page of a render that lands no transition of its own', async () => {

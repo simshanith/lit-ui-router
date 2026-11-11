@@ -60,31 +60,6 @@ interface NodeFsPromises {
   writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
-const trimmed = (path: string): string => path.replace(/\/+$/, '');
-
-const pathOf = (url: string): string => url.replace(/[?#].*$/, '');
-
-// The router's hrefs are its baseHref plus its url, so after a settle they must spell the page's served path.
-const checkSettled = (
-  router: UIRouterLit,
-  base: string,
-  path: string,
-): void => {
-  const url = pathOf(router.urlService.url());
-  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
-  const served = `${trimmed(base)}${pathOf(path)}`;
-
-  if (trimmed(linked) === trimmed(served)) return;
-
-  const suggested = served.endsWith(url)
-    ? `${trimmed(served.slice(0, served.length - url.length))}/`
-    : undefined;
-
-  throw new Error(
-    `prerender: the router settled '${path}' at '${linked}', but the page is served at '${served}'; build the router with installServerLocation(router, { baseHref: ${suggested === undefined ? 'site.base' : `'${suggested}'`} })`,
-  );
-};
-
 const dirOf = (file: string): string => {
   const cut = file.lastIndexOf('/');
 
@@ -166,8 +141,7 @@ export interface PrerenderOptions extends Omit<
    * {@link responder} takes them. A path that matches one settles
    * {@link PrerenderOptions.router | router} on it and writes what its
    * handler answers: a 2xx body at the path its url spells, or a 3xx as a
-   * rules line. The handler's request is a GET for the path under
-   * {@link PrerenderOptions.base | base} at
+   * rules line. The handler's request is a GET for the path at
    * {@link PrerenderOptions.origin | origin}. Without this option, a response
    * state throws.
    */
@@ -288,7 +262,6 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when both `dehydrate` and `payload` are supplied
- * @throws an `Error` when a render settles the router where its links don't spell the page's served path: `baseHref()` plus its url, against `base` plus the path
  *
  * @example
  * ```ts
@@ -331,8 +304,6 @@ export async function prerender(
     origin = 'http://lit-ui-router-ssr',
     ...site
   } = options;
-
-  const base = site.base ?? site.resolver?.base ?? '/';
 
   if (dehydrateOptions && payload)
     throw new Error(
@@ -410,8 +381,6 @@ export async function prerender(
 
     if (redirect) return redirect;
 
-    if (lastLanded() !== before) checkSettled(router, base, context.path);
-
     const markup = isString(body) ? body : renderTemplate(body, context);
 
     return document ? document(markup, context) : markup;
@@ -431,7 +400,7 @@ export async function prerender(
 
       return responder(router, responses)(
         verdict,
-        new Request(new URL(`${base.replace(/\/+$/, '')}${path}`, origin)),
+        new Request(new URL(path, origin)),
       );
     };
 
