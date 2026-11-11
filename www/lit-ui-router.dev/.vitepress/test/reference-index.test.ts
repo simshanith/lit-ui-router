@@ -15,6 +15,7 @@ const PAGES = {
   '<!-- reference-index -->': 'reference/index.md',
   '<!-- package-index -->': 'packages/index.md',
   '<!-- example-index -->': 'examples/index.md',
+  '<!-- live-examples -->': 'examples/live.md',
 } as const satisfies Record<keyof typeof INDEX_MARKERS, string>;
 
 describe('the generated index pages', () => {

@@ -129,12 +129,14 @@ const TITLE = /^title:\s*(.+)$|^# (.+)$/m;
 const SKIPPED =
   /(^|\/)(node_modules|dist)$|^(\.vitepress|reference|package-releases)$/;
 
-/** The docs pages that embed each example, by `<LiveExample>`; generated page trees are skipped. */
-export function embeddingPages(): Map<
-  string,
-  { title: string; url: string }[]
-> {
-  const pages = new Map<string, { title: string; url: string }[]>();
+interface PageLink {
+  title: string;
+  url: string;
+}
+
+/** The docs pages whose sources embed each example, by `<LiveExample>`; generated page trees are skipped, and the live-examples page's source holds only its marker. */
+export function embeddingPages(): Map<string, PageLink[]> {
+  const pages = new Map<string, PageLink[]>();
 
   const files = globSync('**/*.md', {
     cwd: SITE,
@@ -172,10 +174,59 @@ export function facetLine(facets: ExampleFacets): string {
     .join(' · ');
 }
 
+/** The live-examples page: it embeds the examples no other page embeds. */
+export const LIVE_EXAMPLES = { title: 'Live examples', url: '/examples/live' };
+
+const SPECIAL = /[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g;
+
+/** A heading's anchor, as VitePress's default slugify writes it. */
+export const headingSlug = (heading: string): string =>
+  heading
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .replace(SPECIAL, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/^(\d)/, '_$1')
+    .toLowerCase();
+
+/** The examples no docs page source embeds, in embeds.ts order. */
+export const unembeddedExamples = (
+  pages: ReadonlyMap<string, readonly PageLink[]> = embeddingPages(),
+): ExampleName[] => EXAMPLE_NAMES.filter((name) => !pages.has(name));
+
+export const EMPTY_LIVE_EXAMPLES = `every example is embedded on a docs page, so ${LIVE_EXAMPLES.url} would be empty: delete examples/live.md, its sidebar link in catalog/navigation.ts and its path in catalog/surfaces.ts`;
+
+/** One section per example no other page embeds, each under its examples-index heading. */
+export function liveExamples(
+  pages: ReadonlyMap<string, readonly PageLink[]> = embeddingPages(),
+): string {
+  const names = unembeddedExamples(pages);
+
+  if (names.length === 0) throw new Error(EMPTY_LIVE_EXAMPLES);
+
+  return names
+    .flatMap((name) => {
+      const { title, summary } = EXAMPLES[name];
+
+      return [
+        `## ${title}`,
+        '',
+        `${summary}. [Facets and links](/examples/#${headingSlug(title)}).`,
+        '',
+        `<LiveExample name="${name}" />`,
+        '',
+      ];
+    })
+    .join('\n');
+}
+
+const pageLink = ({ title, url }: PageLink): string => `[${title}](${url})`;
+
 function exampleEntry(
   name: ExampleName,
   facets: ExampleFacets,
-  pages: readonly { title: string; url: string }[],
+  pages: readonly PageLink[],
 ): string[] {
   const { title, summary } = EXAMPLES[name];
 
@@ -192,11 +243,14 @@ function exampleEntry(
     '',
     `- Facets: ${facetLine(facets)}`,
     `- ${links.join(' · ')}`,
-    ...(pages.length > 0
-      ? [
-          `- Embedded in: ${pages.map(({ title: page, url }) => `[${page}](${url})`).join(', ')}`,
-        ]
-      : []),
+    `- Embedded in: ${
+      pages.length > 0
+        ? pages.map(pageLink).join(', ')
+        : pageLink({
+            title: LIVE_EXAMPLES.title,
+            url: `${LIVE_EXAMPLES.url}#${headingSlug(title)}`,
+          })
+    }`,
     '',
   ];
 }

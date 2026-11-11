@@ -36,9 +36,9 @@ export const SURFACES = [
     deadLinks: 'check',
   },
   {
-    // The index page of the examples space; the built examples under it are static.
+    // The examples space's pages; the built examples under it are static.
     id: 'examples-index',
-    paths: ['/examples/'],
+    paths: ['/examples/', '/examples/live'],
     renderer: 'vitepress',
     sitemap: true,
     llms: 'pages',

@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite';
 
-import { exampleIndex } from './example-index.ts';
+import { exampleIndex, liveExamples } from './example-index.ts';
 import { packageIndex } from './package-index.ts';
 import { referenceIndex } from './reference-index.ts';
 
@@ -9,14 +9,16 @@ export const INDEX_MARKERS = {
   '<!-- reference-index -->': referenceIndex,
   '<!-- package-index -->': packageIndex,
   '<!-- example-index -->': exampleIndex,
+  '<!-- live-examples -->': liveExamples,
 } as const;
 
 export type IndexMarker = keyof typeof INDEX_MARKERS;
 
-const MARKER = /^<!-- (?:reference|package|example)-index -->$/m;
-
 // SAFETY: INDEX_MARKERS is a const literal, so its own keys are exactly IndexMarker
 const markers = Object.keys(INDEX_MARKERS) as IndexMarker[];
+
+// The markers are plain text: no RegExp metacharacters to escape.
+const MARKER = new RegExp(`^(?:${markers.join('|')})$`, 'm');
 
 /** Replaces each marker line with its generated list. */
 export function expandIndexes(markdown: string): string {

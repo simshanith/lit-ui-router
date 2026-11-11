@@ -187,6 +187,7 @@ export const SIDEBAR: SidebarEntry[] = [
       { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
       { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
       { text: 'All Examples', link: '/examples/' },
+      { text: 'Live Examples', link: '/examples/live' },
     ],
   },
   {

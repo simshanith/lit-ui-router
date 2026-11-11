@@ -76,11 +76,12 @@
         "docs:release-stubs",
         "types:worker"
       ],
-      // The generated index pages read these manifests and example sources.
+      // The generated index pages read these manifests, the embeds list and the example sources.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/*/package.json",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",
+        "$TURBO_ROOT$/examples/embeds.ts",
         "$TURBO_ROOT$/examples/*/package.json",
         "$TURBO_ROOT$/examples/*/*.js",
         "$TURBO_ROOT$/examples/*/src/**",
@@ -129,6 +130,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/*/package.json",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",
+        "$TURBO_ROOT$/examples/embeds.ts",
         "$TURBO_ROOT$/examples/*/package.json",
         "$TURBO_ROOT$/examples/*/*.js",
         "$TURBO_ROOT$/examples/*/src/**",

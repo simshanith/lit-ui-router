@@ -10,7 +10,9 @@ Every example app in the repository, and every live mount of the
 [sample app](/sample-app). Run it opens the built app this site serves; Open in
 StackBlitz boots an editable workspace installed from the published npm
 packages. The tutorial walks through three of them in order, starting with
-[Hello World](/tutorial/helloworld).
+[Hello World](/tutorial/helloworld). Embedded in names the pages that run an
+example inline; [Live examples](/examples/live) runs the ones no other page
+embeds.
 
 Each entry lists its facets, read from the example's own files:
 
