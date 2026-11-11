@@ -11,7 +11,8 @@ import {
 import { installServerLocation } from 'ui-router-server/location';
 
 import { configure, page } from './app.ts';
-import { mounts, paths } from './route-table.ts';
+import { solarBodies } from './bodies.ts';
+import { mounts } from './routes.ts';
 
 /** One page body and the file it belongs at, relative to the site root. */
 export interface SitePage {
@@ -38,7 +39,8 @@ export async function renderSite(baseHref = '/'): Promise<Site> {
     const result = await prerender({
       mounts,
       router,
-      paths,
+      // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
+      paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
       outDir: '',
       // Eleventy writes the rules file, with the site's base path on each line.
       rules: 'none',

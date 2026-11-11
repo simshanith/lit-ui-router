@@ -90,6 +90,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 
 **hellosolarsystem** as a static site. The states and resolves are the vanilla ones; the router decides the pages and [Eleventy](https://www.11ty.dev) writes them.
 
+- `src/routes.ts` holds the states as data: names, urls, the redirect, `otherwise` and `strict`. `src/prerender.ts` builds the server's mount from it, and `src/app.ts` spreads it into the states it registers, adding components and resolves, so the two halves can't drift. `src/bodies.ts` holds the solar-system data, which the prerender script also reads to list a path per body.
 - One [`prerender()`](https://lit-ui-router.dev/packages/lit-ui-router-ssr) call in `src/prerender.ts` runs before each Eleventy build, in a fresh Node process, and its result becomes Eleventy's global data. It renders each path, the 404 page from the `otherwise` state, and the `legacy` redirect, and hands the bodies and redirect lines back instead of writing files.
 - Paginated templates in `site/` write a page per entry, `_redirects`, and a page per redirect for hosts that don't read `_redirects`; the layout owns the document.
 - `dehydrate: {}` puts each page's resolves in its hydration signature, so `bootstrap()` adopts the served `<ui-view>` without running them again.
