@@ -31,7 +31,7 @@ export default definePrerender((site) => {
       LightElementRenderer,
       LitElementRenderer,
     ],
-    // Each page carries its resolves, so the client boots without fetching them again.
+    // `{}` turns dehydration on with its defaults: each page embeds its resolved data, which the client adopts instead of running the resolves again.
     dehydrate: {},
     renderShell: async (_verdict, { path }) => {
       await settle(router, path);
