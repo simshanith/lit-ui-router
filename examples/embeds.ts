@@ -2,7 +2,8 @@
 // them: build-embeds.ts builds these, EMBEDDED_EXAMPLES used to repeat them,
 // and the docs theme re-exports this for <LiveExample>. embeds.test.ts holds
 // the directories on disk to these keys; embeds.test-d.ts holds the
-// per-example npm scripts to them.
+// per-example npm scripts to them. `summary` is the example's line on the
+// docs site's /examples/ index.
 //
 // `height` reserves the embed's space before its iframe loads, so the page
 // doesn't shift when the example paints — a static number by design. It is not
@@ -14,44 +15,66 @@
 // tools/embed-heights): an example taller than that reserves the cap and
 // scrolls inside the embed.
 export const EXAMPLES = {
-  helloworld: { title: 'Hello World', height: '190px', file: 'src/main.ts' },
+  helloworld: {
+    title: 'Hello World',
+    summary:
+      'Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation',
+    height: '190px',
+    file: 'src/main.ts',
+  },
   'helloworld-buildless': {
     title: 'Hello World (No Build)',
+    summary:
+      'The same starter in plain JavaScript: an import map to a CDN, no TypeScript and no build step',
     height: '190px',
     file: 'public/main.js',
   },
   hellosolarsystem: {
     title: 'Hello Solar System',
+    summary:
+      'Solar System tour: route parameters and async `resolve` data with a master/detail flow',
     height: '800px',
     file: 'src/main.ts',
   },
   'hellosolarsystem-mobx': {
     title: 'Hello Solar System (MobX)',
+    summary:
+      'The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour',
     height: '880px',
     file: 'src/main.ts',
   },
   'hellosolarsystem-signals': {
     title: 'Hello Solar System (Signals)',
+    summary:
+      'The same tour with `lit-ui-router-signals` and `@lit/context`: a provided unit signal, the consumed router',
     height: '810px',
     file: 'src/main.ts',
   },
   'hellosolarsystem-eleventy': {
     title: 'Hello Solar System (Eleventy SSR)',
+    summary:
+      'The same tour prerendered by Eleventy and `lit-ui-router-ssr`: static pages, a 404 page and redirect rules, adopted on boot',
     height: '800px',
     file: 'src/prerender.ts',
   },
   'hellosolarsystem-ssr': {
     title: 'Hello Solar System (Vite SSR)',
+    summary:
+      'The same tour prerendered by `vite build` alone: `serverRouterPlugin` and one prerender script',
     height: '800px',
     file: 'src/prerender.ts',
   },
   hellogalaxy: {
     title: 'Hello Galaxy',
+    summary:
+      'Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise',
     height: '920px',
     file: 'src/main.ts',
   },
   'hellogalaxy-effect': {
     title: 'Hello Galaxy (Effect)',
+    summary:
+      'The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads',
     // Tallest at the astronaut route, whose <model-viewer> mounts a frame
     // later than hellogalaxy's — re-measure over several runs, not one.
     height: '1120px',
@@ -59,28 +82,38 @@ export const EXAMPLES = {
   },
   'hellogalaxy-signals': {
     title: 'Hello Galaxy (Signals)',
+    summary:
+      'The same explorer with both Lit signal bindings: a star chart shared by nested views, route-driven crumbs',
     height: '930px',
     file: 'src/main.ts',
   },
   'design-system-links': {
     title: 'Design System Links',
+    summary:
+      "`uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`",
     height: '540px',
     file: 'src/main.ts',
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
+    summary:
+      '`eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page',
     // Capped: the open report outgrows the cap and scrolls inside the embed.
     height: '1200px',
     file: 'src/main.ts',
   },
   'navigation-api': {
     title: 'Navigation API',
+    summary:
+      '`ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app',
     // check:embeds walks hash links only, so it measures the initial state; every other state keeps that height.
     height: '650px',
     file: 'src/main.ts',
   },
   'loading-and-error-views': {
     title: 'Loading and Error Views',
+    summary:
+      'Per-route pending and error views from transition hooks and inherited `data`, a NOWAIT resolve, and retry',
     // check:embeds never ticks Fail requests, so this also covers the error views, which stand a few px taller.
     height: '410px',
     file: 'src/main.ts',
@@ -91,3 +124,8 @@ export type ExampleName = keyof typeof EXAMPLES;
 
 // SAFETY: EXAMPLES is a const literal, so its own keys are exactly ExampleName
 export const EXAMPLE_NAMES = Object.keys(EXAMPLES) as ExampleName[];
+
+/** Docs pages under the site's /examples/, beside the built examples at /examples/<name>/: no example may take one's slug. */
+export const RESERVED_NAMES = ['live'] as const;
+
+export type ReservedName = (typeof RESERVED_NAMES)[number];

@@ -67,7 +67,7 @@ class UserMenu extends LitElement {
 }
 ```
 
-The [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+The [Hello Solar System (Signals)](/examples/#hello-solar-system-signals)
 example consumes it this way, beside a context of its own that hands routed
 views a signal.
 
