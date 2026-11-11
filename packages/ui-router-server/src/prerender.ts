@@ -36,8 +36,10 @@ export interface EmittedPage {
   path: string;
   /** Path relative to `outDir` — `sheet/7B/index.html`. */
   file: string;
-  /** The verdict that produced it; `status` carries the otherwise projection's 404. */
+  /** The verdict that produced it; `verdict.status` carries the otherwise projection's 404. */
   verdict: Verdict;
+  /** Status the page answers with, as the adapters answer the same path. */
+  readonly status: number;
   /** Bytes written, or planned under `dryRun`. */
   bytes: number;
 }
@@ -532,6 +534,7 @@ export async function prerender(
     verdict: Verdict,
     listed: string,
     file: string,
+    status: number,
     body: string,
   ): Promise<Outcome> => {
     if (!dryRun) await write(joinPath(outDir, file), body);
@@ -540,6 +543,7 @@ export async function prerender(
       path: listed,
       file,
       verdict,
+      status,
       bytes: new TextEncoder().encode(body).length,
     };
 
@@ -564,7 +568,7 @@ export async function prerender(
       return { redirect: html };
     }
 
-    return emitPage(verdict, listed, file, html);
+    return emitPage(verdict, listed, file, verdict.status ?? 200, html);
   };
 
   const answer = async (
@@ -599,6 +603,7 @@ export async function prerender(
       verdict,
       listed,
       file,
+      status,
       await response.text(),
     );
 
