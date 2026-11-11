@@ -11,7 +11,8 @@ import { installServerLocation } from 'ui-router-server/location';
 import { redirectPages } from 'ui-router-server/prerender';
 
 import { configure, page } from './app.ts';
-import { mounts, paths } from './route-table.ts';
+import { solarBodies } from './bodies.ts';
+import { mounts } from './routes.ts';
 
 export default definePrerender((site) => {
   // Vite's `base`, so the server render builds its hrefs where the host serves the pages.
@@ -22,7 +23,8 @@ export default definePrerender((site) => {
   return {
     mounts,
     router,
-    paths,
+    // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
+    paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
     // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
     rules: redirectPages({ redirectsFile: true }),
     // The default omits LitElementRenderer, which <app-root>'s shadow root needs.

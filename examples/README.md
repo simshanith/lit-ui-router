@@ -100,6 +100,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 
 **hellosolarsystem-eleventy** without Eleventy. `vite build` builds the client, then [`serverRouterPlugin`](https://lit-ui-router.dev/guides/prerender-with-vite) runs `src/prerender.ts` in a worker thread and writes the site into `dist/`.
 
+- `src/routes.ts` holds the states as data: names, urls, the redirect, `otherwise` and `strict`. `vite.config.ts` builds the server router from it, and `src/app.ts` spreads it into the states it registers, adding components and resolves, so the two halves can't drift. `src/bodies.ts` holds the solar-system data, which the prerender script also reads to list a path per body.
 - `src/prerender.ts` default-exports `definePrerender(...)`, whose options go to `lit-ui-router-ssr`'s `prerender()`. `document` puts each rendered page into the built `index.html` at its `<!--app-->` marker.
 - `redirectPages({ redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
 - The route table stays at `/`. The script builds its router with `baseHref: site.base`, Vite's `base`, and the rules lines and redirect pages carry the base on their own, so the same script builds the site at any base.
