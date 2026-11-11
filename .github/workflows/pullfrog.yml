@@ -2,8 +2,9 @@
 # App dispatches this workflow from the default branch with the prompt for the
 # PR or comment it is answering, so the `prompt`/`name` inputs are its contract.
 #
-# One provider key reaches the job, and the model is set here, so only the
-# free OpenCode Zen model can run. The console's repo model must stay
+# The job signs in to OpenCode over OIDC, so no provider key is stored. That
+# token is the only credential the agent gets, and the model is set here, so
+# only the free OpenCode Zen model can run. The console's repo model must stay
 # "Custom (set in workflow)": a model stored there beats the `model` input.
 name: Pullfrog
 run-name: ${{ inputs.name || github.workflow }}
@@ -25,7 +26,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
-      # The action mints its own short-lived GitHub token over OIDC
+      # OIDC: the OpenCode sign-in, and the action's own short-lived GitHub token
       id-token: write
       contents: read
     steps:
@@ -34,6 +35,23 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - name: Sign in to OpenCode
+        id: opencode
+        shell: bash
+        env:
+          AUDIENCE: https://opencode.ai/console
+          CLIENT_ID: ${{ vars.OPENCODE_CLIENT_ID }}
+        run: |
+          oidc=$(curl -sSf --oauth2-bearer "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er .value)
+          echo "::add-mask::$oidc"
+          token=$(curl -sSf https://opencode.ai/console/auth/oauth/token \
+            -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange \
+            -d subject_token_type=urn:ietf:params:oauth:token-type:jwt \
+            -d client_id="$CLIENT_ID" \
+            -d subject_token="$oidc" | jq -er .access_token)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
       - name: Run agent
         uses: pullfrog/pullfrog@0741f79ecebfa4469a010644d2aed2d96d32d489 # v0.1.127
         with:
@@ -42,5 +60,5 @@ jobs:
           push: disabled
           timeout: 20m
         env:
-          # The only provider key; a second one is a later rollout phase
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          # The only provider credential; a second one is a later rollout phase
+          OPENCODE_API_KEY: ${{ steps.opencode.outputs.token }}
