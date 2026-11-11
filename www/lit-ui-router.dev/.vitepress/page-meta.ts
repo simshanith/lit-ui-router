@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 
+import { GUIDE_TOPICS } from '../catalog/navigation.ts';
 import { STUB_DIR } from './release-stubs.ts';
 
 /** What a page is for; the first four are the Diátaxis quadrants. */
@@ -16,18 +17,6 @@ export const PAGE_TYPES = {
 } as const;
 
 export type PageType = keyof typeof PAGE_TYPES;
-
-/** The Guides sidebar groups, in sidebar order. */
-export const GUIDE_TOPICS = [
-  { id: 'urls', label: 'URLs & Location' },
-  { id: 'server', label: 'Server-side' },
-  { id: 'transitions', label: 'Transitions & Guards' },
-  { id: 'markup', label: 'Links & Markup' },
-  { id: 'builds', label: 'Builds & Diagnostics' },
-  { id: 'reactivity', label: 'Reactivity' },
-] as const;
-
-export type GuideTopic = (typeof GUIDE_TOPICS)[number]['id'];
 
 /** Page sources a generator writes; they carry no page type. */
 export const GENERATED_PAGES = ['api/*/**', `${STUB_DIR}/**`];

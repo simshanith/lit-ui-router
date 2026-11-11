@@ -7,8 +7,8 @@ import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { DefaultTheme } from 'vitepress';
 
+import { companionGroups } from '../../catalog/navigation.ts';
 import { PACKAGES } from '../../catalog/packages.ts';
-import { companionGroups } from '../packages-sidebar.ts';
 
 const site = join(import.meta.dirname, '../..');
 
