@@ -335,12 +335,17 @@ Note the resolve: instead of a top-level `import '@google/model-viewer'`, the st
 
 ## Router Setup
 
+As in Hello Solar System, the router logs each transition to the browser console, and the [UI Router visualizer](https://github.com/ui-router/visualizer) loads only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellogalaxy/?visualizer" target="_self">running example</a>.
+
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+router.trace.enable('TRANSITION');
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 router.stateRegistry.register(galaxyState);
 router.stateRegistry.register(starsState);
 router.stateRegistry.register(starState);

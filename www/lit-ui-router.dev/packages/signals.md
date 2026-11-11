@@ -30,11 +30,11 @@ should list a single version.
 
 ## In use
 
-- [Hello Solar System (Signals)](/tutorial/live-examples#hello-solar-system-signals)
+- [Hello Solar System (Signals)](/examples/#hello-solar-system-signals)
   follows the route from an un-routed header with a `RouterSignalController`,
   shares a `Signal.State` between routed and un-routed views, and sets the
   tab title with a bare `watchSelection`.
-- [Hello Galaxy (Signals)](/tutorial/live-examples#hello-galaxy-signals) puts
+- [Hello Galaxy (Signals)](/examples/#hello-galaxy-signals) puts
   `@lit-labs/signals` and `lit-ui-router-signals` on one graph: a star chart
   that nested views share, and a breadcrumb built from `RouterSignals`.
 - The <a href="/app-signals" target="_self">Signals sample app</a> keeps its

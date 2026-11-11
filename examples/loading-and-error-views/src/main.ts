@@ -420,6 +420,9 @@ const router = new UIRouterLit();
 
 router.plugin(hashLocationPlugin);
 
+// Logs each transition to the console.
+router.trace.enable('TRANSITION');
+
 for (const state of [
   homeState,
   reportState,

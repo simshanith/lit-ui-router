@@ -757,7 +757,7 @@ While the router sits at `users`, that link is
 `<a href="/users" class="nav-link active" aria-current="page">`; at
 `users.detail` the `active` class stays and `aria-current` is gone, because
 the token is exact-match only. The three are covered in
-[Attribute-part forms](/reference/#attribute-part-forms).
+[Attribute-part forms](/packages/lit-ui-router#attribute-part-forms).
 
 `srefHref`'s `render()` is a function of the router and its arguments alone —
 it returns the `href` string, or `nothing` for a state with no url — and it

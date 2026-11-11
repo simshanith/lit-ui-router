@@ -24,6 +24,12 @@ import {
 import { FILE_FILTERS, type FileFilter } from './npm-diff/file-filter.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
+  inSitemap,
+  type SitemapEntry,
+  sitemapEntries,
+  sitemapXml,
+} from './sitemap.ts';
+import {
   CompareView,
   diffUrl,
   filesDiffPath,
@@ -43,6 +49,7 @@ type ResponseName = ResponseState<Route>;
 /** What each state's view or responder reads from its resolves. */
 interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
+  'releases.sitemap': { sitemap: SitemapEntry[] };
   'releases.package': { versions: LedgerVersion[] };
   'releases.package.latest': { latest: LedgerVersion };
   'releases.package.diff': { compare: string };
@@ -142,6 +149,19 @@ const latestResolve = (ledger: LedgerReader) => ({
 
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 
+/** Every listed package's versions, newest first, or a `NotInLedger` rejection while the catalog keeps the space out of the sitemap. */
+const sitemapOf =
+  (ledger: LedgerReader) =>
+  async (packages: readonly LedgerPackage[]): Promise<SitemapEntry[]> => {
+    if (!inSitemap()) throw new NotInLedger('no releases sitemap');
+
+    const versions = await Promise.all(
+      packages.map(({ name }) => versionsOf(ledger)({ pkg: name })),
+    );
+
+    return sitemapEntries(packages, versions);
+  };
+
 const PATCH_TYPE = 'text/x-diff; charset=utf-8';
 
 /** A data route's answer: a pair's published files never change, so neither does it. */
@@ -195,6 +215,12 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
   releases: {
     component: ReleasesView,
     resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
+  },
+  'releases.sitemap': {
+    resolve: [
+      { token: 'sitemap', deps: ['packages'], resolveFn: sitemapOf(ledger) },
+    ],
+    cacheKey: urlKey,
   },
   'releases.package': {
     component: PackageView,
@@ -289,6 +315,13 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
 
 /** Each response state's answer, bound by name. */
 export const releaseResponses = {
+  'releases.sitemap': ({ resolves, request }) =>
+    new Response(sitemapXml(new URL(request.url).origin, resolves.sitemap), {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    }),
   'releases.package.latest': ({ resolves, request }) =>
     found(
       mergeSearch(versionPath(resolves.latest), new URL(request.url).search),

@@ -17,6 +17,7 @@ import type {
 import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
 import type {
   FileWriter,
+  PathReport,
   PrerenderOptions,
   RedirectLine,
   RenderContext,
@@ -519,6 +520,43 @@ describe('prerender', () => {
     );
     assert.equal(result.tally.shell, 1);
     assert.equal(result.tally.redirect, 1);
+  });
+
+  it('reports each listed path once, in order, with its page or redirect', async (t) => {
+    silenceWarn(t);
+    const reports: PathReport[] = [];
+
+    await run({
+      paths: ['/', '/sheet/7B', '/app/legacy', '/app/nope'],
+      render: (_verdict, { path }) =>
+        path === '/sheet/7B' ? { location: '/sheet/7', status: 308 } : '<p/>',
+      onPath: (report) => reports.push(report),
+    });
+
+    assert.deepEqual(
+      reports.map(({ path, verdict, page, redirect }) => [
+        path,
+        verdict.kind,
+        page?.file,
+        redirect,
+      ]),
+      [
+        ['/', 'shell', 'index.html', undefined],
+        [
+          '/sheet/7B',
+          'shell',
+          undefined,
+          { location: '/sheet/7', status: 308 },
+        ],
+        [
+          '/app/legacy',
+          'redirect',
+          undefined,
+          { location: '/app/welcome', status: 302 },
+        ],
+        ['/app/nope', 'notFound', undefined, undefined],
+      ],
+    );
   });
 
   it('throws when the 404 document’s render answers a redirect', async () => {
