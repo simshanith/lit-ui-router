@@ -71,7 +71,10 @@ export interface PathReport {
   verdict: Verdict;
   /** The page written for it, when one was. */
   page?: EmittedPage;
-  /** Where it redirects, when its verdict, render or response answered a redirect. */
+  /**
+   * Where it redirects, when its verdict, render or response answered a redirect.
+   * The location is base-free, like `path` and `verdict`; the rules line for it carries `base`.
+   */
   redirect?: RenderedRedirect;
 }
 
