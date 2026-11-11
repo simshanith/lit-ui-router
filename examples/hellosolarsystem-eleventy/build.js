@@ -1,6 +1,6 @@
-// Records the base path from `--base=`, then runs Eleventy, which builds the app with Vite and writes the site into dist/.
+// Starts Eleventy with `--base=` as its path prefix; Eleventy builds the app with Vite and writes the site into dist/.
 import { spawn } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 
@@ -9,13 +9,13 @@ const base =
 
 rmSync('dist', { recursive: true, force: true });
 
-mkdirSync('node_modules/.build', { recursive: true });
-
-writeFileSync('node_modules/.build/base.json', JSON.stringify(base));
-
 const eleventy = spawn(
   'npx',
-  args.includes('--serve') ? ['eleventy', '--serve'] : ['eleventy'],
+  [
+    'eleventy',
+    `--pathprefix=${base}`,
+    ...(args.includes('--serve') ? ['--serve'] : []),
+  ],
   { stdio: 'inherit', shell: process.platform === 'win32' },
 );
 
