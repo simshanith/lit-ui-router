@@ -68,6 +68,9 @@ of `ui-router-server`.
 | Static prerender | Eleventy                   | [Prerender with Eleventy](./prerender-with-eleventy)                                         | [`hellosolarsystem-eleventy`](https://github.com/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-eleventy)                                                                            |
 | Server render    | Workers                    | [Rendering one page per request](/packages/lit-ui-router-ssr#rendering-one-page-per-request) | This site's [release pages](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/releases/serve.ts), rendered per request without hydration                          |
 
+This site is the working code for the Workers rows; [How this site runs](/site/)
+describes its worker, the release ledger and the release pages.
+
 The API references for both packages are at
 [`/reference/ui-router-server/`](/reference/ui-router-server/) and
 [`/reference/lit-ui-router-ssr/`](/reference/lit-ui-router-ssr/).
