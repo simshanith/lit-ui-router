@@ -7,7 +7,10 @@ import type { TestContext } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
 import type { ServerRouter, Verdict } from '../src/index.ts';
-import type { ConnectMiddleware } from '../src/connect.ts';
+import type {
+  ConnectAdapterOptions,
+  ConnectMiddleware,
+} from '../src/connect.ts';
 import { definePrerender, serverRouterPlugin } from '../src/vite.ts';
 import type {
   PrerenderEntry,
@@ -173,6 +176,22 @@ describe('serverRouterPlugin', () => {
     });
     assert.deepEqual(await answer('/solar/about'), { url: '/solar/' });
     assert.deepEqual(await answer('/legacy'), { url: '/legacy' });
+  });
+
+  it("takes a shared adapter options bag whose base matches Vite's, and throws for one that differs", async () => {
+    const router = createServerRouter({ mounts: { '/': { routes: [] } } });
+    const shared: ConnectAdapterOptions = { base: '/solar' };
+
+    await serverRouterPlugin(router, shared).configResolved(
+      configOf('/nonexistent', { base: '/solar/' }),
+    );
+
+    await assert.rejects(
+      serverRouterPlugin(router, shared).configResolved(
+        configOf('/nonexistent', { base: '/moon/' }),
+      ),
+      /serverRouterPlugin: the base option '\/solar' differs from Vite's base '\/moon\/'/,
+    );
   });
 
   it('never reports mount diagnostics; construction does', (t) => {

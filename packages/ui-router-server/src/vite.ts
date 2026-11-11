@@ -133,8 +133,8 @@ export function definePrerender(entry: PrerenderEntry): PrerenderEntry {
 
 /** Options for {@link serverRouterPlugin}: the Connect adapter's, plus the build step; the base comes from Vite's config. */
 export interface ServerRouterPluginOptions extends ConnectAdapterOptions {
-  /** Not an option here: the plugin reads Vite's resolved `base`, which the router's `base` sets when Vite's is unset. */
-  base?: never;
+  /** Checked against Vite's resolved `base`, which the router's `base` sets when Vite's is unset; a different value throws. */
+  base?: string;
   /**
    * Prerenders the app after `vite build`. `entry` names the prerender
    * script, resolved against Vite's root, whose default export is a
@@ -441,7 +441,7 @@ export function serverRouterPlugin(
   router: ServerRouter,
   options: ServerRouterPluginOptions = {},
 ): ServerRouterPlugin {
-  const { prerender, ...adapter } = options;
+  const { prerender, base: passed, ...adapter } = options;
 
   const job =
     // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the option's own union: a string is shorthand for `{ entry }`
@@ -491,8 +491,17 @@ export function serverRouterPlugin(
     async configResolved(config) {
       resolved = config;
 
-      if (config.base.startsWith('/'))
-        await checkUndeclaredBase(router, config.base, 'serverRouterPlugin');
+      if (!config.base.startsWith('/')) return;
+
+      if (
+        passed !== undefined &&
+        normalizeBase(passed, 'serverRouterPlugin') !== siteBase()
+      )
+        throw new Error(
+          `serverRouterPlugin: the base option '${passed}' differs from Vite's base '${config.base}'; set Vite's base`,
+        );
+
+      await checkUndeclaredBase(router, config.base, 'serverRouterPlugin');
     },
     configureServer(server) {
       server.middlewares.use(served());
