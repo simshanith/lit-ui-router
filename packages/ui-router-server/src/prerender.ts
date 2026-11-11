@@ -10,6 +10,14 @@
 // Verdicts turned into files and host rules; the page body comes from the caller's render.
 import { devGate } from '#dev-gate';
 
+import {
+  baseFor,
+  carriesBase,
+  checkUndeclaredBase,
+  mountsUnder,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
@@ -78,6 +86,8 @@ export interface RulesContext {
   write: FileWriter;
   /** The run's {@link PrerenderOptions.outDir | outDir}. */
   outDir: string;
+  /** The run's {@link PrerenderOptions.base | base}, already on every generated line. */
+  base: string;
   /** Every page the run wrote, the 404 document included. */
   pages: readonly EmittedPage[];
 }
@@ -101,10 +111,47 @@ export interface PrerenderOptions {
    * policies come with it. Any other resolver is read as `'as-requested'`.
    */
   resolver?: ServerRouter;
-  /** Every path to ask for a verdict. Redirect and notFound paths belong here too. */
+  /**
+   * Every path to ask for a verdict. Redirect and notFound paths belong here
+   * too. They spell the {@link PrerenderOptions.base | base} when
+   * {@link PrerenderOptions.pathsIncludeBase | pathsIncludeBase} is on, as
+   * it is by default for a router that declares one, and lie under it with
+   * it taken off otherwise.
+   */
   paths: Iterable<string> | AsyncIterable<string>;
+  /**
+   * Whether each of {@link PrerenderOptions.paths | paths} spells the
+   * {@link PrerenderOptions.base | base}, as a host serves it: `/app/about`
+   * under `/app/`. When `true`, the base is taken off each path once,
+   * before anything else sees it, so the output matches the base-free
+   * listing; a path outside the base throws. When `false`, a path is read as
+   * given, even one that starts with the base. `pages`, `warnings` and
+   * `delegated` report each path as listed. Under base `/` it changes nothing.
+   *
+   * Defaults to whether the router declares a base: `true` for a
+   * {@link PrerenderOptions.resolver | resolver} from
+   * `createServerRouter({ base, mounts })` or a
+   * {@link PrerenderOptions.mounts | mounts} table keyed by the base, so a
+   * table that spells real urls lists real urls; `false` for a table at `/`
+   * stripped under a `base`, so its paths stay the same at any base. The
+   * default follows that declaration, never the shape of the paths.
+   */
+  pathsIncludeBase?: boolean;
   /** Directory the files are written under. */
   outDir: string;
+  /**
+   * The url path `outDir` is served at, such as Vite's `base`; `/` by
+   * default. The mounts stay at `/` and page files don't move: the base goes
+   * once onto each generated rules line's `from` and host-absolute `to`.
+   * {@link PrerenderOptions.extraRules | extraRules} are written as given.
+   * Defaults to the {@link PrerenderOptions.resolver | resolver}'s own
+   * `base`; a different value throws, as does a relative or full-URL base.
+   * A {@link PrerenderOptions.mounts | mounts} table keyed by the base
+   * compiles as `createServerRouter({ base, mounts })` would. Either way,
+   * {@link PrerenderOptions.paths | paths} lie under the base, with it taken
+   * off.
+   */
+  base?: string;
   /**
    * Renders one shell verdict to the file's full text, document included, or
    * answers a {@link RenderedRedirect} for a page whose render found it
@@ -338,7 +385,14 @@ const writeRules = async (
   );
 };
 
-const resolverOf = (options: PrerenderOptions): ServerRouter => {
+// Whether a mounts table spells the base in its keys, and so compiles under it.
+const keyedBy = (base: string, mounts: Record<string, MountConfig>): boolean =>
+  Object.keys(mounts).some((key) => carriesBase(base, key));
+
+const resolverOf = (
+  options: PrerenderOptions,
+  base: string | undefined,
+): ServerRouter => {
   if (options.resolver) return options.resolver;
 
   if (!options.mounts) {
@@ -347,7 +401,7 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
     );
   }
 
-  return createServerRouter({ mounts: options.mounts });
+  return createServerRouter({ base, mounts: options.mounts });
 };
 
 /**
@@ -367,7 +421,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * `href()` formats it under {@link url-config!applyUrlConfig | `applyUrlConfig`}.
  * Under `'as-requested'` neither spelling gets a line. A redirect's line is
  * written for both spellings of its path, since a static host may append the
- * slash.
+ * slash. Under a {@link PrerenderOptions.base | base}, every generated line
+ * carries it.
  *
  * It knows no renderer: `render` turns each shell verdict into the file's
  * text, so any template engine, or a `settle` and a string, can fill it.
@@ -376,6 +431,8 @@ const resolverOf = (options: PrerenderOptions): ServerRouter => {
  * @param options - the mount table, the paths, the render, and the hooks
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
+ * @throws an `Error` when `base` is relative or a full URL, or differs from the resolver's
+ * @throws an `Error` when a mount of a resolver that declares no `base` already carries `base`
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
  * @throws an `Error` when the 404 document's render answers a redirect
@@ -424,7 +481,13 @@ export async function prerender(
     dryRun = false,
   } = options;
 
-  const resolver = resolverOf(options);
+  const base = baseFor(options.resolver ?? {}, options.base, 'prerender');
+  const keyed = mounts !== undefined && keyedBy(base, mounts);
+  const resolver = resolverOf(options, keyed ? base : undefined);
+  await checkUndeclaredBase(resolver, base, 'prerender');
+
+  const pathsIncludeBase =
+    options.pathsIncludeBase ?? resolver.base !== undefined;
 
   const tally: PrerenderTally = {
     shell: 0,
@@ -446,6 +509,7 @@ export async function prerender(
     path: string,
     subpath: string,
     file: string,
+    listed = path,
   ): Promise<'shell' | 'redirect'> => {
     const html = await render(verdict, { path, subpath, file });
 
@@ -457,7 +521,7 @@ export async function prerender(
 
     if (!dryRun) await write(joinPath(outDir, file), html);
     pages.push({
-      path,
+      path: listed,
       file,
       verdict,
       bytes: new TextEncoder().encode(html).length,
@@ -469,6 +533,7 @@ export async function prerender(
   const answer = async (
     verdict: ResponseVerdict,
     path: string,
+    listed: string,
   ): Promise<void> => {
     const subpath = subpathIn(verdict.mount, path);
     const file = responseFileFor(subpath);
@@ -496,7 +561,7 @@ export async function prerender(
 
     if (!dryRun) await write(joinPath(outDir, file), body);
     pages.push({
-      path,
+      path: listed,
       file,
       verdict,
       bytes: new TextEncoder().encode(body).length,
@@ -508,7 +573,21 @@ export async function prerender(
 
   let slashProbed = false;
 
-  const visit = async (path: string): Promise<void> => {
+  // The listed path as the mounts see it: the base taken off once, when the caller listed it on.
+  const baseFree = (listed: string): string => {
+    if (!pathsIncludeBase) return listed;
+    const path = stripBase(base, listed);
+
+    if (path === undefined)
+      throw new Error(
+        `prerender: '${listed}' lies outside base '${base}', and pathsIncludeBase lists every path under it`,
+      );
+
+    return path;
+  };
+
+  const visit = async (listed: string): Promise<void> => {
+    const path = baseFree(listed);
     const verdict = await resolver.resolve(path);
     // Read before narrowing: a structural resolver may return a kind the Verdict union lacks.
     const kind: string = verdict.kind;
@@ -528,7 +607,14 @@ export async function prerender(
         await warnStrictSlash(resolver, path);
       }
 
-      const emitted = await emit(verdict, path, subpath, fileFor(subpath));
+      const emitted = await emit(
+        verdict,
+        path,
+        subpath,
+        fileFor(subpath),
+        listed,
+      );
+
       tally[emitted] += 1;
 
       if (emitted === 'shell')
@@ -545,15 +631,15 @@ export async function prerender(
     }
 
     if (verdict.kind === 'response') {
-      await answer(verdict, path);
+      await answer(verdict, path, listed);
 
       return;
     }
 
     if (verdict.kind === 'notFound') {
       tally.notFound += 1;
-      warnings.push(path);
-      warnUnclaimed(path);
+      warnings.push(listed);
+      warnUnclaimed(listed);
 
       return;
     }
@@ -565,12 +651,16 @@ export async function prerender(
     }
 
     tally.delegate += 1;
-    delegated.push(path);
+    delegated.push(listed);
   };
 
   for await (const path of paths) await visit(path);
 
-  const page = await notFoundPage(notFound, mounts, resolver);
+  const page = await notFoundPage(
+    notFound,
+    keyed ? mountsUnder(base, mounts, 'prerender') : mounts,
+    resolver,
+  );
 
   if (page) {
     tally.document += 1;
@@ -585,9 +675,16 @@ export async function prerender(
       );
   }
 
-  const lines = [...extraRules, ...uniqueLines(generated)];
+  const lines = [
+    ...extraRules,
+    ...uniqueLines(generated).map((line) => ({
+      ...line,
+      from: withBase(base, line.from),
+      to: withBase(base, line.to),
+    })),
+  ];
 
-  if (!dryRun) await writeRules(lines, rules, { write, outDir, pages });
+  if (!dryRun) await writeRules(lines, rules, { write, outDir, base, pages });
 
   return { tally, pages, rules: lines, warnings, delegated };
 }

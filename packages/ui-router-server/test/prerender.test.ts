@@ -128,6 +128,50 @@ describe('prerender', () => {
     );
   });
 
+  it('puts the base once on every generated line, leaving extraRules and page files as written', async () => {
+    const legacy: RedirectLine = { from: '/old', to: '/', status: 301 };
+    const away = { location: 'https://example.com/', status: 302 };
+
+    const { files, result } = await run({
+      base: '/solar/',
+      paths: ['/', '/sheet/7B', '/app/legacy'],
+      notFound: false,
+      extraRules: [legacy],
+      render: (_verdict, { path }) => (path === '/sheet/7B' ? away : 'page'),
+    });
+
+    assert.deepEqual(result.rules, [
+      legacy,
+      { from: '/solar/sheet/7B', to: 'https://example.com/', status: 302 },
+      { from: '/solar/sheet/7B/', to: 'https://example.com/', status: 302 },
+      { from: '/solar/app/legacy', to: '/solar/app/welcome', status: 302 },
+      { from: '/solar/app/legacy/', to: '/solar/app/welcome', status: 302 },
+    ]);
+    assert.deepEqual([...files.keys()], ['dist/index.html', 'dist/_redirects']);
+  });
+
+  it('hands the base to a rules function, and rejects a relative or full-URL base', async () => {
+    let base = '';
+
+    await run({
+      base: '/solar',
+      paths: [],
+      notFound: false,
+      rules: (_lines, context) => {
+        base = context.base;
+      },
+    });
+    assert.equal(base, '/solar/');
+    await assert.rejects(
+      run({ base: './' }),
+      /prerender: base '.\/' is relative/,
+    );
+    await assert.rejects(
+      run({ base: 'https://cdn.example.com/' }),
+      /prerender: base 'https:\/\/cdn.example.com\/' is a full URL/,
+    );
+  });
+
   it('hands lines to a rules function and writes no rules file', async () => {
     let received: RedirectLine[] = [];
 
@@ -591,6 +635,21 @@ describe('redirectPages', () => {
     assert.match(page, /<link rel="canonical" href="\/app\/welcome">/);
     assert.match(page, /<meta name="robots" content="noindex">/);
     assert.match(page, /<a href="\/app\/welcome">/);
+  });
+
+  it("takes prerender's base by default, writing pages under outDir", async () => {
+    const { files } = await run({
+      base: '/solar/',
+      paths: ['/app/legacy'],
+      notFound: false,
+      rules: redirectPages(),
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/app/legacy/index.html']);
+    assert.match(
+      files.get('dist/app/legacy/index.html') ?? '',
+      /<link rel="canonical" href="\/solar\/app\/welcome">/,
+    );
   });
 
   it('carries the query and fragment into a target that has none', async () => {

@@ -3,7 +3,7 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import type { Verdict } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
-import type { ResponseHandlers } from 'ui-router-server/ssr';
+import { settle, type ResponseHandlers } from 'ui-router-server/ssr';
 import { describe, expect, it, vi } from 'vitest';
 
 import { prerender } from '../prerender.js';
@@ -51,9 +51,10 @@ const responses = {
   }
 >;
 
-const serverRouter = () => {
+const serverRouter = (baseHref?: string) => {
   const router = installServerLocation(new UIRouterLit(), {
     urlConfig: { strict: false },
+    baseHref,
   });
 
   for (const route of routes)
@@ -201,6 +202,100 @@ describe('prerender responses', () => {
       'http://lit-ui-router-ssr/lit/badge.svg',
     );
   });
+
+  it.each([
+    { pathsIncludeBase: false, paths: ['/lit/badge.svg', '/lit/latest'] },
+    {
+      pathsIncludeBase: true,
+      paths: ['/solar/lit/badge.svg', '/solar/lit/latest'],
+    },
+  ])(
+    'hands the handler a request under the base, and writes the base into rules lines once, with pathsIncludeBase $pathsIncludeBase',
+    async ({ pathsIncludeBase, paths }) => {
+      const badge = vi.spyOn(responses, 'pkg.badge');
+      const router = serverRouter('/solar/');
+
+      const result = await prerender({
+        mounts: { '/': { routes, config: { strict: false } } },
+        router,
+        base: '/solar/',
+        pathsIncludeBase,
+        outDir: 'dist',
+        paths,
+        notFound: false,
+        elementRenderers: [],
+        renderShell: () => '',
+        responses,
+        write: () => {},
+      });
+
+      expect(badge.mock.calls.at(-1)?.[0].request.url).toBe(
+        'http://lit-ui-router-ssr/solar/lit/badge.svg',
+      );
+      expect(result.rules).toEqual([
+        { from: '/solar/lit/latest', to: '/solar/v/lit@1.0.0', status: 302 },
+        { from: '/solar/lit/latest/', to: '/solar/v/lit@1.0.0', status: 302 },
+      ]);
+      expect(result.pages.map((page) => [page.path, page.file])).toEqual([
+        [paths[0], 'lit/badge.svg'],
+      ]);
+    },
+  );
+
+  it.each([
+    { baseHref: undefined, linked: '/' },
+    { baseHref: '/solar/app/', linked: '/solar/app/' },
+  ])(
+    'throws when baseHref $baseHref links the page at $linked, not under the base',
+    async ({ baseHref, linked }) => {
+      const router = serverRouter(baseHref);
+
+      await expect(
+        prerender({
+          mounts: { '/': { routes } },
+          router,
+          base: '/solar/',
+          outDir: 'dist',
+          paths: ['/'],
+          renderShell: async (_verdict, { path }) => {
+            await settle(router, path);
+
+            return '';
+          },
+          write: () => {},
+        }),
+      ).rejects.toThrow(
+        `prerender: the router settled '/' at '${linked}', but the page is served at '/solar/'; build the router with installServerLocation(router, { baseHref: '/solar/' })`,
+      );
+    },
+  );
+
+  it.each([
+    { base: '/solar/', mount: '/', baseHref: '/solar/', at: 'path' },
+    { base: '/', mount: '/releases', baseHref: '/releases/', at: 'subpath' },
+    { base: '/', mount: '/releases', baseHref: undefined, at: 'path' },
+  ] as const)(
+    'renders under base $base, mount $mount, baseHref $baseHref, settled on the $at',
+    async ({ base, mount, baseHref, at }) => {
+      const router = serverRouter(baseHref);
+
+      const result = await prerender({
+        mounts: { [mount]: { routes } },
+        router,
+        base,
+        outDir: 'dist',
+        paths: [mount === '/' ? '/' : `${mount}/`],
+        renderShell: async (_verdict, context) => {
+          await settle(router, context[at] || '/');
+
+          return '';
+        },
+        write: () => {},
+      });
+
+      expect(result.pages.map((page) => page.file)).toEqual(['index.html']);
+    },
+  );
 
   it('throws for a response state without responses', async () => {
     await expect(

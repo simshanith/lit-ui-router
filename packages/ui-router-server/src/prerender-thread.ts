@@ -28,6 +28,8 @@ export interface PrerenderJob {
   preload: readonly string[];
   /** Vite's resolved output directory, absolute. */
   outDir: string;
+  /** Vite's resolved `base`. */
+  base: string;
   /** The built `index.html`. */
   shellHtml: string;
 }
@@ -184,6 +186,7 @@ const runJob = async (job: PrerenderJob): Promise<PrerenderResult> => {
 
     return await entry({
       outDir: job.outDir,
+      base: job.base,
       shellHtml: job.shellHtml,
       write,
     });

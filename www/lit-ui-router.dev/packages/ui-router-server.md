@@ -298,6 +298,72 @@ whose `Accept` includes `text/html` — so module and asset fetches pass
 through untouched. Override with `() => true` when the adapter sits behind
 the static layer and should judge everything.
 
+### Serving under a base path
+
+Every adapter takes `base`, the url path the site is served at, such as
+Vite's `base`; it is `/` by default. The mount table stays at `/`: the
+adapter matches each request with the base taken off, passes a request
+outside the base on (`null` from fetch, `next()` from Connect and Hono), and
+puts the base back on what it writes: redirect `Location`s, the canonical
+`Link`, and the shell url it hands on.
+
+```ts
+createFetchHandler(router, {
+  base: '/solar/',
+  serveShell: (mount, request) => env.ASSETS.fetch(request),
+});
+// GET /solar/legacy → 302 Location: /solar/about
+// GET /legacy       → null
+```
+
+A delegate or response handler gets the original request, base included.
+A relative base (`./`) or a full-URL base throws at construction.
+
+A table can name the base in its keys instead. `createServerRouter` takes
+`base` too: every mount key lies under it, the router compiles the keys with
+the base taken off, and it reports the base as `router.base`. The table below
+resolves exactly as `{ '/': appMount }` does, and `resolve()` takes paths
+under the base, as the adapters hand them over:
+
+```ts
+const MOUNT = '/solar/';
+const router = createServerRouter({
+  base: MOUNT,
+  mounts: { [MOUNT]: appMount },
+});
+
+router.base; // '/solar/'
+await router.resolve('/legacy'); // { kind: 'redirect', location: '/about', ... }
+```
+
+`prerender()`'s `pathsIncludeBase` says whether `paths` spell the base. It
+defaults to whether the router declares one: a `resolver` from
+`createServerRouter({ base, mounts })`, or a `mounts` table keyed by the base,
+lists real urls such as `/solar/about`, while a table at `/` stripped under a
+base lists base-free paths such as `/about`, so the same script deploys at any
+base. The default follows that declaration, never the shape of the paths, and
+an explicit value wins. When it is on, every path lies under the base, which is
+taken off once, and a path outside it throws; when it is off, a path that
+starts with the base is read as given. The output is the same either way, and
+`result.pages`, `warnings` and `delegated` report each path as listed. Under
+base `/` it changes nothing.
+
+Each adapter's `base` defaults to `router.base`, and a different value
+throws. `serverRouterPlugin` takes no `base` option: it reads Vite's resolved
+`base`, and sets Vite's from `router.base` when the config leaves it unset.
+When both are set and differ, the config fails.
+
+A table keyed by the base without declaring it would see the base twice.
+Under a base other than `/`, on a router with no `base`, the plugin's config,
+each adapter and `prerender()` resolve the base path, and fail when the mount
+that owns it already carries it:
+`mount '/solar' already carries base '/solar/': declare createServerRouter({ base: '/solar/', mounts }), or key the mount '/'`.
+The plugin fails at config time and `prerender()` before it writes anything;
+the adapters fail each request, through `next(error)` from Connect and a
+rejection from fetch and Hono.
+[Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+covers the build.
+
 ### fetch — the edge
 
 A minimal Cloudflare Worker, with each mount's shell at its base and a
@@ -522,6 +588,14 @@ received (`c.req.raw` in Hono).
   either.
 - The Connect adapter throws for delegate keys unless `delegates: 'next'`,
   as its section above describes.
+
+A static build leaves delegated paths to the server: `prerender()` lists them
+in `result.delegated`, in the form `paths` listed them. With a table keyed by
+the base, `paths` are real urls by default
+([serving under a base path](#serving-under-a-base-path)), so `delegated` goes
+straight into Cloudflare's `assets.run_worker_first`. With a table at `/`
+stripped under a base, `paths` and `delegated` are base-free, and the deploy
+step adds the base.
 
 #### Typing delegates
 
@@ -820,6 +894,17 @@ Either is counted in `result.tally.response`; another status throws, as does
 a response state with no `respond`. A verdict kind the loop doesn't know
 throws instead of being counted.
 
+`base` is the url path `outDir` is served at, `/` by default, as for the
+[adapters](#serving-under-a-base-path). The mounts and the page files stay
+where they are; the base goes once onto each generated rules line's `from`
+and onto its `to` when that is a path. `extraRules` are written as given.
+`base` defaults to a `resolver`'s `router.base`, and a `mounts` table keyed by
+the base compiles as `createServerRouter({ base, mounts })` does. A table with
+keys both under and outside the base throws. `paths` spell the base for a
+router that declares one, and lie under it with it taken off otherwise;
+`pathsIncludeBase` overrides that
+([serving under a base path](#serving-under-a-base-path)).
+
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -852,7 +937,7 @@ render, and writes through `node:fs` by default.
 `rules` decides what happens to the redirect lines: `'_redirects'` (the
 default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
 them in `result.rules`, and a function receives them with the run's `write`,
-`outDir` and written `pages`. A host with no redirect rules, such as GitHub
+`outDir`, `base` and written `pages`. A host with no redirect rules, such as GitHub
 Pages or a plain bucket, takes
 [`redirectPages()`](/reference/ui-router-server/prerender/functions/redirectPages):
 each line becomes a page at `<from>/index.html` that sends the browser to its
@@ -884,7 +969,8 @@ await prerender({
   would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
   spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
   throws.
-- **Options.** `base` is the url path `outDir` is served at, `/` by default.
+- **Options.** `base` is the url path `outDir` is served at, `prerender()`'s
+  `base` by default.
   `redirectsFile: true` also writes `_redirects`, for a site deployed to both
   kinds of host.
 - **Your own page.** `page` builds each page's HTML from its line (`from`,

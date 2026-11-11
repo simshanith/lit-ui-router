@@ -22,6 +22,12 @@
  * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */
 
+import {
+  baseFor,
+  checkUndeclaredBase,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { registeredDelegates } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
 import type { ServerRouter, Verdict } from './index.ts';
@@ -65,6 +71,19 @@ export type ConnectMiddleware = (
 
 /** Host hooks for {@link createConnectMiddleware}: asset IO, and which requests get verdicts. */
 export interface ConnectAdapterOptions {
+  /**
+   * The url path the site is served at, such as Vite's `base`; `/` by
+   * default. The middleware matches `req.url` with the base taken off, so
+   * the mount table stays at `/`, passes a request outside the base to
+   * `next()` untouched, and puts the base back on redirect `Location`s, the
+   * canonical `Link` and the url the default {@link ConnectAdapterOptions.serveShell | serveShell}
+   * hands downstream. A host `serveShell` sees `req.url` with the base on.
+   * Defaults to the router's {@link index!ServerRouter.base | base}; a
+   * different value throws. Under a base the router doesn't declare, the
+   * middleware resolves the base once and fails every request through
+   * `next(error)` when a mount already carries it.
+   */
+  base?: string;
   /**
    * Maps a shell verdict's mount to the path the default {@link ConnectAdapterOptions.serveShell | serveShell}
    * rewrites `req.url` to (default: the mount base itself). The hook for
@@ -187,6 +206,10 @@ const unservedResponse = (state: string): Error =>
  * lazy boundary), which Connect absorbs naturally — with matcher-tier
  * mounts nothing async ever actually runs.
  *
+ * Under a {@link ConnectAdapterOptions.base | base}, the mounts see each
+ * url with the base taken off, and every url the middleware writes gets it
+ * back.
+ *
  * - `redirect` → `writeHead(302, { Location })`, the request's search
  *   MERGED into the verdict's location via {@link mergeSearch} (targets that
  *   declare their own query keep it — never `?a=1?b=2`).
@@ -210,10 +233,14 @@ export function createConnectMiddleware(
   router: ServerRouter,
   options: ConnectAdapterOptions = {},
 ): ConnectMiddleware {
+  const base = baseFor(router, options.base, 'createConnectMiddleware');
+  const ready = checkUndeclaredBase(router, base, 'createConnectMiddleware');
+  ready.catch(() => {});
+
   const {
     shellPath = (mount) => mount,
     serveShell = (mount, req, _res, next) => {
-      req.url = shellPath(mount);
+      req.url = withBase(base, shellPath(mount));
       next();
     },
     serveNotFound = defaultServeNotFound,
@@ -237,61 +264,67 @@ export function createConnectMiddleware(
     );
 
   return (req, res, next) => {
-    if (!shouldHandle(req)) {
+    const url = stripBase(base, req.url ?? '/');
+
+    if (url === undefined || !shouldHandle(req)) {
       next();
 
       return;
     }
 
-    const url = req.url ?? '/';
     const cut = url.indexOf('?');
     const search = cut === -1 ? '' : url.substring(cut);
-    router.resolve(url).then((verdict) => {
-      if (verdict.kind === 'redirect') {
-        res.writeHead(verdict.status, {
-          Location: mergeSearch(verdict.location, search),
-        });
-        res.end();
+    ready
+      .then(() => router.resolve(url))
+      .then((verdict) => {
+        if (verdict.kind === 'redirect') {
+          res.writeHead(verdict.status, {
+            Location: mergeSearch(withBase(base, verdict.location), search),
+          });
+          res.end();
 
-        return;
-      }
-
-      if (verdict.kind === 'shell') {
-        if (verdict.status === undefined) {
-          res.setHeader('Link', `<${verdict.mount}>; rel="canonical"`);
-        } else {
-          stripValidators(req);
-          relabel(res, verdict.status);
+          return;
         }
 
-        serveShell(verdict.mount, req, res, next, verdict);
+        if (verdict.kind === 'shell') {
+          if (verdict.status === undefined) {
+            res.setHeader(
+              'Link',
+              `<${withBase(base, verdict.mount)}>; rel="canonical"`,
+            );
+          } else {
+            stripValidators(req);
+            relabel(res, verdict.status);
+          }
 
-        return;
-      }
+          serveShell(verdict.mount, req, res, next, verdict);
 
-      if (verdict.kind === 'delegate' && !passDelegates) {
-        next(unservedDelegate(verdict.delegate));
+          return;
+        }
 
-        return;
-      }
+        if (verdict.kind === 'delegate' && !passDelegates) {
+          next(unservedDelegate(verdict.delegate));
 
-      if (verdict.kind === 'response' && !passResponses) {
-        next(unservedResponse(verdict.state));
+          return;
+        }
 
-        return;
-      }
+        if (verdict.kind === 'response' && !passResponses) {
+          next(unservedResponse(verdict.state));
 
-      if (
-        verdict.kind === 'delegate' ||
-        verdict.kind === 'response' ||
-        verdict.mount === undefined
-      ) {
-        next();
+          return;
+        }
 
-        return;
-      }
+        if (
+          verdict.kind === 'delegate' ||
+          verdict.kind === 'response' ||
+          verdict.mount === undefined
+        ) {
+          next();
 
-      serveNotFound(verdict.mount, req, res, next);
-    }, next);
+          return;
+        }
+
+        serveNotFound(verdict.mount, req, res, next);
+      }, next);
   };
 }
