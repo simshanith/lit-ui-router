@@ -256,6 +256,9 @@ export const states = [
 export const urlConfig = { strict: false } as const;
 ```
 
+Keep `as const satisfies`: an array annotated `readonly StateDeclaration[]`
+loses its literal names and no longer fits `routesFromStates`.
+
 [`routesFromStates`](/reference/ui-router-server/index/functions/routesFromStates)
 turns them into a mount's routes:
 

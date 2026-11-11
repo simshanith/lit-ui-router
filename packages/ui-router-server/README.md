@@ -71,6 +71,9 @@ export const states = [
 ] as const satisfies readonly StateDeclaration[];
 ```
 
+Keep `as const satisfies`: an array annotated `readonly StateDeclaration[]` loses its literal names
+and no longer fits `routesFromStates`.
+
 ```ts
 // vite.config.ts
 import { createServerRouter, routesFromStates } from 'ui-router-server';
