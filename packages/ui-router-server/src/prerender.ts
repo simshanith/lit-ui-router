@@ -36,7 +36,7 @@ export interface EmittedPage {
   path: string;
   /** Path relative to `outDir` — `sheet/7B/index.html`. */
   file: string;
-  /** The verdict that produced it; `status` carries the otherwise projection's 404. */
+  /** The verdict that produced it; `verdict.status` carries the otherwise projection's 404. */
   verdict: Verdict;
   /** Status the page answers with, as the adapters answer the same path. */
   readonly status: number;

@@ -935,6 +935,7 @@ the adapters answer the same path: `200` for a page, the `otherwise`
 projection's `404` for the 404 document, and the `respond` answer's 2xx for
 a response state's body. A host that writes its own files or headers reads
 `page.status`.
+
 [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
 
