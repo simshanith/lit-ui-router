@@ -59,6 +59,8 @@ export const EXAMPLES = {
   },
   'hellosolarsystem-ssr': {
     title: 'Hello Solar System (Vite SSR)',
+    summary:
+      'The same tour prerendered by `vite build` alone: `serverRouterPlugin` and one prerender script',
     height: '800px',
     file: 'src/prerender.ts',
   },
