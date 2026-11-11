@@ -1,6 +1,7 @@
 ---
 title: ui-router-effect
 description: A framework-agnostic Effect SubscriptionRef of the router's current state with ui-router-effect
+type: package
 ---
 
 # ui-router-effect
@@ -40,7 +41,7 @@ show up around it:
 
 ## routeRef
 
-[`routeRef(router)`](/api/ui-router-effect/functions/routeRef) returns a
+[`routeRef(router)`](/reference/ui-router-effect/functions/routeRef) returns a
 `SubscriptionRef` of the router's current route.
 The first call for a router creates its one ref and registers one `onSuccess`
 transition hook that sets it, so every value it holds is a settled route.
@@ -101,12 +102,12 @@ snapshot is a settled route. The first call to either for a router creates
 both refs and registers one `onStart` hook that feeds them; later calls return
 the same refs.
 
-- [`pendingRef(router)`](/api/ui-router-effect/functions/pendingRef) holds the
+- [`pendingRef(router)`](/reference/ui-router-effect/functions/pendingRef) holds the
   newest transition still in flight, and `undefined` when none is. The
   transition's promise clears it when that transition settles, whether it
   succeeds, errors or is aborted. A superseded transition never clears its
   successor, and a transition already running on first use counts as pending.
-- [`errorRef(router)`](/api/ui-router-effect/functions/errorRef) holds the
+- [`errorRef(router)`](/reference/ui-router-effect/functions/errorRef) holds the
   newest transition's failure as core's `Rejection`, and `undefined`
   otherwise. Only a `RejectType.ERROR` rejection, such as a resolve that
   throws, sets it; superseded, redirected, aborted and ignored transitions
@@ -138,9 +139,9 @@ Effect.runFork(
 ## RouteSnapshot
 
 The ref holds a
-[`RouteSnapshot`](/api/ui-router-effect/interfaces/RouteSnapshot), taken once
+[`RouteSnapshot`](/reference/ui-router-effect/interfaces/RouteSnapshot), taken once
 per successful transition.
-[`snapshotRoute(router, transition?)`](/api/ui-router-effect/functions/snapshotRoute)
+[`snapshotRoute(router, transition?)`](/reference/ui-router-effect/functions/snapshotRoute)
 builds one directly. Every field answers
 for the moment it was taken:
 
@@ -156,7 +157,7 @@ selector asking during a later transition gets the settled answer.
 
 ## Typed snapshots
 
-[`RouteTypes`](/api/ui-router-effect/interfaces/RouteTypes) is empty, and
+[`RouteTypes`](/reference/ui-router-effect/interfaces/RouteTypes) is empty, and
 `routeRef` holds a `RouteSnapshot`. Filling in its `snapshot` member by module
 augmentation types the ref's value: a snapshot whose `includes(name)` is a
 type predicate narrows `current` and `params` to that state.
@@ -177,7 +178,7 @@ declare module 'ui-router-effect' {
 
 ## Further reading
 
-- [API reference](/api/ui-router-effect/)
+- [API reference](/reference/ui-router-effect/)
 - [lit-ui-router-effect](/packages/lit-ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-effect) — this package as

@@ -1,6 +1,10 @@
+---
+type: reference
+---
+
 # API
 
-This guide provides a quick overview of the `lit-ui-router` API. For detailed type signatures and complete documentation, see the [API Reference](./reference/). Companion packages have their own home — see [Companion Packages](/packages/).
+This guide provides a quick overview of the `lit-ui-router` API. For detailed type signatures and complete documentation, see the [API Reference](./lit-ui-router/). Companion packages have their own home — see [Companion Packages](/packages/).
 
 ## Installation
 
@@ -69,22 +73,22 @@ state that reads the query needs the function form — see
 
 ### Router
 
-[`UIRouterLit`](./reference/core/UIRouterLit) is the main router class. It extends `@uirouter/core`'s UIRouter with Lit-specific view handling.
+[`UIRouterLit`](./lit-ui-router/core/UIRouterLit) is the main router class. It extends `@uirouter/core`'s UIRouter with Lit-specific view handling.
 
-[`viewRendered(router, transition?)`](./reference/core/viewRendered) resolves once every `<ui-view>` registered with the router, and the element each one rendered, has completed its update for the transition. It waits on `updateComplete`, never on a frame — see [Component Lifecycle](/guides/component-lifecycle#after-the-transition-waiting-for-the-view-to-render).
+[`viewRendered(router, transition?)`](./lit-ui-router/core/viewRendered) resolves once every `<ui-view>` registered with the router, and the element each one rendered, has completed its update for the transition. It waits on `updateComplete`, never on a frame — see [Component Lifecycle](/guides/component-lifecycle#after-the-transition-waiting-for-the-view-to-render).
 
 ### Components
 
-- [**`<ui-router>`**](./reference/components/UIRouterLitElement) - Root component that provides router context to descendants
-- [**`<ui-view>`**](./reference/components/UiView) - Viewport that renders the component for the current state
+- [**`<ui-router>`**](./lit-ui-router/components/UIRouterLitElement) - Root component that provides router context to descendants
+- [**`<ui-view>`**](./lit-ui-router/components/UiView) - Viewport that renders the component for the current state
 
 ### Directives
 
-- **[`uiSref`](./reference/directives/uiSref)** - Creates navigation links to states
-- **[`uiSrefActive`](./reference/directives/uiSrefActive)** - Adds CSS classes when linked state is active, and sets `aria-current` on active links
-- **[`srefHref`](./reference/directives/srefHref)** - `uiSref` bound in the `href` attribute
-- **[`srefActiveClass`](./reference/directives/srefActiveClass)** - `uiSrefActive`'s classes, bound in the `class` attribute
-- **[`srefAriaCurrent`](./reference/directives/srefAriaCurrent)** - `uiSrefActive`'s `aria-current`, bound in the attribute
+- **[`uiSref`](./lit-ui-router/directives/uiSref)** - Creates navigation links to states
+- **[`uiSrefActive`](./lit-ui-router/directives/uiSrefActive)** - Adds CSS classes when linked state is active, and sets `aria-current` on active links
+- **[`srefHref`](./lit-ui-router/directives/srefHref)** - `uiSref` bound in the `href` attribute
+- **[`srefActiveClass`](./lit-ui-router/directives/srefActiveClass)** - `uiSrefActive`'s classes, bound in the `class` attribute
+- **[`srefAriaCurrent`](./lit-ui-router/directives/srefAriaCurrent)** - `uiSrefActive`'s `aria-current`, bound in the attribute
 
 #### Attribute-part forms
 
@@ -126,7 +130,7 @@ and so does a server render given a router — see
 A `class` attribute holds one toggling directive, so `srefActiveClass` and
 `classMap` cannot share it. When a component wants both — the active flag
 next to its own bindings —
-[`SrefStatusController`](./reference/controllers/SrefStatusController) hands
+[`SrefStatusController`](./lit-ui-router/controllers/SrefStatusController) hands
 the status to the host instead of writing an attribute, and the template
 composes it freely:
 
@@ -214,7 +218,7 @@ the directive then never writes and never takes ownership.
 
 ### State Declaration
 
-[`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component.
+[`LitStateDeclaration`](./lit-ui-router/types/LitStateDeclaration) defines a state with its URL and component.
 
 #### Component Styles
 
@@ -290,12 +294,12 @@ Two shapes type-check:
 
 Components can implement these interfaces to respond to routing events:
 
-- **[`UiOnExit`](./reference/hooks/UiOnExit)** - Called before navigating away (can cancel navigation)
-- **[`UiOnParamsChanged`](./reference/hooks/UiOnParamsChanged)** - Called when route parameters change
+- **[`UiOnExit`](./lit-ui-router/hooks/UiOnExit)** - Called before navigating away (can cancel navigation)
+- **[`UiOnParamsChanged`](./lit-ui-router/hooks/UiOnParamsChanged)** - Called when route parameters change
 
 ### Injected Props
 
-Routed components receive [`UIViewInjectedProps`](./reference/types/UIViewInjectedProps) with:
+Routed components receive [`UIViewInjectedProps`](./lit-ui-router/types/UIViewInjectedProps) with:
 
 - `router` - The UIRouter instance
 - `transition` - The current transition
@@ -321,7 +325,7 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 - [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
 
 On the server, `serverLocationPlugin` from
-[`ui-router-server/location`](/packages/server) is the in-memory plugin whose
+[`ui-router-server/location`](/packages/ui-router-server) is the in-memory plugin whose
 hrefs are paths, so a prerendered link matches what the pushState client writes.
 
 ## Server Rendering
@@ -343,10 +347,10 @@ See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server
 
 ## Companion Packages
 
-`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx), the [Navigation API location plugin](/packages/navigation-plugin), and [server-side routing verdicts](/packages/server) with [`ui-router-server`](/api/ui-router-server/) (in development), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
+`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx), the [Navigation API location plugin](/packages/ui-router-navigation-location-plugin), and [server-side routing verdicts](/packages/ui-router-server) with [`ui-router-server`](/reference/ui-router-server/) (in development), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
 
 ## Further Reading
 
 - [Tutorial](/tutorial/helloworld) - Step-by-step guide
-- [API Reference](./reference/) - Complete type documentation
+- [API Reference](./lit-ui-router/) - Complete type documentation
 - [@uirouter/core docs](https://ui-router.github.io/core/docs/latest/) - Core router documentation

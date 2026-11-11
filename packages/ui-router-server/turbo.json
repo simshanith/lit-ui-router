@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:api": {
-      "outputs": ["../../www/lit-ui-router.dev/api/ui-router-server/**"]
+      "outputs": ["../../www/lit-ui-router.dev/reference/ui-router-server/**"]
     },
     // development-build and bundle-size specs read this package's own dist
     "test": {

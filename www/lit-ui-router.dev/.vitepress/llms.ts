@@ -9,6 +9,8 @@ import {
   githubTreeSrc,
   stackblitzOpenSrc,
 } from './theme/components/examples.ts';
+import { RELEASES_PATH } from './release-stubs.ts';
+import { pageGlobs, surfaceOf } from './surfaces.ts';
 
 const LIVE_EXAMPLE = /^<LiveExample\s([^>]*?)\/>[ \t]*$/gm;
 
@@ -65,20 +67,27 @@ export function liveExampleSourcesPlugin(): Plugin {
   };
 }
 
-const EXCLUDED_PAGE = 'about-this-site';
+/** The llms.txt listing of a sidebar link: external links stay, and the catalog decides for site paths. */
+const llmsOf = (link: string | undefined) =>
+  link?.startsWith('/') ? surfaceOf(link).llms : 'pages';
 
-/** Keeps each API reference's index page, and drops its member pages, the excluded page and the sample-app shells. */
+/** Keeps the pages the catalog lists, and only the index page of an `index` row such as an API reference. */
 export function llmsSidebar(
   items: DefaultTheme.SidebarItem[],
 ): DefaultTheme.SidebarItem[] {
   return items.flatMap(({ items: children, ...item }) => {
-    if (item.link === `/${EXCLUDED_PAGE}` || item.target === '_self') return [];
+    const llms = llmsOf(item.link);
 
-    if (item.link?.startsWith('/api/') || !children) return [item];
+    if (llms !== 'pages' && llms !== 'index') return [];
+
+    if (llms === 'index' || !children) return [item];
 
     return [{ ...item, items: llmsSidebar(children) }];
   });
 }
+
+/** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`reference/<pkg>/index.md`), which matches the same sidebar link as the package index (`reference/<pkg>.md`). */
+export const LLMS_TXT_IGNORE = pageGlobs(({ llms }) => llms === 'index');
 
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.
 
@@ -98,15 +107,39 @@ npx tiged simshanith/lit-ui-router/examples/helloworld my-app
 
 For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-plugins.md) guide recommends \`navigationLocationPlugin\` where the browser has the Navigation API and \`pushStateLocationPlugin\` where it doesn't; the tutorial uses hash URLs, which need no host configuration.`;
 
+const DOMAIN = 'https://lit-ui-router.dev';
+
+/** The worker renders the release pages, so no Markdown source or sidebar item can list them. */
+export const LLMS_RELEASES = `- [Releases](${DOMAIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${DOMAIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`;
+
+// The plugin's default template plus the Releases section; `{toc}` ends with its own blank line.
+const LLMS_TEMPLATE = `# {title}
+
+{description}
+
+{details}
+
+## Table of Contents
+
+{toc}## Releases
+
+{releases}
+`;
+
 export function llmsPlugins(): Plugin[] {
   return [
     liveExampleSourcesPlugin(),
     ...llmstxt({
-      domain: 'https://lit-ui-router.dev',
-      customTemplateVariables: { details: LLMS_DETAILS },
-      ignoreFiles: [`${EXCLUDED_PAGE}.md`],
+      domain: DOMAIN,
+      customLLMsTxtTemplate: LLMS_TEMPLATE,
+      customTemplateVariables: {
+        details: LLMS_DETAILS,
+        releases: LLMS_RELEASES,
+      },
+      // The release stubs exist for local search; the Releases section covers them here.
+      ignoreFiles: pageGlobs(({ llms }) => llms === false),
       // Member pages the sidebar filter drops would otherwise land under "Other".
-      ignoreFilesPerOutput: { llmsTxt: ['api/*/**', '!api/*/index.md'] },
+      ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
       sidebar: (sidebar) => {
         if (!Array.isArray(sidebar)) {
           throw new Error('llms: expected the themeConfig sidebar array');

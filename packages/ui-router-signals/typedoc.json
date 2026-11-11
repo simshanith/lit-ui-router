@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "../../www/lit-ui-router.dev/api/ui-router-signals",
+  "out": "../../www/lit-ui-router.dev/reference/ui-router-signals",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",

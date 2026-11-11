@@ -1,6 +1,7 @@
 ---
 title: ui-router-signals
 description: A framework-agnostic TC39 Signals mirror of the router's current state with ui-router-signals
+type: package
 ---
 
 # ui-router-signals
@@ -30,7 +31,7 @@ two separate signal graphs.
 
 ## RouterSignals
 
-[`RouterSignals.for(router)`](/api/ui-router-signals/classes/RouterSignals#for)
+[`RouterSignals.for(router)`](/reference/ui-router-signals/classes/RouterSignals#for)
 returns the router's one instance, attaching its
 transition hooks on first use. An `onSuccess` hook writes one route snapshot
 per successful transition, so every value is a settled route. Its fields are
@@ -83,7 +84,7 @@ const stop = watchSelection(
 
 ## Typed snapshots
 
-[`RouteTypes`](/api/ui-router-signals/interfaces/RouteTypes) is empty, and
+[`RouteTypes`](/reference/ui-router-signals/interfaces/RouteTypes) is empty, and
 `route` holds a `RouteSnapshot`. Filling in its `snapshot` member by module
 augmentation types `route`: a snapshot whose `includes(name)` is a type
 predicate narrows `current` and `params` to that state. The `current`,
@@ -99,7 +100,7 @@ declare module 'ui-router-signals' {
 
 ## watchSelection
 
-[`watchSelection(selector, equals, apply)`](/api/ui-router-signals/functions/watchSelection)
+[`watchSelection(selector, equals, apply)`](/reference/ui-router-signals/functions/watchSelection)
 watches a selector through a
 `Signal.Computed` and hands each new value to `apply`: once synchronously, then
 in a microtask after any source changes. A watcher's notify callback may not
@@ -124,7 +125,7 @@ const stop = watchSelection(
 
 ## Further reading
 
-- [API reference](/api/ui-router-signals/)
+- [API reference](/reference/ui-router-signals/)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-signals) — this package as

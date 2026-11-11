@@ -7,6 +7,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
+import { PACKAGES, ROLES } from '../../catalog/packages.ts';
 import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
@@ -108,56 +109,90 @@ const crumbs = (
     </ol>
   </nav>`;
 
+/** A role's packages on the index, in catalog order. */
+interface PackageGroup {
+  id: string;
+  label: string;
+  packages: LedgerPackage[];
+}
+
+/** The ledger's packages under the catalog's roles; a package the catalog lacks lands in a final Other group. */
+const byRole = (packages: readonly LedgerPackage[]): PackageGroup[] => {
+  const recorded = new Map(packages.map((row) => [row.name, row]));
+  const cataloged = new Set<string>(PACKAGES.map(({ name }) => name));
+
+  return [
+    ...ROLES.map(({ id, label }) => ({
+      id,
+      label,
+      packages: PACKAGES.flatMap(({ name, role }) => {
+        const row = role === id ? recorded.get(name) : undefined;
+
+        return row ? [row] : [];
+      }),
+    })),
+    {
+      id: 'other',
+      label: 'Other',
+      packages: packages.filter(({ name }) => !cataloged.has(name)),
+    },
+  ].filter((group) => group.packages.length > 0);
+};
+
+const packageRow = (
+  router: UIRouter,
+  { name: pkg, latest: row }: LedgerPackage,
+): TemplateResult =>
+  html`<tr>
+    <th scope="row">
+      <a href=${router.stateService.href('releases.package', { pkg })}
+        >${pkg}</a
+      >
+    </th>
+    <td>
+      ${
+        row
+          ? html`<a
+              href=${router.stateService.href('releases.package.version', {
+                pkg,
+                version: row.version,
+              })}
+              ><span class="visually-hidden">${pkg}@</span>${row.version}</a
+            >`
+          : 'None recorded'
+      }
+    </td>
+    <td>${date(row?.npm_published_at ?? null)}</td>
+  </tr>`;
+
 const indexPage = (
   router: UIRouter,
   packages: readonly LedgerPackage[],
 ): TemplateResult => html`
   <h1>Releases</h1>
   <p>
-    The latest stable release of each package, as the release ledger records it.
-    Each package lists every version it has released.
+    The latest stable release of each package, as the release ledger records it,
+    grouped by role. Each package lists every version it has released.
   </p>
-  <div class="table">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Package</th>
-          <th scope="col">Latest</th>
-          <th scope="col">Published</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${packages.map(
-          ({ name: pkg, latest: row }) =>
-            html`<tr>
-              <th scope="row">
-                <a href=${router.stateService.href('releases.package', { pkg })}
-                  >${pkg}</a
-                >
-              </th>
-              <td>
-                ${
-                  row
-                    ? html`<a
-                        href=${router.stateService.href(
-                          'releases.package.version',
-                          {
-                            pkg,
-                            version: row.version,
-                          },
-                        )}
-                        ><span class="visually-hidden">${pkg}@</span
-                        >${row.version}</a
-                      >`
-                    : 'None recorded'
-                }
-              </td>
-              <td>${date(row?.npm_published_at ?? null)}</td>
-            </tr>`,
-        )}
-      </tbody>
-    </table>
-  </div>
+  ${byRole(packages).map(
+    ({ id, label, packages: group }) => html`
+      <h2 id=${id}>${label}</h2>
+      <div class="table">
+        <table class="by-role" aria-labelledby=${id}>
+          <thead>
+            <tr>
+              <th scope="col">Package</th>
+              <th scope="col">Latest</th>
+              <th scope="col">Published</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${group.map((row) => packageRow(router, row))}
+          </tbody>
+        </table>
+      </div>
+    `,
+  )}
 `;
 
 /** `releases`: every package with its latest stable release. */

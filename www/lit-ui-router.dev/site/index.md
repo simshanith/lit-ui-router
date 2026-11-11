@@ -1,6 +1,7 @@
 ---
 title: How this site runs
 description: lit-ui-router.dev on Cloudflare — static assets, the docs worker that routes the sample apps and release pages, and the release-ledger and release-diffs workers behind them
+type: site
 ---
 
 # How this site runs
@@ -10,12 +11,12 @@ plain files; a worker answers only the paths that need a routing decision —
 the sample apps, through `ui-router-server`, and the release pages, from two
 workers behind it: one keeps the release ledger, the other builds release
 diffs.
-[Server-Side Routing](./guides/server-route-matching#one-request-at-a-time)
+[Server-Side Routing](../guides/server-route-matching#one-request-at-a-time)
 follows a single request through the docs worker.
 
 <DiagramEmbed src="/diagrams/about-this-site-architecture.svg">
 
-<!--@include: ./public/diagrams/about-this-site-architecture.svg-->
+<!--@include: ../public/diagrams/about-this-site-architecture.svg-->
 
 </DiagramEmbed>
 
@@ -27,11 +28,13 @@ follows a single request through the docs worker.
    [`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/wrangler.jsonc),
    with `404.html` for misses; the worker never sees those requests. The
    sample-app mounts, the 404 exhibits, `/releases` and `/gh` go to the docs
-   worker instead.
+   worker instead. Moved docs pages redirect from a `_redirects` file the
+   build writes from
+   [`catalog/redirects.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/catalog/redirects.ts).
 3. **The docs worker**
    ([`worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
    answers the sample-app mounts with
-   [`ui-router-server` verdicts](./guides/server-route-matching#the-verdict):
+   [`ui-router-server` verdicts](../guides/server-route-matching#the-verdict):
    a redirect, a 404, or the app's shell, fetched back from static assets
    like its 404 pages and any path it doesn't route. It also renders the
    release pages and `/gh` redirects from ledger rows it reads over RPC, and
@@ -57,7 +60,7 @@ and other workers read the result.
 
 <DiagramEmbed src="/diagrams/about-this-site-ledger.svg">
 
-<!--@include: ./public/diagrams/about-this-site-ledger.svg-->
+<!--@include: ../public/diagrams/about-this-site-ledger.svg-->
 
 </DiagramEmbed>
 
@@ -85,7 +88,7 @@ versions of a package, built once per version pair.
 
 <DiagramEmbed src="/diagrams/about-this-site-release-diffs.svg">
 
-<!--@include: ./public/diagrams/about-this-site-release-diffs.svg-->
+<!--@include: ../public/diagrams/about-this-site-release-diffs.svg-->
 
 </DiagramEmbed>
 
@@ -111,7 +114,7 @@ a Preview writes its own bucket.
 
 <DiagramEmbed src="/diagrams/about-this-site-release-diff-build.svg">
 
-<!--@include: ./public/diagrams/about-this-site-release-diff-build.svg-->
+<!--@include: ../public/diagrams/about-this-site-release-diff-build.svg-->
 
 </DiagramEmbed>
 

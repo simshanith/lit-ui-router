@@ -14,7 +14,7 @@ export interface RouterReactionControllerOptions<
   /**
    * Explicit router instance. When omitted, the controller asks the nearest
    * router provider on `hostConnected` over `context-request` (via
-   * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
+   * [requestRouter](https://lit-ui-router.dev/reference/lit-ui-router/core/requestRouter)
    * with `subscribe: true`). It rebinds when a subscribed provider hands it
    * the router that replaces its placeholder.
    */

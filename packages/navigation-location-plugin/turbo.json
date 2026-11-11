@@ -4,7 +4,7 @@
   "tasks": {
     "docs:api": {
       "outputs": [
-        "../../www/lit-ui-router.dev/api/navigation-location-plugin/**"
+        "../../www/lit-ui-router.dev/reference/ui-router-navigation-location-plugin/**"
       ]
     }
   }

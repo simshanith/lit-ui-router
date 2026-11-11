@@ -1,6 +1,7 @@
 ---
 title: Hello Solar System
 description: Learn about resolves and state parameters
+type: tutorial
 ---
 
 # Hello Solar System

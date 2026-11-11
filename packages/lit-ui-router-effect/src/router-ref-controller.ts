@@ -12,11 +12,11 @@ export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
   /**
    * Explicit router instance, or a thunk returning one. When omitted (or the
    * thunk returns `undefined`), the controller takes the router an enclosing
-   * [`withRouterSync`](https://lit-ui-router.dev/api/reference/core/withRouterSync)
+   * [`withRouterSync`](https://lit-ui-router.dev/reference/lit-ui-router/core/withRouterSync)
    * scoped at construction (a server render), and otherwise requests the
    * router from the nearest provider on `hostConnected` over
    * `context-request` (via
-   * [requestRouter](https://lit-ui-router.dev/api/reference/core/requestRouter)
+   * [requestRouter](https://lit-ui-router.dev/reference/lit-ui-router/core/requestRouter)
    * with `subscribe: true`), and follows the router that provider hands it
    * later, such as the app's router replacing a served page's placeholder.
    * An explicit or scoped router is read at construction, so `.value` is live

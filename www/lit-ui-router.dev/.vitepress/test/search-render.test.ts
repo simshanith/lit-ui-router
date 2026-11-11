@@ -10,7 +10,7 @@ const md = await createMarkdownRenderer(dirname(import.meta.dirname));
 
 async function render(
   src: string,
-  relativePath = 'api/reference/controllers/Example.md',
+  relativePath = 'reference/lit-ui-router/controllers/Example.md',
 ) {
   const html = await renderForSearch(
     src,

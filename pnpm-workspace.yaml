@@ -9,6 +9,7 @@ packages:
   - examples
 
 catalog:
+  '@11ty/gray-matter': ^2.1.0
   '@ampproject/remapping': ^2.3.0
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5
@@ -18,7 +19,7 @@ catalog:
   '@cloudflare/config': 0.30.2
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.156.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.158.0'
   '@commitlint/cli': ^21.2.4
   '@commitlint/config-conventional': ^21.2.4
   '@commitlint/types': ^21.2.3
@@ -49,7 +50,7 @@ catalog:
   '@types/markdown-it': ^14.2.0
   '@types/node': ^24.19.2
   '@types/pacote': ^11.1.8
-  '@typescript-eslint/parser': ^8.72.1
+  '@typescript-eslint/parser': ^8.72.2
   '@types/semver': ^7.8.0
   '@types/webidl2': ^24.4.4
   '@uirouter/core': ^6.1.2
@@ -85,7 +86,7 @@ catalog:
   happy-dom: ^21.0.4
   hono: ^4.13.17
   husky: ^9.1.7
-  jose: ^6.2.16
+  jose: ^6.2.17
   jsonc-parser: ^3.3.1
   knip: ^6.44.2
   lit: ^3.3.3
@@ -135,7 +136,7 @@ catalog:
   vue: ^3.5.45
   vue-tsc: ^3.3.14
   webidl2: ^24.5.0
-  wrangler: ^4.158.0
+  wrangler: ^4.159.0
   yaml: ^2.9.0
 
 catalogMode: prefer

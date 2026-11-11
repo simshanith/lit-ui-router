@@ -1,6 +1,7 @@
 ---
 title: Sample App
 description: The lit-ui-router sample app — a webmail + contacts client — and every live mount it runs behind on lit-ui-router.dev, one per point on the server-support spectrum
+type: index
 ---
 
 # Sample App

@@ -29,6 +29,6 @@
     "../../../**/node_modules",
     "../../../**/dist",
     "../../../**/CHANGELOG.md",
-    "../../../www/lit-ui-router.dev/api/*/**/*"
+    "../../../www/lit-ui-router.dev/reference/*/**/*"
   ]
 }

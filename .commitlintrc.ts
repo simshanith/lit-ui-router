@@ -8,5 +8,8 @@ export default {
     // Hand-typed freshen merges ("merge main into <branch>"); the default
     // ignores only match GitHub's capitalized "Merge branch ..." wording.
     (message) => /^merge\s+\S+\s+into\s+\S+/i.test(message),
+    // Dependabot bodies carry release-note tables past body-max-line-length; the PR-title lint still checks the subject.
+    (message) =>
+      message.includes('Signed-off-by: dependabot[bot] <support@github.com>'),
   ],
 } satisfies UserConfig;

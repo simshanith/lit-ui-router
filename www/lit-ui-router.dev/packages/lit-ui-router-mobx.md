@@ -1,6 +1,7 @@
 ---
 title: lit-ui-router-mobx
 description: Observable router state and reaction-based controllers with lit-ui-router-mobx
+type: package
 ---
 
 # lit-ui-router-mobx
@@ -26,7 +27,7 @@ plumbing.
 ::: tip Not using MobX?
 You don't need this package to react to route changes. The core package's
 zero-dependency
-[`TransitionController`](/api/reference/controllers/TransitionController)
+[`TransitionController`](/reference/lit-ui-router/controllers/TransitionController)
 covers the same ground with transition hooks instead of observables.
 :::
 
@@ -103,7 +104,7 @@ protocols.
 
 ### RouterStore
 
-[`RouterStore`](/api/lit-ui-router-mobx/classes/RouterStore) is an observable
+[`RouterStore`](/reference/lit-ui-router-mobx/classes/RouterStore) is an observable
 mirror of a router's current state, updated by its router's `onSuccess` and
 `onStart` hooks. It is `ui-router-mobx`'s `RouterStore`, re-exported.
 
@@ -120,7 +121,7 @@ mirror of a router's current state, updated by its router's `onSuccess` and
 
 ### RouterReactionController
 
-[`RouterReactionController`](/api/lit-ui-router-mobx/classes/RouterReactionController)
+[`RouterReactionController`](/reference/lit-ui-router-mobx/classes/RouterReactionController)
 observes the `RouterStore` of the router the host's nearest provider supplies:
 
 ```ts
@@ -141,7 +142,7 @@ new RouterReactionController(host, selector, options?)
 
 ### ReactionController
 
-[`ReactionController`](/api/lit-ui-router-mobx/classes/ReactionController) is
+[`ReactionController`](/reference/lit-ui-router-mobx/classes/ReactionController) is
 the generic primitive behind `RouterReactionController` — the same
 selector/options contract over **any** MobX observables, not just the router:
 
@@ -206,7 +207,7 @@ composition-friendly alternative:
 `RouterStore` mirrors `current`, `params`, `transition`, `pending` and
 `error` — not resolves. Resolved data reaches a routed component exactly as it
 does without these bindings: as
-[`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+[`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps)
 on `_uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the store, and
@@ -270,7 +271,7 @@ can be compared file-by-file to see exactly what the MobX idiom changes.
 
 ## Further reading
 
-- [API reference](/api/lit-ui-router-mobx/)
+- [API reference](/reference/lit-ui-router-mobx/)
 - [ui-router-mobx](/packages/ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

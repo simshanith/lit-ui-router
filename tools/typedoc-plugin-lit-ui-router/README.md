@@ -19,7 +19,7 @@ For packages using `"router": "category"` (currently `lit-ui-router`).
 - `RendererEvent.END` — writes `<category>/index.md` for each category folder
   that has member pages (title and blurb from the plugin's category table,
   plus VitePress `prev`/`next` frontmatter), then retitles each
-  `typedoc-sidebar.json` entry and points it at `/api/reference/<category>`.
+  `typedoc-sidebar.json` entry and points it at `<category>` under the output directory's link.
   An uncharted `@category` value is title-cased rather than dropped.
 
 ## `@tools/typedoc-plugin-lit-ui-router/kind-indexes`

@@ -1,6 +1,7 @@
 ---
 title: Navigation API Plugin
 description: Manage URLs with the modern browser Navigation API using ui-router-navigation-location-plugin
+type: package
 ---
 
 # ui-router-navigation-location-plugin
@@ -379,7 +380,7 @@ faster than the prefetch finishes to see the superseded one abort. Its log is a
 - **`UIRouterNavigateEvent` / `UIRouterNavigateInfo`** — the extended event
   and `info` types carrying the `uiRouter` instance
 
-See the full [API reference](/api/navigation-location-plugin/).
+See the full [API reference](/reference/ui-router-navigation-location-plugin/).
 
 ## Releases
 
