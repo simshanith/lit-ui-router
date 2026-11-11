@@ -35,6 +35,11 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - name: Setup mise
+        # Puts mise and the pinned tools on PATH, which the agent's shell inherits
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
       - name: Sign in to OpenCode
         id: opencode
         shell: bash
