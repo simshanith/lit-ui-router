@@ -3,6 +3,7 @@ import {
   element,
   elements,
   parseMarkup,
+  shadowRoot,
 } from '@tools/lit-test-env/ssr-tree.ts';
 import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
@@ -16,7 +17,7 @@ import { LightDomHydrating } from '../light-dom.js';
 import { LightElementRenderer } from '../light-element-renderer.js';
 import { prerender } from '../prerender.js';
 import type { FileWriter } from '../prerender.js';
-import { renderToString } from '../render.js';
+import { renderToString, shadowElementRenderers } from '../render.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { withoutSignature } from './markup.js';
 
@@ -44,6 +45,10 @@ customElements.define('drawn-shell', DrawnShell);
 class StringShell extends ShellRoot {}
 
 customElements.define('string-shell', StringShell);
+
+class OptedShell extends ShellRoot {}
+
+customElements.define('opted-shell', OptedShell);
 
 /** A branded light-DOM element. */
 class BrandedCard extends LightDomHydrating(LitElement) {
@@ -117,7 +122,7 @@ describe('a shadow-DOM element no listed renderer draws', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('<shell-root>');
     expect(warnings[0]).toContain(
-      'Put LitElementRenderer after LightElementRenderer in elementRenderers',
+      'Pass elementRenderers: shadowElementRenderers',
     );
   });
 
@@ -171,6 +176,27 @@ describe('a shadow-DOM element no listed renderer draws', () => {
     expect(
       elements(element(parseMarkup(markup), 'drawn-shell'), 'template'),
     ).not.toEqual([]);
+  });
+
+  it('is quiet under shadowElementRenderers, which draws the shell and its <ui-view>', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const markup = await page(
+      () => html`<opted-shell></opted-shell>`,
+      shadowElementRenderers,
+    );
+
+    expect(fallbackWarnings(warn)).toEqual([]);
+    const shell = element(parseMarkup(markup), 'opted-shell');
+    expect(elements(shadowRoot(shell), 'ui-view')).not.toEqual([]);
+  });
+
+  it('adds LitElementRenderer after the default list in shadowElementRenderers', () => {
+    expect(shadowElementRenderers).toEqual([
+      UiViewRenderer,
+      LightElementRenderer,
+      LitElementRenderer,
+    ]);
   });
 
   it('is quiet for light-DOM elements, <ui-view> and <ui-router>', async () => {

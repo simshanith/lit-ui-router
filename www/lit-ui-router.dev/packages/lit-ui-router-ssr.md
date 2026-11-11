@@ -560,22 +560,18 @@ everything the server drew inside it and renders cold. The served card and its
 children go, the client draws the empty card in their place, and in development
 the console warns that the element could not adopt the server render.
 
-The other answer is a renderer for the card. `LitElementRenderer` from
-`@lit-labs/ssr`, passed beside `UiViewRenderer`, sets the property on the
-server and draws the card's `render()` into a declarative shadow root:
+The other answer is a renderer for the card.
+[`shadowElementRenderers`](/reference/lit-ui-router-ssr/index/variables/shadowElementRenderers)
+is the default list with `@lit-labs/ssr`'s `LitElementRenderer` after it,
+which sets the property on the server and draws the card's `render()` into a
+declarative shadow root:
 
 ```ts
-import { LitElementRenderer } from '@lit-labs/ssr';
-import {
-  LightElementRenderer,
-  prerender,
-  UiViewRenderer,
-} from 'lit-ui-router-ssr';
+import { prerender, shadowElementRenderers } from 'lit-ui-router-ssr';
 
 await prerender({
   // …
-  // The list replaces the default; LightElementRenderer stays ahead of the shadow-root renderer.
-  elementRenderers: [UiViewRenderer, LightElementRenderer, LitElementRenderer],
+  elementRenderers: shadowElementRenderers,
 });
 ```
 
@@ -595,8 +591,9 @@ default avoids.
 A shell element needs that list too: a shadow-DOM component that holds
 `<ui-view>` in its own template, such as an `<app-root>`. Under the default it
 renders as its bare tag, empty, and the views inside it are missing with it.
-With `LitElementRenderer` after `LightElementRenderer`, the `<ui-view>` in its
-shadow root renders, hydrates and adopts. In development, `prerender()` and
+Under `shadowElementRenderers`, the `<ui-view>` in its shadow root renders,
+hydrates and adopts. A list of your own keeps `LitElementRenderer` after
+`LightElementRenderer`: the first renderer that matches a class wins. In development, `prerender()` and
 `renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no
 renderer that draws it; `<ui-router>`, whose shadow root is a bare slot, is left
 out.
