@@ -1,6 +1,8 @@
 ---
 title: Reactive Components
 description: Keep any component in sync with the router using TransitionController
+type: guide
+topic: reactivity
 ---
 
 # Reactive Components
@@ -11,7 +13,7 @@ nav header highlighting the active section, a breadcrumb trail, a user menu
 that appears after login. Lit doesn't know these components care about the
 router, so by default they render once and go stale.
 
-[`TransitionController`](/api/reference/controllers/TransitionController) is
+[`TransitionController`](/reference/lit-ui-router/controllers/TransitionController) is
 the core package's answer: a zero-dependency Lit
 [ReactiveController](https://lit.dev/docs/composition/controllers/) that
 calls `host.requestUpdate()` whenever a matching transition event fires.
@@ -48,9 +50,9 @@ that is not a Lit host, a third-party component — asks the same provider
 directly, over the community
 [`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md)
 from the `lit-ui-router/context` entry.
-[`requestRouter(target)`](/api/reference/core/requestRouter) returns the
+[`requestRouter(target)`](/reference/lit-ui-router/core/requestRouter) returns the
 router a provider answered with synchronously, or `undefined`, and takes any
-`EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
+`EventTarget`. [`routerContext`](/reference/lit-ui-router/core/routerContext) is the
 key, in the protocol's branded shape, so `@lit/context` consumes it with
 nothing in between:
 
@@ -76,16 +78,16 @@ it, and `<ui-view>` passes that on to its own subscribers; any other answer is
 one call and a no-op unsubscribe.
 
 `<ui-router>` also answers the house `ui-router-context` event, which
-[`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement)
+[`UIRouterLitElement.seekRouter(element)`](/reference/lit-ui-router/components/UIRouterLitElement)
 dispatches, and core's controllers and directives fall back to it when no
 `context-request` provider answers. Both are deprecated in favour of
 `context-request`.
 
 `<ui-view>` answers the same way for its own key,
-[`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
+[`parentUiViewContext`](/reference/lit-ui-router/core/parentUiViewContext): a
 `@consume({ context: parentUiViewContext })` or
 `requestContext(element, parentUiViewContext)` gets the nearest enclosing
-`<ui-view>` as a [`ParentUiView`](/api/reference/types/ParentUiView) — the
+`<ui-view>` as a [`ParentUiView`](/reference/lit-ui-router/types/ParentUiView) — the
 element itself, with the view name it fills and the router it renders for. A
 nested view gets the view above it rather than itself; an element that needs
 more than that surface narrows with `instanceof UiView`.
@@ -150,7 +152,7 @@ values immediately instead of waiting for the next transition.
 
 A nav link needs more than "the router moved": it needs to know whether _its_
 state is the current one.
-[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+[`SrefStatusController`](/reference/lit-ui-router/controllers/SrefStatusController)
 exposes exactly that — `active`, `exact`, `entering`, `exiting` — and leaves
 the rendering to you:
 
@@ -176,7 +178,7 @@ class NavLink extends LitElement {
 }
 ```
 
-This is the composition path [`srefActiveClass`](/api/reference/directives/srefActiveClass)
+This is the composition path [`srefActiveClass`](/reference/lit-ui-router/directives/srefActiveClass)
 cannot offer: a `class` attribute holds one toggling directive, so the
 directive and `classMap` cannot share it. Reach for the directive when the
 link's classes are all the component needs; reach for the controller when the

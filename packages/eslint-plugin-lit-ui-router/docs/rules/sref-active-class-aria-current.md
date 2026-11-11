@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-[`uiSrefActive`](https://lit-ui-router.dev/api/reference/directives/uiSrefActive) is an element part, and it writes `aria-current` itself: a link it marks active is active for CSS **and** for assistive technology. [`srefActiveClass`](https://lit-ui-router.dev/api/reference/directives/srefActiveClass) is the attribute-part sibling, and it only writes classes. A link styled active by it says nothing to a screen reader unless the author also binds `aria-current=${srefAriaCurrent(...)}` — a regression nobody sees, because the page still looks right.
+[`uiSrefActive`](https://lit-ui-router.dev/reference/lit-ui-router/directives/uiSrefActive) is an element part, and it writes `aria-current` itself: a link it marks active is active for CSS **and** for assistive technology. [`srefActiveClass`](https://lit-ui-router.dev/reference/lit-ui-router/directives/srefActiveClass) is the attribute-part sibling, and it only writes classes. A link styled active by it says nothing to a screen reader unless the author also binds `aria-current=${srefAriaCurrent(...)}` — a regression nobody sees, because the page still looks right.
 
 This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes, and, under [`allowElementParts: false`](#prerendered-templates), the one a server render of `uiSrefActive` never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
 
@@ -109,6 +109,6 @@ The insertion point comes from the **last** expression in the `class` value, so 
 
 ## Or hand the status to the host
 
-A component that wants `classMap` rather than a class directive can hold a [`SrefStatusController`](https://lit-ui-router.dev/api/reference/controllers/SrefStatusController) instead, compose `active` and `exact` into its own class object, and bind `aria-current=${this.users.ariaCurrent()}` beside it. That shape is this rule's blind spot — no directive call appears in the template — so [`sref-status-aria-current`](./sref-status-aria-current.md) covers it.
+A component that wants `classMap` rather than a class directive can hold a [`SrefStatusController`](https://lit-ui-router.dev/reference/lit-ui-router/controllers/SrefStatusController) instead, compose `active` and `exact` into its own class object, and bind `aria-current=${this.users.ariaCurrent()}` beside it. That shape is this rule's blind spot — no directive call appears in the template — so [`sref-status-aria-current`](./sref-status-aria-current.md) covers it.
 
 If the element was never meant to be a link, drop its `role` — or move the class binding to the wrapper, which is the container idiom this rule leaves alone.

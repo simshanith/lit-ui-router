@@ -22,7 +22,8 @@ each flow. This skill adds only what an unattended run needs.
    With no spec near the change, explore with `playwright-cli` per the README
    instead, from the repo root and in a named session (`-s=<task>`) so parallel
    agents never share a browser. Ignore its update notice: the catalog owns the
-   version.
+   version. If `open` fails on a missing browser, run the README's
+   `install-browser` step.
 5. If clicks time out, check the vite log for `ERROR(TypeScript)`: the checker's
    overlay covers the page. A clean pass logs `[TypeScript] No errors`.
 6. Stop only the server you started: `lsof -tiTCP:<alt> -sTCP:LISTEN`, confirm

@@ -11,22 +11,22 @@ test('samplePages keeps every page outside the API reference', () => {
 
 test('samplePages keeps the first API reference page of each kind', () => {
   const paths = [
-    '/api/reference/types/B',
-    '/api/reference/types/A',
-    '/api/server/matcher/interfaces/Y',
-    '/api/reference/interfaces/X',
-    '/api/server/matcher/',
-    '/api/server/connect/',
-    '/api/server/',
-    '/api/reference/',
-    '/api/',
+    '/reference/lit-ui-router/types/B',
+    '/reference/lit-ui-router/types/A',
+    '/reference/ui-router-server/matcher/interfaces/Y',
+    '/reference/lit-ui-router/interfaces/X',
+    '/reference/ui-router-server/matcher/',
+    '/reference/ui-router-server/connect/',
+    '/reference/ui-router-server/',
+    '/reference/lit-ui-router/',
+    '/reference/',
   ];
 
   assert.deepEqual(samplePages(paths), [
-    '/api/',
-    '/api/reference/',
-    '/api/reference/interfaces/X',
-    '/api/reference/types/A',
-    '/api/server/connect/',
+    '/reference/',
+    '/reference/lit-ui-router/',
+    '/reference/lit-ui-router/interfaces/X',
+    '/reference/lit-ui-router/types/A',
+    '/reference/ui-router-server/connect/',
   ]);
 });

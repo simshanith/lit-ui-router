@@ -1,6 +1,7 @@
 ---
 title: Hello Galaxy
 description: Learn about nested states and views
+type: tutorial
 ---
 
 # Hello Galaxy

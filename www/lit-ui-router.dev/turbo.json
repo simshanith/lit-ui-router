@@ -11,6 +11,8 @@
         "package.json",
         "worker/**",
         "!worker/dist/**",
+        // the worker imports the package catalog from outside worker/
+        "catalog/**",
         // types:worker output; esbuild bundles, it never typechecks, so
         // regenerating the d.ts must not bust this key
         "!worker/worker-configuration.d.ts",
@@ -31,6 +33,12 @@
     "codecov:bundle": {
       // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
       "dependsOn": ["bundle:worker"]
+    },
+    "docs:release-stubs": {
+      // One search stub per published package: the manifests under packages/
+      // are the only input outside this package.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/*/package.json"],
+      "outputs": ["package-releases/**"]
     },
     "docs:preview": {
       "dependsOn": ["build"],
@@ -65,6 +73,7 @@
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api",
         "examples#build:embeds",
+        "docs:release-stubs",
         "types:worker"
       ],
       "outputs": ["dist/**"],
@@ -146,7 +155,8 @@
         "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api",
-        "examples#build:embeds"
+        "examples#build:embeds",
+        "docs:release-stubs"
       ],
       "cache": false,
       "persistent": true,

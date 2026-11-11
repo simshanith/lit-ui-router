@@ -262,6 +262,9 @@ falls back to the installed Google Chrome. Each `@playwright/cli` release is bui
 against one Playwright minor; the overrides in `pnpm-workspace.yaml` run it on the
 workspace's Playwright, so a Playwright bump moves the CLI to its matching release
 (`tools/repo-checks/playwright-cli-pin.test.ts` fails until it does).
+Each Playwright version pins its own Chromium build and `mise run setup` downloads
+no browsers, so after a bump `open` fails on a missing browser until
+`pnpm exec playwright-cli install-browser chromium` fetches it.
 `pnpm exec playwright-cli --help` names the agent skill that ships with that
 version, and `.playwright-cli/` collects what it writes. Turn what it finds into a
 spec.

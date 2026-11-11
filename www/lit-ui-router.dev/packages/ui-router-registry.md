@@ -1,6 +1,7 @@
 ---
 title: Registry
 description: Typed state names and params for a @uirouter/core router with ui-router-registry, a types-only registry
+type: package
 ---
 
 # ui-router-registry
@@ -212,5 +213,5 @@ declare its return type too:
 
 ## Further reading
 
-- [API reference](/api/ui-router-registry/)
+- [API reference](/reference/ui-router-registry/)
 - [UI-Router — state declarations](https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html)

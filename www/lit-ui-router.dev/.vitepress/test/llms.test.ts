@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { appendExampleSources, llmsSidebar } from '../llms.ts';
+import { appendExampleSources, LLMS_RELEASES, llmsSidebar } from '../llms.ts';
 
 const ID = '/docs/tutorial/helloworld.md';
 
@@ -60,9 +60,10 @@ describe('llmsSidebar', () => {
           text: 'Introduction',
           items: [
             { text: 'Intro', link: '/introduction' },
-            { text: 'How this site runs', link: '/about-this-site' },
+            { text: 'How this site runs', link: '/site/' },
           ],
         },
+        { text: 'Releases', link: '/releases/', target: '_self', items: [] },
         {
           text: 'Sample App',
           items: [
@@ -75,9 +76,9 @@ describe('llmsSidebar', () => {
           items: [
             {
               text: 'lit-ui-router',
-              link: '/api/reference/',
+              link: '/reference/lit-ui-router/',
               collapsed: true,
-              items: [{ text: 'Core', link: '/api/reference/core/' }],
+              items: [{ text: 'Core', link: '/reference/lit-ui-router/core/' }],
             },
           ],
         },
@@ -94,10 +95,29 @@ describe('llmsSidebar', () => {
         {
           text: 'API',
           items: [
-            { text: 'lit-ui-router', link: '/api/reference/', collapsed: true },
+            {
+              text: 'lit-ui-router',
+              link: '/reference/lit-ui-router/',
+              collapsed: true,
+            },
           ],
         },
       ],
+    );
+  });
+});
+
+describe('LLMS_RELEASES', () => {
+  it('lists the releases index the sidebar filter drops, and names the package pages', () => {
+    assert.ok(
+      LLMS_RELEASES.startsWith(
+        '- [Releases](https://lit-ui-router.dev/releases/): ',
+      ),
+    );
+    assert.ok(
+      LLMS_RELEASES.includes(
+        '`https://lit-ui-router.dev/releases/<npm-name>/`',
+      ),
     );
   });
 });

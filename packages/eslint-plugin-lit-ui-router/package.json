@@ -7,7 +7,7 @@
     "eslint",
     "eslintplugin"
   ],
-  "homepage": "https://lit-ui-router.dev/packages/eslint-plugin",
+  "homepage": "https://lit-ui-router.dev/packages/eslint-plugin-lit-ui-router",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },

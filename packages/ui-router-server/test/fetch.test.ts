@@ -746,3 +746,59 @@ describe('delegateContext', () => {
     );
   });
 });
+
+describe('createFetchHandler under a base', () => {
+  const router = createServerRouter({
+    mounts: {
+      '/': {
+        routes: [
+          { name: 'home', url: '/' },
+          { name: 'about', url: '/about' },
+          { name: 'legacy', url: '/legacy', redirectTo: 'about' },
+        ],
+      },
+    },
+  });
+
+  it('matches the url with the base taken off and fetches the shell at the base', async () => {
+    const spy = shellSpy(new Response('<main></main>', { status: 200 }));
+
+    const handler = createFetchHandler(router, {
+      base: '/solar/',
+      serveShell: spy.serveShell,
+    });
+
+    const res = await handler(navigation('/solar/about?x=1'));
+    assert.equal(res?.status, 200);
+    assert.equal(spy.calls[0]?.request.url, `${ORIGIN}/solar/`);
+    assert.equal(res?.headers.get('Link'), '</solar/>; rel="canonical"');
+  });
+
+  it('puts the base back on a redirect Location', async () => {
+    const handler = createFetchHandler(router, {
+      base: '/solar',
+      serveShell: noShell,
+    });
+
+    const res = await handler(navigation('/solar/legacy?ref=x'));
+    assert.equal(res?.status, 302);
+    assert.equal(res?.headers.get('Location'), '/solar/about?ref=x');
+  });
+
+  it('passes a request outside the base as null', async () => {
+    const handler = createFetchHandler(router, {
+      base: '/solar/',
+      serveShell: noShell,
+    });
+
+    assert.equal(await handler(navigation('/legacy')), null);
+    assert.equal(await handler(navigation('/solarium/about')), null);
+  });
+
+  it('rejects a relative base', () => {
+    assert.throws(
+      () => createFetchHandler(router, { base: './', serveShell: noShell }),
+      /is relative/,
+    );
+  });
+});

@@ -10,8 +10,9 @@ import type { RedirectLine, RulesWriter } from './prerender.ts';
 /** Options for {@link redirectPages}. */
 export interface RedirectPagesOptions {
   /**
-   * The url path `outDir` is served at, `/` by default. Each line's `from`
-   * must lie under it; the page lands at the rest of the path.
+   * The url path `outDir` is served at, `prerender`'s
+   * {@link PrerenderOptions.base | base} by default. Each line's `from` must
+   * lie under it; the page lands at the rest of the path.
    */
   base?: string;
   /**
@@ -141,8 +142,13 @@ const joinPath = (dir: string, file: string): string =>
  */
 export const redirectPages =
   (options: RedirectPagesOptions = {}): RulesWriter =>
-  async (lines, { write, outDir, pages }) => {
-    const { base = '/', redirectsFile = false, page = redirectPage } = options;
+  async (lines, { write, outDir, base: served, pages }) => {
+    const {
+      base = served,
+      redirectsFile = false,
+      page = redirectPage,
+    } = options;
+
     const written = new Set(pages.map((page) => page.file));
     const planned = new Map<string, RedirectLine>();
 

@@ -1,6 +1,7 @@
 ---
 title: Effect
 description: The Effect packages for UI-Router — ui-router-effect holds the router's state in a SubscriptionRef, and lit-ui-router-effect provides ref-following Lit controllers
+type: package
 ---
 
 # Effect

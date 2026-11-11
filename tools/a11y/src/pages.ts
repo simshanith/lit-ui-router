@@ -7,12 +7,12 @@ function pageKind(path: string): string {
     : (segments.at(-2) ?? '');
 }
 
-/** Keeps every page outside `/api/` and the first `/api/` page of each kind. */
+/** Keeps every page outside `/reference/` and the first `/reference/` page of each kind. */
 export function samplePages(paths: readonly string[]): string[] {
   const seen = new Set<string>();
 
   return [...paths].sort().filter((path) => {
-    if (!path.startsWith('/api/')) return true;
+    if (!path.startsWith('/reference/')) return true;
 
     const kind = pageKind(path);
 

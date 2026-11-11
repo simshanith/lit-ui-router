@@ -1,6 +1,7 @@
 ---
 title: Server
 description: Honest HTTP verdicts for a static SPA with ui-router-server — the client's route table, running on the server or the edge
+type: package
 ---
 
 # ui-router-server
@@ -44,7 +45,7 @@ leaves the ones before it unchanged:
    [`createServerRouter`](#quick-start), an [adapter](#adapters), and a
    `serveShell`.
 2. **Server-rendered pages.** The same states' resolves and views, rendered
-   with [`lit-ui-router-ssr`](/packages/ssr) on
+   with [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) on
    [`settle`](#settling-a-server-router) and
    [`prerender`](#emitting-a-static-site), which `serverRouterPlugin` runs
    after [`vite build`](/guides/prerender-with-vite).
@@ -98,7 +99,7 @@ This package closes the gap by giving the server the same route patterns the
 client matches, projected as pure data. That is **HTTP-semantics SEO** — the
 status, redirect, and 404 a URL earns — and deliberately not content SEO:
 the body is still the client-rendered shell. Rendering is a separate axis, and
-[`lit-ui-router-ssr`](/packages/ssr) is what turns these verdicts into
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) is what turns these verdicts into
 prerendered html.
 
 The [Server-Side Routing guide](/guides/server-route-matching) is the full
@@ -231,7 +232,7 @@ The longest matching mount base owns a pathname outright. A bare mount base
 construction [warns in development](/guides/development-builds#server-runtimes)
 for each mount other than `/` that leaves it to 404. To catch that in CI,
 assert in a test that
-[`diagnoseMounts(router)`](/api/ui-router-server/index/functions/diagnoseMounts)
+[`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns an empty array: it reports, as data and in every build, the findings
 the warning prints.
 
@@ -296,6 +297,72 @@ heuristic `connect-history-api-fallback` established — GET/HEAD requests
 whose `Accept` includes `text/html` — so module and asset fetches pass
 through untouched. Override with `() => true` when the adapter sits behind
 the static layer and should judge everything.
+
+### Serving under a base path
+
+Every adapter takes `base`, the url path the site is served at, such as
+Vite's `base`; it is `/` by default. The mount table stays at `/`: the
+adapter matches each request with the base taken off, passes a request
+outside the base on (`null` from fetch, `next()` from Connect and Hono), and
+puts the base back on what it writes: redirect `Location`s, the canonical
+`Link`, and the shell url it hands on.
+
+```ts
+createFetchHandler(router, {
+  base: '/solar/',
+  serveShell: (mount, request) => env.ASSETS.fetch(request),
+});
+// GET /solar/legacy → 302 Location: /solar/about
+// GET /legacy       → null
+```
+
+A delegate or response handler gets the original request, base included.
+A relative base (`./`) or a full-URL base throws at construction.
+
+A table can name the base in its keys instead. `createServerRouter` takes
+`base` too: every mount key lies under it, the router compiles the keys with
+the base taken off, and it reports the base as `router.base`. The table below
+resolves exactly as `{ '/': appMount }` does, and `resolve()` takes paths
+under the base, as the adapters hand them over:
+
+```ts
+const MOUNT = '/solar/';
+const router = createServerRouter({
+  base: MOUNT,
+  mounts: { [MOUNT]: appMount },
+});
+
+router.base; // '/solar/'
+await router.resolve('/legacy'); // { kind: 'redirect', location: '/about', ... }
+```
+
+`prerender()`'s `pathsIncludeBase` says whether `paths` spell the base. It
+defaults to whether the router declares one: a `resolver` from
+`createServerRouter({ base, mounts })`, or a `mounts` table keyed by the base,
+lists real urls such as `/solar/about`, while a table at `/` stripped under a
+base lists base-free paths such as `/about`, so the same script deploys at any
+base. The default follows that declaration, never the shape of the paths, and
+an explicit value wins. When it is on, every path lies under the base, which is
+taken off once, and a path outside it throws; when it is off, a path that
+starts with the base is read as given. The output is the same either way, and
+`result.pages`, `warnings` and `delegated` report each path as listed. Under
+base `/` it changes nothing.
+
+Each adapter's `base` defaults to `router.base`, and a different value
+throws. `serverRouterPlugin` takes no `base` option: it reads Vite's resolved
+`base`, and sets Vite's from `router.base` when the config leaves it unset.
+When both are set and differ, the config fails.
+
+A table keyed by the base without declaring it would see the base twice.
+Under a base other than `/`, on a router with no `base`, the plugin's config,
+each adapter and `prerender()` resolve the base path, and fail when the mount
+that owns it already carries it:
+`mount '/solar' already carries base '/solar/': declare createServerRouter({ base: '/solar/', mounts }), or key the mount '/'`.
+The plugin fails at config time and `prerender()` before it writes anything;
+the adapters fail each request, through `next(error)` from Connect and a
+rejection from fetch and Hono.
+[Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
+covers the build.
 
 ### fetch — the edge
 
@@ -522,6 +589,14 @@ received (`c.req.raw` in Hono).
 - The Connect adapter throws for delegate keys unless `delegates: 'next'`,
   as its section above describes.
 
+A static build leaves delegated paths to the server: `prerender()` lists them
+in `result.delegated`, in the form `paths` listed them. With a table keyed by
+the base, `paths` are real urls by default
+([serving under a base path](#serving-under-a-base-path)), so `delegated` goes
+straight into Cloudflare's `assets.run_worker_first`. With a table at `/`
+stripped under a base, `paths` and `delegated` are base-free, and the deploy
+step adds the base.
+
 #### Typing delegates
 
 Declare `routes` `as const` and the router's type carries its state names
@@ -586,11 +661,11 @@ and its second parameter types each handler's resolves by state name.
   and `as const` routes make a row with both markers a compile error. A
   redirect may target a response state. A url whose pattern is sometimes a
   page and sometimes a redirect needs a `redirectTo` function instead:
-  [which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
+  [which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 - The fetch and Hono adapters pass a GET or HEAD of any `Accept` that matches
   a response state to `serveResponse(verdict, request, ...args)`, so an
   `<img>` reaches its badge, and answer other methods with a 405.
-  [`lit-ui-router-ssr`](/packages/ssr#response-states)'s `responder` settles
+  [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr#response-states)'s `responder` settles
   the state there and runs its handler; the `Response` goes out untouched. A typed router that declares response states requires
   `serveResponse` at compile time, and construction throws without it.
 - The Connect adapter throws for response states unless `responses: 'next'`.
@@ -630,7 +705,7 @@ their declarations already.
 `baseHref` is the mount prefix: it is added to every href, and `url` is
 passed without it, exactly as a `<base href>` client matches. `urlConfig`
 takes the same object as a mount's `config` and goes through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+[`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
 first, so it throws, leaving the router as it was, if a state's url already
 compiled. For a
 [hash-location](/guides/location-plugins#hash-urls) client, pass
@@ -667,7 +742,7 @@ Each key takes `'always'`, `'never'` or `'as-requested'`.
   redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
   canonical spelling in one hop. A non-navigation request to a response state or a delegate is
   answered at either spelling.
-- **Formatting:** [`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig)
+- **Formatting:** [`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
   installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition
   pushes come out canonical, on the client and on a server router built with
   `installServerLocation(router, { urlConfig })`.
@@ -684,7 +759,7 @@ match the static assets' `html_handling`: `force-trailing-slash` is `{ pages: 'a
 ## Settling a server router
 
 A server render reads the router only once its transition has landed.
-[`settle(router, path)`](/api/ui-router-server/ssr/functions/settle) from
+[`settle(router, path)`](/reference/ui-router-server/ssr/functions/settle) from
 `ui-router-server/ssr` sets the url, syncs the router to it, and resolves
 with the transition that landed, resolves included, so a synchronous render
 after it reads every value. A page loop calls it once per path on the same
@@ -704,28 +779,28 @@ for (const path of ['/', '/sheet/7B']) {
 
 It rejects rather than hangs: on a url no rule matches, on a failed
 transition, and past its
-[`timeout`](/api/ui-router-server/ssr/interfaces/SettleOptions). The entry
+[`timeout`](/reference/ui-router-server/ssr/interfaces/SettleOptions). The entry
 imports `@uirouter/core` and no renderer, so it runs under any renderer.
-[`lit-ui-router-ssr`](/packages/ssr) builds its
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) builds its
 prerender on the same step.
 
 A `redirectTo` chain settles on its final state.
-[`redirectedTo(router, transition)`](/api/ui-router-server/ssr/functions/redirectedTo)
+[`redirectedTo(router, transition)`](/reference/ui-router-server/ssr/functions/redirectedTo)
 then returns `{ url, status }` for a transition a redirect moved, a `redirectTo`
 function's included: the mount-relative url it landed on, query included, and
-the [`redirectStatusCode`](/api/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
+the [`redirectStatusCode`](/reference/ui-router-server/redirects/interfaces/RouteDeclaration#redirectstatuscode)
 of the state the url matched, `302` by default. It returns `undefined` for any
 other transition, so a host answers a redirect found at settle as a 30x; see
-[which decides when](/packages/ssr#page-response-state-or-redirect-which-decides-when).
+[which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ### Handing resolves to the client
 
 A client booting over a server-rendered page would run every resolve the
 server already ran.
-[`dehydrate(transition)`](/api/ui-router-server/ssr/functions/dehydrate)
+[`dehydrate(transition)`](/reference/ui-router-server/ssr/functions/dehydrate)
 draws the resolved values of a landed transition into a JSON payload, keyed by
 state and token, along with the state and url parameters it was drawn for.
-[`seed(router, payload)`](/api/ui-router-server/ssr-client/functions/seed)
+[`seed(router, payload)`](/reference/ui-router-server/ssr-client/functions/seed)
 from `ui-router-server/ssr/client`, called on the client router before it
 starts, makes the boot transition adopt those
 values instead of calling their resolve functions.
@@ -742,14 +817,14 @@ The boot is still a real transition, with every hook it fires. Every resolve
 the payload does not cover runs as usual:
 
 - **A value that is not
-  [plain JSON data](/api/ui-router-server/ssr/type-aliases/JsonValue).** A
+  [plain JSON data](/reference/ui-router-server/ssr/type-aliases/JsonValue).** A
   `Date`, a `Map`, a class instance or `undefined` would come back changed, so
   `dehydrate` lists it in `unserializable` instead, and the client runs its
   resolve. A [transporter](#values-beyond-plain-json) can carry more.
 - **A `NOWAIT` resolve.** `dehydrate` neither awaits nor draws it; it stays
   with the client.
 - **A resolve the call keeps out.**
-  [`shouldDehydrate`](/api/ui-router-server/ssr/interfaces/DehydrateOptions)
+  [`shouldDehydrate`](/reference/ui-router-server/ssr/interfaces/DehydrateOptions)
   decides per state and token, such as for data every page shares that the
   client loads once from a cacheable file. A resolve it declines is not
   listed in `unserializable`.
@@ -764,7 +839,7 @@ Where the payload goes in the document is the renderer's choice.
 #### Values beyond plain JSON
 
 `dehydrate` and `seed` take a `transport`: a record of
-[transporters](/api/ui-router-server/ssr/interfaces/Transporter), each
+[transporters](/reference/ui-router-server/ssr/interfaces/Transporter), each
 carrying one type of value plain JSON can't, keyed by a name both sides share.
 
 ```ts check
@@ -800,7 +875,7 @@ export const transport = {
 
 ## Emitting a static site
 
-[`prerender(options)`](/api/ui-router-server/prerender/functions/prerender) asks
+[`prerender(options)`](/reference/ui-router-server/prerender/functions/prerender) asks
 the mount table for a verdict per path and writes the site. A shell verdict
 becomes `<subpath>/index.html`, holding whatever `render` returns for it. A
 redirect becomes a `_redirects` line, paired with and without the trailing
@@ -818,6 +893,17 @@ headers dropped, and a 3xx becomes a `_redirects` line to its `Location`.
 Either is counted in `result.tally.response`; another status throws, as does
 a response state with no `respond`. A verdict kind the loop doesn't know
 throws instead of being counted.
+
+`base` is the url path `outDir` is served at, `/` by default, as for the
+[adapters](#serving-under-a-base-path). The mounts and the page files stay
+where they are; the base goes once onto each generated rules line's `from`
+and onto its `to` when that is a path. `extraRules` are written as given.
+`base` defaults to a `resolver`'s `router.base`, and a `mounts` table keyed by
+the base compiles as `createServerRouter({ base, mounts })` does. A table with
+keys both under and outside the base throws. `paths` spell the base for a
+router that declares one, and lie under it with it taken off otherwise;
+`pathsIncludeBase` overrides that
+([serving under a base path](#serving-under-a-base-path)).
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -843,7 +929,7 @@ const result = await prerender({
 The loop never touches a filesystem itself: `write` receives each file with
 `outDir` joined on, so the same call emits through `node:fs`, a virtual fs, or
 a `Map`, under any runtime.
-[`lit-ui-router-ssr`](/packages/ssr)'s `prerender` is this loop with a lit
+[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr)'s `prerender` is this loop with a lit
 render, and writes through `node:fs` by default.
 
 ### Hosts without redirect rules
@@ -851,9 +937,9 @@ render, and writes through `node:fs` by default.
 `rules` decides what happens to the redirect lines: `'_redirects'` (the
 default) writes the file Cloudflare Pages and Netlify read, `'none'` leaves
 them in `result.rules`, and a function receives them with the run's `write`,
-`outDir` and written `pages`. A host with no redirect rules, such as GitHub
+`outDir`, `base` and written `pages`. A host with no redirect rules, such as GitHub
 Pages or a plain bucket, takes
-[`redirectPages()`](/api/ui-router-server/prerender/functions/redirectPages):
+[`redirectPages()`](/reference/ui-router-server/prerender/functions/redirectPages):
 each line becomes a page at `<from>/index.html` that sends the browser to its
 `to`.
 
@@ -883,12 +969,13 @@ await prerender({
   would be its target's own. The first line for a page wins, as in `_redirects`, so a path's two
   spellings share one page. A line whose `from` is a pattern (`*`, `:param`)
   throws.
-- **Options.** `base` is the url path `outDir` is served at, `/` by default.
+- **Options.** `base` is the url path `outDir` is served at, `prerender()`'s
+  `base` by default.
   `redirectsFile: true` also writes `_redirects`, for a site deployed to both
   kinds of host.
 - **Your own page.** `page` builds each page's HTML from its line (`from`,
   `to`, `status`), and may return a promise.
-  [`redirectPage`](/api/ui-router-server/prerender/functions/redirectPage) is
+  [`redirectPage`](/reference/ui-router-server/prerender/functions/redirectPage) is
   the default, exported so a template can wrap it. A template gets `to`
   unescaped: HTML-escape it in markup, with `escape-html` or the template's
   own escaper, and escape it as a script string too if it goes in a script.
@@ -933,11 +1020,11 @@ same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
 as the mount's `config`, or share one object through
-[`applyUrlConfig`](/api/ui-router-server/url-config/functions/applyUrlConfig),
+[`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig),
 along with any [trailing-slash policy](#trailing-slashes).
 A static host that serves `<subpath>/index.html` by redirecting onto the
 slashed url makes that relaxation mandatory
-([static hosts add a trailing slash](/packages/ssr#static-hosts-add-a-trailing-slash)).
+([static hosts add a trailing slash](/packages/lit-ui-router-ssr#static-hosts-add-a-trailing-slash)).
 Nor does it see which ids exist: a `:id` param
 matches any value, so narrow it to the known ids when the build can list them
 ([parameterized routes and soft 404s](/guides/server-route-matching#parameterized-routes-and-soft-404s)).
@@ -948,11 +1035,11 @@ matches any value, so narrow it to the known ids when the build can list them
 
 ## Further reading
 
-- [API reference](/api/ui-router-server/) — every entry point, one module
+- [API reference](/reference/ui-router-server/) — every entry point, one module
   per subpath import
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts
-- [`lit-ui-router-ssr`](/packages/ssr) — these verdicts prerendered into a
+- [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) — these verdicts prerendered into a
   static site
 - [Unmatched URLs](/guides/unmatched-urls) — the client-side 404 state this
   pairs with

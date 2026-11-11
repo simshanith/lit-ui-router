@@ -36,6 +36,12 @@
 
 import type { RawParams } from '@uirouter/core';
 
+import {
+  baseFor,
+  checkUndeclaredBase,
+  stripBase,
+  withBase,
+} from './base-path.ts';
 import { registeredDelegates, sharedWeakMap } from './delegate-registry.ts';
 import type { DelegateRegistration } from './delegate-registry.ts';
 import { mergeSearch } from './index.ts';
@@ -200,6 +206,17 @@ export interface FetchAdapterOptions<
   Args extends unknown[] = [],
   Decls extends RouteDeclaration = RouteDeclaration,
 > {
+  /**
+   * The url path the site is served at, `/` by default. The handler matches
+   * each request with the base taken off, so the mount table stays at `/`,
+   * returns `null` for a request outside the base, and puts the base back on
+   * redirect `Location`s, the canonical `Link` and the shell Request's url.
+   * Delegates and `serveResponse` get the original request. Defaults to the
+   * router's {@link index!ServerRouter.base | base}; a different value
+   * throws. Under a base the router doesn't declare, the handler resolves
+   * the base once and every request rejects when a mount already carries it.
+   */
+  base?: string;
   /**
    * Maps a shell verdict's mount to the pathname the shell Request is built
    * at (default: the mount base itself). The hook for aliased mounts whose
@@ -465,6 +482,10 @@ export function createFetchHandler<
     RequiredDelegates<Args, ServerRouterDeclarations<R>> &
     RequiredServeResponse<Args, ServerRouterDeclarations<R>>,
 ): FetchHandler<Args> {
+  const base = baseFor(router, options.base, 'createFetchHandler');
+  const ready = checkUndeclaredBase(router, base, 'createFetchHandler');
+  ready.catch(() => {});
+
   const {
     serveShell,
     serveNotFound = defaultServeNotFound,
@@ -535,14 +556,17 @@ export function createFetchHandler<
       return new Response(null, {
         status: verdict.status,
         headers: {
-          Location: mergeSearch(verdict.location, searchOf(request.url)),
+          Location: mergeSearch(
+            withBase(base, verdict.location),
+            searchOf(request.url),
+          ),
         },
       });
     }
 
     if (verdict.kind === 'shell') {
       const shellRequest = new Request(
-        originOf(request.url) + shellPath(verdict.mount),
+        originOf(request.url) + withBase(base, shellPath(verdict.mount)),
         request,
       );
 
@@ -553,7 +577,10 @@ export function createFetchHandler<
       // No canonical Link on a status'd shell: a 404 is not an alternate
       // representation of the mount root.
       if (verdict.status === undefined)
-        headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
+        headers.set(
+          'Link',
+          `<${withBase(base, verdict.mount)}>; rel="canonical"`,
+        );
 
       return new Response(asset.body, {
         status: verdict.status ?? asset.status,
@@ -566,15 +593,26 @@ export function createFetchHandler<
     return serveNotFound(verdict.mount, request);
   };
 
+  // The request's url as the mounts see it, or undefined outside the base.
+  const routedUrl = (url: string): string | undefined =>
+    base === '/'
+      ? url
+      : stripBase(base, url.slice(originOf(url).length) || '/');
+
   return async (request, ...args) => {
+    const url = routedUrl(request.url);
+
+    if (url === undefined) return null;
+    await ready;
+
     if (!shouldHandle(request)) {
       if (!marking) return null;
-      const verdict = await markedFor(request.url);
+      const verdict = await markedFor(url);
 
       return verdict === null ? null : answerMarked(verdict, request, args);
     }
 
-    const verdict = await router.resolve(request.url);
+    const verdict = await router.resolve(url);
 
     if (verdict.kind === 'delegate' || verdict.kind === 'response')
       return answerMarked(verdict, request, args);

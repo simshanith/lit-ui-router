@@ -1,8 +1,8 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
-  "homepage": "https://lit-ui-router.dev/packages/ssr",
+  "homepage": "https://lit-ui-router.dev/packages/lit-ui-router-ssr",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -87,7 +87,7 @@
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "crap": "crap-report",
-    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-ssr && typedoc",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/lit-ui-router-ssr && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
