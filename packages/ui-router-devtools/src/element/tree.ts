@@ -3,7 +3,13 @@ import { hierarchy, tree } from 'd3-hierarchy';
 import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { StateInfo } from '../schema.ts';
 import { segment } from '../notation.ts';
-import { pivotGlyph, roleGlyph, roleLabel, type Role } from './glyphs.ts';
+import {
+  pivotGlyph,
+  pivotLabel,
+  roleGlyph,
+  roleLabel,
+  type Role,
+} from './glyphs.ts';
 
 const INDENT = 24;
 
@@ -135,16 +141,14 @@ const onTreeKey = (
   event.preventDefault();
 };
 
-const label = (state: StateInfo, pivot: string | undefined, title: boolean) =>
-  html`<span class="name">${segment(state.name)}</span>${
-      state.name === pivot
-        ? html`<span
-            class="pivot"
-            title=${title ? 'pivot: deepest retained state' : nothing}
-            >${pivotGlyph}</span
-          >`
-        : nothing
-    }${state.future ? html`<span class="tag">Lazy</span>` : nothing}`;
+// The row's slots: a 12px glyph, the name, then the trailing tag. Weight and slant follow facts, never the previewed role.
+const label = (state: StateInfo, role: Role, pivot: boolean) =>
+  html`${pivot ? pivotGlyph : roleGlyph(role)}<span class="name"
+      >${segment(state.name)}</span
+    >${state.future ? html`<span class="tag">Lazy</span>` : nothing}`;
+
+const facts = (state: StateInfo, current: string) =>
+  `${state.name === current ? 'current' : ''} ${state.future ? 'future' : ''}`;
 
 export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
   const rows = host._rows();
@@ -166,25 +170,26 @@ export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
     ${rows.map((row) => {
       const { state } = row;
       const role = host._role(state);
+      const isPivot = role === 'retained' && state.name === pivot;
       const selected = host._selectedState === state.name;
 
       /* oxlint-disable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr -- the tree's keydown handler moves focus and selects for every treeitem; aria-description is a global attribute in ARIA 1.3 */
       return html`<div
         role="treeitem"
-        class="row role-${role} ${selected ? 'selected' : ''}"
+        class="row role-${role} ${facts(state, current)} ${selected ? 'selected' : ''}"
         tabindex=${state.name === focus ? 0 : -1}
         aria-level=${row.depth}
         aria-setsize=${row.setsize}
         aria-posinset=${row.posinset}
         aria-expanded=${row.hasChildren ? (host._collapsed.has(state.name) ? 'false' : 'true') : nothing}
-        aria-current=${role === 'current' ? 'true' : nothing}
+        aria-current=${state.name === current ? 'true' : nothing}
         aria-selected=${selected}
-        aria-description=${roleLabel[role]}
+        aria-description=${isPivot ? pivotLabel : roleLabel[role]}
         style="--depth:${row.depth}"
         @click=${() => host._selectState(state.name)}
         @focus=${() => (host._focusState = state.name)}
       >
-        ${roleGlyph(role)}${label(state, pivot, true)}
+        ${label(state, role, isPivot)}
       </div>`;
       /* oxlint-enable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr */
     })}
@@ -213,6 +218,7 @@ export const renderMap = (
 
   const nodes = layout.descendants();
   const pivot = host._focusTx?.retained.at(-1);
+  const current = host._model.current.name;
 
   const nodeWidth = (state: StateInfo) =>
     host._mapWidths.get(state.name) ??
@@ -286,17 +292,18 @@ export const renderMap = (
           aria-hidden="true"
         ></span>`;
       const role = host._role(state);
+      const isPivot = role === 'retained' && state.name === pivot;
       const selected = host._selectedState === state.name;
 
       return html`<button
-        class="map-node role-${role} ${selected ? 'selected' : ''}"
+        class="map-node role-${role} ${facts(state, current)} ${selected ? 'selected' : ''}"
         data-name=${state.name}
         style="inset-inline-start:${x - 6}px;top:${y - 12}px"
         aria-pressed=${selected}
-        aria-label="${state.name}, ${roleLabel[role]}"
+        aria-label="${state.name}, ${isPivot ? pivotLabel : roleLabel[role]}"
         @click=${() => host._selectState(state.name)}
       >
-        ${roleGlyph(role)}${label(state, pivot, false)}
+        ${label(state, role, isPivot)}
       </button>`;
     })}
   </div>`;

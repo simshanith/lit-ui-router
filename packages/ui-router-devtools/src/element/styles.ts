@@ -637,7 +637,7 @@ export const styles: CSSResult = css`
     white-space: nowrap;
   }
 
-  .row.role-current .name {
+  .row.current .name {
     font-weight: 700;
   }
 
@@ -646,22 +646,12 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
-  .row.role-future .name {
+  .row.future .name {
     font-style: italic;
   }
 
   .row.role-errored .name {
     color: var(--uird-red);
-  }
-
-  .pivot {
-    display: inline-flex;
-    margin-inline-start: -4px;
-  }
-
-  .pivot .glyph {
-    inline-size: 8px;
-    block-size: 8px;
   }
 
   .row .tag {
@@ -717,12 +707,15 @@ export const styles: CSSResult = css`
     text-underline-offset: 4px;
   }
 
-  .map-node.role-current .name {
+  .map-node.current .name {
     font-weight: 700;
   }
 
-  .map-node.role-future .name {
+  .map-node.future .name {
     font-style: italic;
+  }
+
+  .map-node.role-future .name {
     color: var(--uird-muted);
   }
 

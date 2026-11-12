@@ -132,6 +132,24 @@ export const apply = (model: Model, event: DevtoolsEvent): Model => {
 export const fold = (events: readonly DevtoolsEvent[]): Model =>
   events.reduce(apply, emptyModel());
 
+// A state's ancestors, nearest first, by the declared parent; a `parent` property need not match the dotted name.
+export const ancestorsOf = (
+  states: readonly StateInfo[],
+  name: string,
+): string[] => {
+  const parents = new Map(states.map((s) => [s.name, s.parent]));
+  const chain: string[] = [];
+
+  for (
+    let parent = parents.get(name);
+    parent && !chain.includes(parent);
+    parent = parents.get(parent)
+  )
+    chain.push(parent);
+
+  return chain;
+};
+
 export const originOf = (txs: readonly Tx[], tx: Tx): Tx | undefined =>
   txs.find((t) => t.successor === tx.id);
 

@@ -134,6 +134,8 @@ const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
       class="line"
       aria-expanded=${selected}
       @click=${() => host._selectTx(selected ? null : tx.id)}
+      @mouseenter=${origin ? preview(origin.id) : nothing}
+      @mouseleave=${origin ? preview(tx.id) : nothing}
     >
       ${head}
     </button>

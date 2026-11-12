@@ -48,10 +48,13 @@ export const roleGlyph = (role: Role): SVGTemplateResult =>
 export const statusGlyph = (status: Status): SVGTemplateResult =>
   frame(statusBodies[status], `status-${status}`);
 
+// The deepest retained state; it takes the role glyph's place, so nothing in the row moves when it appears.
 export const pivotGlyph: SVGTemplateResult = frame(
-  svg`<polygon class="solid" points="6,1.5 10.5,6 6,10.5 1.5,6" />`,
+  svg`<title>pivot: deepest retained state</title><polygon class="solid" points="6,0.5 11.5,6 6,11.5 0.5,6" />`,
   'pivot',
 );
+
+export const pivotLabel = 'retained, pivot';
 
 export const closeGlyph: SVGTemplateResult = frame(
   svg`<path d="M3 3l6 6M9 3l-6 6" />`,

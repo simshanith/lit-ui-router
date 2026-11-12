@@ -10,6 +10,7 @@ import {
 import type { UIRouter } from '@uirouter/core';
 import { record, type Recorder } from './recorder.ts';
 import {
+  ancestorsOf,
   apply,
   durationOf,
   emptyModel,
@@ -375,11 +376,12 @@ export class UIRouterDevtools extends LitElement {
       if (tx.retained.includes(state.name)) return 'retained';
     }
 
-    const current = this._model.current.name;
+    const { states, current } = this._model;
 
-    if (state.name === current) return 'current';
+    if (state.name === current.name) return 'current';
 
-    if (current.startsWith(`${state.name}.`)) return 'ancestor';
+    if (ancestorsOf(states, current.name).includes(state.name))
+      return 'ancestor';
 
     return state.future ? 'future' : 'inactive';
   }

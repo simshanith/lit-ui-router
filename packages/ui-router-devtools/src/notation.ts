@@ -32,7 +32,8 @@ export interface PathParts {
 // The row notation: retained pivot, then the deepest exited and entered states relative to it.
 export const pathParts = (tx: Tx): PathParts => {
   const pivot = tx.retained.at(-1);
-  const exited = tx.exiting[0];
+  // The adapter records all three paths root first, as core's treeChanges() holds them.
+  const exited = tx.exiting.at(-1);
   const entered = tx.entering.at(-1);
 
   return {

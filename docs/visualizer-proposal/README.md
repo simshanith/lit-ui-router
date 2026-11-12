@@ -281,16 +281,16 @@ is used.
 Shape carries status. Every glyph is drawn on a 12×12 grid with one stroke
 weight and has a text label for assistive technology.
 
-| State role      | Glyph                                                          | Rail           |
-| --------------- | -------------------------------------------------------------- | -------------- |
-| Current         | solid disc, weight 700                                         | 2px solid      |
-| Active ancestor | ring with a dot                                                | 2px solid      |
-| Inactive        | ring, grey                                                     | hairline       |
-| Lazy            | dashed ring, italic, `LAZY`                                    | none           |
-| Entering        | plus in a ring                                                 | 2px solid      |
-| Exiting         | minus in a ring                                                | 2px dashed     |
-| Retained        | two bars in a ring; a diamond marks the deepest retained state | 1px solid      |
-| Errored         | solid red square, X knocked out                                | 2px solid, red |
+| State role      | Glyph                                                                         | Rail           |
+| --------------- | ----------------------------------------------------------------------------- | -------------- |
+| Current         | solid disc, weight 700                                                        | 2px solid      |
+| Active ancestor | ring with a dot                                                               | 2px solid      |
+| Inactive        | ring, grey                                                                    | hairline       |
+| Lazy            | dashed ring, italic, `LAZY`                                                   | none           |
+| Entering        | plus in a ring                                                                | 2px solid      |
+| Exiting         | minus in a ring                                                               | 2px dashed     |
+| Retained        | two bars in a ring; the deepest retained state, the pivot, is a solid diamond | 1px solid      |
+| Errored         | solid red square, X knocked out                                               | 2px solid, red |
 
 | Transition outcome | Glyph             | Row treatment                                                               |
 | ------------------ | ----------------- | --------------------------------------------------------------------------- |
@@ -304,7 +304,8 @@ weight and has a text label for assistive technology.
 | Ignored            | bar               | consecutive rows collapse to a count                                        |
 
 A transition row reads `016 ✓ galaxy.stars − star + astronaut 38 ms`: the
-retained prefix, then exited states with a minus and entered states with a plus.
+retained prefix, then the deepest exited state with a minus and the deepest
+entered state with a plus. A reload retains nothing, so both are full names.
 
 ### Tokens
 
