@@ -35,6 +35,9 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - name: Fetch the full history of main
+        # Not `fetch-depth: 0`, which also fetches every branch, asset branches included
+        run: git fetch --unshallow --no-tags origin main
       - name: Setup mise
         # Puts mise and the pinned tools on PATH, which the agent's shell inherits
         uses: jdx/mise-action@v5
