@@ -28,10 +28,8 @@ export const normalizeBase = (
  * A host-absolute path as a host serving the site under `base` spells it:
  * `withBase('/solar/', '/contacts')` is `/solar/contacts`.
  *
- * `base` is a path base with its trailing slash, the form `prerender()` hands
- * a rules writer and a server router reports as `router.base`; a base without
- * the slash loses its last character. Under `/` the path stays as written,
- * as does anything that is not a host-absolute path: a full url
+ * `base` is a path base, with or without its trailing slash. Under `/` the
+ * path stays as written, as does anything that is not a host-absolute path: a full url
  * (`https://example.test/x`), a protocol-relative one (`//example.test/x`)
  * and a relative path (`x`, `./x`, `?q=1`). The path is never inspected for
  * the base, so one that already carries it gets it twice.
@@ -39,7 +37,7 @@ export const normalizeBase = (
 export const withBase = (base: string, path: string): string =>
   base === '/' || !path.startsWith('/') || path.startsWith('//')
     ? path
-    : `${base.slice(0, -1)}${path}`;
+    : `${base.replace(/\/$/, '')}${path}`;
 
 /** The url with the base taken off, or `undefined` when it lies outside the base. */
 export const stripBase = (base: string, url: string): string | undefined => {

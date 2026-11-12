@@ -1019,8 +1019,9 @@ describe('redirectPages', () => {
 });
 
 describe('withBase', () => {
-  it('puts a base with its trailing slash in front of a host-absolute path', () => {
+  it('puts a base, with or without its trailing slash, in front of a host-absolute path', () => {
     assert.equal(withBase('/solar/', '/contacts'), '/solar/contacts');
+    assert.equal(withBase('/solar', '/contacts'), '/solar/contacts');
     assert.equal(withBase('/solar/', '/'), '/solar/');
     assert.equal(
       withBase('/a/b/', '/contacts?q=1#top'),
