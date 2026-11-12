@@ -43,6 +43,9 @@ jobs:
         env:
           # Adds the agent-only tools in .config/mise/config.agent.toml
           MISE_ENV: agent
+      - name: Install dependencies
+        # Before the agent starts, so its first commands never meet a half-written node_modules
+        run: mise run setup
       - name: Sign in to OpenCode
         id: opencode
         shell: bash
