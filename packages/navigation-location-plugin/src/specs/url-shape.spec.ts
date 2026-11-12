@@ -1,7 +1,7 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { UIRouter } from '@uirouter/core';
+import { servicesPlugin, UIRouter } from '@uirouter/core';
 import { navigationLocationPlugin } from '../index.js';
 import { interceptNavigations, restoreUrl } from './real-navigation.js';
 
@@ -59,5 +59,52 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
     expect(window.location.href).not.toContain('#');
 
     plugin.dispose?.(router);
+  });
+
+  // A navigation to another origin cannot be intercepted; cancelling it keeps the tester page alive to report the failure.
+  describe('a URL that begins with //', () => {
+    let leaving: string[];
+
+    const cancelLeaving = (event: NavigateEvent): void => {
+      if (!event.canIntercept) {
+        leaving.push(event.destination.url);
+        event.preventDefault();
+      }
+    };
+
+    beforeEach(() => {
+      leaving = [];
+      window.navigation.addEventListener('navigate', cancelLeaving);
+    });
+
+    afterEach(() => {
+      window.navigation.removeEventListener('navigate', cancelLeaving);
+    });
+
+    it.each([
+      ['/', '/x.invalid'],
+      ['/app/', '/app/x.invalid'],
+    ])(
+      'stays on this origin for an empty leading param under %s',
+      async (baseHref, pathname) => {
+        const router = new UIRouter();
+        router.urlService.config.baseHref = () => baseHref;
+        const plugin = navigationLocationPlugin(router);
+        router.plugin(servicesPlugin);
+        router.stateRegistry.register({ name: 'new', url: '/:lang/:slug' });
+        const { origin } = window.location;
+
+        await router.stateService.go('new', { lang: '', slug: 'x.invalid' });
+
+        await vi.waitFor(() => {
+          expect(window.location.pathname).toBe(pathname);
+        });
+        expect(leaving).toEqual([]);
+        expect(window.location.origin).toBe(origin);
+        expect(router.urlService.url()).toBe('/x.invalid');
+
+        plugin.dispose?.(router);
+      },
+    );
   });
 });

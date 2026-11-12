@@ -47,4 +47,41 @@ describe('composeNavigateUrl', () => {
       '/app/users?q=1#top',
     );
   });
+
+  it.each([
+    ['/', '/evil.example'],
+    ['/app', '/evil.example'],
+    ['/app/', '/app/evil.example'],
+  ])(
+    'keeps a URL that begins with // on this origin under %s',
+    (baseHref, expected) => {
+      expect(composeNavigateUrl('//evil.example', baseHref)).toBe(expected);
+    },
+  );
+
+  it('collapses a longer leading run of slashes to one', () => {
+    expect(composeNavigateUrl('///evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
+      '/app/evil.example',
+    );
+  });
+
+  it('returns the baseHref for a URL of slashes only', () => {
+    expect(composeNavigateUrl('//', '/app/')).toBe('/app/');
+  });
+
+  it('keeps the query and hash of a URL that begins with //', () => {
+    expect(composeNavigateUrl('//evil.example/a?q=1#top', '/')).toBe(
+      '/evil.example/a?q=1#top',
+    );
+    expect(composeNavigateUrl('//evil.example/a?q=1#top', '/app/')).toBe(
+      '/app/evil.example/a?q=1#top',
+    );
+  });
+
+  it('leaves slashes below the first segment as written', () => {
+    expect(composeNavigateUrl('/a//b?next=//c#//d', '/app/')).toBe(
+      '/app/a//b?next=//c#//d',
+    );
+  });
 });
