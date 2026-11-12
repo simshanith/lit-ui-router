@@ -202,9 +202,11 @@ export type Verdict =
       mount: string;
       /**
        * The mount-joined target path; merge the request's search with {@link mergeSearch}.
-       * A verdict `createServerRouter` makes starts with exactly one `/`, so it stays on this
-       * origin. The adapters answer `location` as written: a custom resolver that returns a
-       * `//host` or full-url location redirects there.
+       * A route's `redirectTo` names a state, never a url, so a location `createServerRouter`
+       * formats can only mean a path on this site: it starts with exactly one `/`, and a
+       * leading `//` an empty param would format collapses to one. The adapters answer
+       * `location` as written: a custom resolver that returns a `//host` or full-url location
+       * redirects there.
        */
       location: string;
       /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
