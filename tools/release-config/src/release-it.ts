@@ -1,7 +1,7 @@
 import {
   skipUnconsumedCatalogCommit,
   WORKSPACE_FILE,
-} from './catalog-commits.js';
+} from './catalog-commits.ts';
 import { finalizeContext, footerPartial } from './notes.ts';
 
 // The one release-it config for every publishable package. Each package keeps a
@@ -9,8 +9,8 @@ import { finalizeContext, footerPartial } from './notes.ts';
 // lookup (and `pnpm exec release-it` run inside a package) still resolves; knip
 // skips a bare `export { default } from` config, so the import is load-bearing.
 //
-// JS, not JSON, because conventional-changelog-writer 9 takes template partials
-// as functions rather than handlebars strings.
+// Code, not JSON, because conventional-changelog-writer 9 takes template
+// partials as functions rather than handlebars strings.
 //
 // Everything defaults to false: the workflows turn individual steps on via CLI
 // flags, which is what keeps the pipeline's argv in @tools/release the single
