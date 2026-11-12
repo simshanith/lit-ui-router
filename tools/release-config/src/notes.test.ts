@@ -6,7 +6,12 @@ import { after, before, describe, it } from 'node:test';
 
 import { stringify } from 'yaml';
 
-import { NO_CODE_CHANGES, releaseLinks, trimNoteText } from './notes.ts';
+import {
+  codeMentions,
+  NO_CODE_CHANGES,
+  releaseLinks,
+  trimNoteText,
+} from './notes.ts';
 import { commitFiles, git, renderNotes } from './test-repo.ts';
 
 const PULL = 'https://github.com/simshanith/lit-ui-router/pull';
@@ -282,5 +287,77 @@ describe('scope-aware release notes', () => {
     });
 
     assert.match(preview, /\/releases\/a\/diff\/1\.0\.0\.\.\.1\.1\.0\//);
+  });
+});
+
+describe('codeMentions', () => {
+  it('renders JSDoc tags, npm scopes and decorators as code', () => {
+    assert.equal(
+      codeMentions('check @example blocks, @uirouter/core and @state() fields'),
+      'check `@example` blocks, `@uirouter/core` and `@state`() fields',
+    );
+  });
+
+  it('leaves links, code spans, urls and email addresses alone', () => {
+    const text =
+      '[#12](https://github.com/o/r/issues/12) `@lit-labs/ssr` https://x.dev/@a me@example.com';
+
+    assert.equal(codeMentions(text), text);
+  });
+});
+
+describe('release notes mentions', () => {
+  let repo: string;
+  let notes: string;
+
+  before(async () => {
+    repo = fs.mkdtempSync(path.join(os.tmpdir(), 'release-config-mentions-'));
+    git(repo, 'init', '-q');
+    commitFiles(
+      repo,
+      {
+        'pnpm-workspace.yaml': workspaceYaml('^1.0.0'),
+        'packages/a/package.json': manifest('a'),
+        'tools/site/package.json': JSON.stringify({
+          name: '@tools/site',
+          private: true,
+        }),
+      },
+      'chore: scaffold',
+    );
+    commitFiles(
+      repo,
+      { 'packages/a/src/check.ts': 'export {};' },
+      'feat(a)!: type-check @example blocks against @uirouter/core (#30)\n\n' +
+        'BREAKING CHANGE: @lit-labs/ssr moves to a peer.',
+    );
+    commitFiles(
+      repo,
+      { 'packages/a/README.md': '# a' },
+      'docs(site): describe the @state() decorator (#31)',
+    );
+    notes = await renderNotes(path.join(repo, 'packages/a'), {
+      context: { previousVersion: '' },
+    });
+  });
+
+  after(() => {
+    fs.rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('links no mention in a subject, a breaking note or the closing list', () => {
+    assert.doesNotMatch(
+      notes,
+      /\]\(https:\/\/github\.com\/(?:example|uirouter|lit-labs|state)\b/,
+    );
+    assert.match(
+      notes,
+      /\* \*\*a:\*\* type-check `@example` blocks against `@uirouter\/core` \(\[#30\]/,
+    );
+    assert.match(notes, /\* \*\*a:\*\* `@lit-labs\/ssr` moves to a peer\./);
+    assert.match(
+      notes,
+      /\* \*\*site:\*\* describe the `@state`\(\) decorator \(\[#31\]/,
+    );
   });
 });
