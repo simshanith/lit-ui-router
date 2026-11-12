@@ -386,8 +386,9 @@ so the exact red and the letterspacing rules are not taken from it.
 - **A flame chart as the primary view.** Most phases last under a millisecond,
   so a proportional chart is empty. The phase ruler is ordinal for that reason;
   only resolve bars are proportional.
-- **Nested statechart boxes.** Width grows with depth, and UI-Router has no
-  parallel regions to justify them.
+- **Nested statechart boxes as the only state view.** Width grows with depth,
+  so the Outline stays the primary view. The Map tab draws them where they fit,
+  under the rules in [the nested Map](map.md).
 
 ## Open decisions
 
