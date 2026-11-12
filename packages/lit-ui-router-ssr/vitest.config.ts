@@ -28,8 +28,11 @@ const coexistSpecs = [
   'src/specs/shadow-shell.spec.ts',
 ];
 
-// Real `vite build`s, whose prerender runs in a worker over this package's dist: no shim and no document in the test's own realm.
-const viteSpecs = ['src/specs/vite-build.spec.ts'];
+// Specs that reach `ui-router-server/vite`, which resolves into dist: the one lane that needs a prior build. No shim and no document in the test's own realm.
+const viteSpecs = [
+  'src/specs/define-prerender.spec.ts',
+  'src/specs/vite-build.spec.ts',
+];
 
 // Specs that must also hold against the published build of `@lit-labs/ssr-client`.
 const prodSpecs = ['src/specs/render-light-flag.spec.ts'];
