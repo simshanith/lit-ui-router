@@ -10,6 +10,7 @@ import {
   WORKSPACE_FILE,
   workspaceFileAt,
 } from './catalog-commits.js';
+import type { PeerManifest } from './peer-changes.ts';
 
 // Short scopes that name packages; one may name several.
 export const SCOPE_ALIASES = {
@@ -18,7 +19,7 @@ export const SCOPE_ALIASES = {
   server: ['ui-router-server'],
   signals: ['lit-ui-router-signals', 'ui-router-signals'],
   ssr: ['lit-ui-router-ssr'],
-};
+} as const satisfies Record<string, readonly string[]>;
 
 // The packed manifest fields; scripts and devDependencies never ship.
 const SHIPPED_FIELDS = [
@@ -41,11 +42,24 @@ const SHIPPED_FIELDS = [
 const SHIPPED_SOURCE =
   /^(?:src|bin)\/(?!(?:.*\/)?specs?\/)(?!.*\.(?:spec|test)\.[cm]?[jt]sx?$)/;
 
-function git(cwd, ...args) {
+/** The manifest fields the notes read; the rest pass through untouched. */
+export interface PackageManifest extends PeerManifest {
+  name?: string;
+  private?: boolean;
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+}
+
+export interface ScopeWords {
+  packages: Map<string, string[]>;
+  others: Set<string>;
+}
+
+function git(cwd: string, ...args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' });
 }
 
-function showAt(cwd, rev, path) {
+function showAt(cwd: string, rev: string, path: string): string | undefined {
   try {
     return git(cwd, 'show', `${rev}:${path}`);
   } catch {
@@ -55,19 +69,12 @@ function showAt(cwd, rev, path) {
 }
 
 /**
- * @typedef {{ packages: Map<string, string[]>; others: Set<string> }} ScopeWords
- */
-
-/**
  * Scope words from the workspace globs at `root`: published packages by npm
  * name and directory, every other member by name, directory and top-level
  * folder. `@repo/*` source is inlined into dist, so its scopes stay neutral.
- *
- * @param {string} root
- * @returns {ScopeWords}
  */
-export function workspaceScopes(root) {
-  let source;
+export function workspaceScopes(root: string): ScopeWords {
+  let source: string | undefined;
 
   try {
     source = readFileSync(join(root, WORKSPACE_FILE), 'utf8');
@@ -75,18 +82,27 @@ export function workspaceScopes(root) {
     source = undefined;
   }
 
-  const globs = (source === undefined ? undefined : parse(source))?.packages;
-  const packages = new Map();
-  const others = new Set();
+  // SAFETY: pnpm-workspace.yaml is a mapping whose `packages` is a glob list
+  const workspace = (source === undefined ? undefined : parse(source)) as
+    | { packages?: string[] }
+    | undefined;
 
-  const add = (scope, name) =>
+  const packages = new Map<string, string[]>();
+  const others = new Set<string>();
+
+  const add = (scope: string, name: string) =>
     packages.set(scope, [...(packages.get(scope) ?? []), name]);
 
-  for (const manifestPath of (globs ?? []).flatMap((glob) =>
+  for (const manifestPath of (workspace?.packages ?? []).flatMap((glob) =>
     globSync(`${glob}/package.json`, { cwd: root }),
   )) {
     const dir = dirname(manifestPath);
-    const manifest = JSON.parse(readFileSync(join(root, manifestPath), 'utf8'));
+
+    // SAFETY: a package.json is a JSON object and every declared field is optional
+    const manifest = JSON.parse(
+      readFileSync(join(root, manifestPath), 'utf8'),
+    ) as PackageManifest;
+
     const name = manifest.name ?? basename(dir);
 
     if (name.startsWith('@repo/')) continue;
@@ -97,7 +113,7 @@ export function workspaceScopes(root) {
     } else {
       others.add(name.replace(/^@[^/]+\//, ''));
       others.add(basename(dir));
-      others.add(dir.split('/')[0]);
+      others.add(dir.split('/')[0] ?? dir);
     }
   }
 
@@ -113,13 +129,12 @@ export function workspaceScopes(root) {
 /**
  * `own` when a scope names the package, `foreign` when it names only other
  * workspace members, `neutral` when unscoped or naming none (`deps`).
- *
- * @param {string | null | undefined} scope
- * @param {string} packageName
- * @param {ScopeWords} words
- * @returns {'own' | 'foreign' | 'neutral'}
  */
-export function classifyScope(scope, packageName, words) {
+export function classifyScope(
+  scope: string | null | undefined,
+  packageName: string,
+  words: ScopeWords,
+): 'own' | 'foreign' | 'neutral' {
   const scopes = (scope ?? '')
     .split(',')
     .map((part) => part.trim().toLowerCase())
@@ -136,9 +151,19 @@ export function classifyScope(scope, packageName, words) {
   return 'neutral';
 }
 
-function shippedFieldChanged(cwd, hash) {
-  const before = JSON.parse(showAt(cwd, `${hash}^`, './package.json') ?? '{}');
-  const after = JSON.parse(showAt(cwd, hash, './package.json') ?? '{}');
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+function manifestAt(cwd: string, rev: string): Record<string, Json> {
+  // SAFETY: a package.json is a JSON object
+  return JSON.parse(showAt(cwd, rev, './package.json') ?? '{}') as Record<
+    string,
+    Json
+  >;
+}
+
+function shippedFieldChanged(cwd: string, hash: string): boolean {
+  const before = manifestAt(cwd, `${hash}^`);
+  const after = manifestAt(cwd, hash);
 
   return SHIPPED_FIELDS.some(
     (field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]),
@@ -148,12 +173,12 @@ function shippedFieldChanged(cwd, hash) {
 /**
  * Whether a commit changed what the package at `cwd` packs: its source, a
  * shipped manifest field, or a catalog entry its shipped fields consume.
- *
- * @param {string} cwd
- * @param {string} hash
- * @param {Record<string, Record<string, string> | undefined>} manifest the package's manifest
  */
-export function changesShippedCode(cwd, hash, manifest) {
+export function changesShippedCode(
+  cwd: string,
+  hash: string,
+  manifest: PackageManifest,
+): boolean {
   const files = git(
     cwd,
     'diff-tree',
@@ -178,7 +203,13 @@ export function changesShippedCode(cwd, hash, manifest) {
   const before = parseCatalogs(workspaceFileAt(cwd, `${hash}^`));
   const after = parseCatalogs(workspaceFileAt(cwd, hash));
 
-  return consumedCatalogEntries(manifest).some(
+  const { dependencies, peerDependencies, optionalDependencies } = manifest;
+
+  return consumedCatalogEntries({
+    dependencies,
+    peerDependencies,
+    optionalDependencies,
+  }).some(
     ([catalog, name]) => before[catalog]?.[name] !== after[catalog]?.[name],
   );
 }
@@ -187,10 +218,9 @@ export function changesShippedCode(cwd, hash, manifest) {
  * The manifest at `rev` with its `catalog:` peer specs resolved through the
  * catalogs of that revision, as the packed manifest carries them.
  *
- * @param {string} cwd the package directory
- * @param {string} rev
+ * @param cwd the package directory
  */
-export function resolvedManifestAt(cwd, rev) {
+export function resolvedManifestAt(cwd: string, rev: string): PackageManifest {
   const source = showAt(cwd, rev, './package.json');
 
   if (source === undefined) {
@@ -198,18 +228,19 @@ export function resolvedManifestAt(cwd, rev) {
   }
 
   return resolveCatalogSpecs(
-    JSON.parse(source),
+    // SAFETY: a package.json is a JSON object and every declared field is optional
+    JSON.parse(source) as PackageManifest,
     parseCatalogs(workspaceFileAt(cwd, rev)),
   );
 }
 
-/**
- * @param {Record<string, any>} manifest
- * @param {Record<string, Record<string, string>>} catalogs
- */
-export function resolveCatalogSpecs(manifest, catalogs) {
+/** The manifest with its `catalog:` peer specs replaced by their ranges. */
+export function resolveCatalogSpecs(
+  manifest: PackageManifest,
+  catalogs: Record<string, Record<string, string>>,
+): PackageManifest {
   const peers = Object.entries(manifest.peerDependencies ?? {}).map(
-    ([name, spec]) => {
+    ([name, spec]): [string, string] => {
       if (!spec.startsWith('catalog:')) return [name, spec];
 
       const catalog = spec.slice('catalog:'.length) || 'default';

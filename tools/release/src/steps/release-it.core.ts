@@ -92,7 +92,7 @@ export function bumpArgs(options: {
  * - `gitRawCommitsOpts.from=<from>`: pins the conventional-changelog range
  *   to THIS package's previous tag, or the repo root on a first release
  *   (#302, release-prev-tag.ts)
- * - `context.version` / `context.previousVersion`: the notes' peer statement
+ * - `context.releaseVersion` / `context.previousVersion`: the notes' peer statement
  *   and docs-site links, the same values the bump passes
  */
 export function publishArgs(options: {
@@ -161,12 +161,12 @@ export function changelogArgs(options: {
   ];
 }
 
-// The writer reads both from its context (@tools/release-config notes.js); an empty previousVersion is a first release.
+// The writer reads both from its context (@tools/release-config notes.ts); an empty previousVersion is a first release.
 function notesContextArgs(version: string, previousVersion: string): string[] {
   if (version.trim() === '') throw new Error('version must be non-empty');
 
   return [
-    `--plugins.@release-it/conventional-changelog.context.version=${version}`,
+    `--plugins.@release-it/conventional-changelog.context.releaseVersion=${version}`,
     `--plugins.@release-it/conventional-changelog.context.previousVersion=${previousVersion}`,
   ];
 }

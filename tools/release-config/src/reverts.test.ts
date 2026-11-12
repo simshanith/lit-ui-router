@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { cancelledCommits, prNumber, revertRefs } from './reverts.js';
+import { cancelledCommits, prNumber, revertRefs } from './reverts.ts';
 
 interface Commit {
   hash: string;

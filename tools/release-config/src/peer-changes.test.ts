@@ -5,7 +5,7 @@ import {
   describePeerChange,
   isBreakingPeerChange,
   peerChanges,
-} from './peer-changes.js';
+} from './peer-changes.ts';
 
 const peers = (
   peerDependencies: Record<string, string>,

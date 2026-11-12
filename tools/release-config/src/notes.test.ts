@@ -6,7 +6,7 @@ import { after, before, describe, it } from 'node:test';
 
 import { stringify } from 'yaml';
 
-import { NO_CODE_CHANGES, releaseLinks, trimNoteText } from './notes.js';
+import { NO_CODE_CHANGES, releaseLinks, trimNoteText } from './notes.ts';
 import { commitFiles, git, renderNotes } from './test-repo.ts';
 
 const PULL = 'https://github.com/simshanith/lit-ui-router/pull';
@@ -83,7 +83,7 @@ describe('scope-aware release notes', () => {
   let notes: string;
   let firstRelease: string;
 
-  const context = { version: '1.1.0', previousVersion: '1.0.0' };
+  const context = { releaseVersion: '1.1.0', previousVersion: '1.0.0' };
 
   before(async () => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'release-config-notes-'));
@@ -165,7 +165,7 @@ describe('scope-aware release notes', () => {
 
     notes = await renderNotes(packageA, { from: 'a@1.0.0', context });
     firstRelease = await renderNotes(path.join(repo, 'packages/c'), {
-      context: { version: '1.0.0', previousVersion: '' },
+      context: { releaseVersion: '1.0.0', previousVersion: '' },
     });
   });
 
@@ -268,9 +268,19 @@ describe('scope-aware release notes', () => {
     assert.equal(published, notes);
   });
 
-  it('leaves out the peer statement and links when the drivers pass no context', async () => {
+  it('previews without context against the latest stable tag, leaving out the links', async () => {
     const preview = await renderNotes(packageA, { from: 'a@1.0.0' });
 
-    assert.doesNotMatch(preview, /peer narrows|lit-ui-router\.dev/);
+    assert.match(preview, /the x peer narrows from \^0\.2\.0 to \^0\.3\.0\./);
+    assert.doesNotMatch(preview, /lit-ui-router\.dev/);
+  });
+
+  it('adds the links once a preview names the release version', async () => {
+    const preview = await renderNotes(packageA, {
+      from: 'a@1.0.0',
+      context: { releaseVersion: '1.1.0' },
+    });
+
+    assert.match(preview, /\/releases\/a\/diff\/1\.0\.0\.\.\.1\.1\.0\//);
   });
 });

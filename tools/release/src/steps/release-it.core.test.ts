@@ -138,7 +138,7 @@ describe('publishArgs', () => {
       '--git.tagExclude',
       '${npm.name}@1.8.0',
       '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
-      '--plugins.@release-it/conventional-changelog.context.version=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
       '--plugins.@release-it/conventional-changelog.context.previousVersion=1.7.0',
     ]);
   });
@@ -154,7 +154,7 @@ describe('publishArgs', () => {
     const args = publishArgs({ ...base, from: root, previousVersion: '' });
     assert.deepEqual(args.slice(-3), [
       `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${root}`,
-      '--plugins.@release-it/conventional-changelog.context.version=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
       '--plugins.@release-it/conventional-changelog.context.previousVersion=',
     ]);
   });
@@ -189,7 +189,7 @@ describe('changelogArgs', () => {
       '--changelog',
       '--git.tagMatch=lit-ui-router@[0-9]*.[0-9]*.[0-9]*',
       '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
-      '--plugins.@release-it/conventional-changelog.context.version=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
       '--plugins.@release-it/conventional-changelog.context.previousVersion=1.7.0',
     ]);
   });

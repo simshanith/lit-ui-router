@@ -5,6 +5,8 @@ import path from 'node:path';
 
 import { ConventionalChangelog } from 'conventional-changelog';
 
+type WriterOptions = Parameters<ConventionalChangelog['writer']>[0];
+
 import config from './release-it.js';
 
 const GIT_ENV = {
@@ -42,12 +44,17 @@ export function commitFiles(
 /** The plugin's context plus what the drivers in @tools/release add. */
 interface NotesContext {
   version?: string;
+  releaseVersion?: string;
   previousVersion?: string;
   previousTag?: string;
   currentTag?: string;
 }
 
 const plugin = config.plugins['@release-it/conventional-changelog'];
+
+// SAFETY: notes.ts types only the writer context fields it reads
+// oxlint-disable-next-line anti-slop/no-chained-type-assertions -- notes.ts types a subset of the writer context, which the writer's type can't see
+const writerOpts = plugin.writerOpts as unknown as WriterOptions;
 
 /**
  * Renders a package's notes as the release-it plugin does, from inside the
@@ -67,7 +74,7 @@ export async function renderNotes(
       .repository('https://github.com/simshanith/lit-ui-router')
       .context({ version: '1.0.0', ...options.context })
       .commits({ ...plugin.gitRawCommitsOpts, from: options.from })
-      .writer(plugin.writerOpts);
+      .writer(writerOpts);
 
     let notes = '';
 
