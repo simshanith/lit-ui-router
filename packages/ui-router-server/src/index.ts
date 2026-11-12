@@ -29,7 +29,7 @@ import type {
   RouteMatch,
   RouteTableConfig,
 } from './redirects.ts';
-import { registerMountPolicies, respell } from './trailing-slash.ts';
+import { onOrigin, registerMountPolicies, respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
@@ -200,7 +200,14 @@ export type Verdict =
       kind: 'redirect';
       /** Base of the mount that owned the pathname. */
       mount: string;
-      /** The mount-joined target path; merge the request's search with {@link mergeSearch}. */
+      /**
+       * The mount-joined target path; merge the request's search with {@link mergeSearch}.
+       * A route's `redirectTo` names a state, never a url, so a location `createServerRouter`
+       * formats can only mean a path on this site: it starts with exactly one `/`, and a
+       * leading `//` an empty param would format collapses to one. The adapters answer
+       * `location` as written: a custom resolver that returns a `//host` or full-url location
+       * redirects there.
+       */
       location: string;
       /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
       status: number;
@@ -715,7 +722,7 @@ const redirectVerdict = (
 ): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
-  location: join(mount.base, path),
+  location: onOrigin(join(mount.base, path)),
   status,
 });
 
@@ -935,7 +942,7 @@ const replayVerdict = async (
     return otherwiseVerdict(mount);
   // The memory location only moves when the client's address bar would:
   // core skips the url push for url-sourced transitions.
-  const landed = router.urlService.url();
+  const landed = onOrigin(router.urlService.url());
 
   return landed === subpath
     ? (respelledVerdict(mount, subpath, router.globals.$current.name) ??

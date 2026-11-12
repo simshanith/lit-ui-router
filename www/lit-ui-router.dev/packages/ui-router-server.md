@@ -266,7 +266,12 @@ type Verdict =
   the request's validators so the asset fetch returns a body to relabel.
 - **`redirect`** — `location` is the mount-joined target path and may already
   carry a query string, so preserve the request's search with the exported
-  `mergeSearch(location, incoming)` rather than concatenating. `status` is
+  `mergeSearch(location, incoming)` rather than concatenating. A route's
+  `redirectTo` names a state, never a url, so a location `createServerRouter`
+  formats can only mean a path on this site: it starts with exactly one `/`,
+  and a leading `//` an empty param would format collapses to one. The
+  adapters answer `location` as written: a custom resolver that returns a
+  `//host` or full-url location redirects there. `status` is
   `302` unless the matched state declares `redirectStatusCode`: a redirect
   table is configuration that changes with the next deploy, and browsers
   cache a permanent redirect past it. A pattern rule's redirect is `302`.

@@ -111,3 +111,6 @@ export const mountPolicyOf = (
   router: ServerRouter,
   base: string,
 ): TrailingSlashPolicy | undefined => mountPolicies.get(router)?.get(base);
+
+/** A path a mount formatted, with one leading slash: an empty leading param formats `//`, which names another host. */
+export const onOrigin = (path: string): string => path.replace(/^\/{2,}/, '/');
