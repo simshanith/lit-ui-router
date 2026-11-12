@@ -249,8 +249,7 @@ back to `latest`, and the run names the missing tag.
 
 ### 6. Acceptance (`acceptance.yml`)
 
-**Triggers:** Pull requests; pushes to `main`; manual dispatch against any ref;
-weekly schedule (`links` only)
+**Triggers:** Pull requests; pushes to `main`; manual dispatch against any ref
 
 [Actions ▸ Acceptance ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/acceptance.yml)
 
@@ -267,8 +266,8 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
   Markdown, package READMEs and manifests, and the docs site's Markdown pages
   (`mise run check_links`, [`lychee.toml`](../lychee.toml)), with the broken ones
   listed per file in the job summary. `lit-ui-router.dev` URLs are left to the
-  build's offline check. On a PR it checks only when Markdown, a manifest or its
-  config changed; a red run can be another server's timeout or rate limit.
+  build's offline check. Results are cached for a day, so most runs make few
+  requests; a red run can be another server's timeout or rate limit.
 - `acceptance (npm-diff)`: the patch the release-diffs worker stores against
   `npm diff`, byte for byte but for a final blank context line npm trims, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.
