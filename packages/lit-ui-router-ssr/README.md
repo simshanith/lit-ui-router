@@ -44,7 +44,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
 Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
 and `template` or an async `renderShell()` are the seams for them. `template` takes the router and
 returns the page's template; `prerender` settles the router on each path with `settle()` before
-calling it. A `renderShell()` hook, for a page that needs the verdict or more than a settle, calls
+calling it. That includes the 404 document's probe path, so a mount that projects an `otherwise`
+needs the router to declare an `otherwise` rule of its own. A `renderShell()` hook, for a page that needs the verdict or more than a settle, calls
 `settle()` itself. Pass one or the other; passing both throws.
 
 ## Installation
@@ -183,8 +184,8 @@ if (redirect)
   });
 ```
 
-`prerender` does the same after each `renderShell`: when the transition the hook landed was
-redirected, the path gets a rules line in place of a page, counted in `tally.redirect`. A url rule
+`prerender` does the same after each render, through `template` or `renderShell`: when the
+transition it landed was redirected, the path gets a rules line in place of a page, counted in `tally.redirect`. A url rule
 that rewrites the url, `when('/old', '/new')`, starts a new transition rather than redirecting one,
 so `redirectedTo` reports nothing for it; declare it in the mount's `redirects`. See
 [page, response state or redirect](https://lit-ui-router.dev/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).

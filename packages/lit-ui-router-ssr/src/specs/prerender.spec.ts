@@ -619,6 +619,67 @@ describe('the template option', () => {
     expect(files).toEqual(hooked.files);
   });
 
+  /** sheetRouter with the mount's notFound state registered. */
+  const notFoundRouter = (): UIRouterLit => {
+    const router = sheetRouter();
+    router.stateRegistry.register({ name: 'notFound' });
+
+    return router;
+  };
+
+  it('renders the 404 document on the otherwise state of an otherwise-bearing router', async () => {
+    const router = notFoundRouter();
+    router.urlService.rules.otherwise({ state: 'notFound' });
+
+    const { files, result } = await run({
+      router,
+      paths: ['/'],
+      renderShell: undefined,
+      template: sheetPage,
+    });
+
+    const page = files.get('dist/404.html')!;
+
+    expect(
+      getByText(parseHtml(page).body, /^notFound/, { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(page)).toMatchObject({ state: 'notFound' });
+    expect(router.globals.current.name).toBe('notFound');
+    expect(result.tally.document).toBe(1);
+  });
+
+  it('rejects the 404 document when the router declares no otherwise', async () => {
+    const rendering = run({
+      router: notFoundRouter(),
+      paths: ['/'],
+      renderShell: undefined,
+      template: sheetPage,
+    });
+
+    await expect(rendering).rejects.toThrow(
+      "prerender: `template` settles the router on '/__ui-router-server-probe__', which its mount answers from the otherwise projection, so the router needs an `otherwise` rule of its own (settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise)",
+    );
+    await expect(rendering).rejects.toHaveProperty(
+      'cause.message',
+      'settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise',
+    );
+  });
+
+  it('passes on a settle rejection for a path a route claims', async () => {
+    const router = new UIRouterLit();
+    installServerLocation(router, { urlConfig: { strict: false } });
+
+    await expect(
+      run({
+        router,
+        paths: ['/'],
+        notFound: false,
+        renderShell: undefined,
+        template: sheetPage,
+      }),
+    ).rejects.toThrow(/^settle: no url rule matches \/ /);
+  });
+
   it('throws when renderShell is passed too', async () => {
     await expect(run({ template: () => html`<p>page</p>` })).rejects.toThrow(
       'pass `template` or `renderShell`, not both',

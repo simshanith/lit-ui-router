@@ -72,7 +72,9 @@ Path enumeration, the html document, and `<title>` stay with the caller —
 `paths`, `document()`, and `template` or an async `renderShell()` are the
 seams for them. `template` takes the router and returns the page's template;
 `prerender` [settles](#settling-the-router-on-each-path) the router on each path
-before calling it. A `renderShell()` hook, for a page that needs the verdict or
+before calling it. That includes the 404 document's probe path, so a mount that
+projects an `otherwise` needs the router to declare an `otherwise` rule of its
+own. A `renderShell()` hook, for a page that needs the verdict or
 more than a settle, calls `settle()` itself. Pass one or the other; passing
 both throws.
 
@@ -198,8 +200,8 @@ if (redirect)
   });
 ```
 
-`prerender` does the same after each `renderShell`: when the transition the
-hook landed was redirected, the path gets a rules line,
+`prerender` does the same after each render, through `template` or
+`renderShell`: when the transition it landed was redirected, the path gets a rules line,
 `/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
 `tally.redirect`.
 [`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
@@ -329,14 +331,14 @@ for (const { path, payload } of pages) {
 
 ## Verdict to artefact
 
-| Verdict               | What is emitted                                                                                                                                                                  |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
-| `redirect`            | a rules line (`from to status`), no page                                                                                                                                         |
-| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                             |
-| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                             |
-| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                    |
-| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                 |
+| Verdict               | What is emitted                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`               | `<subpath>/index.html`, rendered through `template` or `renderShell`, and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
+| `redirect`            | a rules line (`from to status`), no page                                                                                                                                                        |
+| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                                            |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                                            |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                                   |
+| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                                |
 
 [`PrerenderResult`](/reference/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
@@ -410,7 +412,7 @@ with no redirect rules.
 The router builds its hrefs under its own `baseHref`, so build it with
 `installServerLocation(router, { baseHref: site.base })`; `prerender()`
 throws when a render settles the router where its links don't reach the page: `baseHref()` plus the router's url has to spell `base` plus the path. A response state's handler gets a request for
-the path under the base, and a redirect `renderShell` lands on gets the base
+the path under the base, and a redirect the render lands on gets the base
 once in its rules line. [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
 shows the setup.
 

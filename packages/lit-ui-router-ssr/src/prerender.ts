@@ -105,10 +105,22 @@ const nodeWrite: FileWriter = async (file, body) => {
 const settledTemplate =
   (router: UIRouterLit, template: (router: UIRouterLit) => TemplateResult) =>
   async (
-    _verdict: ShellVerdict,
+    verdict: ShellVerdict,
     { path }: SiteRenderContext,
   ): Promise<TemplateResult> => {
-    await settle(router, path);
+    try {
+      await settle(router, path);
+    } catch (cause) {
+      if (verdict.status !== 404) throw cause;
+
+      // SAFETY: `settle` rejects with an `Error` only.
+      const { message } = cause as Error;
+
+      throw new Error(
+        `prerender: \`template\` settles the router on '${path}', which its mount answers from the otherwise projection, so the router needs an \`otherwise\` rule of its own (${message})`,
+        { cause },
+      );
+    }
 
     return template(router);
   };
@@ -139,7 +151,9 @@ export interface PrerenderOptions extends Omit<
    * on the path with `settle` from `ui-router-server/ssr` and the template
    * this returns is rendered, as a {@link PrerenderOptions.renderShell | renderShell}
    * hook that settles and returns `template(router)` would. Pass this or
-   * `renderShell`, not both.
+   * `renderShell`, not both. The 404 document's probe path is settled too, so
+   * a mount that projects an `otherwise` needs the router to declare an
+   * `otherwise` rule of its own, or the render rejects.
    */
   template?: (router: UIRouterLit) => TemplateResult;
   /**
@@ -209,8 +223,8 @@ export interface PrerenderOptions extends Omit<
   /**
    * Draws each rendered page's resolve payload with `dehydrate` from
    * `ui-router-server/ssr`, called with these options on the transition the
-   * router last landed, once `renderShell` has returned a template. The
-   * payload's `resolves` go into the page's hydration signature, beside the
+   * router last landed, once `template` or `renderShell` has returned a
+   * template. The payload's `resolves` go into the page's hydration signature, beside the
    * state and parameters the router stands on, and the client adopts them on
    * boot in place of running those resolve functions. Pass `{}` to draw every
    * resolve `dehydrate` draws by default. Without this option or
@@ -233,8 +247,9 @@ export interface PrerenderOptions extends Omit<
   /**
    * Draws the resolve payload for a rendered page by hand, in place of
    * {@link PrerenderOptions.dehydrate | `dehydrate`}: handed the transition the
-   * router last landed, once `renderShell` has returned a template, it returns
-   * the payload the page's signature carries, or `undefined` to write none.
+   * router last landed, once `template` or `renderShell` has returned a
+   * template, it returns the payload the page's signature carries, or
+   * `undefined` to write none.
    * Passing both this and `dehydrate` throws.
    *
    * @example
@@ -274,8 +289,9 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, or a rules line when the transition its
- * `renderShell` landed was redirected, a response state becomes the body or rules line its
+ * `<subpath>/index.html`, or a rules line when the transition its render
+ * landed, through `template` or `renderShell`, was redirected, a response
+ * state becomes the body or rules line its
  * handler in {@link PrerenderOptions.responses | responses} answers, a
  * redirect becomes a rules line and no page, and the `otherwise` projection
  * becomes the 404 document. The loop is
