@@ -322,6 +322,29 @@ describe('the resolves a signature carries', () => {
     ]);
   });
 
+  it('log a payload drawn for another transition under the RESOLVE trace', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const markup = await drawWith('/shell/when');
+    trace.enable('RESOLVE');
+
+    try {
+      await bootOver(markup, '/shell');
+    } finally {
+      trace.disable('RESOLVE');
+    }
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.includes('Seeded from payload')),
+    ).toEqual([
+      expect.stringMatching(
+        /^Transition #\d+-\d+: {9}Seeded from payload: drawn for another transition, re-runs \[.*\]$/,
+      ),
+    ]);
+  });
+
   it("hand seed's report to the caller's onSeed", async () => {
     const onSeed = vi.fn();
 

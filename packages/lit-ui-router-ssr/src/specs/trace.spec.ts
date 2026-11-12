@@ -2,7 +2,7 @@ import { trace } from '@uirouter/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../register.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { rootTemplate } from './fixture.js';
+import { makeRouter, rootTemplate } from './fixture.js';
 import { bootAt, draw, serve, withoutSignature } from './round-trip.js';
 
 const drawShell = (path: string): Promise<string> =>
@@ -83,6 +83,24 @@ describe('tracing hydration', () => {
 
     expect(linesStarting(log, /^bootstrap: /)).toEqual([
       "bootstrap: cold, signature absent (booted into 'shell.detail')",
+    ]);
+  });
+
+  it('logs a failed boot with its rejection under TRANSITION', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    router.transitionService.onBefore({ to: 'shell.detail' }, () => false);
+    trace.enable('TRANSITION');
+
+    await bootAt(container, rootTemplate, '/shell/detail', {}, router);
+
+    expect(linesStarting(log, /^bootstrap: /)).toEqual([
+      expect.stringMatching(
+        /^bootstrap: cold, signature elsewhere \(drawn for 'shell\.detail', booted into '\(root\)'\), error: .*aborted/i,
+      ),
     ]);
   });
 });
