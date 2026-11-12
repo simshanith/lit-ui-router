@@ -58,7 +58,7 @@ test.describe('docs site', () => {
   });
 
   test('navigates without a full page load', async ({ page }) => {
-    await page.goto('/tutorial/live-examples');
+    await page.goto('/tutorial/helloworld');
     await hydrated(page);
     await page.evaluate(() => {
       window.hydrationProbe = true;
@@ -91,7 +91,7 @@ test.describe('docs site', () => {
   });
 
   test('mounts the ExampleEmbed theme component', async ({ page }) => {
-    await page.goto('/tutorial/live-examples');
+    await page.goto('/tutorial/helloworld');
     await expect(embedFrame(page, 'Hello World example')).toHaveAttribute(
       'src',
       '/examples/helloworld/',
@@ -111,7 +111,7 @@ test.describe('docs site', () => {
   test('expands an ExampleEmbed in place without reloading its iframe', async ({
     page,
   }) => {
-    await page.goto('/tutorial/live-examples');
+    await page.goto('/tutorial/helloworld');
     await hydrated(page);
 
     const dialog = embed(page, 'Hello World example');

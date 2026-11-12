@@ -18,6 +18,7 @@
     "@tools/bootstrap": "catalog:workspace"
   },
   "devDependencies": {
+    "@tools/cli": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",

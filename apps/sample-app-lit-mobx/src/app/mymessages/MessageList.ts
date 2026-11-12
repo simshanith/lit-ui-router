@@ -13,7 +13,7 @@ export class MessageList extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<MessageListResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<MessageListResolves>) {
     super();
   }
 
@@ -28,13 +28,13 @@ export class MessageList extends LitElement {
   }));
 
   get folder() {
-    return this._uiViewProps.resolves.folder;
+    return this.uiViewProps.resolves.folder;
   }
 
   get messages() {
     return MessagesStore.loaded
       ? MessagesStore.byFolder(this.folder._id)
-      : (this._uiViewProps.resolves.messages ?? []);
+      : (this.uiViewProps.resolves.messages ?? []);
   }
 
   render() {

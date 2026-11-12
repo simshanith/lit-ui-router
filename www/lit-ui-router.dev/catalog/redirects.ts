@@ -67,6 +67,8 @@ const API_PAGES: Redirect[] = apiDirs.map(([name, dir]) => ({
 /** Moved docs URLs, in `_redirects` order: an exact static rule beats any dynamic one, and no two dynamic sources overlap. */
 export const REDIRECTS: readonly Redirect[] = [
   { from: '/about-this-site', to: '/site/', status: 301 },
+  { from: '/tutorial/live-examples', to: '/examples/', status: 301 },
+  { from: '/tutorial/live-examples.md', to: '/examples.md', status: 301 },
   {
     from: '/packages/eslint-plugin',
     to: '/packages/eslint-plugin-lit-ui-router',

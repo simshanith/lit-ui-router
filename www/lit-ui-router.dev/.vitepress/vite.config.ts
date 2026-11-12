@@ -14,6 +14,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 import { llmsPlugins } from './llms.ts';
 import { redirectsPlugin } from './redirects.ts';
+import { indexPagesPlugin } from './index-pages.ts';
 
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
@@ -56,7 +57,8 @@ function examplesIndexPlugin(): Plugin {
       server.middlewares.use((req, _res, next) => {
         const dir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
 
-        if (dir) req.url = `/examples/${dir[1]}/index.html`;
+        if (dir && EXAMPLE_NAMES.some((name) => name === dir[1]))
+          req.url = `/examples/${dir[1]}/index.html`;
         next();
       });
     },
@@ -268,6 +270,8 @@ function diffHighlighterPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
+    // Ahead of the llms plugin, which reads each page's source.
+    indexPagesPlugin(),
     ...llmsPlugins(),
     chunkSizePlugin(),
     releasePagesStylesheetPlugin(),

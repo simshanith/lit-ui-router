@@ -13,19 +13,19 @@ export class MessageList extends SignalWatcher(LitElement) {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<MessageListResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<MessageListResolves>) {
     super();
   }
 
   get folder() {
-    return this._uiViewProps.resolves.folder;
+    return this.uiViewProps.resolves.folder;
   }
 
   // A folder change builds a new instance, so only the store moves this signal.
   readonly messages = computed(() =>
     MessagesStore.loaded
       ? MessagesStore.byFolder(this.folder._id)
-      : (this._uiViewProps.resolves.messages ?? []),
+      : (this.uiViewProps.resolves.messages ?? []),
   );
 
   render() {

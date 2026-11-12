@@ -104,7 +104,7 @@ When navigating to `planets`, the router:
 
 ### Accessing Resolved Data
 
-Components receive resolved data through `_uiViewProps`:
+Components receive resolved data through `uiViewProps`:
 
 ```typescript
 import type { UIViewInjectedProps } from 'lit-ui-router';
@@ -113,16 +113,16 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 class PlanetListComponent extends LitElement {
   // The router constructs routed components with injected props.
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this._uiViewProps.resolves!.planets;
+    return this.uiViewProps.resolves!.planets;
   }
 
   render() {
@@ -151,7 +151,7 @@ class PlanetListComponent extends LitElement {
 
 Key points:
 
-- **`_uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
+- **`uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
 - **Constructor parameter**: The props are passed to the constructor when the component is created
 - **`resolves.planets`**: Access data using the resolve's token name
 
@@ -212,16 +212,16 @@ The detail view renders a larger orb plus a definition list of facts:
 @customElement('planet-detail')
 class PlanetDetailComponent extends LitElement {
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this._uiViewProps.resolves!.planet;
+    return this.uiViewProps.resolves!.planet;
   }
 
   render() {
@@ -264,14 +264,17 @@ Note the graceful fallback: if the URL contains an unknown id (say `/planets/42`
 
 ## Router Setup
 
-The router configuration is the same as Hello World, plus the [UI Router visualizer](https://github.com/ui-router/visualizer) so you can watch states and transitions as you click around:
+The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [UI Router visualizer](https://github.com/ui-router/visualizer), a diagram of the state tree and its transitions, loaded only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?visualizer" target="_self">running example</a>.
 
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+router.trace.enable('TRANSITION');
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });

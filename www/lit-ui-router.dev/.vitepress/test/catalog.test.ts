@@ -7,7 +7,7 @@ import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { DefaultTheme } from 'vitepress';
 
-import { companionGroups } from '../../catalog/navigation.ts';
+import { packageGroups } from '../../catalog/navigation.ts';
 import { PACKAGES } from '../../catalog/packages.ts';
 
 const site = join(import.meta.dirname, '../..');
@@ -58,8 +58,8 @@ describe('the package catalog', () => {
     assert.equal(new Set(cataloged).size, cataloged.length);
   });
 
-  it('puts the same packages under each Companion Packages role as the catalog', () => {
-    for (const { role, items } of companionGroups) {
+  it('puts the same packages under each Packages role as the catalog', () => {
+    for (const { role, items } of packageGroups) {
       assert.deepEqual(
         links(items).flatMap(packageOf).sort(),
         PACKAGES.filter((entry) => entry.role === role)

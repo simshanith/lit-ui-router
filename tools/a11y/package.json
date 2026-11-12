@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
+    "@tools/cli": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "jsonc-parser": "catalog:",

@@ -22,7 +22,7 @@ covers the one difference the bindings' callers see.
 
 ## In use
 
-- [Hello Solar System (MobX)](/tutorial/live-examples#hello-solar-system-mobx)
+- [Hello Solar System (MobX)](/examples/#hello-solar-system-mobx)
   runs the solar system tutorial on `lit-ui-router-mobx`.
 - The <a href="/app-mobx" target="_self">MobX sample app</a> keeps its client
   state in MobX stores through the same bindings.

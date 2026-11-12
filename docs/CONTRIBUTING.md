@@ -65,6 +65,21 @@ re-derive mise's environment before every command, for that command's starting
 directory. New sessions pick it up; `mise run agent_hook --remove` takes it out.
 The settings file is per checkout, so run it in each worktree you use.
 
+### JSON output from tools scripts
+
+A `tools/` CLI that emits machine-readable output takes one JSON destination,
+following [clig.dev](https://clig.dev/#output):
+
+- `--json-out <path>` writes the JSON document to `<path>`; `-` is stdout.
+- `--json` is shorthand for `--json-out -`.
+- With neither flag, a script that keeps a default file (a turbo task output or
+  a `.cache/` report) writes it there; any other script writes no JSON.
+- JSON on stdout is the only thing on stdout; the human report moves to stderr
+  or is dropped. JSON to a file leaves the human report on stdout.
+
+[`tools/cli/src/json-output.ts`](../tools/cli/src/json-output.ts) parses
+the flags and writes the document; new scripts use it.
+
 ## Running Tests
 
 ```bash
@@ -371,7 +386,7 @@ resolves the sample app's route table through `ui-router-server`.
   it times stale code.
 - Alternate the versions on one machine (A, B, A, B) and keep every run's
   report. Each run overwrites `apps/sample-app-routes/.cache/routes-bench.json`
-  unless given `--json <path>`; `BENCH_TIME_MS` sets tinybench's time budget
+  unless given `--json-out <path>`, or `--json` for stdout; `BENCH_TIME_MS` sets tinybench's time budget
   per task. A single run, or a CI run compared against a local one, is not
   evidence.
 - Judge a gap against how much the same task moves between runs, not against
@@ -410,6 +425,16 @@ discussion (see the tool README).
 - Ensure your changes pass local tests before submitting
 
 ### Automated review
+
+[Pullfrog](https://docs.pullfrog.com) is the first reviewer. Its GitHub App
+dispatches [`pullfrog.yml`](../.github/workflows/pullfrog.yml), which runs the
+review on a free OpenCode Zen model named in that workflow. The job signs in to
+OpenCode over OIDC, so no provider key is stored, and no other credential
+reaches it, so nothing metered can run. Which PRs it reviews is set in
+the Pullfrog console, and what it looks for in
+[`.github/pullfrog/review.md`](../.github/pullfrog/review.md). Comment
+`@pullfrog` on a PR to ask for a run; only collaborators can. It comments and
+cannot push or approve, and like CodeRabbit it is advisory.
 
 [CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
 the free OSS tier meters reviews, so they are worth spending deliberately. Label
