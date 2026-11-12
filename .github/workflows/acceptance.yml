@@ -338,7 +338,7 @@ jobs:
       - name: Restore lychee cache
         # Results from the last day skip the request; a fresh key saves each run's.
         if: ${{ steps.changes.outputs.links != 'false' }}
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: .lycheecache
           key: lychee-${{ github.run_id }}
@@ -355,7 +355,14 @@ jobs:
         # Goes red after a broken link, so a red job opens on the report.
         if: ${{ !cancelled() && steps.links.outcome != 'skipped' }}
         run: |
-          cat "$RUNNER_TEMP/links.md" >> "$GITHUB_STEP_SUMMARY"
+          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/links.md"
           test "$LINKS_OUTCOME" = success
         env:
           LINKS_OUTCOME: ${{ steps.links.outcome }}
+      - name: Save lychee cache
+        # A separate save: the combined action saves only from a green job.
+        if: ${{ !cancelled() && steps.links.outcome != 'skipped' }}
+        uses: actions/cache/save@v6
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}
