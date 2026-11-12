@@ -5,7 +5,8 @@
   "description": "The single release-it config the publishable packages share, including the function-valued changelog partials writer 9 requires",
   "type": "module",
   "exports": {
-    ".": "./src/release-it.ts"
+    ".": "./src/release-it.ts",
+    "./notes.ts": "./src/notes.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",

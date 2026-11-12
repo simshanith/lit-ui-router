@@ -3391,6 +3391,9 @@ importers:
       '@tools/lit-test-env':
         specifier: catalog:workspace
         version: link:../../tools/lit-test-env
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
