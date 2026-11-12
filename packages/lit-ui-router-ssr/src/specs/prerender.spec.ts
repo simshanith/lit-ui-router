@@ -268,10 +268,10 @@ describe('a path that begins with //', () => {
       }).getAttribute('href'),
     ).toBe('/en/next');
     expect(result.rules).toEqual([
-      { from: '//about', to: '/about', status: 308 },
-      { from: '//about/', to: '/about', status: 308 },
-      { from: '//en/intro', to: '/en/intro', status: 308 },
-      { from: '//en/intro/', to: '/en/intro', status: 308 },
+      { from: '//about', to: '/about', status: 302 },
+      { from: '//about/', to: '/about', status: 302 },
+      { from: '//en/intro', to: '/en/intro', status: 302 },
+      { from: '//en/intro/', to: '/en/intro', status: 302 },
     ]);
   });
 

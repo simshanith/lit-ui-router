@@ -103,7 +103,7 @@ describe('a request path that begins with //', () => {
           kind: 'redirect',
           mount,
           location: prefix + location,
-          status: 308,
+          status: 302,
         });
     });
 
@@ -148,13 +148,13 @@ describe('a request path that begins with //', () => {
       const handler = createFetchHandler(router(), { serveShell: noShell });
       const res = await handler(navigation(url));
 
-      assert.equal(res?.status, 308);
+      assert.equal(res?.status, 302);
       assert.equal(res?.headers.get('Location'), location);
     });
 
     it(`redirects through Connect, the query kept (${name})`, async () => {
       assert.deepEqual(await connect(createConnectMiddleware(router()), url), {
-        status: 308,
+        status: 302,
         location,
       });
     });
@@ -166,7 +166,7 @@ describe('a request path that begins with //', () => {
 
       const res = await app.request(navigation(url));
 
-      assert.equal(res.status, 308);
+      assert.equal(res.status, 302);
       assert.equal(res.headers.get('Location'), location);
     });
 
@@ -174,7 +174,7 @@ describe('a request path that begins with //', () => {
       assert.deepEqual(
         await connect(await previewMiddleware(router(), base), url),
         {
-          status: 308,
+          status: 302,
           location,
         },
       );
@@ -228,7 +228,7 @@ describe('a request path that begins with //', () => {
         kind: 'redirect',
         mount: '/',
         location: '/nope',
-        status: 308,
+        status: 302,
       });
     });
 
@@ -258,19 +258,19 @@ describe('a request path that begins with //', () => {
         kind: 'redirect',
         mount: '/',
         location: '/docs/guide',
-        status: 308,
+        status: 302,
       });
       assert.deepEqual(await resolve('/docs//guide'), {
         kind: 'redirect',
         mount: '/docs',
         location: '/docs/guide',
-        status: 308,
+        status: 302,
       });
       assert.deepEqual(await resolve('//docs//guide'), {
         kind: 'redirect',
         mount: '/',
         location: '/docs/guide',
-        status: 308,
+        status: 302,
       });
     });
 
@@ -296,7 +296,7 @@ describe('a request path that begins with //', () => {
       for (const path of ['/en/feed', '/en/badge.svg']) {
         const res = await handler(navigation(`/${path}`));
 
-        assert.equal(res?.status, 308);
+        assert.equal(res?.status, 302);
         assert.equal(res?.headers.get('Location'), path);
       }
 
@@ -322,7 +322,7 @@ describe('a listed path that begins with //', () => {
     const lines = ['', '/'].map((slash) => ({
       from: `${served}//about${slash}`,
       to: `${served}/about`,
-      status: 308,
+      status: 302,
     }));
 
     it(`writes rules lines that carry the base on both sides, and no page (${name})`, async () => {

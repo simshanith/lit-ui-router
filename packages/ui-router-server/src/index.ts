@@ -211,7 +211,7 @@ export type Verdict =
       location: string;
       /**
        * Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode},
-       * else 302; 308 for a respelling, of a trailing slash or of a leading `//`.
+       * else 302; 308 for a trailing-slash respelling.
        */
       status: number;
     }
@@ -293,7 +293,7 @@ export interface ServerRouter<
    *
    * A path that begins with `//` below its mount is answered from its
    * collapsed spelling, so no state matches it with an empty leading param:
-   * a `308` to that spelling, the redirect that spelling itself answers, or
+   * a `302` to that spelling, the redirect that spelling itself answers, or
    * `notFound` when it matches no route.
    */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
@@ -1110,7 +1110,7 @@ export function createServerRouter<
 
     return verdict.kind === 'redirect'
       ? { ...verdict, mount: mount.base }
-      : redirectVerdict(mount, collapsed, 308);
+      : redirectVerdict(mount, collapsed, 302);
   };
 
   const routing: ServerRouter = {

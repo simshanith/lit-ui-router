@@ -52,7 +52,7 @@ middleware call `next()`), so the host keeps its own fallthrough and 404 handlin
 owns but no state matches is that mount's 404, which `serveNotFound` can answer with the app's own
 404 page. A path that begins with `//` below its mount (`//about`, `/docs//about` in a `/docs`
 mount) is answered from its collapsed spelling, so no state matches it with an empty leading param:
-a `308` to that spelling, the redirect that spelling itself answers, or `notFound` when it matches
+a `302` to that spelling, the redirect that spelling itself answers, or `notFound` when it matches
 no route. A non-navigation request to a response state or a delegate is matched as written. See
 [when to use it](https://lit-ui-router.dev/packages/ui-router-server#when-to-use-it).
 
