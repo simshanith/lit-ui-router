@@ -40,6 +40,9 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+        env:
+          # Adds the agent-only tools in .config/mise/config.agent.toml
+          MISE_ENV: agent
       - name: Sign in to OpenCode
         id: opencode
         shell: bash

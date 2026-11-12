@@ -49,6 +49,7 @@ reviews:
     - '!pnpm-lock.yaml'
     - '!examples/*/package-lock.json'
     - '!.config/mise/mise.lock'
+    - '!.config/mise/mise.agent.lock'
     - '!**/dist/**'
 
   path_instructions:
