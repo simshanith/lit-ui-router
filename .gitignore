@@ -65,6 +65,9 @@ mise.*.local.toml
 # rumdl ships a self-ignoring .rumdl_cache/.gitignore; belt-and-braces for a pre-1.0 tool
 .rumdl_cache/
 
+# lychee's request cache (lychee.toml `cache`)
+/.lycheecache
+
 lit-ui-router-*.tgz
 **/.vitest/
 coverage

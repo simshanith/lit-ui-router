@@ -91,6 +91,8 @@ idiomatic_version_file_enable_tools = ["node"]
 # Markdown linter (markdownlint's rule set, in Rust). Check-only: oxfmt formats
 # .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
 "aqua:rvben/rumdl" = "0.2.74"
+# External link checker for the `acceptance (links)` job (lychee.toml).
+"aqua:lycheeverse/lychee" = "0.24.2"
 
 # snake_case names (bazel target convention); no colons in task names — mise
 # monorepo task addressing owns `:` (see the config_roots above).
@@ -157,6 +159,19 @@ run = "mise run shellcheck"
 # is CI/config plumbing, and markdown is content.
 description = "Lint tracked Markdown (README, docs, examples) with rumdl"
 run = "mise run rumdl check"
+
+[tasks.check_links]
+# External URLs only, for the `acceptance (links)` job; settings in lychee.toml.
+# Package changelogs are left out: release-it writes them, full of commit links.
+description = "Check external URLs in READMEs, manifests and docs Markdown with lychee"
+usage = '''
+flag "--output <path>" help="Also write lychee's Markdown report to this file"
+'''
+# --root-dir resolves the docs pages' root-relative links, which scheme then skips.
+run = '''
+git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' |
+  lychee --root-dir "{{config_root}}/www/lit-ui-router.dev" ${usage_output:+--output "$usage_output"} --files-from -
+'''
 
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers

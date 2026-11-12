@@ -12,6 +12,9 @@ on:
   pull_request:
   # Runs a suite against any ref; ci-main/ branches don't run it.
   workflow_dispatch:
+  # Weekly, for `links` only: external URLs break without a commit here.
+  schedule:
+    - cron: '41 7 * * 1'
 
 # Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
 env:
@@ -28,6 +31,7 @@ jobs:
     # tinybench timings for ui-router-server (`bench`), rendered as the job
     # summary. No thresholds, so only a crashing bench turns it red.
     name: acceptance (bench)
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
@@ -108,6 +112,7 @@ jobs:
     # The release-diffs worker's npm diff against `npm diff` (`test:npm-diff`),
     # byte for byte, both reading the npm registry.
     name: acceptance (npm-diff)
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
@@ -183,6 +188,7 @@ jobs:
     # axe-core over the docs pages and sample-app mounts (`test:e2e:a11y`),
     # served by `wrangler dev`.
     name: acceptance (a11y)
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     permissions:
@@ -294,3 +300,62 @@ jobs:
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
+
+  links:
+    # lychee over the external URLs in READMEs, manifests and the docs pages'
+    # Markdown (`mise run check_links`, lychee.toml), reported as the job summary.
+    # Other servers decide the verdict, so a red run can be a timeout.
+    name: acceptance (links)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # paths-filter lists a PR's files through the API.
+      pull-requests: read
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Filter changed paths
+        # PRs check only when a linking file changed; other events always check.
+        id: changes
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            links:
+              - '**/*.md'
+              - '**/package.json'
+              - lychee.toml
+              - .github/workflows/acceptance.yml
+      - name: Setup mise
+        if: ${{ steps.changes.outputs.links != 'false' }}
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
+      - name: Restore lychee cache
+        # Results from the last day skip the request; a fresh key saves each run's.
+        if: ${{ steps.changes.outputs.links != 'false' }}
+        uses: actions/cache@v6
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}
+          restore-keys: lychee-
+      - name: Links
+        id: links
+        if: ${{ steps.changes.outputs.links != 'false' }}
+        continue-on-error: true
+        run: mise run check_links --output "$RUNNER_TEMP/links.md"
+        env:
+          # github.com URLs go through the API, which rate-limits anonymous calls.
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Links summary
+        # Goes red after a broken link, so a red job opens on the report.
+        if: ${{ !cancelled() && steps.links.outcome != 'skipped' }}
+        run: |
+          cat "$RUNNER_TEMP/links.md" >> "$GITHUB_STEP_SUMMARY"
+          test "$LINKS_OUTCOME" = success
+        env:
+          LINKS_OUTCOME: ${{ steps.links.outcome }}
