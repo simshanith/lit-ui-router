@@ -15,8 +15,14 @@ import {
   MemoryLocationConfig,
   MemoryLocationService,
 } from '@uirouter/core';
-import type { LocationPlugin, UIRouter } from '@uirouter/core';
+import type {
+  LocationPlugin,
+  RawParams,
+  UIRouter,
+  UrlMatcher,
+} from '@uirouter/core';
 
+import { onOrigin } from './trailing-slash.ts';
 import { applyUrlConfig } from './url-config.ts';
 import type { RouterUrlConfig } from './url-config.ts';
 
@@ -43,6 +49,38 @@ class ServerLocationService extends MemoryLocationService {
   }
 }
 
+// Every href core builds goes through `urlRouter.href`, which prefixes the base and origin to the matcher's path.
+const keepHrefsOnOrigin = (uiRouter: UIRouter): (() => void) => {
+  // oxlint-disable-next-line typescript/no-deprecated -- core's StateService.href calls router.urlRouter.href, and UrlService has no href
+  const { urlRouter } = uiRouter;
+  const href = urlRouter.href.bind(urlRouter);
+
+  urlRouter.href = (matcher, params, options) => {
+    // A fragment cannot name a host, so a hash client's href stays as core formats it.
+    if (!uiRouter.urlService.config.html5Mode())
+      return href(matcher, params, options);
+    // SAFETY: Object.create(matcher) is a UrlMatcher by prototype.
+    const onThisOrigin = Object.create(matcher) as UrlMatcher;
+
+    const format = (values?: RawParams): string | null => {
+      // SAFETY: core's format returns null for invalid params, though its type says string.
+      const formatted = matcher.format(values) as string | null;
+
+      return formatted === null ? null : onOrigin(formatted);
+    };
+
+    // SAFETY: as above, core's own format returns null where its type says string.
+    onThisOrigin.format = format as UrlMatcher['format'];
+
+    return href(onThisOrigin, params, options);
+  };
+
+  return () => {
+    // SAFETY: the own property shadows the prototype's href; deleting it restores core's.
+    delete (urlRouter as { href?: unknown }).href;
+  };
+};
+
 /** Options for {@link serverLocationPlugin | `serverLocationPlugin`}. */
 export interface ServerLocationPluginOptions {
   /**
@@ -67,6 +105,11 @@ export interface ServerLocationPluginOptions {
  * default, to match `pushStateLocationPlugin` or the Navigation API plugin,
  * and fragments under `{ html5Mode: false }`, to match `hashLocationPlugin`.
  *
+ * A path href starts with one slash. A url that begins with a param formats
+ * `//…` when that param is empty, which a browser reads as another host, so
+ * the plugin collapses the leading slashes of the path before the base and
+ * origin are added. A router in the browser formats `//…` for the same params.
+ *
  * @param uiRouter - the router the plugin is installed on
  * @param options - the url shape the client uses
  * @returns the installed location plugin
@@ -87,12 +130,22 @@ export function serverLocationPlugin(
   uiRouter: UIRouter,
   options?: ServerLocationPluginOptions,
 ): LocationPlugin {
-  return locationPluginFactory(
+  const plugin = locationPluginFactory(
     'server.memoryLocation',
     options?.html5Mode ?? true,
     ServerLocationService,
     ServerLocationConfig,
   )(uiRouter);
+
+  const restoreHref = keepHrefsOnOrigin(uiRouter);
+  const dispose = plugin.dispose.bind(plugin);
+
+  plugin.dispose = (router) => {
+    restoreHref();
+    dispose(router);
+  };
+
+  return plugin;
 }
 
 /** Options for {@link installServerLocation | `installServerLocation`}. */

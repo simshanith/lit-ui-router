@@ -126,6 +126,33 @@ describe('renderToString', () => {
     expect(payload).toBeUndefined();
   });
 
+  it('renders a link whose leading param is empty on this origin, at / and under a base', async () => {
+    for (const [baseHref, href] of [
+      [undefined, '/evil.example'],
+      ['/app/', '/app/evil.example'],
+    ] as const) {
+      const router = new UIRouterLit();
+      installServerLocation(router, { baseHref });
+      router.stateRegistry.register({ name: 'home', url: '/' });
+      // ':lang' formats an empty segment, so core formats this url as '//evil.example'.
+      router.stateRegistry.register({ name: 'new', url: '/:lang/:slug' });
+      await settle(router, '/');
+
+      const { html: markup } = renderToString(
+        html`<a href=${srefHref('new', { lang: '', slug: 'evil.example' })}
+          >out</a
+        >`,
+        { router },
+      );
+
+      expect(
+        getByRole(parseHtml(markup).body, 'link', { name: 'out' }).getAttribute(
+          'href',
+        ),
+      ).toBe(href);
+    }
+  });
+
   it('answers a context-request at the root during the render, and removes the provider after', async () => {
     const root = new EventTarget();
     const router = await settled('/');
