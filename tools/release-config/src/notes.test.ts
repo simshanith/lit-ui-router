@@ -304,6 +304,23 @@ describe('codeMentions', () => {
 
     assert.equal(codeMentions(text), text);
   });
+
+  it('leaves fenced code blocks alone', () => {
+    const fenced = [
+      'the tag moves:',
+      '```ts',
+      '// @example usage',
+      '```',
+      '  ~~~',
+      '  @state() open',
+      '  ~~~',
+    ].join('\n');
+
+    assert.equal(
+      codeMentions(`see @example\n${fenced}\nand @state`),
+      `see \`@example\`\n${fenced}\nand \`@state\``,
+    );
+  });
 });
 
 describe('release notes mentions', () => {

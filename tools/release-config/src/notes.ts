@@ -36,9 +36,9 @@ const PEER_SECTION = 'Peer Dependencies';
 // A squash body lists the branch's commits as `* type(scope): subject`.
 const SUB_COMMIT = /^\s*[*-]\s+[a-z]+(?:\([^)]*\))?!?: \S/;
 
-// Links, code spans and urls stay as they are; any other `@name` is code, never a mention.
+// Links, fenced blocks, code spans and urls stay as they are; any other `@name` is code, never a mention.
 const MENTION_OR_KEPT =
-  /\[[^\]]*\]\([^)]*\)|`[^`\n]*`|https?:\/\/\S+|\B@[a-z0-9][\w-]*(?:\/[\w.-]+)?/gi;
+  /\[[^\]]*\]\([^)]*\)|^[ \t]*(?=(`{3,}|~{3,}))\1[\s\S]*?^[ \t]*\1[ \t]*\r?$|`[^`\n]*`|https?:\/\/\S+|\B@[a-z0-9][\w-]*(?:\/[\w.-]+)?/gim;
 
 /** A commit as the parser hands it to the preset's transform. */
 interface ParsedCommit extends RevertableCommit {
