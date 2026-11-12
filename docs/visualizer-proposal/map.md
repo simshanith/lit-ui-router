@@ -147,6 +147,25 @@ The constraint solver `libavoid` uses for nudging, crossing minimisation,
 labels on lines and path morphing are left out. New edges fade in, and not
 under reduced motion.
 
+### WebAssembly
+
+The router is TypeScript only. A spike built the same search in dependency-free
+Rust compiled to WebAssembly and compared the two on identical routes:
+
+|                                      | TypeScript | WebAssembly                  |
+| ------------------------------------ | ---------- | ---------------------------- |
+| Size, gzip                           | 2.2 kB     | 3.9 kB as a file, 4.9 inline |
+| One edge, 14 boxes (Chromium)        | 0.13 ms    | 0.10 ms                      |
+| Six edges, 60 boxes (Chromium)       | 3.8 ms     | 2.4 ms                       |
+| Cold first call, six edges, 60 boxes | 9.7 ms     | 6.2 ms                       |
+
+Both are well inside a frame. Under `script-src 'self'` every way of loading a
+module fails in Chromium and WebKit; WebAssembly needs `'wasm-unsafe-eval'`.
+The panel runs inside host apps, so a TypeScript router would have to ship as
+the fallback either way. A mode that routes every observed edge at once, a few
+hundred per resize, is where a WebAssembly router in a worker would start to
+pay.
+
 ## Accessibility
 
 Containment maps onto a tree. Each box's header is a `treeitem` that owns,
