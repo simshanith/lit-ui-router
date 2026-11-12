@@ -4,30 +4,40 @@ import { describe, it } from 'node:test';
 import { Hono } from 'hono';
 
 import { createConnectMiddleware } from '../src/connect.ts';
-import type { ConnectMiddleware, ConnectNext } from '../src/connect.ts';
 import { createFetchHandler } from '../src/fetch.ts';
 import { serverRouterHono } from '../src/hono.ts';
 import { createServerRouter } from '../src/index.ts';
 import type { MountConfig, ServerRouter, Verdict } from '../src/index.ts';
 import { prerender, redirectPages } from '../src/prerender.ts';
-import type { FileWriter } from '../src/prerender.ts';
-import { serverRouterPlugin } from '../src/vite.ts';
+import {
+  connect,
+  memory,
+  navigation,
+  noShell,
+  previewMiddleware,
+  STRATEGIES,
+} from './redirect-fixtures.ts';
+import type { Strategy } from './redirect-fixtures.ts';
 
-const STRATEGIES = ['matcher', 'simulate'] as const;
-
-// ':lang' matches an empty segment, so the target formats with a leading '//'.
-const site = (strategy: (typeof STRATEGIES)[number]) =>
+// 'bare' names an empty ':lang', so its target formats with a leading '//'.
+const site = (strategy: Strategy) =>
   ({
     routes: [
       { name: 'old', url: '/:lang/docs/:slug', redirectTo: 'new' },
+      {
+        name: 'bare',
+        url: '/bare',
+        redirectTo: {
+          state: 'new',
+          params: { lang: '', slug: 'evil.example' },
+        },
+      },
       { name: 'new', url: '/:lang/:slug' },
     ],
     strategy,
   }) satisfies MountConfig;
 
-const ORIGIN = 'https://site.test';
-
-const HOSTILE = '//docs/evil.example';
+const HOSTILE = '/bare';
 
 // Each strategy at base '/' and under '/app/': the router, the hostile url and the Location it must answer.
 const CASES = STRATEGIES.flatMap((strategy) => [
@@ -55,46 +65,8 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
-const navigation = (url: string) =>
-  new Request(`${ORIGIN}${url}`, { headers: { accept: 'text/html' } });
-
-const noShell = () => {
-  throw new Error('serveShell must not be called');
-};
-
-// Runs Connect middleware once; answers the redirect it wrote.
-const connect = (middleware: ConnectMiddleware, url: string) =>
-  new Promise<{ status?: number; location?: string; error?: unknown }>(
-    (resolve) => {
-      const res = {
-        writeHead: (status: number, headers?: { Location?: string }) =>
-          resolve({ status, location: headers?.Location }),
-        setHeader: () => {},
-        end: () => {},
-      };
-
-      const next: ConnectNext = (error) => resolve({ error });
-
-      middleware(
-        { url, method: 'GET', headers: { accept: 'text/html' } },
-        res,
-        next,
-      );
-    },
-  );
-
-const memory = () => {
-  const files = new Map<string, string>();
-
-  const write: FileWriter = (file, body) => {
-    files.set(file, body);
-  };
-
-  return { files, write };
-};
-
 // A path on this origin: one leading slash, never a second.
-const SAME_ORIGIN = /^\/(?!\/)/;
+const SAME_ORIGIN = /^\/(?![/\\])/;
 
 describe("a redirect verdict's location", () => {
   for (const strategy of STRATEGIES) {
@@ -144,22 +116,10 @@ describe("a redirect verdict's location", () => {
     });
 
     it(`stays on this origin through vite preview (${name})`, async () => {
-      const plugin = serverRouterPlugin(router());
-      const installed: ConnectMiddleware[] = [];
-
-      plugin.configResolved({
-        root: '/nonexistent',
-        base: name.endsWith('/app/') ? '/app/' : '/',
-        command: 'serve',
-        mode: 'production',
-        build: { outDir: 'dist', ssr: false },
-        logger: { info: () => {} },
-      });
-      plugin.configurePreviewServer({
-        middlewares: { use: (mw: ConnectMiddleware) => installed.push(mw) },
-      });
-      const [middleware] = installed;
-      assert.ok(middleware);
+      const middleware = await previewMiddleware(
+        router(),
+        name.endsWith('/app/') ? '/app/' : '/',
+      );
 
       assert.deepEqual(await connect(middleware, url), {
         status: 302,
@@ -194,9 +154,6 @@ describe("a redirect verdict's location", () => {
       assert.doesNotMatch(files.get('dist/_redirects') ?? '', / \/\//);
     });
 
-    // Under a base, redirectPages rejects the listed '//…' path itself as outside the base.
-    if (base !== '/') continue;
-
     it(`writes no redirect page whose target starts with '//' (${name})`, async () => {
       const { files, write } = memory();
 
@@ -214,7 +171,7 @@ describe("a redirect verdict's location", () => {
       assert.ok(pages.length > 0);
 
       for (const page of pages) {
-        assert.match(page, /url=\/evil\.example"/);
+        assert.match(page, new RegExp(`url=${base}evil\\.example"`));
         assert.doesNotMatch(page, /(url=|href=")\/\//);
         assert.doesNotMatch(page, /"\/\/evil\.example/);
       }

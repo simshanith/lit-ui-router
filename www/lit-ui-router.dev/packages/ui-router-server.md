@@ -350,6 +350,13 @@ type Verdict =
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
 
+A path that begins with `//` below its mount (`//about`, `/docs//about` in a
+`/docs` mount) is answered from its collapsed spelling, so no state matches it
+with an empty leading param: a `302` to that spelling, the redirect that
+spelling itself answers, or `notFound` when it matches no route. A
+non-navigation request to a response state or a delegate is matched as
+written.
+
 ## Adapters
 
 Four entry points turn verdicts into HTTP. Each is a thin wrapper — all the

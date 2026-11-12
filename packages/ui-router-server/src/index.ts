@@ -213,7 +213,10 @@ export type Verdict =
        * redirects there.
        */
       location: string;
-      /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
+      /**
+       * Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode},
+       * else 302; 308 for a trailing-slash respelling.
+       */
       status: number;
     }
   /**
@@ -291,6 +294,11 @@ export interface ServerRouter<
    * (URL, Location). Under a {@link ServerRouter.base | base}, the pathname
    * lies under it, with the base taken off, as the adapters hand it over;
    * verdict mounts and redirect locations come back the same way.
+   *
+   * A path that begins with `//` below its mount is answered from its
+   * collapsed spelling, so no state matches it with an empty leading param:
+   * a `302` to that spelling, the redirect that spelling itself answers, or
+   * `notFound` when it matches no route.
    */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
   /**
@@ -1072,22 +1080,40 @@ export function createServerRouter<
       .then((simulate) => prewarmPools(simulate, mounts))
       .catch(() => {});
 
+  const verdictFor = async (pathname: string): Promise<Verdict> => {
+    for (const mount of mounts) {
+      const subpath = subpathIn(mount.base, pathname);
+
+      if (subpath === null) continue;
+
+      const collapsed = onOrigin(subpath);
+
+      if (collapsed !== subpath) return collapsedVerdict(mount, collapsed);
+
+      if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
+
+      return simulateVerdict(await loadSimulate(), mount, subpath);
+    }
+
+    return { kind: 'notFound' };
+  };
+
+  // A subpath that begins with '//' is answered from its collapsed spelling, so no state matches it with an empty leading param.
+  const collapsedVerdict = async (
+    mount: Mount,
+    collapsed: string,
+  ): Promise<Verdict> => {
+    const verdict = await verdictFor(join(mount.base, collapsed));
+
+    if (verdict.kind === 'notFound') return notFoundVerdict(mount);
+
+    return verdict.kind === 'redirect'
+      ? { ...verdict, mount: mount.base }
+      : redirectVerdict(mount, collapsed, 302);
+  };
+
   const routing: ServerRouter = {
-    async resolve(pathnameOrUrl) {
-      const pathname = pathnameOf(pathnameOrUrl);
-
-      for (const mount of mounts) {
-        const subpath = subpathIn(mount.base, pathname);
-
-        if (subpath === null) continue;
-
-        if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
-
-        return simulateVerdict(await loadSimulate(), mount, subpath);
-      }
-
-      return { kind: 'notFound' };
-    },
+    resolve: (pathnameOrUrl) => verdictFor(pathnameOf(pathnameOrUrl)),
   };
 
   const router: ServerRouter =

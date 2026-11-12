@@ -359,6 +359,10 @@ const respelledLines = async (
     : [];
 };
 
+// A generated line's `from` is a listed path or its other spelling, so it takes the base even where it begins with '//'.
+const fromUnderBase = (base: string, from: string): string =>
+  from.startsWith('//') ? base.slice(0, -1) + from : withBase(base, from);
+
 const lineKey = ({ from, to, status }: RedirectLine): string =>
   `${from} ${to} ${status}`;
 
@@ -738,7 +742,7 @@ export async function prerender(
     ...extraRules,
     ...uniqueLines(generated).map((line) => ({
       ...line,
-      from: withBase(base, line.from),
+      from: fromUnderBase(base, line.from),
       to: withBase(base, line.to),
     })),
   ];

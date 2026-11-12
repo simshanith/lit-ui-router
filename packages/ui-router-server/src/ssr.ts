@@ -23,6 +23,8 @@ import type {
   RouteDeclaration,
 } from './index.ts';
 
+import { onOrigin } from './trailing-slash.ts';
+
 export { dehydrate } from './dehydrate.ts';
 
 export type {
@@ -237,7 +239,7 @@ export const settle = (
 
 /** Where a redirected transition landed, as {@link redirectedTo | `redirectedTo`} reports it. */
 export interface SettledRedirect {
-  /** The url it landed on, relative to the mount, query included. */
+  /** The url it landed on, relative to the mount, query included; a leading `//` an empty param formats collapses to one `/`. */
   url: string;
   /** The redirecting state's `redirectStatusCode`, `302` when it declares none. */
   status: RedirectStatusCode;
@@ -293,7 +295,7 @@ export const redirectedTo = (
     return undefined;
 
   return {
-    url: router.urlService.url(),
+    url: onOrigin(router.urlService.url()),
     status: transition.originalTransition().to().redirectStatusCode ?? 302,
   };
 };
