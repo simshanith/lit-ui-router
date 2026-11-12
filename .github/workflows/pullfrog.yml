@@ -24,7 +24,7 @@ permissions: {}
 jobs:
   pullfrog:
     runs-on: ubuntu-26.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       # OIDC: the OpenCode sign-in, and the action's own short-lived GitHub token
       id-token: write
@@ -72,7 +72,7 @@ jobs:
           prompt: ${{ inputs.prompt }}
           model: opencode/deepseek-v4.1-flash-free
           push: disabled
-          timeout: 20m
+          timeout: 30m
         env:
           # The only provider credential; the OpenCode workspace decides what it can run
           OPENCODE_API_KEY: ${{ steps.opencode.outputs.token }}
