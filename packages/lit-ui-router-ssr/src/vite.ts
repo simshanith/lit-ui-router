@@ -78,19 +78,18 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
 const APP_MARKER = '<!--app-->';
 
 /** The default `document`: `shellHtml` with its first {@link APP_MARKER} replaced by the body. */
-const shellDocument = (shellHtml: string): ((body: string) => string) => {
-  const at = shellHtml.indexOf(APP_MARKER);
+const shellDocument =
+  (shellHtml: string): ((body: string) => string) =>
+  (body) => {
+    const at = shellHtml.indexOf(APP_MARKER);
 
-  if (at === -1)
-    throw new Error(
-      `definePrerender: the built index.html has no ${APP_MARKER} marker; put ${APP_MARKER} where each page's body goes, or return a \`document\` hook`,
-    );
+    if (at === -1)
+      throw new Error(
+        `definePrerender: the built index.html has no ${APP_MARKER} marker; put ${APP_MARKER} where each page's body goes, or return a \`document\` hook`,
+      );
 
-  const before = shellHtml.slice(0, at);
-  const after = shellHtml.slice(at + APP_MARKER.length);
-
-  return (body) => `${before}${body}${after}`;
-};
+    return `${shellHtml.slice(0, at)}${body}${shellHtml.slice(at + APP_MARKER.length)}`;
+  };
 
 /**
  * Turns a callback that returns this package's prerender options into a
@@ -101,13 +100,14 @@ const shellDocument = (shellHtml: string): ((body: string) => string) => {
  * Without a `document` hook in the options, each page's body goes into
  * `shellHtml`, the built `index.html`, in place of its first `<!--app-->`
  * marker, so the shell's `<head>` and client script carry over. A shell with
- * no marker fails the build. A `document` the script returns wins, and can
- * fill any other marker.
+ * no marker fails the build at the first page written into it; a run that
+ * writes none, such as one of redirects only, needs no marker. A `document`
+ * the script returns wins, and can fill any other marker.
  *
  * @param script - returns the prerender options; handed the build's values
  * @returns the default export for the prerender script, whose result's
  * pages carry their `payload` report
- * @throws from the build step when no `document` is returned and `shellHtml` has no `<!--app-->` marker
+ * @throws from the build step, at the first page, when no `document` is returned and `shellHtml` has no `<!--app-->` marker
  *
  * @example
  * ```ts
