@@ -17,12 +17,20 @@ const stars: Star[] = [
 export const delay = <T>(ms: number, value: T): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
-// The examples/hellogalaxy tree, with stub resolves; blackhole and admin.** are demo-only.
-export const demoStates = (): StateDeclaration[] => [
+// The @uirouter/dsr and @uirouter/sticky-states properties; the demo loads neither plugin, so they are inert.
+interface DemoDeclaration extends StateDeclaration {
+  dsr?: boolean;
+  sticky?: boolean;
+}
+
+// The examples/hellogalaxy tree, with stub resolves; blackhole, mission and admin.** are demo-only.
+export const demoStates = (): DemoDeclaration[] => [
   { name: 'galaxy', url: '/galaxy', redirectTo: 'galaxy.stars' },
   {
     name: 'galaxy.stars',
     url: '/stars',
+    dsr: true,
+    sticky: true,
     resolve: [{ token: 'stars', resolveFn: () => delay(180, stars) }],
   },
   {
@@ -58,6 +66,8 @@ export const demoStates = (): StateDeclaration[] => [
       },
     ],
   },
+  { name: 'mission', url: '/mission', abstract: true },
+  { name: 'mission.log', url: '/log' },
   {
     name: 'admin.**',
     url: '/admin',

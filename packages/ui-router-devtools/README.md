@@ -2,6 +2,8 @@
 
 Devtools for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: a recorder of versioned, JSON-safe transition events, a Lit panel that shows the state tree and the transition log, and reporters for the browser's Performance panel and console.
 
+The outline marks what a declaration says about a state: a box in place of the ring for `abstract`, a dot and arrow for `redirectTo` (drawn on the rail into a default child), a circled H for `dsr` or `deepStateRedirect` from `@uirouter/dsr`, and a box split by a dashed line for `sticky` from `@uirouter/sticky-states`. The inspector names each in words.
+
 The package is private and unpublished, so it is workspace-only for now. The design, the screenshots and the open decisions are in the [router visualizer proposal](../../docs/visualizer-proposal/README.md) and its [devtools scope](../../docs/visualizer-proposal/devtools.md).
 
 ## Entry points
@@ -39,7 +41,8 @@ Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a para
 The demo fakes what a real app would supply:
 
 - States have no components; the page renders a stub line on success.
-- Resolves are `setTimeout` stubs (40 to 200 ms). `galaxy.blackhole` (a rejecting resolve) and `admin.**` (a lazy future state) exist only here.
+- Resolves are `setTimeout` stubs (40 to 200 ms). `galaxy.blackhole` (a rejecting resolve), `mission` (an abstract state) and `admin.**` (a lazy future state) exist only here.
+- `galaxy.stars` declares `dsr` and `sticky` to show their marks; neither plugin is loaded, so the properties do nothing.
 - Inspector subsections for hooks and views are not built.
 
 Two scripts work against the running demo: `pnpm shots` writes the proposal screenshots into `docs/visualizer-proposal/screenshots/` and runs axe on the open panel (`--port`, `--out`, `--only <prefix>`, `--scale`), and `pnpm size` reports min and gzip sizes per entry with `lit` and `@uirouter/core` external.

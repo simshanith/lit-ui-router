@@ -3,7 +3,14 @@ import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { Tx } from '../fold.ts';
 import type { LocationInfo } from '../schema.ts';
 import { renderOptions, renderParams, renderTiming } from './log.ts';
-import { roleGlyph, roleLabel, statusGlyph, statusLabel } from './glyphs.ts';
+import {
+  markGlyph,
+  roleGlyph,
+  roleLabel,
+  stateMarks,
+  statusGlyph,
+  statusLabel,
+} from './glyphs.ts';
 
 const sub = (n: string, title: string) =>
   html`<h3 class="section sub">
@@ -48,7 +55,7 @@ export const renderStateInspector = (
 
   return html`<div class="inspector">
     <p class="insp-title">
-      ${roleGlyph(role)}<span class="name">${state.name}</span>
+      ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span>
       ${
         canGo
           ? html`<button
@@ -65,6 +72,17 @@ export const renderStateInspector = (
       <dd>${roleLabel[role]}</dd>
       <dt>URL</dt>
       <dd class="literal">${state.url ?? '—'}</dd>
+      ${
+        state.abstract
+          ? html`<dt>Abstract</dt>
+              <dd>never a target itself</dd>`
+          : nothing
+      }
+      ${stateMarks(state, states).map(
+        ({ mark, term, text }) =>
+          html`<dt>${term}</dt>
+            <dd class="marked">${markGlyph(mark)}<span>${text}</span></dd>`,
+      )}
     </dl>
     ${sub('3.1', 'Params')}
     ${

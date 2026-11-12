@@ -4,11 +4,16 @@ import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { StateInfo } from '../schema.ts';
 import { segment } from '../notation.ts';
 import {
+  describeState,
+  markGlyph,
+  markLabel,
   pivotGlyph,
   pivotLabel,
   roleGlyph,
   roleLabel,
+  stateMarks,
   type Role,
+  type StateMark,
 } from './glyphs.ts';
 
 const INDENT = 24;
@@ -36,10 +41,24 @@ const RANK: Record<Role, number> = {
 
 const rowHeight = () => (matchMedia('(pointer: coarse)').matches ? 32 : 24);
 
-const rails = (paths: { role: Role; d: string }[]) =>
+interface Segment {
+  role: Role;
+  d: string;
+  // The rail into a default child starts at a dot and ends in an arrowhead.
+  initial?: string;
+}
+
+const rails = (paths: Segment[]) =>
   paths.map(
     ({ role, d }) =>
       svg`${role === 'exiting' ? svg`<path class="knockout" d=${d} />` : nothing}<path class="rail role-${role}" d=${d} />`,
+  );
+
+const initials = (paths: Segment[]) =>
+  paths.map(({ role, initial }) =>
+    initial
+      ? svg`<path class="rail-initial role-${role}" d=${initial} />`
+      : nothing,
   );
 
 const renderRails = (host: UIRouterDevtools, rows: Row[]) => {
@@ -48,16 +67,22 @@ const renderRails = (host: UIRouterDevtools, rows: Row[]) => {
   const gx = (depth: number) => 12 + (depth - 1) * INDENT + 6;
 
   const segments = rows
-    .flatMap((row, i) => {
+    .flatMap((row, i): Segment[] => {
       if (row.depth <= 1) return [];
 
       const pi = index.get(row.state.parent ?? '') ?? 0;
       const px = gx(row.depth - 1);
+      const y = i * h + h / 2;
+      const end = gx(row.depth) - GLYPH_R;
 
       return [
         {
           role: host._role(row.state),
-          d: `M${px} ${pi * h + h / 2 + GLYPH_R}V${i * h + h / 2}H${gx(row.depth) - GLYPH_R}`,
+          d: `M${px} ${pi * h + h / 2 + GLYPH_R}V${y}H${end}`,
+          initial:
+            rows[pi]?.state.redirectTo === row.state.name
+              ? `M${px - 3} ${y}a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM${end - 5} ${y - 3.5}L${end} ${y}L${end - 5} ${y + 3.5}z`
+              : undefined,
         },
       ];
     })
@@ -69,7 +94,7 @@ const renderRails = (host: UIRouterDevtools, rows: Row[]) => {
     width=${gx(Math.max(1, ...rows.map((r) => r.depth))) + 8}
     height=${rows.length * h}
   >
-    ${rails(segments)}
+    ${rails(segments)}${initials(segments)}
   </svg>`;
 };
 
@@ -141,18 +166,42 @@ const onTreeKey = (
   event.preventDefault();
 };
 
-// The row's slots: a 12px glyph, the name, then the trailing tag. Weight and slant follow facts, never the previewed role.
-const label = (state: StateInfo, role: Role, pivot: boolean) =>
-  html`${pivot ? pivotGlyph : roleGlyph(role)}<span class="name"
+// The row's slots: a 12px glyph, the name, then the trailing marks and tag. Weight and slant follow facts, never the previewed role.
+const label = (
+  state: StateInfo,
+  role: Role,
+  pivot: boolean,
+  marks: readonly StateMark[],
+) =>
+  html`${pivot ? pivotGlyph : roleGlyph(role, state.abstract)}<span class="name"
       >${segment(state.name)}</span
-    >${state.future ? html`<span class="tag">Lazy</span>` : nothing}`;
+    >${
+      marks.length
+        ? html`<span class="marks" aria-hidden="true"
+            >${marks.map(
+              (mark) =>
+                html`<span class="mark" title=${markLabel(mark)}
+                  >${markGlyph(mark.mark)}</span
+                >`,
+            )}</span
+          >`
+        : nothing
+    }${state.future ? html`<span class="tag">Lazy</span>` : nothing}`;
 
 const facts = (state: StateInfo, current: string) =>
   `${state.name === current ? 'current' : ''} ${state.future ? 'future' : ''}`;
 
+const words = (
+  state: StateInfo,
+  role: Role,
+  pivot: boolean,
+  marks: readonly StateMark[],
+) => describeState(pivot ? pivotLabel : roleLabel[role], state, marks);
+
 export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
   const rows = host._rows();
   const pivot = host._focusTx?.retained.at(-1);
+  const { states } = host._model;
   const current = host._model.current.name;
 
   const focus =
@@ -171,6 +220,7 @@ export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
       const { state } = row;
       const role = host._role(state);
       const isPivot = role === 'retained' && state.name === pivot;
+      const marks = stateMarks(state, states);
       const selected = host._selectedState === state.name;
 
       /* oxlint-disable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr -- the tree's keydown handler moves focus and selects for every treeitem; aria-description is a global attribute in ARIA 1.3 */
@@ -184,12 +234,12 @@ export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
         aria-expanded=${row.hasChildren ? (host._collapsed.has(state.name) ? 'false' : 'true') : nothing}
         aria-current=${state.name === current ? 'true' : nothing}
         aria-selected=${selected}
-        aria-description=${isPivot ? pivotLabel : roleLabel[role]}
+        aria-description=${words(state, role, isPivot, marks)}
         style="--depth:${row.depth}"
         @click=${() => host._selectState(state.name)}
         @focus=${() => (host._focusState = state.name)}
       >
-        ${label(state, role, isPivot)}
+        ${label(state, role, isPivot, marks)}
       </div>`;
       /* oxlint-enable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr */
     })}
@@ -293,6 +343,7 @@ export const renderMap = (
         ></span>`;
       const role = host._role(state);
       const isPivot = role === 'retained' && state.name === pivot;
+      const marks = stateMarks(state, host._model.states);
       const selected = host._selectedState === state.name;
 
       return html`<button
@@ -300,10 +351,10 @@ export const renderMap = (
         data-name=${state.name}
         style="inset-inline-start:${x - 6}px;top:${y - 12}px"
         aria-pressed=${selected}
-        aria-label="${state.name}, ${isPivot ? pivotLabel : roleLabel[role]}"
+        aria-label="${state.name}, ${words(state, role, isPivot, marks)}"
         @click=${() => host._selectState(state.name)}
       >
-        ${label(state, role, isPivot)}
+        ${label(state, role, isPivot, marks)}
       </button>`;
     })}
   </div>`;

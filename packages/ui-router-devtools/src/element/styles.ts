@@ -591,7 +591,8 @@ export const styles: CSSResult = css`
   /* Hairlines sit on the pixel grid at 1x; 2px rails already do. */
   .rail.role-inactive,
   .rail.role-future,
-  .rail.role-retained {
+  .rail.role-retained,
+  .rail-initial:is(.role-inactive, .role-future, .role-retained) {
     translate: 0.5px 0.5px;
   }
 
@@ -654,8 +655,42 @@ export const styles: CSSResult = css`
     color: var(--uird-red);
   }
 
+  .marks {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--uird-muted);
+  }
+
+  .mark {
+    display: inline-flex;
+  }
+
+  .row .marks,
   .row .tag {
     margin-inline-start: auto;
+  }
+
+  .row .marks + .tag {
+    margin-inline-start: 0;
+  }
+
+  .rail-initial {
+    fill: var(--uird-rule-strong);
+  }
+
+  .rail-initial:is(
+    .role-current,
+    .role-ancestor,
+    .role-entering,
+    .role-exiting,
+    .role-retained
+  ) {
+    fill: var(--uird-ink);
+  }
+
+  .rail-initial.role-errored {
+    fill: var(--uird-red);
   }
 
   .selected {
@@ -993,6 +1028,16 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
+  .facts .marked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .facts .marked .glyph {
+    color: var(--uird-muted);
+  }
+
   .plain {
     list-style: none;
     margin-block-start: 8px;
@@ -1016,6 +1061,10 @@ export const styles: CSSResult = css`
 
     .rail {
       stroke: CanvasText;
+    }
+
+    .rail-initial {
+      fill: CanvasText;
     }
 
     .knockout {
