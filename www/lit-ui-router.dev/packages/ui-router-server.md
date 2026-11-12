@@ -911,6 +911,12 @@ router that declares one, and lie under it with it taken off otherwise;
 `pathsIncludeBase` overrides that
 ([serving under a base path](#serving-under-a-base-path)).
 
+`result.pages` and the reports `onPath` receives spell each path as it was
+listed, the base included when `paths` carry it. A redirect's `location` is
+as its verdict, render or response spells it. `withBase(base, path)`, exported
+from this entry, spells one as the host serves it; under `/`, and for a full
+url or a relative path, the path comes back as written.
+
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';

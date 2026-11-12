@@ -60,6 +60,7 @@ import {
   prerender,
   redirectPage,
   redirectPages,
+  withBase,
   type EmittedPage,
   type FileWriter,
   type PrerenderOptions,
@@ -316,6 +317,9 @@ export const pagesSite: PrerenderOptions = {
   ...staticSite,
   rules: redirectPages(pageOptions),
 };
+
+// A reported redirect target, as a host under the base serves it.
+export const servedTarget: string = withBase('/solar/', '/contacts');
 
 export async function staticTally(): Promise<{
   tally: PrerenderTally;

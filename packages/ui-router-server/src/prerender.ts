@@ -26,6 +26,8 @@ import { fileFor, subpathIn } from './site-paths.ts';
 import { mountPolicyOf, slashOf } from './trailing-slash.ts';
 import type { TrailingSlash } from './trailing-slash.ts';
 
+export { withBase } from './base-path.ts';
+
 export { redirectPage, redirectPages } from './redirect-pages.ts';
 
 export type { RedirectPagesOptions } from './redirect-pages.ts';
