@@ -71,7 +71,7 @@ const renderIgnored = (txs: Tx[]) => {
   </li>`;
 };
 
-const renderPath = (tx: Tx) => {
+export const renderPath = (tx: Tx): TemplateResult => {
   if (tx.id < 0)
     return html`<span class="path"
       ><span class="entered">${tx.to}</span></span
@@ -90,7 +90,11 @@ const renderPath = (tx: Tx) => {
 const hidden = (s: Status) =>
   html`<span class="visually-hidden">${statusLabel[s]}</span>`;
 
-const valueCell = (host: UIRouterDevtools, tx: Tx, status: Status) => {
+export const valueCell = (
+  host: UIRouterDevtools,
+  tx: Tx,
+  status: Status,
+): TemplateResult => {
   const tags = sourceTags(tx);
   const muted = status === 'superseded' || status === 'aborted';
   const duration = tx.id < 0 ? undefined : host._duration(tx);

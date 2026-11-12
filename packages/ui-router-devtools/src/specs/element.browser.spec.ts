@@ -1,5 +1,13 @@
-import { afterEach, expect, it } from 'vitest';
-import { getByRole, waitFor } from '@testing-library/dom';
+import { afterEach, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
+import {
+  getAllByRole,
+  getByRole,
+  queryAllByRole,
+  queryByRole,
+  waitFor,
+  within,
+} from '@testing-library/dom';
 import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import '../define.ts';
@@ -8,12 +16,18 @@ import { UIRouterDevtools } from '../ui-router-devtools.ts';
 
 const routers: UIRouter[] = [];
 
-const makeRouter = (): UIRouter => {
+const bareRouter = (): UIRouter => {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(memoryLocationPlugin);
-  router.stateRegistry.register({ name: 'home', url: '/home' });
   routers.push(router);
+
+  return router;
+};
+
+const makeRouter = (): UIRouter => {
+  const router = bareRouter();
+  router.stateRegistry.register({ name: 'home', url: '/home' });
 
   return router;
 };
@@ -26,6 +40,7 @@ const shadow = (element: UIRouterDevtools): HTMLElement =>
 afterEach(() => {
   for (const router of routers.splice(0)) router.dispose();
   document.body.replaceChildren();
+  localStorage.clear();
 });
 
 it('defines <ui-router-devtools>', () => {
@@ -133,4 +148,304 @@ it('draws the default-child arrow to a lazy child', async () => {
   await waitFor(() =>
     expect(shadow(element).querySelectorAll('.rail-initial')).toHaveLength(1),
   );
+});
+
+describe('the nested Map', () => {
+  // The sample app's tree: one root, two compounds, three levels under mymessages.
+  const sampleRouter = (): UIRouter => {
+    const router = bareRouter();
+
+    for (const name of [
+      'app',
+      'app.welcome',
+      'app.login',
+      'app.notFound',
+      'app.contacts',
+      'app.contacts.contact',
+      'app.contacts.contact.edit',
+      'app.contacts.new',
+      'app.mymessages',
+      'app.mymessages.compose',
+      'app.mymessages.messagelist',
+      'app.mymessages.messagelist.message',
+    ])
+      router.stateRegistry.register({ name, abstract: name === 'app' });
+
+    return router;
+  };
+
+  const MESSAGE = 'app.mymessages.messagelist.message';
+
+  const openMap = async (width: number, height = 800, sheet = '') => {
+    await page.viewport(width, height);
+
+    const router = sampleRouter();
+    const { element } = router.plugin(DevtoolsPlugin);
+    element.style.cssText = sheet;
+
+    for (const state of [
+      'app.login',
+      'app.mymessages.messagelist',
+      MESSAGE,
+      'app.contacts.contact',
+      MESSAGE,
+      'app.mymessages.messagelist',
+      MESSAGE,
+    ])
+      await router.stateService.go(state);
+
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'map' }).click();
+    await element.updateComplete;
+
+    return element;
+  };
+
+  const tree = (element: UIRouterDevtools) =>
+    waitFor(() => getByRole(shadow(element), 'tree', { name: 'State map' }));
+
+  const edges = (element: UIRouterDevtools) =>
+    element.renderRoot.querySelectorAll('.nedge');
+
+  // The share of the Map viewport's content box that the root box covers.
+  const rootFill = (element: UIRouterDevtools): number => {
+    const scroller = element.renderRoot.querySelector('.map-scroll')!;
+    const style = getComputedStyle(scroller);
+    const root = element.renderRoot.querySelector('.nested > .box')!;
+    const rect = root.getBoundingClientRect();
+
+    const width =
+      scroller.clientWidth -
+      parseFloat(style.paddingLeft) -
+      parseFloat(style.paddingRight);
+
+    const height =
+      scroller.clientHeight -
+      parseFloat(style.paddingTop) -
+      parseFloat(style.paddingBottom);
+
+    return (rect.width * rect.height) / (width * height);
+  };
+
+  it('is a tree of treeitems holding groups, named by header', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const app = getByRole(map, 'treeitem', { name: 'app' });
+    const messages = getByRole(map, 'treeitem', { name: 'mymessages' });
+    const message = getByRole(map, 'treeitem', { name: 'message' });
+
+    expect(app.getAttribute('aria-expanded')).toBe('true');
+    expect(message.hasAttribute('aria-expanded')).toBe(false);
+    expect(message.getAttribute('aria-current')).toBe('true');
+    expect(message.getAttribute('aria-selected')).toBe('false');
+
+    // Each header owns the group in its box, and that group holds the child items.
+    const owned = (item: HTMLElement) =>
+      element.renderRoot.querySelector<HTMLElement>(
+        `#${item.getAttribute('aria-owns')}`,
+      )!;
+
+    expect(owned(app).getAttribute('role')).toBe('group');
+    expect(owned(app).parentElement).toBe(app.parentElement);
+    expect(owned(app).contains(messages)).toBe(true);
+    expect(
+      within(owned(messages)).getByRole('treeitem', { name: 'messagelist' }),
+    ).toBeTruthy();
+    expect(message.hasAttribute('aria-owns')).toBe(false);
+    expect(
+      getAllByRole(map, 'treeitem').filter((item) => item.tabIndex === 0),
+    ).toEqual([message]);
+    expect(map.querySelector('svg.nedges')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
+  });
+
+  it('fills the Map viewport in the dock and maximised', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    await waitFor(() => expect(rootFill(element)).toBeGreaterThan(0.6));
+    expect(rootFill(element)).toBeLessThanOrEqual(1.01);
+
+    getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
+    await waitFor(() => {
+      const scroller = element.renderRoot.querySelector('.map-scroll')!;
+      expect(scroller.clientHeight).toBeGreaterThan(300);
+      expect(rootFill(element)).toBeGreaterThan(0.6);
+    });
+    expect(rootFill(element)).toBeLessThanOrEqual(1.01);
+    // Maximised, the full log and the inspector sit below the diagram.
+    expect(
+      getByRole(shadow(element), 'heading', { name: /Inspector/ }),
+    ).toBeTruthy();
+    expect(queryByRole(shadow(element), 'listbox')).toBeNull();
+  });
+
+  it('moves focus in tree order with the arrow keys', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const item = (name: string) => getByRole(map, 'treeitem', { name });
+
+    const press = (key: string) =>
+      element.shadowRoot?.activeElement?.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, composed: true }),
+      );
+
+    item('message').focus();
+    press('ArrowUp');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(item('messagelist')),
+    );
+    press('ArrowLeft');
+    await waitFor(() =>
+      // collapsed, its label carries the count of the states inside
+      expect(item('messagelist 1').getAttribute('aria-expanded')).toBe('false'),
+    );
+    expect(queryByRole(map, 'treeitem', { name: 'message' })).toBeNull();
+    press('ArrowRight');
+    await waitFor(() => expect(item('message')).toBeTruthy());
+  });
+
+  it("draws no edge at rest and a state's traffic once it is selected", async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    expect(edges(element)).toHaveLength(0);
+
+    getByRole(map, 'treeitem', { name: 'message' }).click();
+    // messagelist to message, contact to message, message to contact and message to messagelist
+    await waitFor(() => expect(edges(element)).toHaveLength(4));
+    expect(
+      getByRole(map, 'treeitem', { name: 'message' }).getAttribute(
+        'aria-selected',
+      ),
+    ).toBe('true');
+    expect(element.renderRoot.querySelectorAll('.nedge.w2')).toHaveLength(1);
+    expect(element.renderRoot.querySelectorAll('.nedge.fallback')).toHaveLength(
+      0,
+    );
+
+    // The inspector names the same relations in words; each one selects and focuses its box.
+    const inspector = getByRole(shadow(element), 'group', {
+      name: /Inspector/,
+    });
+
+    expect(inspector.textContent).toMatch(/Arrived/);
+    expect(inspector.textContent).toMatch(/Left/);
+    within(inspector).getAllByRole('button', { name: 'contact' })[0].click();
+
+    const contact = await waitFor(() => {
+      const box = getByRole(map, 'treeitem', { name: 'contact' });
+      expect(box.getAttribute('aria-selected')).toBe('true');
+
+      return box;
+    });
+
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(contact),
+    );
+  });
+
+  it('shows a selected transition from the scrubber as an edge', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const options = getAllByRole(listbox, 'option');
+    expect(options).toHaveLength(7);
+
+    options[3].click();
+    await waitFor(() => expect(edges(element)).toHaveLength(1));
+    expect(options[3].getAttribute('aria-selected')).toBe('true');
+    expect(listbox.getAttribute('aria-activedescendant')).toBe(options[3].id);
+
+    listbox.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+    );
+    await waitFor(() =>
+      expect(
+        getAllByRole(listbox, 'option')[4].getAttribute('aria-selected'),
+      ).toBe('true'),
+    );
+  });
+
+  it('places the inspector popover from measured rects without CSS anchor positioning', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    element._measuredPopover = true;
+    getByRole(map, 'treeitem', { name: 'login' }).click();
+
+    await waitFor(() => {
+      const panel = getByRole(shadow(element), 'region', {
+        name: 'Router devtools',
+      });
+
+      const popover = element.renderRoot
+        .querySelector('.inspector-pane')!
+        .getBoundingClientRect();
+
+      const box = getByRole(map, 'treeitem', {
+        name: 'login',
+      }).getBoundingClientRect();
+
+      const bounds = panel.getBoundingClientRect();
+
+      expect(panel.dataset.pop).toBe('measured');
+      expect(popover.width).toBeGreaterThan(0);
+      expect(popover.left >= box.right || popover.right <= box.left).toBe(true);
+      expect(popover.left).toBeGreaterThanOrEqual(bounds.left);
+      expect(popover.right).toBeLessThanOrEqual(bounds.right);
+      expect(popover.bottom).toBeLessThanOrEqual(bounds.bottom);
+    });
+  });
+
+  it('remembers the chosen layout', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    getByRole(shadow(element), 'button', { name: 'Tree' }).click();
+
+    await waitFor(() =>
+      expect(
+        queryByRole(shadow(element), 'tree', { name: 'State map' }),
+      ).toBeNull(),
+    );
+    expect(
+      getByRole(shadow(element), 'group', { name: 'State map' }),
+    ).toBeTruthy();
+    expect(localStorage.getItem('ui-router-devtools:map-layout')).toBe('tree');
+
+    element.remove();
+
+    const next = await openMap(1280);
+    await waitFor(() =>
+      expect(
+        getByRole(shadow(next), 'group', { name: 'State map' }),
+      ).toBeTruthy(),
+    );
+    expect(queryAllByRole(shadow(next), 'tree')).toHaveLength(0);
+  });
+
+  it('shows the node-link tree, and does not offer nested boxes, under 560px', async () => {
+    const element = await openMap(800, 800, '--uird-sheet-width: 480px');
+
+    const nodeLink = await waitFor(() =>
+      getByRole(shadow(element), 'group', { name: 'State map' }),
+    );
+
+    expect(nodeLink.getBoundingClientRect().width).toBeGreaterThan(0);
+    expect(
+      queryByRole(shadow(element), 'tree', { name: 'State map' }),
+    ).toBeNull();
+
+    const nested = getByRole(shadow(element), 'button', { name: 'Nested' });
+    expect(nested).toHaveProperty('disabled', true);
+    expect(
+      getByRole(shadow(element), 'button', { name: 'Tree' }).getAttribute(
+        'aria-pressed',
+      ),
+    ).toBe('true');
+  });
 });

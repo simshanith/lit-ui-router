@@ -48,7 +48,7 @@ const row = (page: Page, text: string) =>
   page.locator(`${TAG} .tx > .line`, { hasText: text }).first();
 
 const showMap = (page: Page) =>
-  page.locator(`${TAG} .switch button`, { hasText: 'map' }).click();
+  page.locator(`${TAG} .switch button:visible`, { hasText: 'map' }).click();
 
 const panel = (page: Page) => page.locator(`${TAG} .panel`);
 

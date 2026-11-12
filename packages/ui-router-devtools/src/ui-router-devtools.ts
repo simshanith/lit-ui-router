@@ -28,6 +28,8 @@ import {
 } from './schema.ts';
 import {
   closeGlyph,
+  maxGlyph,
+  minGlyph,
   statusGlyph,
   statusLabel,
   type Role,
@@ -35,6 +37,16 @@ import {
 } from './element/glyphs.ts';
 import { styles } from './element/styles.ts';
 import { renderMap, renderOutline } from './element/tree.ts';
+import {
+  layoutNested,
+  NESTED_MIN_WIDTH,
+  renderNested,
+  type NestedLayout,
+} from './element/nested.ts';
+import type { Rung, Size } from './element/pack.ts';
+import type { Rect } from './element/route.ts';
+import { placeBeside } from './element/popover.ts';
+import { renderScrubber } from './element/scrubber.ts';
 import { renderLog } from './element/log.ts';
 import {
   renderRouterCard,
@@ -51,6 +63,38 @@ export interface Row {
 }
 
 type Inspect = 'none' | 'router' | 'state' | 'tx';
+
+type MapLayout = 'nested' | 'tree';
+
+const LAYOUT_KEY = 'ui-router-devtools:map-layout';
+
+// Storage can be blocked or throw; the preference is a convenience, so a failure is silent.
+const storedLayout = (): MapLayout => {
+  try {
+    return localStorage.getItem(LAYOUT_KEY) === 'tree' ? 'tree' : 'nested';
+  } catch {
+    return 'nested';
+  }
+};
+
+const storeLayout = (layout: MapLayout): void => {
+  try {
+    localStorage.setItem(LAYOUT_KEY, layout);
+  } catch {
+    // the choice still holds for this page
+  }
+};
+
+const rectOf = (element: Element, origin: DOMRect): Rect => {
+  const rect = element.getBoundingClientRect();
+
+  return {
+    x: Math.round(rect.x - origin.x),
+    y: Math.round(rect.y - origin.y),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+};
 
 const elide = (name: string): string => {
   if (name.length <= 28) return name;
@@ -69,6 +113,10 @@ export class UIRouterDevtools extends LitElement {
     _imported: { state: true },
     _tab: { state: true },
     _view: { state: true },
+    _layoutPref: { state: true },
+    _max: { state: true },
+    _mapSize: { state: true },
+    _mapOpen: { state: true },
     _selectedTx: { state: true },
     _previewTx: { state: true },
     _selectedState: { state: true },
@@ -87,6 +135,10 @@ export class UIRouterDevtools extends LitElement {
   declare _imported: { session: Session; model: Model } | null;
   declare _tab: 'tree' | 'log';
   declare _view: 'outline' | 'map';
+  declare _layoutPref: MapLayout;
+  declare _max: boolean;
+  declare _mapSize: Size;
+  declare _mapOpen: ReadonlyMap<string, boolean>;
   declare _selectedTx: number | null;
   declare _previewTx: number | null;
   declare _selectedState: string | null;
@@ -98,6 +150,17 @@ export class UIRouterDevtools extends LitElement {
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
+  // Measured box rects of the nested Map, relative to it; the edge router reads them.
+  _rects: ReadonlyMap<string, Rect> | null = null;
+  // The fit ladder's last rung, for its hysteresis.
+  _rung: Rung | undefined;
+  // Browsers without CSS anchor positioning place the inspector popover from measured rects.
+  _measuredPopover: boolean = !globalThis.CSS?.supports?.(
+    'position-anchor: --a',
+  );
+  #rectKey = '';
+  #resize: ResizeObserver | undefined;
+  #observed: Element | null = null;
   #recorder: Recorder | undefined;
   #attached: UIRouter | undefined;
   #unsubscribe: (() => void) | undefined;
@@ -111,6 +174,10 @@ export class UIRouterDevtools extends LitElement {
     this._imported = null;
     this._tab = 'tree';
     this._view = 'outline';
+    this._layoutPref = storedLayout();
+    this._max = false;
+    this._mapSize = { width: 0, height: 0 };
+    this._mapOpen = new Map();
     this._inspect = 'none';
     this.#resetSelection();
     this._collapsed = new Set();
@@ -139,6 +206,8 @@ export class UIRouterDevtools extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#detach();
+    this.#resize?.disconnect();
+    this.#observed = null;
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -164,18 +233,115 @@ export class UIRouterDevtools extends LitElement {
     }
   }
 
+  // A re-pack can move the focused box to another row, which rebuilds it; focus then returns to the same state.
+  protected update(changed: PropertyValues<this>): void {
+    if (this.shadowRoot?.activeElement?.matches('.box > .head'))
+      this._moveFocus = true;
+    super.update(changed);
+  }
+
   protected firstUpdated(): void {
     if (this.isConnected) this.#pill?.showPopover();
   }
 
   protected updated(): void {
+    this.#observeMap();
     this.#measureMap();
+    this.#measureNested();
+    this.#placePopover();
+    this.#showTick();
 
     if (!this._moveFocus) return;
     this._moveFocus = false;
     this.renderRoot
       .querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')
       ?.focus();
+  }
+
+  // The nested Map packs for the Map viewport, so the viewport's content box is observed.
+  #observeMap() {
+    const scroller = this.renderRoot.querySelector('.map-scroll');
+
+    if (scroller === this.#observed) return;
+
+    this.#resize ??= new ResizeObserver(([entry]) => {
+      const width = Math.floor(entry.contentRect.width);
+      const height = Math.floor(entry.contentRect.height);
+
+      if (width !== this._mapSize.width || height !== this._mapSize.height)
+        this._mapSize = { width, height };
+    });
+    this.#resize.disconnect();
+    this.#observed = scroller;
+
+    if (scroller) this.#resize.observe(scroller);
+  }
+
+  // Edges route around rendered boxes; a changed rect re-renders once.
+  #measureNested() {
+    const root = this.renderRoot.querySelector('.nested');
+    const origin = root?.getBoundingClientRect();
+
+    if (!root || !origin?.width) {
+      this._rects = null;
+      this.#rectKey = '';
+
+      return;
+    }
+
+    const rects = new Map<string, Rect>();
+
+    for (const box of root.querySelectorAll<HTMLElement>('.box'))
+      rects.set(box.dataset.name!, rectOf(box, origin));
+
+    const key = JSON.stringify([...rects]);
+
+    if (key === this.#rectKey) return;
+    this.#rectKey = key;
+    this._rects = rects;
+    this.requestUpdate();
+  }
+
+  #placePopover() {
+    const panel = this.#panel;
+    const anchor = [...this.renderRoot.querySelectorAll('.anchor')].at(-1);
+    const popover = this.renderRoot.querySelector('.inspector-pane');
+
+    if (!this._measuredPopover || !panel || !anchor || !popover) return;
+
+    const origin = panel.getBoundingClientRect();
+    const size = popover.getBoundingClientRect();
+
+    const at = placeBeside(rectOf(anchor, origin), size, {
+      x: 8,
+      y: 34,
+      width: origin.width - 16,
+      height: origin.height - 70,
+    });
+
+    panel.style.setProperty('--uird-pop-x', `${at.x}px`);
+    panel.style.setProperty('--uird-pop-y', `${at.y}px`);
+  }
+
+  // The scrubber keeps the selected transition in view, else the newest.
+  #showTick() {
+    const ticks = this.renderRoot.querySelector<HTMLElement>('.ticks');
+    const tick = ticks?.querySelector<HTMLElement>('.tick.on');
+
+    if (!ticks) return;
+
+    if (!tick) {
+      ticks.scrollLeft =
+        ticks.scrollWidth * (ticks.matches(':dir(rtl)') ? -1 : 1);
+
+      return;
+    }
+
+    const box = ticks.getBoundingClientRect();
+    const rect = tick.getBoundingClientRect();
+
+    if (rect.left < box.left) ticks.scrollLeft -= box.left - rect.left;
+    else if (rect.right > box.right) ticks.scrollLeft += rect.right - box.right;
   }
 
   // Map columns and edge starts follow rendered label widths; a changed width re-renders once.
@@ -301,6 +467,56 @@ export class UIRouterDevtools extends LitElement {
     this._selectedState = this._selectedState === name ? null : name;
     this._focusState = name;
     this._inspect = this._selectedState ? 'state' : 'none';
+  }
+
+  // Selects a state named in the inspector and moves focus to its row or box.
+  _revealState(name: string): void {
+    const hidden = new Set(ancestorsOf(this._model.states, name));
+
+    this._selectedState = name;
+    this._focusState = name;
+    this._inspect = 'state';
+    this._collapsed = new Set(
+      [...this._collapsed].filter((state) => !hidden.has(state)),
+    );
+    this._mapOpen = new Map(
+      [...this._mapOpen].filter(([state]) => !hidden.has(state)),
+    );
+    this._moveFocus = true;
+  }
+
+  _clearSelection(): void {
+    this._selectedState = null;
+    this._selectedTx = null;
+    this._inspect = 'none';
+  }
+
+  // The state the inspector popover sits beside: the selected state, or a selected transition's target.
+  get _anchorState(): string | null {
+    if (this._inspect === 'state') return this._selectedState;
+
+    return this._inspect === 'tx'
+      ? (this._tx(this._selectedTx)?.to ?? null)
+      : null;
+  }
+
+  // The nested layout, when it is chosen, offered at this width and fits.
+  _nested(): NestedLayout | null {
+    if (
+      this._view !== 'map' ||
+      this._layoutPref !== 'nested' ||
+      this._mapSize.width < NESTED_MIN_WIDTH
+    )
+      return null;
+
+    const layout = layoutNested(this);
+
+    return layout.rung === 'tree' ? null : layout;
+  }
+
+  #chooseLayout(layout: MapLayout) {
+    this._layoutPref = layout;
+    storeLayout(layout);
   }
 
   // Session export and import
@@ -466,6 +682,8 @@ export class UIRouterDevtools extends LitElement {
         data-tab=${this._tab}
         data-view=${this._view}
         data-inspect=${this._inspect}
+        data-pop=${this._measuredPopover ? 'measured' : 'anchored'}
+        ?data-max=${this._max}
         ?data-imported=${imported}
         @dragover=${(e: DragEvent) => e.preventDefault()}
         @drop=${this.#onDrop}
@@ -479,9 +697,10 @@ export class UIRouterDevtools extends LitElement {
             aria-labelledby="h-states"
           >
             ${this.#sectionHead('1', 'States', 'h-states')}
-            <div class="scroll outline-scroll">${renderOutline(this)}</div>
-            <div class="scroll map-scroll">${renderMap(this)}</div>
+            <div class="pane-switch">${this.#renderSwitch()}</div>
+            ${this.#renderStates()}
           </section>
+          ${this._view === 'map' ? renderScrubber(this) : nothing}
           <section
             class="pane log-pane"
             id="pane-log"
@@ -536,6 +755,64 @@ export class UIRouterDevtools extends LitElement {
         ${this._announcement}
       </div>
     `;
+  }
+
+  #renderStates() {
+    if (this._view === 'outline')
+      return html`<div class="scroll outline-scroll">
+        ${renderOutline(this)}
+      </div>`;
+
+    const nested = this._nested();
+
+    return html`<div class="scroll map-scroll">
+      ${nested ? renderNested(this, nested) : renderMap(this)}
+    </div>`;
+  }
+
+  // Outline or Map, and on the Map the nested boxes or the node-link tree.
+  #renderSwitch() {
+    const map = this._view === 'map';
+    const nested = Boolean(this._nested());
+    const narrow = this._mapSize.width < NESTED_MIN_WIDTH;
+    const unfit = !narrow && this._layoutPref === 'nested' && !nested;
+
+    const why = narrow
+      ? `Nested boxes need ${NESTED_MIN_WIDTH}px of width`
+      : 'Nested boxes do not fit this tree';
+
+    return html`<div class="switch" role="group" aria-label="State view">
+        ${(['outline', 'map'] as const).map(
+          (view) =>
+            html`<button
+              aria-pressed=${this._view === view}
+              @click=${() => (this._view = view)}
+            >
+              ${view}
+            </button>`,
+        )}
+      </div>
+      ${
+        map
+          ? html`<div class="switch" role="group" aria-label="Map layout">
+              <button
+                aria-pressed=${nested}
+                ?disabled=${narrow || unfit}
+                title=${narrow || unfit ? why : 'Child states inside their parent'}
+                @click=${() => this.#chooseLayout('nested')}
+              >
+                Nested
+              </button>
+              <button
+                aria-pressed=${!nested}
+                title="Node-link tree"
+                @click=${() => this.#chooseLayout('tree')}
+              >
+                Tree
+              </button>
+            </div>`
+          : nothing
+      }`;
   }
 
   #inspectorAside(): string | undefined {
@@ -685,24 +962,14 @@ export class UIRouterDevtools extends LitElement {
 
     return html`<div class="titlestrip">
       <button
-        class="brand"
+        class="brand ${this._inspect === 'router' || this._inspect === 'tx' ? 'anchor' : ''}"
         aria-pressed=${this._inspect === 'router'}
         title="Router configuration"
         @click=${this.#toggleRouter}
       >
         Router
       </button>
-      <div class="switch" role="group" aria-label="State view">
-        ${(['outline', 'map'] as const).map(
-          (view) =>
-            html`<button
-              aria-pressed=${this._view === view}
-              @click=${() => (this._view = view)}
-            >
-              ${view}
-            </button>`,
-        )}
-      </div>
+      <div class="strip-switch">${this.#renderSwitch()}</div>
       ${this.#renderTabs()}
       ${imported ? html`<span class="imported tag" title=${imported.session.routerId}>Imported</span>` : nothing}
       <span class="spacer"></span>
@@ -718,6 +985,15 @@ export class UIRouterDevtools extends LitElement {
         )}
       </span>
       <span class="session">${this._sessionButtons()}</span>
+      <button
+        class="icon max"
+        aria-pressed=${this._max}
+        aria-label="Maximise devtools"
+        title=${this._max ? 'Restore the dock' : 'Maximise'}
+        @click=${() => (this._max = !this._max)}
+      >
+        ${this._max ? minGlyph : maxGlyph}
+      </button>
       <button
         class="icon close"
         aria-label="Collapse devtools"

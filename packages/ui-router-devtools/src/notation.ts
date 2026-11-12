@@ -77,3 +77,18 @@ export const sourceTags = (tx: Tx): string[] => {
     tx.dynamic && 'Dynamic',
   ].filter((tag): tag is string => Boolean(tag));
 };
+
+const SEGMENT_MAX = 24;
+
+// Shortens a long name segment in the middle; both ends carry meaning.
+export const truncateMiddle = (
+  text: string,
+  max: number = SEGMENT_MAX,
+): string => {
+  if (text.length <= max) return text;
+
+  const keep = max - 1;
+  const lead = Math.ceil(keep / 2);
+
+  return `${text.slice(0, lead)}…${text.slice(text.length - (keep - lead))}`;
+};

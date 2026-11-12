@@ -13,6 +13,11 @@ export const styles: CSSResult = css`
     --uird-on-red: var(--uird-surface);
     --uird-active: light-dark(oklch(50% 0.15 255), oklch(76% 0.11 250));
     --uird-exit: light-dark(oklch(62% 0.12 80), oklch(83% 0.13 85));
+    --uird-active-wash: color-mix(
+      in oklch,
+      var(--uird-active) 12%,
+      var(--uird-surface)
+    );
     --uird-unit: 4px;
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
@@ -137,7 +142,7 @@ export const styles: CSSResult = css`
   }
 
   /* Two hues with fixed jobs: active for the path and what a transition enters or retains, exit for what it leaves. */
-  :is(.row, .map-node, .insp-title)
+  :is(.row, .map-node, .head, .insp-title)
     > .glyph:is(
       .role-current,
       .role-ancestor,
@@ -148,7 +153,7 @@ export const styles: CSSResult = css`
     color: var(--uird-active);
   }
 
-  :is(.row, .map-node, .insp-title) > .glyph.role-exiting {
+  :is(.row, .map-node, .head, .insp-title) > .glyph.role-exiting {
     color: var(--uird-exit);
   }
 
@@ -170,12 +175,25 @@ export const styles: CSSResult = css`
     .glyph *,
     .rail,
     .row,
+    .box,
     .map-node {
       transition:
         color 200ms var(--ease-out),
         stroke 200ms var(--ease-out),
         fill 200ms var(--ease-out),
+        border-color 200ms var(--ease-out),
+        background-color 200ms var(--ease-out),
         opacity 200ms var(--ease-out);
+    }
+
+    .nedge {
+      animation: fade-in 200ms var(--ease-out);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
   }
 
@@ -349,10 +367,34 @@ export const styles: CSSResult = css`
     vertical-align: 1px;
   }
 
-  .switch,
+  .strip-switch,
   .tabs {
     display: none;
     gap: 12px;
+  }
+
+  .switch {
+    display: flex;
+    gap: 12px;
+  }
+
+  .strip-switch,
+  .pane-switch {
+    gap: 24px;
+  }
+
+  .pane-switch {
+    display: flex;
+    grid-column: 2;
+    justify-content: end;
+    block-size: var(--uird-row);
+    padding-inline: var(--uird-margin);
+  }
+
+  .switch button:disabled {
+    cursor: default;
+    opacity: 0.5;
+    text-decoration: line-through;
   }
 
   .switch button,
@@ -449,8 +491,21 @@ export const styles: CSSResult = css`
     margin-block-start: 0;
   }
 
+  .tree-pane {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tree-pane > .scroll {
+    grid-column: 1 / -1;
+  }
+
   .map-scroll {
+    padding-inline: var(--uird-margin);
+  }
+
+  .icon.max {
     display: none;
+    margin-inline-end: -16px;
   }
 
   .inspector-pane,
@@ -500,6 +555,10 @@ export const styles: CSSResult = css`
       grid-template-rows: minmax(0, 1fr);
     }
 
+    .tree-pane {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
     .body {
       grid-template-rows: minmax(0, 1fr);
     }
@@ -536,8 +595,21 @@ export const styles: CSSResult = css`
 
   /* Dock: three columns, rules centred in 24px gutters */
   @media (width > 880px) {
-    .switch {
+    .strip-switch {
       display: flex;
+    }
+
+    .pane-switch {
+      display: none;
+    }
+
+    .icon.max {
+      display: grid;
+    }
+
+    .panel[data-max] {
+      inset-block-start: var(--uird-margin);
+      block-size: auto;
     }
 
     .body {
@@ -553,20 +625,6 @@ export const styles: CSSResult = css`
       border-inline-start: 1px solid var(--uird-rule);
     }
 
-    .panel[data-view='map'] .body {
-      grid-template-columns:
-        minmax(240px, 1fr) minmax(264px, 0.8fr)
-        minmax(312px, 1fr);
-    }
-
-    .panel[data-view='map'] .outline-scroll {
-      display: none;
-    }
-
-    .panel[data-view='map'] .map-scroll {
-      display: block;
-    }
-
     .log .detail {
       display: none;
     }
@@ -574,6 +632,115 @@ export const styles: CSSResult = css`
     .inspector {
       padding-inline: var(--uird-margin);
     }
+
+    /* On the Map the diagram owns the panel: the log is a strip and the inspector a popover. */
+    .panel[data-view='map'] .body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .panel[data-view='map'] .tree-pane {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .panel[data-view='map'] .tree-pane > .section,
+    .panel[data-view='map']:not([data-max]) .log-pane {
+      display: none;
+    }
+
+    .panel[data-view='map']:not([data-max]) .scrubber {
+      display: flex;
+    }
+
+    .panel[data-view='map']:not([data-max]) .inspector-pane {
+      position: absolute;
+      z-index: 2;
+      display: none;
+      inline-size: 296px;
+      min-block-size: 136px;
+      max-block-size: calc(var(--uird-dock-height) - 76px);
+      padding-block-start: 4px;
+      border: 1px solid var(--uird-rule-strong);
+      border-radius: 2px;
+      background: var(--uird-surface);
+      box-shadow: 0 8px 32px -8px oklch(0% 0 none / 0.28);
+    }
+
+    .panel[data-view='map']:not([data-max]):is(
+        [data-inspect='state'],
+        [data-inspect='tx'],
+        [data-inspect='router']
+      )
+      .inspector-pane {
+      display: grid;
+    }
+
+    /* Chrome skips layout of a size container inside an element placed by a position-try fallback. */
+    .panel[data-view='map']:not([data-max]) .inspector-pane .scroll {
+      container-type: normal;
+    }
+
+    /* The popover sits beside the selection: anchored where CSS can, else from measured rects. */
+    .panel[data-view='map'][data-pop='anchored']:not([data-max])
+      .inspector-pane {
+      position-anchor: --uird-selection;
+      position-area: inline-end span-block-end;
+      position-try-fallbacks:
+        --uird-above-end, --uird-below-start, --uird-above-start, --uird-corner;
+      inset-block: 0 32px;
+      max-block-size: calc(100% - 32px);
+      margin-inline: 8px;
+    }
+
+    .panel[data-view='map'][data-pop='measured']:not([data-max])
+      .inspector-pane {
+      inset-block-start: var(--uird-pop-y, 38px);
+      left: var(--uird-pop-x, 12px);
+    }
+
+    /* Maximised: the diagram above the full log and inspector. */
+    .panel[data-view='map'][data-max] .body {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr);
+    }
+
+    .panel[data-view='map'][data-max] .tree-pane {
+      grid-column: 1 / -1;
+      border-block-end: 1px solid var(--uird-rule);
+    }
+
+    .panel[data-view='map'][data-max] .log-pane {
+      border-inline-start: 0;
+    }
+
+    .panel[data-view='map'][data-max] :is(.log-pane, .inspector-pane) {
+      padding-block-start: 12px;
+    }
+  }
+
+  .anchor {
+    anchor-name: --uird-selection;
+  }
+
+  /* Beside the selection, growing down from its top or up from its bottom, clear of the title strip and the scrubber. */
+  @position-try --uird-above-end {
+    position-area: inline-end span-block-start;
+    inset-block: 32px 0;
+  }
+
+  @position-try --uird-below-start {
+    position-area: inline-start span-block-end;
+  }
+
+  @position-try --uird-above-start {
+    position-area: inline-start span-block-start;
+    inset-block: 32px 0;
+  }
+
+  @position-try --uird-corner {
+    position-area: none;
+    inset: auto 12px 40px auto;
+    margin: 0;
   }
 
   /* Outline */
@@ -722,6 +889,7 @@ export const styles: CSSResult = css`
   @media (hover: hover) and (pointer: fine) {
     .row:hover,
     .tx .line:hover,
+    .tick:hover,
     .map-node:hover {
       background: var(--uird-surface-raised);
     }
@@ -731,7 +899,6 @@ export const styles: CSSResult = css`
 
   .map {
     position: relative;
-    margin-inline: var(--uird-margin);
   }
 
   .edges {
@@ -773,6 +940,312 @@ export const styles: CSSResult = css`
 
   .map-node.role-future .name {
     color: var(--uird-muted);
+  }
+
+  /* Nested Map: a box per state, child states inside their parent */
+
+  .nested {
+    --nest-head: 20px;
+    --nest-pad: 12px;
+    --nest-gap: 16px;
+
+    position: relative;
+    display: flex;
+    inline-size: max-content;
+    block-size: max-content;
+  }
+
+  .nested.small {
+    --nest-head: 16px;
+    --nest-pad: 8px;
+    --nest-gap: 12px;
+
+    font-size: var(--uird-size-small);
+  }
+
+  .nstack,
+  .kids {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nest-gap);
+    justify-content: space-around;
+  }
+
+  .nstack,
+  .nrow,
+  .box {
+    flex-basis: auto;
+    flex-shrink: 0;
+  }
+
+  .nrow {
+    display: flex;
+    gap: var(--nest-gap);
+  }
+
+  .box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1px;
+    border: 1px solid var(--uird-rule-strong);
+    border-radius: 3px;
+    background: var(--uird-surface);
+    cursor: default;
+  }
+
+  .box.leaf,
+  .box.collapsed {
+    align-self: start;
+  }
+
+  .box.collapsed {
+    box-shadow:
+      3px 3px 0 -1px var(--uird-surface),
+      3px 3px 0 0 var(--uird-rule-strong);
+  }
+
+  .box.led {
+    margin-inline-start: 20px;
+  }
+
+  .head:focus-visible {
+    border-radius: 2px;
+  }
+
+  .box.selected {
+    background: var(--uird-surface);
+    box-shadow: none;
+    outline: 1px solid var(--uird-ink);
+    outline-offset: 2px;
+  }
+
+  .box.role-retained {
+    border-color: var(--uird-active);
+  }
+
+  .box:is(.role-ancestor, .role-entering, .role-current) {
+    padding: 0;
+    border: 2px solid var(--uird-active);
+  }
+
+  .box.role-current {
+    background: var(--uird-active-wash);
+  }
+
+  .box.role-exiting {
+    padding: 0;
+    border: 2px dashed var(--uird-exit);
+  }
+
+  .box.role-future {
+    border-style: dashed;
+  }
+
+  .box.role-errored {
+    padding: 0;
+    border: 2px solid var(--uird-red);
+  }
+
+  .head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    block-size: var(--nest-head);
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  .box.current > .head .name {
+    font-weight: 700;
+  }
+
+  .box.future > .head .name {
+    font-style: italic;
+  }
+
+  .box:is(.role-exiting, .role-future) > .head .name,
+  .head .count {
+    color: var(--uird-muted);
+  }
+
+  .box.role-errored > .head .name {
+    color: var(--uird-red);
+  }
+
+  .head :is(.marks, .tag) {
+    margin-inline-start: auto;
+  }
+
+  .kids {
+    flex: 1;
+    padding: var(--nest-pad);
+  }
+
+  /* A compound and its only child, also a compound, share one header row. */
+  .box.merging > .head {
+    position: relative;
+    z-index: 1;
+    inline-size: max-content;
+  }
+
+  .box.merging > .head::after {
+    content: '›';
+    color: var(--uird-muted);
+  }
+
+  .box.merging > .kids {
+    flex-direction: row;
+    margin-block-start: calc(-1 * var(--nest-head));
+    padding: 0;
+  }
+
+  .nested .box.merged {
+    flex: 1;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .box.merged > .head {
+    padding-inline-start: var(--indent);
+  }
+
+  .initial {
+    position: absolute;
+    inset-block-start: calc(var(--nest-head) / 2 - 5px);
+    inset-inline-start: -22px;
+    fill: var(--uird-ink);
+    stroke: var(--uird-ink);
+  }
+
+  .initial .tip {
+    stroke: none;
+  }
+
+  .initial:dir(rtl) {
+    scale: -1 1;
+  }
+
+  .nedges {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .nedge .line,
+  .nedge .halo,
+  .nedge .cap {
+    fill: none;
+    stroke: var(--uird-ink);
+  }
+
+  .nedge .halo {
+    stroke: var(--uird-surface);
+    stroke-width: 6;
+  }
+
+  .nedge:is(.w2, .edge-redirect) :is(.line, .cap) {
+    stroke-width: 2;
+  }
+
+  .nedge.w3 .line {
+    stroke-width: 3;
+  }
+
+  .nedge .head {
+    display: inline;
+    fill: var(--uird-ink);
+  }
+
+  .nedge.edge-redirect .line {
+    stroke-dasharray: 5 4;
+  }
+
+  .nedge.edge-redirect .head {
+    fill: none;
+    stroke: var(--uird-ink);
+    stroke-width: 2;
+  }
+
+  .nedge.edge-fault :is(.line, .cap) {
+    stroke: var(--uird-red);
+  }
+
+  .nedge.edge-fault .head {
+    fill: var(--uird-red);
+  }
+
+  /* No route was found, so the line is straight and dotted. */
+  .nedge.fallback .line {
+    stroke-dasharray: 1 3;
+  }
+
+  /* Scrubber: the Map's transition log, one outcome glyph each */
+
+  .scrubber {
+    display: none;
+    align-items: center;
+    gap: var(--uird-gap);
+    min-inline-size: 0;
+    block-size: 28px;
+    padding-inline: var(--uird-margin);
+    border-block-start: 1px solid var(--uird-rule);
+  }
+
+  .scrubber .section {
+    flex: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ticks {
+    display: flex;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tick {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 20px;
+    block-size: 27px;
+    color: var(--uird-muted);
+    cursor: pointer;
+  }
+
+  .tick.origin,
+  .tick.on {
+    background: var(--uird-surface-raised);
+  }
+
+  .tick.on {
+    box-shadow: inset 0 2px 0 var(--uird-ink);
+    color: var(--uird-ink);
+  }
+
+  .now {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: var(--uird-gap);
+    min-inline-size: 0;
+    margin-inline-start: auto;
+    white-space: nowrap;
+  }
+
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
 
   /* Transition log */
@@ -1069,6 +1542,30 @@ export const styles: CSSResult = css`
     :host {
       --uird-active: CanvasText;
       --uird-exit: CanvasText;
+      --uird-active-wash: Canvas;
+    }
+
+    .nedge :is(.line, .cap),
+    .nedge.edge-redirect .head {
+      stroke: CanvasText;
+    }
+
+    .nedge .halo {
+      stroke: Canvas;
+    }
+
+    .nedge .head,
+    .initial {
+      fill: CanvasText;
+    }
+
+    .nedge.edge-redirect .head {
+      fill: none;
+    }
+
+    .box.selected,
+    .tick.on {
+      outline: 2px solid Highlight;
     }
 
     .glyph,
@@ -1101,14 +1598,14 @@ export const styles: CSSResult = css`
       background: CanvasText;
     }
 
-    .selected,
+    .selected:not(.box),
     .tx.selected {
       background: Highlight;
       color: HighlightText;
       forced-color-adjust: none;
     }
 
-    .selected *,
+    .selected:not(.box) *,
     .tx.selected > .line *,
     .tx.selected > .line .seq {
       color: HighlightText;

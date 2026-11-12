@@ -108,12 +108,30 @@ const MIRRORED: ReadonlyMap<string, string> = new Map([
 const logicalKey = (host: HTMLElement, key: string): string =>
   getComputedStyle(host).direction === 'rtl' ? (MIRRORED.get(key) ?? key) : key;
 
-const onTreeKey = (
+export interface TreeKeys {
+  expanded: (row: Row) => boolean;
+  toggle: (name: string, collapse: boolean) => void;
+}
+
+const outlineKeys = (host: UIRouterDevtools): TreeKeys => ({
+  expanded: (row) => row.hasChildren && !host._collapsed.has(row.state.name),
+  toggle: (name, collapse) => {
+    const next = new Set(host._collapsed);
+
+    if (collapse) next.add(name);
+    else next.delete(name);
+    host._collapsed = next;
+  },
+});
+
+// Arrow keys move in tree order; the Outline and the nested Map share them.
+export const onTreeKey = (
   host: UIRouterDevtools,
   event: KeyboardEvent,
   rows: Row[],
   focus: string | undefined,
-) => {
+  { expanded: isExpanded, toggle }: TreeKeys = outlineKeys(host),
+): void => {
   const i = rows.findIndex((r) => r.state.name === focus);
   const row = rows[i];
 
@@ -125,15 +143,7 @@ const onTreeKey = (
     host._moveFocus = true;
   };
 
-  const toggle = (name: string, collapse: boolean) => {
-    const next = new Set(host._collapsed);
-
-    if (collapse) next.add(name);
-    else next.delete(name);
-    host._collapsed = next;
-  };
-
-  const expanded = row.hasChildren && !host._collapsed.has(row.state.name);
+  const expanded = isExpanded(row);
 
   switch (logicalKey(host, event.key)) {
     case 'ArrowDown':
@@ -168,14 +178,15 @@ const onTreeKey = (
 };
 
 // The row's slots: a 12px glyph, the name, then the trailing marks and tag. Weight and slant follow facts, never the previewed role.
-const label = (
+export const label = (
   state: StateInfo,
   role: Role,
   pivot: boolean,
   marks: readonly StateMark[],
-) =>
+  name: string = segment(state.name),
+): TemplateResult =>
   html`${pivot ? pivotGlyph : roleGlyph(role, state.abstract)}<span class="name"
-      >${segment(state.name)}</span
+      >${name}</span
     >${
       marks.length
         ? html`<span class="marks" aria-hidden="true"
@@ -189,17 +200,21 @@ const label = (
         : nothing
     }${state.future ? html`<span class="tag">Lazy</span>` : nothing}`;
 
-const facts = (state: StateInfo, current: string) =>
+export const facts = (state: StateInfo, current: string): string =>
   `${state.name === current ? 'current' : ''} ${state.future ? 'future' : ''}`;
 
-const words = (
+export const words = (
   state: StateInfo,
   role: Role,
   pivot: boolean,
   marks: readonly StateMark[],
-) => describeState(pivot ? pivotLabel : roleLabel[role], state, marks);
+): string => describeState(pivot ? pivotLabel : roleLabel[role], state, marks);
 
-export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
+export const renderOutline = (
+  host: UIRouterDevtools,
+): TemplateResult | typeof nothing => {
+  if (host._view !== 'outline') return nothing;
+
   const rows = host._rows();
   const pivot = host._focusTx?.retained.at(-1);
   const { states } = host._model;
@@ -249,10 +264,7 @@ export const renderOutline = (host: UIRouterDevtools): TemplateResult => {
 
 type MapNode = { state: StateInfo | null; children: MapNode[] };
 
-export const renderMap = (
-  host: UIRouterDevtools,
-): TemplateResult | typeof nothing => {
-  if (host._view !== 'map') return nothing;
+export const renderMap = (host: UIRouterDevtools): TemplateResult => {
   const children = host._children();
 
   const build = (parent: string | null): MapNode[] =>
@@ -348,7 +360,7 @@ export const renderMap = (
       const selected = host._selectedState === state.name;
 
       return html`<button
-        class="map-node role-${role} ${facts(state, current)} ${selected ? 'selected' : ''}"
+        class="map-node role-${role} ${facts(state, current)} ${selected ? 'selected' : ''} ${state.name === host._anchorState ? 'anchor' : ''}"
         data-name=${state.name}
         style="inset-inline-start:${x - 6}px;top:${y - 12}px"
         aria-pressed=${selected}

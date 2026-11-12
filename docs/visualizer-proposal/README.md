@@ -14,14 +14,18 @@ beyond the panel and which devtools hosts it can plug into.
 - Build `<ui-router-devtools>`: a Lit element that takes any `UIRouter`, with a
   thin `UIRouterPlugin` beside it so `router.plugin(...)` keeps working.
 - It opens from a 28px pill. The primary view is an indented state outline
-  (`role="tree"`) and a transition log; the node-link diagram is a Map tab in the
-  wide dock, laid out by `d3-hierarchy`.
+  (`role="tree"`) and a transition log; the Map tab draws the states as nested
+  statechart boxes, with a node-link tree laid out by `d3-hierarchy` as the
+  fallback.
 - Nodes are HTML elements over one SVG edge layer. No canvas, no graph library.
 - The look is a specification sheet: one grotesque, two sizes, two weights, ink
-  on paper, and one red that means fault.
-- The element measures 59.5 kB min / 18.3 kB gzip with `lit`
+  on paper, two hues for what is active and what is exiting, and one red that
+  means fault.
+- The element measures 100.1 kB min / 31.2 kB gzip with `lit`
   external, against 85.0 kB / 25.6 kB for `@uirouter/visualizer` 7.2.1, and passes
-  axe with no violations. The adapter and recorder alone are 7.2 kB / 3.1 kB.
+  axe with no violations. The nested Map is 37.5 kB / 11.8 kB of that; its
+  packer and edge router are 10.6 kB / 4.7 kB. The adapter and recorder alone
+  are 8.0 kB / 3.4 kB.
 
 | Wide dock, outline                                                | Wide dock, map, fault selected                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -163,13 +167,13 @@ if (new URLSearchParams(location.search).has('visualizer')) {
 }
 ```
 
-| Surface           | Members                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties        | `router`, `open`, `dock` (`auto`, `side`, `bottom`, `inline`), `history` (row limit), `storageKey`                                                            |
-| Events            | `devtools-toggle`; `devtools-select-state`, cancelable                                                                                                        |
-| Custom properties | `--uird-surface`, `--uird-surface-raised`, `--uird-ink`, `--uird-muted`, `--uird-rule`, `--uird-rule-strong`, `--uird-red`, `--uird-font`, `--uird-font-mono` |
-| Parts             | `pill`, `panel`, `tree`, `node`, `log`, `transition`, `inspector`                                                                                             |
-| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`                                                            |
+| Surface           | Members                                                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties        | `router`, `open`, `dock` (`auto`, `side`, `bottom`, `inline`), `history` (row limit), `storageKey`                                                                                                                  |
+| Events            | `devtools-toggle`; `devtools-select-state`, cancelable                                                                                                                                                              |
+| Custom properties | `--uird-surface`, `--uird-surface-raised`, `--uird-ink`, `--uird-muted`, `--uird-rule`, `--uird-rule-strong`, `--uird-red`, `--uird-active`, `--uird-exit`, `--uird-active-wash`, `--uird-font`, `--uird-font-mono` |
+| Parts             | `pill`, `panel`, `tree`, `node`, `log`, `transition`, `inspector`                                                                                                                                                   |
+| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`                                                                                                                  |
 
 The name `ui-router-devtools` follows the repo's convention: `ui-router-*` for
 packages that work with any adapter, `lit-ui-router-*` for Lit-only ones. Lit is
@@ -221,7 +225,7 @@ Stage 1 is what replaces the plugin in the five examples.
 | Pill, with the current state, the last outcome and its duration                          | Resolve bars: stage 2, after the core question is settled         |
 | Panel as bottom sheet, side sheet or dock, chosen by container width                     | Search and filter chips: stage 2                                  |
 | State outline: `role="tree"`, arrow keys, collapse, lazy states                          | `postMessage` transport and a parent-page panel: stage 3          |
-| Map tab in the wide dock, laid out by `d3-hierarchy`                                     | Performance-panel track: stage 3                                  |
+| Map tab: nested boxes, with a `d3-hierarchy` node-link tree as the fallback              | Performance-panel track: stage 3                                  |
 | Transition log: redirect chains, superseded and ignored rows de-emphasised               | Hooks and views in the inspector: needs data core does not expose |
 | Expanded row: phase ruler and param diff                                                 | Document Picture-in-Picture pop-out: stage 4                      |
 | Selecting a row shows its entered, exited and retained states on the outline and the map | Dragging and resizing                                             |
@@ -270,8 +274,9 @@ is used.
   raised surface.
 - **Numbering.** Sections are `1 STATES`, `2 TRANSITIONS`, `3 INSPECTOR`, with
   `3.1 PARAMS` and `3.2 RESOLVES`. Transitions are zero-padded: `016`.
-- **Red means fault.** The active path is carried by ink: a solid glyph, weight
-  700 and a 2px rail. The panel is black and white until something breaks.
+- **Red means fault.** The active path is carried by a solid glyph, weight 700
+  and a 2px rail in `--uird-active`; what a transition exits is dashed in
+  `--uird-exit`. The transition log stays ink and red.
 - **Motion.** Rail and glyph cross-fades at 200ms. Movement sits under
   `prefers-reduced-motion: no-preference`; hover under
   `(hover: hover) and (pointer: fine)`.
@@ -335,6 +340,13 @@ entered state with a plus. A reload retains nothing, so both are full names.
   --uird-rule: light-dark(oklch(88% 0 none), oklch(33% 0 none));
   --uird-rule-strong: light-dark(oklch(58% 0 none), oklch(60% 0 none));
   --uird-red: light-dark(oklch(53% 0.2 28), oklch(72% 0.17 28));
+  --uird-active: light-dark(oklch(50% 0.15 255), oklch(76% 0.11 250));
+  --uird-exit: light-dark(oklch(62% 0.12 80), oklch(83% 0.13 85));
+  --uird-active-wash: color-mix(
+    in oklch,
+    var(--uird-active) 12%,
+    var(--uird-surface)
+  );
   --uird-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --uird-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -352,8 +364,11 @@ ui-router-devtools {
 
 Computed WCAG contrast on the surface and the raised surface: ink 18.3 and 16.7
 in light, 16.0 and 14.2 in dark; muted 6.6 and 6.1, 8.0 and 7.1; red 5.7 and 5.2,
-6.9 and 6.2; `rule-strong` 4.2 and 3.8, 4.7 and 4.2. `rule` is a hairline only.
-Text on a red fill uses the surface colour.
+6.9 and 6.2; `rule-strong` 4.2 and 3.8, 4.7 and 4.2; `active` 5.9 and 5.4, 8.7
+and 7.7; `exit` 3.6 and 3.3, 10.9 and 9.7. `rule` is a hairline only. Text on a
+red fill uses the surface colour. `exit` marks borders, rails and glyphs and
+never text. `active-wash` fills the current state's box: ink on it is 15.4 and
+13.5, and `active` on it 5.0 and 7.3.
 
 ### References
 

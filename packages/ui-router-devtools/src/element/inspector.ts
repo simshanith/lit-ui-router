@@ -2,6 +2,8 @@ import { html, nothing, type TemplateResult } from 'lit';
 import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { Tx } from '../fold.ts';
 import type { LocationInfo } from '../schema.ts';
+import { observedEdges } from '../edges.ts';
+import { segment, seq } from '../notation.ts';
 import { renderOptions, renderParams, renderTiming } from './log.ts';
 import {
   markGlyph,
@@ -17,6 +19,85 @@ const sub = (n: string, title: string) =>
     <span class="num">${n}</span><span class="title">${title}</span>
   </h3>`;
 
+// A state named in words; it selects that state and moves focus to its row or box.
+const stateLink = (host: UIRouterDevtools, name: string) =>
+  html`<button
+    class="link"
+    title=${name}
+    @click=${() => host._revealState(name)}
+  >
+    ${segment(name)}
+  </button>`;
+
+const commas = (items: readonly unknown[]) =>
+  items.map((item, index) => html`${index ? ', ' : nothing}${item}`);
+
+const stateLinks = (host: UIRouterDevtools, names: readonly string[]) =>
+  commas(names.map((name) => stateLink(host, name)));
+
+// What the Map draws as edges for a selected transition, in words.
+const renderTxPath = (host: UIRouterDevtools, tx: Tx) => {
+  if (tx.id < 0) return nothing;
+
+  const origin = host._origin(tx);
+
+  return html`<dl class="facts">
+    ${
+      tx.from
+        ? html`<dt>From</dt>
+            <dd>${stateLink(host, tx.from)}</dd>`
+        : nothing
+    }${
+      origin
+        ? html`<dt>Redirected</dt>
+            <dd>from ${seq(origin.id)}, bound for ${origin.to}</dd>`
+        : nothing
+    }${
+      tx.exiting.length
+        ? html`<dt>Exits</dt>
+            <dd>${stateLinks(host, tx.exiting)}</dd>`
+        : nothing
+    }${
+      tx.entering.length
+        ? html`<dt>Enters</dt>
+            <dd>${stateLinks(host, tx.entering)}</dd>`
+        : nothing
+    }
+  </dl>`;
+};
+
+// What the Map draws as edges for a selected state, in words: successful arrivals and departures per other state.
+const renderTraffic = (host: UIRouterDevtools, name: string) => {
+  const seen = observedEdges(host._model).flatMap((edge) =>
+    edge.outcomes.success ? [{ ...edge, count: edge.outcomes.success }] : [],
+  );
+
+  const arrived = seen.filter((edge) => edge.to === name);
+  const left = seen.filter((edge) => edge.from === name && edge.to !== name);
+
+  const from = (edge: (typeof seen)[number]) => {
+    if (edge.from === name) return html`${edge.count} from itself`;
+
+    return edge.from
+      ? html`${edge.count} from ${stateLink(host, edge.from)}`
+      : html`${edge.count} at the start`;
+  };
+
+  return html`${
+    arrived.length
+      ? html`<dt>Arrived</dt>
+          <dd>${commas(arrived.map(from))}</dd>`
+      : nothing
+  }${
+    left.length
+      ? html`<dt>Left</dt>
+          <dd>
+            ${commas(left.map((edge) => html`${edge.count} to ${stateLink(host, edge.to)}`))}
+          </dd>`
+      : nothing
+  }`;
+};
+
 export const renderTxInspector = (
   host: UIRouterDevtools,
   tx: Tx,
@@ -30,6 +111,7 @@ export const renderTxInspector = (
       ><span class="visually-hidden">${statusLabel[status]}</span>
     </p>
     ${tx.result?.reason ? html`<p class="insp-reason ${fault ? 'fault' : ''}">${tx.result.reason}</p>` : nothing}
+    ${renderTxPath(host, tx)}
     ${renderParams(host, tx, '3.1', true)}${renderOptions(tx, '3.2')}${renderTiming(host, tx, '3.3')}
   </div>`;
 };
@@ -83,6 +165,7 @@ export const renderStateInspector = (
           html`<dt>${term}</dt>
             <dd class="marked">${markGlyph(mark)}<span>${text}</span></dd>`,
       )}
+      ${renderTraffic(host, state.name)}
     </dl>
     ${sub('3.1', 'Params')}
     ${

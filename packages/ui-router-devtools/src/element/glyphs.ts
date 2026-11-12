@@ -83,6 +83,16 @@ export const closeGlyph: SVGTemplateResult = frame(
   'close',
 );
 
+export const maxGlyph: SVGTemplateResult = frame(
+  svg`<path d="M2.5 5V2.5H5M7 2.5h2.5V5M9.5 7v2.5H7M5 9.5H2.5V7" />`,
+  'max',
+);
+
+export const minGlyph: SVGTemplateResult = frame(
+  svg`<path d="M5 2.5V5H2.5M9.5 5H7V2.5M7 9.5V7h2.5M2.5 7H5v2.5" />`,
+  'min',
+);
+
 export const roleLabel: Record<Role, string> = {
   current: 'active, current',
   ancestor: 'active',
