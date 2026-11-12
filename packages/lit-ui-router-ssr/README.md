@@ -455,7 +455,7 @@ A shell element needs that list too: a shadow-DOM component that holds `<ui-view
 template, such as an `<app-root>`. Under the default it renders as its bare tag, empty, and the
 views inside it are missing with it. Under `shadowElementRenderers`, the `<ui-view>` in its shadow
 root renders, hydrates and adopts. A list of your own keeps `LitElementRenderer` after
-`LightElementRenderer`: the first renderer that matches a class wins. In development, `prerender()` and
+the package's own renderers, `UiViewRenderer` and `LightElementRenderer`: the first renderer that matches a class wins. In development, `prerender()` and
 `renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no renderer that draws
 it; `<ui-router>`, whose shadow root is a bare slot, is left out.
 
