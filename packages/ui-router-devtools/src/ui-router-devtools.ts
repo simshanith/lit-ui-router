@@ -1108,11 +1108,11 @@ export class UIRouterDevtools extends LitElement {
       <span class="counts">
         ${counts.map(
           ([status, n, label]) =>
-            html`<span class="count status-${status}" title="${n} ${label}"
-              ><span class="num">${n}</span>${statusGlyph(status)}<span
-                class="visually-hidden"
-                >${label}</span
-              ></span
+            html`<span
+              class="count status-${status} ${n ? '' : 'zero'}"
+              title="${n} ${label}"
+              >${statusGlyph(status)}<span class="num">${n}</span
+              ><span class="visually-hidden">${label}</span></span
             >`,
         )}
       </span>

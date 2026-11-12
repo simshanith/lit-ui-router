@@ -26,11 +26,14 @@ export const styles: CSSResult = css`
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
       sans-serif;
-    --uird-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --uird-font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono',
+      monospace;
     --uird-size: 12px;
     --uird-size-small: 11px;
     --uird-line: 16px;
     --uird-row: 24px;
+    --uird-band: 28px;
     --uird-margin: 12px;
     --uird-indent: 24px;
     --uird-gap: 12px;
@@ -90,8 +93,28 @@ export const styles: CSSResult = css`
     white-space: nowrap;
   }
 
-  .num {
+  /* What the router says is set in the monospace face: names, notation, ids, times and values. The panel's own labels stay sans. */
+  .name,
+  .path,
+  .seq,
+  .num,
+  .num-start,
+  .link,
+  .reason,
+  .aside,
+  .pill-name,
+  .plain,
+  .wf-key,
+  .wf-state,
+  .traffic,
+  dd,
+  .params dt {
+    font-family: var(--uird-font-mono);
+    font-variant-ligatures: none;
     font-variant-numeric: tabular-nums;
+  }
+
+  .num {
     text-align: end;
     white-space: nowrap;
   }
@@ -339,6 +362,7 @@ export const styles: CSSResult = css`
 
   .panel:popover-open {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
   }
 
@@ -407,6 +431,10 @@ export const styles: CSSResult = css`
     gap: 12px;
   }
 
+  .titlestrip > .session {
+    align-items: center;
+  }
+
   .session button {
     block-size: var(--uird-row);
     min-inline-size: 48px;
@@ -470,7 +498,7 @@ export const styles: CSSResult = css`
     display: flex;
     grid-column: 2;
     justify-content: end;
-    block-size: var(--uird-row);
+    align-items: center;
     padding-inline: var(--uird-margin);
   }
 
@@ -514,7 +542,17 @@ export const styles: CSSResult = css`
   .count {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+  }
+
+  /* An outcome that has not happened recedes, so a red mark always means a fault. */
+  .count.zero,
+  .count.zero .glyph {
+    color: var(--uird-muted);
+  }
+
+  .count.zero .fault {
+    fill: currentColor;
   }
 
   .icon {
@@ -527,7 +565,6 @@ export const styles: CSSResult = css`
   .body {
     display: grid;
     min-block-size: 0;
-    padding-block-start: 12px;
   }
 
   .pane {
@@ -547,31 +584,48 @@ export const styles: CSSResult = css`
     display: flex;
     align-items: center;
     block-size: var(--uird-row);
-    margin-block-end: 8px;
     padding-inline: var(--uird-margin);
     font-weight: 700;
+  }
+
+  /* Column headings share one band, so their hairlines meet across the panel. */
+  .pane > .section,
+  .pane-switch {
+    block-size: var(--uird-band);
+    margin-block-end: 4px;
+    border-block-end: 1px solid var(--uird-rule);
   }
 
   .section .num {
     min-inline-size: 24px;
     color: var(--uird-muted);
+    font-family: var(--uird-font);
     font-weight: 400;
     text-align: start;
   }
 
   .section .aside {
-    margin-inline-start: var(--uird-gap);
-    font-variant-numeric: tabular-nums;
+    margin-inline-start: auto;
+    color: var(--uird-muted);
+    font-size: var(--uird-size);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .section.sub {
-    margin-block-start: 12px;
-    margin-block-end: 0;
+    margin-block-start: 8px;
+    padding-block-start: 4px;
     padding-inline: 0;
+    border-block-start: 1px solid var(--uird-rule);
+    block-size: calc(var(--uird-band) + 4px);
   }
 
   .section.sub:first-child {
     margin-block-start: 0;
+    padding-block-start: 0;
+    border-block-start: 0;
+    block-size: var(--uird-row);
   }
 
   .tree-pane {
@@ -583,6 +637,7 @@ export const styles: CSSResult = css`
   }
 
   .map-scroll {
+    padding-block-start: 12px;
     padding-inline: var(--uird-margin);
   }
 
@@ -594,7 +649,7 @@ export const styles: CSSResult = css`
 
   .icon.max {
     display: none;
-    margin-inline-end: -16px;
+    margin-inline: -12px -16px;
   }
 
   .inspector-pane,
@@ -650,6 +705,7 @@ export const styles: CSSResult = css`
 
     .body {
       grid-template-rows: minmax(0, 1fr);
+      padding-block-start: 4px;
     }
   }
 
@@ -659,13 +715,13 @@ export const styles: CSSResult = css`
       grid-template-rows: auto minmax(0, 1fr);
     }
 
+    .titlestrip {
+      gap: 12px;
+    }
+
     .tree-pane {
       max-block-size: 40svh;
       border-block-end: 1px solid var(--uird-rule);
-    }
-
-    .log-pane {
-      padding-block-start: 12px;
     }
 
     .panel[data-inspect='router'] .body {
@@ -696,6 +752,13 @@ export const styles: CSSResult = css`
       display: grid;
     }
 
+    /* The strip's end reads as three groups: counts, session, window. */
+    .titlestrip > .session {
+      align-self: stretch;
+      padding-inline: 12px;
+      border-inline: 1px solid var(--uird-rule);
+    }
+
     .panel[data-max] {
       inset-block-start: var(--uird-margin);
       block-size: auto;
@@ -716,6 +779,16 @@ export const styles: CSSResult = css`
 
     .log .detail {
       display: none;
+    }
+
+    .log .tx.selected .reason.fault {
+      overflow: clip;
+      white-space: nowrap;
+    }
+
+    .log .tx.selected .reason .more {
+      display: inline;
+      margin-inline-start: 1ch;
     }
 
     .inspector {
@@ -748,7 +821,6 @@ export const styles: CSSResult = css`
       inline-size: 296px;
       min-block-size: 136px;
       max-block-size: calc(var(--uird-dock-height) - 76px);
-      padding-block-start: 4px;
       border: 1px solid var(--uird-rule-strong);
       border-radius: 2px;
       background: var(--uird-surface);
@@ -793,10 +865,6 @@ export const styles: CSSResult = css`
 
     .panel[data-view='map'][data-max] .log-pane {
       border-inline-start: 0;
-    }
-
-    .panel[data-view='map'][data-max] :is(.log-pane, .inspector-pane) {
-      padding-block-start: 12px;
     }
   }
 
@@ -1269,7 +1337,6 @@ export const styles: CSSResult = css`
 
   .scrubber .section {
     flex: none;
-    margin: 0;
     padding: 0;
   }
 
@@ -1311,16 +1378,36 @@ export const styles: CSSResult = css`
     white-space: nowrap;
   }
 
+  /* A state named in words is underlined, thinly, in its identity colour. */
   .link {
     text-decoration: underline;
+    text-decoration-color: var(--uird-id, var(--uird-rule-strong));
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
   }
 
-  /* A state named in words is underlined in its identity colour. */
-  .link:is(.d1, .d2, .d3, .d4) {
-    text-decoration-color: var(--uird-id);
+  .link:focus-visible {
     text-decoration-thickness: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .traffic {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 16px;
+  }
+
+  .hop {
+    white-space: nowrap;
+  }
+
+  .times {
+    color: var(--uird-muted);
   }
 
   /* Transition log */
@@ -1354,18 +1441,19 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
+  /* A redirect's successor keeps the row grid; a thread joins the two outcome glyphs. */
   .tx .line.chain {
-    grid-template-columns: 24px 24px 12px minmax(0, 1fr) auto;
+    position: relative;
     cursor: default;
   }
 
-  .elbow {
-    justify-self: end;
-    inline-size: 18px;
-    block-size: 12px;
-    margin-block-start: -12px;
-    border-inline-start: 1px solid var(--uird-ink);
-    border-block-end: 1px solid var(--uird-ink);
+  .tx .line.chain::before {
+    content: '';
+    position: absolute;
+    inset-block-start: -5px;
+    inset-inline-start: calc(var(--uird-margin) + 24px + var(--uird-gap) + 5px);
+    block-size: 10px;
+    border-inline-start: 1px solid var(--uird-rule-strong);
   }
 
   .path {
@@ -1406,16 +1494,52 @@ export const styles: CSSResult = css`
     padding-block-end: 4px;
     margin-block-start: -4px;
     color: var(--uird-muted);
+    font-size: var(--uird-size-small);
+    overflow-wrap: anywhere;
   }
 
-  .reason.fault,
-  .insp-reason.fault {
+  .reason.fault .msg {
     color: var(--uird-red);
   }
 
-  .insp-reason {
-    padding-inline-start: 24px;
-    color: var(--uird-muted);
+  /* A fault is one line in the log; the inspector, or the selected row where there is none, holds all of it. */
+  .tx .reason.fault {
+    overflow: clip;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reason .more {
+    margin-inline-start: 1ch;
+  }
+
+  .tx.selected .reason.fault {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .tx.selected .reason .more {
+    display: block;
+    margin-inline-start: 0;
+  }
+
+  .inspector .reason {
+    margin-block: 4px 8px;
+    margin-inline-start: 5px;
+    padding-block: 0;
+    padding-inline: 17px 0;
+    border-inline-start: 2px solid var(--uird-rule);
+  }
+
+  .inspector .reason.fault {
+    border-inline-start-color: var(--uird-red);
+  }
+
+  .inspector .reason .more {
+    display: block;
+    margin-block-start: 4px;
+    margin-inline-start: 0;
+    color: var(--uird-ink);
   }
 
   .tx .value {
@@ -1491,6 +1615,7 @@ export const styles: CSSResult = css`
   .wf-key {
     grid-column: 2;
     color: var(--uird-muted);
+    font-size: var(--uird-size-small);
     overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1510,12 +1635,6 @@ export const styles: CSSResult = css`
 
   .bar.failed {
     background: var(--uird-red);
-  }
-
-  .params dd,
-  .literal {
-    font-family: var(--uird-font-mono);
-    font-size: var(--uird-size-small);
   }
 
   .wf > .tag,
@@ -1566,6 +1685,7 @@ export const styles: CSSResult = css`
     align-items: center;
     gap: var(--uird-gap);
     min-block-size: var(--uird-row);
+    margin-block-start: 4px;
   }
 
   .insp-title .name {
@@ -1684,6 +1804,7 @@ export const styles: CSSResult = css`
       forced-color-adjust: none;
     }
 
+    .tx.selected .reason.fault .msg,
     .selected:not(.box) *,
     .tx.selected > .line *,
     .tx.selected > .line .seq {

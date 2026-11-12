@@ -48,7 +48,7 @@ const SETTLE = 200;
 /** How long a withdrawn edge stays drawn. */
 const WITHDRAW = 160;
 
-const CHAR = 6.7;
+const CHAR = 7.2;
 
 interface Options {
   collapse: boolean;
@@ -264,7 +264,8 @@ export const layoutNested = (host: UIRouterDevtools): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
   const style = getComputedStyle(host);
-  const family = style.fontFamily;
+  // State names are set in the monospace face, so that is the face measured.
+  const family = style.getPropertyValue('--uird-font-mono');
   const rtl = style.direction === 'rtl';
 
   // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.

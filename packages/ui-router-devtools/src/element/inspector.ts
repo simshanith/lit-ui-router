@@ -4,7 +4,12 @@ import type { Tx } from '../fold.ts';
 import type { LocationInfo } from '../schema.ts';
 import { observedEdges } from '../edges.ts';
 import { segment, seq } from '../notation.ts';
-import { renderOptions, renderParams, renderTiming } from './log.ts';
+import {
+  reasonLine,
+  renderOptions,
+  renderParams,
+  renderTiming,
+} from './log.ts';
 import {
   markGlyph,
   roleGlyph,
@@ -75,24 +80,28 @@ const renderTraffic = (host: UIRouterDevtools, name: string) => {
   const arrived = seen.filter((edge) => edge.to === name);
   const left = seen.filter((edge) => edge.from === name && edge.to !== name);
 
-  const from = (edge: (typeof seen)[number]) => {
-    if (edge.from === name) return html`${edge.count} from itself`;
-
-    return edge.from
-      ? html`${edge.count} from ${stateLink(host, edge.from)}`
-      : html`${edge.count} at the start`;
-  };
+  // One state and how often, per hop: `stars ×2`.
+  const hop = (other: string, count: number) =>
+    html`<span class="hop"
+      >${
+        other === name || !other
+          ? html`<span class="muted">${other ? 'itself' : 'start'}</span>`
+          : stateLink(host, other)
+      }<span class="times"> ×${count}</span></span
+    >`;
 
   return html`${
     arrived.length
       ? html`<dt>Arrived</dt>
-          <dd>${commas(arrived.map(from))}</dd>`
+          <dd class="traffic">
+            ${arrived.map((edge) => hop(edge.from, edge.count))}
+          </dd>`
       : nothing
   }${
     left.length
       ? html`<dt>Left</dt>
-          <dd>
-            ${commas(left.map((edge) => html`${edge.count} to ${stateLink(host, edge.to)}`))}
+          <dd class="traffic">
+            ${left.map((edge) => hop(edge.to, edge.count))}
           </dd>`
       : nothing
   }`;
@@ -103,15 +112,13 @@ export const renderTxInspector = (
   tx: Tx,
 ): TemplateResult => {
   const status = tx.result?.outcome ?? 'running';
-  const fault = status === 'error' || status === 'invalid';
 
   return html`<div class="inspector">
     <p class="insp-title">
       ${statusGlyph(status)}<span class="name">${tx.to}</span
       ><span class="visually-hidden">${statusLabel[status]}</span>
     </p>
-    ${tx.result?.reason ? html`<p class="insp-reason ${fault ? 'fault' : ''}">${tx.result.reason}</p>` : nothing}
-    ${renderTxPath(host, tx)}
+    ${reasonLine(tx.result?.reason, status)} ${renderTxPath(host, tx)}
     ${renderParams(host, tx, '3.1', true)}${renderOptions(tx, '3.2')}${renderTiming(host, tx, '3.3')}
   </div>`;
 };

@@ -12,7 +12,7 @@ const MAP_LEAD = 12;
 
 const MAP_RUN = 36;
 
-const CHAR = 6.7;
+const CHAR = 7.2;
 
 type MapNode = { state: StateInfo | null; children: MapNode[] };
 

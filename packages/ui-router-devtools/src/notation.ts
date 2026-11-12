@@ -78,6 +78,23 @@ export const sourceTags = (tx: Tx): string[] => {
   ].filter((tag): tag is string => Boolean(tag));
 };
 
+const REJECTION =
+  /^Transition Rejection\(\$id: \d+ type: \d+, message: (.*?), detail: (.*)\)$/s;
+
+export interface ReasonParts {
+  head: string;
+  detail?: string;
+}
+
+// Core's Rejection.toString() wraps a message and a detail; a row shows the message and the inspector both.
+export const reasonParts = (reason: string): ReasonParts => {
+  const [, head, detail] = REJECTION.exec(reason) ?? [];
+
+  if (!head) return { head: reason };
+
+  return detail && detail !== 'undefined' ? { head, detail } : { head };
+};
+
 const SEGMENT_MAX = 24;
 
 // Shortens a long name segment in the middle; both ends carry meaning.

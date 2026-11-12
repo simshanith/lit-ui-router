@@ -8,7 +8,7 @@ import {
 
 import { ancestorsOf } from '../fold.ts';
 import { fold, observe, type DevtoolsEvent } from '../index.ts';
-import { pathText } from '../notation.ts';
+import { pathText, reasonParts } from '../notation.ts';
 
 const states: StateDeclaration[] = [
   { name: 'app' },
@@ -64,4 +64,26 @@ it('names the deepest exited and the deepest entered state', async () => {
     '− login + mail.list',
     '− mail.list + mail.list',
   ]);
+});
+
+it('splits the message and the detail out of a rejection core printed', () => {
+  expect(
+    reasonParts(
+      "Transition Rejection($id: 5 type: 4, message: This transition is invalid, detail: The following parameter values are not valid for state 'contacts.contact.edit': [contactId:undefined])",
+    ),
+  ).toEqual({
+    head: 'This transition is invalid',
+    detail:
+      "The following parameter values are not valid for state 'contacts.contact.edit': [contactId:undefined]",
+  });
+
+  expect(
+    reasonParts(
+      'Transition Rejection($id: 2 type: 6, message: The transition errored, detail: undefined)',
+    ),
+  ).toEqual({ head: 'The transition errored' });
+
+  expect(reasonParts('Resolve "horizon" rejected: no data escapes')).toEqual({
+    head: 'Resolve "horizon" rejected: no data escapes',
+  });
 });

@@ -5,6 +5,7 @@ import type { Value } from '../schema.ts';
 import {
   ms,
   pathParts,
+  reasonParts,
   segment,
   seq,
   sourceTags,
@@ -50,10 +51,23 @@ const logItems = (host: UIRouterDevtools): LogItem[] => {
   return items;
 };
 
-const reasonLine = (reason: string | null | undefined, status: Status) =>
-  reason
-    ? html`<p class="reason ${FAULTS.has(status) ? 'fault' : ''}">${reason}</p>`
-    : nothing;
+// A fault's message leads; what core appended to it follows as the detail.
+export const reasonLine = (
+  reason: string | null | undefined,
+  status: Status,
+): TemplateResult | typeof nothing => {
+  if (!reason) return nothing;
+
+  const { head, detail } = reasonParts(reason);
+
+  return html`<p
+    class="reason ${FAULTS.has(status) ? 'fault' : ''}"
+    title=${detail ? `${head}: ${detail}` : head}
+  >
+    <span class="msg">${head}</span
+    >${detail ? html`<span class="more">${detail}</span>` : nothing}
+  </p>`;
+};
 
 const renderIgnored = (txs: Tx[]) => {
   const ids = txs.map((tx) => seq(tx.id)).join(', ');
@@ -147,8 +161,7 @@ const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
     ${
       origin
         ? html`<div class="line chain">
-            <span class="elbow" aria-hidden="true"></span
-            ><span class="seq">${seq(tx.id)}</span
+            <span class="seq">${seq(tx.id)}</span
             >${statusGlyph(status)}${hidden(
               status,
             )}${renderPath(tx)}${valueCell(host, tx, status)}
