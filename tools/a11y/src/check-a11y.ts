@@ -23,12 +23,12 @@ const SITE_DIR = join(workspaceRoot, 'www/lit-ui-router.dev');
 
 const DIST = join(SITE_DIR, 'dist');
 
-/** The vanilla walk also turns on the api-docs panel and the visualizer. */
+/** The vanilla walk also turns on the api-docs panel and the devtools. */
 const APPS: readonly AppMount[] = [
   {
     mount: '/app',
     hash: false,
-    query: '?feature-enable-api-docs=true&feature-enable-visualizer=true',
+    query: '?feature-enable-api-docs=true&feature-enable-devtools=true',
   },
   { mount: '/app-mobx', hash: false },
   { mount: '/app-effect', hash: false },

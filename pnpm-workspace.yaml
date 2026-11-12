@@ -258,6 +258,7 @@ catalogs:
     sample-app-routes: workspace:*
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
+    ui-router-devtools: workspace:*
     ui-router-effect: workspace:*
     ui-router-mobx: workspace:*
     ui-router-registry: workspace:*

@@ -634,6 +634,9 @@ catalogs:
     sample-app-shared:
       specifier: workspace:*
       version: workspace:*
+    ui-router-devtools:
+      specifier: workspace:*
+      version: workspace:*
     ui-router-effect:
       specifier: workspace:*
       version: workspace:*
@@ -1094,6 +1097,9 @@ importers:
       sample-app-routes:
         specifier: catalog:workspace
         version: link:../sample-app-routes
+      ui-router-devtools:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-devtools
       ui-router-navigation-location-plugin:
         specifier: catalog:workspace
         version: link:../../packages/navigation-location-plugin
