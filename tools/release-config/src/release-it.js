@@ -2,6 +2,7 @@ import {
   skipUnconsumedCatalogCommit,
   WORKSPACE_FILE,
 } from './catalog-commits.js';
+import { finalizeContext, footerPartial } from './notes.js';
 
 // The one release-it config for every publishable package. Each package keeps a
 // .release-it.js that imports and re-exports it so release-it's cwd-based config
@@ -65,6 +66,10 @@ export default {
         headerPartial: () => '',
         // Workspace-file-only commits count only when they change a consumed entry.
         skip: skipUnconsumedCatalogCommit,
+        // notes.js pairs reverts itself; the built-in filter drops both silently.
+        ignoreReverted: false,
+        finalizeContext,
+        footerPartial,
       },
     },
   },
