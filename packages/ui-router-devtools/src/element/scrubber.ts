@@ -11,7 +11,8 @@ const tickId = (tx: Tx): string =>
   tx.id < 0 ? `tick-n${-tx.id}` : `tick-${tx.id}`;
 
 const tickLabel = (host: UIRouterDevtools, tx: Tx): string => {
-  const took = tx.id < 0 ? '' : `, ${ms(host._duration(tx))}`;
+  const duration = tx.id < 0 ? undefined : host._duration(tx);
+  const took = duration === undefined ? '' : `, ${ms(duration)}`;
 
   return `${seq(tx.id)} ${statusLabel[statusOf(tx)]}: ${pathText(tx)}${took}`.trim();
 };

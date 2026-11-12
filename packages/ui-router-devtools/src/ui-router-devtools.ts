@@ -33,13 +33,14 @@ import {
   minGlyph,
   statusGlyph,
   statusLabel,
+  took,
   type Role,
   type Status,
 } from './element/glyphs.ts';
 import { styles } from './element/styles.ts';
 import { renderOutline } from './element/tree.ts';
 import type { NestedLayout } from './element/nested.ts';
-import type { Rung, Size } from './element/pack.ts';
+import type { Metrics, Rung, Size } from './element/pack.ts';
 import type { Rect } from './element/route.ts';
 import { placeBeside } from './element/popover.ts';
 import { renderScrubber } from './element/scrubber.ts';
@@ -73,7 +74,13 @@ const SETTLE = 200;
 /** The room the dock's inspector popover takes beside the diagram: its inline size and a module either side. */
 const ASIDE = 320;
 
+const MARGIN = 12;
+
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+
+const FLIP = 'uird-flip';
+
+const RESCALE = 'uird-rescale';
 
 const LAYOUT_KEY = 'ui-router-devtools:map-layout';
 
@@ -126,6 +133,75 @@ const offsetIn = (element: HTMLElement, ancestor: Element): Rect => {
 const MOVERS = ':is(.nested, .map), [data-name]';
 
 const moverKey = (element: HTMLElement): string => element.dataset.name ?? '';
+
+// A change of type size is one object changing size: the diagram scales from its old outline and its boxes ride it.
+const rescale = (root: HTMLElement, was: DOMRect): void => {
+  const now = root.getBoundingClientRect();
+  // The panel changes size at once and its viewport clips, so the diagram grows about its own middle on the block axis.
+  const from = `translate(${was.x - now.x}px, ${(now.height - was.height) / 2}px) scale(${was.width / now.width}, ${was.height / now.height})`;
+
+  root.animate(
+    [
+      { transformOrigin: '0 0', transform: from },
+      { transformOrigin: '0 0', transform: 'none' },
+    ],
+    { id: RESCALE, duration: SETTLE, easing: EASE_OUT },
+  );
+};
+
+// While a box changes size its header keeps its final width, so no name is elided mid-flight, and what the box does not hold yet stays out of sight.
+const holdInside = (box: HTMLElement, rtl: boolean): (() => void) => {
+  const head = box.querySelector<HTMLElement>(':scope > .head');
+  const width = `${head?.offsetWidth ?? 0}px`;
+  const timing = { id: FLIP, duration: SETTLE };
+
+  // The clip leaves room for the selection outline, and at the inline start for the default-child marker.
+  const clipPath = rtl
+    ? 'inset(-4px -24px -4px -4px)'
+    : 'inset(-4px -4px -4px -24px)';
+
+  // The header is measured at rest, before the box's own animation narrows or widens it.
+  return () => {
+    head?.animate([{ minWidth: width }, { minWidth: width }], timing);
+    box.animate([{ clipPath }, { clipPath }], timing);
+  };
+};
+
+const sizeOf = (rect: DOMRect) => ({
+  width: `${rect.width}px`,
+  height: `${rect.height}px`,
+});
+
+// Only a box changes size: the root would re-centre mid-flight, and a tree node is its label.
+const ease = (
+  element: HTMLElement,
+  was: DOMRect,
+  now: DOMRect,
+  { x, y, rtl }: { x: number; y: number; rtl: boolean },
+): void => {
+  const grows =
+    element.matches('.box') &&
+    (Math.abs(was.width - now.width) >= 1 ||
+      Math.abs(was.height - now.height) >= 1);
+
+  if (!grows && Math.abs(x) < 1 && Math.abs(y) < 1) return;
+
+  const hold = grows ? holdInside(element, rtl) : undefined;
+  const from: Keyframe = { transform: `translate(${x}px, ${y}px)` };
+  const to: Keyframe = { transform: 'none' };
+
+  if (grows) {
+    Object.assign(from, sizeOf(was));
+    Object.assign(to, sizeOf(now));
+  }
+
+  element.animate([from, to], {
+    id: FLIP,
+    duration: SETTLE,
+    easing: EASE_OUT,
+  });
+  hold?.();
+};
 
 const elide = (name: string): string => {
   if (name.length <= 28) return name;
@@ -189,6 +265,9 @@ export class UIRouterDevtools extends LitElement {
   // What the Map last drew, and where its states were before a change to it.
   #geometry: readonly unknown[] = [];
   #before: Map<string, DOMRect> | null = null;
+  // The Map's type step, and whether the last change to the Map changed it.
+  #step: Metrics | undefined;
+  #resized = false;
   #resize: ResizeObserver | undefined;
   #observed: Element | null = null;
   #recorder: Recorder | undefined;
@@ -282,9 +361,11 @@ export class UIRouterDevtools extends LitElement {
 
   // The Map's drawing changes with its view, its layout and the panel's size; anything else leaves boxes where they are.
   #mapMoved(): boolean {
+    const nested = this._view === 'map' ? this._nested() : null;
+
     const geometry =
       this._view === 'map'
-        ? [this._nested()?.placed ?? this._layoutPref, this._max, this._aside]
+        ? [nested?.placed ?? this._layoutPref, this._max]
         : [];
 
     const moved =
@@ -293,6 +374,10 @@ export class UIRouterDevtools extends LitElement {
 
     const drawn = this.#geometry.length > 0;
     this.#geometry = geometry;
+    this.#resized = Boolean(
+      this.#step && nested && this.#step !== nested.metrics,
+    );
+    this.#step = nested?.metrics;
 
     return (
       moved &&
@@ -320,16 +405,38 @@ export class UIRouterDevtools extends LitElement {
     );
   }
 
-  // FLIP: each state's element starts where the state was and eases to its new place; a child moves relative to its parent.
+  // Ends the moves in flight and, when the type size changed, starts the one that scales the whole diagram.
+  #rescaled(root: HTMLElement | undefined, outline: DOMRect | undefined) {
+    // The panel's own resize re-packs once more while the diagram is still changing size; that stays one move.
+    const rescaling =
+      this.#resized ||
+      root?.getAnimations().some((animation) => animation.id === RESCALE);
+
+    for (const element of this.renderRoot.querySelectorAll('.map-scroll *'))
+      for (const animation of element.getAnimations())
+        if (animation.id === FLIP || animation.id === RESCALE)
+          animation.cancel();
+
+    if (!rescaling || !root?.matches('.nested') || !outline?.width)
+      return false;
+
+    rescale(root, outline);
+
+    return true;
+  }
+
+  // FLIP: each state's element starts where and as large as the state was and eases to its new place and size; a child moves relative to its parent.
   #flip(before: ReadonlyMap<string, DOMRect>) {
     const movers = this.#movers;
 
-    for (const element of movers)
-      for (const animation of element.getAnimations())
-        if (animation.id === 'uird-flip') animation.cancel();
+    if (this.#rescaled(movers[0], before.get(''))) return;
 
+    // A box hangs from its parent's inline-start edge, so that is the edge a shift is measured at.
+    const rtl = getComputedStyle(this).direction === 'rtl';
+    const edge = (rect: DOMRect) => (rtl ? rect.right : rect.x);
     const shifts = new Map<Element, { x: number; y: number }>();
 
+    // Every box is read before any is animated, since a parent's animation would move what its children report.
     const plans = movers.map((element) => {
       const was = before.get(moverKey(element));
       const now = element.getBoundingClientRect();
@@ -339,18 +446,21 @@ export class UIRouterDevtools extends LitElement {
       ) ?? { x: 0, y: 0 };
 
       // A state that was not drawn rides with its parent and fades in.
-      const shift = was ? { x: was.x - now.x, y: was.y - now.y } : carried;
+      const shift = was
+        ? { x: edge(was) - edge(now), y: was.y - now.y }
+        : carried;
+
       shifts.set(element, shift);
 
-      return { element, x: shift.x - carried.x, y: shift.y - carried.y };
+      return {
+        element,
+        was: was ?? now,
+        now,
+        by: { x: shift.x - carried.x, y: shift.y - carried.y, rtl },
+      };
     });
 
-    for (const { element, x, y } of plans)
-      if (Math.abs(x) >= 1 || Math.abs(y) >= 1)
-        element.animate(
-          [{ transform: `translate(${x}px, ${y}px)` }, { transform: 'none' }],
-          { id: 'uird-flip', duration: SETTLE, easing: EASE_OUT },
-        );
+    for (const { element, was, now, by } of plans) ease(element, was, now, by);
   }
 
   protected firstUpdated(): void {
@@ -419,15 +529,49 @@ export class UIRouterDevtools extends LitElement {
 
     if (!anchor) return;
 
-    const place = placeBeside(
+    const place = this.#popoverPlace(
       anchor,
       popover.getBoundingClientRect(),
-      { x: 8, y: 34, width: origin.width - 16, height: origin.height - 70 },
-      nested ? (this._map?.keepClear(this, nested).map(inPanel) ?? []) : [],
+      origin,
+      nested && box ? { nested, at } : undefined,
     );
 
     panel.style.setProperty('--uird-pop-x', `${place.x}px`);
     panel.style.setProperty('--uird-pop-y', `${place.y}px`);
+  }
+
+  // Beside the diagram the popover has a column of its own; over it, it takes the place that covers least.
+  #popoverPlace(
+    anchor: Rect,
+    size: Size,
+    origin: Size,
+    map?: { nested: NestedLayout; at: { x: number; y: number } },
+  ) {
+    const bounds = {
+      x: 8,
+      y: 34,
+      width: origin.width - 16,
+      height: origin.height - 70,
+    };
+
+    if (!map) return placeBeside(anchor, size, bounds);
+
+    if (this._beside(map.nested)) {
+      const rtl = getComputedStyle(this).direction === 'rtl';
+
+      return { x: rtl ? MARGIN : origin.width - MARGIN - size.width, y: 38 };
+    }
+
+    const clear = this._map?.keepClear(this, map.nested) ?? [];
+
+    return placeBeside(anchor, size, bounds, [
+      { ...anchor, weight: 1000 },
+      ...clear.map((rect) => ({
+        ...rect,
+        x: rect.x + map.at.x,
+        y: rect.y + map.at.y,
+      })),
+    ]);
   }
 
   // The scrubber keeps the selected transition in view, else the newest.
@@ -607,16 +751,19 @@ export class UIRouterDevtools extends LitElement {
       : null;
   }
 
-  // In the dock the diagram moves over for the inspector popover when both fit side by side, so neither covers the other.
-  get _aside(): boolean {
-    const nested = this._nested();
+  // Whether the dock has room for the inspector popover beside the diagram. It follows the diagram's size, never the selection.
+  _beside(nested: NestedLayout): boolean {
+    return !this._max && this._mapSize.width - nested.placed.width >= ASIDE;
+  }
 
-    return (
-      nested !== null &&
-      !this._max &&
-      (this._inspect === 'state' || this._inspect === 'tx') &&
-      nested.placed.width + ASIDE <= this._mapSize.width
-    );
+  // The room kept at the diagram's end so the popover's column is empty before anything is selected, and nothing moves when it is.
+  _reserve(nested: NestedLayout): number {
+    if (!this._beside(nested)) return 0;
+
+    const spare = this._mapSize.width - nested.placed.width;
+
+    // Centred while a column is free either side; past that the diagram gives up its end margin first.
+    return Math.max(0, Math.min(ASIDE, ASIDE * 2 - spare));
   }
 
   _depthClass(name: string): string {
@@ -994,7 +1141,7 @@ export class UIRouterDevtools extends LitElement {
     return {
       status,
       name: name || '(root)',
-      took: duration === undefined ? '' : ms(duration),
+      took: duration === undefined ? nothing : took(duration),
     };
   }
 
@@ -1009,7 +1156,7 @@ export class UIRouterDevtools extends LitElement {
       ${statusGlyph(status)}<span class="visually-hidden"
         >Router ${statusLabel[status]}:</span
       ><span class="pill-name">${elide(name)}</span
-      >${took ? html`<span class="num">${took}</span>` : nothing}${
+      >${took === nothing ? nothing : html`<span class="num">${took}</span>`}${
         this._imported ? html`<span class="tag">Imported</span>` : nothing
       }
     </button>`;

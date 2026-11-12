@@ -1,5 +1,5 @@
-import { svg, type SVGTemplateResult } from 'lit';
-import type { Status } from '../notation.ts';
+import { html, svg, type SVGTemplateResult, type TemplateResult } from 'lit';
+import { ms, type Status } from '../notation.ts';
 import type { StateInfo } from '../schema.ts';
 import { bareName } from '../fold.ts';
 
@@ -198,4 +198,11 @@ export const statusLabel: Record<Status, string> = {
   superseded: 'superseded',
   aborted: 'aborted',
   ignored: 'ignored',
+};
+
+/** A duration as it is shown: the number, then its unit set close and muted. A screen reader hears "0.6 ms". */
+export const took = (value: number): TemplateResult => {
+  const [amount, unit] = ms(value).split(' ');
+
+  return html`${amount}<span class="unit">${unit}</span>`;
 };

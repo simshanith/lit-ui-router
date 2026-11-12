@@ -231,7 +231,7 @@ describe('the nested Map', () => {
     waitFor(() =>
       expect(
         [...element.renderRoot.querySelectorAll('.nested, .box')].flatMap(
-          (box) => box.getAnimations().filter((a) => a.id === 'uird-flip'),
+          (box) => box.getAnimations().filter((a) => a.id.startsWith('uird-')),
         ),
       ).toHaveLength(0),
     );
@@ -282,46 +282,110 @@ describe('the nested Map', () => {
     expect(await tree(element)).toBeTruthy();
   });
 
-  it('keeps boxes at their natural size and centres the diagram, in the dock and maximised', async () => {
+  it("keeps boxes at their natural size in the dock, with the popover's column free, and enlarges them maximised", async () => {
     const element = await openMap(1280);
     const map = await tree(element);
 
-    const centred = async () => {
-      await settled(element);
-      const room = margins(element);
-
-      expect(Math.abs(room.left - room.right)).toBeLessThanOrEqual(1);
-      expect(Math.abs(room.top - room.bottom)).toBeLessThanOrEqual(1);
-      expect(room.left).toBeGreaterThanOrEqual(0);
-      expect(room.top).toBeGreaterThanOrEqual(0);
-
+    const pills = (height: number, widest: number) => {
       for (const name of ['login', 'message', 'edit']) {
         const pill = getByRole(map, 'treeitem', { name }).parentElement!;
         const rect = pill.getBoundingClientRect();
+        const text = pill.querySelector('.name')!;
 
-        expect(rect.height).toBe(24);
-        expect(rect.width).toBeLessThanOrEqual(208);
+        expect(rect.height).toBe(height);
+        expect(rect.width).toBeLessThanOrEqual(widest);
         // A pill is its label and padding, so its text is never clipped and never has slack beside it.
-        expect(
-          rect.right -
-            pill.querySelector('.name')!.getBoundingClientRect().right,
-        ).toBeLessThan(16);
+        expect(text.scrollWidth).toBeLessThanOrEqual(text.clientWidth);
+        expect(rect.right - text.getBoundingClientRect().right).toBeLessThan(
+          height,
+        );
       }
     };
 
-    await centred();
+    await settled(element);
+    const dock = margins(element);
+
+    // The diagram is centred when a column is free either side, and otherwise as near the middle as leaves one free at the end.
+    expect(Math.abs(dock.top - dock.bottom)).toBeLessThanOrEqual(1);
+    expect(dock.left).toBeGreaterThanOrEqual(0);
+    expect(dock.left).toBeLessThanOrEqual(dock.right + 1);
+    expect(dock.right).toBeGreaterThanOrEqual(320);
+    pills(24, 208);
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
     await waitFor(() => {
       const scroller = element.renderRoot.querySelector('.map-scroll')!;
       expect(scroller.clientHeight).toBeGreaterThan(300);
     });
-    await centred();
+    await settled(element);
+    const max = margins(element);
+
+    expect(Math.abs(max.left - max.right)).toBeLessThanOrEqual(1);
+    expect(Math.abs(max.top - max.bottom)).toBeLessThanOrEqual(1);
+    // Maximised, the diagram takes a larger step and still keeps a margin.
+    expect(max.left).toBeGreaterThan(40);
+    expect(max.top).toBeGreaterThan(12);
+    expect(
+      getComputedStyle(element.renderRoot.querySelector('.nested')!).fontSize,
+    ).not.toBe('12px');
+
+    const { height } = getByRole(map, 'treeitem', {
+      name: 'login',
+    }).parentElement!.getBoundingClientRect();
+
+    expect([32, 40]).toContain(height);
+    pills(height, 348);
     // Maximised, the full log and the inspector sit below the diagram.
     expect(
       getByRole(shadow(element), 'heading', { name: /Inspector/ }),
     ).toBeTruthy();
     expect(queryByRole(shadow(element), 'listbox')).toBeNull();
+  });
+
+  it('moves nothing when a state is selected, and keeps the popover off the selected box', async () => {
+    for (const width of [1280, 1000]) {
+      const element = await openMap(width);
+      const map = await tree(element);
+      await settled(element);
+
+      const rects = () =>
+        [...element.renderRoot.querySelectorAll('.box')].map((box) => {
+          const { x, y, width: w, height: h } = box.getBoundingClientRect();
+
+          return [x, y, w, h];
+        });
+
+      const before = rects();
+
+      for (const name of ['message', 'login', 'contacts']) {
+        const item = getByRole(map, 'treeitem', { name });
+        item.click();
+        await waitFor(() =>
+          expect(item.getAttribute('aria-selected')).toBe('true'),
+        );
+        await element.updateComplete;
+
+        expect(rects()).toEqual(before);
+
+        const box = item.parentElement!.getBoundingClientRect();
+
+        await waitFor(() => {
+          const popover = element.renderRoot
+            .querySelector('.inspector-pane')!
+            .getBoundingClientRect();
+
+          expect(popover.width).toBeGreaterThan(0);
+          expect(
+            popover.left >= box.right ||
+              popover.right <= box.left ||
+              popover.top >= box.bottom ||
+              popover.bottom <= box.top,
+          ).toBe(true);
+        });
+      }
+
+      element.remove();
+    }
   });
 
   it('closes and opens a compound from its fold button', async () => {
@@ -336,6 +400,23 @@ describe('the nested Map', () => {
         ),
       ).toBe('false'),
     );
+
+    // The collapsing box and the root that shrinks around it ease their size as well as their place.
+    const sized = (name: string) =>
+      element.renderRoot
+        .querySelector(`.box[data-name="${name}"]`)!
+        .getAnimations()
+        .flatMap((animation) =>
+          animation.id === 'uird-flip' &&
+          animation.effect instanceof KeyframeEffect
+            ? animation.effect.getKeyframes()
+            : [],
+        )
+        .some((frame) => 'width' in frame && 'height' in frame);
+
+    expect(sized('app.contacts')).toBe(true);
+    expect(sized('app')).toBe(true);
+    await settled(element);
     expect(queryByRole(map, 'treeitem', { name: 'edit' })).toBeNull();
     expect(
       getByRole(map, 'treeitem', { name: 'contacts 3' }).getAttribute(

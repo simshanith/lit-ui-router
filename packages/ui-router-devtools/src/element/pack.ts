@@ -15,6 +15,8 @@ export interface Metrics {
   /** The narrowest and widest a leaf may be. */
   min: number;
   max: number;
+  /** The type size the labels are set in. */
+  type: number;
 }
 
 // The spacing system, on the panel's 4px unit and 12px module; `map.md` records it.
@@ -28,6 +30,34 @@ export const METRICS: Metrics = {
   groupY: 36,
   min: 56,
   max: 208,
+  type: 12,
+};
+
+/** The maximised panel's steps: the same proportions at 16px and 20px type, a third and two thirds larger. */
+export const ROOMY_METRICS: Metrics = {
+  head: 32,
+  padX: 32,
+  padY: 16,
+  gapX: 32,
+  gapY: 32,
+  groupX: 48,
+  groupY: 48,
+  min: 76,
+  max: 276,
+  type: 16,
+};
+
+export const LARGE_METRICS: Metrics = {
+  head: 40,
+  padX: 40,
+  padY: 20,
+  gapX: 40,
+  gapY: 40,
+  groupX: 60,
+  groupY: 60,
+  min: 92,
+  max: 348,
+  type: 20,
 };
 
 /** The caption-size rung of the fit ladder. */
@@ -41,6 +71,7 @@ export const SMALL_METRICS: Metrics = {
   groupY: 16,
   min: 48,
   max: 176,
+  type: 11,
 };
 
 export interface Size {
@@ -447,8 +478,10 @@ export const mostSlack = (placed: Placed, metrics: Metrics): number => {
   return Math.max(own, ...inner.map((item) => mostSlack(item.placed, metrics)));
 };
 
-/** The fit ladder, mildest first; each rung keeps the ones before it. The last is the node-link tree. */
+/** The fit ladder, mildest first; each rung keeps the ones before it. The first two enlarge and the last is the node-link tree. */
 export const RUNGS = [
+  'large',
+  'roomy',
   'expanded',
   'collapsed',
   'merged',
@@ -461,23 +494,30 @@ export type Rung = (typeof RUNGS)[number];
 
 const SPARE = 0.9;
 
+const NATURAL = RUNGS.indexOf('expanded');
+
 /**
  * The first rung whose packed size fits the viewport. A rung milder than the previous one
  * must fit with a tenth of the inline size to spare, so a resize does not flicker between layouts.
+ * The enlarged rungs are tried only when `enlarge` is set, and must leave a tenth of each axis as margin.
  */
 export const chooseRung = (
   sizeAt: (rung: Rung, room: Size) => Size,
   viewport: Size,
   previous?: Rung,
+  enlarge = false,
 ): Rung => {
   const held = previous ? RUNGS.indexOf(previous) : 0;
   const spare = { ...viewport, width: viewport.width * SPARE };
+  const framed = { ...spare, height: viewport.height * SPARE };
 
   for (const [index, rung] of RUNGS.entries()) {
     if (rung === 'tree') break;
 
+    if (index < NATURAL && !enlarge) continue;
+
     // A milder rung is packed for the narrower room, since a packing follows the room it is given.
-    const room = index < held ? spare : viewport;
+    const room = index < NATURAL ? framed : index < held ? spare : viewport;
 
     if (fits(sizeAt(rung, room), room)) return rung;
   }

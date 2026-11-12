@@ -4,10 +4,12 @@ import { stressStates } from '../../demo/stress.ts';
 import {
   chooseRung,
   drawnIn,
+  LARGE_METRICS,
   leastCover,
   METRICS,
   mostSlack,
   pack,
+  ROOMY_METRICS,
   splitRows,
   type Box,
   type Placed,
@@ -267,6 +269,8 @@ describe('pack', () => {
 
 describe('chooseRung', () => {
   const sizes: Record<Rung, { width: number; height: number }> = {
+    large: { width: 2300, height: 330 },
+    roomy: { width: 1850, height: 265 },
     expanded: { width: 1400, height: 200 },
     collapsed: { width: 1000, height: 200 },
     merged: { width: 900, height: 200 },
@@ -291,6 +295,50 @@ describe('chooseRung', () => {
     expect(at(1120, 'merged')).toBe('collapsed');
     expect(at(720, 'tree')).toBe('tree');
     expect(at(780, 'tree')).toBe('small');
+  });
+});
+
+describe('the enlarged rungs', () => {
+  const sizes: Record<Rung, Size> = {
+    large: { width: 1000, height: 250 },
+    roomy: { width: 800, height: 200 },
+    expanded: { width: 600, height: 150 },
+    collapsed: { width: 500, height: 150 },
+    merged: { width: 400, height: 150 },
+    truncated: { width: 300, height: 150 },
+    small: { width: 200, height: 120 },
+    tree: { width: 0, height: 0 },
+  };
+
+  const at = (viewport: Size, enlarge: boolean) =>
+    chooseRung((rung) => sizes[rung], viewport, undefined, enlarge);
+
+  it('are tried only when asked for', () => {
+    expect(at({ width: 1230, height: 400 }, false)).toBe('expanded');
+    expect(at({ width: 1230, height: 400 }, true)).toBe('large');
+  });
+
+  it('take the largest step that leaves a tenth of each axis as margin', () => {
+    expect(at({ width: 1112, height: 400 }, true)).toBe('large');
+    expect(at({ width: 1100, height: 400 }, true)).toBe('roomy');
+    expect(at({ width: 1230, height: 270 }, true)).toBe('roomy');
+    expect(at({ width: 880, height: 220 }, true)).toBe('expanded');
+  });
+
+  it('keep the spacing in proportion to the type, on the 4px grid', () => {
+    for (const metrics of [ROOMY_METRICS, LARGE_METRICS]) {
+      const scale = metrics.type / METRICS.type;
+
+      for (const key of ['head', 'padX', 'padY', 'gapX', 'gapY'] as const) {
+        expect(metrics[key] % 4).toBe(0);
+        expect(metrics[key] / METRICS[key]).toBeCloseTo(scale, 1);
+      }
+
+      const placed = pack([sample()], MAXIMISED, metrics);
+
+      expect(mostSlack(placed, metrics)).toBeLessThan(4);
+      expect(leastCover(placed, metrics)).toBeGreaterThanOrEqual(0.5);
+    }
   });
 });
 
@@ -353,6 +401,18 @@ describe('placeBeside', () => {
       x: 272,
       y: 60,
     });
+  });
+
+  it('finds the one free place along the bounds when beside the anchor and every corner are taken', () => {
+    const narrow = { x: 8, y: 34, width: 900, height: 266 };
+    const anchor = { x: 560, y: 150, width: 80, height: 24, weight: 1000 };
+    // Edges run from the anchor to both ends of the bounds, low on one side and high on the other.
+    const low = { x: 640, y: 156, width: 268, height: 12, weight: 20 };
+    const high = { x: 8, y: 40, width: 500, height: 12, weight: 20 };
+    const at = placeBeside(anchor, size, narrow, [anchor, low, high]);
+
+    expect(at.x + size.width).toBeLessThanOrEqual(anchor.x);
+    expect(at.y).toBeGreaterThanOrEqual(high.y + high.height);
   });
 
   it('takes the far corner when the anchor spans the bounds', () => {

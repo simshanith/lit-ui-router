@@ -123,6 +123,12 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
+  /* A duration's unit follows its number at a third of a space, and recedes. */
+  .unit {
+    margin-inline-start: 0.3ch;
+    color: var(--uird-muted);
+  }
+
   .tag {
     font-size: var(--uird-size-small);
     letter-spacing: 0.08em;
@@ -855,7 +861,7 @@ export const styles: CSSResult = css`
     /* Maximised: the diagram above the full log and inspector. */
     .panel[data-view='map'][data-max] .body {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
     }
 
     .panel[data-view='map'][data-max] .tree-pane {
@@ -1066,13 +1072,9 @@ export const styles: CSSResult = css`
 
   .nested {
     --nest-head: 24px;
+    --nest-scale: 1;
 
     position: relative;
-  }
-
-  /* The dock's inspector popover takes the end of the viewport, and the diagram centres in the rest. */
-  .nested.aside {
-    margin-inline-end: 320px;
   }
 
   .nested.small {
@@ -1081,9 +1083,39 @@ export const styles: CSSResult = css`
     font-size: var(--uird-size-small);
   }
 
+  /* The maximised panel's steps: the header's type, glyphs and spacing grow together, on the packer's metrics. */
+  .nested.roomy {
+    --nest-head: 32px;
+    --nest-scale: 1.3333;
+
+    font-size: 16px;
+    line-height: 1.3333;
+  }
+
+  .nested.large {
+    --nest-head: 40px;
+    --nest-scale: 1.6667;
+
+    font-size: 20px;
+    line-height: 1.3333;
+  }
+
+  .nested .glyph {
+    inline-size: calc(12px * var(--nest-scale));
+    block-size: calc(12px * var(--nest-scale));
+  }
+
+  .nested .marks {
+    gap: calc(4px * var(--nest-scale));
+  }
+
+  .nested .tag {
+    font-size: calc(var(--uird-size-small) * var(--nest-scale));
+  }
+
   .box {
     position: absolute;
-    border-radius: 4px;
+    border-radius: calc(4px * var(--nest-scale));
     background: var(--uird-surface);
     cursor: default;
   }
@@ -1105,7 +1137,7 @@ export const styles: CSSResult = css`
   }
 
   .head:focus-visible {
-    border-radius: 4px;
+    border-radius: inherit;
   }
 
   .box.selected {
@@ -1149,10 +1181,10 @@ export const styles: CSSResult = css`
   .head {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: calc(8px * var(--nest-scale));
     block-size: var(--nest-head);
-    padding-inline: 8px;
-    border-radius: 4px;
+    padding-inline: calc(8px * var(--nest-scale));
+    border-radius: inherit;
     white-space: nowrap;
   }
 
@@ -1196,9 +1228,9 @@ export const styles: CSSResult = css`
     display: grid;
     flex: none;
     place-items: center;
-    inline-size: 16px;
+    inline-size: calc(16px * var(--nest-scale));
     block-size: var(--nest-head);
-    margin-inline-end: -4px;
+    margin-inline-end: calc(-4px * var(--nest-scale));
     color: var(--uird-muted);
   }
 

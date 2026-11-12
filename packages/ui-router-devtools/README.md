@@ -57,7 +57,8 @@ Two scripts work against the running demo: `pnpm shots` writes the proposal scre
 
 - An app `onInvalid` handler registered after the devtools that rescues a target still leaves an `invalid` row: callbacks run in registration order and the adapter cannot see the outcome.
 - RTL mirrors the rails, map edges and selection bar; Latin text inside rows is not bidi-isolated.
-- In the dock the nested Map moves over for the inspector popover when both fit side by side. When they do not, the popover covers pills before it covers an edge or a box an edge ends at; the maximised panel shows the inspector below the diagram.
-- Selecting a state for the first time, or clearing the selection, can move the diagram to make or take back the popover's room, so the box under the pointer moves with it.
-- A box's size changes at once when its compound opens or closes; only its place is animated.
+- In the dock the nested Map keeps a column free at its end for the inspector popover whenever the diagram leaves room for one, so a selection moves nothing. When it does not, the popover takes the place that covers least: never the selected box when any place clears it, then edges and the boxes they end at, then pills. The maximised panel shows the inspector below the diagram.
+- Selecting a transition whose states sit inside a collapsed compound opens it, which re-packs the diagram.
+- A leaf with four or more edges is crowded, and an edge between a compound and its own child is a short stub to the compound's border; [map.md](../../docs/visualizer-proposal/map.md#edge-routing) records what a fix needs.
+- Maximised, edges and arrowheads keep their dock weight beside the larger type.
 - The transition strip and the log name states in ink; identity colour is on the Map, the Outline, the tree and the inspector.

@@ -3,7 +3,6 @@ import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { Tx } from '../fold.ts';
 import type { Value } from '../schema.ts';
 import {
-  ms,
   pathParts,
   reasonParts,
   segment,
@@ -11,7 +10,7 @@ import {
   sourceTags,
   type Status,
 } from '../notation.ts';
-import { roleGlyph, statusGlyph, statusLabel } from './glyphs.ts';
+import { roleGlyph, statusGlyph, statusLabel, took } from './glyphs.ts';
 
 const SLOW_MS = 150;
 
@@ -119,7 +118,7 @@ export const valueCell = (
         ? html`<span class="tag">${status}</span>`
         : duration === undefined
           ? nothing
-          : html`<span class="num">${ms(duration)}</span>`
+          : html`<span class="num">${took(duration)}</span>`
     }</span
   >`;
 };
@@ -217,7 +216,7 @@ const renderResolveRow = (
         : html`<span class="value"
             >${slow ? html`<span class="tag">Slow</span>` : nothing}<span
               class="num"
-              >${ms(r.end - r.start)}</span
+              >${took(r.end - r.start)}</span
             ></span
           >`
     }`;
@@ -255,7 +254,7 @@ export const renderTiming = (
         (p) =>
           html`<li class=${p.phase === 'error' ? 'fault' : ''}>
             <span class="tag">${p.phase}</span
-            ><span class="num">${ms(Math.max(0, p.t - t0))}</span>
+            ><span class="num">${took(Math.max(0, p.t - t0))}</span>
           </li>`,
       )}
     </ol>
@@ -271,7 +270,7 @@ export const renderTiming = (
                   ${group.resolves.map((r) => renderResolveRow(r, pct))}`,
             )}
             <div class="axis" aria-hidden="true">
-              <span class="num">0</span><span class="num">${ms(total)}</span>
+              <span class="num">0</span><span class="num">${took(total)}</span>
             </div>
           </div>`
         : nothing

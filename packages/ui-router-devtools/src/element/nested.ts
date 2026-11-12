@@ -16,8 +16,10 @@ import {
 import {
   chooseRung,
   drawnIn,
+  LARGE_METRICS,
   METRICS,
   pack,
+  ROOMY_METRICS,
   SMALL_METRICS,
   type Box,
   type Drawn,
@@ -39,9 +41,6 @@ import { facts, label, onTreeKey, words } from './tree.ts';
 
 const LEAD = 20;
 
-/** The inline size of the button that opens or closes a compound, with its gap. */
-const FOLD = 20;
-
 /** How long boxes take to settle after a re-pack; edges draw once they have. */
 const SETTLE = 200;
 
@@ -54,16 +53,32 @@ interface Options {
   collapse: boolean;
   merge: boolean;
   truncate: boolean;
-  small: boolean;
+  metrics: Metrics;
 }
 
+const OPEN = { collapse: false, merge: false, truncate: false };
+
+const SHUT = { collapse: true, merge: true, truncate: true };
+
 const OPTIONS: Record<Exclude<Rung, 'tree'>, Options> = {
-  expanded: { collapse: false, merge: false, truncate: false, small: false },
-  collapsed: { collapse: true, merge: false, truncate: false, small: false },
-  merged: { collapse: true, merge: true, truncate: false, small: false },
-  truncated: { collapse: true, merge: true, truncate: true, small: false },
-  small: { collapse: true, merge: true, truncate: true, small: true },
+  large: { ...OPEN, metrics: LARGE_METRICS },
+  roomy: { ...OPEN, metrics: ROOMY_METRICS },
+  expanded: { ...OPEN, metrics: METRICS },
+  collapsed: { ...OPEN, collapse: true, metrics: METRICS },
+  merged: { ...SHUT, truncate: false, metrics: METRICS },
+  truncated: { ...SHUT, metrics: METRICS },
+  small: { ...SHUT, metrics: SMALL_METRICS },
 };
+
+const STEP = new Map([
+  [LARGE_METRICS, 'large'],
+  [ROOMY_METRICS, 'roomy'],
+  [SMALL_METRICS, 'small'],
+]);
+
+/** How far the header's fixed parts are enlarged with the type; the caption rung keeps them. */
+export const scaleOf = (metrics: Metrics): number =>
+  Math.max(1, metrics.type / METRICS.type);
 
 export interface NestedLayout {
   rung: Rung;
@@ -118,31 +133,30 @@ const labelWidth = (
   merging: boolean,
 ): number => {
   const { host, options, family } = build;
-  const size = options.small ? 11 : 12;
+  const size = options.metrics.type;
+  const scale = scaleOf(options.metrics);
   const weight = state.name === host._model.current.name ? 700 : 400;
   const marks = stateMarks(state, host._model.states).length;
+  const font = (w: number) => `${w} ${size}px ${family}`;
 
+  // The count is measured like the name, so a header is never a fraction of a pixel short and elided.
   const count = collapsed
-    ? 8 + String(countUnder(build, state.name)).length * 7
+    ? 8 * scale + textWidth(String(countUnder(build, state.name)), font(400))
     : 0;
 
-  const name = textWidth(
-    nameOf(state, options),
-    `${weight} ${size}px ${family}`,
-  );
+  const name = textWidth(nameOf(state, options), font(weight));
 
   // A merging header is the glyph, the name and the chevron that leads to the next one.
-  if (merging) return Math.ceil(44 + name);
+  if (merging) return Math.ceil(44 * scale + name);
+
+  const fixed =
+    36 +
+    (marks ? 4 + marks * 16 : 0) +
+    (state.future ? 40 : 0) +
+    ((build.children.get(state.name) ?? []).length ? 20 : 0);
 
   // Padding, the glyph and its gap, then the name and whatever trails it.
-  return Math.ceil(
-    36 +
-      name +
-      count +
-      (marks ? 4 + marks * 16 : 0) +
-      (state.future ? 40 : 0) +
-      ((build.children.get(state.name) ?? []).length ? FOLD : 0),
-  );
+  return Math.ceil(fixed * scale + name + count);
 };
 
 const buildBox = (build: Build, state: StateInfo): Box => {
@@ -171,14 +185,7 @@ const keepOpen = (host: UIRouterDevtools): Set<string> => {
   const tx = host._inspect === 'tx' ? host._tx(host._selectedTx) : undefined;
   const origin = tx && host._origin(tx);
 
-  const names = [
-    current.name,
-    host._selectedState,
-    tx?.from,
-    tx?.to,
-    origin?.from,
-    origin?.to,
-  ];
+  const names = [current.name, tx?.from, tx?.to, origin?.from, origin?.to];
 
   const keep = new Set<string>();
 
@@ -187,6 +194,10 @@ const keepOpen = (host: UIRouterDevtools): Set<string> => {
     keep.add(name);
     ancestorsOf(states, name).forEach((ancestor) => keep.add(ancestor));
   }
+
+  // A selected box stays as it is drawn, so selecting moves nothing; only what hides it opens.
+  if (host._selectedState)
+    ancestorsOf(states, host._selectedState).forEach((a) => keep.add(a));
 
   return keep;
 };
@@ -271,13 +282,21 @@ export const layoutNested = (host: UIRouterDevtools): NestedLayout => {
   // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
   const viewport = host._mapSize;
 
+  const children = host._children();
+
+  // Only a compound without a hand-set fold can change the packing, so a selection that opens nothing keeps the layout.
+  const opened = [...keep].filter(
+    (name) => children.get(name)?.length && !host._mapOpen.has(name),
+  );
+
   const content = JSON.stringify([
     states,
     current.name,
-    [...keep],
+    opened,
     [...host._mapOpen],
     family,
     rtl,
+    host._max,
   ]);
 
   const key = content + JSON.stringify(viewport);
@@ -286,11 +305,9 @@ export const layoutNested = (host: UIRouterDevtools): NestedLayout => {
 
   if (cached?.key === key) return cached.layout;
 
-  const children = host._children();
   const byName = new Map(states.map((state) => [state.name, state]));
 
-  const metricsAt = (rung: Exclude<Rung, 'tree'>) =>
-    OPTIONS[rung].small ? SMALL_METRICS : METRICS;
+  const metricsAt = (rung: Exclude<Rung, 'tree'>) => OPTIONS[rung].metrics;
 
   const boxesAt = (rung: Exclude<Rung, 'tree'>) => {
     const build = { host, children, keep, options: OPTIONS[rung], family };
@@ -306,7 +323,7 @@ export const layoutNested = (host: UIRouterDevtools): NestedLayout => {
 
   // The ladder holds its rung across a resize only; a changed tree or selection starts from the top.
   const held = cached?.content === content ? host._rung : undefined;
-  const rung = chooseRung(sizeAt, viewport, held);
+  const rung = chooseRung(sizeAt, viewport, held, host._max);
   // The tree fallback still needs a packed tree to measure against on the next resize.
   const shown = rung === 'tree' ? 'small' : rung;
   const boxes = boxesAt(shown);
@@ -845,10 +862,10 @@ export const renderNested = (
 
   /* oxlint-disable lit-a11y/click-events-have-key-events -- the tree's keydown handler moves focus and selects for every treeitem */
   return html`<div
-    class="nested ${options.small ? 'small' : ''} ${host._aside ? 'aside' : ''}"
+    class="nested ${STEP.get(options.metrics) ?? ''}"
     role="tree"
     aria-label="State map"
-    style="inline-size:${placed.width}px;block-size:${placed.height}px"
+    style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-end:${host._reserve(layout)}px"
     @keydown=${onKey}
     @click=${select}
     @focusin=${focusIn}
