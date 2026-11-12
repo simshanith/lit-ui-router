@@ -7,7 +7,7 @@ import { after, before, describe, it } from 'node:test';
 import { stringify } from 'yaml';
 
 import {
-  codeMentions,
+  literalText,
   NO_CODE_CHANGES,
   releaseLinks,
   trimNoteText,
@@ -290,10 +290,10 @@ describe('scope-aware release notes', () => {
   });
 });
 
-describe('codeMentions', () => {
+describe('literalText', () => {
   it('renders JSDoc tags, npm scopes and decorators as code', () => {
     assert.equal(
-      codeMentions('check @example blocks, @uirouter/core and @state() fields'),
+      literalText('check @example blocks, @uirouter/core and @state() fields'),
       'check `@example` blocks, `@uirouter/core` and `@state`() fields',
     );
   });
@@ -302,7 +302,16 @@ describe('codeMentions', () => {
     const text =
       '[#12](https://github.com/o/r/issues/12) `@lit-labs/ssr` https://x.dev/@a me@example.com';
 
-    assert.equal(codeMentions(text), text);
+    assert.equal(literalText(text), text);
+  });
+
+  it('escapes an angle bracket once, so a placeholder is not read as a tag', () => {
+    assert.equal(
+      literalText('move the reference to /reference/<npm-name>/ and >=1 <2'),
+      'move the reference to /reference/\\<npm-name>/ and >=1 \\<2',
+    );
+    assert.equal(literalText('already \\<escaped>'), 'already \\<escaped>');
+    assert.equal(literalText('`Array<string>` stays'), '`Array<string>` stays');
   });
 
   it('leaves fenced code blocks alone', () => {
@@ -317,7 +326,7 @@ describe('codeMentions', () => {
     ].join('\n');
 
     assert.equal(
-      codeMentions(`see @example\n${fenced}\nand @state`),
+      literalText(`see @example\n${fenced}\nand @state`),
       `see \`@example\`\n${fenced}\nand \`@state\``,
     );
   });

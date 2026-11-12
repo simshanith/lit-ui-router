@@ -36,9 +36,9 @@ const PEER_SECTION = 'Peer Dependencies';
 // A squash body lists the branch's commits as `* type(scope): subject`.
 const SUB_COMMIT = /^\s*[*-]\s+[a-z]+(?:\([^)]*\))?!?: \S/;
 
-// Links, fenced blocks, code spans and urls stay as they are; any other `@name` is code, never a mention.
-const MENTION_OR_KEPT =
-  /\[[^\]]*\]\([^)]*\)|^[ \t]*(?=(`{3,}|~{3,}))\1[\s\S]*?^[ \t]*\1[ \t]*\r?$|`[^`\n]*`|https?:\/\/\S+|\B@[a-z0-9][\w-]*(?:\/[\w.-]+)?/gim;
+// Links, fenced blocks, code spans and urls stay as they are; elsewhere `@name` and `<` would render as a mention and a tag.
+const MARKUP_OR_KEPT =
+  /\[[^\]]*\]\([^)]*\)|^[ \t]*(?=(`{3,}|~{3,}))\1[\s\S]*?^[ \t]*\1[ \t]*\r?$|`[^`\n]*`|https?:\/\/\S+|\B@[a-z0-9][\w-]*(?:\/[\w.-]+)?|\\?</gim;
 
 /** A commit as the parser hands it to the preset's transform. */
 interface ParsedCommit extends RevertableCommit {
@@ -110,13 +110,17 @@ export function trimNoteText(text: string): string {
 }
 
 /**
- * Wraps each `@name` (a JSDoc tag, an npm scope, a decorator) in a code span
- * so GitHub never renders or notifies it as a mention.
+ * Keeps commit text literal in Markdown: each `@name` (a JSDoc tag, an npm
+ * scope, a decorator) becomes a code span, so GitHub never renders or
+ * notifies it as a mention, and each `<` is escaped, so a placeholder such as
+ * `<name>` is not dropped as an unknown tag.
  */
-export function codeMentions(text: string): string {
-  return text.replace(MENTION_OR_KEPT, (match) =>
-    match.startsWith('@') ? `\`${match}\`` : match,
-  );
+export function literalText(text: string): string {
+  return text.replace(MARKUP_OR_KEPT, (match) => {
+    if (match.startsWith('@')) return `\`${match}\``;
+
+    return match === '<' || match === '\\<' ? '\\<' : match;
+  });
 }
 
 /**
@@ -249,7 +253,7 @@ function touchedLine(
     ? `, ${pair.role === 'reverts' ? 'reverts' : 'reverted by'} ${refOf(pair.partner, context)}`
     : '';
 
-  return `* ${scope}${codeMentions(subjectOf(commit))} (${refOf(commit, context)})${why}`;
+  return `* ${scope}${literalText(subjectOf(commit))} (${refOf(commit, context)})${why}`;
 }
 
 interface Partition {
@@ -314,7 +318,7 @@ function keptNoteGroups(
     const notes = group.notes.flatMap((note) =>
       gone(note.commit?.hash)
         ? []
-        : [{ ...note, text: codeMentions(trimNoteText(note.text)) }],
+        : [{ ...note, text: literalText(trimNoteText(note.text)) }],
     );
 
     return notes.length > 0 ? [{ ...group, notes }] : [];
@@ -344,7 +348,7 @@ function addPeerStatements(
   const commits: WriterCommit[] = [];
 
   for (const change of fresh) {
-    const text = codeMentions(describePeerChange(change));
+    const text = literalText(describePeerChange(change));
 
     if (isBreakingPeerChange(change)) {
       notes.push({ title: BREAKING, text, commit: { scope: packageName } });
@@ -389,7 +393,7 @@ export function finalizeContext(
         : [
             {
               ...commit,
-              subject: commit.subject && codeMentions(commit.subject),
+              subject: commit.subject && literalText(commit.subject),
             },
           ],
     );
