@@ -21,7 +21,11 @@ host_concurrency = 4
 user_agent = "Mozilla/5.0 (compatible; lychee link checker)"
 
 # Manifest `repository.url` is a git+https clone URL; check its web page.
-remap = ['^git\+(https://github\.com/.+)\.git$ $1']
+# npmjs.com answers datacenter runners 403; the registry checks the same package.
+remap = [
+  '^git\+(https://github\.com/.+)\.git$ $1',
+  '^https://www\.npmjs\.com/package/((@[^/]+/)?[^/?#]+)/?$ https://registry.npmjs.org/$1',
+]
 
 exclude = [
   # Owned by the offline published-link check in the build.
@@ -29,4 +33,10 @@ exclude = [
   # Placeholder and documentation hosts.
   '^https?://([a-z0-9-]+\.)*example\.(com|org|net)',
   '^https?://([a-z0-9-]+\.)*(localhost|test|invalid)(:\d+)?([/?#]|$)',
+  # npmjs.com answers datacenter runners 403, and the home page has no registry twin.
+  '^https://www\.npmjs\.com/?$',
 ]
+
+# The abbreviated packument keeps registry checks small.
+[hosts."registry.npmjs.org"]
+headers = { "accept" = "application/vnd.npm.install-v1+json" }
