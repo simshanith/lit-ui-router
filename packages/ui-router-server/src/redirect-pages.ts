@@ -103,9 +103,9 @@ const pageFileFor = (from: string, base: string): string => {
   return rest === '' ? 'index.html' : `${rest}/index.html`;
 };
 
-// The folder a path's page is written to: a run of slashes names the same folder as one.
+// The folder a path's page is written to: a run of slashes names the same folder as one, and a backslash reads as a slash.
 const pageFolder = (path: string): string =>
-  trimSlashes(path).replace(/\/{2,}/g, '/');
+  trimSlashes(path.replace(/\\/g, '/')).replace(/\/{2,}/g, '/');
 
 // A line between a path's two spellings, whose page would be its target's.
 const isRespelling = ({ from, to }: RedirectLine): boolean =>

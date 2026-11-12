@@ -360,6 +360,25 @@ describe('a listed path that begins with //', () => {
       assert.doesNotMatch([...files.values()].join(''), /url=/);
     });
 
+    it(`writes no redirect page for a backslash spelling of the page (${name})`, async () => {
+      const { files, write } = memory();
+      const backslash = String.fromCharCode(92);
+
+      await prerender({
+        ...table,
+        outDir: 'dist',
+        paths: [`${below}/${backslash}about`, `${below}/about`],
+        render: () => '<p/>',
+        rules: redirectPages(),
+        write,
+        notFound: false,
+      });
+
+      assert.equal(files.size, 1);
+      assert.doesNotMatch([...files.keys()].join(''), /\\/);
+      assert.doesNotMatch([...files.values()].join(''), /url=/);
+    });
+
     it(`warns about one whose collapsed spelling matches no route (${name})`, async () => {
       const { files, write } = memory();
 
