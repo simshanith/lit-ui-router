@@ -88,7 +88,7 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  * ```ts
  * import type { TemplateResult } from 'lit';
  * import type { UIRouterLit } from 'lit-ui-router';
- * import { settle, type PrerenderOptions } from 'lit-ui-router-ssr';
+ * import type { PrerenderOptions } from 'lit-ui-router-ssr';
  * import { definePrerender } from 'lit-ui-router-ssr/vite';
  *
  * declare const mounts: PrerenderOptions['mounts'];
@@ -99,10 +99,7 @@ const loadPrerender = async () => (await import('./prerender.js')).prerender;
  *   mounts,
  *   router,
  *   paths: ['/', '/about'],
- *   renderShell: async (_verdict, { path }) => {
- *     await settle(router, path);
- *     return page(router);
- *   },
+ *   template: page,
  *   document: (body) => site.shellHtml.replace('<!--app-->', body),
  * }));
  * ```

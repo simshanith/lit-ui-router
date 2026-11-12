@@ -59,7 +59,7 @@ state's `redirectStatusCode`.
   [`prerender`](/packages/ui-router-server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
+  `template` or `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
   `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **One page for a host that owns the request.**
   [`renderToString`](#rendering-one-page-per-request) is that render alone,
@@ -69,14 +69,19 @@ state's `redirectStatusCode`.
   transition landed with.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
-`paths`, `document()`, and an async `renderShell()` are the seams for them.
-[`settle()`](#settling-the-router-on-each-path) drives the router to each path
-inside `renderShell()`.
+`paths`, `document()`, and `template` or an async `renderShell()` are the
+seams for them. `template` takes the router and returns the page's template;
+`prerender` [settles](#settling-the-router-on-each-path) the router on each path
+before calling it. That includes the 404 document's probe path, so a mount that
+projects an `otherwise` needs the router to declare an `otherwise` rule of its
+own. A `renderShell()` hook, for a page that needs the verdict or
+more than a settle, calls `settle()` itself. Pass one or the other; passing
+both throws.
 
 ## Quick start
 
 ```ts
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { prerender } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -84,18 +89,16 @@ const result = await prerender({
   outDir: 'dist',
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    return page();
-  },
+  template: page,
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
 console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
-`renderShell` returns a template and this package renders it; return a string
-and it is written as-is. `dryRun: true` plans everything and writes nothing.
+`template` returns the page for the router `prerender` has settled; this
+package renders it. A `renderShell` hook returns a template the same way, or a
+string, which is written as-is. `dryRun: true` plans everything and writes nothing.
 
 ## Settling the router on each path
 
@@ -197,8 +200,8 @@ if (redirect)
   });
 ```
 
-`prerender` does the same after each `renderShell`: when the transition the
-hook landed was redirected, the path gets a rules line,
+`prerender` does the same after each render, through `template` or
+`renderShell`: when the transition it landed was redirected, the path gets a rules line,
 `/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
 `tally.redirect`.
 [`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
@@ -265,7 +268,7 @@ to draw every resolve:
 import { prerender } from 'lit-ui-router-ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   dehydrate: {
     shouldDehydrate: ({ token }) => token !== 'manifest',
   },
@@ -300,7 +303,7 @@ one or the other; passing both throws.
 import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   payload: (transition, { path }) =>
     path.startsWith('/drafts/')
       ? undefined
@@ -328,14 +331,14 @@ for (const { path, payload } of pages) {
 
 ## Verdict to artefact
 
-| Verdict               | What is emitted                                                                                                                                                                  |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
-| `redirect`            | a rules line (`from to status`), no page                                                                                                                                         |
-| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                             |
-| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                             |
-| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                    |
-| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                 |
+| Verdict               | What is emitted                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`               | `<subpath>/index.html`, rendered through `template` or `renderShell`, and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
+| `redirect`            | a rules line (`from to status`), no page                                                                                                                                                        |
+| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                                            |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                                            |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                                   |
+| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                                |
 
 [`PrerenderResult`](/reference/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
@@ -409,7 +412,7 @@ with no redirect rules.
 The router builds its hrefs under its own `baseHref`, so build it with
 `installServerLocation(router, { baseHref: site.base })`; `prerender()`
 throws when a render settles the router where its links don't reach the page: `baseHref()` plus the router's url has to spell `base` plus the path. A response state's handler gets a request for
-the path under the base, and a redirect `renderShell` lands on gets the base
+the path under the base, and a redirect the render lands on gets the base
 once in its rules line. [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
 shows the setup.
 
@@ -679,7 +682,7 @@ export default definePrerender((site) => ({
   mounts,
   router,
   paths,
-  renderShell,
+  template: page,
   document,
 }));
 ```

@@ -61,11 +61,7 @@ const result = await prerender({
   base,
   rules: redirectPages({ redirectsFile: true, page: ({ to }) => to }),
   dehydrate: {},
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-
-    return page(router);
-  },
+  template: page,
   write: (file, body) => {
     files.set(file, body);
   },
