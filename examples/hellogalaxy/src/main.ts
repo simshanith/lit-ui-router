@@ -202,13 +202,12 @@ class GalaxyShellComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
@@ -324,17 +323,16 @@ class StarsContainerComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
+  uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
 
   constructor(props: UIViewInjectedProps<{ stars: Star[] }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   get stars(): Star[] {
-    return this._uiViewProps.resolves.stars;
+    return this.uiViewProps.resolves.stars;
   }
 
   render() {
@@ -416,17 +414,16 @@ class StarDetailComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
+  uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
 
   constructor(props: UIViewInjectedProps<{ star: Star | undefined }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   get star(): Star | undefined {
-    return this._uiViewProps.resolves.star;
+    return this.uiViewProps.resolves.star;
   }
 
   firstUpdated() {
@@ -501,13 +498,12 @@ class AstronautDetailComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
