@@ -1,5 +1,5 @@
 // The lit render of one page the router already stands on: the step prerender() runs per page, and the entry a host that owns the request calls.
-import { render } from '@lit-labs/ssr';
+import { LitElementRenderer, render } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import type { TemplateResult } from 'lit';
@@ -27,6 +27,49 @@ import { collectDrawnViews, UiViewRenderer } from './ui-view-renderer.js';
 export const defaultElementRenderers: RenderInfo['elementRenderers'] = [
   UiViewRenderer,
   LightElementRenderer,
+];
+
+/**
+ * The default element renderers plus `@lit-labs/ssr`'s `LitElementRenderer`
+ * last: `[UiViewRenderer, LightElementRenderer, LitElementRenderer]`. Pass it
+ * as `elementRenderers` when the page holds a `LitElement` that renders into a
+ * shadow root, such as an `<app-root>` around `<ui-view>`, which the default
+ * draws as its bare tag, empty. `LitElementRenderer` draws every `LitElement`
+ * no earlier renderer answers for into a declarative shadow root, an
+ * unbranded light-DOM element and `<ui-router>` included, which is why the
+ * default leaves it out.
+ *
+ * @example
+ * ```ts
+ * import type { TemplateResult } from 'lit';
+ * import type { UIRouterLit } from 'lit-ui-router';
+ * import {
+ *   prerender,
+ *   settle,
+ *   shadowElementRenderers,
+ *   type PrerenderOptions,
+ * } from 'lit-ui-router-ssr';
+ *
+ * declare const mounts: PrerenderOptions['mounts'];
+ * declare const router: UIRouterLit;
+ * declare function page(router: UIRouterLit): TemplateResult;
+ *
+ * await prerender({
+ *   mounts,
+ *   router,
+ *   outDir: 'dist',
+ *   paths: ['/'],
+ *   elementRenderers: shadowElementRenderers,
+ *   renderShell: async (_verdict, { path }) => {
+ *     await settle(router, path);
+ *     return page(router);
+ *   },
+ * });
+ * ```
+ */
+export const shadowElementRenderers: RenderInfo['elementRenderers'] = [
+  ...defaultElementRenderers,
+  LitElementRenderer,
 ];
 
 /** What a page's hydration signature carries of its resolve payload. */
@@ -68,7 +111,8 @@ export interface RenderToStringOptions {
    * `[UiViewRenderer, LightElementRenderer]`, as `prerender()`'s option of the
    * same name does, and a list passed here replaces it the same way. As there,
    * a shadow-DOM `LitElement` no renderer in the list answers for renders as
-   * its bare tag, empty, and warns once per tag in development.
+   * its bare tag, empty, and warns once per tag in development; pass
+   * {@link shadowElementRenderers} to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**

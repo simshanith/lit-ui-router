@@ -158,7 +158,8 @@ export interface PrerenderOptions extends Omit<
    * shadow root, to draw those elements. Pass `[]` for a render with no
    * `<ui-view>` to fill. A shadow-DOM `LitElement` no renderer in the list
    * answers for renders as its bare tag, empty, and warns once per tag in
-   * development; put `LitElementRenderer` after `LightElementRenderer` to draw it.
+   * development; pass `shadowElementRenderers`, which adds `LitElementRenderer`
+   * after `LightElementRenderer`, to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**
