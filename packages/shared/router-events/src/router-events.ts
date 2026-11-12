@@ -451,7 +451,8 @@ export const observe = (
       emit({
         type: 'invalid',
         key: ++invalidKey,
-        from: from?.name() ?? router.globals.current.name ?? '',
+        // name() returns the state object for the root state, whose name is empty.
+        from: from?.$state()?.name ?? router.globals.current.name ?? '',
         to: name,
         toParams: paramsOf(to?.params() ?? {}, 'invalid', redact),
         reason: invalidTargetReason(name),

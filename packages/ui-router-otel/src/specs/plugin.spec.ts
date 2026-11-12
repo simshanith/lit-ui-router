@@ -387,6 +387,7 @@ describe('an invalid target', () => {
       message: "No state named 'nope'",
     });
     expect(span.attributes).toEqual({
+      'ui_router.from': '',
       'ui_router.to': 'nope',
       'ui_router.outcome': 'invalid',
       'ui_router.rejection_type': 'invalid',

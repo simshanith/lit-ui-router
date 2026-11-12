@@ -87,6 +87,20 @@ describe('onInvalid', () => {
   });
 });
 
+describe('an invalid target from the root state', () => {
+  it('emits a JSON-safe event with an empty from', async () => {
+    const router = makeRouter([{ name: 'a', url: '/a' }]);
+    const events: RouterEvent[] = [];
+    observe(router, (event) => events.push(event));
+    await router.stateService.go('typo').catch(() => {});
+    router.dispose();
+
+    const invalid = events.find((event) => event.type === 'invalid');
+    expect(invalid).toMatchObject({ from: '', to: 'typo' });
+    expect(() => JSON.stringify(invalid)).not.toThrow();
+  });
+});
+
 describe('state declarations', () => {
   const describeStates = (states: PluginState[]) => {
     const router = makeRouter(states);
