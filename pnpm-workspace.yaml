@@ -336,3 +336,7 @@ trustPolicy: no-downgrade
 trustPolicyExcludePrune: true
 
 trustPolicyIgnoreAfter: 43200
+
+permissions:
+  '@playwright/cli':
+    skills: true
