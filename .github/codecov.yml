@@ -74,6 +74,10 @@ component_management:
       name: ui-router-devtools
       paths:
         - packages/ui-router-devtools/src/**
+    - component_id: ui-router-otel
+      name: ui-router-otel
+      paths:
+        - packages/ui-router-otel/src/**
     - component_id: dev-gate
       name: dev-gate
       paths:

@@ -131,7 +131,7 @@ behind a flag, because any script on the page can reach a global.
 | Vite DevTools dock    | A Vite plugin's `devtools.setup(ctx)` with `ctx.docks.register(...)`; `custom-render` mounts an element; RPC between Node and client | `@vitejs/devtools` 0.8. Nuxt DevTools and Vue DevTools 9 are moving onto it. Natural host: the `ui-router-server` Vite plugin, which can also bridge prerender data |
 | TanStack Devtools     | A plugin `{ id, name, render(el) }`                                                                                                  | About ten lines; `@tanstack/devtools` 0.16; serves `@uirouter/react` apps                                                                                           |
 | WebMCP tools          | `document.modelContext.registerTool(...)`                                                                                            | Chrome origin trial; a draft spec. Opt-in only, with `go` marked consequential                                                                                      |
-| OpenTelemetry, Sentry | A span per transition; Sentry's `startBrowserTracingNavigationSpan` named by state                                                   | A docs recipe first, then a subpath with an optional peer                                                                                                           |
+| OpenTelemetry, Sentry | A span per transition; Sentry's `startBrowserTracingNavigationSpan` named by state                                                   | OpenTelemetry is `ui-router-otel`; Sentry is not built                                                                                                              |
 | Console formatters    | `window.devtoolsFormatters`                                                                                                          | Off by default in Chrome and Firefox, so low reach                                                                                                                  |
 | Navigation API detail | A `navigationType` field on transition events from `navigation-location-plugin`                                                      | A field, not a surface                                                                                                                                              |
 
@@ -163,17 +163,23 @@ behind a flag, because any script on the page can reach a global.
 - **One package with subpaths.** Every layer shares the schema and the adapter.
   Host libraries are optional peers, so a subpath costs only its users.
 
-  | Subpath                                      | Contents                                   | When   |
-  | -------------------------------------------- | ------------------------------------------ | ------ |
-  | `.`                                          | Adapter, recorder, schema types            | First  |
-  | `./define`                                   | Registers the element                      | First  |
-  | `./plugin`                                   | The `UIRouterPlugin`                       | First  |
-  | `./performance`                              | Performance-panel and User Timing reporter | First  |
-  | `./console`                                  | Console reporter                           | First  |
-  | `./testing`                                  | Recorder helpers for e2e and unit tests    | First  |
-  | `./transport`                                | `postMessage` bridge                       | Second |
-  | `./vite`, `./tanstack`, `./otel`, `./webmcp` | Host integrations                          | Later  |
+  | Subpath                            | Contents                                   | When   |
+  | ---------------------------------- | ------------------------------------------ | ------ |
+  | `.`                                | Adapter, recorder, schema types            | First  |
+  | `./define`                         | Registers the element                      | First  |
+  | `./plugin`                         | The `UIRouterPlugin`                       | First  |
+  | `./performance`                    | Performance-panel and User Timing reporter | First  |
+  | `./console`                        | Console reporter                           | First  |
+  | `./testing`                        | Recorder helpers for e2e and unit tests    | First  |
+  | `./transport`                      | `postMessage` bridge                       | Second |
+  | `./vite`, `./tanstack`, `./webmcp` | Host integrations                          | Later  |
 
+- **OpenTelemetry in its own package.** The reporter is production telemetry,
+  not development tooling, so it is
+  [`ui-router-otel`](../../packages/ui-router-otel/README.md). The adapter it
+  shares with the devtools is private shared source,
+  [`@repo/router-events`](../../packages/shared/router-events/), inlined into
+  each package's `dist/`.
 - **A no-op in production.** TanStack's devtools packages resolve to a no-op
   build unless the `development` export condition is set; the same shape fits
   here, beside a documented dynamic import behind a dev guard.
@@ -208,8 +214,8 @@ a span list of transitions, phases and resolves with absolute times.
 | 4     | CSV and NDJSON             | DuckDB, Observable, Vega-Lite, process-mining tools        | Navigation is cyclic, so a Sankey needs unrolling                                                     |
 | Later | Cytoscape.js JSON, DOT, D2 | Graph explorers and text-diagram tools                     | Near-copies of the Mermaid emitter                                                                    |
 
-OpenTelemetry is live spans, not a file: a reporter over the event stream,
-tracked in #2097, with the server and hydration side in #2098. A trace vendor
+OpenTelemetry is live spans, not a file: `ui-router-otel` reports the event
+stream to a tracer (#2097), with the server and hydration side in #2098. A trace vendor
 that takes JSON events with trace, span and parent ids, a duration and a
 timestamp can also replay a recorded session; Honeycomb's batch events API is
 one.
