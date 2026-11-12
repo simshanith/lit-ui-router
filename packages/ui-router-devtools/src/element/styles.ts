@@ -11,6 +11,8 @@ export const styles: CSSResult = css`
     --uird-rule-strong: light-dark(oklch(58% 0 none), oklch(60% 0 none));
     --uird-red: light-dark(oklch(53% 0.2 28), oklch(72% 0.17 28));
     --uird-on-red: var(--uird-surface);
+    --uird-active: light-dark(oklch(50% 0.15 255), oklch(76% 0.11 250));
+    --uird-exit: light-dark(oklch(62% 0.12 80), oklch(83% 0.13 85));
     --uird-unit: 4px;
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
@@ -132,6 +134,22 @@ export const styles: CSSResult = css`
   .glyph.role-inactive,
   .glyph.role-future {
     color: var(--uird-rule-strong);
+  }
+
+  /* Two hues with fixed jobs: active for the path and what a transition enters or retains, exit for what it leaves. */
+  :is(.row, .map-node, .insp-title)
+    > .glyph:is(
+      .role-current,
+      .role-ancestor,
+      .role-entering,
+      .role-retained,
+      .pivot
+    ) {
+    color: var(--uird-active);
+  }
+
+  :is(.row, .map-node, .insp-title) > .glyph.role-exiting {
+    color: var(--uird-exit);
   }
 
   .glyph.slow {
@@ -599,18 +617,18 @@ export const styles: CSSResult = css`
   .rail.role-current,
   .rail.role-ancestor,
   .rail.role-entering {
-    stroke: var(--uird-ink);
+    stroke: var(--uird-active);
     stroke-width: 2;
   }
 
   .rail.role-exiting {
-    stroke: var(--uird-ink);
+    stroke: var(--uird-exit);
     stroke-width: 2;
     stroke-dasharray: 4 4;
   }
 
   .rail.role-retained {
-    stroke: var(--uird-ink);
+    stroke: var(--uird-active);
   }
 
   .rail.role-errored {
@@ -683,10 +701,13 @@ export const styles: CSSResult = css`
     .role-current,
     .role-ancestor,
     .role-entering,
-    .role-exiting,
     .role-retained
   ) {
-    fill: var(--uird-ink);
+    fill: var(--uird-active);
+  }
+
+  .rail-initial.role-exiting {
+    fill: var(--uird-exit);
   }
 
   .rail-initial.role-errored {
@@ -1045,6 +1066,11 @@ export const styles: CSSResult = css`
   }
 
   @media (forced-colors: active) {
+    :host {
+      --uird-active: CanvasText;
+      --uird-exit: CanvasText;
+    }
+
     .glyph,
     .glyph.role-inactive,
     .glyph.role-future {
