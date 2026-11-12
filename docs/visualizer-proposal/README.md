@@ -262,15 +262,20 @@ Manual: one typeface used in few sizes and weights, a strict grid, a palette of
 black, white, greys and one red, and uniform numbering. None of NASA's identity
 is used.
 
-- **Type.** `"Helvetica Neue", Helvetica, Arial, sans-serif`, no webfont. Two
-  sizes: 12px on a 16px line, and 11px uppercase captions tracked 0.08em. Two
-  weights: 400 and 700. Flush left; only numerals align right, in tabular figures.
-  Monospace (`ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`, 11px) is
-  kept for literal values in the inspector: param values and URL patterns.
+- **Type.** Two voices, no webfont. What the router says is monospace
+  (`ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace`)
+  with tabular figures: state names, the transition notation, ids, times,
+  counts, reasons and inspector values, on the Map as in the Outline. What the
+  panel says is sans (`"Helvetica Neue", Helvetica, Arial, sans-serif`): the
+  brand, tabs, section headings, field labels, buttons and tags. Two sizes:
+  12px on a 16px line, and 11px for uppercase captions tracked 0.08em and for
+  the reason under a row. Two weights: 400 and 700. Flush left; only times
+  align right.
 - **Grid.** A 4px unit, 12px columns, 24px rows (32px for coarse pointers).
   Section titles, outline labels and inspector keys share one text edge.
-- **Rules, not boxes.** A 2px ink rule under the title strip, hairlines between
-  sections, nothing between rows. The selected row gets a 2px ink bar and the
+- **Rules, not boxes.** A 2px ink rule under the title strip, one hairline
+  under the column headings and one above each inspector section, nothing
+  between rows. The selected row gets a 2px ink bar and the
   raised surface.
 - **Numbering.** Sections are `1 STATES`, `2 TRANSITIONS`, `3 INSPECTOR`, with
   `3.1 PARAMS` and `3.2 RESOLVES`. Transitions are zero-padded: `016`.
@@ -325,8 +330,8 @@ a `TargetState`; a function's target is unknown until it runs.
 | ------------------ | ----------------- | --------------------------------------------------------------------------- |
 | Running            | 270° arc          | live elapsed time; the arc is static under reduced motion                   |
 | Success            | check             | full strength                                                               |
-| Error              | red square        | message on a second line, in red                                            |
-| Redirected         | elbow arrow       | joined to its successor by an elbow rail                                    |
+| Error              | red square        | message on a second line, in red, cut to one line; the inspector has it all |
+| Redirected         | elbow arrow       | its successor is the next row, joined by a thread between the two glyphs    |
 | Superseded         | double chevron    | muted, `SUPERSEDED`                                                         |
 | Aborted            | ring with a slash | muted                                                                       |
 | Invalid target     | red triangle      | the missing state name, in red; it is a programming error, so it is a fault |
@@ -361,7 +366,8 @@ entered state with a plus. A reload retains nothing, so both are full names.
   --uird-depth-4: light-dark(oklch(46% 0.17 345), oklch(68% 0.13 345));
   --uird-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --uird-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --uird-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --uird-font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 ```
 
