@@ -609,6 +609,8 @@ the same text. The writer's `finalizeContext` and `footerPartial`
   `⚠ BREAKING CHANGES`; widened, removed, newly optional and non-semver
   changes go under `Peer Dependencies`. A statement a kept breaking note
   already makes (it names the peer and the new range) is left out.
+- An `@name` (a JSDoc tag, npm scope or decorator) renders as code, never as a
+  user link or a GitHub mention; only `#<digits>` references are linked.
 - The body ends with links to the release's page on lit-ui-router.dev and,
   after a package's first release in the lane, to the diff from the previous
   version (`/releases/<pkg>/<version>/`, `/releases/<pkg>/diff/<from>...<to>/`).

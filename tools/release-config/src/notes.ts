@@ -36,6 +36,10 @@ const PEER_SECTION = 'Peer Dependencies';
 // A squash body lists the branch's commits as `* type(scope): subject`.
 const SUB_COMMIT = /^\s*[*-]\s+[a-z]+(?:\([^)]*\))?!?: \S/;
 
+// Links, fenced blocks, code spans and urls stay as they are; any other `@name` is code, never a mention.
+const MENTION_OR_KEPT =
+  /\[[^\]]*\]\([^)]*\)|^[ \t]*(?=(`{3,}|~{3,}))\1[\s\S]*?^[ \t]*\1[ \t]*\r?$|`[^`\n]*`|https?:\/\/\S+|\B@[a-z0-9][\w-]*(?:\/[\w.-]+)?/gim;
+
 /** A commit as the parser hands it to the preset's transform. */
 interface ParsedCommit extends RevertableCommit {
   scope?: string | null;
@@ -103,6 +107,16 @@ export function trimNoteText(text: string): string {
   const end = lines.findIndex((line, i) => i > 0 && SUB_COMMIT.test(line));
 
   return (end === -1 ? lines : lines.slice(0, end)).join('\n').trim();
+}
+
+/**
+ * Wraps each `@name` (a JSDoc tag, an npm scope, a decorator) in a code span
+ * so GitHub never renders or notifies it as a mention.
+ */
+export function codeMentions(text: string): string {
+  return text.replace(MENTION_OR_KEPT, (match) =>
+    match.startsWith('@') ? `\`${match}\`` : match,
+  );
 }
 
 /**
@@ -235,7 +249,7 @@ function touchedLine(
     ? `, ${pair.role === 'reverts' ? 'reverts' : 'reverted by'} ${refOf(pair.partner, context)}`
     : '';
 
-  return `* ${scope}${subjectOf(commit)} (${refOf(commit, context)})${why}`;
+  return `* ${scope}${codeMentions(subjectOf(commit))} (${refOf(commit, context)})${why}`;
 }
 
 interface Partition {
@@ -300,7 +314,7 @@ function keptNoteGroups(
     const notes = group.notes.flatMap((note) =>
       gone(note.commit?.hash)
         ? []
-        : [{ ...note, text: trimNoteText(note.text) }],
+        : [{ ...note, text: codeMentions(trimNoteText(note.text)) }],
     );
 
     return notes.length > 0 ? [{ ...group, notes }] : [];
@@ -330,7 +344,7 @@ function addPeerStatements(
   const commits: WriterCommit[] = [];
 
   for (const change of fresh) {
-    const text = describePeerChange(change);
+    const text = codeMentions(describePeerChange(change));
 
     if (isBreakingPeerChange(change)) {
       notes.push({ title: BREAKING, text, commit: { scope: packageName } });
@@ -369,8 +383,15 @@ export function finalizeContext(
   const previousVersion = context.previousVersion ?? latestStableVersion(state);
 
   context.commitGroups = context.commitGroups.flatMap((group) => {
-    const kept = group.commits.filter(
-      (commit) => !commit.hash || !parts.leaving.has(commit.hash),
+    const kept = group.commits.flatMap((commit) =>
+      commit.hash && parts.leaving.has(commit.hash)
+        ? []
+        : [
+            {
+              ...commit,
+              subject: commit.subject && codeMentions(commit.subject),
+            },
+          ],
     );
 
     return kept.length > 0 ? [{ ...group, commits: kept }] : [];

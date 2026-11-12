@@ -53,6 +53,8 @@ export default {
         ],
         // Only `#<digits>` is an issue; `#dev-gate` and `package.json#imports` are not.
         issuePrefixes: [/#(?=\d+(?![\w-]))/],
+        // `@name` is a JSDoc tag, npm scope or decorator, not a user; notes.ts renders it as code.
+        formatUserUrl: () => '',
       },
       // Relative to cwd, so each package's notes stay scoped to its own dir,
       // plus the workspace file whose catalogs feed its packed manifest.
