@@ -72,7 +72,7 @@ const harness = (overrides: Partial<ConnectRequest> = {}): Harness => {
   return h;
 };
 
-const CANONICAL_APP = '</app>; rel="canonical"';
+const CANONICAL_ABOUT = '</app/about>; rel="canonical"';
 
 describe('createConnectMiddleware', () => {
   it('answers redirects 302 with the request search merged into the Location', async () => {
@@ -119,10 +119,73 @@ describe('createConnectMiddleware', () => {
     const h = harness({ url: '/app/about' });
     mw(h.req, h.res, h.next);
     await h.done;
-    assert.equal(h.headers.Link, CANONICAL_APP);
+    assert.equal(h.headers.Link, CANONICAL_ABOUT);
     assert.equal(h.req.url, '/app'); // default shellPath = mount base
     assert.equal(h.nextArgs.length, 1);
     assert.equal(h.ended, false); // the static layer ends it
+  });
+
+  it('percent-encodes what a raw request target cannot carry inside the Link', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness({ url: '/app/a<b>"c d?q=<x>' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.headers.Link, '</app/a%3Cb%3E%22c%20d>; rel="canonical"');
+  });
+
+  it('names the root canonical for a request target that carries no path', async () => {
+    const mw = createConnectMiddleware(
+      createServerRouter({
+        mounts: {
+          '/': {
+            routes: [
+              { name: 'home', url: '' },
+              { name: 'about', url: '/about' },
+            ],
+          },
+        },
+      }),
+    );
+
+    // An absolute-form target (a proxy's request line) may end at the authority.
+    for (const url of [
+      'http://example.test',
+      'http://example.test?ref=email',
+      '?ref=email',
+      '',
+    ]) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.headers.Link, '</>; rel="canonical"', url);
+      assert.deepEqual(h.nextArgs, [[]], url);
+    }
+
+    const h = harness({ url: 'http://example.test/about?ref=email#team' });
+    mw(h.req, h.res, h.next);
+    await h.done;
+    assert.equal(h.headers.Link, '</about>; rel="canonical"');
+  });
+
+  it('names a path on this origin, never another host or scheme', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    for (const [url, link] of [
+      ['/app/%7Euser/a%2Fb', '</app/%7Euser/a%2Fb>; rel="canonical"'],
+      ['http://example.test//app/about', '</app/about>; rel="canonical"'],
+      ['///example.test/app', '</example.test/app>; rel="canonical"'],
+      ['mailto:app', '</mailto:app>; rel="canonical"'],
+    ] as const) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.headers.Link, link, url);
+    }
   });
 
   it('strips validators and relabels the downstream status for a status’d shell', async () => {
@@ -363,7 +426,7 @@ describe('createConnectMiddleware', () => {
       mw(h.req, h.res, h.next);
       await h.done;
       assert.equal(h.req.url, '/app');
-      assert.equal(h.headers.Link, CANONICAL_APP);
+      assert.equal(h.headers.Link, CANONICAL_ABOUT);
     }
 
     // A redirect rule → 302.
@@ -407,7 +470,7 @@ describe('createConnectMiddleware under a base', () => {
     await h.done;
     assert.equal(h.req.url, '/solar/');
     assert.deepEqual(h.nextArgs, [[]]);
-    assert.equal(h.headers.Link, '</solar/>; rel="canonical"');
+    assert.equal(h.headers.Link, '</solar/about>; rel="canonical"');
   });
 
   it('serves the base itself, with or without its trailing slash', async () => {
@@ -416,6 +479,7 @@ describe('createConnectMiddleware under a base', () => {
       mw(h.req, h.res, h.next);
       await h.done;
       assert.equal(h.req.url, '/solar/');
+      assert.equal(h.headers.Link, '</solar/>; rel="canonical"');
     }
   });
 

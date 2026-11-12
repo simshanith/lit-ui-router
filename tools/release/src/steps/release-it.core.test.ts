@@ -118,6 +118,7 @@ describe('publishArgs', () => {
     releaseVersion: '1.8.0',
     tarballPath: '/w/tools/release/.cache/publish/lit-ui-router.tgz',
     from: 'lit-ui-router@1.7.0',
+    previousVersion: '1.7.0',
     dryRun: false,
   };
 
@@ -137,6 +138,8 @@ describe('publishArgs', () => {
       '--git.tagExclude',
       '${npm.name}@1.8.0',
       '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.previousVersion=1.7.0',
     ]);
   });
 
@@ -148,11 +151,12 @@ describe('publishArgs', () => {
 
   it('pins a first release to the repo root sha, never leaving the range to release-it', () => {
     const root = '2407f49e29e058e21bffc9b0a69fd235e99a73c9';
-    const args = publishArgs({ ...base, from: root });
-    assert.equal(
-      args.at(-1),
+    const args = publishArgs({ ...base, from: root, previousVersion: '' });
+    assert.deepEqual(args.slice(-3), [
       `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${root}`,
-    );
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.previousVersion=',
+    ]);
   });
 
   it('appends --dry-run last for manual dry runs', () => {
@@ -173,29 +177,42 @@ describe('publishArgs', () => {
 });
 
 describe('changelogArgs', () => {
-  it('is the package changelog script plus the same range pin publish carries', () => {
-    assert.deepEqual(
-      changelogArgs({
-        packageName: 'lit-ui-router',
-        from: 'lit-ui-router@1.7.0',
-      }),
-      [
-        '--changelog',
-        '--git.tagMatch=lit-ui-router@[0-9]*.[0-9]*.[0-9]*',
-        '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
-      ],
-    );
+  const base = {
+    packageName: 'lit-ui-router',
+    version: '1.8.0',
+    from: 'lit-ui-router@1.7.0',
+    previousVersion: '1.7.0',
+  };
+
+  it('is the package changelog script plus the range pin and notes context publish carries', () => {
+    assert.deepEqual(changelogArgs(base), [
+      '--changelog',
+      '--git.tagMatch=lit-ui-router@[0-9]*.[0-9]*.[0-9]*',
+      '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
+      '--plugins.@release-it/conventional-changelog.context.releaseVersion=1.8.0',
+      '--plugins.@release-it/conventional-changelog.context.previousVersion=1.7.0',
+    ]);
   });
 
-  it('rejects a blank package name or range start', () => {
+  it('passes the same notes context as publishArgs', () => {
+    const publish = publishArgs({
+      releaseVersion: base.version,
+      tarballPath: '/w/lit-ui-router.tgz',
+      from: base.from,
+      previousVersion: base.previousVersion,
+      dryRun: false,
+    });
+
+    assert.deepEqual(changelogArgs(base).slice(-3), publish.slice(-3));
+  });
+
+  it('rejects a blank package name, version or range start', () => {
     assert.throws(
-      () => changelogArgs({ packageName: '', from: 'x' }),
+      () => changelogArgs({ ...base, packageName: '' }),
       /packageName/,
     );
-    assert.throws(
-      () => changelogArgs({ packageName: 'lit-ui-router', from: '' }),
-      /from/,
-    );
+    assert.throws(() => changelogArgs({ ...base, version: ' ' }), /version/);
+    assert.throws(() => changelogArgs({ ...base, from: '' }), /from/);
   });
 });
 

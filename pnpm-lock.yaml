@@ -3060,6 +3060,9 @@ importers:
 
   tools/release-config:
     dependencies:
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
       yaml:
         specifier: 'catalog:'
         version: 2.9.1
@@ -3070,6 +3073,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       conventional-changelog:
         specifier: 'catalog:'
         version: 8.1.3

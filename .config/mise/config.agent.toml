@@ -1,0 +1,4 @@
+# Loaded only under MISE_ENV=agent, which .github/workflows/pullfrog.yml sets:
+# tools for the review agent's shell, locked in mise.agent.lock.
+[tools]
+ripgrep = "15.1.0"

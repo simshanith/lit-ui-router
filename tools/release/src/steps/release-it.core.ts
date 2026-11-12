@@ -92,14 +92,18 @@ export function bumpArgs(options: {
  * - `gitRawCommitsOpts.from=<from>`: pins the conventional-changelog range
  *   to THIS package's previous tag, or the repo root on a first release
  *   (#302, release-prev-tag.ts)
+ * - `context.releaseVersion` / `context.previousVersion`: the notes' peer statement
+ *   and docs-site links, the same values the bump passes
  */
 export function publishArgs(options: {
   releaseVersion: string;
   tarballPath: string;
   from: string;
+  previousVersion: string;
   dryRun: boolean;
 }): string[] {
-  const { releaseVersion, tarballPath, from, dryRun } = options;
+  const { releaseVersion, tarballPath, from, previousVersion, dryRun } =
+    options;
 
   if (releaseVersion.trim() === '') {
     throw new Error('releaseVersion must be non-empty');
@@ -124,22 +128,26 @@ export function publishArgs(options: {
     '--git.tagExclude',
     `\${npm.name}@${releaseVersion}`,
     changelogFromArg(from),
+    ...notesContextArgs(releaseVersion, previousVersion),
     ...(dryRun ? ['--dry-run'] : []),
   ];
 }
 
 /**
  * The bump driver's changelog capture — what the packages' `changelog`
- * script runs, plus the same range pin the publish argv carries. The
+ * script runs, plus the same range pin and notes context the publish argv
+ * carries, so the PR body and the GitHub release body match. The
  * package's own tag glob keeps release-it's latest-tag context (and its
  * flat-log fallback, #423) off other packages' tags; the pin is what sets
  * the range, since that glob still matches the package's prerelease tags.
  */
 export function changelogArgs(options: {
   packageName: string;
+  version: string;
   from: string;
+  previousVersion: string;
 }): string[] {
-  const { packageName, from } = options;
+  const { packageName, version, from, previousVersion } = options;
 
   if (packageName.trim() === '') {
     throw new Error('packageName must be non-empty');
@@ -149,6 +157,17 @@ export function changelogArgs(options: {
     '--changelog',
     `--git.tagMatch=${packageName}@[0-9]*.[0-9]*.[0-9]*`,
     changelogFromArg(from),
+    ...notesContextArgs(version, previousVersion),
+  ];
+}
+
+// The writer reads both from its context (@tools/release-config notes.ts); an empty previousVersion is a first release.
+function notesContextArgs(version: string, previousVersion: string): string[] {
+  if (version.trim() === '') throw new Error('version must be non-empty');
+
+  return [
+    `--plugins.@release-it/conventional-changelog.context.releaseVersion=${version}`,
+    `--plugins.@release-it/conventional-changelog.context.previousVersion=${previousVersion}`,
   ];
 }
 
