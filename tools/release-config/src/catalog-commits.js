@@ -49,7 +49,7 @@ export function parseCatalogs(source) {
   return { default: manifest?.catalog ?? {}, ...manifest?.catalogs };
 }
 
-function workspaceFileAt(cwd, rev) {
+export function workspaceFileAt(cwd, rev) {
   try {
     return git(cwd, 'show', `${rev}:${WORKSPACE_FILE}`);
   } catch {

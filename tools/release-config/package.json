@@ -15,11 +15,13 @@
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "semver": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "conventional-changelog": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
