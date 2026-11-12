@@ -306,6 +306,10 @@ export class UIRouterDevtools extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
+    // Firefox and WebKit keep the media rules a shared sheet matched while no adopter was connected; resetting its media re-evaluates them.
+    for (const sheet of this.shadowRoot?.adoptedStyleSheets ?? [])
+      sheet.media.mediaText = String(sheet.media);
+
     if (this.router && !this.#recorder) this.#attach(this.router);
 
     // Removal from the document closes every popover; a reconnected element shows its pill again.
