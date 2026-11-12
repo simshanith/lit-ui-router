@@ -5,11 +5,12 @@ import { basename, dirname, join } from 'node:path';
 import { parse } from 'yaml';
 
 import {
+  type Catalogs,
   consumedCatalogEntries,
   parseCatalogs,
   WORKSPACE_FILE,
   workspaceFileAt,
-} from './catalog-commits.js';
+} from './catalog-commits.ts';
 import type { PeerManifest } from './peer-changes.ts';
 
 // Short scopes that name packages; one may name several.
@@ -237,7 +238,7 @@ export function resolvedManifestAt(cwd: string, rev: string): PackageManifest {
 /** The manifest with its `catalog:` peer specs replaced by their ranges. */
 export function resolveCatalogSpecs(
   manifest: PackageManifest,
-  catalogs: Record<string, Record<string, string>>,
+  catalogs: Catalogs,
 ): PackageManifest {
   const peers = Object.entries(manifest.peerDependencies ?? {}).map(
     ([name, spec]): [string, string] => {

@@ -540,7 +540,7 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 ## Release Configuration
 
 Release behavior is configured once, in `@tools/release-config`
-(`tools/release-config/src/release-it.js`):
+(`tools/release-config/src/release-it.ts`):
 
 ```js
 export default {
@@ -566,7 +566,7 @@ The config defaults most options to `false` so workflows can enable them explici
 A package's range is the commits that touched its directory, plus commits to
 `pnpm-workspace.yaml` that changed a catalog entry its `dependencies`,
 `peerDependencies` or `optionalDependencies` resolve through `catalog:`
-(`tools/release-config/src/catalog-commits.js`).
+(`tools/release-config/src/catalog-commits.ts`).
 
 The changelog lists its commit types explicitly, with the `conventionalcommits`
 preset's section names. A package range made only of unlisted types renders
@@ -574,7 +574,7 @@ empty, and release-it silently falls back to a flat repo-wide git log; a range
 mixing listed and unlisted types silently omits the unlisted commits. Preview
 with `pnpm --silent changelog` before a bump.
 
-It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
+It is code rather than JSON because `conventional-changelog-writer` 9 takes
 template partials as functions.
 
 ### Release notes

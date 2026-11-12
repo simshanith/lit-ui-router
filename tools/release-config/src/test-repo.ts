@@ -7,7 +7,7 @@ import { ConventionalChangelog } from 'conventional-changelog';
 
 type WriterOptions = Parameters<ConventionalChangelog['writer']>[0];
 
-import config from './release-it.js';
+import config from './release-it.ts';
 
 const GIT_ENV = {
   ...process.env,

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { parseCatalogs, WORKSPACE_FILE } from './catalog-commits.js';
+import { parseCatalogs, WORKSPACE_FILE } from './catalog-commits.ts';
 import {
   describePeerChange,
   isBreakingPeerChange,
@@ -352,7 +352,7 @@ function addPeerStatements(
 /**
  * The writer's `finalizeContext` for the package release-it runs in. It
  * replaces conventional-changelog's, which only fills the compare link of
- * the header release-it.js blanks.
+ * the header release-it.ts blanks.
  *
  * `previousVersion` (empty on a first release) feeds the peer statement and
  * defaults to the latest stable tag; `releaseVersion` adds the docs-site links.
