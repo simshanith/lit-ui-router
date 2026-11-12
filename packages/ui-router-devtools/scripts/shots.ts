@@ -108,9 +108,29 @@ const shots: Shot[] = [
     setup: (page) => row(page, '006').click(),
   },
   {
+    name: '3-dock-map-rest',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: showMap,
+  },
+  {
+    name: '3-dock-map-state',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: async (page) => {
+      await showMap(page);
+      await page
+        .locator(`${TAG} .box[data-name="galaxy.stars.star"] > .head`)
+        .click({ position: { x: 14, y: 12 } });
+    },
+  },
+  {
     name: '3-dock-map',
     width: 1280,
     open: true,
+    axe: true,
     setup: async (page) => {
       await row(page, '006').click();
       await showMap(page);

@@ -41,6 +41,10 @@ export default defineConfig({
       },
       {
         cacheDir: `node_modules/.vite-${cacheKey}-browser`,
+        // The Map loads on first use; a dependency found only then would make Vite reload the test.
+        optimizeDeps: {
+          include: ['d3-hierarchy', 'lit/directives/repeat.js'],
+        },
         test: {
           name: 'browser',
           setupFiles: ['./vitest.setup.ts'],

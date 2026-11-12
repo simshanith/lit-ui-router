@@ -4,7 +4,9 @@ Devtools for any [UI-Router](https://ui-router.github.io) `@uirouter/core` route
 
 The outline marks what a declaration says about a state: a box in place of the ring for `abstract`, a dot and arrow for `redirectTo` (drawn on the rail into a default child), a circled H for `dsr` or `deepStateRedirect` from `@uirouter/dsr`, and a box split by a dashed line for `sticky` from `@uirouter/sticky-states`. The inspector names each in words.
 
-The Map tab draws the state tree two ways, chosen in the panel header and remembered per viewer: nested boxes, child states inside their parent, and a node-link tree. The nested layout packs for the panel's shape and steps down a fit ladder when the tree is too large; under 560px of width, or when nothing on the ladder fits, the tree shows. No edge is drawn at rest: selecting a transition draws its edge, and selecting a state draws the traffic it has seen. The rules are in [the nested Map](../../docs/visualizer-proposal/map.md).
+The Map tab draws the state tree two ways, chosen in the panel header and remembered per viewer: nested boxes, child states inside their parent, and a node-link tree. The nested layout keeps every box at its natural size, composes them for the panel's shape and steps down a fit ladder when the tree is too large; under 560px of width, or when nothing on the ladder fits, the tree shows. No edge is drawn at rest: selecting a transition draws its edge, and selecting a state draws the traffic it has seen. Boxes move to their new places when the layout changes, and edges draw in after them; under reduced motion nothing moves. The Map's code loads on first use of the tab. The rules are in [the nested Map](../../docs/visualizer-proposal/map.md).
+
+A state has one colour wherever it appears: its box on the Map, its glyph and rail in the Outline, its node in the tree and its name in the inspector. The colour follows the state's depth in the tree, from a cycle of four, `--uird-depth-1` to `--uird-depth-4`. While a transition is selected, previewed or running, those colours recede and `--uird-active` and `--uird-exit` mark what it enters, retains and exits. Set the four depth tokens to one value for a monochrome panel.
 
 `observedEdges` folds a recorded session into one edge per ordered pair of states, with its count and outcomes, for exporters as well as the Map.
 
@@ -49,11 +51,13 @@ The demo fakes what a real app would supply:
 - `galaxy.stars` declares `dsr` and `sticky` to show their marks; neither plugin is loaded, so the properties do nothing.
 - Inspector subsections for hooks and views are not built.
 
-Two scripts work against the running demo: `pnpm shots` writes the proposal screenshots into `docs/visualizer-proposal/screenshots/` and runs axe on the open panel (`--port`, `--out`, `--only <prefix>`, `--scale`), and `pnpm size` reports min and gzip sizes per entry with `lit` and `@uirouter/core` external.
+Two scripts work against the running demo: `pnpm shots` writes the proposal screenshots into `docs/visualizer-proposal/screenshots/` and runs axe on the open panel (`--port`, `--out`, `--only <prefix>`, `--scale`), and `pnpm size` reports min and gzip sizes per entry and per chunk with `lit` and `@uirouter/core` external: `with` chunks load with the entry and `lazy` ones on demand.
 
 ## Known limits
 
 - An app `onInvalid` handler registered after the devtools that rescues a target still leaves an `invalid` row: callbacks run in registration order and the adapter cannot see the outcome.
 - RTL mirrors the rails, map edges and selection bar; Latin text inside rows is not bidi-isolated.
-- The nested Map's inspector popover can cover a neighbouring box or an edge in the 336px dock; the maximised panel shows the inspector below the diagram.
-- A nested box opens and closes from the keyboard. A pointer opens a collapsed box by selecting it and has no way to close an open one.
+- In the dock the nested Map moves over for the inspector popover when both fit side by side. When they do not, the popover covers pills before it covers an edge or a box an edge ends at; the maximised panel shows the inspector below the diagram.
+- Selecting a state for the first time, or clearing the selection, can move the diagram to make or take back the popover's room, so the box under the pointer moves with it.
+- A box's size changes at once when its compound opens or closes; only its place is animated.
+- The transition strip and the log name states in ink; identity colour is on the Map, the Outline, the tree and the inspector.

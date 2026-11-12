@@ -167,13 +167,13 @@ if (new URLSearchParams(location.search).has('visualizer')) {
 }
 ```
 
-| Surface           | Members                                                                                                                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Properties        | `router`, `open`, `dock` (`auto`, `side`, `bottom`, `inline`), `history` (row limit), `storageKey`                                                                                                                  |
-| Events            | `devtools-toggle`; `devtools-select-state`, cancelable                                                                                                                                                              |
-| Custom properties | `--uird-surface`, `--uird-surface-raised`, `--uird-ink`, `--uird-muted`, `--uird-rule`, `--uird-rule-strong`, `--uird-red`, `--uird-active`, `--uird-exit`, `--uird-active-wash`, `--uird-font`, `--uird-font-mono` |
-| Parts             | `pill`, `panel`, `tree`, `node`, `log`, `transition`, `inspector`                                                                                                                                                   |
-| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`                                                                                                                  |
+| Surface           | Members                                                                                                                                                                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Properties        | `router`, `open`, `dock` (`auto`, `side`, `bottom`, `inline`), `history` (row limit), `storageKey`                                                                                                                                                                           |
+| Events            | `devtools-toggle`; `devtools-select-state`, cancelable                                                                                                                                                                                                                       |
+| Custom properties | `--uird-surface`, `--uird-surface-raised`, `--uird-ink`, `--uird-muted`, `--uird-rule`, `--uird-rule-strong`, `--uird-red`, `--uird-active`, `--uird-exit`, `--uird-active-wash`, `--uird-depth-1` to `--uird-depth-4`, `--uird-ease-out`, `--uird-font`, `--uird-font-mono` |
+| Parts             | `pill`, `panel`, `tree`, `node`, `log`, `transition`, `inspector`                                                                                                                                                                                                            |
+| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`                                                                                                                                                                           |
 
 The name `ui-router-devtools` follows the repo's convention: `ui-router-*` for
 packages that work with any adapter, `lit-ui-router-*` for Lit-only ones. Lit is
@@ -274,10 +274,18 @@ is used.
   raised surface.
 - **Numbering.** Sections are `1 STATES`, `2 TRANSITIONS`, `3 INSPECTOR`, with
   `3.1 PARAMS` and `3.2 RESOLVES`. Transitions are zero-padded: `016`.
-- **Red means fault.** The active path is carried by a solid glyph, weight 700
-  and a 2px rail in `--uird-active`; what a transition exits is dashed in
-  `--uird-exit`. The transition log stays ink and red.
-- **Motion.** Rail and glyph cross-fades at 200ms. Movement sits under
+- **Colour is identity, then status.** A state's glyph, its rail and its box
+  on the Map take one of four colours by its depth in the state tree,
+  `--uird-depth-1` to `--uird-depth-4`, as an editor colours matching
+  brackets. The active path is carried by a solid glyph, weight 700 and a 2px
+  rail, in that colour. While a transition is selected, previewed or running,
+  identity recedes and colour says what the transition does: `--uird-active`
+  on what it enters or retains, `--uird-exit`, dashed, on what it exits.
+  [The nested Map](map.md#modes) has the modes and the palette.
+- **Red means fault.** Red is kept for a failed transition and the state that
+  failed. The transition log stays ink and red.
+- **Motion.** Rail and glyph cross-fades at 200ms. On the Map, boxes move to
+  their new places in 200ms and edges draw in after them. Movement sits under
   `prefers-reduced-motion: no-preference`; hover under
   `(hover: hover) and (pointer: fine)`.
 
@@ -347,6 +355,11 @@ entered state with a plus. A reload retains nothing, so both are full names.
     var(--uird-active) 12%,
     var(--uird-surface)
   );
+  --uird-depth-1: light-dark(oklch(46% 0.19 275), oklch(70% 0.15 275));
+  --uird-depth-2: light-dark(oklch(57% 0.1 185), oklch(86% 0.12 185));
+  --uird-depth-3: light-dark(oklch(64% 0.125 85), oklch(82% 0.13 85));
+  --uird-depth-4: light-dark(oklch(46% 0.17 345), oklch(68% 0.13 345));
+  --uird-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --uird-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --uird-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -367,8 +380,11 @@ in light, 16.0 and 14.2 in dark; muted 6.6 and 6.1, 8.0 and 7.1; red 5.7 and 5.2
 6.9 and 6.2; `rule-strong` 4.2 and 3.8, 4.7 and 4.2; `active` 5.9 and 5.4, 8.7
 and 7.7; `exit` 3.6 and 3.3, 10.9 and 9.7. `rule` is a hairline only. Text on a
 red fill uses the surface colour. `exit` marks borders, rails and glyphs and
-never text. `active-wash` fills the current state's box: ink on it is 15.4 and
-13.5, and `active` on it 5.0 and 7.3.
+never text. The four depth colours mark borders, rails, glyphs and underlines
+and never text: 7.4, 4.1, 3.3 and 7.6 on the light surface, 6.7, 12.7, 10.5 and
+6.0 on the dark, and 3.0 at the least on the raised surface. The current
+state's box is washed with 12% of its depth colour, and a leaf a transition
+enters with `active-wash`; ink on either is above 12.
 
 ### References
 

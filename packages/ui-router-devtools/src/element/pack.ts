@@ -1,13 +1,47 @@
-// The nested Map's packer: measured boxes in, rows out. It reads no DOM.
+// The nested Map's packer: measured boxes in, placed boxes out. It reads no DOM.
 
 export interface Metrics {
   /** A leaf's block size, and a compound's header row. */
   head: number;
-  /** Padding between a compound's border and its rows. */
-  pad: number;
-  /** Space between boxes in a row and between rows. */
-  gap: number;
+  /** Padding between a compound's border and its rows, along the inline and block axes. */
+  padX: number;
+  padY: number;
+  /** Space between leaves in a row, and between rows of leaves. */
+  gapX: number;
+  gapY: number;
+  /** Space between a compound and its neighbours, so groups read as groups. */
+  groupX: number;
+  groupY: number;
+  /** The narrowest and widest a leaf may be. */
+  min: number;
+  max: number;
 }
+
+// The spacing system, on the panel's 4px unit and 12px module; `map.md` records it.
+export const METRICS: Metrics = {
+  head: 24,
+  padX: 24,
+  padY: 12,
+  gapX: 24,
+  gapY: 24,
+  groupX: 36,
+  groupY: 36,
+  min: 56,
+  max: 208,
+};
+
+/** The caption-size rung of the fit ladder. */
+export const SMALL_METRICS: Metrics = {
+  head: 20,
+  padX: 16,
+  padY: 8,
+  gapX: 16,
+  gapY: 12,
+  groupX: 24,
+  groupY: 16,
+  min: 48,
+  max: 176,
+};
 
 export interface Size {
   width: number;
@@ -31,39 +65,69 @@ export interface Placed extends Size {
   /** The inline size of the ancestors' labels this header follows, when merged. */
   indent: number;
   rows: Placed[][];
+  /** Offset from the container's content origin, set when the container is placed. */
+  x: number;
+  y: number;
 }
 
 const INNER_RATIO = 2;
+
+/** How much an empty fraction of a compound's interior costs against a ratio nearer the target. */
+const WASTE = 1.5;
+
+const GRID = 4;
+
+const onGrid = (value: number): number => Math.ceil(value / GRID) * GRID;
 
 const sum = (values: readonly number[]): number =>
   values.reduce((total, value) => total + value, 0);
 
 const cellWidth = (cell: Placed): number => cell.width + (cell.box?.lead ?? 0);
 
-const rowWidth = (row: readonly Placed[], gap: number): number =>
-  sum(row.map(cellWidth)) + gap * (row.length - 1);
+// A drawn compound or a stack: something that reads as a group, not a pill.
+const isGroup = (cell: Placed): boolean => cell.rows.length > 0;
+
+const between = (a: Placed, b: Placed, metrics: Metrics): number =>
+  isGroup(a) || isGroup(b) ? metrics.groupX : metrics.gapX;
+
+const rowWidth = (row: readonly Placed[], metrics: Metrics): number =>
+  sum(
+    row.map(
+      (cell, index) =>
+        cellWidth(cell) + (index ? between(row[index - 1], cell, metrics) : 0),
+    ),
+  );
 
 const rowHeight = (row: readonly Placed[]): number =>
   Math.max(0, ...row.map((cell) => cell.height));
 
-const rowsSize = (rows: readonly Placed[][], gap: number): Size => ({
-  width: Math.max(0, ...rows.map((row) => rowWidth(row, gap))),
-  height: sum(rows.map(rowHeight)) + gap * Math.max(0, rows.length - 1),
+const rowGap = (
+  above: readonly Placed[],
+  below: readonly Placed[],
+  metrics: Metrics,
+): number =>
+  above.some(isGroup) || below.some(isGroup) ? metrics.groupY : metrics.gapY;
+
+const rowsSize = (rows: readonly Placed[][], metrics: Metrics): Size => ({
+  width: Math.max(0, ...rows.map((row) => rowWidth(row, metrics))),
+  height: sum(
+    rows.map(
+      (row, index) =>
+        rowHeight(row) + (index ? rowGap(rows[index - 1], row, metrics) : 0),
+    ),
+  ),
 });
 
 // Splits cells into `count` contiguous rows whose widest row is as narrow as possible; ties keep earlier rows longer.
 export const splitRows = (
   cells: readonly Placed[],
   count: number,
-  gap: number,
+  metrics: Metrics,
 ): Placed[][] => {
   const n = cells.length;
-  const before = [0];
-
-  for (const cell of cells) before.push(before.at(-1)! + cellWidth(cell));
 
   const span = (from: number, to: number) =>
-    before[to] - before[from] + gap * (to - from - 1);
+    rowWidth(cells.slice(from, to), metrics);
 
   // best[k][i]: the widest row when the first i cells take k rows; cut[k][i]: where the last row starts.
   const best = [cells.map((_, i) => span(0, i + 1))];
@@ -100,20 +164,25 @@ export const splitRows = (
 };
 
 // A run of short cells beside a tall one stacks into as many rows as the tall one's height holds.
-const stackRun = (run: Placed[], height: number, gap: number): Placed[] => {
+const stackRun = (
+  run: Placed[],
+  height: number,
+  metrics: Metrics,
+): Placed[] => {
   for (let count = Math.min(run.length, 8); count > 1; count--) {
-    const rows = splitRows(run, count, gap);
-    const size = rowsSize(rows, gap);
+    const rows = splitRows(run, count, metrics);
+    const size = rowsSize(rows, metrics);
 
-    if (size.height <= height) return [{ box: null, indent: 0, rows, ...size }];
+    if (size.height <= height)
+      return [{ box: null, indent: 0, rows, x: 0, y: 0, ...size }];
   }
 
   return run;
 };
 
-const stackShort = (row: Placed[], gap: number): Placed[] => {
+const stackShort = (row: Placed[], metrics: Metrics): Placed[] => {
   const height = rowHeight(row);
-  const short = (cell: Placed) => cell.height * 2 + gap <= height;
+  const short = (cell: Placed) => cell.height * 2 + metrics.gapY <= height;
   const cells: Placed[] = [];
   let run: Placed[] = [];
 
@@ -123,11 +192,11 @@ const stackShort = (row: Placed[], gap: number): Placed[] => {
       continue;
     }
 
-    cells.push(...stackRun(run, height, gap), cell);
+    cells.push(...stackRun(run, height, metrics), cell);
     run = [];
   }
 
-  return [...cells, ...stackRun(run, height, gap)];
+  return [...cells, ...stackRun(run, height, metrics)];
 };
 
 interface Choice {
@@ -146,11 +215,11 @@ interface Frame {
   min: number;
 }
 
-const frameSize = (rows: Placed[][], frame: Frame, gap: number): Size => {
-  const size = rowsSize(rows, gap);
+const frameSize = (rows: Placed[][], frame: Frame, metrics: Metrics): Size => {
+  const size = rowsSize(rows, metrics);
 
   return {
-    width: Math.max(frame.min, size.width + frame.inline),
+    width: onGrid(Math.max(frame.min, size.width + frame.inline)),
     height: size.height + frame.block,
   };
 };
@@ -158,31 +227,64 @@ const frameSize = (rows: Placed[][], frame: Frame, gap: number): Size => {
 const fits = (size: Size, room: Size | undefined): boolean =>
   !room || (size.width <= room.width && size.height <= room.height);
 
-// Tries every row count and keeps the split whose aspect ratio is nearest the target; ties keep fewer rows.
+const area = (cells: readonly Placed[]): number =>
+  sum(cells.map((cell) => cellWidth(cell) * cell.height));
+
+// The share of the rows' bounding box that their cells cover.
+const cover = (rows: readonly Placed[][], metrics: Metrics): number => {
+  const size = rowsSize(rows, metrics);
+
+  return area(rows.flat()) / Math.max(1, size.width * size.height);
+};
+
+// Tries every row count and keeps the split nearest the target ratio that wastes least of its interior; ties keep fewer rows.
 const chooseRows = (
   cells: Placed[],
   frame: Frame,
   choice: Choice,
-  gap: number,
+  metrics: Metrics,
 ): Placed[][] => {
   let chosen: Placed[][] = [];
   let score = Infinity;
 
   for (let count = 1; count <= cells.length; count++) {
-    const rows = splitRows(cells, count, gap).map((row) =>
-      stackShort(row, gap),
+    const rows = splitRows(cells, count, metrics).map((row) =>
+      stackShort(row, metrics),
     );
 
-    const size = frameSize(rows, frame, gap);
+    const size = frameSize(rows, frame, metrics);
 
     const candidate =
       Math.abs(Math.log(size.width / size.height / choice.ratio)) +
+      WASTE * (1 - cover(rows, metrics)) +
       (fits(size, choice.fit) ? 0 : 1000);
 
     if (candidate < score) [chosen, score] = [rows, candidate];
   }
 
   return chosen;
+};
+
+// Rows start at the inline start and cells sit at their row's top.
+const place = (rows: Placed[][], metrics: Metrics): void => {
+  let y = 0;
+
+  rows.forEach((row, index) => {
+    let x = 0;
+
+    if (index) y += rowGap(rows[index - 1], row, metrics);
+
+    row.forEach((cell, at) => {
+      if (at) x += between(row[at - 1], cell, metrics);
+      cell.x = x + (cell.box?.lead ?? 0);
+      cell.y = y;
+      x += cellWidth(cell);
+
+      if (!cell.box) place(cell.rows, metrics);
+    });
+
+    y += rowHeight(row);
+  });
 };
 
 const packBox = (
@@ -201,14 +303,27 @@ const packBox = (
       box,
       indent,
       rows: [[inner]],
+      x: 0,
+      y: 0,
       width: inner.width,
       height: inner.height,
     };
   }
 
+  if (!box.children.length)
+    return {
+      box,
+      indent,
+      rows: [],
+      x: 0,
+      y: 0,
+      width: onGrid(Math.min(metrics.max, Math.max(metrics.min, label))),
+      height: metrics.head,
+    };
+
   const frame = {
-    inline: metrics.pad * 2,
-    block: box.children.length ? metrics.head + metrics.pad * 2 : metrics.head,
+    inline: metrics.padX * 2,
+    block: metrics.head + metrics.padY * 2,
     min: label,
   };
 
@@ -216,12 +331,20 @@ const packBox = (
     packBox(child, metrics, { ratio: INNER_RATIO }),
   );
 
-  const rows = chooseRows(cells, frame, choice, metrics.gap);
+  const rows = chooseRows(cells, frame, choice, metrics);
+  place(rows, metrics);
 
-  return { box, indent, rows, ...frameSize(rows, frame, metrics.gap) };
+  return {
+    box,
+    indent,
+    rows,
+    x: 0,
+    y: 0,
+    ...frameSize(rows, frame, metrics),
+  };
 };
 
-/** Packs the top-level boxes for a viewport: one root box fills it, several share it as rows. */
+/** Packs the top-level boxes at their natural sizes into rows whose outline is nearest the viewport's shape. */
 export const pack = (
   roots: readonly Box[],
   viewport: Size,
@@ -242,14 +365,86 @@ export const pack = (
     packBox(box, metrics, { ratio: INNER_RATIO }),
   );
 
-  const rows = chooseRows(cells, frame, choice, metrics.gap);
+  const rows = chooseRows(cells, frame, choice, metrics);
+  place(rows, metrics);
 
   return {
     box: null,
     indent: 0,
     rows,
-    ...frameSize(rows, frame, metrics.gap),
+    x: 0,
+    y: 0,
+    ...frameSize(rows, frame, metrics),
   };
+};
+
+export interface Drawn extends Size {
+  box: Box;
+  placed: Placed;
+  /** Offset from the enclosing drawn box's border, or from the diagram's origin. */
+  x: number;
+  y: number;
+}
+
+/** The boxes drawn directly inside a placed box, with stacks flattened away. */
+export const drawnIn = (placed: Placed, metrics: Metrics): Drawn[] => {
+  const merged = placed.box?.merge;
+  const inset = placed.box && !merged ? metrics.padX : 0;
+  const top = placed.box && !merged ? metrics.head + metrics.padY : 0;
+
+  const walk = (cell: Placed, x: number, y: number): Drawn[] =>
+    cell.box
+      ? [
+          {
+            box: cell.box,
+            placed: cell,
+            x: x + cell.x,
+            y: y + cell.y,
+            width: cell.width,
+            height: cell.height,
+          },
+        ]
+      : cell.rows.flat().flatMap((item) => walk(item, x + cell.x, y + cell.y));
+
+  return placed.rows.flat().flatMap((cell) => walk(cell, inset, top));
+};
+
+/** The least share of any compound's packed rows that its boxes cover; ragged rows and short stacks lower it. */
+export const leastCover = (placed: Placed, metrics: Metrics): number => {
+  const inner = drawnIn(placed, metrics);
+  const size = rowsSize(placed.rows, metrics);
+
+  const own =
+    placed.box?.merge || !inner.length
+      ? 1
+      : sum(
+          inner.map(
+            (item) => (item.width + (item.box.lead ?? 0)) * item.height,
+          ),
+        ) /
+        (size.width * size.height);
+
+  return Math.min(
+    own,
+    ...inner.map((item) => leastCover(item.placed, metrics)),
+  );
+};
+
+/** How far any compound is wider than its header and its rows need; a shrink-wrapped tree gives less than one grid step. */
+export const mostSlack = (placed: Placed, metrics: Metrics): number => {
+  const inner = drawnIn(placed, metrics);
+  const { box } = placed;
+
+  const own =
+    box && !box.merge && inner.length
+      ? placed.width -
+        Math.max(
+          placed.indent + box.label,
+          rowsSize(placed.rows, metrics).width + metrics.padX * 2,
+        )
+      : 0;
+
+  return Math.max(own, ...inner.map((item) => mostSlack(item.placed, metrics)));
 };
 
 /** The fit ladder, mildest first; each rung keeps the ones before it. The last is the node-link tree. */

@@ -48,8 +48,10 @@ export interface Routed {
 }
 
 export interface RouteOptions {
-  /** Clearance between a route and a box edge. */
+  /** The least clearance between a route and a box edge it runs alongside. */
   margin?: number;
+  /** The longest straight lead between a box and an edge's first bend; a narrower gutter gives half its width. */
+  lead?: number;
   /** The cost of one bend, in pixels of length. */
   bend?: number;
   /** Corner radius. */
@@ -60,6 +62,7 @@ export interface RouteOptions {
 
 interface Settings {
   margin: number;
+  lead: number;
   bend: number;
   radius: number;
   dpr: number;
@@ -70,11 +73,20 @@ const DX = [1, 0, -1, 0];
 
 const DY = [0, 1, 0, -1];
 
-const PORT_STEP = 8;
+/** The least space between two ports on one side: an arrowhead and room beside it. */
+const PORT_STEP = 12;
+
+/** Ports keep this far from a side's corners. */
+const PORT_INSET = 6;
 
 const NUDGE_STEP = 4;
 
 const HEAD_INSET = 4;
+
+/** A gutter wider than this is open space, where a route keeps its lead instead of the midline. */
+const CHANNEL = 48;
+
+const LOOP = 12;
 
 type Side = 0 | 1 | 2 | 3;
 
@@ -89,6 +101,8 @@ interface Port {
   /** The box is an ancestor of the other end, so the edge meets its border from inside. */
   inner: boolean;
   border: Point;
+  /** How far the stub sits from the border. */
+  reach: number;
   /** Where the search starts or ends: the border point moved clear of the box. */
   stub: Point;
 }
@@ -132,12 +146,58 @@ export const visibleEnd = (
   return undefined;
 };
 
+// How far a box's side is from the nearest border facing it: a neighbour's, or an ancestor's from inside.
+const clearance = (
+  box: RouteBox,
+  side: Side,
+  boxes: ReadonlyMap<string, RouteBox>,
+): number => {
+  const { x, y, width, height } = box.rect;
+  const upright = side % 2 === 0;
+  const from = [x + width, y + height, x, y][side];
+  const sign = side < 2 ? 1 : -1;
+  const above = new Set(ancestorsOf(boxes, box.id));
+  let clear = Infinity;
+
+  for (const other of boxes.values()) {
+    if (other === box) continue;
+
+    const r = other.rect;
+    const inside = above.has(other.id);
+
+    const overlaps = upright
+      ? r.y < y + height && y < r.y + r.height
+      : r.x < x + width && x < r.x + r.width;
+
+    if (!overlaps) continue;
+
+    // An ancestor is met from inside, at its far border or under its header row.
+    const far = inside === side < 2;
+
+    const at = upright
+      ? r.x + (far ? r.width : 0)
+      : inside && side === 3
+        ? r.y + other.head
+        : r.y + (far ? r.height : 0);
+
+    const gap = (at - from) * sign;
+
+    if (gap >= 0) clear = Math.min(clear, gap);
+  }
+
+  return clear;
+};
+
+// A lead runs to the middle of a narrow gutter and no further than `lead` into an open one.
+const leadOf = (clear: number, { margin, lead }: Settings): number =>
+  Math.max(margin, Math.min(lead, Math.floor(clear / 2)));
+
 const portAt = (
   box: RouteBox,
   side: Side,
   inner: boolean,
   offset: number,
-  margin: number,
+  reach: number,
 ): Port => {
   const { x, y, width, height } = box.rect;
   const top = inner ? y + box.head : y;
@@ -151,12 +211,13 @@ const portAt = (
     { x: cx, y: top },
   ][side];
 
-  const clear = inner ? -margin : margin;
+  const clear = inner ? -reach : reach;
 
   return {
     side,
     inner,
     border,
+    reach,
     stub: { x: border.x + DX[side] * clear, y: border.y + DY[side] * clear },
   };
 };
@@ -296,6 +357,10 @@ const buildWalls = (
 
 // Search
 
+// A bend right at a stub leaves no straight lead; a side with room for one is worth a detour.
+const shortfall = (port: Port, lead: number): number =>
+  Math.max(0, lead - port.reach) * 4;
+
 interface Heap {
   items: number[];
   /** Orders two entries; negative when the first comes out first. */
@@ -354,6 +419,8 @@ interface Search {
   starts: Port[];
   goals: Port[];
   bend: number;
+  /** The lead an end should have; a bend nearer the box than this costs the shortfall again. */
+  lead: number;
 }
 
 const nodeOf = (grid: Grid, point: Point): number | undefined => {
@@ -390,6 +457,8 @@ interface Frontier {
   from: Int32Array;
   queue: { f: number; state: number; g: number }[];
   heap: Heap;
+  /** What a bend at each start state costs. */
+  short: Map<number, number>;
 }
 
 const pointOf = ({ search: { grid } }: Frontier, state: number): Point => {
@@ -441,6 +510,7 @@ const newFrontier = (search: Search): Frontier => {
     bends,
     from: new Int32Array(size).fill(-1),
     queue,
+    short: new Map(),
     // Ties break on fewer bends, then on push order.
     heap: {
       items: [],
@@ -468,7 +538,7 @@ const expand = (frontier: Frontier, state: number, g: number): void => {
     visit(
       frontier,
       frontier.states + index,
-      g + turn * bend,
+      g + turn * (bend + shortfall(goal, frontier.search.lead)),
       turns + turn,
       state,
     );
@@ -482,10 +552,14 @@ const expand = (frontier: Frontier, state: number, g: number): void => {
     const turn = next === dir ? 0 : 1;
     const there = pointOf(frontier, to * 4);
     const length = Math.abs(there.x - at.x) + Math.abs(there.y - at.y);
+
+    const short =
+      frontier.from[state] < 0 ? (frontier.short.get(state) ?? 0) : 0;
+
     visit(
       frontier,
       to * 4 + next,
-      g + length + turn * bend,
+      g + length + turn * (bend + short),
       turns + turn,
       state,
     );
@@ -521,8 +595,11 @@ const search = (query: Search): Found | null => {
   for (const port of query.starts) {
     const node = nodeOf(query.grid, port.stub);
 
-    if (node !== undefined)
-      visit(frontier, node * 4 + travel(port, true), 0, 0, -1);
+    if (node === undefined) continue;
+
+    const state = node * 4 + travel(port, true);
+    frontier.short.set(state, shortfall(port, query.lead));
+    visit(frontier, state, 0, 0, -1);
   }
 
   for (let entry = heapPop(heap); entry !== undefined; entry = heapPop(heap)) {
@@ -645,6 +722,58 @@ const nudge = (routes: Point[][], margin: number): void => {
   }
 };
 
+// The borders a segment runs between: the nearest on each side whose box spans any of the segment's length.
+const channel = (
+  segment: Segment,
+  boxes: readonly RouteBox[],
+  margin: number,
+): [number, number] => {
+  let low = -Infinity;
+  let high = Infinity;
+
+  for (const { rect, head } of boxes) {
+    const [from, size, start, length] = segment.upright
+      ? [rect.x, rect.width, rect.y, rect.height]
+      : [rect.y, rect.height, rect.x, rect.width];
+
+    if (start > segment.high + margin || start + length < segment.low - margin)
+      continue;
+
+    const lines = [from, from + size];
+
+    if (!segment.upright && rect.height > head + 1) lines.push(from + head);
+
+    for (const line of lines) {
+      if (line < segment.line) low = Math.max(low, line);
+      else if (line > segment.line) high = Math.min(high, line);
+    }
+  }
+
+  return [low, high];
+};
+
+// A free segment moves to the middle of a narrow gutter, and in open space keeps a lead's distance from a border.
+const centre = (
+  points: Point[],
+  boxes: readonly RouteBox[],
+  { margin, lead }: Settings,
+): Point[] => {
+  for (const segment of innerSegments(points, 0)) {
+    const [low, high] = channel(segment, boxes, margin);
+    const narrow = high - low <= CHANNEL;
+
+    const to = narrow
+      ? Math.round((low + high) / 2)
+      : Math.min(high - lead, Math.max(low + lead, segment.line));
+
+    const axis = segment.upright ? 'x' : 'y';
+    points[segment.index][axis] = to;
+    points[segment.index + 1][axis] = to;
+  }
+
+  return simplify(points);
+};
+
 // Output
 
 // Puts a coordinate on the device-pixel grid: on a pixel boundary for an even stroke, mid-pixel for an odd one.
@@ -738,28 +867,45 @@ const finish = (
   };
 };
 
-// A self-loop is a fixed shape on the header row's end, not a search.
-const loop = (edge: RouteEdge, box: RouteBox, settings: Settings): Routed => {
-  const { x, y, width } = box.rect;
-  const right = x + width;
-  const out = y + Math.round(box.head / 4);
-  const back = y + Math.round((box.head * 3) / 4);
-  const far = right + settings.margin + 4;
+// A self-loop is a fixed shape, not a search: out of the top or bottom near a corner and back into the side beside it.
+// It takes the end side and the top unless routed edges already use them and the other is free.
+const loop = (
+  edge: RouteEdge,
+  box: RouteBox,
+  boxes: ReadonlyMap<string, RouteBox>,
+  taken: ReadonlySet<Side>,
+  settings: Settings,
+): Routed => {
+  const { x, y, width, height } = box.rect;
+  const west = taken.has(0) && !taken.has(2);
+  const south = taken.has(3) && !taken.has(1);
+  const sx = west ? -1 : 1;
+  const sy = south ? 1 : -1;
+  const side = west ? x : x + width;
+  const base = south ? y + height : y;
+
+  const out =
+    base + sy * leadOf(clearance(box, south ? 1 : 3, boxes), settings);
+
+  const far = side + sx * leadOf(clearance(box, west ? 2 : 0, boxes), settings);
+  const half = Math.round(Math.min(box.head, height) / 2);
+  const back = south ? y + height - half : y + half;
 
   return finish(
     edge,
     'loop',
     [
-      { x: right, y: out },
+      { x: side - sx * LOOP, y: base },
+      { x: side - sx * LOOP, y: out },
       { x: far, y: out },
       { x: far, y: back },
-      { x: right, y: back },
+      { x: side, y: back },
     ],
-    { ...settings, radius: (back - out) / 2 },
+    { ...settings, radius: 6 },
   );
 };
 
-const centre = ({ rect }: RouteBox): Point => ({
+const middle = ({ rect }: RouteBox): Point => ({
   x: rect.x + rect.width / 2,
   y: rect.y + rect.height / 2,
 });
@@ -771,8 +917,8 @@ const fallback = (
   to: RouteBox,
   settings: Settings,
 ): Routed => {
-  const a = centre(from);
-  const b = centre(to);
+  const a = middle(from);
+  const b = middle(to);
   const flat = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y);
   const forward = flat ? b.x >= a.x : b.y >= a.y;
   const sides: readonly Side[] = flat ? [0, 2] : [1, 3];
@@ -807,7 +953,7 @@ interface Job {
 const makeJob = (
   edge: RouteEdge,
   boxes: ReadonlyMap<string, RouteBox>,
-  margin: number,
+  settings: Settings,
 ): Job | undefined => {
   const from = boxes.get(edge.from);
   const to = boxes.get(edge.to);
@@ -819,6 +965,17 @@ const makeJob = (
   const fromInner = below.includes(from.id);
   const toInner = above.includes(to.id);
 
+  const portsOf = (box: RouteBox, inner: boolean) =>
+    SIDES.map((side) =>
+      portAt(
+        box,
+        side,
+        inner,
+        0,
+        inner ? settings.margin : leadOf(clearance(box, side, boxes), settings),
+      ),
+    );
+
   return {
     edge,
     from,
@@ -826,8 +983,8 @@ const makeJob = (
     fromInner,
     toInner,
     through: new Set([...above, ...below]),
-    starts: SIDES.map((side) => portAt(from, side, fromInner, 0, margin)),
-    goals: SIDES.map((side) => portAt(to, side, toInner, 0, margin)),
+    starts: portsOf(from, fromInner),
+    goals: portsOf(to, toInner),
   };
 };
 
@@ -849,6 +1006,7 @@ const runJobs = (
       starts: job.starts,
       goals: job.goals,
       bend: settings.bend,
+      lead: settings.lead,
     });
 
     if (found || !job.found) job.found = found ?? undefined;
@@ -884,17 +1042,66 @@ const keepOf = ({ port, start }: Claim): number => {
   return port.side % 2 === 0 ? DX[dir] : -DY[dir];
 };
 
-// Ports on one side spread in the order of where their edges go; the second pass routes from them.
-const spreadPorts = (jobs: readonly Job[], margin: number): void => {
+const boxOf = (claim: Claim): RouteBox =>
+  claim.start ? claim.job.from : claim.job.to;
+
+const sideLength = (claim: Claim): number =>
+  claim.port.side % 2 === 0
+    ? boxOf(claim).rect.height
+    : boxOf(claim).rect.width;
+
+const claimsBySide = (jobs: readonly Job[]): Claim[][] => {
   const sides = new Map<string, Claim[]>();
 
   for (const claim of jobs.flatMap(claimsOf)) {
-    const box = claim.start ? claim.job.from : claim.job.to;
-    const key = JSON.stringify([box.id, claim.port.side, claim.port.inner]);
+    const key = JSON.stringify([
+      boxOf(claim).id,
+      claim.port.side,
+      claim.port.inner,
+    ]);
+
     sides.set(key, [...(sides.get(key) ?? []), claim]);
   }
 
-  for (const claims of sides.values()) {
+  return [...sides.values()];
+};
+
+// A side holds as many ports as fit a step apart; the edges past that lose the side, so the next pass tries another.
+// A box with a self-loop keeps its end side for the loop.
+const relieve = (
+  jobs: readonly Job[],
+  looped: ReadonlySet<string>,
+): boolean => {
+  let changed = false;
+
+  for (const claims of claimsBySide(jobs)) {
+    const [{ port }] = claims;
+
+    const kept =
+      port.side === 0 && !port.inner && looped.has(boxOf(claims[0]).id);
+
+    const room = kept
+      ? 0
+      : Math.floor(
+          Math.max(0, sideLength(claims[0]) - PORT_INSET * 2) / PORT_STEP,
+        ) + 1;
+
+    for (const claim of claims.slice(room)) {
+      const key = claim.start ? 'starts' : 'goals';
+      const rest = claim.job[key].filter((port) => port !== claim.port);
+
+      if (!rest.length) continue;
+      claim.job[key] = rest;
+      changed = true;
+    }
+  }
+
+  return changed;
+};
+
+// Ports on one side spread in the order of where their edges go; the last pass routes from them.
+const spreadPorts = (jobs: readonly Job[]): void => {
+  for (const claims of claimsBySide(jobs)) {
     claims.sort(
       (a, b) =>
         a.toward - b.toward ||
@@ -902,13 +1109,16 @@ const spreadPorts = (jobs: readonly Job[], margin: number): void => {
         a.job.edge.id.localeCompare(b.job.edge.id),
     );
 
+    const gap = Math.min(
+      PORT_STEP,
+      Math.max(0, sideLength(claims[0]) - PORT_INSET * 2) /
+        Math.max(1, claims.length - 1),
+    );
+
     claims.forEach((claim, order) => {
-      const box = claim.start ? claim.job.from : claim.job.to;
-      const { side, inner } = claim.port;
-      const length = side % 2 === 0 ? box.rect.height : box.rect.width;
-      const gap = Math.min(PORT_STEP, length / (claims.length + 1));
+      const { side, inner, reach } = claim.port;
       const offset = Math.round((order - (claims.length - 1) / 2) * gap);
-      const port = portAt(box, side, inner, offset, margin);
+      const port = portAt(boxOf(claim), side, inner, offset, reach);
 
       if (claim.start) claim.job.starts = [port];
       else claim.job.goals = [port];
@@ -943,21 +1153,39 @@ export const route = (
   edges: readonly RouteEdge[],
   options: RouteOptions = {},
 ): Routed[] => {
-  const settings = { margin: 6, bend: 24, radius: 4, dpr: 1, ...options };
+  const settings = {
+    margin: 6,
+    lead: 12,
+    bend: 24,
+    radius: 4,
+    dpr: 1,
+    ...options,
+  };
+
   const drawn = boxes.map(rounded).toSorted((a, b) => a.id.localeCompare(b.id));
   const byId = new Map(drawn.map((box) => [box.id, box]));
   const ordered = edges.toSorted((a, b) => a.id.localeCompare(b.id));
 
-  const jobs = ordered.flatMap(
-    (edge) => makeJob(edge, byId, settings.margin) ?? [],
+  const jobs = ordered.flatMap((edge) => makeJob(edge, byId, settings) ?? []);
+
+  // The first passes pick each end's side from the side midpoints; the last routes from the spread ports.
+  runJobs(jobs, drawn, settings);
+
+  const looped = new Set(
+    ordered.flatMap((edge) => (edge.from === edge.to ? [edge.from] : [])),
   );
 
-  // The first pass picks each end's side from the side midpoints; the second routes from the spread ports.
-  runJobs(jobs, drawn, settings);
-  spreadPorts(jobs, settings.margin);
+  for (let round = 0; round < 2 && relieve(jobs, looped); round++)
+    runJobs(jobs, drawn, settings);
+
+  spreadPorts(jobs);
   runJobs(jobs, drawn, settings);
 
-  const lines = jobs.map(polyline);
+  const lines = jobs.map((job) => {
+    const points = polyline(job);
+
+    return points && centre(points, drawn, settings);
+  });
 
   nudge(
     lines.flatMap((points) => (points ? [points] : [])),
@@ -977,9 +1205,20 @@ export const route = (
     }),
   );
 
+  const taken = (box: RouteBox) =>
+    new Set(
+      jobs
+        .flatMap(claimsOf)
+        .flatMap((claim) =>
+          boxOf(claim) === box && !claim.port.inner ? [claim.port.side] : [],
+        ),
+    );
+
   return ordered.flatMap((edge) => {
     const box = edge.from === edge.to ? byId.get(edge.from) : undefined;
 
-    return box ? [loop(edge, box, settings)] : (routed.get(edge.id) ?? []);
+    return box
+      ? [loop(edge, box, byId, taken(box), settings)]
+      : (routed.get(edge.id) ?? []);
   });
 };

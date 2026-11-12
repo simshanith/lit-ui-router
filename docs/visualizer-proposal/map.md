@@ -14,18 +14,102 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
   one edge per pair of states, with line weight for the count.
 - **The diagram owns the panel.** On the Map tab in the wide dock the
   transition log is a strip of outcome glyphs, and the inspector is a popover
-  beside the selection. The maximised panel shows the full log and inspector
+  beside the diagram. The maximised panel shows the full log and inspector
   below the diagram. On the sheets the Map takes the Outline's place above the
   log.
-- **Two hues with fixed jobs.** `--uird-active` marks the active path and what
-  a selected transition enters or retains. `--uird-exit` marks what it exits.
-  Red stays reserved for faults, a failed transition's edge included. Border
-  style and glyph repeat every distinction, so greyscale and forced colours
-  still read. The Outline's rails and role glyphs use the same two hues.
-  `--uird-exit` is never used for text: in the light scheme it clears 3:1 but
-  not 4.5:1.
+- **Boxes keep their natural size.** A leaf is its label and padding. A
+  compound shrink-wraps its children. Nothing stretches to fill the viewport;
+  the diagram sits in the middle of it.
+- **Colour is identity, until a transition is in focus.** See
+  [Modes](#modes).
+- **Red means fault.** A failed transition's edge and the state that failed
+  are red, and no identity colour is near it.
 - **Type stays at 12px.** The layout may shrink to the caption size and no
   further, and it never enlarges.
+
+## Modes
+
+The Map does not make one picture carry every encoding. Colour and arrows have
+a different job in each mode, and `data-mode` on the panel names the mode.
+
+| Mode                         | Colour                                                                                                                 | Arrows                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| At rest (`rest`)             | identity, on every border and glyph                                                                                    | none                                               |
+| A state selected (`state`)   | identity, so the named boxes can be found                                                                              | the state's traffic, weighted by count             |
+| A transition in focus (`tx`) | status: `--uird-active` on what it enters or retains, `--uird-exit` on what it exits, red on a fault; identity recedes | that transition's edge, and its redirect's, dashed |
+
+A transition is in focus while it is selected, previewed from the strip or
+running.
+
+Weight, dash, wash and glyph say the rest, and they do not change with the
+mode, so greyscale and forced colours read the same:
+
+| Role               | Border              | Glyph            | Also             |
+| ------------------ | ------------------- | ---------------- | ---------------- |
+| Current            | 2px solid           | solid disc       | wash, weight 700 |
+| Active ancestor    | 2px solid           | ring with a dot  |                  |
+| Inactive           | 1px solid           | ring             |                  |
+| Lazy               | 1px dashed          | dashed ring      | italic, `LAZY`   |
+| Entering           | 2px solid           | plus in a ring   | wash on a leaf   |
+| Retained           | 1px solid           | bars, or diamond |                  |
+| Exiting            | 2px dashed          | minus in a ring  | muted name       |
+| Errored            | 2px solid, red      | red square       | red name         |
+| Selected           | 1px ink outline     |                  |                  |
+| Collapsed compound | stacked second edge |                  | count of states  |
+
+The layout has modes too, and each is designed on its own terms: nested boxes
+or the node-link tree, the dock or the maximised panel, a compound open or
+collapsed, and each rung of the [fit ladder](#when-it-does-not-fit).
+[Motion](#motion) carries the eye between them.
+
+### Identity
+
+A state's colour follows its depth in the declared state tree, from a cycle of
+four: `--uird-depth-1` to `--uird-depth-4`, then round again. The idea is an
+editor's rainbow brackets: matching levels can be traced at a glance, and a
+child never shares its parent's colour.
+
+Depth is read from the declaration, not from the drawing. A merged header, a
+collapsed compound and a change of rung alter what a box looks like and leave
+its state's depth alone, so the colour does not flicker when the layout
+changes. The same state has the same colour as a box on the Map, a glyph and
+rail in the Outline, a node and link in the tree layout, the title glyph of
+the inspector and the underline of its name wherever the inspector links to
+it. The transition strip and the log stay ink: they describe transitions, and
+a transition's colours are the status pair.
+
+A colour per state or per branch was weighed and left out. Four to six hues
+are all that stay distinct under the common colour-vision deficiencies, and
+the stress tree has 20 top-level branches.
+
+| Token            | Light                 | Dark                  | On surface, light and dark |
+| ---------------- | --------------------- | --------------------- | -------------------------- |
+| `--uird-depth-1` | `oklch(46% 0.19 275)` | `oklch(70% 0.15 275)` | 7.4, 6.7                   |
+| `--uird-depth-2` | `oklch(57% 0.1 185)`  | `oklch(86% 0.12 185)` | 4.1, 12.7                  |
+| `--uird-depth-3` | `oklch(64% 0.125 85)` | `oklch(82% 0.13 85)`  | 3.3, 10.5                  |
+| `--uird-depth-4` | `oklch(46% 0.17 345)` | `oklch(68% 0.13 345)` | 7.6, 6.0                   |
+
+The hues step by about 90 degrees and alternate dark and light, so two colours
+that a deficiency brings close in hue still differ in lightness. The least
+OKLab distance between any two of the four, under normal vision and simulated
+protanopia, deuteranopia and tritanopia (Machado, 2009, full severity), is
+0.10 in the light scheme and 0.12 in the dark. The least distance from
+`--uird-red` is 0.10 and 0.07. Every border clears 3:1 on the surface and the
+raised surface, and the receded mix of the `tx` mode clears 3.8:1.
+
+In greyscale depth 1 and depth 4 are the same grey in the light scheme. Depth
+is then read from containment alone, which the boxes draw anyway.
+
+Setting the four tokens to one value gives a monochrome Map and Outline:
+
+```css
+ui-router-devtools {
+  --uird-depth-1: var(--uird-rule-strong);
+  --uird-depth-2: var(--uird-rule-strong);
+  --uird-depth-3: var(--uird-rule-strong);
+  --uird-depth-4: var(--uird-rule-strong);
+}
+```
 
 ## Layout
 
@@ -33,30 +117,66 @@ No surveyed tool fits its layout to the shape of its container. The XState
 visualiser measures HTML nodes and hands them to `elkjs`; Mermaid scales the
 whole drawing; KIELER collapses what is out of focus; itemis CREATE moves a
 composite's contents to another diagram. A wrapping flex row fills one row
-greedily, which leaves a wide dock half empty.
+greedily, which leaves a wide dock half empty. Stretching boxes to fill the
+dock gives bars for leaves and compounds that are mostly blank.
 
-The nested layout chooses widths and lets CSS place the boxes:
+The packer places every box, and CSS only draws them:
 
 1. Measure each leaf and header. The text widths come from a canvas, so
    packing needs no render.
-2. Bottom-up, split each compound's children into contiguous rows in
-   declaration order, trying every row count, and keep the split whose aspect
-   ratio is nearest a target: the Map viewport's ratio for the root, about 2
-   for inner compounds. Within a row, a run of short boxes beside a tall one
-   stacks into as many rows as the tall one's height holds. The root prefers a
-   split that fits the viewport to a nearer one that does not. The compound's
-   inline size is its widest row.
-3. If the root still does not fit, step down the ladder below.
-4. CSS places the rows. The root takes the whole viewport, and each box grows
-   in proportion to its packed inline size, so spare room is shared between
-   boxes instead of left at one edge. Leaves keep their block size.
+2. Size each leaf to its label, between 56px and 208px, on the 4px grid.
+3. Bottom-up, split each compound's children into contiguous rows in
+   declaration order, trying every row count. Within a row, a run of short
+   boxes beside a tall one stacks into as many rows as the tall one's height
+   holds. Each split is scored on how far its width over height is from a
+   target, the Map viewport's for the root and about 2 for inner compounds,
+   plus one and a half times the share of its rows left empty. The root
+   prefers a split that fits the viewport to a nearer one that does not.
+4. A compound is its header, its rows and its padding, and no wider than the
+   wider of the two needs.
+5. If the root still does not fit, step down the ladder below.
+6. The diagram sits in the middle of the viewport at that size. The room left
+   over frames it evenly; no box takes it.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
 have no minimum box size and no notion of a label's width.
 
-The packer is `src/element/pack.ts` in the package: boxes in, rows out, with
-no DOM.
+The packer is `src/element/pack.ts` in the package: boxes in, placed boxes
+out, with no DOM. Its specs hold the layout to four checks, for the sample
+tree and the stress tree, in the dock (1230 by 256) and the maximised panel
+(1230 by 372): no leaf is wider than its label needs or than the maximum; no
+compound is wider than its header and rows need; in every compound the boxes
+cover at least half of the rows' bounding box; and the diagram fits, with a
+width over height between 0.6 and 1.6 times the viewport's.
+
+### Spacing
+
+Every distance is a multiple of the panel's 4px unit, and the gaps and padding
+are multiples of its 12px module. `METRICS` in `pack.ts` holds the values.
+
+| Distance                                     | Size        |
+| -------------------------------------------- | ----------- |
+| Leaf block size, and a compound's header row | 24px        |
+| Leaf inline size                             | 56 to 208px |
+| Padding inside a leaf, inline                | 8px         |
+| Compound padding, inline and block           | 24px, 12px  |
+| Between leaves in a row, and between rows    | 24px, 24px  |
+| Between a compound and its neighbours        | 36px, 36px  |
+| Outer margin, from the panel's padding       | 12px        |
+| Box corner radius                            | 4px         |
+
+A leaf and the gap beside it are the same 24px, so a block of leaves reads as
+an even grid. A compound stands half as far again from its neighbours, so
+groups read as groups. The block padding is 12px because the dock is 256px
+tall and three levels of nesting must fit in it.
+
+The edge router's margins come from the same numbers: a route keeps 6px from
+any border, the middle of the narrowest gutter, and an end's lead is 12px, the
+middle of a 24px one.
+
+At the caption-size rung the header is 20px, the padding 16px and 8px, the
+leaf gaps 16px and 12px, and the group gaps 24px and 16px.
 
 ### When it does not fit
 
@@ -83,16 +203,63 @@ breadcrumb, would sit before the fallback. It is left out: it needs a second
 navigation model for the states outside the new root, and the stress tree (60
 states, six levels, 20 top-level siblings) fits a 1256px dock without it.
 
-Pan, zoom, a minimap and animated re-layout are left out.
+A compound's header ends in a button that closes it, and a collapsed
+compound's in one that opens it. A merged header has one, at its end, for the
+box the header belongs to.
+
+Pan, zoom and a minimap are left out.
 
 ### The inspector popover
 
-The popover sits beside the selected box, level with its top or, with no room
-below, its bottom, on whichever side has room. A selection that spans the
-panel puts it in the far corner. CSS anchor positioning places it, with
-`position-try-fallbacks`; a browser without anchor positioning gets the same
-order from measured rects. It can cover a neighbouring box or an edge: a
-336px dock has no free column to give it.
+The popover is placed from the packed rects. It tries beside the selected
+box, level with its top or its bottom, then the corners of the panel, and
+takes the place that covers least: a drawn edge or a box an edge ends at
+counts twenty times a pill. When the diagram and the popover fit side by
+side, the diagram moves over to the middle of the room the popover leaves, so
+neither covers the other. In a dock too narrow for both, the popover covers
+pills before it covers an edge.
+
+## Motion
+
+A box changes place and size between modes, and the eye follows a state
+through the change by its colour and its movement.
+
+- **Boxes move.** A re-pack on resize, a collapse or an expand, a change of
+  rung, the switch between nested boxes and the tree, and the dock becoming
+  the maximised panel all move the same states. Each state's element starts
+  where the state was and eases to its new place in 200ms, on
+  `--uird-ease-out`. A box that was not drawn before fades in.
+- **Edges draw.** An edge draws in from its start in 240ms and withdraws
+  toward its end in 160ms. After a re-pack the edges wait the 200ms the boxes
+  take, and then draw, so none is stranded beside a moving box.
+- **The popover fades in** over 160ms where it is placed.
+- **Reduced motion.** Positions change at once. Edges, new boxes and the
+  popover fade, and nothing else animates.
+
+The mechanism is FLIP on the Web Animations API. Before a render that changes
+the Map's geometry the panel reads where each state's element is drawn, and
+after it reads where each now is and animates a `transform` from the
+difference. A child's shift is taken relative to its parent's, since it rides
+its parent's transform. Only `transform` and `opacity` animate, and nothing
+waits on an animation. An interrupted move starts from what is on screen: the
+first read is of the drawn position, mid-flight included, and the earlier
+animation is cancelled before the second.
+
+Edges are revealed by an SVG mask whose stroke offset animates, so a dashed
+edge draws in the same way as a solid one.
+
+The View Transitions API was tried and left out. In Chromium 158 a
+`view-transition-name` on a box inside the panel's shadow root, in its
+`popover`, got no transition group: only the document root and a light-DOM
+probe did. While the transition ran, hit testing anywhere on the page
+returned the transition overlay, so the whole document took no input. A
+document-level transition is also the host page's to start, and one started
+by the panel would cut across the page's own. `Element.startViewTransition`
+exists in that build and was not pursued, for the same top-layer and
+shadow-root reasons. Firefox and WebKit were not probed.
+
+Path morphing of an edge between two routes is left out; a re-routed edge is
+redrawn.
 
 ## Edge routing
 
@@ -118,22 +285,39 @@ Connector Routing" (Graph Drawing 2009), the algorithm behind `libavoid`:
 - **Grid.** Lines sit at each box's edges offset by a margin, at its centre and
   at gutter midlines, never on a border. A route can cross a border and cannot
   run along one.
+- **Leads.** An edge leaves and enters a box at a right angle, with a straight
+  lead before its first bend: to the middle of the gutter it faces, and 12px
+  into open space. A bend nearer the box than that costs extra, so a side with
+  room for a lead is preferred to a nearer one without.
 - **Search.** A\* over (node, direction) states, with a penalty per bend and no
   reversal. Ties break on fewer bends, then on a fixed expansion order, so the
   same geometry gives the same route.
 - **Ports.** A first pass routes from side midpoints to choose each edge's
-  side. Ports on a side then spread around its midpoint in the order of where
-  their edges go, and a second pass routes from the fixed ports.
+  side. A side holds as many ports as fit 12px apart and 6px from its corners,
+  two on a leaf's 24px end; the edges past that lose the side and are routed
+  again, so they take another. Ports then spread around the side's midpoint
+  in the order of where their edges go, and a last pass routes from the fixed
+  ports. No edge ends under another's arrowhead.
+- **Channels.** A free segment moves to the middle of the gutter it runs in.
+  In a gutter wider than 48px it keeps 12px from the nearer border instead.
 - **Nudging.** Segments that share a line spread across the channel in a
   fixed order, greedily and without a solver. Opposite edges between one pair
   each keep to their right.
-- **Templates.** A self-loop is a fixed shape, not a search. An edge whose end
-  sits inside a collapsed compound stops at that box's border with a stub cap,
-  and one whose ends are both inside the same box becomes that box's loop.
+- **Templates.** A self-loop is a fixed shape, not a search: out of the top
+  near the end corner and back into the end side, which is kept free of other
+  ports. It takes the start side or the bottom when routed edges use the
+  other and leave that one free. An edge whose end sits inside a collapsed
+  compound stops at that box's border with a stub cap, and one whose ends are
+  both inside the same box becomes that box's loop.
 - **No route.** A straight dotted line joins the two boxes, and the result is
   flagged as a fallback.
-- **Output.** Corners are rounded and coordinates sit on the device-pixel
-  grid, mid-pixel for an odd stroke.
+- **Arrowheads.** One head for every weight, 7px long and 7px across, on
+  strokes of 1px to 3px. A redirect's dashed edge ends in an open chevron of
+  the same size, so the two read apart without colour. Edges are ink with a
+  halo of the surface colour, which keeps them clear of the identity colours
+  they cross.
+- **Output.** Corners are rounded at 4px, 6px on a loop, and coordinates sit
+  on the device-pixel grid, mid-pixel for an odd stroke.
 
 The router is `src/element/route.ts`: rects in, paths out. Edges are routed in
 id order, so the same boxes and edges give the same paths.
@@ -143,9 +327,8 @@ recorded session into one edge per ordered pair of states with its count and
 outcomes. A selected state shows its successful traffic, 1px for one
 transition, 2px for two or three and 3px for four or more.
 
-The constraint solver `libavoid` uses for nudging, crossing minimisation,
-labels on lines and path morphing are left out. New edges fade in, and not
-under reduced motion.
+The constraint solver `libavoid` uses for nudging, crossing minimisation and
+labels on lines are left out.
 
 ### WebAssembly
 
@@ -166,6 +349,15 @@ the fallback either way. A mode that routes every observed edge at once, a few
 hundred per resize, is where a WebAssembly router in a worker would start to
 pay.
 
+## Loading
+
+The nested layout, the packer, the edge router and the node-link tree, with
+`d3-hierarchy`, are one module, `src/element/map.ts`, that the panel imports
+on first use of the Map tab. A panel that only ever shows the Outline does not
+load it. The package's build emits a module per source file, so the import is
+a relative `import('./element/map.js')` in `dist`, which a bundler turns into
+a chunk of its own.
+
 ## Accessibility
 
 Containment maps onto a tree. Each box's header is a `treeitem` that owns,
@@ -173,8 +365,12 @@ through `aria-owns`, the `group` of child items in the same box, with
 `aria-expanded` on compounds only. The header is the item, not the box, so
 that an item's name is its header alone: a name computed from a box's content
 would take in every state inside it. Arrow keys move in tree order, as in the
-Outline, not spatially, and a re-pack that rebuilds the focused box returns
-focus to the same state.
+Outline, not spatially. A re-pack moves a box's element and does not replace
+it, so focus stays on the same state.
+
+The button that closes or opens a compound is named for what it does,
+`Collapse contacts` or `Expand contacts`. It is for the pointer and is not a
+tab stop: the left and right arrow keys do the same on the item.
 
 A truncated name carries its full name as the label, so there the label and
 the visible text differ.
@@ -208,3 +404,8 @@ and focus the box they name.
 - WAI-ARIA tree view pattern:
   <https://www.w3.org/WAI/ARIA/apg/patterns/treeview/>
 - WAI-ARIA Graphics Module: <https://www.w3.org/TR/graphics-aria-1.0/>
+- Machado, Oliveira and Fernandes, "A physiologically-based model for
+  simulation of color vision deficiency", 2009:
+  <https://doi.org/10.1109/TVCG.2009.113>
+- FLIP: <https://aerotwist.com/blog/flip-your-animations/>
+- The CSS guideline the panel follows: <https://good-css.com>

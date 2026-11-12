@@ -23,7 +23,9 @@ const ring = svg`<circle class="ring" cx="6" cy="6" r="4.75" />`;
 const fault = svg`<rect class="fault" x="1" y="1" width="10" height="10" /><path class="knock" d="M3.75 3.75l4.5 4.5M8.25 3.75l-4.5 4.5" />`;
 
 // An abstract state is never a target itself, so its outline is the statechart's compound-state box.
-const box = svg`<title>abstract</title><rect class="ring" x="1.25" y="1.25" width="9.5" height="9.5" rx="1" />`;
+const plainBox = svg`<rect class="ring" x="1.25" y="1.25" width="9.5" height="9.5" rx="1" />`;
+
+const box = svg`<title>abstract</title>${plainBox}`;
 
 const roleBodies = (
   outline: SVGTemplateResult,
@@ -41,6 +43,8 @@ const roleBodies = (
 const concreteBodies = roleBodies(ring);
 
 const abstractBodies = roleBodies(box);
+
+const plainAbstractBodies = roleBodies(plainBox);
 
 export type Mark = 'initial' | 'history' | 'sticky';
 
@@ -61,8 +65,16 @@ const statusBodies: Record<Status, SVGTemplateResult> = {
   ignored: svg`<path d="M3.5 6h5" />`,
 };
 
-export const roleGlyph = (role: Role, abstract = false): SVGTemplateResult =>
-  frame((abstract ? abstractBodies : concreteBodies)[role], `role-${role}`);
+// `titled` is off where the glyph sits in a labelled item: a title's text would count as visible text the label lacks.
+export const roleGlyph = (
+  role: Role,
+  abstract = false,
+  titled = true,
+): SVGTemplateResult => {
+  const bodies = titled ? abstractBodies : plainAbstractBodies;
+
+  return frame((abstract ? bodies : concreteBodies)[role], `role-${role}`);
+};
 
 export const markGlyph = (mark: Mark): SVGTemplateResult =>
   frame(markBodies[mark], `mark-${mark}`);
@@ -71,10 +83,14 @@ export const statusGlyph = (status: Status): SVGTemplateResult =>
   frame(statusBodies[status], `status-${status}`);
 
 // The deepest retained state; it takes the role glyph's place, so nothing in the row moves when it appears.
+const diamond = svg`<polygon class="solid" points="6,0.5 11.5,6 6,11.5 0.5,6" />`;
+
 export const pivotGlyph: SVGTemplateResult = frame(
-  svg`<title>pivot: deepest retained state</title><polygon class="solid" points="6,0.5 11.5,6 6,11.5 0.5,6" />`,
+  svg`<title>pivot: deepest retained state</title>${diamond}`,
   'pivot',
 );
+
+export const plainPivotGlyph: SVGTemplateResult = frame(diamond, 'pivot');
 
 export const pivotLabel = 'retained, pivot';
 
@@ -92,6 +108,20 @@ export const minGlyph: SVGTemplateResult = frame(
   svg`<path d="M5 2.5V5H2.5M9.5 5H7V2.5M7 9.5V7h2.5M2.5 7H5v2.5" />`,
   'min',
 );
+
+// Closes or opens a compound on the Map.
+export const foldGlyph = (open: boolean): SVGTemplateResult =>
+  frame(
+    svg`<polyline points=${open ? '2.5,4.5 6,8 9.5,4.5' : '4.5,2.5 8,6 4.5,9.5'} />`,
+    open ? 'fold-open' : 'fold-closed',
+  );
+
+/** How many identity colours there are; deeper states cycle through them again. */
+export const DEPTHS = 4;
+
+// A state's identity colour follows its depth in the declared tree, so it is the same on every surface and in every layout.
+export const depthClass = (depth: number): string =>
+  `d${((Math.max(1, depth) - 1) % DEPTHS) + 1}`;
 
 export const roleLabel: Record<Role, string> = {
   current: 'active, current',

@@ -18,6 +18,10 @@ export const styles: CSSResult = css`
       var(--uird-active) 12%,
       var(--uird-surface)
     );
+    --uird-depth-1: light-dark(oklch(46% 0.19 275), oklch(70% 0.15 275));
+    --uird-depth-2: light-dark(oklch(57% 0.1 185), oklch(86% 0.12 185));
+    --uird-depth-3: light-dark(oklch(64% 0.125 85), oklch(82% 0.13 85));
+    --uird-depth-4: light-dark(oklch(46% 0.17 345), oklch(68% 0.13 345));
     --uird-unit: 4px;
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
@@ -32,7 +36,7 @@ export const styles: CSSResult = css`
     --uird-gap: 12px;
     --uird-dock-height: 336px;
     --uird-sheet-width: 360px;
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --uird-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
     font: 400 var(--uird-size) / var(--uird-line) var(--uird-font);
     color: var(--uird-ink);
@@ -81,7 +85,7 @@ export const styles: CSSResult = css`
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
-    overflow: hidden;
+    overflow: clip;
     clip-path: inset(50%);
     white-space: nowrap;
   }
@@ -136,24 +140,54 @@ export const styles: CSSResult = css`
     stroke: var(--uird-on-red);
   }
 
+  /* Identity: a state's colour follows its depth in the declared tree, on every surface that shows it. */
+  .d1 {
+    --uird-id: var(--uird-depth-1);
+  }
+
+  .d2 {
+    --uird-id: var(--uird-depth-2);
+  }
+
+  .d3 {
+    --uird-id: var(--uird-depth-3);
+  }
+
+  .d4 {
+    --uird-id: var(--uird-depth-4);
+  }
+
+  :is(.d1, .d2, .d3, .d4) {
+    --uird-line: var(--uird-id);
+  }
+
+  /* While a transition is in focus colour says what it does, so identity recedes toward the neutral rule. */
+  .panel[data-mode='tx']
+    :is(.row, .map-node, .box, .rail, .rail-initial):is(.d1, .d2, .d3, .d4) {
+    --uird-line: color-mix(
+      in oklch,
+      var(--uird-id) 30%,
+      var(--uird-rule-strong)
+    );
+  }
+
   .glyph.role-inactive,
   .glyph.role-future {
     color: var(--uird-rule-strong);
   }
 
-  /* Two hues with fixed jobs: active for the path and what a transition enters or retains, exit for what it leaves. */
-  :is(.row, .map-node, .head, .insp-title)
-    > .glyph:is(
-      .role-current,
-      .role-ancestor,
-      .role-entering,
-      .role-retained,
-      .pivot
-    ) {
+  :is(.row, .map-node, .head, .insp-title) > .glyph {
+    color: var(--uird-line, currentColor);
+  }
+
+  /* Two status hues, read only while a transition is in focus: active for what it enters or retains, exit for what it leaves. */
+  .panel[data-mode='tx']
+    :is(.row, .map-node, .head)
+    > .glyph:is(.role-entering, .role-retained, .pivot) {
     color: var(--uird-active);
   }
 
-  :is(.row, .map-node, .head, .insp-title) > .glyph.role-exiting {
+  .panel[data-mode='tx'] :is(.row, .map-node, .head) > .glyph.role-exiting {
     color: var(--uird-exit);
   }
 
@@ -176,18 +210,67 @@ export const styles: CSSResult = css`
     .rail,
     .row,
     .box,
+    .box::before,
     .map-node {
       transition:
-        color 200ms var(--ease-out),
-        stroke 200ms var(--ease-out),
-        fill 200ms var(--ease-out),
-        border-color 200ms var(--ease-out),
-        background-color 200ms var(--ease-out),
-        opacity 200ms var(--ease-out);
+        color 200ms var(--uird-ease-out),
+        stroke 200ms var(--uird-ease-out),
+        fill 200ms var(--uird-ease-out),
+        border-color 200ms var(--uird-ease-out),
+        background-color 200ms var(--uird-ease-out),
+        opacity 200ms var(--uird-ease-out);
     }
 
+    button {
+      transition: scale 160ms var(--uird-ease-out);
+    }
+
+    /* An edge draws in from its start once the boxes have settled, and withdraws toward its end. */
+    .nedge .reveal {
+      animation: draw 240ms var(--uird-ease-out) var(--uird-edge-delay, 0ms)
+        backwards;
+    }
+
+    .nedge.leaving .reveal {
+      animation: withdraw 160ms var(--uird-ease-out) forwards;
+    }
+  }
+
+  /* Without motion nothing moves or draws: an edge and a new box only fade. */
+  @media (prefers-reduced-motion: reduce) {
     .nedge {
-      animation: fade-in 200ms var(--ease-out);
+      animation: fade-in 200ms var(--uird-ease-out);
+    }
+
+    .nedge.leaving {
+      animation: fade-out 160ms var(--uird-ease-out) forwards;
+    }
+  }
+
+  .box,
+  .map-node {
+    animation: fade-in 200ms var(--uird-ease-out);
+  }
+
+  button:active {
+    scale: 0.97;
+  }
+
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes withdraw {
+    to {
+      stroke-dashoffset: -1;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
     }
   }
 
@@ -222,7 +305,7 @@ export const styles: CSSResult = css`
     border-radius: 2px;
     background: var(--uird-surface);
     color: var(--uird-ink);
-    overflow: hidden;
+    overflow: clip;
   }
 
   .pill:not(:popover-open) {
@@ -251,7 +334,7 @@ export const styles: CSSResult = css`
     background: var(--uird-surface);
     color: var(--uird-ink);
     box-shadow: 0 8px 32px -8px oklch(0% 0 none / 0.28);
-    overflow: hidden;
+    overflow: clip;
   }
 
   .panel:popover-open {
@@ -503,6 +586,12 @@ export const styles: CSSResult = css`
     padding-inline: var(--uird-margin);
   }
 
+  /* The diagram keeps its natural size and sits in the middle of the viewport, so the room left over frames it evenly. */
+  .map-scroll:has(> .nested) {
+    display: grid;
+    place-content: safe center;
+  }
+
   .icon.max {
     display: none;
     margin-inline-end: -16px;
@@ -664,6 +753,11 @@ export const styles: CSSResult = css`
       border-radius: 2px;
       background: var(--uird-surface);
       box-shadow: 0 8px 32px -8px oklch(0% 0 none / 0.28);
+      /* Placed from measured rects, clear of the drawn edges; the inline offset is physical because the rects are. */
+      inset-block-start: var(--uird-pop-y, 38px);
+      left: var(--uird-pop-x, 12px);
+      /* It fades in where it is placed and never moves, so the fade needs no reduced-motion gate. */
+      transition: opacity 160ms var(--uird-ease-out);
     }
 
     .panel[data-view='map']:not([data-max]):is(
@@ -675,27 +769,15 @@ export const styles: CSSResult = css`
       display: grid;
     }
 
-    /* Chrome skips layout of a size container inside an element placed by a position-try fallback. */
-    .panel[data-view='map']:not([data-max]) .inspector-pane .scroll {
-      container-type: normal;
-    }
-
-    /* The popover sits beside the selection: anchored where CSS can, else from measured rects. */
-    .panel[data-view='map'][data-pop='anchored']:not([data-max])
-      .inspector-pane {
-      position-anchor: --uird-selection;
-      position-area: inline-end span-block-end;
-      position-try-fallbacks:
-        --uird-above-end, --uird-below-start, --uird-above-start, --uird-corner;
-      inset-block: 0 32px;
-      max-block-size: calc(100% - 32px);
-      margin-inline: 8px;
-    }
-
-    .panel[data-view='map'][data-pop='measured']:not([data-max])
-      .inspector-pane {
-      inset-block-start: var(--uird-pop-y, 38px);
-      left: var(--uird-pop-x, 12px);
+    @starting-style {
+      .panel[data-view='map']:not([data-max]):is(
+          [data-inspect='state'],
+          [data-inspect='tx'],
+          [data-inspect='router']
+        )
+        .inspector-pane {
+        opacity: 0;
+      }
     }
 
     /* Maximised: the diagram above the full log and inspector. */
@@ -716,31 +798,6 @@ export const styles: CSSResult = css`
     .panel[data-view='map'][data-max] :is(.log-pane, .inspector-pane) {
       padding-block-start: 12px;
     }
-  }
-
-  .anchor {
-    anchor-name: --uird-selection;
-  }
-
-  /* Beside the selection, growing down from its top or up from its bottom, clear of the title strip and the scrubber. */
-  @position-try --uird-above-end {
-    position-area: inline-end span-block-start;
-    inset-block: 32px 0;
-  }
-
-  @position-try --uird-below-start {
-    position-area: inline-start span-block-end;
-  }
-
-  @position-try --uird-above-start {
-    position-area: inline-start span-block-start;
-    inset-block: 32px 0;
-  }
-
-  @position-try --uird-corner {
-    position-area: none;
-    inset: auto 12px 40px auto;
-    margin: 0;
   }
 
   /* Outline */
@@ -767,9 +824,10 @@ export const styles: CSSResult = css`
     box-shadow: inset -2px 0 0 var(--uird-ink);
   }
 
+  /* A rail takes the identity colour of the state it leads into; weight marks the active path. */
   .rail {
     fill: none;
-    stroke: var(--uird-rule-strong);
+    stroke: var(--uird-line, var(--uird-rule-strong));
     stroke-width: 1;
   }
 
@@ -784,7 +842,6 @@ export const styles: CSSResult = css`
   .rail.role-current,
   .rail.role-ancestor,
   .rail.role-entering {
-    stroke: var(--uird-active);
     stroke-width: 2;
   }
 
@@ -794,7 +851,7 @@ export const styles: CSSResult = css`
     stroke-dasharray: 4 4;
   }
 
-  .rail.role-retained {
+  .panel[data-mode='tx'] .rail:is(.role-entering, .role-retained) {
     stroke: var(--uird-active);
   }
 
@@ -861,15 +918,10 @@ export const styles: CSSResult = css`
   }
 
   .rail-initial {
-    fill: var(--uird-rule-strong);
+    fill: var(--uird-line, var(--uird-rule-strong));
   }
 
-  .rail-initial:is(
-    .role-current,
-    .role-ancestor,
-    .role-entering,
-    .role-retained
-  ) {
+  .panel[data-mode='tx'] .rail-initial:is(.role-entering, .role-retained) {
     fill: var(--uird-active);
   }
 
@@ -942,119 +994,108 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
-  /* Nested Map: a box per state, child states inside their parent */
+  /* Nested Map: a box per state, child states inside their parent. The packer sets every box's place and size. */
 
   .nested {
-    --nest-head: 20px;
-    --nest-pad: 12px;
-    --nest-gap: 16px;
+    --nest-head: 24px;
 
     position: relative;
-    display: flex;
-    inline-size: max-content;
-    block-size: max-content;
+  }
+
+  /* The dock's inspector popover takes the end of the viewport, and the diagram centres in the rest. */
+  .nested.aside {
+    margin-inline-end: 320px;
   }
 
   .nested.small {
-    --nest-head: 16px;
-    --nest-pad: 8px;
-    --nest-gap: 12px;
+    --nest-head: 20px;
 
     font-size: var(--uird-size-small);
   }
 
-  .nstack,
-  .kids {
-    display: flex;
-    flex-direction: column;
-    gap: var(--nest-gap);
-    justify-content: space-around;
-  }
-
-  .nstack,
-  .nrow,
   .box {
-    flex-basis: auto;
-    flex-shrink: 0;
-  }
-
-  .nrow {
-    display: flex;
-    gap: var(--nest-gap);
-  }
-
-  .box {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 1px;
-    border: 1px solid var(--uird-rule-strong);
-    border-radius: 3px;
+    position: absolute;
+    border-radius: 4px;
     background: var(--uird-surface);
     cursor: default;
   }
 
-  .box.leaf,
-  .box.collapsed {
-    align-self: start;
+  /* The border is a layer of its own, so a heavier or dashed one moves nothing inside the box. */
+  .box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--uird-line, var(--uird-rule-strong));
+    border-radius: inherit;
+    pointer-events: none;
   }
 
   .box.collapsed {
     box-shadow:
       3px 3px 0 -1px var(--uird-surface),
-      3px 3px 0 0 var(--uird-rule-strong);
-  }
-
-  .box.led {
-    margin-inline-start: 20px;
+      3px 3px 0 0 var(--uird-line, var(--uird-rule-strong));
   }
 
   .head:focus-visible {
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
   .box.selected {
-    background: var(--uird-surface);
-    box-shadow: none;
     outline: 1px solid var(--uird-ink);
     outline-offset: 2px;
   }
 
-  .box.role-retained {
-    border-color: var(--uird-active);
-  }
-
-  .box:is(.role-ancestor, .role-entering, .role-current) {
-    padding: 0;
-    border: 2px solid var(--uird-active);
+  /* Weight, wash and dash say where a state stands; hue stays with identity until a transition is in focus. */
+  .box:is(.role-ancestor, .role-entering, .role-current)::before {
+    border-width: 2px;
   }
 
   .box.role-current {
-    background: var(--uird-active-wash);
+    background: color-mix(
+      in oklch,
+      var(--uird-line, var(--uird-ink)) 12%,
+      var(--uird-surface)
+    );
   }
 
-  .box.role-exiting {
-    padding: 0;
-    border: 2px dashed var(--uird-exit);
-  }
-
-  .box.role-future {
+  .box.role-future::before {
     border-style: dashed;
   }
 
-  .box.role-errored {
-    padding: 0;
+  .panel[data-mode='tx'] .box:is(.role-entering, .role-retained)::before {
+    border-color: var(--uird-active);
+  }
+
+  .panel[data-mode='tx'] .box.role-entering.leaf {
+    background: var(--uird-active-wash);
+  }
+
+  .box.role-exiting::before {
+    border: 2px dashed var(--uird-exit);
+  }
+
+  .box.role-errored::before {
     border: 2px solid var(--uird-red);
   }
 
   .head {
     display: flex;
-    flex: none;
     align-items: center;
     gap: 8px;
     block-size: var(--nest-head);
     padding-inline: 8px;
+    border-radius: 4px;
     white-space: nowrap;
+  }
+
+  .head .name {
+    min-inline-size: 0;
+    overflow: clip;
+    text-overflow: ellipsis;
+  }
+
+  .head:active {
+    background: color-mix(in oklch, var(--uird-ink) 8%, transparent);
   }
 
   .box.current > .head .name {
@@ -1074,13 +1115,37 @@ export const styles: CSSResult = css`
     color: var(--uird-red);
   }
 
-  .head :is(.marks, .tag) {
+  .head :is(.marks, .tag, .fold) {
     margin-inline-start: auto;
   }
 
-  .kids {
-    flex: 1;
-    padding: var(--nest-pad);
+  .head :is(.marks, .tag) + .fold {
+    margin-inline-start: 0;
+  }
+
+  /* The pointer's way to close or open a compound. */
+  .fold {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 16px;
+    block-size: var(--nest-head);
+    margin-inline-end: -4px;
+    color: var(--uird-muted);
+  }
+
+  .fold:dir(rtl) .glyph.fold-closed {
+    scale: -1 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .head:hover {
+      background: color-mix(in oklch, var(--uird-ink) 5%, transparent);
+    }
+
+    .fold:hover {
+      color: var(--uird-ink);
+    }
   }
 
   /* A compound and its only child, also a compound, share one header row. */
@@ -1095,17 +1160,12 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
-  .box.merging > .kids {
-    flex-direction: row;
-    margin-block-start: calc(-1 * var(--nest-head));
-    padding: 0;
+  .box.merged {
+    background: none;
   }
 
-  .nested .box.merged {
-    flex: 1;
-    padding: 0;
-    border: 0;
-    background: none;
+  .box.merged::before {
+    content: none;
   }
 
   .box.merged > .head {
@@ -1114,7 +1174,7 @@ export const styles: CSSResult = css`
 
   .initial {
     position: absolute;
-    inset-block-start: calc(var(--nest-head) / 2 - 5px);
+    inset-block-start: calc(var(--nest-head) / 2 - 6px);
     inset-inline-start: -22px;
     fill: var(--uird-ink);
     stroke: var(--uird-ink);
@@ -1150,6 +1210,14 @@ export const styles: CSSResult = css`
     stroke-width: 6;
   }
 
+  /* A mask's luminance decides what shows, so its stroke is white whatever the scheme. */
+  .nedge .reveal {
+    fill: none;
+    stroke: oklch(100% 0 none);
+    stroke-width: 24;
+    stroke-dasharray: 1;
+  }
+
   .nedge:is(.w2, .edge-redirect) :is(.line, .cap) {
     stroke-width: 2;
   }
@@ -1163,6 +1231,7 @@ export const styles: CSSResult = css`
     fill: var(--uird-ink);
   }
 
+  /* A redirect's line is dashed and its head is an open chevron, so the two read apart without colour. */
   .nedge.edge-redirect .line {
     stroke-dasharray: 5 4;
   }
@@ -1170,7 +1239,7 @@ export const styles: CSSResult = css`
   .nedge.edge-redirect .head {
     fill: none;
     stroke: var(--uird-ink);
-    stroke-width: 2;
+    stroke-width: 1.5;
   }
 
   .nedge.edge-fault :is(.line, .cap) {
@@ -1248,6 +1317,12 @@ export const styles: CSSResult = css`
     text-underline-offset: 3px;
   }
 
+  /* A state named in words is underlined in its identity colour. */
+  .link:is(.d1, .d2, .d3, .d4) {
+    text-decoration-color: var(--uird-id);
+    text-decoration-thickness: 2px;
+  }
+
   /* Transition log */
 
   .log {
@@ -1294,7 +1369,7 @@ export const styles: CSSResult = css`
   }
 
   .path {
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1416,7 +1491,7 @@ export const styles: CSSResult = css`
   .wf-key {
     grid-column: 2;
     color: var(--uird-muted);
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1543,6 +1618,10 @@ export const styles: CSSResult = css`
       --uird-active: CanvasText;
       --uird-exit: CanvasText;
       --uird-active-wash: Canvas;
+      --uird-depth-1: CanvasText;
+      --uird-depth-2: CanvasText;
+      --uird-depth-3: CanvasText;
+      --uird-depth-4: CanvasText;
     }
 
     .nedge :is(.line, .cap),

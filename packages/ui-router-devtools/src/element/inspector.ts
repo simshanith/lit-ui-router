@@ -22,7 +22,7 @@ const sub = (n: string, title: string) =>
 // A state named in words; it selects that state and moves focus to its row or box.
 const stateLink = (host: UIRouterDevtools, name: string) =>
   html`<button
-    class="link"
+    class="link ${host._depthClass(name)}"
     title=${name}
     @click=${() => host._revealState(name)}
   >
@@ -136,7 +136,7 @@ export const renderStateInspector = (
   const values = state.name === current.name ? current.params : {};
 
   return html`<div class="inspector">
-    <p class="insp-title">
+    <p class="insp-title ${host._depthClass(state.name)}">
       ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span>
       ${
         canGo

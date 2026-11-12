@@ -28,6 +28,7 @@ import {
 } from './schema.ts';
 import {
   closeGlyph,
+  depthClass,
   maxGlyph,
   minGlyph,
   statusGlyph,
@@ -36,13 +37,8 @@ import {
   type Status,
 } from './element/glyphs.ts';
 import { styles } from './element/styles.ts';
-import { renderMap, renderOutline } from './element/tree.ts';
-import {
-  layoutNested,
-  NESTED_MIN_WIDTH,
-  renderNested,
-  type NestedLayout,
-} from './element/nested.ts';
+import { renderOutline } from './element/tree.ts';
+import type { NestedLayout } from './element/nested.ts';
 import type { Rung, Size } from './element/pack.ts';
 import type { Rect } from './element/route.ts';
 import { placeBeside } from './element/popover.ts';
@@ -65,6 +61,19 @@ export interface Row {
 type Inspect = 'none' | 'router' | 'state' | 'tx';
 
 type MapLayout = 'nested' | 'tree';
+
+type MapModule = typeof import('./element/map.ts');
+
+/** Below this inline size the nested layout is the Outline with borders, so it is not offered. */
+const NESTED_MIN_WIDTH = 560;
+
+/** How long boxes take to move to their new places; `nested.ts` delays edges by as much. */
+const SETTLE = 200;
+
+/** The room the dock's inspector popover takes beside the diagram: its inline size and a module either side. */
+const ASIDE = 320;
+
+const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 
 const LAYOUT_KEY = 'ui-router-devtools:map-layout';
 
@@ -95,6 +104,28 @@ const rectOf = (element: Element, origin: DOMRect): Rect => {
     height: Math.round(rect.height),
   };
 };
+
+// Where an element is laid out inside an ancestor, whatever transform is animating it.
+const offsetIn = (element: HTMLElement, ancestor: Element): Rect => {
+  let x = 0;
+  let y = 0;
+
+  for (
+    let at: Element | null = element;
+    at instanceof HTMLElement && at !== ancestor;
+    at = at.offsetParent
+  ) {
+    x += at.offsetLeft - (at === element ? 0 : at.scrollLeft);
+    y += at.offsetTop - (at === element ? 0 : at.scrollTop);
+  }
+
+  return { x, y, width: element.offsetWidth, height: element.offsetHeight };
+};
+
+// The Map's root and every element that stands for a state, parents first.
+const MOVERS = ':is(.nested, .map), [data-name]';
+
+const moverKey = (element: HTMLElement): string => element.dataset.name ?? '';
 
 const elide = (name: string): string => {
   if (name.length <= 28) return name;
@@ -150,15 +181,14 @@ export class UIRouterDevtools extends LitElement {
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
-  // Measured box rects of the nested Map, relative to it; the edge router reads them.
-  _rects: ReadonlyMap<string, Rect> | null = null;
   // The fit ladder's last rung, for its hysteresis.
   _rung: Rung | undefined;
-  // Browsers without CSS anchor positioning place the inspector popover from measured rects.
-  _measuredPopover: boolean = !globalThis.CSS?.supports?.(
-    'position-anchor: --a',
-  );
-  #rectKey = '';
+  // The Map's layouts and edge router, loaded on first use of the Map tab.
+  _map: MapModule | undefined;
+  #mapLoading = false;
+  // What the Map last drew, and where its states were before a change to it.
+  #geometry: readonly unknown[] = [];
+  #before: Map<string, DOMRect> | null = null;
   #resize: ResizeObserver | undefined;
   #observed: Element | null = null;
   #recorder: Recorder | undefined;
@@ -224,6 +254,14 @@ export class UIRouterDevtools extends LitElement {
       !this._imported &&
       this._live.txs.some((tx) => !tx.result);
 
+    if (this._view === 'map' && !this._map && !this.#mapLoading) {
+      this.#mapLoading = true;
+      void import('./element/map.ts').then((map) => {
+        this._map = map;
+        this.requestUpdate();
+      });
+    }
+
     if (running && !this.#ticker)
       this.#ticker = setInterval(() => (this._now = performance.now()), 100);
 
@@ -237,7 +275,82 @@ export class UIRouterDevtools extends LitElement {
   protected update(changed: PropertyValues<this>): void {
     if (this.shadowRoot?.activeElement?.matches('.box > .head'))
       this._moveFocus = true;
+
+    this.#before = this.#mapMoved() ? this.#measureMovers() : null;
     super.update(changed);
+  }
+
+  // The Map's drawing changes with its view, its layout and the panel's size; anything else leaves boxes where they are.
+  #mapMoved(): boolean {
+    const geometry =
+      this._view === 'map'
+        ? [this._nested()?.placed ?? this._layoutPref, this._max, this._aside]
+        : [];
+
+    const moved =
+      geometry.length !== this.#geometry.length ||
+      geometry.some((part, index) => part !== this.#geometry[index]);
+
+    const drawn = this.#geometry.length > 0;
+    this.#geometry = geometry;
+
+    return (
+      moved &&
+      drawn &&
+      geometry.length > 0 &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
+  }
+
+  get #movers(): HTMLElement[] {
+    return [
+      ...(this.renderRoot
+        .querySelector('.map-scroll')
+        ?.querySelectorAll<HTMLElement>(MOVERS) ?? []),
+    ];
+  }
+
+  // Where each state is drawn now, mid-flight included, so an interrupted move starts from what the eye sees.
+  #measureMovers(): Map<string, DOMRect> {
+    return new Map(
+      this.#movers.map((element) => [
+        moverKey(element),
+        element.getBoundingClientRect(),
+      ]),
+    );
+  }
+
+  // FLIP: each state's element starts where the state was and eases to its new place; a child moves relative to its parent.
+  #flip(before: ReadonlyMap<string, DOMRect>) {
+    const movers = this.#movers;
+
+    for (const element of movers)
+      for (const animation of element.getAnimations())
+        if (animation.id === 'uird-flip') animation.cancel();
+
+    const shifts = new Map<Element, { x: number; y: number }>();
+
+    const plans = movers.map((element) => {
+      const was = before.get(moverKey(element));
+      const now = element.getBoundingClientRect();
+
+      const carried = shifts.get(
+        element.parentElement?.closest(MOVERS) ?? element,
+      ) ?? { x: 0, y: 0 };
+
+      // A state that was not drawn rides with its parent and fades in.
+      const shift = was ? { x: was.x - now.x, y: was.y - now.y } : carried;
+      shifts.set(element, shift);
+
+      return { element, x: shift.x - carried.x, y: shift.y - carried.y };
+    });
+
+    for (const { element, x, y } of plans)
+      if (Math.abs(x) >= 1 || Math.abs(y) >= 1)
+        element.animate(
+          [{ transform: `translate(${x}px, ${y}px)` }, { transform: 'none' }],
+          { id: 'uird-flip', duration: SETTLE, easing: EASE_OUT },
+        );
   }
 
   protected firstUpdated(): void {
@@ -247,9 +360,11 @@ export class UIRouterDevtools extends LitElement {
   protected updated(): void {
     this.#observeMap();
     this.#measureMap();
-    this.#measureNested();
     this.#placePopover();
     this.#showTick();
+
+    if (this.#before) this.#flip(this.#before);
+    this.#before = null;
 
     if (!this._moveFocus) return;
     this._moveFocus = false;
@@ -277,50 +392,42 @@ export class UIRouterDevtools extends LitElement {
     if (scroller) this.#resize.observe(scroller);
   }
 
-  // Edges route around rendered boxes; a changed rect re-renders once.
-  #measureNested() {
-    const root = this.renderRoot.querySelector('.nested');
-    const origin = root?.getBoundingClientRect();
-
-    if (!root || !origin?.width) {
-      this._rects = null;
-      this.#rectKey = '';
-
-      return;
-    }
-
-    const rects = new Map<string, Rect>();
-
-    for (const box of root.querySelectorAll<HTMLElement>('.box'))
-      rects.set(box.dataset.name!, rectOf(box, origin));
-
-    const key = JSON.stringify([...rects]);
-
-    if (key === this.#rectKey) return;
-    this.#rectKey = key;
-    this._rects = rects;
-    this.requestUpdate();
-  }
-
+  // The popover sits beside the selection, on the side that covers least of the drawn edges and the boxes they end at.
   #placePopover() {
     const panel = this.#panel;
-    const anchor = [...this.renderRoot.querySelectorAll('.anchor')].at(-1);
     const popover = this.renderRoot.querySelector('.inspector-pane');
+    const root = this.renderRoot.querySelector<HTMLElement>('.nested');
+    const nested = root && this._nested();
 
-    if (!this._measuredPopover || !panel || !anchor || !popover) return;
+    const marked = [
+      ...this.renderRoot.querySelectorAll('.map-node.anchor, .brand.anchor'),
+    ].at(-1);
+
+    if (!panel || !popover || this._view !== 'map' || this._max) return;
 
     const origin = panel.getBoundingClientRect();
-    const size = popover.getBoundingClientRect();
+    const at = root ? offsetIn(root, panel) : { x: 0, y: 0 };
 
-    const at = placeBeside(rectOf(anchor, origin), size, {
-      x: 8,
-      y: 34,
-      width: origin.width - 16,
-      height: origin.height - 70,
+    const inPanel = <R extends Rect>(rect: R): R => ({
+      ...rect,
+      x: rect.x + at.x,
+      y: rect.y + at.y,
     });
 
-    panel.style.setProperty('--uird-pop-x', `${at.x}px`);
-    panel.style.setProperty('--uird-pop-y', `${at.y}px`);
+    const box = nested && this._map?.anchorRect(this, nested);
+    const anchor = box ? inPanel(box) : marked && rectOf(marked, origin);
+
+    if (!anchor) return;
+
+    const place = placeBeside(
+      anchor,
+      popover.getBoundingClientRect(),
+      { x: 8, y: 34, width: origin.width - 16, height: origin.height - 70 },
+      nested ? (this._map?.keepClear(this, nested).map(inPanel) ?? []) : [],
+    );
+
+    panel.style.setProperty('--uird-pop-x', `${place.x}px`);
+    panel.style.setProperty('--uird-pop-y', `${place.y}px`);
   }
 
   // The scrubber keeps the selected transition in view, else the newest.
@@ -500,16 +607,40 @@ export class UIRouterDevtools extends LitElement {
       : null;
   }
 
-  // The nested layout, when it is chosen, offered at this width and fits.
+  // In the dock the diagram moves over for the inspector popover when both fit side by side, so neither covers the other.
+  get _aside(): boolean {
+    const nested = this._nested();
+
+    return (
+      nested !== null &&
+      !this._max &&
+      (this._inspect === 'state' || this._inspect === 'tx') &&
+      nested.placed.width + ASIDE <= this._mapSize.width
+    );
+  }
+
+  _depthClass(name: string): string {
+    return depthClass(ancestorsOf(this._model.states, name).length + 1);
+  }
+
+  // What colour says: a state's identity, except while a transition is in focus, when it says what that transition does.
+  get #mode(): 'tx' | 'state' | 'rest' {
+    if (this._focusTx) return 'tx';
+
+    return this._inspect === 'state' ? 'state' : 'rest';
+  }
+
+  // The nested layout, when it is loaded, chosen, offered at this width and fits.
   _nested(): NestedLayout | null {
     if (
+      !this._map ||
       this._view !== 'map' ||
       this._layoutPref !== 'nested' ||
       this._mapSize.width < NESTED_MIN_WIDTH
     )
       return null;
 
-    const layout = layoutNested(this);
+    const layout = this._map.layoutNested(this);
 
     return layout.rung === 'tree' ? null : layout;
   }
@@ -682,7 +813,7 @@ export class UIRouterDevtools extends LitElement {
         data-tab=${this._tab}
         data-view=${this._view}
         data-inspect=${this._inspect}
-        data-pop=${this._measuredPopover ? 'measured' : 'anchored'}
+        data-mode=${this.#mode}
         ?data-max=${this._max}
         ?data-imported=${imported}
         @dragover=${(e: DragEvent) => e.preventDefault()}
@@ -764,9 +895,10 @@ export class UIRouterDevtools extends LitElement {
       </div>`;
 
     const nested = this._nested();
+    const map = this._map;
 
     return html`<div class="scroll map-scroll">
-      ${nested ? renderNested(this, nested) : renderMap(this)}
+      ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : nothing}
     </div>`;
   }
 

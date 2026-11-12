@@ -209,25 +209,32 @@ describe('the nested Map', () => {
   const edges = (element: UIRouterDevtools) =>
     element.renderRoot.querySelectorAll('.nedge');
 
-  // The share of the Map viewport's content box that the root box covers.
-  const rootFill = (element: UIRouterDevtools): number => {
+  // The room left around the diagram inside the Map viewport's content box, per side.
+  const margins = (element: UIRouterDevtools) => {
     const scroller = element.renderRoot.querySelector('.map-scroll')!;
     const style = getComputedStyle(scroller);
-    const root = element.renderRoot.querySelector('.nested > .box')!;
-    const rect = root.getBoundingClientRect();
+    const outer = scroller.getBoundingClientRect();
 
-    const width =
-      scroller.clientWidth -
-      parseFloat(style.paddingLeft) -
-      parseFloat(style.paddingRight);
+    const rect = element.renderRoot
+      .querySelector('.nested > .box')!
+      .getBoundingClientRect();
 
-    const height =
-      scroller.clientHeight -
-      parseFloat(style.paddingTop) -
-      parseFloat(style.paddingBottom);
-
-    return (rect.width * rect.height) / (width * height);
+    return {
+      left: rect.left - outer.left - parseFloat(style.paddingLeft),
+      right: outer.right - parseFloat(style.paddingRight) - rect.right,
+      top: rect.top - outer.top - parseFloat(style.paddingTop),
+      bottom: outer.bottom - parseFloat(style.paddingBottom) - rect.bottom,
+    };
   };
+
+  const settled = (element: UIRouterDevtools) =>
+    waitFor(() =>
+      expect(
+        [...element.renderRoot.querySelectorAll('.nested, .box')].flatMap(
+          (box) => box.getAnimations().filter((a) => a.id === 'uird-flip'),
+        ),
+      ).toHaveLength(0),
+    );
 
   it('is a tree of treeitems holding groups, named by header', async () => {
     const element = await openMap(1280);
@@ -262,24 +269,126 @@ describe('the nested Map', () => {
     );
   });
 
-  it('fills the Map viewport in the dock and maximised', async () => {
+  it('loads the Map on first use of the Map tab', async () => {
+    const router = sampleRouter();
+    const { element } = router.plugin(DevtoolsPlugin);
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+
+    expect(element._map).toBeUndefined();
+    getByRole(shadow(element), 'button', { name: 'map' }).click();
+    await waitFor(() => expect(element._map).toBeDefined());
+    expect(await tree(element)).toBeTruthy();
+  });
+
+  it('keeps boxes at their natural size and centres the diagram, in the dock and maximised', async () => {
     const element = await openMap(1280);
-    await tree(element);
-    await waitFor(() => expect(rootFill(element)).toBeGreaterThan(0.6));
-    expect(rootFill(element)).toBeLessThanOrEqual(1.01);
+    const map = await tree(element);
+
+    const centred = async () => {
+      await settled(element);
+      const room = margins(element);
+
+      expect(Math.abs(room.left - room.right)).toBeLessThanOrEqual(1);
+      expect(Math.abs(room.top - room.bottom)).toBeLessThanOrEqual(1);
+      expect(room.left).toBeGreaterThanOrEqual(0);
+      expect(room.top).toBeGreaterThanOrEqual(0);
+
+      for (const name of ['login', 'message', 'edit']) {
+        const pill = getByRole(map, 'treeitem', { name }).parentElement!;
+        const rect = pill.getBoundingClientRect();
+
+        expect(rect.height).toBe(24);
+        expect(rect.width).toBeLessThanOrEqual(208);
+        // A pill is its label and padding, so its text is never clipped and never has slack beside it.
+        expect(
+          rect.right -
+            pill.querySelector('.name')!.getBoundingClientRect().right,
+        ).toBeLessThan(16);
+      }
+    };
+
+    await centred();
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
     await waitFor(() => {
       const scroller = element.renderRoot.querySelector('.map-scroll')!;
       expect(scroller.clientHeight).toBeGreaterThan(300);
-      expect(rootFill(element)).toBeGreaterThan(0.6);
     });
-    expect(rootFill(element)).toBeLessThanOrEqual(1.01);
+    await centred();
     // Maximised, the full log and the inspector sit below the diagram.
     expect(
       getByRole(shadow(element), 'heading', { name: /Inspector/ }),
     ).toBeTruthy();
     expect(queryByRole(shadow(element), 'listbox')).toBeNull();
+  });
+
+  it('closes and opens a compound from its fold button', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+
+    getByRole(map, 'button', { name: 'Collapse contacts' }).click();
+    await waitFor(() =>
+      expect(
+        getByRole(map, 'treeitem', { name: 'contacts 3' }).getAttribute(
+          'aria-expanded',
+        ),
+      ).toBe('false'),
+    );
+    expect(queryByRole(map, 'treeitem', { name: 'edit' })).toBeNull();
+    expect(
+      getByRole(map, 'treeitem', { name: 'contacts 3' }).getAttribute(
+        'aria-selected',
+      ),
+    ).toBe('false');
+
+    getByRole(map, 'button', { name: 'Expand contacts' }).click();
+    await waitFor(() =>
+      expect(getByRole(map, 'treeitem', { name: 'edit' })).toBeTruthy(),
+    );
+  });
+
+  it('colours a state by its depth on the Map and in the Outline, and by status while a transition is in focus', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+
+    const box = (name: string) =>
+      getByRole(map, 'treeitem', { name }).parentElement!;
+
+    const border = (name: string) =>
+      getComputedStyle(box(name), '::before').borderTopColor;
+
+    // Siblings share a colour, a child differs from its parent, and the cycle comes round after four levels.
+    expect(box('app').classList.contains('d1')).toBe(true);
+    expect(box('message').classList.contains('d4')).toBe(true);
+    expect(border('login')).toBe(border('contacts'));
+    expect(border('mymessages')).not.toBe(border('app'));
+    expect(border('messagelist')).not.toBe(border('mymessages'));
+    expect(getComputedStyle(box('message'), '::before').borderTopWidth).toBe(
+      '2px',
+    );
+
+    const resting = border('messagelist');
+
+    const options = getAllByRole(
+      getByRole(shadow(element), 'listbox', { name: /Transitions/ }),
+      'option',
+    );
+
+    // The second transition enters mymessages and messagelist.
+    options[1].click();
+    await waitFor(() =>
+      expect(
+        getByRole(shadow(element), 'region', { name: 'Router devtools' })
+          .dataset.mode,
+      ).toBe('tx'),
+    );
+    await waitFor(() => {
+      expect(border('messagelist')).not.toBe(resting);
+      expect(border('messagelist')).toBe(border('mymessages'));
+    });
+    expect(border('contacts')).not.toBe(border('messagelist'));
   });
 
   it('moves focus in tree order with the arrow keys', async () => {
@@ -372,11 +481,12 @@ describe('the nested Map', () => {
     );
   });
 
-  it('places the inspector popover from measured rects without CSS anchor positioning', async () => {
-    const element = await openMap(1280);
+  it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
+    // Wide enough that the popover has room beside the diagram.
+    const element = await openMap(1680);
     const map = await tree(element);
-    element._measuredPopover = true;
-    getByRole(map, 'treeitem', { name: 'login' }).click();
+    getByRole(map, 'treeitem', { name: 'message' }).click();
+    await waitFor(() => expect(edges(element)).toHaveLength(4));
 
     await waitFor(() => {
       const panel = getByRole(shadow(element), 'region', {
@@ -387,18 +497,22 @@ describe('the nested Map', () => {
         .querySelector('.inspector-pane')!
         .getBoundingClientRect();
 
-      const box = getByRole(map, 'treeitem', {
-        name: 'login',
-      }).getBoundingClientRect();
-
       const bounds = panel.getBoundingClientRect();
 
-      expect(panel.dataset.pop).toBe('measured');
       expect(popover.width).toBeGreaterThan(0);
-      expect(popover.left >= box.right || popover.right <= box.left).toBe(true);
       expect(popover.left).toBeGreaterThanOrEqual(bounds.left);
       expect(popover.right).toBeLessThanOrEqual(bounds.right);
       expect(popover.bottom).toBeLessThanOrEqual(bounds.bottom);
+
+      for (const name of ['message', 'messagelist', 'contact']) {
+        const box = getByRole(map, 'treeitem', {
+          name,
+        }).parentElement!.getBoundingClientRect();
+
+        expect(popover.left >= box.right || popover.right <= box.left).toBe(
+          true,
+        );
+      }
     });
   });
 
