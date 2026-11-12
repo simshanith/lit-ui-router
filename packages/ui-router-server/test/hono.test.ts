@@ -61,7 +61,7 @@ describe('serverRouterHono', () => {
     const app = appWith({ kind: 'shell', mount: '/app' });
     const res = await navigate(app, '/app/about');
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
+    assert.equal(res.headers.get('Link'), '</app/about>; rel="canonical"');
     // serveShell got a request rewritten to the mount base.
     assert.equal(await bodyText(res), 'shell:/app');
   });
