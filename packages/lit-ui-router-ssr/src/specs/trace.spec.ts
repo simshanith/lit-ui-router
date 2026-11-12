@@ -1,6 +1,7 @@
-import { trace } from '@uirouter/core';
+import { trace, UIRouter } from '@uirouter/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../register.js';
+import { registerTraceCategory } from '../trace-categories.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { makeRouter, rootTemplate } from './fixture.js';
 import { bootAt, draw, serve, withoutSignature } from './round-trip.js';
@@ -83,6 +84,33 @@ describe('tracing hydration', () => {
 
     expect(linesStarting(log, /^bootstrap: /)).toEqual([
       "bootstrap: cold, signature absent (booted into 'shell.detail')",
+    ]);
+  });
+
+  it('logs views and the boot under the registered HYDRATION category alone', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const switches = new UIRouter();
+    registerTraceCategory(switches, 'HYDRATION');
+    switches.trace.enable('HYDRATION');
+
+    try {
+      await bootAt(container, rootTemplate, '/shell/detail');
+    } finally {
+      switches.trace.disable('HYDRATION');
+    }
+
+    expect(trace.enabled('UIVIEW')).toBe(false);
+    expect(linesStarting(log, adoptLine)).toEqual([
+      expect.stringMatching(
+        /^ui-view: Adopted {24}\[ui-view#\d+ lit:\$default /,
+      ),
+      expect.stringMatching(
+        /^ui-view: Adopted {24}\[ui-view#\d+ lit:\$default\.\$default /,
+      ),
+    ]);
+    expect(linesStarting(log, /^bootstrap: /)).toEqual([
+      expect.stringMatching(/^bootstrap: adopted, signature matched /),
     ]);
   });
 

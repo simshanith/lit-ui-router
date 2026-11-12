@@ -15,7 +15,7 @@ import {
   stringify,
   trace,
 } from '@uirouter/core';
-import type { StateObject, Transition } from '@uirouter/core';
+import type { StateObject, Trace, Transition } from '@uirouter/core';
 import { noChange, render } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
@@ -32,6 +32,10 @@ import type {
 } from 'ui-router-server/ssr/client';
 import { devGate } from '#dev-gate';
 import { adoptUiViewContext } from './adopt-context.js';
+import { traceCategoryEnabled } from './trace-categories.js';
+
+export { registerTraceCategory } from './trace-categories.js';
+
 import type { AdoptableView } from './adopt-context.js';
 import { bootPendingContext } from './boot-pending.js';
 import { isLightDomElement } from './light-dom-brand.js';
@@ -315,18 +319,29 @@ const adoptTraceEvent = {
   none: 'Rendered cold',
 } as const;
 
+// Core's `traceUIViewEvent` checks `UIVIEW` itself, so `HYDRATION` alone hands it a receiver that reads every category on.
+const uiViewTracer = (): Trace | undefined => {
+  if (trace.enabled('UIVIEW')) return trace;
+
+  if (!traceCategoryEnabled('HYDRATION')) return undefined;
+
+  // SAFETY: an Object.create of core's Trace inherits every member; `enabled` keeps its signature.
+  return Object.create(trace, { enabled: { value: () => true } }) as Trace;
+};
+
 const traceAdopt = (
   view: Element,
   outcome: AdoptOutcome,
   cause: unknown,
 ): void => {
-  if (!(view instanceof UiView) || !trace.enabled('UIVIEW')) return;
+  if (!(view instanceof UiView)) return;
+  const tracer = uiViewTracer();
   const { uiViewData, viewContext } = view;
 
-  if (!uiViewData) return;
+  if (!tracer || !uiViewData) return;
   const state = viewContext?.name;
 
-  trace.traceUIViewEvent(
+  tracer.traceUIViewEvent(
     adoptTraceEvent[outcome],
     uiViewData,
     (state === undefined ? '' : ` for state='${state}'`) +
@@ -1387,7 +1402,7 @@ const traceSeed = (
   transition: Transition,
   { matched, adopted, rerun }: SeedReport,
 ): void => {
-  if (!trace.enabled('RESOLVE')) return;
+  if (!trace.enabled('RESOLVE') && !traceCategoryEnabled('HYDRATION')) return;
   console.log(
     `Transition #${transition.$id}-${transition.router.$id}:         Seeded from payload: ` +
       (matched
@@ -1402,7 +1417,8 @@ const traceBoot = (
   served: HydrationSignature | null,
   result: BootstrapResult,
 ): BootstrapResult => {
-  if (!trace.enabled('TRANSITION')) return result;
+  if (!trace.enabled('TRANSITION') && !traceCategoryEnabled('HYDRATION'))
+    return result;
   const { outcome, signature, views, error } = result;
   const drawn = served ? `drawn for '${String(served.state)}', ` : '';
   const viewList = [...views].map(([fqn, view]) => `${fqn}=${view.outcome}`);

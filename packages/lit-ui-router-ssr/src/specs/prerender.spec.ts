@@ -13,7 +13,7 @@ import {
   shadowRoot,
   text,
 } from '@tools/lit-test-env/ssr-tree.ts';
-import { trace } from '@uirouter/core';
+import { trace, UIRouter } from '@uirouter/core';
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
@@ -31,6 +31,7 @@ import packageJson from '../../package.json' with { type: 'json' };
 import { lightSlot } from '../client.js';
 import { LightDomHydrating } from '../light-dom.js';
 import { prerender } from '../prerender.js';
+import { registerTraceCategory } from '../trace-categories.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import type { HydrationSignature } from '../client.js';
 import type { FileWriter, RedirectLine } from '../prerender.js';
@@ -1266,6 +1267,24 @@ describe('the TRANSITION trace', () => {
     ).toEqual([
       "prerender: '/plate/7B' shell, landed 'plate'",
       "prerender: '/plate/7B/' shell, landed 'plate'",
+    ]);
+  });
+
+  it('logs each path under the registered PRERENDER category alone', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const switches = new UIRouter();
+    registerTraceCategory(switches, 'PRERENDER');
+    switches.trace.enable('PRERENDER');
+
+    try {
+      await plates(['/plain']);
+    } finally {
+      switches.trace.disable('PRERENDER');
+    }
+
+    expect(trace.enabled('TRANSITION')).toBe(false);
+    expect(log.mock.calls.map(([line]) => String(line))).toEqual([
+      "prerender: '/plain' shell, landed 'plain'",
     ]);
   });
 

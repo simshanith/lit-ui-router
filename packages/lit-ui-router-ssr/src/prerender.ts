@@ -4,7 +4,7 @@ import type { TemplateResult } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter } from 'lit-ui-router/context';
-import { isString } from '@uirouter/core';
+import { isString, trace } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
 import {
   prerender as prerenderSite,
@@ -37,6 +37,7 @@ import {
 } from './render.js';
 import type { PagePayload } from './render.js';
 import { responder } from './respond.js';
+import { traceCategoryEnabled } from './trace-categories.js';
 import type { BoundResponses } from './respond.js';
 
 export type {
@@ -117,14 +118,14 @@ const servedTarget = (base: string, location: string): string => {
     : `'${served}' (with base '${trimmed(base)}/')`;
 };
 
-// One line per path under core's `TRANSITION` trace, in core's `console.log` style.
+// One line per path under core's `TRANSITION` trace or the registered `PRERENDER`, in core's `console.log` style.
 const tracePath = (
-  router: UIRouterLit,
   base: string,
   { path, verdict, redirect }: PathReport,
   { state, tokens }: Landing,
 ): void => {
-  if (!router.trace.enabled('TRANSITION')) return;
+  if (!trace.enabled('TRANSITION') && !traceCategoryEnabled('PRERENDER'))
+    return;
   console.log(
     `prerender: '${path}' ${verdict.kind}` +
       (state === undefined ? '' : `, landed '${state}'`) +
@@ -548,7 +549,7 @@ export async function prerender(
     };
 
     const onPath = (report: PathReport): void => {
-      tracePath(router, base, report, landing);
+      tracePath(base, report, landing);
       landing = {};
       site.onPath?.(report);
     };

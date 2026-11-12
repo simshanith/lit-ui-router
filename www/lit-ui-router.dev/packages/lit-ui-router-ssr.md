@@ -867,6 +867,22 @@ prerender: '/api/health' delegate
 
 The path is as it was listed. A redirect's target is as the host serves it, so under a `base` other than `/` it carries the base and the line says so: `prerender: '/old' redirect, redirect 302 '/solar/contacts' (with base '/solar/')`. The report the caller's own `onPath` receives stays base-free.
 
+#### A dedicated switch
+
+Core's categories also turn on core's own lines. To watch hydration alone, register the `HYDRATION` category with `registerTraceCategory` and enable it by name. It turns on every line above except core's own, and leaves core's categories as they are. Register it right after creating the router, before anything enables it and before `bootstrap`:
+
+```ts
+import { bootstrap, registerTraceCategory } from 'lit-ui-router-ssr/client';
+
+registerTraceCategory(router, 'HYDRATION');
+router.trace.enable('HYDRATION');
+await bootstrap(router, root, page(router));
+```
+
+The prerender script does the same with `PRERENDER`, imported from `lit-ui-router-ssr`, for the per-path lines alone.
+
+Core reads every category name through a fixed enum, so on its own an unregistered name such as `'HYDRATION'` shares one key with every other unknown name. `registerTraceCategory` keeps registered names apart by wrapping `router.trace`: the wrapper answers `enable`, `disable` and `enabled` for registered names, including a no-argument `enable()` or `disable()`, and hands everything else to core's trace. Every router that shares core's trace sees the same switches.
+
 ### Routed class views
 
 [`UiViewRenderer`](/reference/lit-ui-router-ssr/index/classes/UiViewRenderer) draws a
