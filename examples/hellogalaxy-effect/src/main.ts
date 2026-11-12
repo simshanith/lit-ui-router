@@ -265,13 +265,12 @@ class GalaxyShellComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
@@ -387,19 +386,18 @@ class StarsContainerComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ StarCatalog: StarCatalogService }>;
+  uiViewProps!: UIViewInjectedProps<{ StarCatalog: StarCatalogService }>;
 
   constructor(props: UIViewInjectedProps<{ StarCatalog: StarCatalogService }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // The service resolve lands in `resolves` under the tag's key, so a view
   // reads it exactly like any other resolve.
   get stars(): readonly Star[] {
-    return this._uiViewProps.resolves.StarCatalog.all;
+    return this.uiViewProps.resolves.StarCatalog.all;
   }
 
   render() {
@@ -487,13 +485,12 @@ class StarDetailComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ star: Star }>;
+  uiViewProps!: UIViewInjectedProps<{ star: Star }>;
 
   constructor(props: UIViewInjectedProps<{ star: Star }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Written by the ticker forked into this state's scope, not by a resolve:
@@ -506,7 +503,7 @@ class StarDetailComponent extends LitElement {
   );
 
   get star(): Star {
-    return this._uiViewProps.resolves.star;
+    return this.uiViewProps.resolves.star;
   }
 
   firstUpdated() {
@@ -587,13 +584,12 @@ class AstronautDetailComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ modelViewer: { src: string } }>;
+  uiViewProps!: UIViewInjectedProps<{ modelViewer: { src: string } }>;
 
   constructor(props: UIViewInjectedProps<{ modelViewer: { src: string } }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
@@ -604,7 +600,7 @@ class AstronautDetailComponent extends LitElement {
       <!-- src is the blob the resolve already downloaded, so the viewer paints
            immediately instead of fetching the model a second time -->
       <model-viewer
-        src="${this._uiViewProps.resolves.modelViewer.src}"
+        src="${this.uiViewProps.resolves.modelViewer.src}"
         alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
         camera-controls
         auto-rotate
