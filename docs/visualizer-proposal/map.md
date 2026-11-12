@@ -14,18 +14,22 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
   one edge per pair of states, with line weight for the count.
 - **The diagram owns the panel.** On the Map tab in the wide dock the
   transition log is a strip of outcome glyphs, and the inspector is a popover
-  beside the diagram. The maximised panel shows the full log and inspector
-  below the diagram. On the sheets the Map takes the Outline's place above the
-  log.
+  beside the diagram. The maximised panel gives the diagram three fifths of
+  its height and shows the full log and inspector below it. On the sheets the
+  Map takes the Outline's place above the log.
 - **Boxes keep their natural size.** A leaf is its label and padding. A
   compound shrink-wraps its children. Nothing stretches to fill the viewport;
-  the diagram sits in the middle of it.
+  the diagram sits in the room [left for it](#the-inspector-popover).
+- **A selection moves nothing.** Selecting a state draws its edges and shows
+  the inspector, and every box stays where it was, so nothing shifts under
+  the pointer.
 - **Colour is identity, until a transition is in focus.** See
   [Modes](#modes).
 - **Red means fault.** A failed transition's edge and the state that failed
   are red, and no identity colour is near it.
-- **Type stays at 12px.** The layout may shrink to the caption size and no
-  further, and it never enlarges.
+- **Type is 12px in the dock.** The layout may shrink to the caption size and
+  no further. The maximised panel is the one place it enlarges, in whole
+  steps of the [spacing system](#spacing), never by a scale factor.
 
 ## Modes
 
@@ -134,9 +138,11 @@ The packer places every box, and CSS only draws them:
    prefers a split that fits the viewport to a nearer one that does not.
 4. A compound is its header, its rows and its padding, and no wider than the
    wider of the two needs.
-5. If the root still does not fit, step down the ladder below.
-6. The diagram sits in the middle of the viewport at that size. The room left
-   over frames it evenly; no box takes it.
+5. If the root still does not fit, step down the ladder below. In the
+   maximised panel, first step up it.
+6. The diagram sits in the middle of the viewport at that size, or as near
+   the middle as leaves [the popover's column](#the-inspector-popover) free.
+   The room left over frames it; no box takes it.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
@@ -148,7 +154,8 @@ tree and the stress tree, in the dock (1230 by 256) and the maximised panel
 (1230 by 372): no leaf is wider than its label needs or than the maximum; no
 compound is wider than its header and rows need; in every compound the boxes
 cover at least half of the rows' bounding box; and the diagram fits, with a
-width over height between 0.6 and 1.6 times the viewport's.
+width over height between 0.6 and 1.6 times the viewport's. The two larger
+steps are held to the second and third, for the sample tree.
 
 ### Spacing
 
@@ -178,14 +185,40 @@ middle of a 24px one.
 At the caption-size rung the header is 20px, the padding 16px and 8px, the
 leaf gaps 16px and 12px, and the group gaps 24px and 16px.
 
+The maximised panel has two larger steps, each the table above in proportion
+to its type, still on the 4px grid:
+
+| Step  | Type | Header | Compound padding | Leaf gaps | Group gaps | Leaf inline size |
+| ----- | ---- | ------ | ---------------- | --------- | ---------- | ---------------- |
+| Dock  | 12px | 24px   | 24px, 12px       | 24px      | 36px       | 56 to 208px      |
+| Roomy | 16px | 32px   | 32px, 16px       | 32px      | 48px       | 76 to 276px      |
+| Large | 20px | 40px   | 40px, 20px       | 40px      | 60px       | 92 to 348px      |
+
+A header's glyphs, marks, padding and fold button grow by the same factor,
+from one custom property on the diagram. Edge strokes, arrowheads and the
+router's margins stay as they are in the dock.
+
+A scale on the whole diagram was weighed against the steps. A scale fills any
+viewport exactly, and gives type and borders at sizes that are on no grid; the
+steps keep every distance a multiple of 4px and the type at three sizes. A
+different target shape for the packer was also weighed: the root already aims
+for the viewport's shape, and the sample trees are wider than the maximised
+viewport is, so a taller target would give more rows of boxes that are still
+the dock's size.
+
 ### When it does not fit
 
-The layout starts with every compound open and stops at the first step that
-fits. Each step keeps the ones before it:
+In the maximised panel the layout first tries the large step and then the
+roomy one, with every compound open, and takes the first that fits with a
+tenth of the viewport's width and height to spare. The dock never enlarges.
 
-1. Collapse compounds off the active path and outside the selection to one box
-   with a count of the states inside. Opening or closing a box by hand
-   overrides this for that box.
+Otherwise the layout starts at the dock's step with every compound open and
+stops at the first step that fits. Each step keeps the ones before it:
+
+1. Collapse compounds off the active path to one box with a count of the
+   states inside. A selected transition's states and the ancestors of a
+   selected state stay open; the selected box itself stays as it is drawn.
+   Opening or closing a box by hand overrides this for that box.
 2. Merge a compound with its only visible child, when that child is also a
    compound, into one header.
 3. Truncate a name segment longer than 24 characters in the middle. The full
@@ -194,8 +227,9 @@ fits. Each step keeps the ones before it:
 5. Fall back to the node-link tree.
 
 A milder step is restored only once it fits with about 10% of the inline size
-to spare, so a resize does not flicker between layouts. A change to the tree
-or the selection starts again from the top. Below 560px of inline size the
+to spare, so a resize does not flicker between layouts. A change to the tree,
+or a selection that opens a compound, starts again from the top; a selection
+that opens nothing keeps the layout it has. Below 560px of inline size the
 nested layout is not offered: at that width it is the Outline with borders.
 
 Re-rooting at the deepest compound on the active path, with its ancestors as a
@@ -211,24 +245,44 @@ Pan, zoom and a minimap are left out.
 
 ### The inspector popover
 
-The popover is placed from the packed rects. It tries beside the selected
-box, level with its top or its bottom, then the corners of the panel, and
-takes the place that covers least: a drawn edge or a box an edge ends at
-counts twenty times a pill. When the diagram and the popover fit side by
-side, the diagram moves over to the middle of the room the popover leaves, so
-neither covers the other. In a dock too narrow for both, the popover covers
-pills before it covers an edge.
+The popover is 296px wide, and its column, with a 12px margin either side, is
+320px. Whether the dock has that column to spare is decided by the diagram's
+size, before anything is selected:
+
+- **Room for a column either side:** the diagram is centred, and the popover
+  takes the column at the end.
+- **Room for one column:** the diagram sits as near the middle as leaves the
+  column free at the end, so the room at its start shrinks first. The popover
+  takes that column.
+- **No room:** the diagram is centred and the popover goes over it. It tries
+  beside the selected box, level with its top or its bottom, then the corners
+  of the panel, then every 12px along the panel's top and bottom, and takes
+  the place that covers least. The selected box counts a thousand times a
+  pill, and a drawn edge or a box an edge ends at twenty times, so the
+  selection is covered only when no place clears it.
+
+In the first two the popover is always in the same place, at the end of the
+dock, and neither a first selection nor a change of selection moves a box.
+Reserving the column at every width was weighed and left out: the stress tree
+needs the dock's whole width. So was a start-aligned diagram, which leaves
+the same column free and reads as a document, not a drawing.
 
 ## Motion
 
 A box changes place and size between modes, and the eye follows a state
 through the change by its colour and its movement.
 
-- **Boxes move.** A re-pack on resize, a collapse or an expand, a change of
-  rung, the switch between nested boxes and the tree, and the dock becoming
-  the maximised panel all move the same states. Each state's element starts
-  where the state was and eases to its new place in 200ms, on
-  `--uird-ease-out`. A box that was not drawn before fades in.
+- **Boxes move and change size.** A re-pack on resize, a collapse or an
+  expand, a change of rung and the switch between nested boxes and the tree
+  all move the same states. Each state's element starts where and as large
+  as the state was and eases to its new place and size in 200ms, on
+  `--uird-ease-out`. A box that was not drawn before fades in, and is
+  clipped by its parent until the parent has grown to hold it. A header
+  keeps its final width through the change, so no name is elided on the way.
+- **The diagram changes size as one object.** Between the dock and the
+  maximised panel the type step changes, so the whole diagram scales from
+  its old outline to its new one, about its own middle on the block axis,
+  and its boxes ride it. The panel itself changes size at once.
 - **Edges draw.** An edge draws in from its start in 240ms and withdraws
   toward its end in 160ms. After a re-pack the edges wait the 200ms the boxes
   take, and then draw, so none is stranded beside a moving box.
@@ -240,8 +294,13 @@ The mechanism is FLIP on the Web Animations API. Before a render that changes
 the Map's geometry the panel reads where each state's element is drawn, and
 after it reads where each now is and animates a `transform` from the
 difference. A child's shift is taken relative to its parent's, since it rides
-its parent's transform. Only `transform` and `opacity` animate, and nothing
-waits on an animation. An interrupted move starts from what is on screen: the
+its parent's transform. Every element is read before any is animated. A box
+whose size changed also animates `width` and `height`; the boxes are
+absolutely placed, so that layout is theirs alone. Opening and closing a
+compound in the stress tree's dock, with 20 to 26 boxes drawn, the frame that
+re-packs took 21 to 27ms and every frame after it 16.7ms, in headless
+Chromium. A change of type step animates one `transform` with a scale on the
+diagram's root instead. Nothing waits on an animation. An interrupted move starts from what is on screen: the
 first read is of the drawn position, mid-flight included, and the earlier
 animation is cancelled before the second.
 
@@ -329,6 +388,20 @@ transition, 2px for two or three and 3px for four or more.
 
 The constraint solver `libavoid` uses for nudging, crossing minimisation and
 labels on lines are left out.
+
+Two things read poorly and are left as they are. A leaf with four or more
+edges is a knot: a 24px end holds two ports, the pairs take a side each, and
+their leads share the 12px gap under the parent's header. An edge between a
+compound and its own child is a stub from the child to the nearest border of
+the compound, met from inside. Lining that port up with the child was tried:
+the stub is then straight, and it moves to whichever border is nearest, which
+pushed the self-loop into the corner the other edges already use. A fix needs
+three things together: one trunk for the edges that share an end, so a leaf
+has one port per neighbour instead of one per edge; a port budget that
+counts a leaf's four sides before any edge is routed, instead of relieving a
+side after the fact; and a template for the compound and child pair that
+ends on the compound's header, which is the part of it that reads as the
+state.
 
 ### WebAssembly
 

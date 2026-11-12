@@ -269,8 +269,9 @@ is used.
   panel says is sans (`"Helvetica Neue", Helvetica, Arial, sans-serif`): the
   brand, tabs, section headings, field labels, buttons and tags. Two sizes:
   12px on a 16px line, and 11px for uppercase captions tracked 0.08em and for
-  the reason under a row. Two weights: 400 and 700. Flush left; only times
-  align right.
+  the reason under a row. The maximised Map alone sets its state names at
+  16px or 20px. Two weights: 400 and 700. Flush left; only times align right.
+  A duration's unit follows its number at a third of a space, muted.
 - **Grid.** A 4px unit, 12px columns, 24px rows (32px for coarse pointers).
   Section titles, outline labels and inspector keys share one text edge.
 - **Rules, not boxes.** A 2px ink rule under the title strip, one hairline

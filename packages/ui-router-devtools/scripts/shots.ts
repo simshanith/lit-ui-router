@@ -137,6 +137,19 @@ const shots: Shot[] = [
     },
   },
   {
+    name: '3-max-map-state',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: async (page) => {
+      await showMap(page);
+      await page.locator(`${TAG} .icon.max`).click();
+      await page
+        .locator(`${TAG} .box[data-name="galaxy.stars.star"] > .head`)
+        .click({ position: { x: 14, y: 12 } });
+    },
+  },
+  {
     name: '2-dock-outline-fault',
     width: 1280,
     open: true,
