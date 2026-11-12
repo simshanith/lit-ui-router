@@ -399,3 +399,47 @@ describe('a listed path that begins with //', () => {
     );
   });
 });
+
+describe('a request path whose leading run holds a backslash', () => {
+  // A url parser reads '/\\host' as '//host', so the run collapses like '//'.
+  const BACKSLASH = String.fromCharCode(92);
+
+  const pages = (strategy: Strategy) =>
+    createServerRouter({
+      mounts: {
+        '/': {
+          routes: [
+            { name: 'page', url: '/:slug' },
+            { name: 'old', url: '/:lang/docs/:slug', redirectTo: 'moved' },
+            { name: 'moved', url: '/:lang/to/:slug' },
+          ],
+          strategy,
+        },
+      },
+    });
+
+  for (const strategy of STRATEGIES) {
+    for (const lead of [`//${BACKSLASH}`, `/${BACKSLASH}`, `/${BACKSLASH}/`])
+      it(`${strategy}: redirects '${lead}evil.example' to the page on this origin`, async () => {
+        assert.deepEqual(await pages(strategy).resolve(`${lead}evil.example`), {
+          kind: 'redirect',
+          mount: '/',
+          location: '/evil.example',
+          status: 302,
+        });
+      });
+
+    it(`${strategy}: answers a raw Connect target on this origin`, async () => {
+      const { location } = await connect(
+        createConnectMiddleware(pages(strategy)),
+        `//${BACKSLASH}evil.example?x=1`,
+      );
+
+      assert.equal(location, '/evil.example?x=1');
+      assert.equal(
+        new URL(location ?? '', ORIGIN).origin,
+        new URL(ORIGIN).origin,
+      );
+    });
+  }
+});

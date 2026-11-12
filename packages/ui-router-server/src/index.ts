@@ -1082,8 +1082,9 @@ export function createServerRouter<
 
       if (subpath === null) continue;
 
-      if (subpath.startsWith('//'))
-        return collapsedVerdict(mount, onOrigin(subpath));
+      const collapsed = onOrigin(subpath);
+
+      if (collapsed !== subpath) return collapsedVerdict(mount, collapsed);
 
       if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
 

@@ -66,7 +66,7 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
 });
 
 // A path on this origin: one leading slash, never a second.
-const SAME_ORIGIN = /^\/(?!\/)/;
+const SAME_ORIGIN = /^\/(?![/\\])/;
 
 describe("a redirect verdict's location", () => {
   for (const strategy of STRATEGIES) {

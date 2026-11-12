@@ -112,5 +112,9 @@ export const mountPolicyOf = (
   base: string,
 ): TrailingSlashPolicy | undefined => mountPolicies.get(router)?.get(base);
 
-/** A path a mount formatted, with one leading slash: an empty leading param formats `//`, which names another host. */
-export const onOrigin = (path: string): string => path.replace(/^\/{2,}/, '/');
+/**
+ * A path with one leading slash. A leading `//` names another host, as an empty leading param
+ * formats it, and so does `/\`: a url parser reads a backslash there as a slash.
+ */
+export const onOrigin = (path: string): string =>
+  path.replace(/^[/\\]{2,}/, '/');
