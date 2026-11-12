@@ -5,12 +5,14 @@ import {
   servicesPlugin,
   UIRouter,
   type StateDeclaration,
+  type Transition,
 } from '@uirouter/core';
 
 import { installServerLocation } from '../src/location.ts';
 import {
   seed,
   type ResolvePayload,
+  type SeedReport,
   type Transporter,
 } from '../src/ssr-client.ts';
 import {
@@ -383,6 +385,43 @@ describe('seed', () => {
 
     assert.equal(transition.to().name, 'app.sheet');
     assert.equal(calls.get('app.sheet.title'), undefined);
+  });
+
+  it('reports what it adopted and what re-runs to onSeed', async () => {
+    const { payload } = await drawn('/app/sheet/7B');
+    const reports: [string, SeedReport][] = [];
+
+    const onSeed = (transition: Transition, report: SeedReport) => {
+      reports.push([transition.to().name ?? '', report]);
+    };
+
+    const booted = makeRouter().router;
+    const elsewhere = makeRouter().router;
+    seed(booted, roundTrip(payload), { onSeed });
+    seed(elsewhere, roundTrip(payload), { onSeed });
+
+    await settle(booted, '/app/sheet/7B');
+    await settle(elsewhere, '/app/index');
+
+    assert.deepEqual(reports, [
+      [
+        'app.sheet',
+        {
+          matched: true,
+          adopted: [
+            'app.user',
+            'app.sheet.title',
+            'app.sheet.count',
+            'app.sheet.empty',
+          ],
+          rerun: ['app.sheet.drawnAt', 'app.sheet.sheet', 'app.sheet.comments'],
+        },
+      ],
+      [
+        'app.index',
+        { matched: false, adopted: [], rerun: ['app.user', 'app.index.list'] },
+      ],
+    ]);
   });
 
   it('runs every resolve of a state outside the drawn set, and disarms after boot', async () => {

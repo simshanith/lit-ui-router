@@ -267,8 +267,8 @@ const main = async (argv: readonly string[]): Promise<void> => {
   );
 
   if (args.dryRun) {
+    // stdout is one JSON claim per line and nothing else, so it pipes into another tool
     for (const claim of claims) console.log(JSON.stringify(claim));
-    console.log(`dry run: ${claims.length} claims, none sent`);
 
     return;
   }

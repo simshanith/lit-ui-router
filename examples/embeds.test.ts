@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { EXAMPLE_NAMES } from './embeds.ts';
+import { EXAMPLE_NAMES, RESERVED_NAMES } from './embeds.ts';
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +31,15 @@ function exampleDirs(): string[] {
 describe('embeds manifest', () => {
   it('declares every example directory, and no others', () => {
     assert.deepEqual(exampleDirs(), [...EXAMPLE_NAMES].sort());
+  });
+
+  it("leaves the docs pages' slugs under /examples/ to them", () => {
+    const reserved: readonly string[] = RESERVED_NAMES;
+
+    assert.deepEqual(
+      exampleDirs().filter((dir) => reserved.includes(dir)),
+      [],
+    );
   });
 });
 

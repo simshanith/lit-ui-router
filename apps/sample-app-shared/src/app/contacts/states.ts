@@ -44,7 +44,7 @@ export const states = bindStates(contactsTable, {
     sticky: true,
     views: {
       contacts: (props: UIViewInjectedProps<StateResolves<'contacts'>>) =>
-        html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`,
+        html`<sample-contacts .uiViewProps=${props}></sample-contacts>`,
     },
   },
   /**

@@ -1,4 +1,5 @@
-// Type-level pin on the per-example npm scripts. There is no runtime here and
+// Type-level pins on the example names: their npm scripts, and the docs
+// slugs under /examples/ they must leave alone. There is no runtime here and
 // nothing to execute — `tsc --noEmit` IS the assertion, so this file rides
 // //#typecheck:root. The `.test-d.ts` suffix keeps it out of the package's
 // `node --test "*.test.ts"`, which matters more than convention: the probe
@@ -10,7 +11,7 @@
 // setup` and left without node_modules.
 import pkg from './package.json' with { type: 'json' };
 
-import type { ExampleName } from './embeds.ts';
+import type { ExampleName, ReservedName } from './embeds.ts';
 
 /** Assignability probe: the call typechecks iff the argument satisfies T. */
 declare function accepts<T>(value: T): T;
@@ -36,3 +37,9 @@ accepts<typeof declaredTypecheck>(requiredTypecheck);
 accepts<`example:install:${ExampleName}`>(declaredInstall);
 
 accepts<`typecheck:example:${ExampleName}`>(declaredTypecheck);
+
+// -- no example takes a docs page's slug under /examples/ ---------------------
+
+declare const reservedExample: Extract<ExampleName, ReservedName>;
+
+accepts<never>(reservedExample);

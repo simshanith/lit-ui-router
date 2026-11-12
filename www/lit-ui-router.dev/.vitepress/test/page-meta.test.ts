@@ -98,6 +98,21 @@ describe('Guides sidebar', () => {
     assert.deepEqual(linked.sort(byLink), guides.sort(byLink));
   });
 
+  it('links each group heading to an index page', () => {
+    const types = new Map(
+      parsed.flatMap(({ path, result }) =>
+        result.success ? [[route(path), result.output.type]] : [],
+      ),
+    );
+
+    assert.deepEqual(
+      guideGroups.flatMap(({ link }) =>
+        link && types.get(link) !== 'index' ? [link] : [],
+      ),
+      [],
+    );
+  });
+
   it('matches the sections of guides/index.md', () => {
     const index = pages.find(({ path }) => path === 'guides/index.md');
 

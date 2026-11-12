@@ -13,12 +13,12 @@ export class MyMessages extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<MyMessagesResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<MyMessagesResolves>) {
     super();
   }
 
   get folders(): { _id: string }[] {
-    return this._uiViewProps.resolves.folders ?? [];
+    return this.uiViewProps.resolves.folders ?? [];
   }
 
   render() {

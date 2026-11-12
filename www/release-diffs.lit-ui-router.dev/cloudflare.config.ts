@@ -6,6 +6,7 @@ export default defineConfig(({ isPreview }) => ({
   worker: {
     name: 'release-diffs',
     compatibilityDate: '2026-07-01',
+    compatibilityFlags: ['nodejs_compat'],
     entrypoint,
     // Reached only through the docs worker's service binding, so neither production nor a Preview gets a URL.
     workersDev: false,

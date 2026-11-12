@@ -21,6 +21,9 @@ client deployed across every point on the server-support spectrum.
 
 ## Server-side
 
+The [server-side overview](/guides/server) maps the verdict, render and host
+choices to the pages below.
+
 - [Server-Side Routing](./server-route-matching) — serve routing verdicts
   at the edge with `ui-router-server`: the app shell for real routes, 302
   entry redirects, and real 404s for everything else, across the full

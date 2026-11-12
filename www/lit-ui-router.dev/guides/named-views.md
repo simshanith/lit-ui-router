@@ -63,7 +63,7 @@ const folderState = {
 A bare name targets a view in the parent state's template, just as `component`
 targets that template's `$default` view. Each view's component
 receives the `resolves` of the state that declares it, through
-[`_uiViewProps`](./routed-components).
+[`uiViewProps`](./routed-components).
 
 A state declares `views` or `component`, not both: when `views` is present,
 `component` is ignored. A named `<ui-view>` that no active state fills shows

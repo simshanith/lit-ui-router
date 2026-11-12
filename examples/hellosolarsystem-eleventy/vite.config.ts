@@ -12,7 +12,6 @@ export default defineConfig(({ isSsrBuild }) => ({
         },
       }
     : {
-        target: 'esnext',
         outDir: 'node_modules/.build/client',
         rolldownOptions: {
           input: 'src/client.ts',

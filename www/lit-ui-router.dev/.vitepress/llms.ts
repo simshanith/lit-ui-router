@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite';
+import type { Plugin, Rollup, TransformResult } from 'vite';
 import type { DefaultTheme } from 'vitepress';
 import llmstxt from 'vitepress-plugin-llms';
 
@@ -126,27 +126,84 @@ const LLMS_TEMPLATE = `# {title}
 {releases}
 `;
 
+/** The hooks vitepress-plugin-llms defines, as plain functions that ignore `this`. */
+export interface LlmsHooks {
+  transform: (code: string, id: string) => Promise<TransformResult>;
+  buildStart: () => void;
+  generateBundle: (
+    options: Rollup.NormalizedOutputOptions,
+    bundle: Rollup.OutputBundle,
+    isWrite: boolean,
+  ) => Promise<void>;
+}
+
+/** Hands the llms plugin its pages in source-path order: it sorts by title alone, so equal titles otherwise keep Vite's concurrent transform order. */
+export function inPathOrder([tags, build]: [Plugin, Plugin]): [Plugin, Plugin] {
+  // SAFETY: vitepress-plugin-llms 1.14 defines each hook as a plain function; llms-order.test.ts runs them
+  const transform = tags.transform as LlmsHooks['transform'];
+
+  // SAFETY: as above
+  const buildStart = build.buildStart as LlmsHooks['buildStart'];
+
+  // SAFETY: as above
+  const generateBundle = build.generateBundle as LlmsHooks['generateBundle'];
+
+  const pages = new Map<string, string>();
+
+  return [
+    {
+      ...tags,
+      transform(code, id) {
+        if (id.endsWith('.md')) pages.set(id, code);
+
+        return transform(code, id);
+      },
+    },
+    {
+      ...build,
+      buildStart() {
+        pages.clear();
+        buildStart();
+      },
+      async generateBundle(options, bundle, isWrite) {
+        // The plugin's buildStart empties its page map; refill it sorted.
+        buildStart();
+
+        for (const [id, code] of [...pages].sort(([a], [b]) =>
+          a < b ? -1 : 1,
+        )) {
+          await transform(code, id);
+        }
+
+        await generateBundle(options, bundle, isWrite);
+      },
+    },
+  ];
+}
+
 export function llmsPlugins(): Plugin[] {
   return [
     liveExampleSourcesPlugin(),
-    ...llmstxt({
-      domain: DOMAIN,
-      customLLMsTxtTemplate: LLMS_TEMPLATE,
-      customTemplateVariables: {
-        details: LLMS_DETAILS,
-        releases: LLMS_RELEASES,
-      },
-      // The release stubs exist for local search; the Releases section covers them here.
-      ignoreFiles: pageGlobs(({ llms }) => llms === false),
-      // Member pages the sidebar filter drops would otherwise land under "Other".
-      ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
-      sidebar: (sidebar) => {
-        if (!Array.isArray(sidebar)) {
-          throw new Error('llms: expected the themeConfig sidebar array');
-        }
+    ...inPathOrder(
+      llmstxt({
+        domain: DOMAIN,
+        customLLMsTxtTemplate: LLMS_TEMPLATE,
+        customTemplateVariables: {
+          details: LLMS_DETAILS,
+          releases: LLMS_RELEASES,
+        },
+        // The release stubs exist for local search; the Releases section covers them here.
+        ignoreFiles: pageGlobs(({ llms }) => llms === false),
+        // Member pages the sidebar filter drops would otherwise land under "Other".
+        ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
+        sidebar: (sidebar) => {
+          if (!Array.isArray(sidebar)) {
+            throw new Error('llms: expected the themeConfig sidebar array');
+          }
 
-        return llmsSidebar(sidebar);
-      },
-    }),
+          return llmsSidebar(sidebar);
+        },
+      }),
+    ),
   ];
 }

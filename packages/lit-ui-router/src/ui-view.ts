@@ -253,6 +253,16 @@ export class UiView extends LitElement {
 
   private _uiViewData!: ActiveUIView;
 
+  /**
+   * This view's registration with core's view service, as
+   * `trace.traceUIViewEvent` takes it.
+   *
+   * @internal
+   */
+  get uiViewData(): ActiveUIView | undefined {
+    return this._uiViewData;
+  }
+
   private resolveContext!: ResolveContext;
 
   private _viewConfigUpdated(config: ViewConfig) {
