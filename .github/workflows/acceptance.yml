@@ -330,10 +330,13 @@ jobs:
           # github.com URLs go through the API, which rate-limits anonymous calls.
           GITHUB_TOKEN: ${{ github.token }}
       - name: Links summary
-        # Goes red after a broken link, so a red job opens on the report.
+        # Goes red after a broken link, so a red job opens on the report; a run
+        # that died before lychee wrote one has none to show.
         if: ${{ !cancelled() }}
         run: |
-          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/links.md"
+          if [ -f "$RUNNER_TEMP/links.md" ]; then
+            tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/links.md"
+          fi
           test "$LINKS_OUTCOME" = success
         env:
           LINKS_OUTCOME: ${{ steps.links.outcome }}
