@@ -51,7 +51,7 @@ describe('composeNavigateUrl', () => {
   it.each([
     ['/', '/evil.example'],
     ['/app', '/evil.example'],
-    ['/app/', '/app/evil.example'],
+    ['/app/', '/app//evil.example'],
   ])(
     'keeps a URL that begins with // on this origin under %s',
     (baseHref, expected) => {
@@ -61,13 +61,14 @@ describe('composeNavigateUrl', () => {
 
   it('collapses a longer leading run of slashes to one', () => {
     expect(composeNavigateUrl('///evil.example', '/')).toBe('/evil.example');
-    expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
-      '/app/evil.example',
-    );
+    expect(composeNavigateUrl('//', '/')).toBe('/');
   });
 
-  it('returns the baseHref for a URL of slashes only', () => {
-    expect(composeNavigateUrl('//', '/app/')).toBe('/app/');
+  it('leaves the url as written below a base prefix, where it names this origin', () => {
+    expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
+      '/app///evil.example',
+    );
+    expect(composeNavigateUrl('//', '/app/')).toBe('/app//');
   });
 
   it('keeps the query and hash of a URL that begins with //', () => {
@@ -75,7 +76,7 @@ describe('composeNavigateUrl', () => {
       '/evil.example/a?q=1#top',
     );
     expect(composeNavigateUrl('//evil.example/a?q=1#top', '/app/')).toBe(
-      '/app/evil.example/a?q=1#top',
+      '/app//evil.example/a?q=1#top',
     );
   });
 

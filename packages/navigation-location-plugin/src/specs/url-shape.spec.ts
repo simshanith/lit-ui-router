@@ -82,11 +82,11 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
     });
 
     it.each([
-      ['/', '/x.invalid'],
-      ['/app/', '/app/x.invalid'],
+      ['/', '/x.invalid', '/x.invalid'],
+      ['/app/', '/app//x.invalid', '//x.invalid'],
     ])(
       'stays on this origin for an empty leading param under %s',
-      async (baseHref, pathname) => {
+      async (baseHref, pathname, routerUrl) => {
         const router = new UIRouter();
         router.urlService.config.baseHref = () => baseHref;
         const plugin = navigationLocationPlugin(router);
@@ -101,7 +101,7 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
         });
         expect(leaving).toEqual([]);
         expect(window.location.origin).toBe(origin);
-        expect(router.urlService.url()).toBe('/x.invalid');
+        expect(router.urlService.url()).toBe(routerUrl);
 
         plugin.dispose?.(router);
       },

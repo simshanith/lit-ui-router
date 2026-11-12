@@ -8,20 +8,20 @@ import { stripLastPathElement } from '@uirouter/core';
  *
  * - `''` and `'/'` resolve to `baseHref` itself (so `<base href='/app/'>`
  *   navigates to `/app/`, not `/app`).
- * - a leading run of slashes in `url` counts as one, so the result never
- *   begins with `//` and names another host.
  * - anything else is prefixed with the base prefix
  *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
  *   the caller may have omitted.
+ * - a result that would begin with `//` begins with one slash, so it never
+ *   names another host. Under a base prefix the url stays as written.
  *
  * @internal
  */
 export function composeNavigateUrl(url: string, baseHref: string): string {
-  const path = url.replace(/^\/+/, '');
-
-  if (path === '') {
+  if (url === '' || url === '/') {
     return baseHref;
   }
 
-  return `${stripLastPathElement(baseHref)}/${path}`;
+  const slash = url.startsWith('/') ? '' : '/';
+
+  return (stripLastPathElement(baseHref) + slash + url).replace(/^\/{2,}/, '/');
 }
