@@ -236,6 +236,73 @@ assert in a test that
 returns an empty array: it reports, as data and in every build, the findings
 the warning prints.
 
+### Sharing states with the client
+
+Keep one data-only module of names, urls and redirects. The client spreads
+each entry into a state and adds its component and resolves; the server
+compiles its mount from the same module, so the two never drift:
+
+```ts check
+// states.ts: data only, so vite.config.ts and a Worker can import it.
+import type { StateDeclaration } from '@uirouter/core';
+
+export const states = [
+  { name: 'planets', url: '/' },
+  { name: 'planet', url: '/planets/:planetId', data: { title: 'Planet' } },
+  { name: 'legacy', url: '/legacy', redirectTo: 'planets' },
+  { name: 'notFound' },
+] as const satisfies readonly StateDeclaration[];
+
+export const urlConfig = { strict: false } as const;
+```
+
+Keep `as const satisfies`: an array annotated `readonly StateDeclaration[]`
+loses its literal names and no longer fits `routesFromStates`.
+
+[`routesFromStates`](/reference/ui-router-server/index/functions/routesFromStates)
+turns them into a mount's routes:
+
+```ts
+// vite.config.ts
+import { createServerRouter, routesFromStates } from 'ui-router-server';
+
+import { states, urlConfig } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': {
+      routes: routesFromStates(states),
+      otherwise: { state: 'notFound' },
+      config: urlConfig,
+    },
+  },
+});
+```
+
+```ts
+// app.ts: the client states add what only the browser runs.
+import { applyUrlConfig } from 'ui-router-server/url-config';
+
+import { states, urlConfig } from './states.ts';
+
+const [planets, planet, legacy, notFound] = states;
+
+applyUrlConfig(router, urlConfig);
+router.stateRegistry.register({ ...planets, component: PlanetsView });
+router.stateRegistry.register({ ...planet, component: PlanetView, resolve });
+router.stateRegistry.register(legacy);
+router.stateRegistry.register({ ...notFound, component: NotFoundView });
+router.urlService.rules.otherwise({ state: 'notFound' });
+```
+
+Each route keeps only the fields a mount reads (`name`, `parent`, `url`,
+`params`, `redirectTo`, `redirectStatusCode`, `delegate`, `response`), and
+literal names still type the router. `otherwise` and the url config stay on
+the mount, since they belong to the router, not a state. A state a mount
+would get wrong throws at the call: a function or `TargetState` `redirectTo`,
+which only the client can run, and an abstract state with a url, whose url
+core never matches.
+
 ## The verdict
 
 ```ts
