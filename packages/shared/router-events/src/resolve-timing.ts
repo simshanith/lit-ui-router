@@ -1,7 +1,7 @@
 import type { PathNode, Transition } from '@uirouter/core';
 
-import { messageOf } from './reasons.ts';
-import type { ResolveEvent } from './schema.ts';
+import { messageOf } from './transition-reasons.ts';
+import type { ResolveEvent } from './event-schema.ts';
 
 /** A resolve event before the adapter stamps its schema version and time. */
 export type ResolveDraft = Omit<ResolveEvent, 'v' | 't'>;

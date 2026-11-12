@@ -82,6 +82,10 @@ component_management:
       name: route-snapshot
       paths:
         - packages/shared/route-snapshot/src/**
+    - component_id: router-events
+      name: router-events
+      paths:
+        - packages/shared/router-events/src/**
     - component_id: transition-status
       name: transition-status
       paths:

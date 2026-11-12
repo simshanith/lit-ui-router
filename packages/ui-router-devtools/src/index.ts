@@ -1,4 +1,4 @@
-export { observe, type ObserveOptions } from './adapter.ts';
+export { observe, type ObserveOptions } from '@repo/router-events';
 
 export { record, type Recorder, type RecordOptions } from './recorder.ts';
 

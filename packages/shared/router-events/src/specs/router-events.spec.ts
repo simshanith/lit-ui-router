@@ -7,7 +7,8 @@ import {
   type StateDeclaration,
 } from '@uirouter/core';
 
-import { observe, type DevtoolsEvent } from '../index.ts';
+import type { RouterEvent } from '../event-schema.ts';
+import { observe } from '../router-events.ts';
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -29,7 +30,7 @@ describe('onInvalid', () => {
   const run = async (placement: Placement) => {
     const router = makeRouter([{ name: 'a', url: '/a' }]);
     const seen: string[] = [];
-    const events: DevtoolsEvent[] = [];
+    const events: RouterEvent[] = [];
     const install = () => observe(router, (event) => events.push(event));
 
     if (placement === 'first') install();
@@ -89,7 +90,7 @@ describe('onInvalid', () => {
 describe('state declarations', () => {
   const describeStates = (states: PluginState[]) => {
     const router = makeRouter(states);
-    const events: DevtoolsEvent[] = [];
+    const events: RouterEvent[] = [];
     observe(router, (event) => events.push(event))();
     router.dispose();
 
@@ -258,7 +259,7 @@ describe('resolve timing', () => {
   const run = async (timeResolves: boolean | undefined) => {
     const calls: string[] = [];
     const router = makeRouter(states(calls));
-    const events: DevtoolsEvent[] = [];
+    const events: RouterEvent[] = [];
 
     const stop = observe(router, (event) => events.push(event), {
       timeResolves,

@@ -1,0 +1,31 @@
+{
+  "name": "@repo/router-events",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Canonical source of the event adapter that observes a @uirouter/core router, inlined into each consuming package's dist/ by oxc-emit",
+  "type": "module",
+  "exports": {
+    ".": "./src/router-events.ts",
+    "./reasons": "./src/transition-reasons.ts",
+    "./resolve-timing": "./src/resolve-timing.ts",
+    "./schema": "./src/event-schema.ts",
+    "./source": "./src/transition-source.ts"
+  },
+  "scripts": {
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

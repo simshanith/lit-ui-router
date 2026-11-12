@@ -77,6 +77,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
+    "@repo/router-events": "catalog:workspace",
     "@testing-library/dom": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
