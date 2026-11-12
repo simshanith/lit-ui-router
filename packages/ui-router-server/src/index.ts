@@ -721,7 +721,8 @@ const redirectVerdict = (
 ): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
-  location: join(mount.base, path),
+  // A path this mount formatted: a leading '//' would name another host.
+  location: join(mount.base, path).replace(/^\/{2,}/, '/'),
   status,
 });
 
