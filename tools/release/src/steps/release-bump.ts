@@ -30,7 +30,7 @@ import {
   releaseVersionArgs,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
-import { changelogFrom } from './release-prev-tag.ts';
+import { changelogRange } from './release-prev-tag.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
@@ -64,12 +64,16 @@ runMain(async () => {
   }
 
   const commitMessage = await group('changelog', async () => {
-    const from = await changelogFrom(packageName, version);
+    const { from, previousVersion } = await changelogRange(
+      packageName,
+      version,
+    );
+
     console.log(`range start: ${from}`);
 
     const changelog = await releaseItOutput(
       packageName,
-      changelogArgs({ packageName, from }),
+      changelogArgs({ packageName, version, from, previousVersion }),
     );
 
     const { message, warning } = releaseCommitMessage(version, changelog, from);

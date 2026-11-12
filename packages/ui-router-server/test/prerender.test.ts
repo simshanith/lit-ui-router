@@ -14,7 +14,12 @@ import type {
   TrailingSlashPolicy,
   Verdict,
 } from '../src/index.ts';
-import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
+import {
+  prerender,
+  redirectPage,
+  redirectPages,
+  withBase,
+} from '../src/prerender.ts';
 import type {
   FileWriter,
   PathReport,
@@ -1052,6 +1057,60 @@ describe('redirectPages', () => {
         rules: redirectPages({ page: linePage, base: '/app' }),
       }),
       /'\/old' lies outside base '\/app'/,
+    );
+  });
+});
+
+describe('withBase', () => {
+  it('puts a base, with or without its trailing slash, in front of a host-absolute path', () => {
+    assert.equal(withBase('/solar/', '/contacts'), '/solar/contacts');
+    assert.equal(withBase('/solar', '/contacts'), '/solar/contacts');
+    assert.equal(withBase('/solar/', '/'), '/solar/');
+    assert.equal(
+      withBase('/a/b/', '/contacts?q=1#top'),
+      '/a/b/contacts?q=1#top',
+    );
+  });
+
+  it('leaves the path as written under the root base', () => {
+    assert.equal(withBase('/', '/contacts'), '/contacts');
+  });
+
+  it('leaves a full url, a protocol-relative url and a relative path as written', () => {
+    for (const target of [
+      'https://example.test/contacts',
+      '//example.test/contacts',
+      'contacts',
+      './contacts',
+      '?q=1',
+    ])
+      assert.equal(withBase('/solar/', target), target);
+  });
+
+  it('adds the base to a path that already carries it', () => {
+    assert.equal(
+      withBase('/solar/', '/solar/contacts'),
+      '/solar/solar/contacts',
+    );
+  });
+
+  it('spells a reported redirect as the run’s rules line does', async (t) => {
+    silenceWarn(t);
+    const reports: PathReport[] = [];
+
+    const { result } = await run({
+      base: '/solar/',
+      rules: 'none',
+      paths: ['/app/legacy'],
+      notFound: false,
+      onPath: (report) => reports.push(report),
+    });
+
+    const [report] = reports;
+    assert.equal(report?.redirect?.location, '/app/welcome');
+    assert.equal(
+      withBase('/solar/', report?.redirect?.location ?? ''),
+      result.rules[0]?.to,
     );
   });
 });

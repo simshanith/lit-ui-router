@@ -17,7 +17,7 @@ import {
   PRERELEASE_CHANNELS,
   rootCommitArgs,
 } from './release-prev-tag.core.ts';
-import { changelogFrom, prevReleaseTag } from './release-prev-tag.ts';
+import { changelogRange, prevReleaseTag } from './release-prev-tag.ts';
 
 describe('describeArgs', () => {
   it('anchors the match glob and excludes the tag being released', () => {
@@ -342,27 +342,27 @@ describe('prevReleaseTag', () => {
     );
   });
 
-  describe('changelogFrom', () => {
-    it('is the previous tag when the lane has one', async () => {
-      assert.equal(
-        await changelogFrom('lit-ui-router', '1.2.0', { cwd: repo }),
-        'lit-ui-router@1.1.0',
+  describe('changelogRange', () => {
+    it('starts at the previous tag when the lane has one', async () => {
+      assert.deepEqual(
+        await changelogRange('lit-ui-router', '1.2.0', { cwd: repo }),
+        { from: 'lit-ui-router@1.1.0', previousVersion: '1.1.0' },
       );
     });
 
-    it('is the repo root for a first stable after an rc lane (#733)', async () => {
-      assert.equal(
-        await changelogFrom('lit-ui-router', '1.0.0', {
+    it('starts at the repo root for a first stable after an rc lane (#733)', async () => {
+      assert.deepEqual(
+        await changelogRange('lit-ui-router', '1.0.0', {
           cwd: prereleaseOnlyRepo,
         }),
-        rootSha(prereleaseOnlyRepo),
+        { from: rootSha(prereleaseOnlyRepo), previousVersion: '' },
       );
     });
 
-    it('is the repo root on a first release', async () => {
-      assert.equal(
-        await changelogFrom('lit-ui-router', '1.0.0', { cwd: mobxOnlyRepo }),
-        rootSha(mobxOnlyRepo),
+    it('starts at the repo root on a first release', async () => {
+      assert.deepEqual(
+        await changelogRange('lit-ui-router', '1.0.0', { cwd: mobxOnlyRepo }),
+        { from: rootSha(mobxOnlyRepo), previousVersion: '' },
       );
     });
 
@@ -375,7 +375,7 @@ describe('prevReleaseTag', () => {
         );
 
       await assert.rejects(
-        changelogFrom('lit-ui-router', '1.2.0', { cwd: repo, exec }),
+        changelogRange('lit-ui-router', '1.2.0', { cwd: repo, exec }),
         { message: 'git failed' },
       );
     });

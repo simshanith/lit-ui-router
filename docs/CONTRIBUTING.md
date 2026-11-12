@@ -499,6 +499,11 @@ built from the PR itself:
   footer in a commit message (or `!` in the PR title) is what signals a major.
 - **PR description → review artifact only.** It never lands in git history;
   write whatever helps reviewers, HTML comments and all.
+- **Reverts name their target.** A `revert` PR carries a `Reverts: #N`
+  trailer in a branch commit, naming the PR it reverts, so the release notes
+  can drop the pair when both land in one release
+  ([RELEASE: Release notes](RELEASE.md#release-notes)). A PR description's
+  `Reverts #N` never reaches git.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
 title on every PR. It runs only when GitHub can build a merge ref, so it skips

@@ -465,11 +465,11 @@ catalogs:
       specifier: npm:@lit-labs/ssr@4.1.0
       version: 4.1.0
     lit-ui-router-floor:
-      specifier: npm:lit-ui-router@1.19.0
-      version: 1.19.0
+      specifier: npm:lit-ui-router@1.20.0
+      version: npm:lit-ui-router@1.20.0
     ui-router-server-floor:
-      specifier: npm:ui-router-server@0.10.0
-      version: npm:ui-router-server@0.10.0
+      specifier: npm:ui-router-server@0.11.0
+      version: npm:ui-router-server@0.11.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -1694,7 +1694,7 @@ importers:
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloorSsr
-        version: lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3)
+        version: link:../lit-ui-router
       oxfmt:
         specifier: 'catalog:'
         version: 0.78.0
@@ -3060,6 +3060,9 @@ importers:
 
   tools/release-config:
     dependencies:
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
       yaml:
         specifier: 'catalog:'
         version: 2.9.1
@@ -3070,6 +3073,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       conventional-changelog:
         specifier: 'catalog:'
         version: 8.1.3
@@ -8293,12 +8299,6 @@ packages:
 
   lit-ui-router@1.16.0:
     resolution: {integrity: sha512-Pnk1LY1Feb2HwSRsh/WeL0Umx+31aQ0AlNUusKQ1NhT3fbp9oH94CciEYJDqY1EvNdZLvp4u17c03aLGxluzCg==}
-    peerDependencies:
-      '@uirouter/core': ^6.0.8
-      lit: ^2.0.0 || ^3.0.0
-
-  lit-ui-router@1.19.0:
-    resolution: {integrity: sha512-zhNUixJo7Z8qCoeGD+AkRABOX/WvqVTE9MIcj4dyZdgoDRaOu9irx71yxBBgD+A9NGCyvUYGge2J0QLFb3G0QQ==}
     peerDependencies:
       '@uirouter/core': ^6.0.8
       lit: ^2.0.0 || ^3.0.0
@@ -14349,12 +14349,6 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3):
-    dependencies:
-      '@oxc-project/runtime': 0.158.0
-      '@uirouter/core': 6.1.2
-      lit: 3.3.3
-
-  lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
       '@oxc-project/runtime': 0.158.0
       '@uirouter/core': 6.1.2

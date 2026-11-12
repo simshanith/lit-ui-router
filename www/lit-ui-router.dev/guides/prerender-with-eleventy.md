@@ -61,11 +61,7 @@ const result = await prerender({
   base,
   rules: redirectPages({ redirectsFile: true, page: ({ to }) => to }),
   dehydrate: {},
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-
-    return page(router);
-  },
+  template: page,
   write: (file, body) => {
     files.set(file, body);
   },
@@ -110,8 +106,9 @@ Links bind `href=${srefHref(...)}` rather than `uiSref`. The server renders
 attribute parts and skips element parts, so a `uiSref` link would be served as
 an `<a>` with no `href` until the client boots.
 
-`<app-root>` renders into a shadow root, so the render lists
-`LitElementRenderer` beside the package's own renderers. The
+`<app-root>` renders into a shadow root, so the render needs
+`LitElementRenderer` after the package's own renderers;
+`elementRenderers: shadowElementRenderers` is that list. The
 [default](/packages/lit-ui-router-ssr#property-bindings-on-the-server) leaves it out, and
 `<app-root>` would render empty.
 

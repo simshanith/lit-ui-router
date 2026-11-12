@@ -24,11 +24,20 @@ export const normalizeBase = (
   return base.endsWith('/') ? base : `${base}/`;
 };
 
-/** A host-absolute path under the base; a url or a relative path stays as written. */
+/**
+ * A host-absolute path as a host serving the site under `base` spells it:
+ * `withBase('/solar/', '/contacts')` is `/solar/contacts`.
+ *
+ * `base` is a path base, with or without its trailing slash. Under `/` the
+ * path stays as written, as does anything that is not a host-absolute path: a full url
+ * (`https://example.test/x`), a protocol-relative one (`//example.test/x`)
+ * and a relative path (`x`, `./x`, `?q=1`). The path is never inspected for
+ * the base, so one that already carries it gets it twice.
+ */
 export const withBase = (base: string, path: string): string =>
   base === '/' || !path.startsWith('/') || path.startsWith('//')
     ? path
-    : `${base.slice(0, -1)}${path}`;
+    : `${base.replace(/\/$/, '')}${path}`;
 
 /** The url with the base taken off, or `undefined` when it lies outside the base. */
 export const stripBase = (base: string, url: string): string | undefined => {
@@ -113,4 +122,26 @@ export const checkUndeclaredBase = async (
     throw new Error(
       `${caller}: mount '${mount}' already carries base '${base}': declare createServerRouter({ base: '${base}', mounts }), or key the mount '/'`,
     );
+};
+
+/** `scheme://authority` at the head of an absolute url. String ops stand in for a URL global (runtime-neutral). */
+export const ORIGIN: RegExp = /^[a-z][a-z\d+.-]*:\/\/[^/?#]*/i;
+
+/** The url's path as written: its origin, query and fragment drop. */
+export const pathOf = (url: string): string => {
+  const path = url.replace(ORIGIN, '');
+  const end = path.search(/[?#]/);
+
+  return end === -1 ? path : path.substring(0, end);
+};
+
+/** `Link` naming the routed url's own path under the base as canonical; its origin, query and fragment drop. */
+export const canonicalLink = (base: string, url: string): string => {
+  // One leading slash: `//host` or `scheme:` would name another origin.
+  const path = `/${pathOf(url).replace(/^\/+/, '')}`;
+
+  // A url-reference inside <…> cannot carry <, >, quotes or whitespace raw.
+  const href = withBase(base, path).replace(/[\s"<>]/g, encodeURIComponent);
+
+  return `<${href}>; rel="canonical"`;
 };

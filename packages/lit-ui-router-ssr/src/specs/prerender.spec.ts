@@ -204,6 +204,93 @@ describe('redirect verdicts', () => {
   });
 });
 
+describe('a path that begins with //', () => {
+  // ':lang' matches an empty segment, so '//about' names 'page' with an empty lang as written.
+  const langMounts = {
+    '/': {
+      routes: [
+        { name: 'page', url: '/:lang/:slug' },
+        { name: 'about', url: '/about' },
+        { name: 'bare', url: '/bare' },
+      ],
+    },
+  } satisfies Record<string, MountConfig>;
+
+  const langRouter = (): UIRouterLit => {
+    const router = new UIRouterLit();
+    installServerLocation(router);
+    router.stateRegistry.register({ name: 'page', url: '/:lang/:slug' });
+    router.stateRegistry.register({ name: 'about', url: '/about' });
+    router.stateRegistry.register({
+      name: 'bare',
+      url: '/bare',
+      redirectTo: () => ({ state: 'page', params: { lang: '', slug: 'x' } }),
+    });
+
+    return router;
+  };
+
+  // A link that carries the request's own ':lang' into its href.
+  const linkAt = async (
+    router: UIRouterLit,
+    path: string,
+  ): Promise<TemplateResult> => {
+    await settle(router, path);
+    const { lang = 'en' } = router.globals.params;
+
+    return html`<a href=${srefHref('page', { lang, slug: 'next' })}>next</a>`;
+  };
+
+  it('renders no page for it, so no href that begins with // reaches markup', async () => {
+    const router = langRouter();
+    const rendered: string[] = [];
+
+    const { files, result } = await run({
+      mounts: langMounts,
+      router,
+      paths: ['//about', '/about', '//en/intro'],
+      notFound: false,
+      renderShell: (_verdict, { path }) => {
+        rendered.push(path);
+
+        return linkAt(router, path);
+      },
+    });
+
+    expect(rendered).toEqual(['/about']);
+    expect([...files.keys()]).toEqual([
+      'dist/about/index.html',
+      'dist/_redirects',
+    ]);
+    expect(
+      getByRole(parseHtml(files.get('dist/about/index.html')!).body, 'link', {
+        name: 'next',
+      }).getAttribute('href'),
+    ).toBe('/en/next');
+    expect(result.rules).toEqual([
+      { from: '//about', to: '/about', status: 302 },
+      { from: '//about/', to: '/about', status: 302 },
+      { from: '//en/intro', to: '/en/intro', status: 302 },
+      { from: '//en/intro/', to: '/en/intro', status: 302 },
+    ]);
+  });
+
+  it('keeps a redirect a render lands, to a state with an empty leading param, on this origin', async () => {
+    const router = langRouter();
+
+    const { files, result } = await run({
+      mounts: langMounts,
+      router,
+      paths: ['/bare'],
+      notFound: false,
+      renderShell: (_verdict, { path }) => linkAt(router, path),
+    });
+
+    expect(result.pages).toEqual([]);
+    expect(files.get('dist/_redirects')).toBe('/bare /x 302\n/bare/ /x 302\n');
+  });
+});
+
 describe('unclaimed paths', () => {
   it('counts, warns and emits nothing', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -560,6 +647,144 @@ describe('renderShell return values', () => {
     ).rejects.toThrow('boom');
 
     expect(files.has('dist/_redirects')).toBe(false);
+  });
+});
+
+describe('the template option', () => {
+  /** Prerenders `paths` with `template` and no renderShell. */
+  const templated = (
+    paths: string[],
+    template: (router: UIRouterLit) => TemplateResult,
+  ) => {
+    const { files, write } = memoryWriter();
+
+    return prerender({
+      mounts,
+      router: sheetRouter(),
+      outDir: 'dist',
+      paths,
+      notFound: false,
+      template,
+      write,
+    }).then((result) => ({ files, result }));
+  };
+
+  const sheetPage = (router: UIRouterLit): TemplateResult =>
+    html`<p>${router.globals.current.name} ${router.globals.params.num}</p>`;
+
+  it('settles the router on each path, then renders the template it returns', async () => {
+    const { files } = await templated(['/', '/sheet/7B'], sheetPage);
+    const page = files.get('dist/sheet/7B/index.html')!;
+
+    expect(
+      getByText(parseHtml(page).body, 'sheet 7B', { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(page)).toMatchObject({
+      state: 'sheet',
+      params: { num: '7B' },
+    });
+    expect(signatureIn(files.get('dist/index.html')!)).toMatchObject({
+      state: 'home',
+    });
+  });
+
+  it('writes the pages a renderShell that settles first writes', async () => {
+    const { files } = await templated(['/', '/sheet/7B'], sheetPage);
+    const router = sheetRouter();
+
+    const hooked = await run({
+      router,
+      paths: ['/', '/sheet/7B'],
+      notFound: false,
+      renderShell: async (_verdict, { path }) => {
+        await settle(router, path);
+
+        return sheetPage(router);
+      },
+    });
+
+    expect(files).toEqual(hooked.files);
+  });
+
+  /** sheetRouter with the mount's notFound state registered. */
+  const notFoundRouter = (): UIRouterLit => {
+    const router = sheetRouter();
+    router.stateRegistry.register({ name: 'notFound' });
+
+    return router;
+  };
+
+  it('renders the 404 document on the otherwise state of an otherwise-bearing router', async () => {
+    const router = notFoundRouter();
+    router.urlService.rules.otherwise({ state: 'notFound' });
+
+    const { files, result } = await run({
+      router,
+      paths: ['/'],
+      renderShell: undefined,
+      template: sheetPage,
+    });
+
+    const page = files.get('dist/404.html')!;
+
+    expect(
+      getByText(parseHtml(page).body, /^notFound/, { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(page)).toMatchObject({ state: 'notFound' });
+    expect(router.globals.current.name).toBe('notFound');
+    expect(result.tally.document).toBe(1);
+  });
+
+  it('rejects the 404 document when the router declares no otherwise', async () => {
+    const rendering = run({
+      router: notFoundRouter(),
+      paths: ['/'],
+      renderShell: undefined,
+      template: sheetPage,
+    });
+
+    await expect(rendering).rejects.toThrow(
+      "prerender: `template` settles the router on '/__ui-router-server-probe__', which its mount answers from the otherwise projection, and the settle failed, usually because the router declares no `otherwise` rule of its own (settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise)",
+    );
+    await expect(rendering).rejects.toHaveProperty(
+      'cause.message',
+      'settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise',
+    );
+  });
+
+  it('passes on a settle rejection for a path a route claims', async () => {
+    const router = new UIRouterLit();
+    installServerLocation(router, { urlConfig: { strict: false } });
+
+    await expect(
+      run({
+        router,
+        paths: ['/'],
+        notFound: false,
+        renderShell: undefined,
+        template: sheetPage,
+      }),
+    ).rejects.toThrow(/^settle: no url rule matches \/ /);
+  });
+
+  it('throws when renderShell is passed too', async () => {
+    await expect(run({ template: () => html`<p>page</p>` })).rejects.toThrow(
+      'pass `template` or `renderShell`, not both',
+    );
+  });
+
+  it('throws when neither is passed', async () => {
+    const { write } = memoryWriter();
+
+    await expect(
+      prerender({
+        mounts,
+        router: sheetRouter(),
+        outDir: 'dist',
+        paths: ['/'],
+        write,
+      }),
+    ).rejects.toThrow('pass `template` or `renderShell`');
   });
 });
 

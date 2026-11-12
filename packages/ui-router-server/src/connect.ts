@@ -24,6 +24,7 @@
 
 import {
   baseFor,
+  canonicalLink,
   checkUndeclaredBase,
   stripBase,
   withBase,
@@ -213,11 +214,12 @@ const unservedResponse = (state: string): Error =>
  * - `redirect` → `writeHead(302, { Location })`, the request's search
  *   MERGED into the verdict's location via {@link mergeSearch} (targets that
  *   declare their own query keep it — never `?a=1?b=2`).
- * - `shell` → `Link: <mount>; rel="canonical"` (the shell is the same
- *   representation at every route path), then {@link ConnectAdapterOptions.serveShell | serveShell}.
+ * - `shell` → `Link: <path>; rel="canonical"`, the request's own path with
+ *   the base on and the query dropped (each route path is its own page,
+ *   prerendered or not), then {@link ConnectAdapterOptions.serveShell | serveShell}.
  * - `shell` with status (the otherwise projection) → validators stripped,
- *   downstream status relabeled, no canonical Link (a 404 is not an
- *   alternate representation of the mount root), then {@link ConnectAdapterOptions.serveShell | serveShell}.
+ *   downstream status relabeled, no canonical Link (a 404 is not a page to
+ *   index), then {@link ConnectAdapterOptions.serveShell | serveShell}.
  * - `notFound` with a mount → {@link ConnectAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `notFound` without a mount, or a non-navigation request → `next()`.
  * - `delegate` → `next()` with {@link ConnectAdapterOptions.delegates | `delegates: 'next'`}; mount the
@@ -288,10 +290,7 @@ export function createConnectMiddleware(
 
         if (verdict.kind === 'shell') {
           if (verdict.status === undefined) {
-            res.setHeader(
-              'Link',
-              `<${withBase(base, verdict.mount)}>; rel="canonical"`,
-            );
+            res.setHeader('Link', canonicalLink(base, url));
           } else {
             stripValidators(req);
             relabel(res, verdict.status);

@@ -275,10 +275,12 @@ these check runs.
 ### Standard Release
 
 1. **Start the version bump:**
-   - Preview the release notes first: `pnpm --silent changelog` in the
-     package directory runs the real release-it config, so its output is what
-     ships (see [Release Configuration](#release-configuration)); dispatching
-     with `dryRun` shows the same
+   - Preview the release notes first: in the package directory, on a clean
+     working tree, `pnpm --silent changelog` runs the real release-it config,
+     peer statement included (see [Release notes](#release-notes)). Add the
+     version you mean to release to get the whole body, docs-site links
+     included:
+     `pnpm --silent changelog --plugins.@release-it/conventional-changelog.context.releaseVersion=<version>`
    - Go to Actions → "Bump version"
    - Click "Run workflow"
    - Select increment type (`patch`, `minor`, or `major`)
@@ -538,7 +540,7 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 ## Release Configuration
 
 Release behavior is configured once, in `@tools/release-config`
-(`tools/release-config/src/release-it.js`):
+(`tools/release-config/src/release-it.ts`):
 
 ```js
 export default {
@@ -564,7 +566,7 @@ The config defaults most options to `false` so workflows can enable them explici
 A package's range is the commits that touched its directory, plus commits to
 `pnpm-workspace.yaml` that changed a catalog entry its `dependencies`,
 `peerDependencies` or `optionalDependencies` resolve through `catalog:`
-(`tools/release-config/src/catalog-commits.js`).
+(`tools/release-config/src/catalog-commits.ts`).
 
 The changelog lists its commit types explicitly, with the `conventionalcommits`
 preset's section names. A package range made only of unlisted types renders
@@ -572,5 +574,51 @@ empty, and release-it silently falls back to a flat repo-wide git log; a range
 mixing listed and unlisted types silently omits the unlisted commits. Preview
 with `pnpm --silent changelog` before a bump.
 
-It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
+It is code rather than JSON because `conventional-changelog-writer` 9 takes
 template partials as functions.
+
+### Release notes
+
+The bump (release PR body and squash commit) and the publish (GitHub release
+body) render the notes from the same config, range and context, so both carry
+the same text. The writer's `finalizeContext` and `footerPartial`
+(`tools/release-config/src/notes.ts`) shape them:
+
+- A `BREAKING CHANGE:` note ends at the first `* type(scope): …` line, so a
+  squash body's sub-commit list stays out of the breaking block.
+- A revert and the commit it reverts leave the main sections when both fall in
+  the range. A revert names its target with a `Reverts: #N` trailer
+  ([commit conventions](CONTRIBUTING.md#commit-conventions)), GitHub's
+  `Reverts owner/repo#N` line, or git's `This reverts commit <sha>.`
+  (`reverts.ts`). A revert of a revert restores the original.
+- A commit whose scope names another workspace member (`scopes.ts`; short
+  scopes such as `ssr` map through `SCOPE_ALIASES`) stays in the main sections
+  only when it changed what this package ships: `src/` or `bin/` outside
+  specs, a packed manifest field, or a catalog entry the package's shipped
+  fields consume. Its breaking notes are dropped either way, since they
+  describe the other package. Unscoped commits and scopes naming no member
+  (`deps`) behave like the package's own.
+- Commits that left the main sections close the notes in a collapsed
+  `Also touched this package (N)` list, each revert pair annotated. When
+  nothing else remains, the body opens with `No changes to this package's
+  published code.`
+- Peer changes come from the manifests (`peer-changes.ts`): the previous
+  release tag's manifest and the manifest about to publish, each with its
+  `catalog:` specs resolved through that revision's catalogs. A narrowed
+  range, a new required peer, or an optional peer made required goes under
+  `⚠ BREAKING CHANGES`; widened, removed, newly optional and non-semver
+  changes go under `Peer Dependencies`. A statement a kept breaking note
+  already makes (it names the peer and the new range) is left out.
+- An `@name` (a JSDoc tag, npm scope or decorator) renders as code, never as a
+  user link or a GitHub mention; only `#<digits>` references are linked.
+- The body ends with links to the release's page on lit-ui-router.dev and,
+  after a package's first release in the lane, to the diff from the previous
+  version (`/releases/<pkg>/<version>/`, `/releases/<pkg>/diff/<from>...<to>/`).
+
+The drivers pass `context.releaseVersion` and `context.previousVersion` (the
+previous tag in the lane, empty on a first release) through the
+`changelogArgs` and `publishArgs` argv in `@tools/release`. Without
+`previousVersion`, the notes compare against the package's latest stable tag,
+as the drivers do for a stable release; a prerelease preview passes
+`--plugins.@release-it/conventional-changelog.context.previousVersion=<version>`
+too. Without `releaseVersion`, the links are left out.

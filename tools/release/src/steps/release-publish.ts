@@ -21,7 +21,7 @@ import {
   publishArgs,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
-import { changelogFrom } from './release-prev-tag.ts';
+import { changelogRange } from './release-prev-tag.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');
@@ -38,17 +38,26 @@ runMain(async () => {
     return version;
   });
 
-  const from = await group('changelog range start (#302 pin)', async () => {
-    const start = await changelogFrom(packageName, releaseVersion);
-    console.log(start);
+  const { from, previousVersion } = await group(
+    'changelog range start (#302 pin)',
+    async () => {
+      const range = await changelogRange(packageName, releaseVersion);
+      console.log(range.from);
 
-    return start;
-  });
+      return range;
+    },
+  );
 
   await group(`publish ${packageName}@${releaseVersion}`, () =>
     releaseItRun(
       packageName,
-      publishArgs({ releaseVersion, tarballPath, from, dryRun }),
+      publishArgs({
+        releaseVersion,
+        tarballPath,
+        from,
+        previousVersion,
+        dryRun,
+      }),
     ),
   );
 

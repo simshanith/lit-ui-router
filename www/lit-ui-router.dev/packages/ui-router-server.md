@@ -236,6 +236,73 @@ assert in a test that
 returns an empty array: it reports, as data and in every build, the findings
 the warning prints.
 
+### Sharing states with the client
+
+Keep one data-only module of names, urls and redirects. The client spreads
+each entry into a state and adds its component and resolves; the server
+compiles its mount from the same module, so the two never drift:
+
+```ts check
+// states.ts: data only, so vite.config.ts and a Worker can import it.
+import type { StateDeclaration } from '@uirouter/core';
+
+export const states = [
+  { name: 'planets', url: '/' },
+  { name: 'planet', url: '/planets/:planetId', data: { title: 'Planet' } },
+  { name: 'legacy', url: '/legacy', redirectTo: 'planets' },
+  { name: 'notFound' },
+] as const satisfies readonly StateDeclaration[];
+
+export const urlConfig = { strict: false } as const;
+```
+
+Keep `as const satisfies`: an array annotated `readonly StateDeclaration[]`
+loses its literal names and no longer fits `routesFromStates`.
+
+[`routesFromStates`](/reference/ui-router-server/index/functions/routesFromStates)
+turns them into a mount's routes:
+
+```ts
+// vite.config.ts
+import { createServerRouter, routesFromStates } from 'ui-router-server';
+
+import { states, urlConfig } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': {
+      routes: routesFromStates(states),
+      otherwise: { state: 'notFound' },
+      config: urlConfig,
+    },
+  },
+});
+```
+
+```ts
+// app.ts: the client states add what only the browser runs.
+import { applyUrlConfig } from 'ui-router-server/url-config';
+
+import { states, urlConfig } from './states.ts';
+
+const [planets, planet, legacy, notFound] = states;
+
+applyUrlConfig(router, urlConfig);
+router.stateRegistry.register({ ...planets, component: PlanetsView });
+router.stateRegistry.register({ ...planet, component: PlanetView, resolve });
+router.stateRegistry.register(legacy);
+router.stateRegistry.register({ ...notFound, component: NotFoundView });
+router.urlService.rules.otherwise({ state: 'notFound' });
+```
+
+Each route keeps only the fields a mount reads (`name`, `parent`, `url`,
+`params`, `redirectTo`, `redirectStatusCode`, `delegate`, `response`), and
+literal names still type the router. `otherwise` and the url config stay on
+the mount, since they belong to the router, not a state. A state a mount
+would get wrong throws at the call: a function or `TargetState` `redirectTo`,
+which only the client can run, and an abstract state with a url, whose url
+core never matches.
+
 ## The verdict
 
 ```ts
@@ -266,7 +333,12 @@ type Verdict =
   the request's validators so the asset fetch returns a body to relabel.
 - **`redirect`** — `location` is the mount-joined target path and may already
   carry a query string, so preserve the request's search with the exported
-  `mergeSearch(location, incoming)` rather than concatenating. `status` is
+  `mergeSearch(location, incoming)` rather than concatenating. A route's
+  `redirectTo` names a state, never a url, so a location `createServerRouter`
+  formats can only mean a path on this site: it starts with exactly one `/`,
+  and a leading `//` an empty param would format collapses to one. The
+  adapters answer `location` as written: a custom resolver that returns a
+  `//host` or full-url location redirects there. `status` is
   `302` unless the matched state declares `redirectStatusCode`: a redirect
   table is configuration that changes with the next deploy, and browsers
   cache a permanent redirect past it. A pattern rule's redirect is `302`.
@@ -277,6 +349,13 @@ type Verdict =
 - **`notFound`** — `mount` set means a mount owned the path but nothing
   matched (serve that app's 404 page); absent means no mount claimed it at
   all (not this router's problem).
+
+A path that begins with `//` below its mount (`//about`, `/docs//about` in a
+`/docs` mount) is answered from its collapsed spelling, so no state matches it
+with an empty leading param: a `302` to that spelling, the redirect that
+spelling itself answers, or `notFound` when it matches no route. A
+non-navigation request to a response state or a delegate is matched as
+written.
 
 ## Adapters
 
@@ -407,8 +486,9 @@ export default {
 
 The adapter owns the verdict → HTTP mechanics: status mapping, `mergeSearch`
 on redirect `Location`s, stripping validators and relabelling status'd
-shells, and the canonical `Link` header (status-less shells only — a 404 is
-not an alternate representation of anything).
+shells, and the canonical `Link` header, which names the request's own path
+with the base on and the query dropped (status-less shells only — a 404 is
+not a page to index).
 
 This site's Worker
 ([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts))
@@ -739,8 +819,8 @@ export const urlConfig = {
 Each key takes `'always'`, `'never'` or `'as-requested'`.
 
 - **Matching:** a navigation that matches a state in the other spelling verdicts as a `308`
-  redirect to the canonical one, on both strategies. A data `redirectTo` lands in its target's
-  canonical spelling in one hop. A non-navigation request to a response state or a delegate is
+  redirect to the canonical one, on both strategies, so a shell's canonical `Link` names that
+  spelling. A data `redirectTo` lands in its target's canonical spelling in one hop. A non-navigation request to a response state or a delegate is
   answered at either spelling.
 - **Formatting:** [`applyUrlConfig`](/reference/ui-router-server/url-config/functions/applyUrlConfig)
   installs a `stateRegistry` url decorator, so `href()`, `ui-sref` and the urls a transition
@@ -904,6 +984,12 @@ keys both under and outside the base throws. `paths` spell the base for a
 router that declares one, and lie under it with it taken off otherwise;
 `pathsIncludeBase` overrides that
 ([serving under a base path](#serving-under-a-base-path)).
+
+`result.pages` and the reports `onPath` receives spell each path as it was
+listed, the base included when `paths` carry it. A redirect's `location` is
+as its verdict, render or response spells it. `withBase(base, path)`, exported
+from this entry, spells one as the host serves it; under `/`, and for a full
+url or a relative path, the path comes back as written.
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises';

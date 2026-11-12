@@ -24,7 +24,7 @@ permissions: {}
 jobs:
   pullfrog:
     runs-on: ubuntu-26.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       # OIDC: the OpenCode sign-in, and the action's own short-lived GitHub token
       id-token: write
@@ -35,11 +35,20 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - name: Fetch the full history of main
+        # Not `fetch-depth: 0`, which also fetches every branch, asset branches included
+        run: git fetch --unshallow --no-tags origin main
       - name: Setup mise
         # Puts mise and the pinned tools on PATH, which the agent's shell inherits
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+        env:
+          # Adds the agent-only tools in .config/mise/config.agent.toml
+          MISE_ENV: agent
+      - name: Install dependencies
+        # Before the agent starts, so its first commands never meet a half-written node_modules
+        run: mise run setup
       - name: Sign in to OpenCode
         id: opencode
         shell: bash
@@ -63,7 +72,7 @@ jobs:
           prompt: ${{ inputs.prompt }}
           model: opencode/deepseek-v4.1-flash-free
           push: disabled
-          timeout: 20m
+          timeout: 30m
         env:
           # The only provider credential; the OpenCode workspace decides what it can run
           OPENCODE_API_KEY: ${{ steps.opencode.outputs.token }}

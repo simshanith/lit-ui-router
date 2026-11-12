@@ -23,6 +23,7 @@ export {
   type RenderedPage,
   renderToString,
   type RenderToStringOptions,
+  shadowElementRenderers,
 } from './render.js';
 
 export {

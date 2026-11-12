@@ -1,15 +1,16 @@
 import {
   skipUnconsumedCatalogCommit,
   WORKSPACE_FILE,
-} from './catalog-commits.js';
+} from './catalog-commits.ts';
+import { finalizeContext, footerPartial } from './notes.ts';
 
 // The one release-it config for every publishable package. Each package keeps a
 // .release-it.js that imports and re-exports it so release-it's cwd-based config
 // lookup (and `pnpm exec release-it` run inside a package) still resolves; knip
 // skips a bare `export { default } from` config, so the import is load-bearing.
 //
-// JS, not JSON, because conventional-changelog-writer 9 takes template partials
-// as functions rather than handlebars strings.
+// Code, not JSON, because conventional-changelog-writer 9 takes template
+// partials as functions rather than handlebars strings.
 //
 // Everything defaults to false: the workflows turn individual steps on via CLI
 // flags, which is what keeps the pipeline's argv in @tools/release the single
@@ -52,6 +53,8 @@ export default {
         ],
         // Only `#<digits>` is an issue; `#dev-gate` and `package.json#imports` are not.
         issuePrefixes: [/#(?=\d+(?![\w-]))/],
+        // `@name` is a JSDoc tag, npm scope or decorator, not a user; notes.ts renders it as code.
+        formatUserUrl: () => '',
       },
       // Relative to cwd, so each package's notes stay scoped to its own dir,
       // plus the workspace file whose catalogs feed its packed manifest.
@@ -65,6 +68,10 @@ export default {
         headerPartial: () => '',
         // Workspace-file-only commits count only when they change a consumed entry.
         skip: skipUnconsumedCatalogCommit,
+        // notes.ts pairs reverts itself; the built-in filter drops both silently.
+        ignoreReverted: false,
+        finalizeContext,
+        footerPartial,
       },
     },
   },
