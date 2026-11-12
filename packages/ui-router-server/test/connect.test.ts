@@ -170,6 +170,24 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.headers.Link, '</about>; rel="canonical"');
   });
 
+  it('names a path on this origin, never another host or scheme', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    for (const [url, link] of [
+      ['/app/%7Euser/a%2Fb', '</app/%7Euser/a%2Fb>; rel="canonical"'],
+      ['http://example.test//app/about', '</app/about>; rel="canonical"'],
+      ['///example.test/app', '</example.test/app>; rel="canonical"'],
+      ['mailto:app', '</mailto:app>; rel="canonical"'],
+    ] as const) {
+      const h = harness({ url });
+      mw(h.req, h.res, h.next);
+      await h.done;
+      assert.equal(h.headers.Link, link, url);
+    }
+  });
+
   it('strips validators and relabels the downstream status for a status’d shell', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app', status: 404 }),

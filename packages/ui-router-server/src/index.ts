@@ -13,7 +13,7 @@
 
 import type { RawParams, StateRule } from '@uirouter/core';
 
-import { mountsUnder, normalizeBase as siteBase } from './base-path.ts';
+import { mountsUnder, normalizeBase as siteBase, pathOf } from './base-path.ts';
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
@@ -357,14 +357,8 @@ interface Mount {
 const isUrlText = (input: string | { pathname: string }): input is string =>
   typeof input === 'string';
 
-const pathnameOf = (input: string | { pathname: string }): string => {
-  if (!isUrlText(input)) return input.pathname;
-  // Accept absolute urls without requiring a URL global (runtime-neutral).
-  const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
-  const end = path.search(/[?#]/);
-
-  return end === -1 ? path : path.substring(0, end);
-};
+const pathnameOf = (input: string | { pathname: string }): string =>
+  isUrlText(input) ? pathOf(input) : input.pathname;
 
 // The pathname within the mount, or null when the mount doesn't own it.
 const subpathIn = (base: string, pathname: string): string | null => {

@@ -115,21 +115,24 @@ export const checkUndeclaredBase = async (
     );
 };
 
+/** `scheme://authority` at the head of an absolute url. String ops stand in for a URL global (runtime-neutral). */
+export const ORIGIN: RegExp = /^[a-z][a-z\d+.-]*:\/\/[^/?#]*/i;
+
+/** The url's path as written: its origin, query and fragment drop. */
+export const pathOf = (url: string): string => {
+  const path = url.replace(ORIGIN, '');
+  const end = path.search(/[?#]/);
+
+  return end === -1 ? path : path.substring(0, end);
+};
+
 /** `Link` naming the routed url's own path under the base as canonical; its origin, query and fragment drop. */
 export const canonicalLink = (base: string, url: string): string => {
-  const target = url.replace(/^[a-z][a-z\d+.-]*:\/\/[^/?#]*/i, '');
-  const cut = target.search(/[?#]/);
-
-  const path = (cut === -1 ? target : target.slice(0, cut)).replace(
-    /^\/{2,}/,
-    '/',
-  );
+  // One leading slash: `//host` or `scheme:` would name another origin.
+  const path = `/${pathOf(url).replace(/^\/+/, '')}`;
 
   // A url-reference inside <…> cannot carry <, >, quotes or whitespace raw.
-  const href = withBase(base, path || '/').replace(
-    /[\s"<>]/g,
-    encodeURIComponent,
-  );
+  const href = withBase(base, path).replace(/[\s"<>]/g, encodeURIComponent);
 
   return `<${href}>; rel="canonical"`;
 };

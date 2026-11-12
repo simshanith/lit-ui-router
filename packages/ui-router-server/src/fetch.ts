@@ -40,6 +40,7 @@ import {
   baseFor,
   canonicalLink,
   checkUndeclaredBase,
+  ORIGIN,
   stripBase,
   withBase,
 } from './base-path.ts';
@@ -307,7 +308,7 @@ const searchOf = (url: string): string => {
 // absolute, so this always matches; the shell Request is built at origin +
 // shellPath so it points at the asset, not the route path.
 const originOf = (url: string): string => {
-  const match = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i.exec(url);
+  const match = ORIGIN.exec(url);
 
   return match ? match[0] : '';
 };
