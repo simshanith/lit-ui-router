@@ -117,7 +117,7 @@ const settledTemplate =
       const { message } = cause as Error;
 
       throw new Error(
-        `prerender: \`template\` settles the router on '${path}', which its mount answers from the otherwise projection, so the router needs an \`otherwise\` rule of its own (${message})`,
+        `prerender: \`template\` settles the router on '${path}', which its mount answers from the otherwise projection, and the settle failed, usually because the router declares no \`otherwise\` rule of its own (${message})`,
         { cause },
       );
     }

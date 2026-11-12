@@ -657,7 +657,7 @@ describe('the template option', () => {
     });
 
     await expect(rendering).rejects.toThrow(
-      "prerender: `template` settles the router on '/__ui-router-server-probe__', which its mount answers from the otherwise projection, so the router needs an `otherwise` rule of its own (settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise)",
+      "prerender: `template` settles the router on '/__ui-router-server-probe__', which its mount answers from the otherwise projection, and the settle failed, usually because the router declares no `otherwise` rule of its own (settle: no url rule matches /__ui-router-server-probe__ and the router declares no otherwise)",
     );
     await expect(rendering).rejects.toHaveProperty(
       'cause.message',
