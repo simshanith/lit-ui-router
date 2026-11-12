@@ -436,6 +436,25 @@ the Pullfrog console, and what it looks for in
 `@pullfrog` on a PR to ask for a run; only collaborators can. It comments and
 cannot push or approve, and like CodeRabbit it is advisory.
 
+Drafts get no automatic review, so on a draft ask for one with an
+`@pullfrog review this PR` comment once the local gate passes, and again after
+each round of fixes. Marking the PR ready triggers a review of its own, and
+every push after that gets a re-review of the new commits. Each run shows on
+the PR as the `pullfrog` check: a first review typically takes 10–20 minutes,
+a re-review 2–5. `gh pr checks <n>` shows its state without waiting. To wait,
+call the `pr_wait` tool of Pullfrog's MCP server (`npx pullfrog mcp`) or
+`npx pullfrog watch --pr <n> --once` in a loop: each returns on new activity or
+after under a minute with nothing, so call again until the review arrives.
+`gh pr checks <n> --watch` waits for every check, not just this one.
+
+Judge each finding on its merits. Fix the sound ones in new commits; for one
+you reject, reply in its thread with the reason and leave the thread open for
+the maintainer. Pullfrog resolves its own threads when a re-review finds them
+addressed, so don't resolve them yourself. The cycle ends when a re-review
+reports no new issues, or when every finding left open has a reply saying why
+it stands; then summarize what is still open on the PR. Asking CodeRabbit for
+a review stays the maintainer's call.
+
 [CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
 the free OSS tier meters reviews, so they are worth spending deliberately. Label
 a PR `coderabbit:review` to ask for one; it is one-shot, and

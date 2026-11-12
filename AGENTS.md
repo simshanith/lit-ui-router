@@ -100,6 +100,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## PRs, commits, releases
 
 - Squash-only: the PR title is the commit subject, so one PR is one changelog entry. Split changes of different types ([CONTRIBUTING: Commit conventions](docs/CONTRIBUTING.md#commit-conventions)).
+- Once the local gate passes, take your PR through Pullfrog review: request it on a draft, wait for the `pullfrog` check, then address or answer each finding ([CONTRIBUTING: Automated review](docs/CONTRIBUTING.md#automated-review)).
 - After a stack's base squash-merges, check siblings for silent reverts before merging.
 - The `release` label belongs to bump-version PRs only.
 - Releases: [docs/RELEASE.md](docs/RELEASE.md).
