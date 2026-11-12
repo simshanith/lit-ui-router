@@ -221,18 +221,19 @@ describe("a redirect verdict's location", () => {
     });
   }
 
-  it('keeps a mount-joined path as formatted below the mount', async () => {
-    const router = createServerRouter({
-      mounts: { '/docs': site('matcher') },
-    });
+  for (const strategy of STRATEGIES)
+    it(`${strategy}: collapses the path below a mount the same way`, async () => {
+      const router = createServerRouter({
+        mounts: { '/docs': site(strategy) },
+      });
 
-    assert.deepEqual(await router.resolve(`/docs${HOSTILE}`), {
-      kind: 'redirect',
-      mount: '/docs',
-      location: '/docs//evil.example',
-      status: 302,
+      assert.deepEqual(await router.resolve(`/docs${HOSTILE}`), {
+        kind: 'redirect',
+        mount: '/docs',
+        location: '/docs/evil.example',
+        status: 302,
+      });
     });
-  });
 });
 
 describe('an explicitly external redirect target', () => {
@@ -305,4 +306,36 @@ describe('an explicitly external redirect target', () => {
       );
     });
   }
+});
+
+describe('a redirect that lands where it started once its leading slashes collapse', () => {
+  // Each target formats '//x' for '/x': the same path on this origin, so no redirect.
+  const EMPTY_LEADS = {
+    'a declared empty param': [
+      { name: 'short', url: '/:slug', redirectTo: 'new' },
+      {
+        name: 'new',
+        url: '/:lang/:slug',
+        params: { lang: { value: '', squash: false } },
+      },
+    ],
+    'explicit empty target params': [
+      {
+        name: 'short',
+        url: '/:slug',
+        redirectTo: { state: 'new', params: { lang: '', slug: 'x' } },
+      },
+      { name: 'new', url: '/:lang/:slug' },
+    ],
+  } satisfies Record<string, MountConfig['routes']>;
+
+  for (const [lead, routes] of Object.entries(EMPTY_LEADS))
+    for (const strategy of STRATEGIES)
+      it(`${strategy}: ${lead} answers the shell, not a redirect onto itself`, async () => {
+        const router = createServerRouter({
+          mounts: { '/': { routes, strategy } },
+        });
+
+        assert.equal((await router.resolve('/x')).kind, 'shell');
+      });
 });

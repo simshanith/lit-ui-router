@@ -29,7 +29,7 @@ import type {
   RouteMatch,
   RouteTableConfig,
 } from './redirects.ts';
-import { registerMountPolicies, respell } from './trailing-slash.ts';
+import { onOrigin, registerMountPolicies, respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
@@ -721,8 +721,7 @@ const redirectVerdict = (
 ): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
-  // A path this mount formatted: a leading '//' would name another host.
-  location: join(mount.base, path).replace(/^\/{2,}/, '/'),
+  location: onOrigin(join(mount.base, path)),
   status,
 });
 
@@ -942,7 +941,7 @@ const replayVerdict = async (
     return otherwiseVerdict(mount);
   // The memory location only moves when the client's address bar would:
   // core skips the url push for url-sourced transitions.
-  const landed = router.urlService.url();
+  const landed = onOrigin(router.urlService.url());
 
   return landed === subpath
     ? (respelledVerdict(mount, subpath, router.globals.$current.name) ??
