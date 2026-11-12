@@ -441,9 +441,11 @@ Drafts get no automatic review, so on a draft ask for one with an
 each round of fixes. Marking the PR ready triggers a review of its own, and
 every push after that gets a re-review of the new commits. Each run shows on
 the PR as the `pullfrog` check: a first review typically takes 10–20 minutes,
-a re-review 2–5. Wait on it with `gh pr checks <n>`, or with the `pr_wait` tool
-of Pullfrog's MCP server (`npx pullfrog mcp`) or
-`npx pullfrog watch --pr <n> --once`, which return on new activity.
+a re-review 2–5. `gh pr checks <n>` shows its state without waiting. To block
+until the review lands, use the `pr_wait` tool of Pullfrog's MCP server
+(`npx pullfrog mcp`) or `npx pullfrog watch --pr <n> --once`, which return on
+new activity; `gh pr checks <n> --watch` waits for every check, not just this
+one.
 
 Judge each finding on its merits. Fix the sound ones in new commits; for one
 you reject, reply in its thread with the reason and leave the thread open for
