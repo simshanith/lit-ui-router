@@ -1,6 +1,5 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
-import type { mounts } from 'sample-app-routes';
-
+import { SAMPLE_APPS } from './examples.ts';
 import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
 
 /** A page link, in VitePress's shape. */
@@ -70,15 +69,22 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
   ],
 };
 
+/** A topic's hub page, which its sidebar group heading links. */
+const GUIDE_HUBS: Partial<Record<GuideTopic, string>> = {
+  server: '/guides/server',
+};
+
 /** One Guides sidebar group per topic, labelled and ordered by the vocabulary. */
 export const guideGroups = GUIDE_TOPICS.map(({ id, label }) => ({
   topic: id,
   text: label,
+  link: GUIDE_HUBS[id],
   items: GUIDES[id],
 }));
 
-// Keyed by role, so a new role fails typecheck until it has a group; the renderer is no companion.
-const COMPANIONS: Record<Exclude<Role, 'renderer'>, SidebarEntry[]> = {
+// Keyed by role, so a new role fails typecheck until it has a group.
+const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
+  renderer: [{ text: 'lit-ui-router', link: '/packages/lit-ui-router' }],
   reactivity: [
     {
       text: 'Effect',
@@ -133,26 +139,17 @@ const COMPANIONS: Record<Exclude<Role, 'renderer'>, SidebarEntry[]> = {
   ],
 };
 
-/** The Companion Packages sidebar groups, labelled and ordered by the catalog's roles. */
-export const companionGroups = ROLES.flatMap(({ id, label }) =>
-  id === 'renderer' ? [] : [{ role: id, text: label, items: COMPANIONS[id] }],
-);
-
-type AppMount = Extract<keyof typeof mounts, `/app${string}`>;
-
-// Keyed by mount, so a new /app* mount fails typecheck until it has a label.
-const SAMPLE_APP_LABELS: Record<AppMount, string> = {
-  '/app': 'Vanilla',
-  '/app-mobx': 'MobX',
-  '/app-effect': 'Effect',
-  '/app-signals': 'Signals',
-  '/app-hash': 'Hash',
-};
+/** The Packages sidebar groups, labelled and ordered by the catalog's roles. */
+export const packageGroups = ROLES.map(({ id, label }) => ({
+  role: id,
+  text: label,
+  items: PACKAGE_PAGES[id],
+}));
 
 // The top nav and the sidebar both list these.
 const sampleAppItems: NavLink[] = [
   { text: 'Overview', link: '/sample-app' },
-  ...Object.entries(SAMPLE_APP_LABELS).map(([link, text]) => ({
+  ...Object.entries(SAMPLE_APPS).map(([link, { label: text }]) => ({
     text,
     link,
     target: '_self',
@@ -189,7 +186,8 @@ export const SIDEBAR: SidebarEntry[] = [
       { text: 'Hello World', link: '/tutorial/helloworld' },
       { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
       { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-      { text: 'All Examples', link: '/tutorial/live-examples' },
+      { text: 'All Examples', link: '/examples/' },
+      { text: 'Live Examples', link: '/examples/live' },
     ],
   },
   {
@@ -198,8 +196,9 @@ export const SIDEBAR: SidebarEntry[] = [
     collapsed: true,
     items: [
       { text: 'Overview', link: '/guides/' },
-      ...guideGroups.map(({ text, items }) => ({
+      ...guideGroups.map(({ text, link, items }) => ({
         text,
+        link,
         collapsed: false,
         items,
       })),
@@ -207,11 +206,11 @@ export const SIDEBAR: SidebarEntry[] = [
   },
   { text: 'Releases', link: '/releases/', target: '_self', items: [] },
   {
-    text: 'Companion Packages',
+    text: 'Packages',
     collapsed: true,
     items: [
       { text: 'Overview', link: '/packages/' },
-      ...companionGroups.map(({ text, items }) => ({
+      ...packageGroups.map(({ text, items }) => ({
         text,
         collapsed: false,
         items,
@@ -252,7 +251,7 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'Guides', link: '/guides/' },
       { text: 'Releases', link: '/releases/', target: '_self' },
-      { text: 'Companion Packages', link: '/packages/' },
+      { text: 'Packages', link: '/packages/' },
       { text: 'API', link: '/reference/' },
     ],
   },

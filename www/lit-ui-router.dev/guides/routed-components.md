@@ -1,6 +1,6 @@
 ---
 title: Routed Components
-description: Read a state's params in its routed component, code-split the component's element module with a resolve or a lazyLoad future state, and reach the element a view rendered
+description: Read a state's params in its routed component, type its resolves, code-split the component's element module with a resolve or a lazyLoad future state, and reach the element a view rendered
 type: guide
 topic: transitions
 ---
@@ -10,9 +10,10 @@ topic: transitions
 A routed component gets its inputs from `<ui-view>`, which renders it with
 [`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps): the
 `router`, the `transition` that rendered the view, and the state's
-`resolves`. This guide covers three things every routed component meets:
-reading its state's params, loading its own element module only when the state
-is entered, and how the page reaches the element a view rendered.
+`resolves`. This guide covers what every routed component meets: reading its
+state's params and typing its resolves, loading its own element module only
+when the state is entered, and how the page reaches the element a view
+rendered.
 
 <DiagramEmbed src="/diagrams/routed-components-anatomy.svg">
 
@@ -55,13 +56,21 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 
 class UserDetail extends LitElement {
   @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps<UserResolves>;
+  uiViewProps?: UIViewInjectedProps<UserResolves>;
 
   render() {
-    return html`<h1>User ${this._uiViewProps?.resolves.userId}</h1>`;
+    return html`<h1>User ${this.uiViewProps?.resolves.userId}</h1>`;
   }
 }
 ```
+
+`uiViewProps` is the property's name from `lit-ui-router` 1.20. `<ui-view>`
+also assigns the same props to `_uiViewProps`, the deprecated name earlier 1.x
+releases wrote, so a class that declares only that name keeps working.
+
+The router owns both names on a routed class. It assigns them on every render,
+so a class cannot keep its own data there or define either as a getter without
+a setter.
 
 The same resolve can fetch the record instead of passing the id through, so
 the component renders with its data already loaded. The sample app's
@@ -82,6 +91,31 @@ A non-dynamic param change exits and re-enters the state, so the component is
 rebuilt with fresh resolves. A **dynamic** param keeps the component, and its
 resolves keep the values they had when it was created. Read changed values in
 [`uiOnParamsChanged`](./component-lifecycle#uionparamschanged-react-to-dynamic-parameters).
+
+## Typing resolves
+
+`LitStateDeclaration<T>` takes the resolves type as a generic, defaulting to
+`Record<string, any>`. A view receives `T` as an argument, so the check runs in
+reverse: a view that requires a resolve does not fit the default, and TypeScript
+reports the error at `component:` rather than at the generic.
+
+```ts
+const GalleryView: RoutedLitTemplate<{ manifest: Manifest }> = (props) =>
+  html`<p>${props.resolves.manifest.sheets.length}</p>`;
+
+const states: LitStateDeclaration[] = [
+  { name: 'gallery', url: '/', component: GalleryView }, // TS2322 at component:
+];
+```
+
+Two shapes type-check:
+
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ manifest: Manifest }>[]`.
+  A bare `RoutedLitTemplate` view still fits beside the typed one.
+- **A table mixing resolve shapes** threads one type alias that covers every view,
+  such as `GalleryResolves & SheetResolves`. Each view keeps its own required
+  members. An alias with every member optional also fits, at the cost of `?.` at
+  each use inside the views.
 
 ## Lazy-loading a route's element
 

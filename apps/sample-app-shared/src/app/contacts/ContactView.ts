@@ -14,12 +14,12 @@ export class ContactView extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<ContactViewResolves>) {
+  constructor(public uiViewProps: UIViewInjectedProps<ContactViewResolves>) {
     super();
   }
 
   get contact() {
-    return this._uiViewProps.resolves.contact;
+    return this.uiViewProps.resolves.contact;
   }
 
   render() {

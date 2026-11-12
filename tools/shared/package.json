@@ -2,7 +2,7 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: the exec seam, the gh CLI guard, GitHub Actions plumbing, the node:test reporter, bench result files, shared source globs, consumer-shaped compiler paths for the workspace packages, turbo task log paths, and workspace enumeration",
+  "description": "Tooling helpers imported by two or more workspace packages",
   "type": "module",
   "exports": {
     "./bench-report.ts": "./src/bench-report.ts",
@@ -31,6 +31,7 @@
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/cli": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

@@ -6,6 +6,7 @@ export interface Surface {
   paths: readonly string[];
   /** `typedoc` is Markdown that docs:api generates and VitePress renders; `static` is files copied into dist. */
   renderer: 'vitepress' | 'typedoc' | 'worker' | 'static';
+  /** A worker row in the sitemap serves its own at `<paths[0]>/sitemap.xml`, which the build's sitemap index lists. */
   sitemap: boolean;
   /** `pages`: listed in llms.txt and llms-full.txt; `index`: llms.txt lists only the index pages; `section`: a hand-written llms.txt section names it. */
   llms: 'pages' | 'index' | 'section' | false;
@@ -31,6 +32,16 @@ export const SURFACES = [
     renderer: 'vitepress',
     sitemap: true,
     llms: false,
+    search: true,
+    deadLinks: 'check',
+  },
+  {
+    // The examples space's pages; the built examples under it are static.
+    id: 'examples-index',
+    paths: ['/examples/', '/examples/live'],
+    renderer: 'vitepress',
+    sitemap: true,
+    llms: 'pages',
     search: true,
     deadLinks: 'check',
   },
@@ -108,7 +119,7 @@ export const SURFACES = [
     id: 'releases',
     paths: ['/releases', '/releases/*'],
     renderer: 'worker',
-    sitemap: false,
+    sitemap: true,
     llms: 'section',
     search: false,
     deadLinks: 'check',

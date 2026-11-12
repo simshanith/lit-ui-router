@@ -3,6 +3,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.ts",
   // Resolved from this directory, where every wrangler script runs.
   "alias": { "lit-html/is-server.js": "./worker/is-server.ts" },

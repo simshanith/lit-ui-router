@@ -176,6 +176,10 @@ export class AppRoot extends LitElement {
         handler: () => this.prefetch(event.destination.url, event.signal),
       }),
     } satisfies NavigationLocationPluginOptions);
+
+    // Logs each transition to the console: after the first page, navigation is client-side, with no request.
+    this.router.trace.enable('TRANSITION');
+
     this.router.stateRegistry.register(folderState);
     this.router.urlService.rules.initial({ state: 'folder' });
   }

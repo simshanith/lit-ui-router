@@ -21,11 +21,11 @@ export class App extends LitElement {
 
   /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   // Re-renders this component after every successful transition, keeping the
@@ -33,7 +33,7 @@ export class App extends LitElement {
   transitions = new TransitionController(this);
 
   get stateService(): TypedStateService {
-    return this._uiViewProps.router.stateService;
+    return this.uiViewProps.router.stateService;
   }
 
   isActive(glob: string) {

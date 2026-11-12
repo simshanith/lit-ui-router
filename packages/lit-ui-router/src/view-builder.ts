@@ -37,7 +37,7 @@ const forEachValue = forEach as <V>(
  * A template function is either:
  * - A function that returns a Lit TemplateResult
  * - A LitElement class (constructor props optional — props are also delivered
- *   via the `_uiViewProps` property; see {@link RoutedLitElement})
+ *   via the `uiViewProps` property; see {@link RoutedLitElement})
  *
  * @param config - The view declaration to check
  * @returns True if the config is a template function

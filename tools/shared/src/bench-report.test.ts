@@ -2,15 +2,15 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 import { describe, it } from 'node:test';
 
 import {
   benchBudget,
   benchEntries,
-  benchReportPath,
+  benchReport,
   benchRun,
   sizeFromName,
-  writeBenchReport,
 } from './bench-report.ts';
 import type { BenchEntry, BenchRun, BenchTask } from './bench-report.ts';
 import type { Exec } from './exec.ts';
@@ -90,27 +90,6 @@ describe('benchEntries', () => {
   });
 });
 
-describe('benchReportPath', () => {
-  it('defaults without --json', () => {
-    assert.equal(benchReportPath(['node', 'x.ts'], '/d.json'), '/d.json');
-  });
-
-  it('takes the --json path', () => {
-    assert.equal(
-      benchReportPath(['node', 'x.ts', '--json', '/o.json'], '/d.json'),
-      '/o.json',
-    );
-  });
-
-  it('rejects --json without a path', () => {
-    assert.throws(() => benchReportPath(['--json'], '/d.json'), /--json/);
-    assert.throws(
-      () => benchReportPath(['--json', '--other'], '/d.json'),
-      /--json/,
-    );
-  });
-});
-
 describe('benchRun', () => {
   it('prefers GITHUB_SHA', async () => {
     const meta = await benchRun(failingExec, { GITHUB_SHA: 'cafe' });
@@ -124,25 +103,81 @@ describe('benchRun', () => {
   });
 });
 
-describe('writeBenchReport', () => {
-  it('writes the entries as a JSON array at the resolved path', async () => {
+const sink = () => {
+  const stream = new PassThrough();
+  const chunks: string[] = [];
+  stream.on('data', (chunk: Buffer) => chunks.push(chunk.toString()));
+
+  return { stream, text: () => chunks.join('') };
+};
+
+describe('benchReport', () => {
+  const report = (argv: string[], dir = '/unused') => {
+    const stdout = sink();
+    const stderr = sink();
+
+    return {
+      stdout,
+      stderr,
+      report: benchReport({
+        defaultPath: join(dir, '.cache', 'bench.json'),
+        argv: ['node', 'x.bench.ts', ...argv],
+        exec: headExec,
+        env: {},
+        stdout: stdout.stream,
+        stderr: stderr.stream,
+      }),
+    };
+  };
+
+  it('defaults to the .cache path without a flag', () => {
+    assert.deepEqual(report([]).report.output, {
+      kind: 'file',
+      path: '/unused/.cache/bench.json',
+    });
+  });
+
+  it('takes the --json-out path', () => {
+    assert.deepEqual(report(['--json-out', '/o.json']).report.output, {
+      kind: 'file',
+      path: '/o.json',
+    });
+  });
+
+  it('rejects bad flags before the bench runs', () => {
+    assert.throws(() => report(['--json-out']), /--json-out requires/);
+    assert.throws(() => report(['--json', '/o.json']), /--json-out \/o\.json/);
+  });
+
+  it('writes the entries to the file and names it on stdout', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bench-report-'));
 
     try {
-      const path = await writeBenchReport([completed('miss n=100')], {
-        defaultPath: join(dir, '.cache', 'bench.json'),
-        argv: [],
-        exec: headExec,
-        env: {},
-      });
+      const { report: bench, stdout, stderr } = report([], dir);
+      await bench.write([completed('miss n=100')]);
 
-      assert.equal(path, join(dir, '.cache', 'bench.json'));
-      // SAFETY: writeBenchReport just wrote this file from BenchEntry[].
+      const path = join(dir, '.cache', 'bench.json');
+      // SAFETY: write just wrote this file from BenchEntry[].
       const [entry] = JSON.parse(await readFile(path, 'utf8')) as BenchEntry[];
       assert.equal(entry?.n, 100);
       assert.equal(entry?.sha, 'deadbeef');
+      assert.equal(stdout.text(), `wrote ${path}\n`);
+      assert.equal(stderr.text(), '');
     } finally {
       await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('puts only the JSON on stdout for --json, and the human output on stderr', async () => {
+    for (const argv of [['--json'], ['--json-out', '-']]) {
+      const { report: bench, stdout, stderr } = report(argv);
+      bench.console.log('table');
+      await bench.write([completed('miss n=100')]);
+
+      // SAFETY: write just printed BenchEntry[].
+      const [entry] = JSON.parse(stdout.text()) as BenchEntry[];
+      assert.equal(entry?.n, 100);
+      assert.equal(stderr.text(), 'table\n');
     }
   });
 });

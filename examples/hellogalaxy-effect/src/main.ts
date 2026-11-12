@@ -761,9 +761,15 @@ const router = new UIRouterLit();
 
 router.plugin(hashLocationPlugin);
 
-void import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+// Logs each transition to the console.
+router.trace.enable('TRANSITION');
+
+// The state visualizer is opt-in: add ?visualizer to the page url, before the #.
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 
 const runtime = ManagedRuntime.make(AppLayer);
 

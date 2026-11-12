@@ -12,6 +12,7 @@ import type { TypedStateService } from 'ui-router-registry';
 declare const $state: TypedStateService;
 
 class ContactView extends LitElement {
+  declare uiViewProps?: UIViewInjectedProps;
   declare _uiViewProps?: UIViewInjectedProps;
 
   render() {

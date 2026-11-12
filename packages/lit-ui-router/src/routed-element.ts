@@ -144,6 +144,8 @@ export function routedLitElementRenderer<
   return Object.assign(
     (props: UIViewInjectedProps<T>, adopted?: Element) => {
       element ??= adopted instanceof Component ? adopted : new Component(props);
+      element.uiViewProps = props;
+      // oxlint-disable-next-line typescript/no-deprecated -- written until 2.0 for classes that declare only this name
       element._uiViewProps = props;
 
       return html`${element}${nothing}`;

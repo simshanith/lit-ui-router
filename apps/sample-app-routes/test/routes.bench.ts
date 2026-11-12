@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
-import { benchBudget, writeBenchReport } from '@tools/shared/bench-report.ts';
+import { benchBudget, benchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
 import { createServerRouter, routeTrie } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
@@ -33,6 +33,12 @@ const rotating = (router: ServerRouter, paths: string[]) => {
 const assertVerdict = async (path: string, expected: Verdict) => {
   assert.deepEqual(await linear.resolve(path), expected, path);
 };
+
+// Reads --json / --json-out before the run, so a bad flag fails fast.
+const report = benchReport({
+  defaultPath: join(import.meta.dirname, '..', '.cache', 'routes-bench.json'),
+  sizeOf: () => routeUrls(mounts['/app'].routes).length,
+});
 
 const bench = new Bench({
   name: 'sample-app-routes resolve',
@@ -103,13 +109,8 @@ bench
 
 await bench.run();
 
-console.log(`${process.version} ${process.platform}-${process.arch}`);
+report.console.log(`${process.version} ${process.platform}-${process.arch}`);
 
-console.table(bench.table());
+report.console.table(bench.table());
 
-const reportPath = await writeBenchReport(bench.tasks, {
-  defaultPath: join(import.meta.dirname, '..', '.cache', 'routes-bench.json'),
-  sizeOf: () => routeUrls(mounts['/app'].routes).length,
-});
-
-console.log(`wrote ${reportPath}`);
+await report.write(bench.tasks);

@@ -17,15 +17,15 @@ export class Contacts extends LitElement {
 
   /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<ContactsResolves>;
+  uiViewProps!: UIViewInjectedProps<ContactsResolves>;
 
-  constructor(_uiViewProps: UIViewInjectedProps<ContactsResolves>) {
+  constructor(uiViewProps: UIViewInjectedProps<ContactsResolves>) {
     super();
-    this._uiViewProps = _uiViewProps;
+    this.uiViewProps = uiViewProps;
   }
 
   get contacts() {
-    return [...(this._uiViewProps?.resolves?.contacts ?? [])];
+    return [...(this.uiViewProps?.resolves?.contacts ?? [])];
   }
 
   render() {
