@@ -204,6 +204,93 @@ describe('redirect verdicts', () => {
   });
 });
 
+describe('a path that begins with //', () => {
+  // ':lang' matches an empty segment, so '//about' names 'page' with an empty lang as written.
+  const langMounts = {
+    '/': {
+      routes: [
+        { name: 'page', url: '/:lang/:slug' },
+        { name: 'about', url: '/about' },
+        { name: 'bare', url: '/bare' },
+      ],
+    },
+  } satisfies Record<string, MountConfig>;
+
+  const langRouter = (): UIRouterLit => {
+    const router = new UIRouterLit();
+    installServerLocation(router);
+    router.stateRegistry.register({ name: 'page', url: '/:lang/:slug' });
+    router.stateRegistry.register({ name: 'about', url: '/about' });
+    router.stateRegistry.register({
+      name: 'bare',
+      url: '/bare',
+      redirectTo: () => ({ state: 'page', params: { lang: '', slug: 'x' } }),
+    });
+
+    return router;
+  };
+
+  // A link that carries the request's own ':lang' into its href.
+  const linkAt = async (
+    router: UIRouterLit,
+    path: string,
+  ): Promise<TemplateResult> => {
+    await settle(router, path);
+    const { lang = 'en' } = router.globals.params;
+
+    return html`<a href=${srefHref('page', { lang, slug: 'next' })}>next</a>`;
+  };
+
+  it('renders no page for it, so no href that begins with // reaches markup', async () => {
+    const router = langRouter();
+    const rendered: string[] = [];
+
+    const { files, result } = await run({
+      mounts: langMounts,
+      router,
+      paths: ['//about', '/about', '//en/intro'],
+      notFound: false,
+      renderShell: (_verdict, { path }) => {
+        rendered.push(path);
+
+        return linkAt(router, path);
+      },
+    });
+
+    expect(rendered).toEqual(['/about']);
+    expect([...files.keys()]).toEqual([
+      'dist/about/index.html',
+      'dist/_redirects',
+    ]);
+    expect(
+      getByRole(parseHtml(files.get('dist/about/index.html')!).body, 'link', {
+        name: 'next',
+      }).getAttribute('href'),
+    ).toBe('/en/next');
+    expect(result.rules).toEqual([
+      { from: '//about', to: '/about', status: 308 },
+      { from: '//about/', to: '/about', status: 308 },
+      { from: '//en/intro', to: '/en/intro', status: 308 },
+      { from: '//en/intro/', to: '/en/intro', status: 308 },
+    ]);
+  });
+
+  it('keeps a redirect a render lands, to a state with an empty leading param, on this origin', async () => {
+    const router = langRouter();
+
+    const { files, result } = await run({
+      mounts: langMounts,
+      router,
+      paths: ['/bare'],
+      notFound: false,
+      renderShell: (_verdict, { path }) => linkAt(router, path),
+    });
+
+    expect(result.pages).toEqual([]);
+    expect(files.get('dist/_redirects')).toBe('/bare /x 302\n/bare/ /x 302\n');
+  });
+});
+
 describe('unclaimed paths', () => {
   it('counts, warns and emits nothing', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

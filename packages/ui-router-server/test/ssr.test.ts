@@ -235,6 +235,35 @@ describe('redirectedTo', () => {
     );
   });
 
+  it('reports a url on this origin when the landed state formats an empty leading param', async () => {
+    const router = makeRouter();
+    router.stateRegistry.register({ name: 'page', url: '/:lang/:slug' });
+    router.stateRegistry.register({
+      name: 'moved',
+      url: '/:lang/moved/:slug',
+      redirectTo: 'page',
+    });
+    router.stateRegistry.register({
+      name: 'bare',
+      url: '/bare',
+      redirectTo: () => ({
+        state: 'page',
+        params: { lang: '', slug: 'evil.example' },
+      }),
+    });
+
+    // A function redirectTo names the empty param itself; no request url carries it.
+    assert.deepEqual(redirectedTo(router, await settle(router, '/bare')), {
+      url: '/evil.example',
+      status: 302,
+    });
+    // A caller that settles a '//…' path itself, past the verdict.
+    assert.deepEqual(
+      redirectedTo(router, await settle(router, '//moved/other.example')),
+      { url: '/other.example', status: 302 },
+    );
+  });
+
   it('reports nothing for a url rule that rewrites the url', async () => {
     const router = makeRouter();
     router.urlService.rules.when('/old', '/sheet/1');
