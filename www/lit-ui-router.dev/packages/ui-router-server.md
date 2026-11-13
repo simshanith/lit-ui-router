@@ -977,7 +977,8 @@ throws instead of being counted.
 `base` is the url path `outDir` is served at, `/` by default, as for the
 [adapters](#serving-under-a-base-path). The mounts and the page files stay
 where they are; the base goes once onto each generated rules line's `from`
-and onto its `to` when that is a path. `extraRules` are written as given.
+and onto its `to` when that is a path. `extraRules` get no base; like the
+generated lines, they are written percent-encoded.
 `base` defaults to a `resolver`'s `router.base`, and a `mounts` table keyed by
 the base compiles as `createServerRouter({ base, mounts })` does. A table with
 keys both under and outside the base throws. `paths` spell the base for a

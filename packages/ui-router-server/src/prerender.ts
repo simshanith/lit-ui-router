@@ -162,7 +162,7 @@ export interface PrerenderOptions {
    * The url path `outDir` is served at, such as Vite's `base`; `/` by
    * default. The mounts stay at `/` and page files don't move: the base goes
    * once onto each generated rules line's `from` and host-absolute `to`.
-   * {@link PrerenderOptions.extraRules | extraRules} are written as given.
+   * {@link PrerenderOptions.extraRules | extraRules} get no base.
    * Defaults to the {@link PrerenderOptions.resolver | resolver}'s own
    * `base`; a different value throws, as does a relative or full-URL base.
    * A {@link PrerenderOptions.mounts | mounts} table keyed by the base
@@ -220,7 +220,7 @@ export interface PrerenderOptions {
    * No SPA catch-all is ever written — one turns every 404 into a 200.
    */
   rules?: '_redirects' | 'none' | RulesWriter;
-  /** Lines prepended to the generated ones, percent-encoded as they are — a site's own legacy redirects. */
+  /** Lines prepended to the generated ones, percent-encoded as they are but given no base — a site's own legacy redirects. */
   extraRules?: RedirectLine[];
   /** Writes each file; pass one over `node:fs`, a virtual fs, or memory. */
   write: FileWriter;
