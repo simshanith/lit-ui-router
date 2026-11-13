@@ -150,7 +150,10 @@ export class UIRouterDevtools extends LitElement {
       if (this.router && this.isConnected) this.#attach(this.router);
     }
 
-    const running = !this._imported && this._live.txs.some((tx) => !tx.result);
+    const running =
+      Boolean(this.#recorder) &&
+      !this._imported &&
+      this._live.txs.some((tx) => !tx.result);
 
     if (running && !this.#ticker)
       this.#ticker = setInterval(() => (this._now = performance.now()), 100);
@@ -239,6 +242,8 @@ export class UIRouterDevtools extends LitElement {
     this.#recorder = undefined;
     this.#attached = undefined;
     this.#unsubscribe = undefined;
+    clearInterval(this.#ticker);
+    this.#ticker = undefined;
   }
 
   _tx(id: number | null | undefined): Tx | undefined {

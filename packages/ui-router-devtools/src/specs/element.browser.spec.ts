@@ -68,3 +68,32 @@ it('removes the element when the plugin is disposed', () => {
   router.dispose(devtools);
   expect(document.body.contains(devtools.element)).toBe(false);
 });
+
+const pending = (router: UIRouter) => {
+  router.stateRegistry.register({
+    name: 'slow',
+    url: '/slow',
+    resolve: [{ token: 'never', resolveFn: () => new Promise(() => {}) }],
+  });
+  void router.stateService.go('slow').catch(() => {});
+};
+
+const tick = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+it('stops ticking when removed mid-transition', async () => {
+  const router = makeRouter();
+  const devtools = router.plugin(DevtoolsPlugin);
+  const element = devtools.element;
+  pending(router);
+  await waitFor(() => expect(element._runningTx?.to).toBe('slow'));
+
+  const ticking = element._now;
+  await waitFor(() => expect(element._now).not.toBe(ticking));
+
+  element.remove();
+  await element.updateComplete;
+  const removed = element._now;
+  await tick(350);
+
+  expect(element._now).toBe(removed);
+});
