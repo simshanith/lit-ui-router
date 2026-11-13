@@ -88,7 +88,7 @@ const PublishedUrl = v.pipe(
   v.string(),
   v.transform((line) => line.split(' ')),
   v.tuple([
-    v.pipe(v.string(), v.startsWith('/')),
+    v.pipe(v.string(), v.regex(/^\/[^#]*(?:#.+)?$/)),
     v.pipe(
       v.string(),
       v.transform((names) => names.split(',')),
@@ -98,12 +98,38 @@ const PublishedUrl = v.pipe(
   v.transform(([path, packages]) => ({ path, packages })),
 );
 
-/** Each path a released tarball links, with the packages that link it: `<path> <name>,<name>` per line. */
-export const publishedUrls = () =>
+/** A catalog entry: a path, with the fragment when the link carries one, and the packages that link it. */
+export type PublishedUrl = v.InferOutput<typeof PublishedUrl>;
+
+/** Each path a released tarball links, with the packages that link it: `<path>[#<fragment>] <name>,<name>` per line. */
+export const publishedUrls = (): PublishedUrl[] =>
   readFileSync(join(SITE, 'catalog/published-urls.txt'), 'utf8')
     .split('\n')
     .filter(Boolean)
     .map((line) => v.parse(PublishedUrl, line));
+
+/** The `<path>[#<fragment>] <name>` lines package links need that the entries lack; a fragment is its own entry. */
+export function unlistedLinks(
+  links: readonly Pick<PackageLink, 'name' | 'url'>[],
+  entries: readonly PublishedUrl[],
+): string[] {
+  const listed = new Set(
+    entries.flatMap(({ path, packages }) =>
+      packages.map((name) => `${path} ${name}`),
+    ),
+  );
+
+  return [
+    ...new Set(
+      links.flatMap(({ name, url }) => {
+        const { pathname, hash } = new URL(url);
+        const line = `${pathname}${hash} ${name}`;
+
+        return listed.has(line) ? [] : [line];
+      }),
+    ),
+  ];
+}
 
 /** True when the path names a file under the site root at exactly this spelling: macOS disks ignore case, Cloudflare does not. */
 const exactFile = (relative: string): boolean =>
@@ -227,3 +253,13 @@ export async function linkProblem(url: string): Promise<string | undefined> {
 
   return redirect ? `${url} -> ${target}: ${problem}` : `${url}: ${problem}`;
 }
+
+/** Why each catalog entry no longer resolves; a fragment entry checks its page and the heading. */
+export const entryProblems = async (
+  entries: readonly PublishedUrl[],
+): Promise<string[]> =>
+  (
+    await Promise.all(
+      entries.map(({ path }) => linkProblem(`${ORIGIN}${path}`)),
+    )
+  ).flatMap((problem) => (problem ? [problem] : []));

@@ -3,11 +3,14 @@ import { describe, it } from 'node:test';
 
 import { REDIRECTS } from '../../catalog/redirects.ts';
 import {
+  entryProblems,
   linkProblem,
   ORIGIN,
   packageLinks,
+  type PublishedUrl,
   publishedUrls,
   siteUrls,
+  unlistedLinks,
 } from '../published-links.ts';
 import { matchRedirect, spellings } from '../redirects.ts';
 
@@ -67,6 +70,53 @@ describe('linkProblem', () => {
   });
 });
 
+describe('unlistedLinks', () => {
+  const entries: PublishedUrl[] = [
+    { path: '/packages/server', packages: ['ui-router-server'] },
+    {
+      path: '/packages/server#trailing-slashes',
+      packages: ['ui-router-server'],
+    },
+  ];
+
+  it('needs an entry per fragment, not only the bare path', () => {
+    assert.deepEqual(
+      unlistedLinks(
+        [
+          { name: 'ui-router-server', url: `${ORIGIN}/packages/server` },
+          {
+            name: 'ui-router-server',
+            url: `${ORIGIN}/packages/server#trailing-slashes`,
+          },
+          {
+            name: 'ui-router-server',
+            url: `${ORIGIN}/packages/server#response-states`,
+          },
+        ],
+        entries,
+      ),
+      ['/packages/server#response-states ui-router-server'],
+    );
+  });
+});
+
+describe('entryProblems', () => {
+  it('flags a fragment entry whose heading is gone, through its redirect', async () => {
+    assert.deepEqual(
+      await entryProblems([
+        {
+          path: '/packages/server#trailing-slashes',
+          packages: ['ui-router-server'],
+        },
+        { path: '/packages/server#nowhere', packages: ['ui-router-server'] },
+      ]),
+      [
+        `${ORIGIN}/packages/server#nowhere -> /packages/ui-router-server: no heading #nowhere in packages/ui-router-server.md`,
+      ],
+    );
+  });
+});
+
 describe('published packages', () => {
   const links = packageLinks();
 
@@ -87,22 +137,8 @@ describe('published packages', () => {
   });
 
   it('list every path they link in catalog/published-urls.txt, before it ships', () => {
-    const listed = new Set(
-      publishedUrls().flatMap(({ path, packages }) =>
-        packages.map((name) => `${path} ${name}`),
-      ),
-    );
-
-    const unlisted = new Set(
-      links.flatMap(({ name, url }) => {
-        const line = `${new URL(url).pathname} ${name}`;
-
-        return listed.has(line) ? [] : [line];
-      }),
-    );
-
     assert.deepEqual(
-      [...unlisted],
+      unlistedLinks(links, publishedUrls()),
       [],
       'add these lines to catalog/published-urls.txt',
     );
@@ -112,12 +148,12 @@ describe('published packages', () => {
 describe('catalog/published-urls.txt', () => {
   const urls = publishedUrls();
 
-  it('lists paths released tarballs link, each of which still resolves', async () => {
+  it('lists paths released tarballs link, each of which still resolves, headings included', async () => {
     assert.ok(urls.length > 0);
     assert.deepEqual(
-      await problems(urls.map(({ path }) => `${ORIGIN}${path}`)),
+      await entryProblems(urls),
       [],
-      'a released tarball links each of these and cannot be republished: keep a page or a redirect at each',
+      'a released tarball links each of these and cannot be republished: keep a page or a redirect at each, and an old heading id with {#old-id}',
     );
   });
 
@@ -126,7 +162,8 @@ describe('catalog/published-urls.txt', () => {
 
     for (const { path, packages } of urls) {
       const rule = REDIRECTS.find(
-        (candidate) => matchRedirect(spellings(candidate), path) !== null,
+        (candidate) =>
+          matchRedirect(spellings(candidate), path.split('#')[0]) !== null,
       );
 
       if (!rule) continue;

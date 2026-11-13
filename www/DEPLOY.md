@@ -44,10 +44,12 @@ All of them live in the site package, `www/lit-ui-router.dev/`:
 Package READMEs, manifests and shipped sources link the site, and a published tarball can't
 change. `.vitepress/test/published-links.test.ts` resolves each such link against the page
 sources, the generated API reference, the worker's routes and `redirects.ts`, headings
-included. `catalog/published-urls.txt` lists every path a package links, released or about
-to be, and the test fails until a new link is listed there. Every listed path must keep
-resolving, and a redirect rule that catches one carries `linkedFrom` naming the packages
-behind it.
+included. `catalog/published-urls.txt` lists every link a package ships, released or about
+to be, as a path or `path#fragment`, and the test fails until a new link is listed there.
+Every listed path and fragment must keep resolving, and a redirect rule that catches one
+carries `linkedFrom` naming the packages behind it. A fragment must match a Markdown
+heading id on the target page; raw `<a id>` anchors don't count. To rename a heading that
+a listed fragment names, keep the old id with `## New heading {#old-id}`.
 
 ### Wrangler Setup
 
