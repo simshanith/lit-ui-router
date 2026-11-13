@@ -355,6 +355,101 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.headers.Link, undefined);
   });
 
+  it('fails a throw from serveShell through next(error)', async () => {
+    const thrown = new Error('shell asset unreadable');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      {
+        serveShell: () => {
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('fails a throw from serveNotFound through next(error)', async () => {
+    const thrown = new Error('404 page unreadable');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'notFound', mount: '/app' }),
+      {
+        serveNotFound: () => {
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('fails a throw from the response writers through next(error)', async () => {
+    const thrown = new Error('headers already sent');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness();
+
+    h.res.setHeader = () => {
+      throw thrown;
+    };
+
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('calls next once when serveShell passes the request on and then throws', async () => {
+    const thrown = new Error('after next');
+    const rejections: unknown[] = [];
+
+    // node:test fails a test on any unhandled rejection; take its listeners
+    // off for the one this case expects.
+    const runnerListeners = process.listeners('unhandledRejection');
+    process.removeAllListeners('unhandledRejection');
+    process.on('unhandledRejection', (reason) => rejections.push(reason));
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      {
+        serveShell: (_mount, _req, _res, next) => {
+          next();
+
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+
+    try {
+      mw(h.req, h.res, h.next);
+      await h.done;
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      process.removeAllListeners('unhandledRejection');
+
+      for (const listener of runnerListeners)
+        process.on('unhandledRejection', listener);
+    }
+
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.deepEqual(rejections, [thrown]);
+  });
+
   it('never judges non-navigation requests (module and asset fetches pass)', async () => {
     const mw = createConnectMiddleware(
       routerOf({ kind: 'shell', mount: '/app' }),
