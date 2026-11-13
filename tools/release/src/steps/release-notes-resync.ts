@@ -55,6 +55,12 @@ async function notesWriter() {
   };
 }
 
+// JSON on stdout leaves stdout to the document.
+async function writeSummary(summary: string, kind: string): Promise<void> {
+  if (kind === 'stdout' && !onActions()) process.stderr.write(summary);
+  else await appendStepSummary(summary);
+}
+
 async function main(argv: readonly string[]): Promise<void> {
   const output = jsonOutput(argv);
 
@@ -103,7 +109,7 @@ async function main(argv: readonly string[]): Promise<void> {
     return;
   }
 
-  // Off Actions the summary below already prints to stdout.
+  // Off Actions the summary below already prints the diffs.
   if (onActions())
     for (const { diff } of plan.changes) process.stderr.write(diff);
 
@@ -121,7 +127,7 @@ async function main(argv: readonly string[]): Promise<void> {
     process.exitCode = 1;
   }
 
-  await appendStepSummary(resyncMarkdown(plan, latest, applied));
+  await writeSummary(resyncMarkdown(plan, latest, applied), output.kind);
 
   await writeJsonOutput(
     output,

@@ -44,6 +44,7 @@ jobs:
     permissions:
       contents: write # gh release edit
     steps:
+      # Against a slip, not branch code: a dispatched ref runs its own copy of this file.
       # Writes publish main's files only; a dry run may preview any branch.
       - name: Refuse writes off main
         if: ${{ !inputs.dry_run && github.ref != 'refs/heads/main' }}
