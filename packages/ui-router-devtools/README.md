@@ -8,22 +8,23 @@ The Map tab draws the state tree two ways, chosen in the panel header and rememb
 
 A state has one colour wherever it appears: its box on the Map, its glyph and rail in the Outline, its node in the tree and its name in the inspector. The colour follows the state's depth in the tree, from a cycle of four, `--uird-depth-1` to `--uird-depth-4`. While a transition is selected, previewed or running, those colours recede and `--uird-active` and `--uird-exit` mark what it enters, retains and exits. Set the four depth tokens to one value for a monochrome panel.
 
-`observedEdges` folds a recorded session into one edge per ordered pair of states, with its count and outcomes, for exporters as well as the Map.
+`observedEdges(session)` folds a recorded session into one edge per ordered pair of states, with its count and outcomes, for exporters as well as the Map.
 
 The package is private and unpublished, so it is workspace-only for now. The design, the screenshots and the open decisions are in the [router visualizer proposal](../../docs/visualizer-proposal/README.md) and its [devtools scope](../../docs/visualizer-proposal/devtools.md).
 
 ## Entry points
 
-| Subpath         | Contents                                                                                                                    |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `.`             | `observe` (the adapter), `record` (a ring-buffered recorder), `fold`, `observedEdges`, `reasons` and the event schema types |
-| `./define`      | Registers `<ui-router-devtools>`; set its `router` property                                                                 |
-| `./plugin`      | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                            |
-| `./performance` | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                              |
-| `./console`     | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                           |
-| `./testing`     | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                          |
+| Subpath                 | Contents                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `SCHEMA_VERSION` and the event and session types |
+| `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                     |
+| `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                |
+| `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                  |
+| `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                               |
+| `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                              |
+| `./session.schema.json` | The session file's JSON Schema                                                                                                  |
 
-`lit` is a dependency and `@uirouter/core` the only peer. The adapter, its event schema and its reasons live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
+`lit` and `valibot` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
 
 ```ts
 import { UIRouter } from '@uirouter/core';
@@ -36,13 +37,32 @@ const { element } = router.plugin(DevtoolsPlugin, { timeResolves: true });
 if (element.recorder) reportToPerformance(element.recorder);
 ```
 
+## Session files and redaction
+
+`recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states and current snapshots and the recorded events. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
+
+A recorder's ring buffer drops whole transitions, oldest first, and counts the events it dropped in `dropped`; the panel notes them at the end of the log and in the router card. The panel's Import reads a file through the same schema: it refuses a file that is not a session, and skips and counts events of a type it does not know.
+
+An export is scrubbed by a `Redaction`, the model `ui-router-otel` shares:
+
+| Field      | Default | Effect                                                                                                           |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `params`   | `[]`    | The param keys whose values are kept, or `'all'`. Every other key stays, with `[redacted]` in place of its value |
+| `messages` | `true`  | Whether the free-text `message` of a result or resolve is kept; `invalidParams` and `errorName` stay either way  |
+
+`DevtoolsPlugin`'s `redaction` option and the element's `redaction` property set the defaults, and the router card's Export toggles, Param values and Messages, change them for the page. Re-exporting an imported session applies the redaction on top of what the file already scrubbed. The live panel and the reporters see every value; only a session leaving the page is scrubbed.
+
+## Schema and compatibility
+
+The event schema and the session file are versioned together by `v`, which is `1`. Within v1, a new optional field, a new event type or a new enum value does not bump `v`, so a reader must ignore fields and event types it does not know and fall back on enum values it does not know; the panel does. Only a breaking change, such as a removed or renamed field or a changed meaning, bumps `v`. The session file carries no `$id`; `format` identifies it.
+
 ## Demo
 
 ```sh
 pnpm -C packages/ui-router-devtools dev --port 5391 --strictPort
 ```
 
-Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true` and an invalid target. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
+Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true`, an invalid target and a transition with an invalid param value. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
 
 The demo fakes what a real app would supply:
 
