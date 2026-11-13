@@ -39,7 +39,7 @@ if (element.recorder) reportToPerformance(element.recorder);
 
 ## Session files and redaction
 
-`recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states and current snapshots and the recorded events. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
+`recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states and current snapshots and the recorded events. The `id` names the recording, not the file: every export of one recorder carries the same `id`, and `(id, seq)` identifies an event across them. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
 
 A recorder's ring buffer drops whole transitions, oldest first, and counts the events it dropped in `dropped`; the panel notes them at the end of the log and in the router card. The panel's Import reads a file through the same schema: it refuses a file that is not a session, and skips and counts events of a type it does not know.
 
@@ -50,11 +50,25 @@ An export is scrubbed by a `Redaction`, the model `ui-router-otel` shares:
 | `params`   | `[]`    | The param keys whose values are kept, or `'all'`. Every other key stays, with `[redacted]` in place of its value |
 | `messages` | `true`  | Whether the free-text `message` of a result or resolve is kept; `invalidParams` and `errorName` stay either way  |
 
-`DevtoolsPlugin`'s `redaction` option and the element's `redaction` property set the defaults, and the router card's Export toggles, Param values and Messages, change them for the page. Re-exporting an imported session applies the redaction on top of what the file already scrubbed. The live panel and the reporters see every value; only a session leaving the page is scrubbed.
+`DevtoolsPlugin`'s `redaction` option and the element's `redaction` property set the defaults, and the router card's Export toggles, Param values and Messages, change them for the page. Re-exporting an imported session keeps the file's `id`, `generator` and `routerId`, since it is still that recording, applies the redaction on top of what the file already scrubbed, and records the stricter of the two: the keys both keep, and messages only if both keep them. The live panel and the reporters see every value; only a session leaving the page is scrubbed. [`ui-router-otel`](../ui-router-otel/README.md#options) takes the same `redaction` shape but omits an unlisted param from its spans instead of redacting its value.
 
 ## Schema and compatibility
 
-The event schema and the session file are versioned together by `v`, which is `1`. Within v1, a new optional field, a new event type or a new enum value does not bump `v`, so a reader must ignore fields and event types it does not know and fall back on enum values it does not know; the panel does. Only a breaking change, such as a removed or renamed field or a changed meaning, bumps `v`. The session file carries no `$id`; `format` identifies it.
+The event schema and the session file are versioned together by `v`, which is `1`. Within v1, a new optional field, a new event type or a new value of an open enum does not bump `v`, so a reader must ignore fields and event types it does not know and tolerate open-enum values it does not know; the panel does. Only a breaking change, such as a removed or renamed field or a changed meaning, bumps `v`. The session file carries no `$id`; `format` identifies it.
+
+Unqualified event `type` values and top-level field names, of the envelope and of each event, belong to this schema. A third party that adds its own namespaces them with a prefix and a colon, such as a `sticky-states:inactivate` event type or a `sticky-states:inactive` field, so a later v1 cannot collide with them.
+
+| Enum                  | Values                                                                          | An unknown value                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PhaseEvent.phase`    | `before`, `start`, `exit`, `retain`, `enter`, `finish`, `success`, `error`      | Open. Kept by its own name: the log, the Performance reporter and `ui-router-otel` show it as written, and pair its start and end only with each other |
+| `ResultEvent.outcome` | `success`, `error`, `redirected`, `superseded`, `aborted`, `ignored`, `invalid` | Open. Reads as `aborted`                                                                                                                               |
+| `options.source`      | `sref`, `url`, `redirect`, `otherwise`, `unknown`                               | Open. Reads as `unknown`                                                                                                                               |
+| `location.kind`       | `hash`, `pushState`, `memory`, `other`                                          | Open. Reads as `other`                                                                                                                                 |
+| `PhaseEvent.edge`     | `start`, `end`                                                                  | Closed: a phase is a pair of edges, and a reader cannot pair a third kind. The event is skipped and counted                                            |
+| `options.location`    | `true`, `false`, `replace`                                                      | Closed: it mirrors core's `TransitionOptions.location`. The event is skipped and counted                                                               |
+| `redaction.params`    | a list of keys, or `all`                                                        | Closed: a reader that does not know what a mode scrubbed cannot say what the file holds. The file is refused                                           |
+
+The published JSON Schema writes an open enum as `anyOf` of the known values and any string.
 
 ## Demo
 

@@ -215,6 +215,29 @@ describe('session files', () => {
     ).toBeTruthy();
   });
 
+  it("re-exports an imported session under the recording's id, generator and stricter redaction", async () => {
+    const { element } = await open();
+    const live = element.session({ params: 'all' })!;
+
+    const recorded = {
+      ...live,
+      id: 'recording-1',
+      generator: { name: 'another-recorder', version: '9.9.9' },
+      redaction: { params: ['id', 'q'], messages: false },
+    };
+
+    importFile(element, JSON.stringify(recorded));
+    await waitFor(() =>
+      expect(element.session({ params: 'all' })?.id).toBe('recording-1'),
+    );
+
+    expect(element.session({ params: ['q', 'page'] })).toMatchObject({
+      id: 'recording-1',
+      generator: { name: 'another-recorder', version: '9.9.9' },
+      redaction: { params: ['q'], messages: false },
+    });
+  });
+
   it('notes at the end of the log how many events the recorder dropped', async () => {
     await page.viewport(1280, 800);
 
