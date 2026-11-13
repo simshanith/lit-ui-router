@@ -23,7 +23,7 @@ The package is private and unpublished, so it is workspace-only for now. The des
 | `./console`     | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                           |
 | `./testing`     | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                          |
 
-`lit` is a dependency and `@uirouter/core` the only peer. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`src/source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`src/resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
+`lit` is a dependency and `@uirouter/core` the only peer. The adapter, its event schema and its reasons live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
 
 ```ts
 import { UIRouter } from '@uirouter/core';

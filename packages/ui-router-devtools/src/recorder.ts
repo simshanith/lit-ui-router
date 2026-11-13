@@ -1,5 +1,5 @@
 import type { UIRouter } from '@uirouter/core';
-import { observe, type ObserveOptions } from './adapter.ts';
+import { observe, type ObserveOptions } from '@repo/router-events';
 import {
   SCHEMA_VERSION,
   type ConfigEvent,

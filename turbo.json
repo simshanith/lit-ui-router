@@ -282,8 +282,8 @@
     // @tools/md-content-mapper over the Markdown `ts` fences flagged `check`,
     // each one a module tsc checks through the 7.1 content mapper.
     "//#lint:md-examples": {
-      // fences import the published entry points, which resolve to dist
-      // d.ts; package-qualified as for //#lint:templates (check:graph-edges)
+      // fences import each package's entry points, published or private, which
+      // resolve to dist d.ts; package-qualified as for //#lint:templates (check:graph-edges)
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
@@ -291,9 +291,12 @@
         "lit-ui-router-mobx#build:types",
         "lit-ui-router-signals#build:types",
         "lit-ui-router-ssr#build:types",
+        "postcss-lit-html#build:types",
+        "ui-router-devtools#build:types",
         "ui-router-effect#build:types",
         "ui-router-mobx#build:types",
         "ui-router-navigation-location-plugin#build:types",
+        "ui-router-otel#build:types",
         "ui-router-registry#build:types",
         "ui-router-server#build:types",
         "ui-router-signals#build:types"

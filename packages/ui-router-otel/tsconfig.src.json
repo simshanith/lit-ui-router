@@ -1,0 +1,16 @@
+{
+  // Runtime-neutral: no DOM or node types, so the reporter compiles for a browser, a server or a worker alike.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": [],
+    // conformance guard for oxc-emit-dts, which never typechecks
+    "declaration": true,
+    "isolatedDeclarations": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/specs"]
+}

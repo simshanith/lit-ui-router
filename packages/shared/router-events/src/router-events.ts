@@ -9,13 +9,17 @@ import {
   type Transition,
   type UIRouter,
 } from '@uirouter/core';
-import { messageOf, reasonFor, reasons } from './reasons.ts';
+import {
+  invalidTargetReason,
+  messageOf,
+  reasonFor,
+} from './transition-reasons.ts';
 import { timeResolvables } from './resolve-timing.ts';
-import { sourceOf } from './source.ts';
+import { sourceOf } from './transition-source.ts';
 import {
   SCHEMA_VERSION,
   type ConfigEvent,
-  type DevtoolsEvent,
+  type RouterEvent,
   type LocationInfo,
   type Outcome,
   type Params,
@@ -24,7 +28,7 @@ import {
   type StateInfo,
   type TransitionOptionsInfo,
   type Value,
-} from './schema.ts';
+} from './event-schema.ts';
 
 export interface ObserveOptions {
   redact?: Redact;
@@ -32,13 +36,19 @@ export interface ObserveOptions {
   timeResolves?: boolean;
 }
 
-type Draft<E> = E extends DevtoolsEvent ? Omit<E, 'v' | 't'> : never;
+type Draft<E> = E extends RouterEvent ? Omit<E, 'v' | 't'> : never;
 
-type Emit = (event: Draft<DevtoolsEvent>) => void;
+type Emit = (event: Draft<RouterEvent>) => void;
 
-const HIGH = Number.MAX_SAFE_INTEGER;
+// Number.MAX_SAFE_INTEGER as a literal: shared source holds no evaluated module state.
+const HIGH = 9_007_199_254_740_991;
 
-const LOW = Number.MIN_SAFE_INTEGER;
+const LOW = -9_007_199_254_740_991;
+
+// Every target runtime has these; declared here so the module compiles without DOM or node types.
+declare const performance: { now(): number };
+
+declare function setTimeout(handler: () => void): void;
 
 const now = (): number => performance.now();
 
@@ -262,7 +272,7 @@ const names = (nodes: PathNode[]): string[] =>
 // Observes one router through public hooks and calls `listener` with JSON-safe events; returns the disposer.
 export const observe = (
   router: UIRouter,
-  listener: (event: DevtoolsEvent) => void,
+  listener: (event: RouterEvent) => void,
   { redact, timeResolves = false }: ObserveOptions = {},
 ): (() => void) => {
   const emit: Emit = (draft) =>
@@ -441,10 +451,11 @@ export const observe = (
       emit({
         type: 'invalid',
         key: ++invalidKey,
-        from: from?.name() ?? router.globals.current.name ?? '',
+        // name() returns the state object for the root state, whose name is empty.
+        from: from?.$state()?.name ?? router.globals.current.name ?? '',
         to: name,
         toParams: paramsOf(to?.params() ?? {}, 'invalid', redact),
-        reason: reasons.invalidTarget(name),
+        reason: invalidTargetReason(name),
       });
 
       return undefined;

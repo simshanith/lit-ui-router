@@ -33,6 +33,8 @@ catalog:
   '@lit-labs/ssr-client': ^1.1.8
   '@lit-labs/ssr-dom-shim': ^1.6.0
   '@lit/context': ^1.1.6
+  '@opentelemetry/api': ^1.10.0
+  '@opentelemetry/sdk-trace': ^3.1.1
   '@oxlint/plugins': 1.93.0
   '@pierre/diffs': 1.6.4
   '@pierre/trees': ^1.0.0-beta.6
@@ -215,6 +217,7 @@ catalogs:
   workspace:
     '@repo/dev-gate': workspace:*
     '@repo/route-snapshot': workspace:*
+    '@repo/router-events': workspace:*
     '@repo/transition-status': workspace:*
     '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*
