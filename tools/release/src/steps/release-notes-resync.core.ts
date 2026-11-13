@@ -9,7 +9,7 @@ import { createTwoFilesPatch } from 'diff';
 import semver from 'semver';
 import * as v from 'valibot';
 
-/** One release of the listing; the job's token sees no drafts, a maintainer's does. */
+/** One release of the listing; this job's write token sees drafts, so the skip below is live. */
 export const ReleaseSchema = v.object({
   tag: v.string(),
   draft: v.boolean(),
