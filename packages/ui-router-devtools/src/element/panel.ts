@@ -71,6 +71,8 @@ type MapLayout = 'nested' | 'tree';
 
 type MapModule = typeof import('./map.ts');
 
+type SessionReader = typeof import('../session-schema.ts');
+
 // Kept outside the recorder's ring buffer, so not counted as recorded events.
 const SNAPSHOTS: ReadonlySet<string> = new Set(['config', 'states', 'current']);
 
@@ -293,6 +295,8 @@ export class DevtoolsPanel extends LitElement {
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
+  // The validator loads on first import, so a panel that never imports does not pay for it; a spec swaps it to fail the load.
+  _importReader = (): Promise<SessionReader> => import('../session-schema.ts');
   // Loads the Map's chunk; a spec swaps it to fail the load.
   _importMap = (): Promise<MapModule> => import('./map.ts');
   // The fit ladder's last rung, for its hysteresis.
@@ -965,9 +969,17 @@ export class DevtoolsPanel extends LitElement {
       return;
     }
 
-    // The validator loads on first import, so a panel that never imports does not pay for it.
-    const { readSession } = await import('../session-schema.ts');
-    const read = readSession(json);
+    let reader: SessionReader;
+
+    try {
+      reader = await this._importReader();
+    } catch {
+      this.#fail('Import failed: the session reader did not load. Try again.');
+
+      return;
+    }
+
+    const read = reader.readSession(json);
 
     if (!read.ok) {
       this.#fail(`Import failed: ${read.error}`);

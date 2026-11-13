@@ -181,6 +181,27 @@ describe('session files', () => {
     input.dispatchEvent(new Event('change'));
   };
 
+  it('says so when the session reader fails to load, and loads it on the next import', async () => {
+    const { element } = await open();
+    const panel = panelOf(element);
+    const session = JSON.stringify(element.session({ params: 'all' }));
+    const load = panel._importReader;
+    panel._importReader = () => Promise.reject(new Error('chunk failed'));
+    importFile(element, session);
+
+    await waitFor(() =>
+      expect(
+        shadow(element).querySelector('.notice.fault')?.textContent,
+      ).toContain('the session reader did not load'),
+    );
+
+    panel._importReader = load;
+    importFile(element, session);
+
+    await waitFor(() => expect(panel._imported).not.toBeNull());
+    expect(shadow(element).querySelector('.notice.fault')).toBeNull();
+  });
+
   it('says in the panel why a file that is not a session did not import', async () => {
     const { element } = await open();
     importFile(element, JSON.stringify({ name: 'package.json' }));
