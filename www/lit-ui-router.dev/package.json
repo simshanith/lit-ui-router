@@ -56,6 +56,7 @@
     "@tools/build_and_test": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
     "@tools/release-ledger": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@tools/vue-check": "catalog:workspace",
