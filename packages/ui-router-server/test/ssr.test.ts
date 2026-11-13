@@ -264,6 +264,54 @@ describe('redirectedTo', () => {
     );
   });
 
+  it('reports a redirect onto the state the router already stands on', async () => {
+    const router = makeRouter();
+    const stood = await settle(router, '/b');
+    const transition = await settle(router, '/a');
+    assert.notEqual(transition, stood);
+    assert.equal(transition.to().name, 'b');
+    assert.equal(transition.injector().get('title'), 'b');
+    assert.deepEqual(redirectedTo(router, transition), {
+      url: '/b',
+      status: 302,
+    });
+    assert.equal(router.urlService.url(), '/b');
+  });
+
+  it('reports a params-only redirect onto the params the router already stands on', async () => {
+    const router = makeRouter();
+    await settle(router, '/find?q=abc');
+    assert.deepEqual(
+      redirectedTo(router, await settle(router, '/find?q=ABC')),
+      { url: '/find?q=abc', status: 301 },
+    );
+  });
+
+  it('reports the status of the matched state through a chain onto the current state', async () => {
+    const router = makeRouter();
+    await settle(router, '/b');
+    assert.deepEqual(redirectedTo(router, await settle(router, '/retired')), {
+      url: '/b',
+      status: 308,
+    });
+  });
+
+  it('reports nothing for a redirect onto the current state that leaves the url in place', async () => {
+    const router = makeRouter();
+    await settle(router, '/b');
+    const transition = await settle(router, '/quiet');
+    assert.equal(transition.to().name, 'b');
+    assert.equal(redirectedTo(router, transition), undefined);
+  });
+
+  it('reports nothing for the same url settled twice', async () => {
+    const router = makeRouter();
+    const first = await settle(router, '/sheet/7B');
+    const second = await settle(router, '/sheet/7B');
+    assert.equal(second, first);
+    assert.equal(redirectedTo(router, second), undefined);
+  });
+
   it('reports nothing for a url rule that rewrites the url', async () => {
     const router = makeRouter();
     router.urlService.rules.when('/old', '/sheet/1');
