@@ -224,6 +224,7 @@ export class UIRouterDevtools extends LitElement {
     _max: { state: true },
     _mapSize: { state: true },
     _mapOpen: { state: true },
+    _mapFailed: { state: true },
     _selectedTx: { state: true },
     _previewTx: { state: true },
     _selectedState: { state: true },
@@ -246,6 +247,8 @@ export class UIRouterDevtools extends LitElement {
   declare _max: boolean;
   declare _mapSize: Size;
   declare _mapOpen: ReadonlyMap<string, boolean>;
+  // The Map's chunk failed to load; choosing the Map view again retries it.
+  declare _mapFailed: boolean;
   declare _selectedTx: number | null;
   declare _previewTx: number | null;
   declare _selectedState: string | null;
@@ -257,6 +260,8 @@ export class UIRouterDevtools extends LitElement {
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
+  // Loads the Map's chunk; a spec swaps it to fail the load.
+  _importMap = (): Promise<MapModule> => import('./element/map.ts');
   // The fit ladder's last rung, for its hysteresis.
   _rung: Rung | undefined;
   // The Map's layouts and edge router, loaded on first use of the Map tab.
@@ -286,6 +291,7 @@ export class UIRouterDevtools extends LitElement {
     this._layoutPref = storedLayout();
     this._max = false;
     this._mapSize = { width: 0, height: 0 };
+    this._mapFailed = false;
     this._mapOpen = new Map();
     this._inspect = 'none';
     this.#resetSelection();
@@ -332,18 +338,23 @@ export class UIRouterDevtools extends LitElement {
       if (this.router && this.isConnected) this.#attach(this.router);
     }
 
+    if (
+      this._view === 'map' &&
+      !this._map &&
+      !this.#mapLoading &&
+      (!this._mapFailed || changed.has('_view'))
+    )
+      this.#loadMap();
+
+    this.#syncTicker();
+  }
+
+  // Durations of a live transition tick while it runs.
+  #syncTicker() {
     const running =
       Boolean(this.#recorder) &&
       !this._imported &&
       this._live.txs.some((tx) => !tx.result);
-
-    if (this._view === 'map' && !this._map && !this.#mapLoading) {
-      this.#mapLoading = true;
-      void import('./element/map.ts').then((map) => {
-        this._map = map;
-        this.requestUpdate();
-      });
-    }
 
     if (running && !this.#ticker)
       this.#ticker = setInterval(() => (this._now = performance.now()), 100);
@@ -352,6 +363,22 @@ export class UIRouterDevtools extends LitElement {
       clearInterval(this.#ticker);
       this.#ticker = undefined;
     }
+  }
+
+  #loadMap() {
+    this.#mapLoading = true;
+    this._mapFailed = false;
+    void this._importMap().then(
+      (map) => {
+        this._map = map;
+        this.#mapLoading = false;
+        this.requestUpdate();
+      },
+      () => {
+        this._mapFailed = true;
+        this.#mapLoading = false;
+      },
+    );
   }
 
   // A re-pack can move the focused box to another row, which rebuilds it; focus then returns to the same state.
@@ -1049,8 +1076,14 @@ export class UIRouterDevtools extends LitElement {
     const map = this._map;
 
     return html`<div class="scroll map-scroll">
-      ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : nothing}
+      ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : this.#mapNotice()}
     </div>`;
+  }
+
+  #mapNotice() {
+    return this._mapFailed
+      ? html`<p class="empty">The Map did not load. Switch views to retry.</p>`
+      : nothing;
   }
 
   // Outline or Map, and on the Map the nested boxes or the node-link tree.

@@ -3,8 +3,10 @@ import { page } from 'vitest/browser';
 import {
   getAllByRole,
   getByRole,
+  getByText,
   queryAllByRole,
   queryByRole,
+  queryByText,
   waitFor,
   within,
 } from '@testing-library/dom';
@@ -306,6 +308,32 @@ describe('the nested Map', () => {
         ),
       ).toEqual(['admin.users.**']),
     );
+  });
+
+  it('says so when the Map fails to load, and retries when the Map is chosen again', async () => {
+    await page.viewport(1280, 800);
+    const router = sampleRouter();
+    const { element } = router.plugin(DevtoolsPlugin);
+    const load = element._importMap;
+    element._importMap = () => Promise.reject(new Error('chunk failed'));
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+
+    const view = (name: 'outline' | 'map') =>
+      getByRole(shadow(element), 'button', { name }).click();
+
+    view('map');
+    await waitFor(() => getByText(shadow(element), /The Map did not load/));
+    expect(element._map).toBeUndefined();
+
+    element._importMap = load;
+    view('outline');
+    await element.updateComplete;
+    view('map');
+
+    expect(await tree(element)).toBeTruthy();
+    expect(queryByText(shadow(element), /The Map did not load/)).toBeNull();
   });
 
   it("keeps boxes at their natural size in the dock, with the popover's column free, and enlarges them maximised", async () => {
