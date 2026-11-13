@@ -510,14 +510,17 @@ plugins: [
 // src/prerender.ts
 import { definePrerender } from 'lit-ui-router-ssr/vite';
 
-export default definePrerender((site) => ({
+export default definePrerender(() => ({
   mounts,
   router,
   paths,
   template: page,
-  document,
 }));
 ```
+
+With no `document` in the options, `definePrerender` puts each page's body into the built
+`index.html` in place of its `<!--app-->` marker, and a shell without one fails the build. A
+`document` the entry returns wins.
 
 The entry then uses plain static imports; see
 [Prerender with Vite](https://lit-ui-router.dev/guides/prerender-with-vite). An entry node runs
