@@ -610,7 +610,9 @@ the same text. The writer's `finalizeContext` and `footerPartial`
   changes go under `Peer Dependencies`. A statement a kept breaking note
   already makes (it names the peer and the new range) is left out.
 - An `@name` (a JSDoc tag, npm scope or decorator) renders as code, never as a
-  user link or a GitHub mention; only `#<digits>` references are linked.
+  user link or a GitHub mention; only `#<digits>` references are linked. A `<`
+  in commit text is escaped, so a placeholder such as `<name>` is not dropped
+  as an HTML tag.
 - The body ends with links to the release's page on lit-ui-router.dev and,
   after a package's first release in the lane, to the diff from the previous
   version (`/releases/<pkg>/<version>/`, `/releases/<pkg>/diff/<from>...<to>/`).
