@@ -135,6 +135,15 @@ Creates a release PR by:
 - `other` - Custom version string (when using `other`)
 - `prBase` - Target branch (default: `main`)
 - `branchPrefix` - Branch prefix (default: `release/lit-ui-router/v`)
+- `autoMerge` - Enable squash auto-merge on the release PR (default: off)
+
+With `autoMerge`, the workflow enables GitHub auto-merge on the PR it opens,
+using the PAT so the merge still triggers tagging and publishing. The PR then
+merges itself once the `main` ruleset's required checks pass; the ruleset
+requires no approving review, so nothing else holds it. A `dryRun` only
+reports that it would enable auto-merge. If GitHub refuses to enable it, for
+example because the PR is already mergeable, the run fails with the PR left
+open and unmerged; merge it by hand or enable auto-merge on the PR.
 
 ### 3. Tag & Push (`publish-gh.yml`)
 
@@ -284,6 +293,8 @@ these check runs.
    - Go to Actions → "Bump version"
    - Click "Run workflow"
    - Select increment type (`patch`, `minor`, or `major`)
+   - Tick `autoMerge` to have the release PR merge itself once its
+     required checks pass; step 3 then needs no action
    - Run the workflow
 
 2. **Review the release PR:**
