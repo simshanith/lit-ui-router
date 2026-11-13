@@ -1,6 +1,7 @@
 import { svg, type SVGTemplateResult } from 'lit';
 import type { Status } from '../notation.ts';
 import type { StateInfo } from '../schema.ts';
+import { bareName } from '../fold.ts';
 
 export type { Status };
 
@@ -107,7 +108,7 @@ export const stateMarks = (
   const marks: StateMark[] = [];
 
   if (state.redirects) {
-    const target = states.find((s) => s.name === state.redirectTo);
+    const target = states.find((s) => bareName(s.name) === state.redirectTo);
 
     marks.push({
       mark: 'initial',

@@ -3,6 +3,7 @@ import { hierarchy, tree } from 'd3-hierarchy';
 import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { StateInfo } from '../schema.ts';
 import { segment } from '../notation.ts';
+import { bareName } from '../fold.ts';
 import {
   describeState,
   markGlyph,
@@ -80,7 +81,7 @@ const renderRails = (host: UIRouterDevtools, rows: Row[]) => {
           role: host._role(row.state),
           d: `M${px} ${pi * h + h / 2 + GLYPH_R}V${y}H${end}`,
           initial:
-            rows[pi]?.state.redirectTo === row.state.name
+            rows[pi]?.state.redirectTo === bareName(row.state.name)
               ? `M${px - 3} ${y}a3 3 0 1 0 6 0a3 3 0 1 0 -6 0zM${end - 5} ${y - 3.5}L${end} ${y}L${end - 5} ${y + 3.5}z`
               : undefined,
         },
