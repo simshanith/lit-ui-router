@@ -133,8 +133,10 @@ Because `lit-ui-router` is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
 app</a> uses [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-states),
 [`@uirouter/dsr`](https://github.com/ui-router/dsr) (deep state redirect), and
-the [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) developer
-tool. The Hello Solar System and Hello Galaxy examples load the visualizer when
+a devtools panel built in this repository that shows the state tree and each
+transition. The [`@uirouter/visualizer`](https://github.com/ui-router/visualizer)
+developer tool loads instead when the url has `?feature-enable-visualizer=true`.
+The Hello Solar System and Hello Galaxy examples load the visualizer when
 the page url has `?visualizer`, as in
 <a href="/examples/hellogalaxy/?visualizer" target="_self">Hello Galaxy</a>.
 
