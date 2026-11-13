@@ -1,38 +1,38 @@
 {
   "ref": "origin/main",
-  "sha": "33cd7ce1",
-  "commitDate": "2026-11-10T23:54:03-08:00",
-  "generatedAtTime": "2026-11-11T18:31:52.716Z",
+  "sha": "ef074136",
+  "commitDate": "2026-11-12T22:25:30-08:00",
+  "generatedAtTime": "2026-11-13T06:54:41.462Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 33cd7ce1",
+  "used": "git archive origin/main @ ef074136",
   "wasAssociatedWith": [
     "git"
   ],
   "workflows": {
-    "files": 14,
-    "calling": 9,
-    "callSites": 60,
-    "targets": 35
+    "files": 15,
+    "calling": 10,
+    "callSites": 62,
+    "targets": 36
   },
   "mise": {
-    "tasks": 64,
+    "tasks": 65,
     "homes": 5,
-    "withUsage": 37,
+    "withUsage": 38,
     "withDepends": 13,
     "dependsEdges": 17
   },
   "turbo": {
-    "files": 32,
+    "files": 33,
     "distinctNames": 102,
-    "definitions": 164,
+    "definitions": 165,
     "rootDefinitions": 57,
-    "memberDefinitions": 107,
+    "memberDefinitions": 108,
     "cacheFalse": 16,
     "rootCacheFalse": 8,
     "memberCacheFalse": 8
   },
   "workflowRows": [
-    {"file":"acceptance.yml","name":"acceptance","callSites":13},
+    {"file":"acceptance.yml","name":"acceptance","callSites":14},
     {"file":"build-test-branch.yml","name":"build-test-branch","callSites":1},
     {"file":"build-test-run.yml","name":"build-test-run","callSites":16},
     {"file":"build-test.yml","name":"build-test","callSites":0},
@@ -44,6 +44,7 @@
     {"file":"lint-workflows.yml","name":"lint-workflows","callSites":1},
     {"file":"publish-gh.yml","name":"publish-gh","callSites":4},
     {"file":"publish-npm.yml","name":"publish-npm","callSites":8},
+    {"file":"pullfrog.yml","name":"pullfrog","callSites":1},
     {"file":"release-signals.yml","name":"release-signals","callSites":10},
     {"file":"semantic-pr.yml","name":"semantic-pr","callSites":0}
   ],
@@ -74,6 +75,7 @@
     {"target":"//tools/turbo-summary:mark_session","calls":3},
     {"target":"//tools/turbo-summary:turbo_summary","calls":6},
     {"target":"bench_pulse","calls":1},
+    {"target":"check_links","calls":1},
     {"target":"ci_graph","calls":1},
     {"target":"ci_main_graph","calls":1},
     {"target":"codecov_bundle","calls":1},
@@ -81,7 +83,7 @@
     {"target":"ledger_claim","calls":1},
     {"target":"lint_workflows","calls":1},
     {"target":"npm_diff_parity","calls":1},
-    {"target":"setup","calls":11},
+    {"target":"setup","calls":12},
     {"target":"test_e2e","calls":2}
   ],
   "miseHomes": [
@@ -89,7 +91,7 @@
     {"home":"tools/turbo-summary/mise.toml","label":"tools/turbo-summary","count":4,"withUsage":2,"withDepends":0,"dependsEdges":0,"names":["mark_session","turbo_summary","format_patch","bench_summary"]},
     {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":15,"withUsage":10,"withDepends":0,"dependsEdges":0,"names":["agent_env","agent_hook","check_workers_builds","cloudflare_item_create","ledger_claim","pause_commands","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
     {"home":"tools/release/mise.toml","label":"tools/release","count":19,"withUsage":12,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","pages_deploy_check_runs","ledger_check_runs","peer_floor_gate","dependent_floor_gate","bump","check_release_closure"]},
-    {"home":".config/mise/config.toml","label":"config.toml inline","count":22,"withUsage":13,"withDepends":11,"dependsEdges":15,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_graph","ci_main","ci_main_graph","test_e2e","e2e_plan","codecov_bundle","bench_pulse","npm_diff_parity","dts_backtest_matrix"]}
+    {"home":".config/mise/config.toml","label":"config.toml inline","count":23,"withUsage":14,"withDepends":11,"dependsEdges":15,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","check_links","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_graph","ci_main","ci_main_graph","test_e2e","e2e_plan","codecov_bundle","bench_pulse","npm_diff_parity","dts_backtest_matrix"]}
   ],
   "turboRows": [
     {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":9,"cacheFalse":1},
@@ -113,6 +115,7 @@
     {"file":"packages/ui-router-signals/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/bootstrap/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"tools/cli/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/lit-test-env/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},

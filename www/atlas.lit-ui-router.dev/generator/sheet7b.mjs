@@ -278,7 +278,7 @@ function badge(n) {
 ${txt(bx.toFixed(1), (cy + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges lifted clear of roofs AND of their own steam plumes
-const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 44, 11: 18, 12: 20, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
+const BADGE_LIFT = { 1: 46, 2: 34, 5: 40, 6: 35, 7: 52, 9: 28, 10: 11, 11: 18, 12: 20, 16: 30, 20: 26, 21: 34, 23: 34, 26: 13, 27: 34 };
 
 // ---- districts: sheet 7's padded plan bounds, imported ---------------------------
 const districts = Object.values(DISTRICT_BOUNDS).map(([x1, y1, x2, y2]) => {
@@ -390,7 +390,7 @@ ${leader(20, 612, 146, 418)}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'L',
+  num: '7B', id: 'working', rev: 'M',
   title: 'THE WORKING CITY',
   sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window ${WINDOW} · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

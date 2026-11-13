@@ -22,8 +22,7 @@ const HOME = {
   manifest: 'https://custom-elements-manifest.open-wc.org',
   modelViewer: 'https://modelviewer.dev',
 };
-// the origin keeps the tallest cap and its badge 24 px inside the frame's top; the frame guard below holds every district there
-const OX = 440, OY = 950;
+const OX = 440;
 const VB_W = 1160;
 // callout pitch: an 11 px lbla line's box is 13.1 px tall, so 12 px stacks touch
 const CP = 14;
@@ -76,6 +75,9 @@ const PLAN = {
 // The demo corpora are not shipped; their footprint is drawn as a vacant lot so
 // the plan shows the gap. Files size the outline, as for every other district.
 const LOT = { name: 'demo corpora', x: 30, y: 8, files: 15, gz: 899000 };
+
+// the origin keeps the highest cap corner 24 px inside the frame's top; the frame guard below holds every district there
+const OY = Math.ceil(24 + Math.max(...PLATE.rows.filter((r) => PLAN[r.district]).map((r) => HT(r.gz) - (PLAN[r.district][0] + PLAN[r.district][1]) / 2)));
 
 // The role outlines, in drawing order; appendix A4 sums the deploy by these roles, so a district no role claims is a build error.
 export const ROLES = [

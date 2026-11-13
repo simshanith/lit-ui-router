@@ -265,7 +265,7 @@ const NOTE = {
   18: 'size probe, advisory · its cores lit',
   19: 'ranges.ts lit; the CI guards unmetered',
   20: 'the check lane, lit by its own suite',
-  21: 'config only',
+  21: SH.get(21).shadow?.join() === 'src/test-repo.ts' ? 'the release-it config and its notes lit; the test-repo helper in shadow' : guardFail(21, 'only the test-repo helper is in shadow'),
   22: SH.get(22).shadow?.length === 0 ? 'the template checker, lit wall to wall' : guardFail(22, 'lit wall to wall'),
   23: 'the spec helpers lit, the setup in shadow',
   24: 'wrapper only',
@@ -303,6 +303,7 @@ const NOTE = {
   57: SH.get(57).shadow?.length === 0 ? 'the example checker, every file lit' : guardFail(57, 'every file is lit'),
   58: `${SH.get(58).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
   59: SH.get(59).shadow?.length === 0 ? 'the Cloudflare client, every file lit' : guardFail(59, 'every file is lit'),
+  60: SH.get(60).shadow?.length === 0 ? 'the JSON output flags, lit wall to wall' : guardFail(60, 'lit wall to wall'),
 };
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 // №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
@@ -413,7 +414,7 @@ ${leader(594, YARD_Y - 4, X(g(16).x + g(16).s / 2), +Y(g(16).y + g(16).s) + 2)}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'K',
+  num: '7A', id: 'shadow', rev: 'L',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

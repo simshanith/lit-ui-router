@@ -1,29 +1,29 @@
 {
   "ref": "origin/main",
-  "sha": "33cd7ce1",
-  "commitDate": "2026-11-10T23:54:03-08:00",
-  "generatedAtTime": "2026-11-11T18:46:12.434Z",
+  "sha": "ef074136",
+  "commitDate": "2026-11-12T22:25:30-08:00",
+  "generatedAtTime": "2026-11-13T07:10:04.353Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-builds.mjs",
-  "used": "git archive origin/main @ 33cd7ce1 — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ a61ce45e — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
+  "used": "git archive origin/main @ ef074136 — apps/*, www/lit-ui-router.dev and examples/<embeds.ts key>/package.json declarations, closed over family peers; withAtlas adds git archive www/atlas @ 909f478c — www/atlas.lit-ui-router.dev/app/package.json; family and runtimes from census-couplings.json",
   "wasAssociatedWith": [
     "git"
   ],
   "totals": {
-    "consumers": 21,
+    "consumers": 22,
     "builds": 11,
     "empty": 1,
     "carrying": {
       "eslint-plugin-lit-ui-router": 1,
-      "lit-ui-router": 19,
+      "lit-ui-router": 20,
       "lit-ui-router-effect": 2,
       "lit-ui-router-mobx": 2,
       "lit-ui-router-signals": 3,
-      "lit-ui-router-ssr": 2,
+      "lit-ui-router-ssr": 3,
       "ui-router-effect": 2,
       "ui-router-mobx": 2,
       "ui-router-navigation-location-plugin": 2,
       "ui-router-registry": 9,
-      "ui-router-server": 3,
+      "ui-router-server": 4,
       "ui-router-signals": 3
     }
   },
@@ -35,13 +35,14 @@
     {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","pinned":["ui-router-server"],"parts":["ui-router-server"],"runtimes":[],"runtimesByPeer":["@uirouter/core","hono","vite"]},
     {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
-    {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
+    {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
     {"name":"helloworld","dir":"examples/helloworld","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"helloworld-buildless","dir":"examples/helloworld-buildless","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"hellosolarsystem","dir":"examples/hellosolarsystem","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"hellosolarsystem-mobx","dir":"examples/hellosolarsystem-mobx","kind":"example","pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"runtimes":["@uirouter/core","lit","mobx"],"runtimesByPeer":["@uirouter/core","lit","mobx"]},
     {"name":"hellosolarsystem-signals","dir":"examples/hellosolarsystem-signals","kind":"example","pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"]},
     {"name":"hellosolarsystem-eleventy","dir":"examples/hellosolarsystem-eleventy","kind":"example","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
+    {"name":"hellosolarsystem-ssr","dir":"examples/hellosolarsystem-ssr","kind":"example","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
     {"name":"hellogalaxy","dir":"examples/hellogalaxy","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
     {"name":"hellogalaxy-effect","dir":"examples/hellogalaxy-effect","kind":"example","pinned":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"runtimes":["@uirouter/core","effect","lit"],"runtimesByPeer":["@uirouter/core","effect","lit"]},
     {"name":"hellogalaxy-signals","dir":"examples/hellogalaxy-signals","kind":"example","pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"]},
@@ -52,8 +53,8 @@
   ],
   "builds": [
     {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["helloworld","helloworld-buildless","hellosolarsystem","hellogalaxy","design-system-links","loading-and-error-views"]},
+    {"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"pinned":[["lit-ui-router","lit-ui-router-ssr","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"consumers":["@www/lit-ui-router.dev","hellosolarsystem-eleventy","hellosolarsystem-ssr"]},
     {"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"pinned":[["lit-ui-router","lit-ui-router-signals","ui-router-registry"],["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"]],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"],"consumers":["sample-app-lit-signals","hellosolarsystem-signals","hellogalaxy-signals"]},
-    {"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"pinned":[["lit-ui-router","lit-ui-router-ssr","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"consumers":["@www/lit-ui-router.dev","hellosolarsystem-eleventy"]},
     {"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"pinned":[["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],["lit-ui-router","lit-ui-router-effect","ui-router-registry"]],"runtimes":["@uirouter/core","effect","lit"],"runtimesByPeer":["@uirouter/core","effect","lit"],"consumers":["sample-app-lit-effect","hellogalaxy-effect"]},
     {"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"pinned":[["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],["lit-ui-router","lit-ui-router-mobx","ui-router-registry"]],"runtimes":["@uirouter/core","lit","mobx"],"runtimesByPeer":["@uirouter/core","lit","mobx"],"consumers":["sample-app-lit-mobx","hellosolarsystem-mobx"]},
     {"parts":[],"pinned":[[]],"runtimes":[],"runtimesByPeer":[],"consumers":["sample-app-lit-e2e"]},
@@ -66,29 +67,29 @@
   "basis": {
     "atlasApp": {
       "ref": "www/atlas",
-      "sha": "a61ce45e",
-      "commitDate": "2026-11-11T10:30:07-08:00",
+      "sha": "909f478c",
+      "commitDate": "2026-11-12T22:52:14-08:00",
       "dir": "www/atlas.lit-ui-router.dev/app"
     },
-    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ a61ce45e, off the cabinet's tree; the second reading adds it"
+    "note": "www/atlas.lit-ui-router.dev/app is on www/atlas @ 909f478c, off the cabinet's tree; the second reading adds it"
   },
   "withAtlas": {
     "totals": {
-      "consumers": 22,
+      "consumers": 23,
       "builds": 12,
       "empty": 1,
       "carrying": {
         "eslint-plugin-lit-ui-router": 2,
-        "lit-ui-router": 20,
+        "lit-ui-router": 21,
         "lit-ui-router-effect": 3,
         "lit-ui-router-mobx": 2,
         "lit-ui-router-signals": 3,
-        "lit-ui-router-ssr": 3,
+        "lit-ui-router-ssr": 4,
         "ui-router-effect": 3,
         "ui-router-mobx": 2,
         "ui-router-navigation-location-plugin": 3,
         "ui-router-registry": 10,
-        "ui-router-server": 4,
+        "ui-router-server": 5,
         "ui-router-signals": 3
       }
     },
@@ -100,13 +101,14 @@
       {"name":"sample-app-lit-vanilla","dir":"apps/sample-app-lit-vanilla","kind":"sample-app","pinned":["lit-ui-router","ui-router-registry"],"parts":["lit-ui-router","ui-router-registry"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"sample-app-routes","dir":"apps/sample-app-routes","kind":"sample-app","pinned":["ui-router-server"],"parts":["ui-router-server"],"runtimes":[],"runtimesByPeer":["@uirouter/core","hono","vite"]},
       {"name":"sample-app-shared","dir":"apps/sample-app-shared","kind":"sample-app","pinned":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"parts":["lit-ui-router","ui-router-navigation-location-plugin","ui-router-registry"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
-      {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
+      {"name":"@www/lit-ui-router.dev","dir":"www/lit-ui-router.dev","kind":"docs-site","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
       {"name":"helloworld","dir":"examples/helloworld","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"helloworld-buildless","dir":"examples/helloworld-buildless","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"hellosolarsystem","dir":"examples/hellosolarsystem","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"hellosolarsystem-mobx","dir":"examples/hellosolarsystem-mobx","kind":"example","pinned":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"runtimes":["@uirouter/core","lit","mobx"],"runtimesByPeer":["@uirouter/core","lit","mobx"]},
       {"name":"hellosolarsystem-signals","dir":"examples/hellosolarsystem-signals","kind":"example","pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"]},
       {"name":"hellosolarsystem-eleventy","dir":"examples/hellosolarsystem-eleventy","kind":"example","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
+      {"name":"hellosolarsystem-ssr","dir":"examples/hellosolarsystem-ssr","kind":"example","pinned":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"]},
       {"name":"hellogalaxy","dir":"examples/hellogalaxy","kind":"example","pinned":["lit-ui-router"],"parts":["lit-ui-router"],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"]},
       {"name":"hellogalaxy-effect","dir":"examples/hellogalaxy-effect","kind":"example","pinned":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"runtimes":["@uirouter/core","effect","lit"],"runtimesByPeer":["@uirouter/core","effect","lit"]},
       {"name":"hellogalaxy-signals","dir":"examples/hellogalaxy-signals","kind":"example","pinned":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"]},
@@ -118,8 +120,8 @@
     ],
     "builds": [
       {"parts":["lit-ui-router"],"pinned":[["lit-ui-router"]],"runtimes":["@uirouter/core","lit"],"runtimesByPeer":["@uirouter/core","lit"],"consumers":["helloworld","helloworld-buildless","hellosolarsystem","hellogalaxy","design-system-links","loading-and-error-views"]},
+      {"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"pinned":[["lit-ui-router","lit-ui-router-ssr","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"consumers":["@www/lit-ui-router.dev","hellosolarsystem-eleventy","hellosolarsystem-ssr"]},
       {"parts":["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"],"pinned":[["lit-ui-router","lit-ui-router-signals","ui-router-registry"],["lit-ui-router","lit-ui-router-signals","ui-router-registry","ui-router-signals"]],"runtimes":["@uirouter/core","lit","signal-polyfill"],"runtimesByPeer":["@uirouter/core","lit","signal-polyfill"],"consumers":["sample-app-lit-signals","hellosolarsystem-signals","hellogalaxy-signals"]},
-      {"parts":["lit-ui-router","lit-ui-router-ssr","ui-router-server"],"pinned":[["lit-ui-router","lit-ui-router-ssr","ui-router-server"]],"runtimes":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","lit","vite"],"runtimesByPeer":["@lit-labs/ssr","@lit-labs/ssr-client","@uirouter/core","hono","lit","vite"],"consumers":["@www/lit-ui-router.dev","hellosolarsystem-eleventy"]},
       {"parts":["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],"pinned":[["lit-ui-router","lit-ui-router-effect","ui-router-effect","ui-router-registry"],["lit-ui-router","lit-ui-router-effect","ui-router-registry"]],"runtimes":["@uirouter/core","effect","lit"],"runtimesByPeer":["@uirouter/core","effect","lit"],"consumers":["sample-app-lit-effect","hellogalaxy-effect"]},
       {"parts":["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],"pinned":[["lit-ui-router","lit-ui-router-mobx","ui-router-mobx","ui-router-registry"],["lit-ui-router","lit-ui-router-mobx","ui-router-registry"]],"runtimes":["@uirouter/core","lit","mobx"],"runtimesByPeer":["@uirouter/core","lit","mobx"],"consumers":["sample-app-lit-mobx","hellosolarsystem-mobx"]},
       {"parts":[],"pinned":[[]],"runtimes":[],"runtimesByPeer":[],"consumers":["sample-app-lit-e2e"]},

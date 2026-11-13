@@ -90,12 +90,16 @@ const TIER_TEXT = {
 
 // the shed stands east of the src slab by the run's trims and a unit of leg: 9 px off the slab, the shed's height plus 1.15 × 11.5 at its wall
 const SHED_X = Math.ceil(45 + S(C('src — packages/*/src')[1]) + 9 + H(C('build — @tools/oxc-emit')[0]) + 1.15 * 11.5 + 1);
+// the packer stands east of the shed by the same rule
+const PACK_X = Math.ceil(SHED_X + S(C('build — @tools/oxc-emit')[1]) + 9 + H(C('pack — packPublishTarball')[0]) + 1.15 * 11.5 + 1);
+// the fleet stands south of the src slab by two units of air
+const FLEET_Y = Math.ceil(24 + S(C('src — packages/*/src')[1]) + 2);
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
   [1,  'src — packages/*/src',      'line',    45,    24, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   [2,  'build — @tools/oxc-emit',   'line',   SHED_X, 63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
-  [3,  'pack — packPublishTarball', 'line',   340,    55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
+  [3,  'pack — packPublishTarball', 'line',   PACK_X, 55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
   [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
   [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
@@ -109,7 +113,7 @@ const M = [
   [12, 'peer-floor tier-2',         'late',   266,   330,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
   [13, 'peer-floor tier-1',         'report', 298,   330,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
   // the fleet stands at the yard's west end, south of the src slab; the anti-slop rules east of it, south of row A's gates
-  [14, 'lint & probe fleet',        'report',  10,   207,    ...C('lint & probe fleet'), null, null, 'templates · doc examples · axe · CI summary'],
+  [14, 'lint & probe fleet',        'report',  10,   FLEET_Y,    ...C('lint & probe fleet'), null, null, 'templates · doc examples · axe · CI summary'],
   [15, '@tools/shared',             'report', 322,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 366,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------

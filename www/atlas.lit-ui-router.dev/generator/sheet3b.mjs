@@ -90,7 +90,7 @@ const fmt = (v) => v.toLocaleString('en-US');
 
 // packages only — @tools/repo-checks is drawn whole as structure 1
 const TERRACE = [
-  '@tools/a11y', '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/ci-logs', '@tools/cloudflare-api', '@tools/compat-guards', '@tools/crap', '@tools/doc-example-check', '@tools/embed-heights',
+  '@tools/a11y', '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/ci-logs', '@tools/cli', '@tools/cloudflare-api', '@tools/compat-guards', '@tools/crap', '@tools/doc-example-check', '@tools/embed-heights',
   '@tools/eslint', '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
   '@tools/lit-test-env', '@tools/md-content-mapper', '@tools/oxc-emit', '@tools/oxlint-anti-slop', '@tools/release-config', '@tools/release-ledger', '@tools/turbo-summary', '@tools/vue-check',
   '@tools/wintercg-globals', '@tools/workers-builds',

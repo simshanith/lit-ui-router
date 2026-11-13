@@ -46,7 +46,7 @@ const INSTRUMENTS = [
   ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/eslint\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/crap\//, /^tools\/build_and_test\//, /^tools\/a11y\//, /^tools\/ci-logs\//, /^tools\/doc-example-check\//, /^tools\/md-content-mapper\//, /^tools\/turbo-summary\//]],
   ['repo checks — graph edges, task inputs, knip, patches', [/^tools\/repo-checks\//]],
   ['bootstrap — pre-install manifest reads', [/^tools\/bootstrap\//]],
-  ['@tools/shared', [/^tools\/shared\//]],
+  ['@tools/shared', [/^tools\/shared\//, /^tools\/cli\//]],
   ['typedoc plugin', [/^tools\/typedoc-plugin/]],
   ['e2e — playwright', [/^apps\/sample-app-lit-e2e\//]],
   ['sample apps', [/^apps\//]],
