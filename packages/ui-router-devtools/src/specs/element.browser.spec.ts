@@ -324,7 +324,12 @@ describe('the nested Map', () => {
       getByRole(shadow(element), 'button', { name }).click();
 
     view('map');
-    await waitFor(() => getByText(shadow(element), /The Map did not load/));
+    await waitFor(() =>
+      getByText(shadow(element), /The Map did not load/, { selector: 'p' }),
+    );
+    expect(getByRole(shadow(element), 'status').textContent).toContain(
+      'The Map did not load',
+    );
     expect(element._map).toBeUndefined();
 
     element._importMap = load;

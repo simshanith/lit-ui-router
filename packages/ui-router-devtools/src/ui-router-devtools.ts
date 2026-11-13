@@ -65,6 +65,8 @@ type MapLayout = 'nested' | 'tree';
 
 type MapModule = typeof import('./element/map.ts');
 
+const MAP_FAILED = 'The Map did not load. Switch views to retry.';
+
 /** Below this inline size the nested layout is the Outline with borders, so it is not offered. */
 const NESTED_MIN_WIDTH = 560;
 
@@ -368,6 +370,9 @@ export class UIRouterDevtools extends LitElement {
   #loadMap() {
     this.#mapLoading = true;
     this._mapFailed = false;
+
+    if (this._announcement === MAP_FAILED) this._announcement = '';
+
     void this._importMap().then(
       (map) => {
         this._map = map;
@@ -377,6 +382,7 @@ export class UIRouterDevtools extends LitElement {
       () => {
         this._mapFailed = true;
         this.#mapLoading = false;
+        this._announcement = MAP_FAILED;
       },
     );
   }
@@ -1081,9 +1087,7 @@ export class UIRouterDevtools extends LitElement {
   }
 
   #mapNotice() {
-    return this._mapFailed
-      ? html`<p class="empty">The Map did not load. Switch views to retry.</p>`
-      : nothing;
+    return this._mapFailed ? html`<p class="empty">${MAP_FAILED}</p>` : nothing;
   }
 
   // Outline or Map, and on the Map the nested boxes or the node-link tree.
