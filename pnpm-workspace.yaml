@@ -86,7 +86,7 @@ catalog:
   fast-xml-parser: ^5.12.0
   fast-xml-validator: ^1.4.2
   happy-dom: ^21.0.4
-  hono: ^4.13.17
+  hono: ^4.13.18
   husky: ^9.1.7
   jose: ^6.2.17
   jsonc-parser: ^3.3.1

@@ -236,8 +236,8 @@ catalogs:
       specifier: ^21.0.4
       version: 21.0.4
     hono:
-      specifier: ^4.13.17
-      version: 4.13.17
+      specifier: ^4.13.18
+      version: 4.13.18
     husky:
       specifier: ^9.1.7
       version: 9.1.7
@@ -2233,7 +2233,7 @@ importers:
         version: 21.0.4
       hono:
         specifier: 'catalog:'
-        version: 4.13.17
+        version: 4.13.18
       hono-floor:
         specifier: catalog:peerFloor
         version: hono@4.0.0
@@ -2628,7 +2628,7 @@ importers:
         version: 4.1.2
       hono:
         specifier: 'catalog:'
-        version: 4.13.17
+        version: 4.13.18
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -3335,7 +3335,7 @@ importers:
         version: link:../../examples
       hono:
         specifier: 'catalog:'
-        version: 4.13.17
+        version: 4.13.18
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -6888,8 +6888,8 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
-  basic-ftp@6.2.1:
-    resolution: {integrity: sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k15NWxyEjmaKtZPlgce58So4BNTjITGQOVTjL9y0ECA==}
+  basic-ftp@6.2.6:
+    resolution: {integrity: sha512-0EjZCaodOz6yiokv2JA1VyKGNdGxULZ+GGlPgG9tm4d+T/bHtX1hUch8CumDneBfpIbiSdn7TaCGwpM+gwsOlw==}
     engines: {node: '>=10.0.0'}
 
   before-after-hook@4.0.0:
@@ -7884,8 +7884,8 @@ packages:
     resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
     engines: {node: '>=16.0.0'}
 
-  hono@4.13.17:
-    resolution: {integrity: sha512-vZIcbkvjOR5hHRWERbGkr8fGfF0GGM1ooYkuH448iO3b2AdVEr3AXZSw4Z3Kn+1L5z0CVoVeyV29VGYmFh05kQ==}
+  hono@4.13.18:
+    resolution: {integrity: sha512-H9q/E1XizaWstJxUW881dmLxEj+t/TrGGnyxINkm4+sK0qUwsMtFdo2BWI9Vs3cIS19MU6b6iCijoUoEf4f3DA==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -12860,7 +12860,7 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  basic-ftp@6.2.1: {}
+  basic-ftp@6.2.6: {}
 
   before-after-hook@4.0.0: {}
 
@@ -13892,7 +13892,7 @@ snapshots:
 
   get-uri@8.0.1(supports-color@10.2.2):
     dependencies:
-      basic-ftp: 6.2.1
+      basic-ftp: 6.2.6
       data-uri-to-buffer: 8.0.0
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
@@ -14001,7 +14001,7 @@ snapshots:
 
   hono@4.0.0: {}
 
-  hono@4.13.17: {}
+  hono@4.13.18: {}
 
   hookable@5.5.3: {}
 
