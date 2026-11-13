@@ -433,8 +433,9 @@ OpenCode over OIDC, so no provider key is stored, and no other credential
 reaches it, so nothing metered can run. Which PRs it reviews is set in
 the Pullfrog console, and what it looks for in
 [`.github/pullfrog/review.md`](../.github/pullfrog/review.md). Comment
-`@pullfrog` on a PR to ask for a run; only collaborators can. It comments and
-cannot push or approve, and like CodeRabbit it is advisory.
+`@pullfrog` on a PR to ask for a run; only collaborators can. It cannot push. It
+approves a PR when it finds no issues, but no approval is required to merge, so
+like CodeRabbit it is advisory.
 
 Drafts get no automatic review, so on a draft ask for one with an
 `@pullfrog review this PR` comment once the local gate passes, and again after
