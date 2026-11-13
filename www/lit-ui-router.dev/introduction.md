@@ -135,7 +135,8 @@ app</a> uses [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-sta
 [`@uirouter/dsr`](https://github.com/ui-router/dsr) (deep state redirect), and
 a devtools panel built in this repository that shows the state tree and each
 transition. The [`@uirouter/visualizer`](https://github.com/ui-router/visualizer)
-developer tool loads instead when the url has `?feature-enable-visualizer=true`.
+developer tool also loads when the url has `?feature-enable-visualizer=true`;
+add `&feature-enable-devtools=false` for the visualizer on its own.
 The Hello Solar System and Hello Galaxy examples load the visualizer when
 the page url has `?visualizer`, as in
 <a href="/examples/hellogalaxy/?visualizer" target="_self">Hello Galaxy</a>.
