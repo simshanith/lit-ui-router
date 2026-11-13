@@ -145,6 +145,25 @@ describe('createFetchHandler', () => {
     assert.equal(await bodyText(res), '<html>shell</html>');
   });
 
+  it("keeps the shell asset's own Link beside the canonical one", async () => {
+    const handler = createFetchHandler(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      {
+        serveShell: () =>
+          new Response('<html>shell</html>', {
+            headers: { Link: '</app.js>; rel=preload; as=script' },
+          }),
+      },
+    );
+
+    const res = await handler(navigation('/app/about'));
+
+    assert.equal(
+      res?.headers.get('Link'),
+      '</app.js>; rel=preload; as=script, </app/about>; rel="canonical"',
+    );
+  });
+
   it("names the policy's spelling of a page canonical, without the query or fragment", async () => {
     const handler = createFetchHandler(
       createServerRouter({

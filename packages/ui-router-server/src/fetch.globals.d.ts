@@ -24,6 +24,7 @@ declare class Headers {
   constructor(init?: Headers | Record<string, string>);
   get(name: string): string | null;
   set(name: string, value: string): void;
+  append(name: string, value: string): void;
   delete(name: string): void;
 }
 

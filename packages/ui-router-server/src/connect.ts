@@ -181,6 +181,21 @@ const relabel = (res: ConnectResponse, status: number): void => {
     writeHead(downstream === 304 ? downstream : status, ...rest);
 };
 
+// Node's setHeader replaces: a Link the downstream layer sets joins the canonical one.
+const setCanonical = (res: ConnectResponse, canonical: string): void => {
+  const setHeader = res.setHeader.bind(res);
+
+  res.setHeader = (name, value) =>
+    setHeader(
+      name,
+      name.toLowerCase() !== 'link' || value.includes(canonical)
+        ? value
+        : `${canonical}, ${value}`,
+    );
+
+  setHeader('Link', canonical);
+};
+
 const defaultServeNotFound = (
   mount: string,
   req: ConnectRequest,
@@ -290,7 +305,7 @@ export function createConnectMiddleware(
 
         if (verdict.kind === 'shell') {
           if (verdict.status === undefined) {
-            res.setHeader('Link', canonicalLink(base, url));
+            setCanonical(res, canonicalLink(base, url));
           } else {
             stripValidators(req);
             relabel(res, verdict.status);
