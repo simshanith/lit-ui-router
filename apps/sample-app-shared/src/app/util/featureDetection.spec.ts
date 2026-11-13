@@ -277,17 +277,18 @@ describe('feature detection', () => {
 
   describe('FeatureFlags', () => {
     it('returns the default when nothing is stored', () => {
-      expect(featureFlags.get('enable-visualizer')).toBe(true);
+      expect(featureFlags.get('enable-devtools')).toBe(true);
+      expect(featureFlags.get('enable-visualizer')).toBe(false);
       expect(featureFlags.get('location-plugin')).toBeUndefined();
     });
 
     it('lets a URL param override the stored value', () => {
-      featureFlags.set('enable-visualizer', true);
-      setFeatureParam('enable-visualizer', 'false');
-      expect(featureFlags.get('enable-visualizer')).toBe(false);
-      expect(featureFlags.getAll()['enable-visualizer']).toBe(false);
+      featureFlags.set('enable-devtools', true);
+      setFeatureParam('enable-devtools', 'false');
+      expect(featureFlags.get('enable-devtools')).toBe(false);
+      expect(featureFlags.getAll()['enable-devtools']).toBe(false);
       // the override does not rewrite storage
-      expect(readStoredFlags()['enable-visualizer']).toBe(true);
+      expect(readStoredFlags()['enable-devtools']).toBe(true);
     });
 
     it.each([
@@ -309,7 +310,7 @@ describe('feature detection', () => {
     it('reports which flags the URL overrides', () => {
       setFeatureParam('enable-trace', '1');
       expect(featureFlags.isUrlOverridden('enable-trace')).toBe(true);
-      expect(featureFlags.isUrlOverridden('enable-visualizer')).toBe(false);
+      expect(featureFlags.isUrlOverridden('enable-devtools')).toBe(false);
     });
 
     it('drops unknown URL params from getAll', () => {
@@ -323,10 +324,10 @@ describe('feature detection', () => {
     });
 
     it('toggles a boolean flag and persists it', () => {
-      expect(featureFlags.toggle('enable-visualizer')).toBe(false);
-      expect(featureFlags.get('enable-visualizer')).toBe(false);
-      expect(readStoredFlags()['enable-visualizer']).toBe(false);
-      expect(featureFlags.toggle('enable-visualizer')).toBe(true);
+      expect(featureFlags.toggle('enable-devtools')).toBe(false);
+      expect(featureFlags.get('enable-devtools')).toBe(false);
+      expect(readStoredFlags()['enable-devtools']).toBe(false);
+      expect(featureFlags.toggle('enable-devtools')).toBe(true);
     });
 
     it('throws when toggling a non-boolean flag', () => {
@@ -336,21 +337,22 @@ describe('feature detection', () => {
     });
 
     it('resets one flag back to its default', () => {
-      featureFlags.set('enable-visualizer', false);
+      featureFlags.set('enable-devtools', false);
       featureFlags.set('location-plugin', 'hash');
-      featureFlags.reset('enable-visualizer');
-      expect(featureFlags.get('enable-visualizer')).toBe(true);
+      featureFlags.reset('enable-devtools');
+      expect(featureFlags.get('enable-devtools')).toBe(true);
       expect(featureFlags.get('location-plugin')).toBe('hash');
       expect(readStoredFlags()).toEqual({ 'location-plugin': 'hash' });
     });
 
     it('resets every flag', () => {
-      featureFlags.set('enable-visualizer', false);
+      featureFlags.set('enable-devtools', false);
       featureFlags.set('location-plugin', 'hash');
       featureFlags.resetAll();
       expect(featureFlags.getAll()).toEqual({
         'location-plugin': undefined,
-        'enable-visualizer': true,
+        'enable-devtools': true,
+        'enable-visualizer': false,
         'enable-trace': import.meta.env.VITE_TRACE === 'true',
         'enable-api-docs': true,
       });
@@ -362,7 +364,7 @@ describe('feature detection', () => {
       sessionStorage.setItem('featureFlags', '{not json');
       expect(() => featureFlags.load()).not.toThrow();
       expect(logged).toHaveBeenCalled();
-      expect(featureFlags.get('enable-visualizer')).toBe(true);
+      expect(featureFlags.get('enable-devtools')).toBe(true);
       logged.mockRestore();
     });
   });

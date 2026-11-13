@@ -102,9 +102,16 @@ const FLAG_CONFIGS: FlagConfig[] = [
     ],
   },
   {
+    key: 'enable-devtools',
+    label: 'Enable Devtools',
+    description: 'Show the ui-router-devtools panel (requires page reload)',
+    type: 'boolean',
+  },
+  {
     key: 'enable-visualizer',
     label: 'Enable Visualizer',
-    description: 'Show UI-Router state visualizer',
+    description:
+      'Show the @uirouter/visualizer state tree and transition log (requires page reload)',
     type: 'boolean',
   },
   {

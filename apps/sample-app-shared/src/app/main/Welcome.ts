@@ -8,8 +8,9 @@ export default () =>
     <p>
       This is a demonstration app intended to highlight some patterns that can
       be used within UI-Router. These patterns should help you to to build
-      cohesive, robust apps. Additionally, this app uses state-vis to show the
-      tree of states, and a transition log visualizer.
+      cohesive, robust apps. Additionally, this app loads the router devtools:
+      open the panel from the pill in the corner to see the tree of states and
+      the transition log.
     </p>
     <h2 class="h4">App Overview</h2>
     <p>
