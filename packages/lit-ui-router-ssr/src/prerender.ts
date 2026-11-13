@@ -151,15 +151,15 @@ const nodeWrite: FileWriter = async (file, body) => {
   await writeFile(file, body, 'utf8');
 };
 
-/** A `renderShell` hook that settles `router` on the path and returns `template(router)`. */
+/** A `renderShell` hook that settles `router` on the path within its mount and returns `template(router)`. */
 const settledTemplate =
   (router: UIRouterLit, template: (router: UIRouterLit) => TemplateResult) =>
   async (
     verdict: ShellVerdict,
-    { path }: SiteRenderContext,
+    { path, subpath }: SiteRenderContext,
   ): Promise<TemplateResult> => {
     try {
-      await settle(router, path);
+      await settle(router, subpath || '/');
     } catch (cause) {
       if (verdict.status !== 404) throw cause;
 
@@ -198,7 +198,7 @@ export interface PrerenderOptions extends Omit<
   /**
    * The page's template, read from {@link PrerenderOptions.router | router}
    * once it stands on the path: for each shell verdict, `router` is settled
-   * on the path with `settle` from `ui-router-server/ssr` and the template
+   * on the path within its mount with `settle` from `ui-router-server/ssr` and the template
    * this returns is rendered, as a {@link PrerenderOptions.renderShell | renderShell}
    * hook that settles and returns `template(router)` would. Pass this or
    * `renderShell`, not both. The 404 document's probe path is settled too, so
