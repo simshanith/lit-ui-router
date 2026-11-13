@@ -1,4 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { commands, page } from 'vitest/browser';
 import {
   configure,
@@ -665,15 +673,7 @@ describe('the nested Map', () => {
       timeout: 5000,
     });
 
-  // Colours ease with motion; without it they change at once, and only opacity fades.
-  const reduceMotion = async () => {
-    await commands.reduceMotion(true);
-    expect(matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true);
-  };
-
   beforeAll(() => import('../element/map.ts'));
-
-  afterEach(() => commands.reduceMotion(false));
 
   const edges = (element: UIRouterDevtools) =>
     element.renderRoot.querySelectorAll('.nedge');
@@ -708,6 +708,29 @@ describe('the nested Map', () => {
     while (flights.length > 0) {
       await Promise.allSettled(flights.map((flight) => flight.finished));
       flights = moving(element);
+    }
+  };
+
+  // An infinite animation cannot be finished, so it is left running.
+  const finite = (element: UIRouterDevtools) =>
+    element
+      .shadowRoot!.getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect?.getComputedTiming().iterations !== Infinity,
+      );
+
+  const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
+  // Jumps every move, ease and fade to its end; a colour that lands can start a transition on what inherits it.
+  const finish = async (element: UIRouterDevtools) => {
+    await element.updateComplete;
+    let running = finite(element);
+
+    while (running.length > 0) {
+      for (const animation of running) animation.finish();
+      await frame();
+      running = finite(element);
     }
   };
 
@@ -836,7 +859,7 @@ describe('the nested Map', () => {
       }
     };
 
-    await settled(element);
+    await finish(element);
     const dock = margins(element);
 
     // The diagram is centred when a column is free either side, and otherwise as near the middle as leaves one free at the end.
@@ -851,7 +874,7 @@ describe('the nested Map', () => {
       const scroller = element.renderRoot.querySelector('.map-scroll')!;
       expect(scroller.clientHeight).toBeGreaterThan(300);
     });
-    await settled(element);
+    await finish(element);
     const max = margins(element);
 
     expect(Math.abs(max.left - max.right)).toBeLessThanOrEqual(1);
@@ -880,7 +903,7 @@ describe('the nested Map', () => {
     for (const width of [1280, 1000]) {
       const element = await openMap(width);
       const map = await tree(element);
-      await settled(element);
+      await finish(element);
 
       const rects = () =>
         [...element.renderRoot.querySelectorAll('.box')].map((box) => {
@@ -965,7 +988,6 @@ describe('the nested Map', () => {
   });
 
   it('colours a state by its depth on the Map and in the Outline, and by status while a transition is in focus', async () => {
-    await reduceMotion();
     const element = await openMap(1280);
     const map = await tree(element);
 
@@ -1000,15 +1022,13 @@ describe('the nested Map', () => {
           .dataset.mode,
       ).toBe('tx'),
     );
-    await waitFor(() => {
-      expect(border('messagelist')).not.toBe(resting);
-      expect(border('messagelist')).toBe(border('mymessages'));
-    });
+    await finish(element);
+    expect(border('messagelist')).not.toBe(resting);
+    expect(border('messagelist')).toBe(border('mymessages'));
     expect(border('contacts')).not.toBe(border('messagelist'));
   });
 
   it('rings a selected box outside its border, and leaves the border saying what it said in every mode', async () => {
-    await reduceMotion();
     const element = await openMap(1280);
     const map = await tree(element);
 
@@ -1066,10 +1086,10 @@ describe('the nested Map', () => {
 
     options[1].click();
     await waitFor(() => expect(mode()).toBe('tx'));
-    await waitFor(() => {
-      expect(border('messagelist')).not.toEqual(resting);
-      expect(border('messagelist')[0]).toBe(border('mymessages')[0]);
-    });
+    await finish(element);
+    expect(border('messagelist')).not.toEqual(resting);
+    expect(border('messagelist')[0]).toBe(border('mymessages')[0]);
+    expect(map.getAnimations({ subtree: true })).toHaveLength(0);
 
     const status = border('mymessages');
 
@@ -1138,7 +1158,7 @@ describe('the nested Map', () => {
     const chips = element.renderRoot.querySelectorAll('.chip');
     expect([...chips].map((chip) => chip.textContent?.trim())).toEqual(['×2']);
 
-    await settled(element);
+    await finish(element);
 
     // Geometry is read in the diagram's own coordinates, which every engine reports alike.
     const origin = element.renderRoot
@@ -1303,14 +1323,14 @@ describe('the nested Map', () => {
   it('keeps the layout and re-fits the view when the panel is resized to the same shape', async () => {
     const element = await openMap(1280);
     await tree(element);
-    await settled(element);
+    await finish(element);
 
     const before = placesIn(element);
     const fitted = margins(element);
 
     await page.viewport(1240, 800);
     await waitFor(() => expect(margins(element).left).not.toBe(fitted.left));
-    await settled(element);
+    await finish(element);
 
     const after = margins(element);
 
@@ -1330,7 +1350,7 @@ describe('the nested Map', () => {
     const zoomIn = getByRole(shadow(element), 'button', { name: 'Zoom in' });
     const fit = getByRole(shadow(element), 'button', { name: 'Fit' });
 
-    await settled(element);
+    await finish(element);
     expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('12px');
     expect(scroller.hasAttribute('data-pan')).toBe(false);
 
@@ -1340,7 +1360,7 @@ describe('the nested Map', () => {
     await waitFor(() =>
       expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
     );
-    await settled(element);
+    await finish(element);
 
     // The largest step is the last, and its diagram is taller than the dock.
     expect(zoomIn).toHaveProperty('disabled', true);
@@ -1392,7 +1412,7 @@ describe('the nested Map', () => {
       }),
     );
     await element.updateComplete;
-    await settled(element);
+    await finish(element);
 
     // Shift and an arrow pans, and moves neither focus nor any box inside the diagram.
     expect(above()).toBeGreaterThan(0);
@@ -1425,7 +1445,7 @@ describe('the nested Map', () => {
     await waitFor(() =>
       expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
     );
-    await settled(element);
+    await finish(element);
 
     const above = () =>
       scroller.getBoundingClientRect().top +
@@ -1567,7 +1587,7 @@ describe('the nested Map', () => {
     await waitFor(() =>
       expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
     );
-    await settled(element);
+    await finish(element);
 
     const press = (key: string) =>
       element.shadowRoot?.activeElement?.dispatchEvent(
@@ -1579,7 +1599,7 @@ describe('the nested Map', () => {
     for (const key of ['End', 'Home']) {
       press(key);
       await element.updateComplete;
-      await settled(element);
+      await finish(element);
 
       const name = key === 'End' ? 'message' : 'app';
 
@@ -1654,5 +1674,72 @@ describe('the nested Map', () => {
         'aria-pressed',
       ),
     ).toBe('true');
+  });
+
+  describe('under reduced motion', () => {
+    beforeEach(async () => {
+      await commands.reduceMotion(true);
+      expect(matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true);
+    });
+
+    afterEach(() => commands.reduceMotion(false));
+
+    const timing = new Set(['offset', 'computedOffset', 'easing', 'composite']);
+
+    // What anything in the shadow tree is changing over time, other than opacity.
+    const eased = (element: UIRouterDevtools) =>
+      element.shadowRoot!.getAnimations().flatMap((animation) =>
+        animation.effect instanceof KeyframeEffect
+          ? animation.effect
+              .getKeyframes()
+              .flatMap((frame) => Object.keys(frame))
+              .filter((key) => !timing.has(key) && key !== 'opacity')
+          : [],
+      );
+
+    it('puts the boxes in their new places at once when the type step changes, and only fades', async () => {
+      const element = await openMap(1280);
+      await tree(element);
+
+      getByRole(shadow(element), 'button', {
+        name: 'Maximise devtools',
+      }).click();
+      await waitFor(() =>
+        expect(
+          getComputedStyle(element.renderRoot.querySelector('.nested')!)
+            .fontSize,
+        ).not.toBe('12px'),
+      );
+
+      const placed = margins(element);
+
+      expect(moving(element)).toHaveLength(0);
+      expect(Math.abs(placed.left - placed.right)).toBeLessThanOrEqual(1);
+      expect(Math.abs(placed.top - placed.bottom)).toBeLessThanOrEqual(1);
+      expect(eased(element)).toEqual([]);
+    });
+
+    it('changes a colour at once when a transition comes into focus', async () => {
+      const element = await openMap(1280);
+      const map = await tree(element);
+
+      const border = (name: string) =>
+        getComputedStyle(
+          getByRole(map, 'treeitem', { name }).parentElement!,
+          '::before',
+        ).borderTopColor;
+
+      const resting = border('messagelist');
+
+      getAllByRole(
+        getByRole(shadow(element), 'listbox', { name: /Transitions/ }),
+        'option',
+      )[1].click();
+      await element.updateComplete;
+
+      expect(border('messagelist')).not.toBe(resting);
+      expect(border('messagelist')).toBe(border('mymessages'));
+      expect(eased(element)).toEqual([]);
+    });
   });
 });
