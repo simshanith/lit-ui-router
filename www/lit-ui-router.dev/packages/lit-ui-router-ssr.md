@@ -772,7 +772,7 @@ It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<script type="application/json" data-lit-ui-router-ssr>{"version":"0.9.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.11.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`
