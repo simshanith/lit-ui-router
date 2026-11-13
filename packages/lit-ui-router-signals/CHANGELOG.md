@@ -2,6 +2,18 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=lit-ui-router-signals%40&expanded=true).
 
+## 0.4.1 (2026-11-13)
+
+### Features
+
+* **www:** move the API reference to /reference/\<npm-name>/ ([#2028](https://github.com/simshanith/lit-ui-router/issues/2028)) ([9044ab3](https://github.com/simshanith/lit-ui-router/commit/9044ab32a5fe2b882ae7eb8de4700f184094c663)), references [#1566](https://github.com/simshanith/lit-ui-router/issues/1566)
+
+### Build System
+
+* drop stale overrides, knip ignores and lint disables from the exception lists ([#1909](https://github.com/simshanith/lit-ui-router/issues/1909)) ([52faefd](https://github.com/simshanith/lit-ui-router/commit/52faefd28347d7437db68607d629f5a6f02c8ad7)), references [#721](https://github.com/simshanith/lit-ui-router/issues/721) [#1448](https://github.com/simshanith/lit-ui-router/issues/1448) [#1474](https://github.com/simshanith/lit-ui-router/issues/1474) [#1534](https://github.com/simshanith/lit-ui-router/issues/1534) [#1907](https://github.com/simshanith/lit-ui-router/issues/1907) [#1901](https://github.com/simshanith/lit-ui-router/issues/1901)
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router-signals/0.4.1/) · [Diff from 0.4.0](https://lit-ui-router.dev/releases/lit-ui-router-signals/diff/0.4.0...0.4.1/)
+
 ## 0.4.0 (2026-11-02)
 
 ### Features
