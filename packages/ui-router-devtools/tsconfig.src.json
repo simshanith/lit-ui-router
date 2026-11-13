@@ -1,0 +1,11 @@
+{
+  // conformance guard for oxc-emit-dts, which never typechecks; browser-only, so no node types
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "isolatedDeclarations": true,
+    "types": []
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/specs"]
+}
