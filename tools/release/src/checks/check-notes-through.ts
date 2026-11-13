@@ -65,8 +65,11 @@ async function main(argv: readonly string[]): Promise<void> {
 
   const stable = bumped.filter(({ version }) => !semver.prerelease(version));
 
+  // Human text leaves stdout to the JSON document when that is where it goes.
+  const say = output.kind === 'stdout' ? console.error : console.log;
+
   for (const { dir, version } of prereleases) {
-    console.log(
+    say(
       `- ${dir}: ${version} is a prerelease, which has no CHANGELOG.md section`,
     );
   }
@@ -74,6 +77,11 @@ async function main(argv: readonly string[]): Promise<void> {
   if (bumped.length === 0) {
     console.error(
       `✗ check-notes-through: ${base}..${head} bumps no publishable member's version`,
+    );
+
+    await writeJsonOutput(
+      output,
+      `${JSON.stringify({ ok: false, base, head, prereleases, results: [] }, null, 2)}\n`,
     );
     process.exitCode = 1;
 
@@ -92,8 +100,7 @@ async function main(argv: readonly string[]): Promise<void> {
   const ok = results.every(passes);
   const report = formatNotesThroughReport(results);
 
-  if (report !== '')
-    (output.kind === 'stdout' || !ok ? console.error : console.log)(report);
+  if (report !== '') (ok ? say : console.error)(report);
 
   await writeJsonOutput(
     output,

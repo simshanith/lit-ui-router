@@ -19,7 +19,7 @@ export function parseNotesThrough(message: string): string | undefined {
 
 /**
  * Whether the notes writer would list a commit by its message alone: a listed
- * type, a breaking change under any type, or a git revert. Ers towards
+ * type, a breaking change under any type, or a git revert. Errs towards
  * listing: the writer's scope and revert-pair rules only move a commit into
  * the closing `Also touched` list, which still names it.
  */
