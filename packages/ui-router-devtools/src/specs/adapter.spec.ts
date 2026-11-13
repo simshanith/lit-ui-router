@@ -87,7 +87,7 @@ describe('onInvalid', () => {
 });
 
 describe('state declarations', () => {
-  const describe = (states: PluginState[]) => {
+  const describeStates = (states: PluginState[]) => {
     const router = makeRouter(states);
     const events: DevtoolsEvent[] = [];
     observe(router, (event) => events.push(event))();
@@ -119,7 +119,7 @@ describe('state declarations', () => {
   }
 
   it('leaves a plain state without the optional fields', () => {
-    expect(describe([{ name: 'a' }])).toEqual([
+    expect(describeStates([{ name: 'a' }])).toEqual([
       { name: 'a', abstract: false, redirects: false },
     ]);
   });
@@ -128,7 +128,7 @@ describe('state declarations', () => {
     const router = new UIRouter();
 
     expect(
-      describe([
+      describeStates([
         { name: 'a', abstract: true, redirectTo: 'a.b' },
         { name: 'a.b', redirectTo: { state: 'a.c', params: {} } },
         { name: 'a.c', redirectTo: router.stateService.target('a') },
@@ -147,7 +147,7 @@ describe('state declarations', () => {
     const plain = { abstract: false, redirects: false };
 
     expect(
-      describe([
+      describeStates([
         { name: 'a', dsr: true, sticky: true },
         { name: 'b', dsr: 'b.c' },
         { name: 'b.c', deepStateRedirect: { default: 'b' } },
@@ -166,7 +166,7 @@ describe('state declarations', () => {
   });
 
   it('keeps every state JSON-safe', () => {
-    const states = describe([
+    const states = describeStates([
       { name: 'a', redirectTo: () => 'a', dsr: () => true },
     ]);
 
