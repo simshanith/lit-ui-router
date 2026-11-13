@@ -233,8 +233,9 @@ its room is still reached, and how a resize is kept from moving boxes.
   [spacing system](#spacing): 11px, 12px, 16px and 20px. Each is a layout of
   its own, packed for a room scaled with its type so that it keeps the
   fitted arrangement. What is drawn does not change with the step: the
-  ladder's rung is chosen for the fitted size and kept. A zoom holds the
-  point in the middle of the room still.
+  ladder's rung is chosen for the fitted size and kept. In a panned view, a
+  zoom holds the point in the middle of the room still; from the fitted view
+  it re-applies the fitted placement instead.
 - **When a resize packs again.** The layout is kept while the ladder's rung
   is the same, the diagram still fits (or is being panned or zoomed), and the
   room's width over height is within a quarter of the one it was packed for.
