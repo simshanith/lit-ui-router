@@ -144,3 +144,27 @@ it('prints array params as a list', () => {
   expect(paramText(null)).toBe('');
   expect(paramText(3)).toBe('3');
 });
+
+it('names the transition that took over, when the result names one', () => {
+  // SAFETY: resultText reads only the result
+  const text = (result: Tx['result']) => resultText({ result } as Tx);
+
+  expect(text({ t: 1, outcome: 'superseded' })).toEqual({
+    head: 'Superseded by a newer transition',
+  });
+  expect(text({ t: 1, outcome: 'redirected' })).toEqual({
+    head: 'Redirected',
+  });
+  expect(text({ t: 1, outcome: 'redirected', by: 4 })).toEqual({
+    head: 'Redirected to 004',
+  });
+});
+
+it('folds past an event type this version does not know', () => {
+  // A later v1 may add event types, which arrive as parsed JSON.
+  const later: RouterEvent = JSON.parse(
+    '{ "v": 1, "seq": 1, "t": 0, "type": "later" }',
+  );
+
+  expect(fold([later]).txs).toEqual([]);
+});

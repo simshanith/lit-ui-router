@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import {
   getAllByRole,
@@ -77,6 +77,114 @@ it('shows the pill with the current state and opens the panel', async () => {
       getByRole(shadow(element), 'button', { name: 'Collapse devtools' }),
     ).toBe(element.shadowRoot?.activeElement),
   );
+});
+
+it('collapses to the pill, and switches views from the tabs and the Router button', async () => {
+  await page.viewport(400, 800);
+  const router = makeRouter();
+  const { element } = router.plugin(DevtoolsPlugin);
+  const panel = panelOf(element);
+  await router.stateService.go('home');
+  await element.updateComplete;
+  getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+  await element.updateComplete;
+
+  const tab = (name: string) =>
+    getByRole(shadow(element), 'tab', { name: new RegExp(name) });
+
+  tab('Transitions').click();
+  await element.updateComplete;
+  expect(tab('Transitions').getAttribute('aria-selected')).toBe('true');
+
+  tab('Router').click();
+  await element.updateComplete;
+  expect(tab('Router').getAttribute('aria-selected')).toBe('true');
+
+  tab('States').click();
+  await element.updateComplete;
+  expect(panel._inspect).toBe('none');
+  expect(tab('States').getAttribute('aria-selected')).toBe('true');
+
+  // The Router button stands in for the tabs once the panes sit side by side.
+  await page.viewport(1280, 800);
+
+  const brand = await waitFor(() =>
+    getByRole(shadow(element), 'button', { name: 'Router', pressed: false }),
+  );
+
+  brand.click();
+  await element.updateComplete;
+  expect(brand.getAttribute('aria-pressed')).toBe('true');
+  brand.click();
+  await element.updateComplete;
+  expect(brand.getAttribute('aria-pressed')).toBe('false');
+
+  getByRole(shadow(element), 'button', { name: 'Collapse devtools' }).click();
+  await element.updateComplete;
+
+  const pill = getByRole(shadow(element), 'button', { name: /Router .*home/ });
+  expect(pill.matches(':popover-open')).toBe(true);
+  expect(element.shadowRoot?.activeElement).toBe(pill);
+  expect(
+    shadow(element).querySelector('.panel')?.matches(':popover-open'),
+  ).toBe(false);
+});
+
+it('marks the state whose resolve failed, and says why in the inspector', async () => {
+  await page.viewport(1280, 800);
+  const router = makeRouter();
+  router.stateService.defaultErrorHandler(() => {});
+  router.stateRegistry.register({
+    name: 'item',
+    url: '/item/:id',
+    resolve: [
+      {
+        token: 'data',
+        resolveFn: () => Promise.reject(new Error('no data')),
+      },
+    ],
+  });
+  const { element } = router.plugin(DevtoolsPlugin, { timeResolves: true });
+  const panel = panelOf(element);
+  await router.stateService.go('item', { id: '7' }).catch(() => {});
+  await element.updateComplete;
+
+  const failed = panel._model.txs.find((tx) => tx.to === 'item')!;
+  panel._selectTx(failed.id);
+  await element.updateComplete;
+
+  const item = panel._model.states.find((state) => state.name === 'item')!;
+  expect(panel._role(item)).toBe('errored');
+
+  const inspector = shadow(element).querySelector('.inspector-pane')!;
+  expect(inspector.querySelector('.reason')?.textContent).toContain('no data');
+  expect(inspector.querySelector('.params')?.textContent).toContain('7');
+});
+
+it('opens the ancestors of a state named in the inspector and selects it', async () => {
+  await page.viewport(1280, 800);
+  const router = bareRouter();
+  router.stateRegistry.register({ name: 'a' });
+  router.stateRegistry.register({ name: 'a.b' });
+  const { element } = router.plugin(DevtoolsPlugin);
+  const panel = panelOf(element);
+  await router.stateService.go('a.b');
+  await element.updateComplete;
+
+  panel._selectTx(panel._model.txs[0].id);
+  panel._collapsed = new Set(['a']);
+  await element.updateComplete;
+
+  const link = shadow(element).querySelector<HTMLElement>(
+    '.inspector-pane .link[title="a.b"]',
+  )!;
+
+  link.click();
+  await element.updateComplete;
+
+  expect(panel._selectedState).toBe('a.b');
+  expect(panel._inspect).toBe('state');
+  expect(panel._collapsed.has('a')).toBe(false);
 });
 
 it('removes the element when the plugin is disposed', () => {
@@ -180,6 +288,100 @@ describe('session files', () => {
     input.files = files.files;
     input.dispatchEvent(new Event('change'));
   };
+
+  it('exports the session as a JSON file named for its router', async () => {
+    const { element } = await open();
+    const panel = panelOf(element);
+    const blobs: Blob[] = [];
+    const names: string[] = [];
+
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      // SAFETY: Export only ever passes a Blob
+      blobs.push(blob as Blob);
+
+      return 'blob:session';
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      names.push(this.download);
+    });
+
+    getByRole(shadow(element), 'button', {
+      name: 'Export session as JSON',
+    }).click();
+
+    expect(names).toEqual([
+      expect.stringMatching(
+        new RegExp(`^ui-router-session-${panel.recorder!.routerId}-.*\\.json$`),
+      ),
+    ]);
+    // The envelope's clock is read at export, so only it differs from a fresh read.
+    expect(JSON.parse(await blobs[0].text())).toEqual({
+      ...JSON.parse(JSON.stringify(panel._exportSession())),
+      t: expect.any(Number),
+    });
+    vi.restoreAllMocks();
+  });
+
+  it('says a file that is not JSON did not import', async () => {
+    const { element } = await open();
+    importFile(element, 'not json');
+
+    await waitFor(() =>
+      expect(
+        shadow(element).querySelector('.notice.fault')?.textContent,
+      ).toContain('session.json is not JSON'),
+    );
+  });
+
+  it('imports a dropped file, and the Live button returns to the router', async () => {
+    const { router, element } = await open();
+    const panel = panelOf(element);
+    const files = new DataTransfer();
+    files.items.add(
+      new File(
+        [JSON.stringify(element.session({ params: 'all' }))],
+        'session.json',
+      ),
+    );
+
+    const region = getByRole(shadow(element), 'region', {
+      name: 'Router devtools',
+    });
+
+    const over = new DragEvent('dragover', { cancelable: true, bubbles: true });
+    region.dispatchEvent(over);
+    expect(over.defaultPrevented).toBe(true);
+    region.dispatchEvent(
+      new DragEvent('drop', {
+        dataTransfer: files,
+        cancelable: true,
+        bubbles: true,
+      }),
+    );
+
+    await waitFor(() => expect(panel._imported).not.toBeNull());
+
+    getByRole(shadow(element), 'button', {
+      name: 'Live: return to the live router',
+    }).click();
+    await element.updateComplete;
+
+    expect(panel._imported).toBeNull();
+    expect(panel._announcement).toBe('Showing the live router.');
+    expect(panel._model.current.name).toBe(router.globals.current.name);
+  });
+
+  it('refuses a session of another schema version', async () => {
+    const { element } = await open();
+    const session = element.session({ params: 'all' })!;
+
+    // SAFETY: a file from a later major version, as importSession would receive it
+    expect(() => element.importSession({ ...session, v: 2 } as never)).toThrow(
+      'Unsupported session version 2; expected 1',
+    );
+  });
 
   it('says so when the session reader fails to load, and loads it on the next import', async () => {
     const { element } = await open();
@@ -325,6 +527,40 @@ describe('session files', () => {
       router.dispose();
       document.body.replaceChildren();
     }
+  });
+
+  it('lets the Messages toggle drop failure messages from the export', async () => {
+    await page.viewport(1280, 800);
+    const router = makeRouter();
+    router.stateService.defaultErrorHandler(() => {});
+    router.stateRegistry.register({
+      name: 'boom',
+      onEnter: () => {
+        throw new Error('boom failed');
+      },
+    });
+
+    const { element } = router.plugin(DevtoolsPlugin);
+    await router.stateService.go('boom').catch(() => {});
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+
+    const messages = () =>
+      panelOf(element)
+        ._exportSession()
+        ?.events.flatMap((event) =>
+          event.type === 'result' && event.message ? [event.message] : [],
+        );
+
+    expect(messages()).toEqual(['boom failed']);
+
+    within(getByRole(shadow(element), 'group', { name: 'Export keeps' }))
+      .getByRole('button', { name: 'Messages' })
+      .click();
+    await element.updateComplete;
+
+    expect(messages()).toEqual([]);
   });
 
   it('starts the export toggles from the redaction option', async () => {
@@ -881,6 +1117,12 @@ describe('the nested Map', () => {
       ).toBeTruthy(),
     );
     expect(queryAllByRole(shadow(next), 'tree')).toHaveLength(0);
+
+    getByRole(shadow(next), 'button', { name: 'Nested' }).click();
+    expect(await tree(next)).toBeTruthy();
+    expect(localStorage.getItem('ui-router-devtools:map-layout')).toBe(
+      'nested',
+    );
   });
 
   it('shows the node-link tree, and does not offer nested boxes, under 560px', async () => {

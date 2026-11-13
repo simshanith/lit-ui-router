@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import { record } from '../index.ts';
@@ -68,6 +68,57 @@ it('counts cleared events as dropped and writes the envelope', async () => {
     'states',
     'current',
   ]);
+  recorder.stop();
+  router.dispose();
+});
+
+it('mints a version 4 session id where randomUUID is missing, as outside a secure context', () => {
+  const router = makeRouter();
+  const real = crypto;
+  vi.stubGlobal('crypto', { getRandomValues: real.getRandomValues.bind(real) });
+
+  try {
+    const recorder = record(router);
+
+    expect(recorder.session().id).toMatch(
+      /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/,
+    );
+    recorder.stop();
+  } finally {
+    vi.unstubAllGlobals();
+    router.dispose();
+  }
+});
+
+it('drops and counts the later events of a transition trimmed while it ran', async () => {
+  const router = makeRouter();
+  let release = () => {};
+
+  const held = new Promise<void>((resolve) => (release = resolve));
+
+  router.stateRegistry.register({ name: 'held' });
+  router.transitionService.onStart({ to: 'held' }, () => held);
+
+  const recorder = record(router, { limit: 40 });
+  const pending = router.stateService.go('held').catch(() => {});
+  await new Promise((resolve) => setTimeout(resolve, 1));
+  const first = recorder.events.find((event) => event.type === 'transition');
+
+  for (let i = 0; i < 12; i++) await router.stateService.go(i % 2 ? 'a' : 'b');
+  const dropped = recorder.dropped;
+  expect(
+    recorder.events.some((event) => 'id' in event && event.id === first?.id),
+  ).toBe(false);
+
+  release();
+  await pending;
+  await settled(recorder);
+
+  // Its result arrives after it was trimmed, and is counted, not kept.
+  expect(recorder.dropped).toBeGreaterThan(dropped);
+  expect(
+    recorder.events.some((event) => 'id' in event && event.id === first?.id),
+  ).toBe(false);
   recorder.stop();
   router.dispose();
 });
