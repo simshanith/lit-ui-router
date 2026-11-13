@@ -684,11 +684,12 @@ A commit that lands on `main` after the bump rendered the notes and before
 the release PR merges would ship in the tarball without appearing in any
 notes. `tools/release/src/checks/check-notes-through.ts` fails when
 `<Notes-Through>..<tip>` holds a commit the notes would list: one in the
-notes' path (`gitRawCommitsOpts.path`), of a listed type or breaking, and not
-skipped as an unconsumed catalog change. Scopes are not consulted, since the
-notes list a foreign-scope commit too, in `Also touched this package`. A test,
-chore or CI commit never trips it, and since it reads only commits, hand edits
-to the section never do either. It runs twice:
+notes' path (`gitRawCommitsOpts.path`), of a listed type, breaking, a git
+revert or carrying a `release-as:` line, and not skipped as an unconsumed
+catalog change. Scopes are not consulted, since the notes list a foreign-scope
+commit too, in `Also touched this package`. A test, chore or CI commit that is
+none of those never trips it, and since it reads only commits, hand edits to
+the section never do either. It runs twice:
 
 - On release PRs (the `release` label), as the last step of
   `build_and_test / run`, against the base branch's tip
