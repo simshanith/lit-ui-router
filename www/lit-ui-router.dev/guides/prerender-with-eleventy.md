@@ -24,7 +24,9 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
 - [`src/routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/routes.ts)
   holds the states as data: names, urls, the redirect, `otherwise` and
   `strict`. `src/app.ts` spreads it into the states it registers, and the
-  server's mount compiles it, so the two halves can't drift.
+  server's mount compiles it with
+  [`routesFromStates()`](/packages/ui-router-server#sharing-states-with-the-client),
+  so the two halves can't drift.
 - [`src/bodies.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/bodies.ts)
   holds the solar-system data.
 - [`src/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/prerender.ts)
@@ -69,9 +71,9 @@ const result = await prerender({
 ```
 
 Each page in `result.pages` names the file it belongs at, such as
-`planets/3/index.html` or `404.html`, and its verdict carries the status. The
-other collected files are `_redirects` and the redirect pages. From there
-Eleventy does the writing:
+`planets/3/index.html` or `404.html`, and `page.status` is the status it
+answers with. The other collected files are `_redirects` and the redirect
+pages. From there Eleventy does the writing:
 
 - A [paginated](https://www.11ty.dev/docs/pagination/) template writes one
   page per entry in `result.pages`, at its `file`, wrapped in the layout.

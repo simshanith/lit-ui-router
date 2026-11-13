@@ -1,11 +1,6 @@
 // Runs after `vite build`: the router decides what each path is, and the pages go into the built index.html.
-import { LitElementRenderer } from '@lit-labs/ssr';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import {
-  LightElementRenderer,
-  settle,
-  UiViewRenderer,
-} from 'lit-ui-router-ssr';
+import { shadowElementRenderers } from 'lit-ui-router-ssr';
 import { definePrerender } from 'lit-ui-router-ssr/vite';
 import { installServerLocation } from 'ui-router-server/location';
 import { redirectPages } from 'ui-router-server/prerender';
@@ -14,32 +9,19 @@ import { configure, page } from './app.ts';
 import { solarBodies } from './bodies.ts';
 import { mounts } from './routes.ts';
 
-export default definePrerender((site) => {
+export default definePrerender((site) => ({
+  mounts,
   // Vite's `base`, so the server render builds its hrefs where the host serves the pages.
-  const router = configure(
+  router: configure(
     installServerLocation(new UIRouterLit(), { baseHref: site.base }),
-  );
-
-  return {
-    mounts,
-    router,
-    // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
-    paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
-    // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
-    rules: redirectPages({ redirectsFile: true }),
-    // The default omits LitElementRenderer, which <app-root>'s shadow root needs.
-    elementRenderers: [
-      UiViewRenderer,
-      LightElementRenderer,
-      LitElementRenderer,
-    ],
-    // `{}` dehydrates with defaults: each page embeds its resolved data; client adopts the resolves instead of rerunning
-    dehydrate: {},
-    renderShell: async (_verdict, { path }) => {
-      await settle(router, path);
-
-      return page(router);
-    },
-    document: (body) => site.shellHtml.replace('<!--app-->', body),
-  };
-});
+  ),
+  // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
+  paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
+  // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
+  rules: redirectPages({ redirectsFile: true }),
+  // <app-root> holds the <ui-view> in its shadow root.
+  elementRenderers: shadowElementRenderers,
+  // `{}` dehydrates with defaults: each page embeds its resolved data; client adopts the resolves instead of rerunning
+  dehydrate: {},
+  template: page,
+}));

@@ -1,5 +1,5 @@
 // The states as data, with no components: the client adds components and resolves, the server compiles its mount.
-import type { MountConfig } from 'ui-router-server';
+import { routesFromStates, type MountConfig } from 'ui-router-server';
 
 export const routes = {
   planets: { name: 'planets', url: '/' },
@@ -9,7 +9,7 @@ export const routes = {
 } as const;
 
 export const mount = {
-  routes: Object.values(routes),
+  routes: routesFromStates(Object.values(routes)),
   otherwise: { state: routes.notFound.name },
   config: { strict: false },
 } satisfies MountConfig;
