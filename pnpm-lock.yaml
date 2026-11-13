@@ -2467,6 +2467,40 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  tools/changelog:
+    dependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
+      '@tools/shared':
+        specifier: catalog:workspace
+        version: link:../shared
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.78.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.93.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/ci-logs:
     dependencies:
       '@tools/shared':

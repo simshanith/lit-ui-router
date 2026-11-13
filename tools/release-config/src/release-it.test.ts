@@ -135,6 +135,24 @@ describe('release notes catalog commits', () => {
     );
     commitFiles(
       repo,
+      { 'packages/a/CHANGELOG.md': '# Changelog\n' },
+      'fix(a): backfill the changelog',
+    );
+    commitFiles(
+      repo,
+      {
+        'packages/a/CHANGELOG.md': '# Changelog\n\n## 1.0.0\n',
+        'packages/a/README.md': 'a',
+      },
+      'fix(a): document the entry point',
+    );
+    commitFiles(
+      repo,
+      { 'packages/a/docs/CHANGELOG.md': 'nested' },
+      'fix(a): add the nested changelog',
+    );
+    commitFiles(
+      repo,
       {
         'pnpm-workspace.yaml': workspaceYaml(
           setEntry(catalogs, 'publishedPeerA', 'x', '^1.0.0 || ^2.0.0'),
@@ -227,6 +245,18 @@ describe('release notes catalog commits', () => {
 
   it('keeps commits inside the package directory', () => {
     assert.match(notesA, /add the entry point/);
+  });
+
+  it('leaves out a commit that only edits the package changelog', () => {
+    assert.doesNotMatch(notesA, /backfill the changelog/);
+  });
+
+  it('keeps a commit that edits the changelog and the package', () => {
+    assert.match(notesA, /document the entry point/);
+  });
+
+  it('keeps a changelog edit in a subdirectory', () => {
+    assert.match(notesA, /add the nested changelog/);
   });
 
   it('lists a commit touching both the directory and the workspace file once', () => {

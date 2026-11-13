@@ -14,6 +14,9 @@
 # only the labels without a trailing parenthetical trip it — promoting them
 # would inject partial entries into the VitePress outline and sidebar.
 disable = ["MD013", "MD033", "MD036", "MD057"]
+# Changelog sections are GitHub release bodies kept byte for byte, so house
+# style never rewrites published notes.
+exclude = ["packages/*/CHANGELOG.md"]
 
 # rumdl counts a VitePress frontmatter `title:` as an H1, so any page with both
 # `title:` and an `#` heading reads as a duplicate/missing H1. Empty = don't
