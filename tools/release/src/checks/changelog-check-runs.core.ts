@@ -47,14 +47,14 @@ export function toChangelogCheckRun(
     return {
       name,
       conclusion: 'action_required',
-      title: `${actions.length} CHANGELOG.md section(s) disagree with the published notes`,
+      title: `${actions.length} CHANGELOG.md finding(s) need action`,
       summary: [
         "Each published package's CHANGELOG.md must hold every stable GitHub",
         'release body the release ledger stores. Correct a section by PR; once it',
         `merges, a maintainer runs [Release notes re-sync](${RESYNC_WORKFLOW})`,
         'to publish the file to GitHub. The ledger records the new bodies at its',
         'next tag sweep.',
-        ...section('Disagreements', actions),
+        ...section('Findings', actions),
         ...notes,
       ].join('\n'),
     };

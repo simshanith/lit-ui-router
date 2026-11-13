@@ -33,9 +33,9 @@ describe('toChangelogCheckRun', () => {
     const run = toChangelogCheckRun([DIFFERS, AHEAD], undefined);
 
     assert.equal(run.conclusion, 'action_required');
-    assert.match(run.title, /^1 CHANGELOG\.md section/);
+    assert.match(run.title, /^1 CHANGELOG\.md finding/);
     assert.match(run.summary, /release-notes-resync\.yml/);
-    assert.match(run.summary, /\*\*Disagreements\*\*\n\n- `pkg@1\.0\.0`/);
+    assert.match(run.summary, /\*\*Findings\*\*\n\n- `pkg@1\.0\.0`/);
   });
 
   it('is neutral when the ledger is unreachable', () => {

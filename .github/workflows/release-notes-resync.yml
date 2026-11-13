@@ -51,12 +51,13 @@ jobs:
           echo "::error::a re-sync that edits releases runs from main only"
           exit 1
       - name: 'Checkout code'
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@v5
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
         with:
+          version: 2026.10.24
           # No restored tool cache: this job holds a token that edits releases.
           cache: false
       - name: Install dependencies

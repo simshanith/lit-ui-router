@@ -1,16 +1,12 @@
 #!/usr/bin/env node
 // Posts the changelog drift verdict on HEAD; a failure is a warning, never an exit; only a usage error exits 2.
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { changelogDrift } from '@tools/changelog/drift.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { appendStepSummary, logWarning } from '@tools/shared/gha.ts';
-import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
+import { changelogFiles } from '../lib/changelog-files.ts';
 import { readLedger } from '../lib/ledger.ts';
 import { withRetry } from '../lib/retry.ts';
 import { toChangelogCheckRun } from './changelog-check-runs.core.ts';
@@ -18,23 +14,6 @@ import {
   checkRunApiArgs,
   checkRunsMarkdown,
 } from './publish-check-runs.core.ts';
-
-/** Each published package's CHANGELOG.md, `undefined` where there is none. */
-async function changelogFiles() {
-  const { members } = await loadWorkspace(workspaceRoot);
-
-  return members
-    .filter(isPublishable)
-    .filter(({ dir }) => dir.startsWith('packages/'))
-    .map(({ name, dir }) => {
-      const path = join(workspaceRoot, dir, 'CHANGELOG.md');
-
-      return {
-        name,
-        text: existsSync(path) ? readFileSync(path, 'utf8') : undefined,
-      };
-    });
-}
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');

@@ -2,13 +2,11 @@
 // Publishes CHANGELOG.md sections to the GitHub releases whose bodies differ; a dry run by default.
 //
 // Usage: release-notes-resync.ts [--package <name>] [--version <version>] [--dry-run true|false] [--json | --json-out <path>]
-import { existsSync, readFileSync } from 'node:fs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   jsonOutput,
   withoutJsonFlags,
@@ -18,9 +16,9 @@ import { messageOf } from '@tools/shared/errors.ts';
 import { defaultCapture } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 import { appendStepSummary, logError, onActions } from '@tools/shared/gha.ts';
-import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 import * as v from 'valibot';
 
+import { changelogFiles } from '../lib/changelog-files.ts';
 import {
   ReleaseSchema,
   applyResync,
@@ -35,22 +33,6 @@ const USAGE =
 
 const ALL = (value: string | undefined): string =>
   value === undefined || value.trim() === 'all' ? '' : value.trim();
-
-async function changelogFiles() {
-  const { members } = await loadWorkspace(workspaceRoot);
-
-  return members
-    .filter(isPublishable)
-    .filter(({ dir }) => dir.startsWith('packages/'))
-    .map(({ name, dir }) => {
-      const path = join(workspaceRoot, dir, 'CHANGELOG.md');
-
-      return {
-        name,
-        text: existsSync(path) ? readFileSync(path, 'utf8') : undefined,
-      };
-    });
-}
 
 async function readReleases(repo: string) {
   const { stdout } = await defaultCapture('gh', releaseListArgs(repo));
