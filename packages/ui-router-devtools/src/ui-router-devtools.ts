@@ -3,7 +3,7 @@ import type { UIRouter } from '@uirouter/core';
 
 import { DevtoolsPanel } from './element/panel.ts';
 import type { Recorder } from './recorder.ts';
-import type { Redaction, Session } from './schema.ts';
+import type { Redaction, Session, SpanRecord } from './schema.ts';
 
 /** `<ui-router-devtools>`: a pill that opens a panel of the router's states, transitions and config. */
 export interface UIRouterDevtools extends LitElement {
@@ -21,6 +21,10 @@ export interface UIRouterDevtools extends LitElement {
   session(redaction?: Partial<Redaction>): Session | undefined;
   /** Shows `session` instead of the live router until the panel's Live button is pressed. */
   importSession(session: Session): void;
+  /** Spans from a tracer, which the Timeline joins to transitions; setting it replaces them all. It holds the latest 2000. */
+  spans: readonly SpanRecord[];
+  /** Adds a span, or replaces the one with its `spanId`: a span can be sent when it starts, without `endTime`, and again when it ends. */
+  addSpan(span: SpanRecord): void;
 }
 
 /** The `<ui-router-devtools>` class; `ui-router-devtools/define` registers it. */
