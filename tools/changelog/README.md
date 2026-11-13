@@ -6,6 +6,12 @@ of each published package.
 - [`src/changelog.ts`](./src/changelog.ts) (`.`): parse a file into its
   preamble and `##` sections, extract one version's body, merge sections
   newest first by semver, and render the file with its fixed preamble.
+- [`src/write-section.ts`](./src/write-section.ts): adds one version's
+  section, every other byte kept; the bump runs it from release-it's
+  `after:bump` hook ([Release notes](../../docs/RELEASE.md#release-notes)).
+- [`src/extract.ts`](./src/extract.ts): prints one version's section body, or
+  fails when there is none; the publish runs it as release-it's
+  `github.releaseNotes`.
 - [`src/normalise.ts`](./src/normalise.ts): the structural changes a GitHub
   release body takes on its way into a section. The words stay as published.
 - [`src/backfill.ts`](./src/backfill.ts): adds the sections a file lacks from
@@ -25,8 +31,9 @@ Prereleases and canaries are not listed here; see [all releases on GitHub](https
 
 One section per stable GitHub release, newest first; a version published to npm
 with no GitHub release, such as `lit-ui-router@0.0.1`, has none. The heading's first token is the
-version; the date is the release's publish day in UTC. Everything before the
-first `##` heading is the preamble, which every writer replaces with the fixed text.
+version; the date is the bump day in UTC, or the publish day for a backfilled
+section. Everything before the first `##` heading is the preamble: the backfill
+and a missing file write the fixed text, and `write-section` keeps what is there.
 oxfmt and rumdl skip these files (`.oxfmtrc.json`, `.config/rumdl.toml`), so a
 body stays byte for byte what was published.
 

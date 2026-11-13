@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/release-it.ts",
+    "./catalog-commits.ts": "./src/catalog-commits.ts",
     "./notes.ts": "./src/notes.ts"
   },
   "scripts": {

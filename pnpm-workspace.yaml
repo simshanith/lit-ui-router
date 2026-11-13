@@ -224,6 +224,7 @@ catalogs:
     '@tools/bootstrap': workspace:*
     '@tools/build_and_test': workspace:*
     '@tools/bundle-probe': workspace:*
+    '@tools/changelog': workspace:*
     '@tools/cli': workspace:*
     '@tools/cloudflare-api': workspace:*
     '@tools/compat-guards': workspace:*

@@ -7,21 +7,93 @@
 // Absorbs the old PREV_TAG/CHANGELOG_ARGS bash wiring: the release version
 // comes from the engine seam, the previous tag of THIS package (or the repo
 // root on a first release) pins the conventional-changelog range (#302,
-// release-prev-tag.ts), and the whole
-// publish argv is built by publishArgs — release-it >= 20.1 handles the
-// immutable draft→assets→publish release natively in that single
+// release-prev-tag.ts), and the whole publish argv is built by publishArgs.
+// A stable release's GitHub release body is its CHANGELOG.md section, which
+// must exist before anything publishes; a commit the notes would list that
+// landed after their Notes-Through commit fails the run too (a warning on dry
+// runs). A prerelease has no section, so release-it renders its body from the
+// pinned range. release-it >= 20.1 handles the immutable draft→assets→publish release natively in that single
 // invocation. Not retried in-tool: the engine's writes are non-idempotent
 // (see retry.ts); a human re-runs the workflow after a partial failure.
 
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import semver from 'semver';
+
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { extractSection } from '@tools/changelog';
+import { group, logWarning, runMain, setOutput } from '@tools/shared/gha.ts';
+
+import {
+  formatNotesThroughReport,
+  passes,
+} from '../checks/notes-through.core.ts';
+import { checkNotesThrough } from '../checks/notes-through.ts';
 import { boolEnv, requireEnv } from '../lib/env.core.ts';
-import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import {
   currentReleaseVersionArgs,
   parseReleaseVersion,
   publishArgs,
+  releaseNotesCommand,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
+import { changelogScript, packageNotes } from './release-notes-file.ts';
 import { changelogRange } from './release-prev-tag.ts';
+
+/**
+ * A stable release's `github.releaseNotes` command, after proving its
+ * CHANGELOG.md section exists and its Notes-Through commit is current.
+ */
+async function stableReleaseNotes(options: {
+  packageName: string;
+  releaseVersion: string;
+  from: string;
+  dryRun: boolean;
+}): Promise<string> {
+  const { packageName, releaseVersion, from, dryRun } = options;
+  const notes = await packageNotes(packageName);
+
+  await group(`release notes: ${notes.changelogPath}`, async () => {
+    const body = extractSection(
+      await readFile(notes.changelog, 'utf8'),
+      releaseVersion,
+    );
+
+    if (body === undefined) {
+      throw new Error(
+        `${notes.changelogPath} has no ${releaseVersion} section; the bump writes it, and nothing regenerates it here`,
+      );
+    }
+
+    console.log(body);
+  });
+
+  await group('notes cover every listed commit (Notes-Through)', () => {
+    const result = checkNotesThrough({
+      packageName,
+      cwd: join(workspaceRoot, notes.dir),
+      trailerRange: `${from}..HEAD`,
+      tip: 'HEAD',
+    });
+
+    const report = formatNotesThroughReport([result]);
+
+    if (passes(result)) console.log(report);
+    else if (dryRun) logWarning(report);
+    else throw new Error(report);
+
+    return Promise.resolve();
+  });
+
+  return releaseNotesCommand({
+    notes: {
+      changelog: notes.changelog,
+      script: changelogScript('extract.ts'),
+    },
+    version: releaseVersion,
+  });
+}
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');
@@ -48,6 +120,10 @@ runMain(async () => {
     },
   );
 
+  const releaseNotes = semver.prerelease(releaseVersion)
+    ? undefined
+    : await stableReleaseNotes({ packageName, releaseVersion, from, dryRun });
+
   await group(`publish ${packageName}@${releaseVersion}`, () =>
     releaseItRun(
       packageName,
@@ -56,6 +132,7 @@ runMain(async () => {
         tarballPath,
         from,
         previousVersion,
+        releaseNotes,
         dryRun,
       }),
     ),
