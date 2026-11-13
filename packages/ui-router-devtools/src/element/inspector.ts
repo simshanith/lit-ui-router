@@ -2,7 +2,14 @@ import { html, nothing, type TemplateResult } from 'lit';
 import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { Tx } from '../fold.ts';
 import type { LocationInfo } from '../schema.ts';
-import { renderOptions, renderParams, renderTiming } from './log.ts';
+import { observedEdges } from '../edges.ts';
+import { segment, seq } from '../notation.ts';
+import {
+  reasonLine,
+  renderOptions,
+  renderParams,
+  renderTiming,
+} from './log.ts';
 import {
   markGlyph,
   roleGlyph,
@@ -17,19 +24,101 @@ const sub = (n: string, title: string) =>
     <span class="num">${n}</span><span class="title">${title}</span>
   </h3>`;
 
+// A state named in words; it selects that state and moves focus to its row or box.
+const stateLink = (host: UIRouterDevtools, name: string) =>
+  html`<button
+    class="link ${host._depthClass(name)}"
+    title=${name}
+    @click=${() => host._revealState(name)}
+  >
+    ${segment(name)}
+  </button>`;
+
+const commas = (items: readonly unknown[]) =>
+  items.map((item, index) => html`${index ? ', ' : nothing}${item}`);
+
+const stateLinks = (host: UIRouterDevtools, names: readonly string[]) =>
+  commas(names.map((name) => stateLink(host, name)));
+
+// What the Map draws as edges for a selected transition, in words.
+const renderTxPath = (host: UIRouterDevtools, tx: Tx) => {
+  if (tx.id < 0) return nothing;
+
+  const origin = host._origin(tx);
+
+  return html`<dl class="facts">
+    ${
+      tx.from
+        ? html`<dt>From</dt>
+            <dd>${stateLink(host, tx.from)}</dd>`
+        : nothing
+    }${
+      origin
+        ? html`<dt>Redirected</dt>
+            <dd>from ${seq(origin.id)}, bound for ${origin.to}</dd>`
+        : nothing
+    }${
+      tx.exiting.length
+        ? html`<dt>Exits</dt>
+            <dd>${stateLinks(host, tx.exiting)}</dd>`
+        : nothing
+    }${
+      tx.entering.length
+        ? html`<dt>Enters</dt>
+            <dd>${stateLinks(host, tx.entering)}</dd>`
+        : nothing
+    }
+  </dl>`;
+};
+
+// What the Map draws as edges for a selected state, in words: successful arrivals and departures per other state.
+const renderTraffic = (host: UIRouterDevtools, name: string) => {
+  const seen = observedEdges(host._model).flatMap((edge) =>
+    edge.outcomes.success ? [{ ...edge, count: edge.outcomes.success }] : [],
+  );
+
+  const arrived = seen.filter((edge) => edge.to === name);
+  const left = seen.filter((edge) => edge.from === name && edge.to !== name);
+
+  // One state and how often, per hop: `stars ×2`.
+  const hop = (other: string, count: number) =>
+    html`<span class="hop"
+      >${
+        other === name || !other
+          ? html`<span class="muted">${other ? 'itself' : 'start'}</span>`
+          : stateLink(host, other)
+      }<span class="times"> ×${count}</span></span
+    >`;
+
+  return html`${
+    arrived.length
+      ? html`<dt>Arrived</dt>
+          <dd class="traffic">
+            ${arrived.map((edge) => hop(edge.from, edge.count))}
+          </dd>`
+      : nothing
+  }${
+    left.length
+      ? html`<dt>Left</dt>
+          <dd class="traffic">
+            ${left.map((edge) => hop(edge.to, edge.count))}
+          </dd>`
+      : nothing
+  }`;
+};
+
 export const renderTxInspector = (
   host: UIRouterDevtools,
   tx: Tx,
 ): TemplateResult => {
   const status = tx.result?.outcome ?? 'running';
-  const fault = status === 'error' || status === 'invalid';
 
   return html`<div class="inspector">
     <p class="insp-title">
       ${statusGlyph(status)}<span class="name">${tx.to}</span
       ><span class="visually-hidden">${statusLabel[status]}</span>
     </p>
-    ${tx.result?.reason ? html`<p class="insp-reason ${fault ? 'fault' : ''}">${tx.result.reason}</p>` : nothing}
+    ${reasonLine(tx.result?.reason, status)} ${renderTxPath(host, tx)}
     ${renderParams(host, tx, '3.1', true)}${renderOptions(tx, '3.2')}${renderTiming(host, tx, '3.3')}
   </div>`;
 };
@@ -54,7 +143,7 @@ export const renderStateInspector = (
   const values = state.name === current.name ? current.params : {};
 
   return html`<div class="inspector">
-    <p class="insp-title">
+    <p class="insp-title ${host._depthClass(state.name)}">
       ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span>
       ${
         canGo
@@ -83,6 +172,7 @@ export const renderStateInspector = (
           html`<dt>${term}</dt>
             <dd class="marked">${markGlyph(mark)}<span>${text}</span></dd>`,
       )}
+      ${renderTraffic(host, state.name)}
     </dl>
     ${sub('3.1', 'Params')}
     ${

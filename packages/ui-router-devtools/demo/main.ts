@@ -4,6 +4,7 @@ import { reportToPerformance } from '../src/performance.ts';
 import { reportToConsole } from '../src/console.ts';
 import { demoStates, delay } from './states.ts';
 import { demoSequence, goByUrl, goQuietly } from './sequence.ts';
+import { stressSequence, stressStates } from './stress.ts';
 
 const query = new URLSearchParams(location.search);
 
@@ -15,7 +16,9 @@ router.plugin(hashLocationPlugin);
 
 const devtools = router.plugin(DevtoolsPlugin, { timeResolves: true });
 
-demoStates().forEach((s) => router.stateRegistry.register(s));
+(query.has('stress') ? stressStates() : demoStates()).forEach((s) =>
+  router.stateRegistry.register(s),
+);
 
 const recorder = devtools.element.recorder;
 
@@ -72,7 +75,13 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
   });
 }
 
-if (query.has('demo')) {
+if (query.has('stress')) {
+  location.hash = '';
+  router.urlService.listen();
+  void stressSequence(router).then(
+    () => (document.documentElement.dataset.demo = 'done'),
+  );
+} else if (query.has('demo')) {
   location.hash = '';
   router.urlService.rules.initial({
     state: 'galaxy.stars.star',

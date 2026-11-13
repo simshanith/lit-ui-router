@@ -190,6 +190,53 @@ behind a flag, because any script on the page can reach a global.
   the trace emitters. One change improves the panel, the Performance track and
   the test recorder together.
 
+## Exports
+
+A recorded session is the one canonical, versioned export. Every other format
+is a pure function over it, in an entry the panel never imports, so the same
+functions run in Node and CI. None of these is built.
+
+The exporters share one model derived from a session: the state tree, the
+observed edges with counts and outcomes (`observedEdges` in `src/edges.ts`), and
+a span list of transitions, phases and resolves with absolute times.
+
+| Order | Format                     | Consumers                                                  | Limits                                                                                                |
+| ----- | -------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1     | Mermaid `stateDiagram-v2`  | GitHub Markdown; draw.io through its Mermaid import        | No transitions between states in different composites, and no styling on composites, so edges flatten |
+| 2     | Chrome Trace Event JSON    | Perfetto, Firefox Profiler, speedscope, `chrome://tracing` | One thread per redirect chain, since chains overlap                                                   |
+| 3     | ELK JSON                   | `elkjs`, the ELK live editor                               | Label sizes are estimates; `hierarchyHandling: INCLUDE_CHILDREN` lays out cross-hierarchy edges       |
+| 4     | CSV and NDJSON             | DuckDB, Observable, Vega-Lite, process-mining tools        | Navigation is cyclic, so a Sankey needs unrolling                                                     |
+| Later | Cytoscape.js JSON, DOT, D2 | Graph explorers and text-diagram tools                     | Near-copies of the Mermaid emitter                                                                    |
+
+OpenTelemetry is live spans, not a file: a reporter over the event stream,
+tracked in #2097, with the server and hydration side in #2098. A trace vendor
+that takes JSON events with trace, span and parent ids, a duration and a
+timestamp can also replay a recorded session; Honeycomb's batch events API is
+one.
+
+Left out:
+
+- **XState config and SCXML.** Both need a named event on every transition.
+  Emitting observed edges as a machine's transitions would misstate UI-Router,
+  where any state can go to any other.
+- **XES and OCEL.** On one session, process mining rediscovers the observed
+  edges. It adds something only across many users' sessions.
+- **RDF.** A JSON-LD context over the shared model is about 40 lines, with
+  PROV-O for transitions and redirect chains. There is no standard statechart
+  vocabulary and no consumer short of a visualiser built for it, so it stays an
+  idea.
+
+What the session needs before it is exported widely:
+
+- A count of the events the recorder's ring buffer dropped. Without it every
+  exported count is a lower bound, silently.
+- A scrub at export time. The `redact` hook covers params, not the free-text
+  `message` and `reason` fields, and it does not run on an imported session.
+  The default is an allowlist of param keys.
+- A session id and the generator's name and version.
+- Which transition superseded another. An exporter can only assume the next
+  one.
+
 ## Revised stages
 
 1. **First release.** Adapter with the two corrections, recorder, the panel as

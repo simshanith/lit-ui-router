@@ -11,21 +11,35 @@ export const styles: CSSResult = css`
     --uird-rule-strong: light-dark(oklch(58% 0 none), oklch(60% 0 none));
     --uird-red: light-dark(oklch(53% 0.2 28), oklch(72% 0.17 28));
     --uird-on-red: var(--uird-surface);
+    --uird-active: light-dark(oklch(50% 0.15 255), oklch(76% 0.11 250));
+    --uird-exit: light-dark(oklch(62% 0.12 80), oklch(83% 0.13 85));
+    --uird-active-wash: color-mix(
+      in oklch,
+      var(--uird-active) 12%,
+      var(--uird-surface)
+    );
+    --uird-depth-1: light-dark(oklch(46% 0.19 275), oklch(70% 0.15 275));
+    --uird-depth-2: light-dark(oklch(57% 0.1 185), oklch(86% 0.12 185));
+    --uird-depth-3: light-dark(oklch(64% 0.125 85), oklch(82% 0.13 85));
+    --uird-depth-4: light-dark(oklch(46% 0.17 345), oklch(68% 0.13 345));
     --uird-unit: 4px;
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
       sans-serif;
-    --uird-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --uird-font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono',
+      monospace;
     --uird-size: 12px;
     --uird-size-small: 11px;
     --uird-line: 16px;
     --uird-row: 24px;
+    --uird-band: 28px;
     --uird-margin: 12px;
     --uird-indent: 24px;
     --uird-gap: 12px;
     --uird-dock-height: 336px;
     --uird-sheet-width: 360px;
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --uird-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
     font: 400 var(--uird-size) / var(--uird-line) var(--uird-font);
     color: var(--uird-ink);
@@ -74,18 +88,44 @@ export const styles: CSSResult = css`
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
-    overflow: hidden;
+    overflow: clip;
     clip-path: inset(50%);
     white-space: nowrap;
   }
 
-  .num {
+  /* What the router says is set in the monospace face: names, notation, ids, times and values. The panel's own labels stay sans. */
+  .name,
+  .path,
+  .seq,
+  .num,
+  .num-start,
+  .link,
+  .reason,
+  .aside,
+  .pill-name,
+  .plain,
+  .wf-key,
+  .wf-state,
+  .traffic,
+  dd,
+  .params dt {
+    font-family: var(--uird-font-mono);
+    font-variant-ligatures: none;
     font-variant-numeric: tabular-nums;
+  }
+
+  .num {
     text-align: end;
     white-space: nowrap;
   }
 
   .muted {
+    color: var(--uird-muted);
+  }
+
+  /* A duration's unit follows its number at a third of a space, and recedes. */
+  .unit {
+    margin-inline-start: 0.3ch;
     color: var(--uird-muted);
   }
 
@@ -129,9 +169,55 @@ export const styles: CSSResult = css`
     stroke: var(--uird-on-red);
   }
 
+  /* Identity: a state's colour follows its depth in the declared tree, on every surface that shows it. */
+  .d1 {
+    --uird-id: var(--uird-depth-1);
+  }
+
+  .d2 {
+    --uird-id: var(--uird-depth-2);
+  }
+
+  .d3 {
+    --uird-id: var(--uird-depth-3);
+  }
+
+  .d4 {
+    --uird-id: var(--uird-depth-4);
+  }
+
+  :is(.d1, .d2, .d3, .d4) {
+    --uird-line: var(--uird-id);
+  }
+
+  /* While a transition is in focus colour says what it does, so identity recedes toward the neutral rule. */
+  .panel[data-mode='tx']
+    :is(.row, .map-node, .box, .rail, .rail-initial):is(.d1, .d2, .d3, .d4) {
+    --uird-line: color-mix(
+      in oklch,
+      var(--uird-id) 30%,
+      var(--uird-rule-strong)
+    );
+  }
+
   .glyph.role-inactive,
   .glyph.role-future {
     color: var(--uird-rule-strong);
+  }
+
+  :is(.row, .map-node, .head, .insp-title) > .glyph {
+    color: var(--uird-line, currentColor);
+  }
+
+  /* Two status hues, read only while a transition is in focus: active for what it enters or retains, exit for what it leaves. */
+  .panel[data-mode='tx']
+    :is(.row, .map-node, .head)
+    > .glyph:is(.role-entering, .role-retained, .pivot) {
+    color: var(--uird-active);
+  }
+
+  .panel[data-mode='tx'] :is(.row, .map-node, .head) > .glyph.role-exiting {
+    color: var(--uird-exit);
   }
 
   .glyph.slow {
@@ -152,12 +238,74 @@ export const styles: CSSResult = css`
     .glyph *,
     .rail,
     .row,
+    .box,
+    .box::before,
     .map-node {
       transition:
-        color 200ms var(--ease-out),
-        stroke 200ms var(--ease-out),
-        fill 200ms var(--ease-out),
-        opacity 200ms var(--ease-out);
+        color 200ms var(--uird-ease-out),
+        stroke 200ms var(--uird-ease-out),
+        fill 200ms var(--uird-ease-out),
+        border-color 200ms var(--uird-ease-out),
+        background-color 200ms var(--uird-ease-out),
+        opacity 200ms var(--uird-ease-out);
+    }
+
+    button {
+      transition: scale 160ms var(--uird-ease-out);
+    }
+
+    /* An edge draws in from its start once the boxes have settled, and withdraws toward its end. */
+    .nedge .reveal {
+      animation: draw 240ms var(--uird-ease-out) var(--uird-edge-delay, 0ms)
+        backwards;
+    }
+
+    .nedge.leaving .reveal {
+      animation: withdraw 160ms var(--uird-ease-out) forwards;
+    }
+  }
+
+  /* Without motion nothing moves or draws: an edge and a new box only fade. */
+  @media (prefers-reduced-motion: reduce) {
+    .nedge {
+      animation: fade-in 200ms var(--uird-ease-out);
+    }
+
+    .nedge.leaving {
+      animation: fade-out 160ms var(--uird-ease-out) forwards;
+    }
+  }
+
+  .box,
+  .map-node {
+    animation: fade-in 200ms var(--uird-ease-out);
+  }
+
+  button:active {
+    scale: 0.97;
+  }
+
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes withdraw {
+    to {
+      stroke-dashoffset: -1;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
   }
 
@@ -186,7 +334,7 @@ export const styles: CSSResult = css`
     border-radius: 2px;
     background: var(--uird-surface);
     color: var(--uird-ink);
-    overflow: hidden;
+    overflow: clip;
   }
 
   .pill:not(:popover-open) {
@@ -215,11 +363,12 @@ export const styles: CSSResult = css`
     background: var(--uird-surface);
     color: var(--uird-ink);
     box-shadow: 0 8px 32px -8px oklch(0% 0 none / 0.28);
-    overflow: hidden;
+    overflow: clip;
   }
 
   .panel:popover-open {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
   }
 
@@ -288,6 +437,10 @@ export const styles: CSSResult = css`
     gap: 12px;
   }
 
+  .titlestrip > .session {
+    align-items: center;
+  }
+
   .session button {
     block-size: var(--uird-row);
     min-inline-size: 48px;
@@ -331,10 +484,34 @@ export const styles: CSSResult = css`
     vertical-align: 1px;
   }
 
-  .switch,
+  .strip-switch,
   .tabs {
     display: none;
     gap: 12px;
+  }
+
+  .switch {
+    display: flex;
+    gap: 12px;
+  }
+
+  .strip-switch,
+  .pane-switch {
+    gap: 24px;
+  }
+
+  .pane-switch {
+    display: flex;
+    grid-column: 2;
+    justify-content: end;
+    align-items: center;
+    padding-inline: var(--uird-margin);
+  }
+
+  .switch button:disabled {
+    cursor: default;
+    opacity: 0.5;
+    text-decoration: line-through;
   }
 
   .switch button,
@@ -371,7 +548,17 @@ export const styles: CSSResult = css`
   .count {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+  }
+
+  /* An outcome that has not happened recedes, so a red mark always means a fault. */
+  .count.zero,
+  .count.zero .glyph {
+    color: var(--uird-muted);
+  }
+
+  .count.zero .fault {
+    fill: currentColor;
   }
 
   .icon {
@@ -384,7 +571,6 @@ export const styles: CSSResult = css`
   .body {
     display: grid;
     min-block-size: 0;
-    padding-block-start: 12px;
   }
 
   .pane {
@@ -404,35 +590,72 @@ export const styles: CSSResult = css`
     display: flex;
     align-items: center;
     block-size: var(--uird-row);
-    margin-block-end: 8px;
     padding-inline: var(--uird-margin);
     font-weight: 700;
+  }
+
+  /* Column headings share one band, so their hairlines meet across the panel. */
+  .pane > .section,
+  .pane-switch {
+    block-size: var(--uird-band);
+    margin-block-end: 4px;
+    border-block-end: 1px solid var(--uird-rule);
   }
 
   .section .num {
     min-inline-size: 24px;
     color: var(--uird-muted);
+    font-family: var(--uird-font);
     font-weight: 400;
     text-align: start;
   }
 
   .section .aside {
-    margin-inline-start: var(--uird-gap);
-    font-variant-numeric: tabular-nums;
+    margin-inline-start: auto;
+    color: var(--uird-muted);
+    font-size: var(--uird-size);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .section.sub {
-    margin-block-start: 12px;
-    margin-block-end: 0;
+    margin-block-start: 8px;
+    padding-block-start: 4px;
     padding-inline: 0;
+    border-block-start: 1px solid var(--uird-rule);
+    block-size: calc(var(--uird-band) + 4px);
   }
 
   .section.sub:first-child {
     margin-block-start: 0;
+    padding-block-start: 0;
+    border-block-start: 0;
+    block-size: var(--uird-row);
+  }
+
+  .tree-pane {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tree-pane > .scroll {
+    grid-column: 1 / -1;
   }
 
   .map-scroll {
+    padding-block-start: 12px;
+    padding-inline: var(--uird-margin);
+  }
+
+  /* The diagram keeps its natural size and sits in the middle of the viewport, so the room left over frames it evenly. */
+  .map-scroll:has(> .nested) {
+    display: grid;
+    place-content: safe center;
+  }
+
+  .icon.max {
     display: none;
+    margin-inline: -12px -16px;
   }
 
   .inspector-pane,
@@ -482,8 +705,13 @@ export const styles: CSSResult = css`
       grid-template-rows: minmax(0, 1fr);
     }
 
+    .tree-pane {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
     .body {
       grid-template-rows: minmax(0, 1fr);
+      padding-block-start: 4px;
     }
   }
 
@@ -493,13 +721,13 @@ export const styles: CSSResult = css`
       grid-template-rows: auto minmax(0, 1fr);
     }
 
+    .titlestrip {
+      gap: 12px;
+    }
+
     .tree-pane {
       max-block-size: 40svh;
       border-block-end: 1px solid var(--uird-rule);
-    }
-
-    .log-pane {
-      padding-block-start: 12px;
     }
 
     .panel[data-inspect='router'] .body {
@@ -518,8 +746,28 @@ export const styles: CSSResult = css`
 
   /* Dock: three columns, rules centred in 24px gutters */
   @media (width > 880px) {
-    .switch {
+    .strip-switch {
       display: flex;
+    }
+
+    .pane-switch {
+      display: none;
+    }
+
+    .icon.max {
+      display: grid;
+    }
+
+    /* The strip's end reads as three groups: counts, session, window. */
+    .titlestrip > .session {
+      align-self: stretch;
+      padding-inline: 12px;
+      border-inline: 1px solid var(--uird-rule);
+    }
+
+    .panel[data-max] {
+      inset-block-start: var(--uird-margin);
+      block-size: auto;
     }
 
     .body {
@@ -535,26 +783,94 @@ export const styles: CSSResult = css`
       border-inline-start: 1px solid var(--uird-rule);
     }
 
-    .panel[data-view='map'] .body {
-      grid-template-columns:
-        minmax(240px, 1fr) minmax(264px, 0.8fr)
-        minmax(312px, 1fr);
-    }
-
-    .panel[data-view='map'] .outline-scroll {
-      display: none;
-    }
-
-    .panel[data-view='map'] .map-scroll {
-      display: block;
-    }
-
     .log .detail {
       display: none;
     }
 
+    .log .tx.selected .reason.fault {
+      overflow: clip;
+      white-space: nowrap;
+    }
+
+    .log .tx.selected .reason .more {
+      display: inline;
+      margin-inline-start: 1ch;
+    }
+
     .inspector {
       padding-inline: var(--uird-margin);
+    }
+
+    /* On the Map the diagram owns the panel: the log is a strip and the inspector a popover. */
+    .panel[data-view='map'] .body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .panel[data-view='map'] .tree-pane {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .panel[data-view='map'] .tree-pane > .section,
+    .panel[data-view='map']:not([data-max]) .log-pane {
+      display: none;
+    }
+
+    .panel[data-view='map']:not([data-max]) .scrubber {
+      display: flex;
+    }
+
+    .panel[data-view='map']:not([data-max]) .inspector-pane {
+      position: absolute;
+      z-index: 2;
+      display: none;
+      inline-size: 296px;
+      min-block-size: 136px;
+      max-block-size: calc(var(--uird-dock-height) - 76px);
+      border: 1px solid var(--uird-rule-strong);
+      border-radius: 2px;
+      background: var(--uird-surface);
+      box-shadow: 0 8px 32px -8px oklch(0% 0 none / 0.28);
+      /* Placed from measured rects, clear of the drawn edges; the inline offset is physical because the rects are. */
+      inset-block-start: var(--uird-pop-y, 38px);
+      left: var(--uird-pop-x, 12px);
+      /* It fades in where it is placed and never moves, so the fade needs no reduced-motion gate. */
+      transition: opacity 160ms var(--uird-ease-out);
+    }
+
+    .panel[data-view='map']:not([data-max]):is(
+        [data-inspect='state'],
+        [data-inspect='tx'],
+        [data-inspect='router']
+      )
+      .inspector-pane {
+      display: grid;
+    }
+
+    @starting-style {
+      .panel[data-view='map']:not([data-max]):is(
+          [data-inspect='state'],
+          [data-inspect='tx'],
+          [data-inspect='router']
+        )
+        .inspector-pane {
+        opacity: 0;
+      }
+    }
+
+    /* Maximised: the diagram above the full log and inspector. */
+    .panel[data-view='map'][data-max] .body {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+    }
+
+    .panel[data-view='map'][data-max] .tree-pane {
+      grid-column: 1 / -1;
+      border-block-end: 1px solid var(--uird-rule);
+    }
+
+    .panel[data-view='map'][data-max] .log-pane {
+      border-inline-start: 0;
     }
   }
 
@@ -582,9 +898,10 @@ export const styles: CSSResult = css`
     box-shadow: inset -2px 0 0 var(--uird-ink);
   }
 
+  /* A rail takes the identity colour of the state it leads into; weight marks the active path. */
   .rail {
     fill: none;
-    stroke: var(--uird-rule-strong);
+    stroke: var(--uird-line, var(--uird-rule-strong));
     stroke-width: 1;
   }
 
@@ -599,18 +916,17 @@ export const styles: CSSResult = css`
   .rail.role-current,
   .rail.role-ancestor,
   .rail.role-entering {
-    stroke: var(--uird-ink);
     stroke-width: 2;
   }
 
   .rail.role-exiting {
-    stroke: var(--uird-ink);
+    stroke: var(--uird-exit);
     stroke-width: 2;
     stroke-dasharray: 4 4;
   }
 
-  .rail.role-retained {
-    stroke: var(--uird-ink);
+  .panel[data-mode='tx'] .rail:is(.role-entering, .role-retained) {
+    stroke: var(--uird-active);
   }
 
   .rail.role-errored {
@@ -676,17 +992,15 @@ export const styles: CSSResult = css`
   }
 
   .rail-initial {
-    fill: var(--uird-rule-strong);
+    fill: var(--uird-line, var(--uird-rule-strong));
   }
 
-  .rail-initial:is(
-    .role-current,
-    .role-ancestor,
-    .role-entering,
-    .role-exiting,
-    .role-retained
-  ) {
-    fill: var(--uird-ink);
+  .panel[data-mode='tx'] .rail-initial:is(.role-entering, .role-retained) {
+    fill: var(--uird-active);
+  }
+
+  .rail-initial.role-exiting {
+    fill: var(--uird-exit);
   }
 
   .rail-initial.role-errored {
@@ -701,6 +1015,7 @@ export const styles: CSSResult = css`
   @media (hover: hover) and (pointer: fine) {
     .row:hover,
     .tx .line:hover,
+    .tick:hover,
     .map-node:hover {
       background: var(--uird-surface-raised);
     }
@@ -710,7 +1025,6 @@ export const styles: CSSResult = css`
 
   .map {
     position: relative;
-    margin-inline: var(--uird-margin);
   }
 
   .edges {
@@ -754,6 +1068,380 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
+  /* Nested Map: a box per state, child states inside their parent. The packer sets every box's place and size. */
+
+  .nested {
+    --nest-head: 24px;
+    --nest-scale: 1;
+
+    position: relative;
+  }
+
+  .nested.small {
+    --nest-head: 20px;
+
+    font-size: var(--uird-size-small);
+  }
+
+  /* The maximised panel's steps: the header's type, glyphs and spacing grow together, on the packer's metrics. */
+  .nested.roomy {
+    --nest-head: 32px;
+    --nest-scale: 1.3333;
+
+    font-size: 16px;
+    line-height: 1.3333;
+  }
+
+  .nested.large {
+    --nest-head: 40px;
+    --nest-scale: 1.6667;
+
+    font-size: 20px;
+    line-height: 1.3333;
+  }
+
+  .nested .glyph {
+    inline-size: calc(12px * var(--nest-scale));
+    block-size: calc(12px * var(--nest-scale));
+  }
+
+  .nested .marks {
+    gap: calc(4px * var(--nest-scale));
+  }
+
+  .nested .tag {
+    font-size: calc(var(--uird-size-small) * var(--nest-scale));
+  }
+
+  .box {
+    position: absolute;
+    border-radius: calc(4px * var(--nest-scale));
+    background: var(--uird-surface);
+    cursor: default;
+  }
+
+  /* The border is a layer of its own, so a heavier or dashed one moves nothing inside the box. */
+  .box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--uird-line, var(--uird-rule-strong));
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .box.collapsed {
+    box-shadow:
+      3px 3px 0 -1px var(--uird-surface),
+      3px 3px 0 0 var(--uird-line, var(--uird-rule-strong));
+  }
+
+  .head:focus-visible {
+    border-radius: inherit;
+  }
+
+  .box.selected {
+    outline: 1px solid var(--uird-ink);
+    outline-offset: 2px;
+  }
+
+  /* Weight, wash and dash say where a state stands; hue stays with identity until a transition is in focus. */
+  .box:is(.role-ancestor, .role-entering, .role-current)::before {
+    border-width: 2px;
+  }
+
+  .box.role-current {
+    background: color-mix(
+      in oklch,
+      var(--uird-line, var(--uird-ink)) 12%,
+      var(--uird-surface)
+    );
+  }
+
+  .box.role-future::before {
+    border-style: dashed;
+  }
+
+  .panel[data-mode='tx'] .box:is(.role-entering, .role-retained)::before {
+    border-color: var(--uird-active);
+  }
+
+  .panel[data-mode='tx'] .box.role-entering.leaf {
+    background: var(--uird-active-wash);
+  }
+
+  .box.role-exiting::before {
+    border: 2px dashed var(--uird-exit);
+  }
+
+  .box.role-errored::before {
+    border: 2px solid var(--uird-red);
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: calc(8px * var(--nest-scale));
+    block-size: var(--nest-head);
+    padding-inline: calc(8px * var(--nest-scale));
+    border-radius: inherit;
+    white-space: nowrap;
+  }
+
+  .head .name {
+    min-inline-size: 0;
+    overflow: clip;
+    text-overflow: ellipsis;
+  }
+
+  .head:active {
+    background: color-mix(in oklch, var(--uird-ink) 8%, transparent);
+  }
+
+  .box.current > .head .name {
+    font-weight: 700;
+  }
+
+  .box.future > .head .name {
+    font-style: italic;
+  }
+
+  .box:is(.role-exiting, .role-future) > .head .name,
+  .head .count {
+    color: var(--uird-muted);
+  }
+
+  .box.role-errored > .head .name {
+    color: var(--uird-red);
+  }
+
+  .head :is(.marks, .tag, .fold) {
+    margin-inline-start: auto;
+  }
+
+  .head :is(.marks, .tag) + .fold {
+    margin-inline-start: 0;
+  }
+
+  /* The pointer's way to close or open a compound. */
+  .fold {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: calc(16px * var(--nest-scale));
+    block-size: var(--nest-head);
+    margin-inline-end: calc(-4px * var(--nest-scale));
+    color: var(--uird-muted);
+  }
+
+  .fold:dir(rtl) .glyph.fold-closed {
+    scale: -1 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .head:hover {
+      background: color-mix(in oklch, var(--uird-ink) 5%, transparent);
+    }
+
+    .fold:hover {
+      color: var(--uird-ink);
+    }
+  }
+
+  /* A compound and its only child, also a compound, share one header row. */
+  .box.merging > .head {
+    position: relative;
+    z-index: 1;
+    inline-size: max-content;
+  }
+
+  .box.merging > .head::after {
+    content: '›';
+    color: var(--uird-muted);
+  }
+
+  .box.merged {
+    background: none;
+  }
+
+  .box.merged::before {
+    content: none;
+  }
+
+  .box.merged > .head {
+    padding-inline-start: var(--indent);
+  }
+
+  .initial {
+    position: absolute;
+    inset-block-start: calc(var(--nest-head) / 2 - 6px);
+    inset-inline-start: -22px;
+    fill: var(--uird-ink);
+    stroke: var(--uird-ink);
+  }
+
+  .initial .tip {
+    stroke: none;
+  }
+
+  .initial:dir(rtl) {
+    scale: -1 1;
+  }
+
+  .nedges {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .nedge .line,
+  .nedge .halo,
+  .nedge .cap {
+    fill: none;
+    stroke: var(--uird-ink);
+  }
+
+  .nedge .halo {
+    stroke: var(--uird-surface);
+    stroke-width: 6;
+  }
+
+  /* A mask's luminance decides what shows, so its stroke is white whatever the scheme. */
+  .nedge .reveal {
+    fill: none;
+    stroke: oklch(100% 0 none);
+    stroke-width: 24;
+    stroke-dasharray: 1;
+  }
+
+  .nedge:is(.w2, .edge-redirect) :is(.line, .cap) {
+    stroke-width: 2;
+  }
+
+  .nedge.w3 .line {
+    stroke-width: 3;
+  }
+
+  .nedge .head {
+    display: inline;
+    fill: var(--uird-ink);
+  }
+
+  /* A redirect's line is dashed and its head is an open chevron, so the two read apart without colour. */
+  .nedge.edge-redirect .line {
+    stroke-dasharray: 5 4;
+  }
+
+  .nedge.edge-redirect .head {
+    fill: none;
+    stroke: var(--uird-ink);
+    stroke-width: 1.5;
+  }
+
+  .nedge.edge-fault :is(.line, .cap) {
+    stroke: var(--uird-red);
+  }
+
+  .nedge.edge-fault .head {
+    fill: var(--uird-red);
+  }
+
+  /* No route was found, so the line is straight and dotted. */
+  .nedge.fallback .line {
+    stroke-dasharray: 1 3;
+  }
+
+  /* Scrubber: the Map's transition log, one outcome glyph each */
+
+  .scrubber {
+    display: none;
+    align-items: center;
+    gap: var(--uird-gap);
+    min-inline-size: 0;
+    block-size: 28px;
+    padding-inline: var(--uird-margin);
+    border-block-start: 1px solid var(--uird-rule);
+  }
+
+  .scrubber .section {
+    flex: none;
+    padding: 0;
+  }
+
+  .ticks {
+    display: flex;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tick {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 20px;
+    block-size: 27px;
+    color: var(--uird-muted);
+    cursor: pointer;
+  }
+
+  .tick.origin,
+  .tick.on {
+    background: var(--uird-surface-raised);
+  }
+
+  .tick.on {
+    box-shadow: inset 0 2px 0 var(--uird-ink);
+    color: var(--uird-ink);
+  }
+
+  .now {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: var(--uird-gap);
+    min-inline-size: 0;
+    margin-inline-start: auto;
+    white-space: nowrap;
+  }
+
+  /* A state named in words is underlined, thinly, in its identity colour. */
+  .link {
+    text-decoration: underline;
+    text-decoration-color: var(--uird-id, var(--uird-rule-strong));
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .link:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .traffic {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 16px;
+  }
+
+  .hop {
+    white-space: nowrap;
+  }
+
+  .times {
+    color: var(--uird-muted);
+  }
+
   /* Transition log */
 
   .log {
@@ -785,22 +1473,23 @@ export const styles: CSSResult = css`
     color: var(--uird-muted);
   }
 
+  /* A redirect's successor keeps the row grid; a thread joins the two outcome glyphs. */
   .tx .line.chain {
-    grid-template-columns: 24px 24px 12px minmax(0, 1fr) auto;
+    position: relative;
     cursor: default;
   }
 
-  .elbow {
-    justify-self: end;
-    inline-size: 18px;
-    block-size: 12px;
-    margin-block-start: -12px;
-    border-inline-start: 1px solid var(--uird-ink);
-    border-block-end: 1px solid var(--uird-ink);
+  .tx .line.chain::before {
+    content: '';
+    position: absolute;
+    inset-block-start: -5px;
+    inset-inline-start: calc(var(--uird-margin) + 24px + var(--uird-gap) + 5px);
+    block-size: 10px;
+    border-inline-start: 1px solid var(--uird-rule-strong);
   }
 
   .path {
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -837,16 +1526,52 @@ export const styles: CSSResult = css`
     padding-block-end: 4px;
     margin-block-start: -4px;
     color: var(--uird-muted);
+    font-size: var(--uird-size-small);
+    overflow-wrap: anywhere;
   }
 
-  .reason.fault,
-  .insp-reason.fault {
+  .reason.fault .msg {
     color: var(--uird-red);
   }
 
-  .insp-reason {
-    padding-inline-start: 24px;
-    color: var(--uird-muted);
+  /* A fault is one line in the log; the inspector, or the selected row where there is none, holds all of it. */
+  .tx .reason.fault {
+    overflow: clip;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reason .more {
+    margin-inline-start: 1ch;
+  }
+
+  .tx.selected .reason.fault {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .tx.selected .reason .more {
+    display: block;
+    margin-inline-start: 0;
+  }
+
+  .inspector .reason {
+    margin-block: 4px 8px;
+    margin-inline-start: 5px;
+    padding-block: 0;
+    padding-inline: 17px 0;
+    border-inline-start: 2px solid var(--uird-rule);
+  }
+
+  .inspector .reason.fault {
+    border-inline-start-color: var(--uird-red);
+  }
+
+  .inspector .reason .more {
+    display: block;
+    margin-block-start: 4px;
+    margin-inline-start: 0;
+    color: var(--uird-ink);
   }
 
   .tx .value {
@@ -922,7 +1647,8 @@ export const styles: CSSResult = css`
   .wf-key {
     grid-column: 2;
     color: var(--uird-muted);
-    overflow: hidden;
+    font-size: var(--uird-size-small);
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -941,12 +1667,6 @@ export const styles: CSSResult = css`
 
   .bar.failed {
     background: var(--uird-red);
-  }
-
-  .params dd,
-  .literal {
-    font-family: var(--uird-font-mono);
-    font-size: var(--uird-size-small);
   }
 
   .wf > .tag,
@@ -997,6 +1717,7 @@ export const styles: CSSResult = css`
     align-items: center;
     gap: var(--uird-gap);
     min-block-size: var(--uird-row);
+    margin-block-start: 4px;
   }
 
   .insp-title .name {
@@ -1045,6 +1766,39 @@ export const styles: CSSResult = css`
   }
 
   @media (forced-colors: active) {
+    :host {
+      --uird-active: CanvasText;
+      --uird-exit: CanvasText;
+      --uird-active-wash: Canvas;
+      --uird-depth-1: CanvasText;
+      --uird-depth-2: CanvasText;
+      --uird-depth-3: CanvasText;
+      --uird-depth-4: CanvasText;
+    }
+
+    .nedge :is(.line, .cap),
+    .nedge.edge-redirect .head {
+      stroke: CanvasText;
+    }
+
+    .nedge .halo {
+      stroke: Canvas;
+    }
+
+    .nedge .head,
+    .initial {
+      fill: CanvasText;
+    }
+
+    .nedge.edge-redirect .head {
+      fill: none;
+    }
+
+    .box.selected,
+    .tick.on {
+      outline: 2px solid Highlight;
+    }
+
     .glyph,
     .glyph.role-inactive,
     .glyph.role-future {
@@ -1075,14 +1829,15 @@ export const styles: CSSResult = css`
       background: CanvasText;
     }
 
-    .selected,
+    .selected:not(.box),
     .tx.selected {
       background: Highlight;
       color: HighlightText;
       forced-color-adjust: none;
     }
 
-    .selected *,
+    .tx.selected .reason.fault .msg,
+    .selected:not(.box) *,
     .tx.selected > .line *,
     .tx.selected > .line .seq {
       color: HighlightText;

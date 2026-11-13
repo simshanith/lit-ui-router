@@ -1,4 +1,4 @@
-// Bundles each subpath entry on its own and reports min and gzip sizes, with lit and @uirouter/core external.
+// Bundles each subpath entry on its own and reports min and gzip sizes per chunk, with lit and @uirouter/core external.
 import { rolldown } from 'rolldown';
 import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
@@ -28,8 +28,17 @@ for (const entry of entries) {
   });
 
   const { output } = await bundle.generate({ format: 'es', minify: true });
-  const code = Buffer.from(output[0].code);
-  console.log(
-    `${entry.padEnd(12)} ${kb(code.length)} kB min  ${kb(gzipSync(code, { level: 9 }).length)} kB gzip`,
-  );
+
+  // The first chunk is the entry; `with` chunks load with it, and `lazy` ones on demand, such as the Map on first use.
+  for (const [index, chunk] of output.entries()) {
+    if (chunk.type !== 'chunk') continue;
+
+    const code = Buffer.from(chunk.code);
+    const kind = chunk.isDynamicEntry ? 'lazy' : 'with';
+    const name = index ? `  ${kind} ${chunk.name}` : entry;
+
+    console.log(
+      `${name.padEnd(12)} ${kb(code.length)} kB min  ${kb(gzipSync(code, { level: 9 }).length)} kB gzip`,
+    );
+  }
 }

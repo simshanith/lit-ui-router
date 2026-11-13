@@ -4,6 +4,13 @@ export { record, type Recorder, type RecordOptions } from './recorder.ts';
 
 export { fold, type Model, type Tx } from './fold.ts';
 
+export {
+  edgeWeight,
+  observedEdges,
+  type EdgeOutcome,
+  type ObservedEdge,
+} from './edges.ts';
+
 export { reasons } from './reasons.ts';
 
 export {

@@ -48,7 +48,7 @@ const row = (page: Page, text: string) =>
   page.locator(`${TAG} .tx > .line`, { hasText: text }).first();
 
 const showMap = (page: Page) =>
-  page.locator(`${TAG} .switch button`, { hasText: 'map' }).click();
+  page.locator(`${TAG} .switch button:visible`, { hasText: 'map' }).click();
 
 const panel = (page: Page) => page.locator(`${TAG} .panel`);
 
@@ -108,12 +108,45 @@ const shots: Shot[] = [
     setup: (page) => row(page, '006').click(),
   },
   {
+    name: '3-dock-map-rest',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: showMap,
+  },
+  {
+    name: '3-dock-map-state',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: async (page) => {
+      await showMap(page);
+      await page
+        .locator(`${TAG} .box[data-name="galaxy.stars.star"] > .head`)
+        .click({ position: { x: 14, y: 12 } });
+    },
+  },
+  {
     name: '3-dock-map',
     width: 1280,
     open: true,
+    axe: true,
     setup: async (page) => {
       await row(page, '006').click();
       await showMap(page);
+    },
+  },
+  {
+    name: '3-max-map-state',
+    width: 1280,
+    open: true,
+    axe: true,
+    setup: async (page) => {
+      await showMap(page);
+      await page.locator(`${TAG} .icon.max`).click();
+      await page
+        .locator(`${TAG} .box[data-name="galaxy.stars.star"] > .head`)
+        .click({ position: { x: 14, y: 12 } });
     },
   },
   {

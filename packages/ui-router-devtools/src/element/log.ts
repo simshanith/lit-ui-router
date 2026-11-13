@@ -3,14 +3,14 @@ import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { Tx } from '../fold.ts';
 import type { Value } from '../schema.ts';
 import {
-  ms,
   pathParts,
+  reasonParts,
   segment,
   seq,
   sourceTags,
   type Status,
 } from '../notation.ts';
-import { roleGlyph, statusGlyph, statusLabel } from './glyphs.ts';
+import { roleGlyph, statusGlyph, statusLabel, took } from './glyphs.ts';
 
 const SLOW_MS = 150;
 
@@ -50,10 +50,23 @@ const logItems = (host: UIRouterDevtools): LogItem[] => {
   return items;
 };
 
-const reasonLine = (reason: string | null | undefined, status: Status) =>
-  reason
-    ? html`<p class="reason ${FAULTS.has(status) ? 'fault' : ''}">${reason}</p>`
-    : nothing;
+// A fault's message leads; what core appended to it follows as the detail.
+export const reasonLine = (
+  reason: string | null | undefined,
+  status: Status,
+): TemplateResult | typeof nothing => {
+  if (!reason) return nothing;
+
+  const { head, detail } = reasonParts(reason);
+
+  return html`<p
+    class="reason ${FAULTS.has(status) ? 'fault' : ''}"
+    title=${detail ? `${head}: ${detail}` : head}
+  >
+    <span class="msg">${head}</span
+    >${detail ? html`<span class="more">${detail}</span>` : nothing}
+  </p>`;
+};
 
 const renderIgnored = (txs: Tx[]) => {
   const ids = txs.map((tx) => seq(tx.id)).join(', ');
@@ -71,7 +84,7 @@ const renderIgnored = (txs: Tx[]) => {
   </li>`;
 };
 
-const renderPath = (tx: Tx) => {
+export const renderPath = (tx: Tx): TemplateResult => {
   if (tx.id < 0)
     return html`<span class="path"
       ><span class="entered">${tx.to}</span></span
@@ -90,7 +103,11 @@ const renderPath = (tx: Tx) => {
 const hidden = (s: Status) =>
   html`<span class="visually-hidden">${statusLabel[s]}</span>`;
 
-const valueCell = (host: UIRouterDevtools, tx: Tx, status: Status) => {
+export const valueCell = (
+  host: UIRouterDevtools,
+  tx: Tx,
+  status: Status,
+): TemplateResult => {
   const tags = sourceTags(tx);
   const muted = status === 'superseded' || status === 'aborted';
   const duration = tx.id < 0 ? undefined : host._duration(tx);
@@ -101,7 +118,7 @@ const valueCell = (host: UIRouterDevtools, tx: Tx, status: Status) => {
         ? html`<span class="tag">${status}</span>`
         : duration === undefined
           ? nothing
-          : html`<span class="num">${ms(duration)}</span>`
+          : html`<span class="num">${took(duration)}</span>`
     }</span
   >`;
 };
@@ -143,8 +160,7 @@ const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
     ${
       origin
         ? html`<div class="line chain">
-            <span class="elbow" aria-hidden="true"></span
-            ><span class="seq">${seq(tx.id)}</span
+            <span class="seq">${seq(tx.id)}</span
             >${statusGlyph(status)}${hidden(
               status,
             )}${renderPath(tx)}${valueCell(host, tx, status)}
@@ -200,7 +216,7 @@ const renderResolveRow = (
         : html`<span class="value"
             >${slow ? html`<span class="tag">Slow</span>` : nothing}<span
               class="num"
-              >${ms(r.end - r.start)}</span
+              >${took(r.end - r.start)}</span
             ></span
           >`
     }`;
@@ -238,7 +254,7 @@ export const renderTiming = (
         (p) =>
           html`<li class=${p.phase === 'error' ? 'fault' : ''}>
             <span class="tag">${p.phase}</span
-            ><span class="num">${ms(Math.max(0, p.t - t0))}</span>
+            ><span class="num">${took(Math.max(0, p.t - t0))}</span>
           </li>`,
       )}
     </ol>
@@ -254,7 +270,7 @@ export const renderTiming = (
                   ${group.resolves.map((r) => renderResolveRow(r, pct))}`,
             )}
             <div class="axis" aria-hidden="true">
-              <span class="num">0</span><span class="num">${ms(total)}</span>
+              <span class="num">0</span><span class="num">${took(total)}</span>
             </div>
           </div>`
         : nothing
