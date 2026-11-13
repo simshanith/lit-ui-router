@@ -470,6 +470,19 @@ describe('prerender', () => {
       assert.equal(result.pages[3]?.file, '404.html');
     });
 
+    it('writes a response at a mount root as index.html', async () => {
+      const { files } = await run({
+        mounts: {
+          '/': { routes: [{ name: 'feed', url: '/', response: true }] },
+        },
+        paths: ['/'],
+        notFound: false,
+        respond: () => new Response('<feed/>'),
+      });
+
+      assert.deepEqual([...files.keys()], ['dist/index.html']);
+    });
+
     it('throws when no respond is supplied', async () => {
       await assert.rejects(
         run({ mounts: responding, paths: ['/app/badge.svg'], notFound: false }),
