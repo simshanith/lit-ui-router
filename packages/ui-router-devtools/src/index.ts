@@ -2,32 +2,27 @@ export { observe, type ObserveOptions } from '@repo/router-events';
 
 export { record, type Recorder, type RecordOptions } from './recorder.ts';
 
-export { fold, type Model, type Tx } from './fold.ts';
-
-export {
-  edgeWeight,
-  observedEdges,
-  type EdgeOutcome,
-  type ObservedEdge,
-} from './edges.ts';
-
-export { reasons } from './reasons.ts';
+export { observedEdges, type EdgeOutcome, type ObservedEdge } from './edges.ts';
 
 export {
   SCHEMA_VERSION,
   type ConfigEvent,
   type CurrentEvent,
-  type DevtoolsEvent,
+  type EventBase,
   type InvalidEvent,
   type LocationInfo,
   type Outcome,
   type ParamInfo,
+  type ParamValue,
   type Params,
   type Phase,
   type PhaseEvent,
-  type Redact,
+  type Redaction,
   type ResolveEvent,
   type ResultEvent,
+  type RouterEvent,
+  type Scalar,
+  type SchemaVersion,
   type Session,
   type Source,
   type StateInfo,

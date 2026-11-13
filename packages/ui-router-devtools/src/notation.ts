@@ -1,5 +1,5 @@
 import type { Tx } from './fold.ts';
-import type { Outcome } from './schema.ts';
+import type { Outcome, ParamValue } from './schema.ts';
 
 export type Status = Outcome | 'running';
 
@@ -78,22 +78,92 @@ export const sourceTags = (tx: Tx): string[] => {
   ].filter((tag): tag is string => Boolean(tag));
 };
 
-const REJECTION =
-  /^Transition Rejection\(\$id: \d+ type: \d+, message: (.*?), detail: (.*)\)$/s;
-
-export interface ReasonParts {
+export interface ResultText {
   head: string;
   detail?: string;
 }
 
-// Core's Rejection.toString() wraps a message and a detail; a row shows the message and the inspector both.
-export const reasonParts = (reason: string): ReasonParts => {
-  const [, head, detail] = REJECTION.exec(reason) ?? [];
+const plural = (count: number, word: string) =>
+  count === 1 ? word : `${word}s`;
 
-  if (!head) return { head: reason };
+const invalidText = ({ to, id, result }: Tx): ResultText => {
+  if (id < 0) return { head: `No state named '${to}'` };
+  const params = result?.invalidParams ?? [];
+  const message = result?.message;
 
-  return detail && detail !== 'undefined' ? { head, detail } : { head };
+  const head = params.length
+    ? `Invalid ${plural(params.length, 'param')}: ${params.join(', ')}`
+    : 'Invalid transition';
+
+  return message ? { head, detail: message } : { head };
 };
+
+const errorText = ({ result }: Tx): ResultText => {
+  const message = result?.message;
+  const name = result?.errorName;
+
+  if (!message)
+    return { head: name ? `${name} thrown` : 'A hook or resolve threw' };
+
+  return name && name !== 'Error'
+    ? { head: message, detail: name }
+    : { head: message };
+};
+
+// The words for how a transition ended, derived from the result's fields; success and running have none.
+export const resultText = (tx: Tx): ResultText | null => {
+  const result = tx.result;
+  const by = result?.by;
+
+  switch (result?.outcome) {
+    case 'ignored':
+      return {
+        head: 'Same state and params; pass reload: true to run it again',
+      };
+    case 'redirected':
+      return {
+        head: by === undefined ? 'Redirected' : `Redirected to ${seq(by)}`,
+      };
+    case 'superseded':
+      return {
+        head:
+          by === undefined
+            ? 'Superseded by a newer transition'
+            : `Superseded by ${seq(by)}`,
+      };
+    case 'aborted':
+      return result.message
+        ? { head: 'Aborted', detail: result.message }
+        : { head: 'Aborted' };
+    case 'invalid':
+      return invalidText(tx);
+    case 'error':
+      return errorText(tx);
+    default:
+      return null;
+  }
+};
+
+/** The result text on one line, for the console, the Performance panel and the live region. */
+export const resultLine = (tx: Tx): string => {
+  const text = resultText(tx);
+
+  return text ? [text.head, text.detail].filter(Boolean).join(': ') : '';
+};
+
+/** A recorded param value as text; null and a missing value are both empty. */
+export const paramText = (value: ParamValue | undefined): string => {
+  if (value === undefined || value === null) return '';
+
+  return Array.isArray(value)
+    ? `[${value.map((item) => JSON.stringify(item)).join(', ')}]`
+    : String(value);
+};
+
+export const sameParam = (
+  a: ParamValue | undefined,
+  b: ParamValue | undefined,
+): boolean => a === b || JSON.stringify(a) === JSON.stringify(b);
 
 const SEGMENT_MAX = 24;
 

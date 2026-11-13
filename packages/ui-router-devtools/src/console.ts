@@ -1,7 +1,16 @@
 import { durationOf, fold, type Tx } from './fold.ts';
-import { ms, pathText, seq, sourceTags, statusText } from './notation.ts';
+import {
+  ms,
+  paramText,
+  pathText,
+  resultLine,
+  sameParam,
+  seq,
+  sourceTags,
+  statusText,
+} from './notation.ts';
 import type { Recorder } from './recorder.ts';
-import type { DevtoolsEvent, Params } from './schema.ts';
+import type { Params, RouterEvent } from './schema.ts';
 
 const DIM = 'color: GrayText';
 
@@ -9,9 +18,17 @@ const paramRows = (before: Params, after: Params) =>
   Object.fromEntries(
     [...new Set([...Object.keys(before), ...Object.keys(after)])].flatMap(
       (key) =>
-        before[key] === after[key]
+        sameParam(before[key], after[key])
           ? []
-          : [[key, { before: before[key], after: after[key] }] as const],
+          : [
+              [
+                key,
+                {
+                  before: paramText(before[key]),
+                  after: paramText(after[key]),
+                },
+              ] as const,
+            ],
     ),
   );
 
@@ -43,9 +60,11 @@ const reportTx = (txs: readonly Tx[], tx: Tx) => {
 
   console.groupCollapsed(header);
 
+  const text = resultLine(tx);
+
   if (result.outcome === 'error' || result.outcome === 'invalid')
-    console.error(result.message ?? result.reason);
-  else if (result.reason) console.log(`%c${result.reason}`, DIM);
+    console.error(text);
+  else if (text) console.log(`%c${text}`, DIM);
   const diff = paramRows(tx.fromParams, tx.toParams);
 
   if (Object.keys(diff).length) console.table(diff);
@@ -63,7 +82,7 @@ const reportTx = (txs: readonly Tx[], tx: Tx) => {
 
 // One collapsed console group per settled transition; with a recorder it keeps reporting until the returned function is called.
 export function reportToConsole(
-  source: readonly DevtoolsEvent[] | Recorder,
+  source: readonly RouterEvent[] | Recorder,
 ): () => void {
   if (!('subscribe' in source)) {
     const { txs } = fold(source);
@@ -76,7 +95,7 @@ export function reportToConsole(
 
   return recorder.subscribe((event) => {
     if (event.type !== 'result' && event.type !== 'invalid') return;
-    const key = event.type === 'result' ? event.id : -event.key;
+    const key = event.type === 'result' ? event.id : -event.seq;
     const { txs } = fold(recorder.events);
     const tx = txs.find((t) => t.id === key);
 

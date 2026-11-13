@@ -2,6 +2,8 @@ import { configDefaults, defineConfig } from 'vitest/config';
 import { GithubActionsReporter } from 'vitest/node';
 import { playwright } from '@vitest/browser-playwright';
 
+import packageJson from './package.json' with { type: 'json' };
+
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
 
@@ -15,6 +17,8 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
   test: {
+    // What oxc-emit-js defines as `import.meta.env.PACKAGE_VERSION` in dist/.
+    env: { PACKAGE_VERSION: packageJson.version },
     // github-actions precedes the failure banner; hanging-process logs open handles in CI
     reporters: [
       ...(process.env.GITHUB_ACTIONS === 'true'

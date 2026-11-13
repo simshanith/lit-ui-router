@@ -1,9 +1,9 @@
 import { html, nothing, type TemplateResult } from 'lit';
-import type { UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { DevtoolsPanel } from './panel.ts';
 import type { Tx } from '../fold.ts';
-import type { LocationInfo } from '../schema.ts';
-import { observedEdges } from '../edges.ts';
-import { segment, seq } from '../notation.ts';
+import { SCHEMA_VERSION, type LocationInfo } from '../schema.ts';
+import { edgesOf } from '../edges.ts';
+import { paramText, segment, seq } from '../notation.ts';
 import {
   reasonLine,
   renderOptions,
@@ -25,7 +25,7 @@ const sub = (n: string, title: string) =>
   </h3>`;
 
 // A state named in words; it selects that state and moves focus to its row or box.
-const stateLink = (host: UIRouterDevtools, name: string) =>
+const stateLink = (host: DevtoolsPanel, name: string) =>
   html`<button
     class="link ${host._depthClass(name)}"
     title=${name}
@@ -37,11 +37,11 @@ const stateLink = (host: UIRouterDevtools, name: string) =>
 const commas = (items: readonly unknown[]) =>
   items.map((item, index) => html`${index ? ', ' : nothing}${item}`);
 
-const stateLinks = (host: UIRouterDevtools, names: readonly string[]) =>
+const stateLinks = (host: DevtoolsPanel, names: readonly string[]) =>
   commas(names.map((name) => stateLink(host, name)));
 
 // What the Map draws as edges for a selected transition, in words.
-const renderTxPath = (host: UIRouterDevtools, tx: Tx) => {
+const renderTxPath = (host: DevtoolsPanel, tx: Tx) => {
   if (tx.id < 0) return nothing;
 
   const origin = host._origin(tx);
@@ -72,8 +72,8 @@ const renderTxPath = (host: UIRouterDevtools, tx: Tx) => {
 };
 
 // What the Map draws as edges for a selected state, in words: successful arrivals and departures per other state.
-const renderTraffic = (host: UIRouterDevtools, name: string) => {
-  const seen = observedEdges(host._model).flatMap((edge) =>
+const renderTraffic = (host: DevtoolsPanel, name: string) => {
+  const seen = edgesOf(host._model).flatMap((edge) =>
     edge.outcomes.success ? [{ ...edge, count: edge.outcomes.success }] : [],
   );
 
@@ -108,7 +108,7 @@ const renderTraffic = (host: UIRouterDevtools, name: string) => {
 };
 
 export const renderTxInspector = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   tx: Tx,
 ): TemplateResult => {
   const status = tx.result?.outcome ?? 'running';
@@ -118,14 +118,12 @@ export const renderTxInspector = (
       ${statusGlyph(status)}<span class="name">${tx.to}</span
       ><span class="visually-hidden">${statusLabel[status]}</span>
     </p>
-    ${reasonLine(tx.result?.reason, status)} ${renderTxPath(host, tx)}
+    ${reasonLine(tx, status)} ${renderTxPath(host, tx)}
     ${renderParams(host, tx, '3.1', true)}${renderOptions(tx, '3.2')}${renderTiming(host, tx, '3.3')}
   </div>`;
 };
 
-export const renderStateInspector = (
-  host: UIRouterDevtools,
-): TemplateResult => {
+export const renderStateInspector = (host: DevtoolsPanel): TemplateResult => {
   const { states, current } = host._model;
   const name = host._selectedState ?? current.name;
   const state = states.find((s) => s.name === name);
@@ -185,7 +183,7 @@ export const renderStateInspector = (
                     >${p.id}${p.optional ? '' : html` <span class="muted">required</span>`}
                   </dt>
                   <dd>
-                    ${values[p.id] ?? html`<span class="muted">—</span>`}<span
+                    ${values[p.id] == null ? html`<span class="muted">—</span>` : paramText(values[p.id])}<span
                       class="muted"
                     >
                       ${p.type}${p.dynamic ? ', dynamic' : ''}${p.array ? ', array' : ''}</span
@@ -220,11 +218,11 @@ const literal = (value: string) =>
 
 // The router facts; the dock shows it as the inspector's default, the sheets as their own pane.
 export const renderRouterCard = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   actions = false,
 ): TemplateResult => {
   const { config, states } = host._model;
-  const session = host.session();
+  const facts = host._sessionFacts();
 
   if (!config) return html`<p class="empty">No router attached.</p>`;
 
@@ -245,16 +243,23 @@ export const renderRouterCard = (
       <dt>States</dt>
       <dd class="num-start">${states.length}</dd>
       <dt>Events</dt>
-      <dd class="num-start">${session?.events.length ?? 0}</dd>
+      <dd class="num-start">${facts.events}</dd>
+      ${
+        facts.dropped
+          ? html`<dt>Dropped</dt>
+              <dd class="num-start">${facts.dropped}</dd>`
+          : nothing
+      }
       <dt>Session</dt>
-      <dd class="literal">${session?.routerId ?? '—'}</dd>
+      <dd class="literal">${facts.routerId || '—'}</dd>
       <dt>Schema</dt>
-      <dd>v${session?.v ?? 1}, ${host._imported ? 'imported' : 'live'}</dd>
+      <dd>v${SCHEMA_VERSION}, ${host._imported ? 'imported' : 'live'}</dd>
     </dl>
     ${sub('3.1', 'Plugins')}
     <ul class="plain literal">
       ${config.plugins.map((name) => html`<li>${name}</li>`)}
     </ul>
+    ${sub('3.2', 'Export')} ${host._exportToggles()}
     ${actions ? html`<p class="session card-actions">${host._sessionButtons()}</p>` : nothing}
   </div>`;
 };

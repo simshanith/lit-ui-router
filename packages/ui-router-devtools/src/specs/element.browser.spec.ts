@@ -14,6 +14,7 @@ import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import '../define.ts';
 import { DevtoolsPlugin } from '../plugin.ts';
+import type { DevtoolsPanel } from '../element/panel.ts';
 import { UIRouterDevtools } from '../ui-router-devtools.ts';
 
 const routers: UIRouter[] = [];
@@ -97,43 +98,45 @@ const pending = (router: UIRouter) => {
 
 const tick = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// SAFETY: the registered class is DevtoolsPanel; the public type hides its render state
+const panelOf = (element: UIRouterDevtools) => element as DevtoolsPanel;
+
 it('stops ticking when removed mid-transition', async () => {
   const router = makeRouter();
-  const devtools = router.plugin(DevtoolsPlugin);
-  const element = devtools.element;
+  const panel = panelOf(router.plugin(DevtoolsPlugin).element);
   pending(router);
-  await waitFor(() => expect(element._runningTx?.to).toBe('slow'));
+  await waitFor(() => expect(panel._runningTx?.to).toBe('slow'));
 
-  const ticking = element._now;
-  await waitFor(() => expect(element._now).not.toBe(ticking));
+  const ticking = panel._now;
+  await waitFor(() => expect(panel._now).not.toBe(ticking));
 
-  element.remove();
-  await element.updateComplete;
-  const removed = element._now;
+  panel.remove();
+  await panel.updateComplete;
+  const removed = panel._now;
   await tick(350);
 
-  expect(element._now).toBe(removed);
+  expect(panel._now).toBe(removed);
 });
 
-it('shows no duration for an imported transition that never finished', async () => {
+it("ends an imported running transition at the export's clock", async () => {
   const router = makeRouter();
-  const devtools = router.plugin(DevtoolsPlugin);
-  const element = devtools.element;
+  const panel = panelOf(router.plugin(DevtoolsPlugin).element);
   pending(router);
-  await waitFor(() => expect(element._runningTx?.to).toBe('slow'));
+  await waitFor(() => expect(panel._runningTx?.to).toBe('slow'));
 
   // The exporting page's clock ran far ahead of this one.
-  const session = element.session()!;
-  element.importSession({
+  const session = panel.session({ params: 'all' })!;
+  const took = session.t - panel._runningTx!.t;
+  panel.importSession({
     ...session,
+    t: session.t + 1e7,
     events: session.events.map((event) => ({ ...event, t: event.t + 1e7 })),
   });
-  await element.updateComplete;
+  await panel.updateComplete;
 
-  const pill = getByRole(shadow(element), 'button', { name: /Router .*slow/ });
-
-  expect(element._duration(element._runningTx!)).toBeUndefined();
-  expect(pill.querySelector('.num')).toBeNull();
+  expect(panel._duration(panel._runningTx!)).toBe(took);
+  await tick(250);
+  expect(panel._duration(panel._runningTx!)).toBe(took);
 });
 
 it('draws the default-child arrow to a lazy child', async () => {
@@ -150,6 +153,114 @@ it('draws the default-child arrow to a lazy child', async () => {
   await waitFor(() =>
     expect(shadow(element).querySelectorAll('.rail-initial')).toHaveLength(1),
   );
+});
+
+describe('session files', () => {
+  const open = async () => {
+    await page.viewport(1280, 800);
+
+    const router = makeRouter();
+
+    const { element } = router.plugin(DevtoolsPlugin, {
+      redaction: { params: ['id'] },
+    });
+
+    await router.stateService.go('home');
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+    await element.updateComplete;
+
+    return { router, element };
+  };
+
+  const importFile = (element: UIRouterDevtools, text: string) => {
+    const input = element.renderRoot.querySelector<HTMLInputElement>('.file')!;
+    const files = new DataTransfer();
+    files.items.add(new File([text], 'session.json'));
+    input.files = files.files;
+    input.dispatchEvent(new Event('change'));
+  };
+
+  it('says in the panel why a file that is not a session did not import', async () => {
+    const { element } = await open();
+    importFile(element, JSON.stringify({ name: 'package.json' }));
+
+    await waitFor(() =>
+      expect(
+        shadow(element).querySelector('.notice.fault')?.textContent,
+      ).toContain('not a ui-router session file'),
+    );
+  });
+
+  it('imports a session with an unknown event type and says what it skipped', async () => {
+    const { element } = await open();
+    const session = element.session({ params: 'all' })!;
+
+    importFile(
+      element,
+      JSON.stringify({
+        ...session,
+        later: true,
+        events: [...session.events, { v: 1, seq: 99, t: 1, type: 'teleport' }],
+      }),
+    );
+
+    await waitFor(() =>
+      expect(shadow(element).querySelector('.notice')?.textContent).toContain(
+        '1 event',
+      ),
+    );
+    expect(
+      getByRole(shadow(element), 'button', { name: /^Live/ }),
+    ).toBeTruthy();
+  });
+
+  it('notes at the end of the log how many events the recorder dropped', async () => {
+    await page.viewport(1280, 800);
+
+    const router = makeRouter();
+    router.stateRegistry.register({ name: 'away', url: '/away' });
+
+    const element = document.createElement('ui-router-devtools');
+    element.history = 1;
+    element.router = router;
+    document.body.append(element);
+
+    for (let i = 0; i < 12; i++)
+      await router.stateService.go(i % 2 ? 'home' : 'away');
+    await element.updateComplete;
+
+    const dropped = element.recorder?.dropped ?? 0;
+    expect(dropped).toBeGreaterThan(0);
+    expect(
+      shadow(element)
+        .querySelector('.dropped')
+        ?.textContent?.replace(/\s+/g, ' '),
+    ).toContain(`${dropped} earlier events dropped`);
+  });
+
+  it('starts the export toggles from the redaction option', async () => {
+    const { element } = await open();
+
+    const toggles = getByRole(shadow(element), 'group', {
+      name: 'Export keeps',
+    });
+
+    const values = within(toggles).getByRole('button', {
+      name: 'Param values',
+    });
+
+    expect(values.getAttribute('aria-pressed')).toBe('false');
+    expect(
+      within(toggles)
+        .getByRole('button', { name: 'Messages' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(element.session()?.redaction).toEqual({
+      params: ['id'],
+      messages: true,
+    });
+  });
 });
 
 describe('the nested Map', () => {
@@ -278,9 +389,10 @@ describe('the nested Map', () => {
     getByRole(shadow(element), 'button', { name: /Router/ }).click();
     await element.updateComplete;
 
-    expect(element._map).toBeUndefined();
+    const panel = panelOf(element);
+    expect(panel._map).toBeUndefined();
     getByRole(shadow(element), 'button', { name: 'map' }).click();
-    await waitFor(() => expect(element._map).toBeDefined());
+    await waitFor(() => expect(panel._map).toBeDefined());
     expect(await tree(element)).toBeTruthy();
   });
 
@@ -314,8 +426,9 @@ describe('the nested Map', () => {
     await page.viewport(1280, 800);
     const router = sampleRouter();
     const { element } = router.plugin(DevtoolsPlugin);
-    const load = element._importMap;
-    element._importMap = () => Promise.reject(new Error('chunk failed'));
+    const panel = panelOf(element);
+    const load = panel._importMap;
+    panel._importMap = () => Promise.reject(new Error('chunk failed'));
     await element.updateComplete;
     getByRole(shadow(element), 'button', { name: /Router/ }).click();
     await element.updateComplete;
@@ -330,9 +443,9 @@ describe('the nested Map', () => {
     expect(getByRole(shadow(element), 'status').textContent).toContain(
       'The Map did not load',
     );
-    expect(element._map).toBeUndefined();
+    expect(panel._map).toBeUndefined();
 
-    element._importMap = load;
+    panel._importMap = load;
     view('outline');
     await element.updateComplete;
     view('map');

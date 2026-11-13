@@ -1,7 +1,7 @@
 import { fold, type Tx } from './fold.ts';
-import { pathText, seq } from './notation.ts';
+import { pathText, resultLine, seq } from './notation.ts';
 import type { Recorder } from './recorder.ts';
-import type { DevtoolsEvent } from './schema.ts';
+import type { RouterEvent } from './schema.ts';
 
 const TRACK_GROUP = 'UI-Router';
 
@@ -40,7 +40,7 @@ const reportPhases = (tx: Tx, end: number) => {
     const key = `${mark.phase} ${mark.state ?? ''}`.trim();
 
     if (mark.edge === 'start') open.set(key, mark.t);
-    else if (open.has(key)) {
+    else if (mark.edge === 'end' && open.has(key)) {
       entry(
         key,
         open.get(key)!,
@@ -84,7 +84,9 @@ const reportTx = (tx: Tx) => {
     ['path', pathText(tx)],
   ];
 
-  if (result.reason) properties.push(['reason', result.reason]);
+  const text = resultLine(tx);
+
+  if (text) properties.push(['reason', text]);
   entry(
     name,
     tx.t,
@@ -120,7 +122,7 @@ const reportTx = (tx: Tx) => {
 
 // Writes settled transitions as User Timing entries; with a recorder it keeps reporting until the returned function is called.
 export function reportToPerformance(
-  source: readonly DevtoolsEvent[] | Recorder,
+  source: readonly RouterEvent[] | Recorder,
 ): () => void {
   if (!('subscribe' in source)) {
     fold(source).txs.forEach(reportTx);
@@ -132,7 +134,7 @@ export function reportToPerformance(
 
   return recorder.subscribe((event) => {
     if (event.type !== 'result' && event.type !== 'invalid') return;
-    const key = event.type === 'result' ? event.id : -event.key;
+    const key = event.type === 'result' ? event.id : -event.seq;
     const tx = fold(recorder.events).txs.find((t) => t.id === key);
 
     if (tx) reportTx(tx);

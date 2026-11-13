@@ -6,9 +6,9 @@ import {
   type StateDeclaration,
 } from '@uirouter/core';
 
-import { ancestorsOf } from '../fold.ts';
-import { fold, observe, type DevtoolsEvent } from '../index.ts';
-import { pathText, reasonParts } from '../notation.ts';
+import { ancestorsOf, fold, type Tx } from '../fold.ts';
+import { observe, type RouterEvent } from '../index.ts';
+import { paramText, pathText, resultText } from '../notation.ts';
 
 const states: StateDeclaration[] = [
   { name: 'app' },
@@ -27,7 +27,7 @@ const session = async (run: (router: UIRouter) => Promise<void>) => {
 
   for (const state of states) router.stateRegistry.register(state);
 
-  const events: DevtoolsEvent[] = [];
+  const events: RouterEvent[] = [];
   const stop = observe(router, (event) => events.push(event));
   await run(router);
   stop();
@@ -66,24 +66,81 @@ it('names the deepest exited and the deepest entered state', async () => {
   ]);
 });
 
-it('splits the message and the detail out of a rejection core printed', () => {
+it('words each outcome from the result fields', async () => {
+  const { txs } = await session(async ({ stateService, transitionService }) => {
+    transitionService.onStart({ to: 'login' }, () => false);
+    await stateService.go('mail').catch(() => {});
+    await stateService.go('mail').catch(() => {});
+    await stateService.go('login').catch(() => {});
+    await stateService.go('typo').catch(() => {});
+  });
+
+  expect(txs.map(resultText)).toEqual([
+    null,
+    { head: 'Same state and params; pass reload: true to run it again' },
+    { head: 'Aborted', detail: 'Hook aborted transition' },
+    { head: "No state named 'typo'" },
+  ]);
+});
+
+it('names invalid params and keeps the detail apart', () => {
+  const tx = (result: Tx['result']): Tx => ({
+    id: 4,
+    t: 0,
+    from: '',
+    to: 'a',
+    fromParams: {},
+    toParams: {},
+    entering: [],
+    exiting: [],
+    retained: [],
+    redirectedFrom: null,
+    options: {
+      source: 'unknown',
+      location: true,
+      reload: false,
+      inherit: true,
+      supercede: true,
+    },
+    dynamic: false,
+    marks: [],
+    resolves: [],
+    result,
+  });
+
   expect(
-    reasonParts(
-      "Transition Rejection($id: 5 type: 4, message: This transition is invalid, detail: The following parameter values are not valid for state 'contacts.contact.edit': [contactId:undefined])",
+    resultText(
+      tx({
+        t: 1,
+        outcome: 'invalid',
+        invalidParams: ['contactId'],
+        message:
+          "The following parameter values are not valid for state 'a': [contactId:undefined]",
+      }),
     ),
   ).toEqual({
-    head: 'This transition is invalid',
+    head: 'Invalid param: contactId',
     detail:
-      "The following parameter values are not valid for state 'contacts.contact.edit': [contactId:undefined]",
+      "The following parameter values are not valid for state 'a': [contactId:undefined]",
   });
-
+  expect(resultText(tx({ t: 1, outcome: 'invalid' }))).toEqual({
+    head: 'Invalid transition',
+  });
+  expect(resultText(tx({ t: 1, outcome: 'superseded', by: 7 }))).toEqual({
+    head: 'Superseded by 007',
+  });
   expect(
-    reasonParts(
-      'Transition Rejection($id: 2 type: 6, message: The transition errored, detail: undefined)',
-    ),
-  ).toEqual({ head: 'The transition errored' });
-
-  expect(reasonParts('Resolve "horizon" rejected: no data escapes')).toEqual({
-    head: 'Resolve "horizon" rejected: no data escapes',
+    resultText(tx({ t: 1, outcome: 'error', errorName: 'TypeError' })),
+  ).toEqual({
+    head: 'TypeError thrown',
   });
+  expect(resultText(tx({ t: 1, outcome: 'error' }))).toEqual({
+    head: 'A hook or resolve threw',
+  });
+});
+
+it('prints array params as a list', () => {
+  expect(paramText(['a', 1, null])).toBe('["a", 1, null]');
+  expect(paramText(null)).toBe('');
+  expect(paramText(3)).toBe('3');
 });

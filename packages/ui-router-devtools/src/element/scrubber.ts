@@ -1,5 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit';
-import type { UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { DevtoolsPanel } from './panel.ts';
 import type { Tx } from '../fold.ts';
 import { ms, pathText, seq, type Status } from '../notation.ts';
 import { statusGlyph, statusLabel } from './glyphs.ts';
@@ -10,9 +10,8 @@ const statusOf = (tx: Tx): Status => tx.result?.outcome ?? 'running';
 const tickId = (tx: Tx): string =>
   tx.id < 0 ? `tick-n${-tx.id}` : `tick-${tx.id}`;
 
-const tickLabel = (host: UIRouterDevtools, tx: Tx): string => {
-  const duration = tx.id < 0 ? undefined : host._duration(tx);
-  const took = duration === undefined ? '' : `, ${ms(duration)}`;
+const tickLabel = (host: DevtoolsPanel, tx: Tx): string => {
+  const took = tx.id < 0 ? '' : `, ${ms(host._duration(tx))}`;
 
   return `${seq(tx.id)} ${statusLabel[statusOf(tx)]}: ${pathText(tx)}${took}`.trim();
 };
@@ -29,7 +28,7 @@ const MIRRORED = new Map([
   ['ArrowRight', 'ArrowLeft'],
 ]);
 
-const onKey = (host: UIRouterDevtools, event: KeyboardEvent, txs: Tx[]) => {
+const onKey = (host: DevtoolsPanel, event: KeyboardEvent, txs: Tx[]) => {
   const rtl = getComputedStyle(host).direction === 'rtl';
   const move = KEYS.get((rtl && MIRRORED.get(event.key)) || event.key);
   const at = txs.findIndex((tx) => tx.id === host._selectedTx);
@@ -43,7 +42,7 @@ const onKey = (host: UIRouterDevtools, event: KeyboardEvent, txs: Tx[]) => {
 };
 
 // The Map's transition log: one outcome glyph per transition, oldest first, with the selected row's notation beside it.
-export const renderScrubber = (host: UIRouterDevtools): TemplateResult => {
+export const renderScrubber = (host: DevtoolsPanel): TemplateResult => {
   const txs = host._model.txs;
   const selected = host._tx(host._selectedTx);
   const origin = selected && host._origin(selected);

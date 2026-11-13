@@ -6,7 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/router-events.ts",
-    "./reasons": "./src/transition-reasons.ts",
+    "./redaction": "./src/redaction.ts",
     "./resolve-timing": "./src/resolve-timing.ts",
     "./schema": "./src/event-schema.ts",
     "./source": "./src/transition-source.ts"

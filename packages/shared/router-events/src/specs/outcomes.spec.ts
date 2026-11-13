@@ -9,7 +9,7 @@ import {
 
 import type { RouterEvent } from '../event-schema.ts';
 import { observe } from '../router-events.ts';
-import { messageOf, reasonFor } from '../transition-reasons.ts';
+import { messageOf } from '../thrown.ts';
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,7 +76,6 @@ const run = async (script: (router: UIRouter) => Promise<void>) => {
 
   const stop = observe(router, (event) => events.push(event), {
     timeResolves: true,
-    redact: (key, value) => (key === 'secret' ? '***' : value),
   });
 
   await script(router);
@@ -91,9 +90,9 @@ const run = async (script: (router: UIRouter) => Promise<void>) => {
 
   return {
     transitions: of('transition'),
-    results: of('result').map(({ outcome, reason, message }) => ({
+    results: of('result').map(({ outcome, by, message }) => ({
       outcome,
-      reason,
+      by,
       message,
     })),
     resolves: of('resolve'),
@@ -111,7 +110,7 @@ const go = (
   );
 
 describe('results', () => {
-  it('give each outcome its reason and message', async () => {
+  it('give each outcome its successor and message', async () => {
     const { results } = await run(async (router) => {
       await go(router, 'a');
       await go(router, 'a');
@@ -123,27 +122,40 @@ describe('results', () => {
     });
 
     expect(results).toEqual([
-      { outcome: 'success', reason: null, message: undefined },
+      { outcome: 'success', by: undefined, message: undefined },
+      { outcome: 'ignored', by: undefined, message: undefined },
+      { outcome: 'redirected', by: 3, message: undefined },
+      { outcome: 'success', by: undefined, message: undefined },
+      { outcome: 'error', by: undefined, message: 'boom failed' },
+      { outcome: 'superseded', by: 6, message: undefined },
+      { outcome: 'success', by: undefined, message: undefined },
       {
-        outcome: 'ignored',
-        reason: 'Same state and params; pass reload: true to run it again',
-        message: undefined,
+        outcome: 'aborted',
+        by: undefined,
+        message: 'Hook aborted transition',
       },
-      {
-        outcome: 'redirected',
-        reason: 'Redirected to 003',
-        message: undefined,
-      },
-      { outcome: 'success', reason: null, message: undefined },
-      { outcome: 'error', reason: 'boom failed', message: 'boom failed' },
-      {
-        outcome: 'superseded',
-        reason: 'Superseded by 006',
-        message: undefined,
-      },
-      { outcome: 'success', reason: null, message: undefined },
-      { outcome: 'aborted', reason: 'Aborted by a hook', message: undefined },
     ]);
+  });
+
+  it('name the error a hook threw', async () => {
+    const { raw } = await run(async (router) => {
+      await go(router, 'boom');
+    });
+
+    expect(raw[0]).toMatchObject({ outcome: 'error', errorName: 'Error' });
+    expect(raw[0]).not.toHaveProperty('reason');
+  });
+
+  it('leave an abort() without a message', async () => {
+    const { raw } = await run(async (router) => {
+      router.transitionService.onStart({ to: 'slow' }, (trans) => {
+        trans.abort();
+      });
+      await go(router, 'slow');
+    });
+
+    expect(raw[0]?.outcome).toBe('aborted');
+    expect(raw[0]).not.toHaveProperty('message');
   });
 
   it('records options, params and the redirect origin', async () => {
@@ -252,24 +264,7 @@ describe('resolve timing', () => {
   });
 });
 
-describe('reasons', () => {
-  it('fall back when no transition is named', () => {
-    const base = { message: '', by: null };
-    expect(reasonFor({ ...base, outcome: 'redirected' })).toBe('Redirected');
-    expect(reasonFor({ ...base, outcome: 'superseded' })).toBe(
-      'Superseded by a newer transition',
-    );
-    expect(reasonFor({ ...base, outcome: 'aborted' })).toBe(
-      'Aborted by a hook',
-    );
-    expect(reasonFor({ ...base, outcome: 'invalid', message: 'x' })).toBe(
-      'Invalid transition: x',
-    );
-    expect(reasonFor({ ...base, outcome: 'error' })).toBe(
-      'A hook or resolve threw',
-    );
-  });
-
+describe('messages', () => {
   it('read the message from an error, a string or a rejection', () => {
     expect(messageOf(new Error('e'))).toBe('e');
     expect(messageOf(Rejection.errored('s'))).toBe('s');
@@ -277,5 +272,24 @@ describe('reasons', () => {
       'The transition has been aborted',
     );
     expect(messageOf(42)).toBe('42');
+  });
+});
+
+describe('sequence numbers', () => {
+  it('number every event from 1 without a gap', async () => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    router.plugin(memoryLocationPlugin);
+    router.stateRegistry.register({ name: 'a', url: '/a' });
+    const events: RouterEvent[] = [];
+    const stop = observe(router, (event) => events.push(event));
+    await router.stateService.go('a');
+    await router.stateService.go('typo').catch(() => {});
+    stop();
+    router.dispose();
+
+    expect(events.map(({ seq }) => seq)).toEqual(
+      events.map((_, index) => index + 1),
+    );
   });
 });
