@@ -226,6 +226,28 @@ describe('core rejections', () => {
     expect(byId.get(slow)).toMatchObject({ outcome: 'superseded', by: a });
   });
 
+  it('name no superseder once the superseded transition has left the window', async () => {
+    let release = () => {};
+
+    const held = new Promise<void>((resolve) => (release = resolve));
+
+    const { transitions, raw } = await run(async (router) => {
+      router.stateRegistry.register({ name: 'held', url: '/held' });
+      router.transitionService.onStart({ to: 'held' }, () => held);
+      const pending = go(router, 'held');
+      await sleep(1);
+
+      // More transitions than the window keeps begin before the held one notices.
+      for (let i = 0; i < 257; i++) await go(router, i % 2 ? 'a' : 'b');
+      release();
+      await pending;
+    });
+
+    const result = raw.find((r) => r.id === transitions[0]?.id);
+    expect(result).toMatchObject({ outcome: 'superseded' });
+    expect(result).not.toHaveProperty('by');
+  });
+
   it('name the successor of a redirect', async () => {
     const { transitions, raw } = await run(async (router) => {
       await go(router, 'r');

@@ -401,7 +401,12 @@ export const observe = (
     if (outcome === 'redirected')
       return started.find((s) => s.redirectedFrom === id)?.id;
 
-    return outcome === 'superseded' ? began[began.indexOf(id) + 1] : undefined;
+    if (outcome !== 'superseded') return undefined;
+
+    // An id that has left the window has no known successor.
+    const index = began.indexOf(id);
+
+    return index === -1 ? undefined : began[index + 1];
   };
 
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
