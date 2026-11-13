@@ -7,6 +7,7 @@ import {
   redactionOf,
   redactParams,
   redactSession,
+  redactSpan,
 } from '../redaction.ts';
 
 describe('redactParams', () => {
@@ -198,5 +199,67 @@ describe('redactSession', () => {
       redaction: { params: ['q'], messages: false },
       events: [{ params: { id: '[redacted]', q: 'x' } }],
     });
+  });
+});
+
+describe('redactSpan', () => {
+  const span = {
+    traceId: 't',
+    spanId: 's',
+    name: 'HTTP GET',
+    startTime: 1,
+    endTime: 2,
+    attributes: {
+      'url.full': 'https://example.test/users/7?token=x',
+      'http.response.status_code': 200,
+      'uirouter.transition_id': 3,
+      'uirouter.to': 'users.user',
+      'uirouter.param.userId': '7',
+      'uirouter.param.q': 'x',
+    },
+  };
+
+  it("keeps the router's own attributes and the allowlisted params, and redacts every other value", () => {
+    expect(redactSpan(span, { params: ['userId'], messages: true })).toEqual({
+      ...span,
+      attributes: {
+        'url.full': '[redacted]',
+        'http.response.status_code': '[redacted]',
+        'uirouter.transition_id': 3,
+        'uirouter.to': 'users.user',
+        'uirouter.param.userId': '7',
+        'uirouter.param.q': '[redacted]',
+      },
+    });
+  });
+
+  it('keeps every value under all, and a span without attributes as it is', () => {
+    expect(redactSpan(span, { params: 'all', messages: true })).toBe(span);
+
+    const bare = { traceId: 't', spanId: 'b', name: 'b', startTime: 0 };
+
+    expect(redactSpan(bare, redactionOf())).toBe(bare);
+  });
+
+  it('applies to the spans of a session, and leaves a session without spans without the field', () => {
+    const session: Session = {
+      format: 'ui-router-session',
+      v: 1,
+      id: 'session-1',
+      generator: { name: 'test', version: '0.0.0' },
+      routerId: 'router-1',
+      timeOrigin: 0,
+      t: 1,
+      dropped: 0,
+      timeResolves: false,
+      redaction: { params: 'all', messages: true },
+      events: [],
+    };
+
+    expect(redactSession(session, redactionOf())).not.toHaveProperty('spans');
+    expect(
+      redactSession({ ...session, spans: [span] }, redactionOf()).spans?.[0]
+        ?.attributes,
+    ).toMatchObject({ 'url.full': '[redacted]', 'uirouter.to': 'users.user' });
   });
 });

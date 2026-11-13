@@ -1618,3 +1618,187 @@ describe('the nested Map', () => {
     ).toBe('true');
   });
 });
+
+describe('the Timeline', () => {
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const open = async () => {
+    await page.viewport(1280, 800);
+
+    const router = makeRouter();
+    router.stateRegistry.register({
+      name: 'users',
+      url: '/users',
+      resolve: [{ token: 'users', resolveFn: () => sleep(20) }],
+    });
+
+    const { element } = router.plugin(DevtoolsPlugin, { timeResolves: true });
+
+    await router.stateService.go('users');
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router .*users/ }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'timeline' }).click();
+
+    const tree = await waitFor(() =>
+      getByRole(shadow(element), 'tree', { name: /Timeline/ }),
+    );
+
+    return { router, element, tree };
+  };
+
+  const press = (element: UIRouterDevtools, key: string) =>
+    element.shadowRoot?.activeElement?.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, composed: true }),
+    );
+
+  it('shows the latest transition as a tree of bars, each named with when it ran and how long it took', async () => {
+    const { tree } = await open();
+    const top = getByRole(tree, 'treeitem', { name: /^000 succeeded: users/ });
+
+    expect(top.getAttribute('aria-level')).toBe('1');
+    expect(top.getAttribute('aria-expanded')).toBe('true');
+    expect(top.getAttribute('aria-label')).toMatch(/at 0 ms, took \d/);
+
+    const resolve = getByRole(tree, 'treeitem', {
+      name: /^resolve users, at /,
+    });
+
+    expect(resolve.getAttribute('aria-level')).toBe('2');
+    // the duration is text in the row, not only a bar's length
+    expect(resolve.textContent).toMatch(/\d+ ms/);
+    expect(
+      getAllByRole(tree, 'treeitem').map(
+        (item) => item.getAttribute('aria-label')?.split(',')[0],
+      ),
+    ).toEqual(
+      expect.arrayContaining(['before', 'start', 'enter users', 'success']),
+    );
+    // With no spans given, nothing about spans is drawn.
+    expect(queryByText(tree, /during|in trace/i)).toBeNull();
+  });
+
+  it('moves, opens and closes with the tree keys, and shows a bar’s details on Enter', async () => {
+    const { element, tree } = await open();
+    const items = () => getAllByRole(tree, 'treeitem');
+    const top = items()[0];
+
+    top.focus();
+    press(element, 'ArrowDown');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items()[1]),
+    );
+    press(element, 'End');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items().at(-1)),
+    );
+    press(element, 'Enter');
+    await waitFor(() =>
+      expect(items().at(-1)?.getAttribute('aria-selected')).toBe('true'),
+    );
+    expect(
+      getByRole(shadow(element), 'region', { name: 'success' }),
+    ).toBeTruthy();
+    press(element, 'Escape');
+    await waitFor(() =>
+      expect(
+        queryByRole(shadow(element), 'region', { name: 'success' }),
+      ).toBeNull(),
+    );
+
+    press(element, 'ArrowLeft');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items()[0]),
+    );
+    press(element, 'ArrowLeft');
+    await waitFor(() => expect(items()).toHaveLength(1));
+    expect(items()[0].getAttribute('aria-expanded')).toBe('false');
+    press(element, 'ArrowRight');
+    await waitFor(() => expect(items().length).toBeGreaterThan(1));
+  });
+
+  it('nests a span that ran during the transition, says it only overlapped, and exports it redacted', async () => {
+    const { router, element, tree } = await open();
+    const panel = panelOf(element);
+    const tx = panel._model.txs[0];
+    const at = (t: number) => performance.timeOrigin + t;
+
+    element.addSpan({
+      traceId: 'a'.repeat(32),
+      spanId: 'b'.repeat(16),
+      name: 'GET /api/users',
+      startTime: at(tx.t + 1),
+      attributes: { 'url.full': 'https://example.test/users?token=x' },
+    });
+
+    const fetch = await waitFor(() =>
+      getByRole(tree, 'treeitem', { name: /^GET \/api\/users, .*during$/ }),
+    );
+
+    expect(fetch.getAttribute('aria-label')).toMatch(/running for/);
+
+    element.addSpan({
+      ...element.spans[0],
+      endTime: at((tx.result?.t ?? tx.t) - 1),
+      status: 'ok',
+    });
+    await waitFor(() =>
+      expect(
+        getByRole(tree, 'treeitem', { name: /^GET \/api\/users, .* took / }),
+      ).toBeTruthy(),
+    );
+    expect(element.spans).toHaveLength(1);
+
+    const exported = element.session();
+
+    expect(exported?.spans).toEqual([
+      expect.objectContaining({
+        name: 'GET /api/users',
+        attributes: { 'url.full': '[redacted]' },
+      }),
+    ]);
+    expect(element.session({ params: 'all' })?.spans?.[0]?.attributes).toEqual({
+      'url.full': 'https://example.test/users?token=x',
+    });
+
+    // An imported session shows its own spans, and the live ones stay with the live router.
+    element.spans = [];
+    element.importSession(exported!);
+    await element.updateComplete;
+    await waitFor(() =>
+      getByRole(
+        getByRole(shadow(element), 'tree', { name: /Timeline/ }),
+        'treeitem',
+        { name: /^GET \/api\/users/ },
+      ),
+    );
+    expect(router.globals.current.name).toBe('users');
+  });
+
+  it('leaves the session file without spans when none were given', async () => {
+    const { element } = await open();
+
+    expect(element.session()).not.toHaveProperty('spans');
+  });
+
+  it('says so when the Timeline fails to load', async () => {
+    await page.viewport(1280, 800);
+    const router = makeRouter();
+    const { element } = router.plugin(DevtoolsPlugin);
+    const panel = panelOf(element);
+    panel._importTimeline = () => Promise.reject(new Error('chunk failed'));
+    await router.stateService.go('home');
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'timeline' }).click();
+
+    await waitFor(() =>
+      getByText(shadow(element), /The Timeline did not load/, {
+        selector: 'p',
+      }),
+    );
+    expect(panel._timeline).toBeUndefined();
+  });
+});

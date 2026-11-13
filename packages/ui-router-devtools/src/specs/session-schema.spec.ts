@@ -34,7 +34,7 @@ describe('readSession', () => {
     const session = await recorded();
     const read = readSession(session);
 
-    expect(read).toEqual({ ok: true, session, skipped: 0 });
+    expect(read).toEqual({ ok: true, session, skipped: 0, skippedSpans: 0 });
     expect(read.ok && fold(read.session.events)).toEqual(fold(session.events));
   });
 
@@ -107,6 +107,31 @@ describe('readSession', () => {
     expect(
       tx?.marks.filter((mark) => mark.phase === 'inactivate'),
     ).toMatchObject([{ edge: 'start' }, { edge: 'end' }]);
+  });
+
+  it('reads spans when the file has them, and skips and counts one that does not read', async () => {
+    const session = await recorded();
+
+    const span = {
+      traceId: 't',
+      spanId: 's',
+      name: 'HTTP GET',
+      startTime: session.timeOrigin + 1,
+      endTime: session.timeOrigin + 2,
+      status: 'teleported',
+      attributes: { 'http.response.status_code': 200, tags: ['a', null] },
+    };
+
+    const read = readSession({
+      ...session,
+      spans: [span, { spanId: 'no trace' }],
+    });
+
+    expect(read.ok && read.skippedSpans).toBe(1);
+    expect(read.ok && read.session.spans).toEqual([
+      { ...span, status: 'unset' },
+    ]);
+    expect(readSession(session)).not.toHaveProperty('session.spans');
   });
 
   it('refuses a file that is not a session', () => {
