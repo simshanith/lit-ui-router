@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-11-13",
+      "num": "A4",
+      "head": "APPENDIX A4",
+      "title": "THE ATLAS, SHIPPED",
+      "rev": "F",
+      "desc": "heights on their own hundredth of sheet 9's ruler, the largest at which the tallest block stands within 640 px"
+    },
+    {
       "date": "2026-11-12",
       "num": "7",
       "head": "SHEET 7",
@@ -2591,7 +2599,7 @@
         "mode": "static",
         "basis": "measured"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/a4.html",
       "interactive": false,
       "needsCytoscape": false,
