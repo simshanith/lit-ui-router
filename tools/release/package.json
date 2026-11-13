@@ -30,6 +30,7 @@
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
     "@types/semver": "catalog:",
+    "diff": "catalog:",
     "effect": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

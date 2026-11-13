@@ -191,10 +191,12 @@ job summary, and posts nothing.
 The step is `continue-on-error`: a failed claim leaves a warning annotation and
 a job summary line, and the ledger's tag sweep records the release later.
 
-The repository has GitHub immutable releases enabled: a published release, its
+The repository has GitHub immutable releases enabled: a published release's
 assets and the tag it points at can never be edited or deleted, and npm
-versions are equally permanent. A bad release body or a missing asset ships
-for good, and test or canary publishes stay as evidence rather than cleanup.
+versions are equally permanent. A missing asset ships for good, and test or
+canary publishes stay as evidence rather than cleanup. A stable release's
+title and notes stay editable; its notes are corrected through its
+`CHANGELOG.md` section ([Correcting published notes](#correcting-published-notes)).
 
 ### 5. Release signals (`release-signals.yml`)
 
@@ -227,6 +229,15 @@ past an hour, `neutral` when a source can't be read. A deprecation is a note in
 the summary. On the post-publish dispatch, Publish to NPM passes the new release
 as the `release` input, and the check also compares its `.tgz` asset with npm's
 tarball.
+
+The cloudflare job's last step posts the `changelog` check run, from the same
+ledger read: each published package's `CHANGELOG.md` against the GitHub release
+bodies the ledger stores for its stable releases, trailing whitespace aside.
+It is `action_required` when a stored body has no section, a section's body
+differs from its stored body, or a section has no published release, and
+`neutral` when the ledger can't be read. A package's newest section, when its
+version is above every release with a stored body, is a note instead: its
+release PR has merged and the publish has not recorded the GitHub release yet.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
@@ -629,6 +640,36 @@ publish passes `--github.releaseNotes` a command that prints the section
 (`tools/changelog/src/extract.ts`), so the GitHub release body is the section
 as merged. To change the notes, edit the section on the release branch before
 merging.
+
+#### Correcting published notes
+
+A published stable release's notes are corrected file first, never on GitHub:
+
+1. Open a PR that edits the release's section in `packages/<pkg>/CHANGELOG.md`.
+   Once it merges, the `changelog` check run on `main`
+   ([Release signals](#5-release-signals-release-signalsyml)) reports the
+   section as differing from the published notes.
+2. A maintainer runs
+   [Actions ▸ Release notes re-sync ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-notes-resync.yml)
+   (`release-notes-resync.yml`) with the package and version, as a dry run
+   first. Its job summary lists each release whose GitHub body differs from
+   its section, with a unified diff; unticking `dry_run` makes the edits,
+   from `main` only.
+
+The re-sync (`mise run //tools/release:notes_resync`,
+`tools/release/src/steps/release-notes-resync.ts`) writes only with
+`gh release edit <tag> --notes-file`, and only for an existing, non-draft,
+stable release whose section exists. It passes `--latest` as the release
+stands, since the update API's `make_latest` defaults to true, checks the
+Latest marker after each edit, and stops after putting it back if it moved.
+It sends no title, draft, prerelease or asset change.
+
+Until the ledger's next daily tag sweep re-reads the edited releases, the
+`release-ledger` check reports their notes as edited on GitHub and the
+`changelog` check still compares against the old bodies; both clear once the
+ledger records the new body. A manual claim through the ledger's `enqueue`
+script ([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md#backfill--manual-claims))
+records it sooner.
 
 A prerelease has no section: its release commit carries the notes, and its
 GitHub release body is the notes the publish renders from the same pinned

@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/changelog.ts",
+    "./drift.ts": "./src/drift.ts",
     "./extract.ts": "./src/extract.ts",
     "./write-section.ts": "./src/write-section.ts"
   },

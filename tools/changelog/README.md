@@ -12,6 +12,10 @@ of each published package.
 - [`src/extract.ts`](./src/extract.ts): prints one version's section body, or
   fails when there is none; the publish runs it as release-it's
   `github.releaseNotes`.
+- [`src/drift.ts`](./src/drift.ts): compares each file with the GitHub
+  release bodies the release ledger stores; the `changelog` check run in
+  [Release signals](../../docs/RELEASE.md#5-release-signals-release-signalsyml)
+  reports it.
 - [`src/normalise.ts`](./src/normalise.ts): the structural changes a GitHub
   release body takes on its way into a section. The words stay as published.
 - [`src/backfill.ts`](./src/backfill.ts): adds the sections a file lacks from

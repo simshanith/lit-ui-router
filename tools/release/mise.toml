@@ -149,6 +149,23 @@ flag "--release <release>" help="<name>@<version> to digest-check against npm; e
 '''
 run = 'RELEASE="${usage_release:-}" node src/checks/ledger-check-runs.ts'
 
+[tasks.changelog_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, ACTIONS_ID_TOKEN_REQUEST_* (id-token: write).
+description = "Create the changelog check run (CHANGELOG.md sections vs the ledger's published notes, non-gating)"
+run = "node src/checks/changelog-check-runs.ts"
+
+[tasks.notes_resync]
+# env: GH_TOKEN, GITHUB_REPOSITORY. Writes only through `gh release edit --notes-file`, and only when --dry-run is false.
+description = "Publish CHANGELOG.md sections to the GitHub releases whose notes differ (file to GitHub)"
+usage = '''
+flag "--package <package>" help="Published package, or all" default="all" env="PACKAGE"
+flag "--version <version>" help="Stable version, or all that differ" default="all" env="VERSION"
+flag "--dry-run <dry_run>" help="true lists the edits; false makes them" default="true" env="DRY_RUN" {
+  choices "true" "false"
+}
+'''
+run = 'node src/steps/release-notes-resync.ts --package "${usage_package?}" --version "${usage_version?}" --dry-run "${usage_dry_run?}"'
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.

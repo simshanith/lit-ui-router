@@ -3076,6 +3076,9 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
+      diff:
+        specifier: 'catalog:'
+        version: 9.0.0
       effect:
         specifier: 'catalog:'
         version: 4.1.2

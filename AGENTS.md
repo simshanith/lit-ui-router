@@ -113,7 +113,7 @@ Agents never:
 - mark PRs ready for review;
 - dispatch release workflows;
 - push to `dependabot/*` branches; redo the bump on their own branch instead;
-- edit or delete GitHub releases, or unpublish npm versions. Releases are immutable, and canary releases stay as evidence;
+- edit or delete GitHub releases, or unpublish npm versions. Release assets and tags are immutable and canary releases stay as evidence; notes are corrected through `CHANGELOG.md` and the maintainer-run re-sync ([RELEASE](docs/RELEASE.md#correcting-published-notes));
 - create labels. Label PRs by subject from the existing set;
 - force-push, except `--force-with-lease` on their own branch.
 
