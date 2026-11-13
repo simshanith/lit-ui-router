@@ -27,15 +27,13 @@ export const errorReason = (message: string): string =>
 export interface ReasonInput {
   outcome: Outcome;
   message: string;
-  successor: number | null;
-  supersededBy: number | null;
+  by: number | null;
 }
 
 export const reasonFor = ({
   outcome,
   message,
-  successor,
-  supersededBy,
+  by,
 }: ReasonInput): string | null => {
   switch (outcome) {
     case 'success':
@@ -43,9 +41,9 @@ export const reasonFor = ({
     case 'ignored':
       return ignoredReason;
     case 'redirected':
-      return redirectedReason(successor);
+      return redirectedReason(by);
     case 'superseded':
-      return supersededReason(supersededBy);
+      return supersededReason(by);
     case 'aborted':
       return abortedReason;
     case 'invalid':

@@ -6,7 +6,7 @@ import {
   type RawParams,
   type StateDeclaration,
   TargetState,
-  type Transition,
+  Transition,
   type UIRouter,
 } from '@uirouter/core';
 import {
@@ -25,6 +25,7 @@ import {
   type Params,
   type Phase,
   type Redact,
+  type ResultEvent,
   type StateInfo,
   type TransitionOptionsInfo,
   type Value,
@@ -266,6 +267,76 @@ const outcomeOf = (error: unknown): Outcome => {
   }
 };
 
+// Core's invalid-transition hook throws `trans.error()` as a plain Error's message, so the rejection arrives as an error.
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
+const invalidOf = (trans: Transition, error: unknown): Rejection | null => {
+  if (!(error instanceof Rejection) || error.type !== RejectType.ERROR)
+    return null;
+
+  const invalid: unknown = trans.error();
+
+  if (!(invalid instanceof Rejection) || invalid.type !== RejectType.INVALID)
+    return null;
+
+  const thrown: unknown = error.detail;
+
+  return thrown instanceof Error &&
+    thrown.message.includes(String(invalid.detail))
+    ? invalid
+    : null;
+};
+
+const invalidParamsOf = (trans: Transition): string[] => {
+  const values = trans.params();
+
+  return trans
+    .$to()
+    .parameters()
+    .filter((param) => !param.validates(values[param.id]))
+    .map((param) => param.id);
+};
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
+const errorNameOf = (error: unknown): string | undefined => {
+  const thrown: unknown = error instanceof Rejection ? error.detail : error;
+
+  return thrown instanceof Error ? thrown.name : undefined;
+};
+
+type Settled = Omit<Draft<ResultEvent>, 'type' | 'id' | 'reason'>;
+
+// What a rejection says, read from core's own objects rather than its printed form.
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
+const settledOf = (trans: Transition, error: unknown): Settled => {
+  const invalid = invalidOf(trans, error);
+
+  if (invalid) {
+    const invalidParams = invalidParamsOf(trans);
+
+    return {
+      outcome: 'invalid',
+      message: messageOf(invalid),
+      ...(invalidParams.length && { invalidParams }),
+    };
+  }
+
+  const outcome = outcomeOf(error);
+  const detail: unknown = error instanceof Rejection ? error.detail : null;
+
+  if (outcome === 'superseded' && detail instanceof Transition)
+    return { outcome, by: detail.$id };
+
+  if (outcome !== 'error' && outcome !== 'invalid') return { outcome };
+
+  const errorName = errorNameOf(error);
+
+  return {
+    outcome,
+    message: messageOf(error),
+    ...(errorName !== undefined && { errorName }),
+  };
+};
+
 const names = (nodes: PathNode[]): string[] =>
   nodes.flatMap((node) => (node.state.name ? [node.state.name] : []));
 
@@ -317,29 +388,32 @@ export const observe = (
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
   const settle = (trans: Transition, error?: unknown) => {
     const id = trans.$id;
-    const outcome = error === undefined ? 'success' : outcomeOf(error);
-    const message = error === undefined ? '' : messageOf(error);
+
+    const settled: Settled =
+      error === undefined ? { outcome: 'success' } : settledOf(trans, error);
 
     const send = () => {
       pendingRedirects.delete(id);
 
-      const successor =
-        started.find((s) => s.redirectedFrom === id)?.id ?? null;
-
-      const supersededBy =
-        started.find((s) => s.id > id && s.redirectedFrom !== id)?.id ?? null;
+      const by =
+        settled.outcome === 'redirected'
+          ? started.find((s) => s.redirectedFrom === id)?.id
+          : settled.by;
 
       emit({
         type: 'result',
         id,
-        outcome,
-        reason: reasonFor({ outcome, message, successor, supersededBy }),
-        message:
-          outcome === 'error' || outcome === 'invalid' ? message : undefined,
+        ...settled,
+        ...(by !== undefined && { by }),
+        reason: reasonFor({
+          outcome: settled.outcome,
+          message: settled.message ?? '',
+          by: by ?? null,
+        }),
       });
     };
 
-    if (outcome !== 'redirected') {
+    if (settled.outcome !== 'redirected') {
       send();
 
       return;

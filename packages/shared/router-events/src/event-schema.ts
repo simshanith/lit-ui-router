@@ -126,7 +126,13 @@ export interface ResultEvent extends Base {
   id: number;
   outcome: Outcome;
   reason: string | null;
+  /** The transition that took over: a redirect's successor, or the transition that superseded this one. */
+  by?: number;
   message?: string;
+  /** The thrown Error's `name`, on an error outcome where a hook or resolve threw one. */
+  errorName?: string;
+  /** Ids of the params that failed validation, on an invalid outcome. */
+  invalidParams?: string[];
 }
 
 // A target that names no state; core creates no Transition for it, so it has no id.

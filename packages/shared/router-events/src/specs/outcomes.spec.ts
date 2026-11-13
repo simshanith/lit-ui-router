@@ -31,6 +31,13 @@ const states: StateDeclaration[] = [
     resolve: [{ token: 'wait', resolveFn: () => sleep(5) }],
   },
   {
+    name: 'n',
+    url: '/n/:num',
+    params: { num: { type: 'int' } },
+  },
+  { name: 'abstract', url: '/abstract', abstract: true },
+  { name: 'toAbstract', url: '/to-abstract', redirectTo: 'abstract' },
+  {
     name: 'p',
     url: '/p',
     resolve: [{ token: 'P', resolveFn: () => 'P' }],
@@ -90,6 +97,7 @@ const run = async (script: (router: UIRouter) => Promise<void>) => {
       message,
     })),
     resolves: of('resolve'),
+    raw: of('result'),
   };
 };
 
@@ -160,6 +168,65 @@ describe('results', () => {
   });
 });
 
+describe('core rejections', () => {
+  it('record invalid param values as an invalid outcome naming the params', async () => {
+    const { raw } = await run(async (router) => {
+      await go(router, 'n', { num: 'x' });
+    });
+
+    expect(raw).toHaveLength(1);
+    expect(raw[0]).toMatchObject({
+      outcome: 'invalid',
+      invalidParams: ['num'],
+      message:
+        "The following parameter values are not valid for state 'n': [num:null]",
+    });
+    expect(raw[0]?.message).not.toContain('Transition Rejection');
+  });
+
+  it('record a redirect to an abstract state as invalid', async () => {
+    const { raw } = await run(async (router) => {
+      await go(router, 'toAbstract');
+    });
+
+    expect(raw.map(({ outcome }) => outcome)).toEqual([
+      'redirected',
+      'invalid',
+    ]);
+    expect(raw[1]).toMatchObject({
+      message: "Cannot transition to abstract state 'abstract'",
+    });
+    expect(raw[1]).not.toHaveProperty('invalidParams');
+  });
+
+  it('name the transition that superseded one, not an ignored one started before it', async () => {
+    const { transitions, raw } = await run(async (router) => {
+      const slow = go(router, 'slow');
+      // Same as the pending transition, so core ignores it without aborting the pending one.
+      void go(router, 'slow');
+      await go(router, 'a');
+      await slow;
+    });
+
+    const [slow, ignored, a] = transitions.map(({ id }) => id);
+    const byId = new Map(raw.map((result) => [result.id, result]));
+    expect(byId.get(ignored)?.outcome).toBe('ignored');
+    expect(byId.get(slow)).toMatchObject({ outcome: 'superseded', by: a });
+  });
+
+  it('name the successor of a redirect', async () => {
+    const { transitions, raw } = await run(async (router) => {
+      await go(router, 'r');
+    });
+
+    const [origin, successor] = transitions.map(({ id }) => id);
+    expect(raw.find((result) => result.id === origin)).toMatchObject({
+      outcome: 'redirected',
+      by: successor,
+    });
+  });
+});
+
 describe('resolve timing', () => {
   it('reports failures and cached values', async () => {
     const { resolves } = await run(async (router) => {
@@ -187,7 +254,7 @@ describe('resolve timing', () => {
 
 describe('reasons', () => {
   it('fall back when no transition is named', () => {
-    const base = { message: '', successor: null, supersededBy: null };
+    const base = { message: '', by: null };
     expect(reasonFor({ ...base, outcome: 'redirected' })).toBe('Redirected');
     expect(reasonFor({ ...base, outcome: 'superseded' })).toBe(
       'Superseded by a newer transition',
