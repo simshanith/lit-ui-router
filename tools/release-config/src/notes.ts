@@ -335,14 +335,16 @@ function addPeerStatements(
   const breaking = noteGroups.find((group) => group.title === BREAKING);
   const said = (breaking?.notes ?? []).map((note) => note.text);
 
-  const fresh = changes.filter(
-    (change) =>
-      !said.some(
-        (text) =>
-          text.includes(change.name) &&
-          text.includes(change.to ?? change.from ?? ''),
-      ),
-  );
+  // A kept note's text is already escaped, so a bare range in it matches only in its escaped spelling.
+  const fresh = changes.filter((change) => {
+    const range = change.to ?? change.from ?? '';
+
+    return !said.some(
+      (text) =>
+        text.includes(change.name) &&
+        (text.includes(range) || text.includes(literalText(range))),
+    );
+  });
 
   const notes: Note[] = [];
   const commits: WriterCommit[] = [];
