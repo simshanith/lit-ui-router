@@ -1200,9 +1200,7 @@ export class DevtoolsPanel extends LitElement {
   }
 
   #mapNotice() {
-    return this._mapFailed
-      ? html`<p class="empty">${MAP_FAILED}</p>`
-      : nothing;
+    return this._mapFailed ? html`<p class="empty">${MAP_FAILED}</p>` : nothing;
   }
 
   // Outline or Map, and on the Map the nested boxes or the node-link tree.
