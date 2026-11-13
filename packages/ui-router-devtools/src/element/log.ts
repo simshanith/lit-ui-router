@@ -1,10 +1,12 @@
 import { html, nothing, type TemplateResult } from 'lit';
-import type { UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { DevtoolsPanel } from './panel.ts';
 import type { Tx } from '../fold.ts';
-import type { Value } from '../schema.ts';
+import type { ParamValue } from '../schema.ts';
 import {
+  paramText,
   pathParts,
-  reasonParts,
+  resultText,
+  sameParam,
   segment,
   seq,
   sourceTags,
@@ -14,7 +16,7 @@ import { roleGlyph, statusGlyph, statusLabel, took } from './glyphs.ts';
 
 const SLOW_MS = 150;
 
-const PHASES = [
+const PHASES: readonly string[] = [
   'before',
   'start',
   'exit',
@@ -23,7 +25,14 @@ const PHASES = [
   'finish',
   'success',
   'error',
-] as const;
+];
+
+// Known phases in core's order, then any a later v1 adds, in the order they started.
+const phaseRank = (phase: string): number => {
+  const rank = PHASES.indexOf(phase);
+
+  return rank < 0 ? PHASES.length : rank;
+};
 
 const FAULTS: ReadonlySet<Status> = new Set(['error', 'invalid']);
 
@@ -31,7 +40,7 @@ type LogItem =
   | { kind: 'tx'; tx: Tx; origin?: Tx }
   | { kind: 'ignored'; txs: Tx[] };
 
-const logItems = (host: UIRouterDevtools): LogItem[] => {
+const logItems = (host: DevtoolsPanel): LogItem[] => {
   const items: LogItem[] = [];
 
   for (const tx of [...host._model.txs].reverse()) {
@@ -50,14 +59,16 @@ const logItems = (host: UIRouterDevtools): LogItem[] => {
   return items;
 };
 
-// A fault's message leads; what core appended to it follows as the detail.
+// How the transition ended, in words derived from its result; a fault's detail follows its head.
 export const reasonLine = (
-  reason: string | null | undefined,
+  tx: Tx | undefined,
   status: Status,
 ): TemplateResult | typeof nothing => {
-  if (!reason) return nothing;
+  const text = tx && resultText(tx);
 
-  const { head, detail } = reasonParts(reason);
+  if (!text) return nothing;
+
+  const { head, detail } = text;
 
   return html`<p
     class="reason ${FAULTS.has(status) ? 'fault' : ''}"
@@ -80,7 +91,7 @@ const renderIgnored = (txs: Tx[]) => {
         >${txs.length > 1 ? `${txs.length} ignored` : `ignored`}</span
       >
     </div>
-    ${reasonLine(txs[0]?.result?.reason, 'ignored')}
+    ${reasonLine(txs[0], 'ignored')}
   </li>`;
 };
 
@@ -104,26 +115,25 @@ const hidden = (s: Status) =>
   html`<span class="visually-hidden">${statusLabel[s]}</span>`;
 
 export const valueCell = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   tx: Tx,
   status: Status,
 ): TemplateResult => {
   const tags = sourceTags(tx);
   const muted = status === 'superseded' || status === 'aborted';
-  const duration = tx.id < 0 ? undefined : host._duration(tx);
 
   return html`<span class="value"
     >${tags.map((tag) => html`<span class="tag source">${tag}</span>`)}${
       muted
         ? html`<span class="tag">${status}</span>`
-        : duration === undefined
+        : tx.id < 0
           ? nothing
-          : html`<span class="num">${took(duration)}</span>`
+          : html`<span class="num">${took(host._duration(tx))}</span>`
     }</span
   >`;
 };
 
-const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
+const renderTx = (host: DevtoolsPanel, tx: Tx, origin: Tx | undefined) => {
   const status: Status = tx.result?.outcome ?? 'running';
   const selected = host._selectedTx === tx.id;
   const preview = (id: number | null) => () => (host._previewTx = id);
@@ -167,7 +177,7 @@ const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
           </div>`
         : nothing
     }
-    ${reasonLine(tx.result?.reason, status)}
+    ${reasonLine(tx, status)}
     ${
       selected
         ? html`<div class="detail">
@@ -178,14 +188,29 @@ const renderTx = (host: UIRouterDevtools, tx: Tx, origin: Tx | undefined) => {
   </li>`;
 };
 
-export const renderLog = (host: UIRouterDevtools): TemplateResult => {
+// The oldest end of the log says when the recorder discarded events before it.
+const renderDropped = (host: DevtoolsPanel) => {
+  const { dropped } = host._sessionFacts();
+
+  return dropped
+    ? html`<p class="dropped">
+        <span class="num">${dropped}</span> earlier
+        ${dropped === 1 ? 'event' : 'events'} dropped
+      </p>`
+    : nothing;
+};
+
+export const renderLog = (host: DevtoolsPanel): TemplateResult => {
   const items = logItems(host);
 
-  if (!items.length) return html`<p class="empty">No transitions yet.</p>`;
+  if (!items.length)
+    return html`<p class="empty">No transitions yet.</p>
+      ${renderDropped(host)}`;
 
   return html`<ol class="log">
-    ${items.map((item) => (item.kind === 'ignored' ? renderIgnored(item.txs) : renderTx(host, item.tx, item.origin)))}
-  </ol>`;
+      ${items.map((item) => (item.kind === 'ignored' ? renderIgnored(item.txs) : renderTx(host, item.tx, item.origin)))}
+    </ol>
+    ${renderDropped(host)}`;
 };
 
 const sub = (n: string, title: string) =>
@@ -224,23 +249,27 @@ const renderResolveRow = (
 
 // Phases sit on an ordinal ruler with their real offsets; only resolve bars are proportional.
 export const renderTiming = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   tx: Tx,
   n: string,
 ): TemplateResult | typeof nothing => {
   if (tx.id < 0) return nothing;
   const t0 = (host._origin(tx) ?? tx).t;
-  const end = host._end(tx) ?? t0;
+  const end = tx.result?.t ?? host._clock;
   const total = Math.max(end - t0, ...tx.resolves.map((r) => r.end - t0), 0.1);
 
   const pct = (t: number) =>
     `${(Math.min(Math.max(0, t - t0), total) / total) * 100}%`;
 
-  const phases = PHASES.flatMap((phase) => {
-    const t = tx.marks.find((m) => m.phase === phase && m.edge === 'start')?.t;
+  const firstStarts = new Map<string, number>();
 
-    return t === undefined ? [] : [{ phase, t }];
-  });
+  for (const m of tx.marks)
+    if (m.edge === 'start' && !firstStarts.has(m.phase))
+      firstStarts.set(m.phase, m.t);
+
+  const phases = [...firstStarts]
+    .map(([phase, t]) => ({ phase, t }))
+    .sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase));
 
   const byState = [...tx.retained, ...tx.entering].flatMap((state) => {
     const resolves = tx.resolves.filter((r) => r.state === state);
@@ -277,8 +306,11 @@ export const renderTiming = (
     }`;
 };
 
-const opOf = (was: Value | undefined, now: Value | undefined): string => {
-  if (was === now) return '';
+const opOf = (
+  was: ParamValue | undefined,
+  now: ParamValue | undefined,
+): string => {
+  if (sameParam(was, now)) return '';
 
   if (was == null) return '+';
 
@@ -286,7 +318,7 @@ const opOf = (was: Value | undefined, now: Value | undefined): string => {
 };
 
 export const renderParams = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   tx: Tx,
   n: string,
   all = false,
@@ -298,7 +330,9 @@ export const renderParams = (
     ...new Set([...Object.keys(before), ...Object.keys(after)]),
   ].filter((k) => before[k] != null || after[k] != null);
 
-  const shown = all ? keys : keys.filter((k) => before[k] !== after[k]);
+  const shown = all
+    ? keys
+    : keys.filter((k) => !sameParam(before[k], after[k]));
 
   return html`${sub(n, 'Params')}
   ${
@@ -311,7 +345,7 @@ export const renderParams = (
 
             return html`<dt><span class="op">${op}</span>${k}</dt>
               <dd>
-                ${op === '~' ? html`<span class="muted">${was}</span> → ` : nothing}${now ?? html`<span class="muted">${was}</span>`}
+                ${op === '~' ? html`<span class="muted">${paramText(was)}</span> → ` : nothing}${now == null ? html`<span class="muted">${paramText(was)}</span>` : paramText(now)}
               </dd>`;
           })}
         </dl>`

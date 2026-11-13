@@ -51,6 +51,7 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
+    "./session.schema.json": "./dist/session.schema.json",
     "./testing": {
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
@@ -58,6 +59,7 @@
   },
   "scripts": {
     "build:js": "oxc-emit-js",
+    "build:schema": "node scripts/json-schema.ts",
     "build:types": "oxc-emit-dts",
     "dev": "vite",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
@@ -73,7 +75,8 @@
   },
   "dependencies": {
     "d3-hierarchy": "catalog:",
-    "lit": "catalog:"
+    "lit": "catalog:",
+    "valibot": "catalog:"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
@@ -85,6 +88,7 @@
     "@types/d3-hierarchy": "catalog:",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@valibot/to-json-schema": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",

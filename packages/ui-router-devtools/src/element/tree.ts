@@ -1,5 +1,5 @@
 import { html, nothing, svg, type TemplateResult } from 'lit';
-import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { Row, DevtoolsPanel } from './panel.ts';
 import type { StateInfo } from '../schema.ts';
 import { segment } from '../notation.ts';
 import { bareName } from '../fold.ts';
@@ -57,7 +57,7 @@ const initials = (paths: Segment[]) =>
       : nothing,
   );
 
-const renderRails = (host: UIRouterDevtools, rows: Row[]) => {
+const renderRails = (host: DevtoolsPanel, rows: Row[]) => {
   const h = rowHeight();
   const index = new Map(rows.map((r, i) => [r.state.name, i]));
   const gx = (depth: number) => 12 + (depth - 1) * INDENT + 6;
@@ -109,7 +109,7 @@ export interface TreeKeys {
   toggle: (name: string, collapse: boolean) => void;
 }
 
-const outlineKeys = (host: UIRouterDevtools): TreeKeys => ({
+const outlineKeys = (host: DevtoolsPanel): TreeKeys => ({
   expanded: (row) => row.hasChildren && !host._collapsed.has(row.state.name),
   toggle: (name, collapse) => {
     const next = new Set(host._collapsed);
@@ -122,7 +122,7 @@ const outlineKeys = (host: UIRouterDevtools): TreeKeys => ({
 
 // Arrow keys move in tree order; the Outline and the nested Map share them.
 export const onTreeKey = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   event: KeyboardEvent,
   rows: Row[],
   focus: string | undefined,
@@ -217,7 +217,7 @@ export const words = (
 ): string => describeState(pivot ? pivotLabel : roleLabel[role], state, marks);
 
 export const renderOutline = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
 ): TemplateResult | typeof nothing => {
   if (host._view !== 'outline') return nothing;
 

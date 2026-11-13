@@ -1,8 +1,17 @@
+/**
+ * Bumped only by a breaking change. Added optional fields, new event types and new values of an open enum keep it,
+ * so a reader ignores fields and event types it does not know and tolerates open-enum values it does not know.
+ */
 export const SCHEMA_VERSION = 1;
 
-export type Value = string | number | boolean | null;
+export type SchemaVersion = typeof SCHEMA_VERSION;
 
-export type Params = Record<string, Value>;
+export type Scalar = string | number | boolean | null;
+
+/** A recorded param value: arrays stay arrays, Dates become ISO strings, anything JSON cannot hold becomes a tag such as `[function]`. */
+export type ParamValue = Scalar | Scalar[];
+
+export type Params = Record<string, ParamValue>;
 
 export interface ParamInfo {
   id: string;
@@ -15,23 +24,23 @@ export interface ParamInfo {
 }
 
 export interface StateInfo {
+  /** As registered; a lazy (future) state keeps its `.**` suffix. */
   name: string;
   parent: string | null;
+  /** The declared url fragment, relative to the parent's. */
   url: string | null;
   params: ParamInfo[];
   resolves: string[];
   future: boolean;
   abstract: boolean;
   redirects: boolean;
-  // The `redirectTo` target, present only when the declaration names it statically.
   redirectTo?: string;
-  // Deep state redirect (`@uirouter/dsr`); `default` is its static fallback target.
   dsr?: { default: string | null };
-  // Sticky state (`@uirouter/sticky-states`).
   sticky?: boolean;
 }
 
-export type Phase =
+/** The phases the adapter emits. */
+export type KnownPhase =
   | 'before'
   | 'start'
   | 'exit'
@@ -40,6 +49,9 @@ export type Phase =
   | 'finish'
   | 'success'
   | 'error';
+
+/** A known phase, or one a later v1 adds (a plugin's hook type, say), kept by its own name. */
+export type Phase = KnownPhase | (string & {});
 
 export type Outcome =
   | 'success'
@@ -68,12 +80,15 @@ export interface LocationInfo {
   html5Mode: boolean;
 }
 
-interface Base {
-  v: typeof SCHEMA_VERSION;
+export interface EventBase {
+  v: SchemaVersion;
+  /** Per observer, from 1, one per emitted event; a gap means events were dropped. */
+  seq: number;
+  /** Milliseconds since the realm's `performance.timeOrigin`. */
   t: number;
 }
 
-export interface ConfigEvent extends Base {
+export interface ConfigEvent extends EventBase {
   type: 'config';
   location: LocationInfo;
   strictMode: boolean;
@@ -81,13 +96,15 @@ export interface ConfigEvent extends Base {
   plugins: string[];
 }
 
-export interface StatesEvent extends Base {
+export interface StatesEvent extends EventBase {
   type: 'states';
   states: StateInfo[];
 }
 
-export interface TransitionEvent extends Base {
+/** The root state is `''` in `from`, `to` and `name`, and is never listed in a path. */
+export interface TransitionEvent extends EventBase {
   type: 'transition';
+  /** Core's `Transition.$id`: unique per router, from 0. */
   id: number;
   from: string;
   to: string;
@@ -101,15 +118,16 @@ export interface TransitionEvent extends Base {
   dynamic: boolean;
 }
 
-export interface PhaseEvent extends Base {
+export interface PhaseEvent extends EventBase {
   type: 'phase';
   id: number;
   phase: Phase;
   edge: 'start' | 'end';
+  /** The state a per-state phase (exit, retain, enter) runs for; null for a transition-wide phase. */
   state: string | null;
 }
 
-export interface ResolveEvent extends Base {
+export interface ResolveEvent extends EventBase {
   type: 'resolve';
   id: number;
   token: string;
@@ -118,28 +136,35 @@ export interface ResolveEvent extends Base {
   end: number;
   ok: boolean;
   cached: boolean;
+  /** Free text from the app; redactable. */
   message?: string;
+  /** The thrown Error's `name`, when the resolve threw or rejected with one. */
+  errorName?: string;
 }
 
-export interface ResultEvent extends Base {
+export interface ResultEvent extends EventBase {
   type: 'result';
   id: number;
   outcome: Outcome;
-  reason: string | null;
+  /** The transition that took over: a redirect's successor, or the transition that superseded this one. */
+  by?: number;
+  /** Free text from the app or from core; redactable. Present on error and invalid, and on aborted when core gives a reason. */
   message?: string;
+  /** The thrown Error's `name`, on an error outcome where a hook or resolve threw one. */
+  errorName?: string;
+  /** Ids of the params that failed validation, on an invalid outcome. */
+  invalidParams?: string[];
 }
 
-// A target that names no state; core creates no Transition for it, so it has no id.
-export interface InvalidEvent extends Base {
+/** A target that names no state; core creates no Transition for it. */
+export interface InvalidEvent extends EventBase {
   type: 'invalid';
-  key: number;
   from: string;
   to: string;
   toParams: Params;
-  reason: string;
 }
 
-export interface CurrentEvent extends Base {
+export interface CurrentEvent extends EventBase {
   type: 'current';
   name: string;
   params: Params;
@@ -155,11 +180,31 @@ export type RouterEvent =
   | InvalidEvent
   | CurrentEvent;
 
-/** Replaces a param value before it is recorded; the result is stored as JSON. */
-export type Redact = (
-  key: string,
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a param value, which the app types
-  value: unknown,
-  where: 'from' | 'to' | 'current' | 'invalid',
-  // oxlint-disable-next-line anti-slop/no-unknown-returns -- any value; the adapter serialises it
-) => unknown;
+export interface Redaction {
+  /** Param keys whose values are kept; every other value becomes `[redacted]`. `'all'` keeps every value. */
+  params: readonly string[] | 'all';
+  /** Whether free-text `message` fields are kept. */
+  messages: boolean;
+}
+
+export interface Session {
+  format: 'ui-router-session';
+  v: SchemaVersion;
+  /** Minted when the recorder starts, with `crypto.randomUUID()`. */
+  id: string;
+  generator: { name: string; version: string };
+  /** The recorder's label for its router, unique within one page. */
+  routerId: string;
+  /** Epoch milliseconds of the recording realm's `performance.timeOrigin`; an event's epoch time is `timeOrigin + t`. */
+  timeOrigin: number;
+  /** The event clock at export, so an imported running transition has an end. */
+  t: number;
+  /** Events the recorder discarded; 0 means the session is complete since recording began. */
+  dropped: number;
+  /** Whether the recorder timed resolves; without it a session has no resolve events. */
+  timeResolves: boolean;
+  /** What the export scrubbed. */
+  redaction: Redaction;
+  /** The latest config, states and current snapshots first, then the kept events in `seq` order. */
+  events: RouterEvent[];
+}

@@ -3,34 +3,40 @@ import type { Recorder } from './recorder.ts';
 import type { Outcome, Params, Session } from './schema.ts';
 
 export interface NormalisedTransition {
+  /** Null for a target that names no state, which core never makes a Transition. */
   id: number | null;
   from: string;
   to: string;
   outcome: Outcome | 'running';
-  reason: string | null;
+  /** The transition that took over: a redirect's successor, or the one that superseded this one. */
+  by: number | null;
+  message: string | null;
   redirectedFrom: number | null;
-  entered: string[];
-  exited: string[];
+  entering: string[];
+  exiting: string[];
   retained: string[];
   params: Params;
 }
 
-// Transitions in start order with times and durations removed, so the list is snapshot-stable.
+// Transitions in start order with times and durations removed, so the list is snapshot-stable; a recorder's params keep their values.
 export const transitions = (
-  session: Session | Recorder,
+  source: Session | Recorder,
 ): NormalisedTransition[] => {
   const events =
-    'session' in session ? session.session().events : session.events;
+    'session' in source
+      ? source.session({ params: 'all' }).events
+      : source.events;
 
   return fold(events).txs.map((tx) => ({
     id: tx.id < 0 ? null : tx.id,
     from: tx.from,
     to: tx.to,
     outcome: tx.result?.outcome ?? 'running',
-    reason: tx.result?.reason ?? null,
+    by: tx.result?.by ?? null,
+    message: tx.result?.message ?? null,
     redirectedFrom: tx.redirectedFrom,
-    entered: tx.entering,
-    exited: tx.exiting,
+    entering: tx.entering,
+    exiting: tx.exiting,
     retained: tx.retained,
     params: tx.toParams,
   }));

@@ -1,9 +1,9 @@
 import { html, nothing, svg, type TemplateResult } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
-import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { Row, DevtoolsPanel } from './panel.ts';
 import type { StateInfo } from '../schema.ts';
 import { ancestorsOf, bareName, type Tx } from '../fold.ts';
-import { edgeWeight, observedEdges } from '../edges.ts';
+import { edgesOf, edgeWeight } from '../edges.ts';
 import { segment, truncateMiddle } from '../notation.ts';
 import {
   depthClass,
@@ -106,7 +106,7 @@ const textWidth = (text: string, font: string): number => {
 };
 
 interface Build {
-  host: UIRouterDevtools;
+  host: DevtoolsPanel;
   children: Map<string | null, StateInfo[]>;
   /** Compounds on the active path or holding the selection; these never collapse on their own. */
   keep: ReadonlySet<string>;
@@ -180,7 +180,7 @@ const buildBox = (build: Build, state: StateInfo): Box => {
   };
 };
 
-const keepOpen = (host: UIRouterDevtools): Set<string> => {
+const keepOpen = (host: DevtoolsPanel): Set<string> => {
   const { states, current } = host._model;
   const tx = host._inspect === 'tx' ? host._tx(host._selectedTx) : undefined;
   const origin = tx && host._origin(tx);
@@ -225,7 +225,7 @@ const openOf = (boxes: readonly Box[]): string[] =>
   );
 
 const cache = new WeakMap<
-  UIRouterDevtools,
+  DevtoolsPanel,
   { content: string; key: string; layout: NestedLayout }
 >();
 
@@ -271,7 +271,7 @@ const allRects = (
 };
 
 /** Packs the state tree for the Map viewport, stepping down the fit ladder until it fits. */
-export const layoutNested = (host: UIRouterDevtools): NestedLayout => {
+export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
   const style = getComputedStyle(host);
@@ -370,7 +370,7 @@ interface Wanted {
 }
 
 // A selected transition shows its own edge and, for a redirect, a dashed one from its origin.
-const txEdges = (host: UIRouterDevtools, tx: Tx): Wanted[] => {
+const txEdges = (host: DevtoolsPanel, tx: Tx): Wanted[] => {
   const origin = host._origin(tx);
 
   return [
@@ -382,8 +382,8 @@ const txEdges = (host: UIRouterDevtools, tx: Tx): Wanted[] => {
 };
 
 // A selected state shows the traffic it has seen, one edge per pair of states.
-const stateEdges = (host: UIRouterDevtools, name: string): Wanted[] =>
-  observedEdges(host._model).flatMap((edge) => {
+const stateEdges = (host: DevtoolsPanel, name: string): Wanted[] =>
+  edgesOf(host._model).flatMap((edge) => {
     const count = edge.outcomes.success ?? 0;
 
     return count && (edge.from === name || edge.to === name)
@@ -391,7 +391,7 @@ const stateEdges = (host: UIRouterDevtools, name: string): Wanted[] =>
       : [];
   });
 
-const wantedEdges = (host: UIRouterDevtools): Wanted[] => {
+const wantedEdges = (host: DevtoolsPanel): Wanted[] => {
   const tx = host._inspect === 'tx' ? host._tx(host._selectedTx) : undefined;
 
   if (tx) return txEdges(host, tx);
@@ -403,7 +403,7 @@ const wantedEdges = (host: UIRouterDevtools): Wanted[] => {
 
 // Ends hidden in a collapsed box move to that box, and edges that now share a pair merge.
 const mapEdges = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   drawn: ReadonlySet<string>,
 ): MapEdge[] => {
   const parents = new Map(host._model.states.map((s) => [s.name, s.parent]));
@@ -445,14 +445,11 @@ const mapEdges = (
 type Drawing = Routed & { edge: MapEdge };
 
 const routes = new WeakMap<
-  UIRouterDevtools,
+  DevtoolsPanel,
   { key: string; layout: NestedLayout; routed: Drawing[] }
 >();
 
-const routeEdges = (
-  host: UIRouterDevtools,
-  layout: NestedLayout,
-): Drawing[] => {
+const routeEdges = (host: DevtoolsPanel, layout: NestedLayout): Drawing[] => {
   const { rects } = layout;
   const edges = mapEdges(host, new Set(rects.keys()));
   const key = JSON.stringify(edges);
@@ -490,7 +487,7 @@ interface Shown {
   timer?: ReturnType<typeof setTimeout>;
 }
 
-const shown = new WeakMap<UIRouterDevtools, Shown>();
+const shown = new WeakMap<DevtoolsPanel, Shown>();
 
 interface EdgesToDraw {
   routed: Drawing[];
@@ -502,7 +499,7 @@ interface EdgesToDraw {
 
 // An edge that is no longer wanted withdraws before it goes; a re-pack drops it at once, since its boxes have moved.
 const edgesToDraw = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   layout: NestedLayout,
 ): EdgesToDraw => {
   const routed = routeEdges(host, layout);
@@ -540,7 +537,7 @@ const edgesToDraw = (
 
 /** The drawn box that stands for the state the inspector popover sits beside. */
 export const anchorRect = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   layout: NestedLayout,
 ): Rect | undefined => {
   const parents = new Map(host._model.states.map((s) => [s.name, s.parent]));
@@ -560,7 +557,7 @@ export const anchorRect = (
 
 /** What the inspector popover should keep clear of: first the drawn edges and the boxes they end at, then every pill. */
 export const keepClear = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   layout: NestedLayout,
 ): Avoid[] => {
   const pad = 6;
@@ -621,7 +618,7 @@ const renderEdge = (
 // Boxes
 
 interface View {
-  host: UIRouterDevtools;
+  host: DevtoolsPanel;
   layout: NestedLayout;
   states: ReadonlyMap<string, StateInfo>;
   build: Build;
@@ -792,7 +789,7 @@ const boxName = (event: Event): string | undefined =>
   // SAFETY: the listeners sit on the tree, whose event targets are its own elements
   (event.target as Element).closest<HTMLElement>('.box')?.dataset.name;
 
-const nestedKeys = (host: UIRouterDevtools, layout: NestedLayout) => ({
+const nestedKeys = (host: DevtoolsPanel, layout: NestedLayout) => ({
   expanded: (row: Row) => layout.open.has(row.state.name),
   toggle: (name: string, collapse: boolean) => {
     host._mapOpen = new Map([...host._mapOpen, [name, !collapse]]);
@@ -801,7 +798,7 @@ const nestedKeys = (host: UIRouterDevtools, layout: NestedLayout) => ({
 
 /** The Map as statechart containment: a box per state, child states inside their parent. */
 export const renderNested = (
-  host: UIRouterDevtools,
+  host: DevtoolsPanel,
   layout: NestedLayout,
 ): TemplateResult => {
   const { states, current } = host._model;

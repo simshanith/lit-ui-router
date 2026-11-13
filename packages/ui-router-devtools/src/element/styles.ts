@@ -538,6 +538,7 @@ export const styles: CSSResult = css`
 
   .spacer {
     flex: 1;
+    min-inline-size: 0;
   }
 
   .counts {
@@ -674,6 +675,32 @@ export const styles: CSSResult = css`
 
   .inspector .empty {
     padding-inline: 24px 0;
+  }
+
+  /* Quiet chrome: what the recorder discarded, and what an import said. */
+  .dropped {
+    padding-block: 8px;
+    padding-inline: 72px var(--uird-margin);
+    border-block-start: 1px dashed var(--uird-rule);
+    color: var(--uird-muted);
+    font-size: var(--uird-size-small);
+  }
+
+  .notice {
+    display: block;
+    overflow: clip;
+    color: var(--uird-muted);
+    font-size: var(--uird-size-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .notice.fault {
+    color: var(--uird-red);
+  }
+
+  .router-card > .switch {
+    padding-inline-start: 24px;
   }
 
   /* Narrow: one pane at a time */

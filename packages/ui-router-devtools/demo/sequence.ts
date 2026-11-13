@@ -1,10 +1,15 @@
-import type { StateObject, TransitionOptions, UIRouter } from '@uirouter/core';
+import type {
+  RawParams,
+  StateObject,
+  TransitionOptions,
+  UIRouter,
+} from '@uirouter/core';
 import { delay } from './states.ts';
 
 export const goQuietly = (
   router: UIRouter,
   state: string,
-  params?: Record<string, string>,
+  params?: RawParams,
   options?: TransitionOptions,
 ): Promise<StateObject | undefined> =>
   router.stateService.go(state, params, options).catch(() => undefined);
@@ -26,13 +31,10 @@ export const goByUrl = (router: UIRouter, url: string): Promise<void> =>
     router.urlService.url(url);
   });
 
-// The fixed `?demo=1` sequence; transition ids 001 to 012 follow the initial 000.
+// The fixed `?demo=1` sequence; transition ids 001 to 013 follow the initial 000, and the invalid target takes none.
 export const demoSequence = async (router: UIRouter): Promise<void> => {
-  const go = (
-    state: string,
-    params?: Record<string, string>,
-    options?: TransitionOptions,
-  ) => goQuietly(router, state, params, options);
+  const go = (state: string, params?: RawParams, options?: TransitionOptions) =>
+    goQuietly(router, state, params, options);
 
   await go('galaxy.stars');
   await go('galaxy.stars.star', { starId: 'vega' });
@@ -52,4 +54,5 @@ export const demoSequence = async (router: UIRouter): Promise<void> => {
   );
   await go('galaxy.stars.star', { starId: 'arcturus' }, { reload: true });
   await go('galaxy.planets');
+  await go('galaxy.stars.star', {}, { inherit: false });
 };

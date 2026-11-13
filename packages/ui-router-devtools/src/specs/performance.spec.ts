@@ -3,6 +3,7 @@ import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import { record } from '../index.ts';
 import { reportToPerformance } from '../performance.ts';
+import type { PhaseEvent } from '../schema.ts';
 import { settled } from '../testing.ts';
 
 interface TrackEntry {
@@ -91,4 +92,47 @@ it('writes one track entry per transition, phase and resolve', async () => {
       .filter((mark) => mark.name.startsWith('ui-router 000'))
       .map((mark) => mark.name),
   ).toEqual(['ui-router 000 start', 'ui-router 000 success']);
+});
+
+it('writes a phase a later v1 adds under its own name', async () => {
+  const router = new UIRouter();
+  router.plugin(servicesPlugin);
+  router.plugin(memoryLocationPlugin);
+  router.stateRegistry.register({ name: 'a', url: '/a' });
+  const recorder = record(router);
+  await router.stateService.go('a');
+  const events = recorder.session().events;
+  recorder.stop();
+  router.dispose();
+
+  const result = events.findIndex((event) => event.type === 'result');
+
+  const later = (seq: number, edge: 'start' | 'end'): PhaseEvent => ({
+    v: 1,
+    seq,
+    t: 0,
+    type: 'phase',
+    id: 0,
+    phase: 'inactivate',
+    edge,
+    state: 'a',
+  });
+
+  reportToPerformance([
+    ...events.slice(0, result),
+    later(900, 'end'),
+    later(901, 'start'),
+    ...events.slice(result),
+  ]);
+
+  expect(
+    measures()
+      .filter((entry) => entry.name === 'inactivate a')
+      .map(({ properties }) => properties),
+  ).toEqual([
+    [
+      ['transition', '000'],
+      ['closed', 'at result'],
+    ],
+  ]);
 });

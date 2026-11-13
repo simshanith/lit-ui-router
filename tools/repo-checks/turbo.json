@@ -125,8 +125,12 @@
       ]
     },
     "check:shared-source": {
-      // the canonical sources the consumers inline
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/shared/*/src/**"]
+      // the canonical sources the consumers inline, and the exports naming them
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/shared/*/src/**",
+        "$TURBO_ROOT$/packages/shared/*/package.json"
+      ]
     },
     "check:task-inputs": {
       // the audit is over every planned task, so any turbo.json or manifest

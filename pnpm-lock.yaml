@@ -157,6 +157,9 @@ catalogs:
     '@uirouter/visualizer':
       specifier: ^7.2.1
       version: 7.2.1
+    '@valibot/to-json-schema':
+      specifier: ^1.8.0
+      version: 1.8.0
     '@vitest/browser':
       specifier: ^5.0.5
       version: 5.1.0
@@ -1987,6 +1990,9 @@ importers:
       lit:
         specifier: 'catalog:'
         version: 3.3.3
+      valibot:
+        specifier: 'catalog:'
+        version: 1.5.0(typescript@7.0.2)
     devDependencies:
       '@axe-core/playwright':
         specifier: 'catalog:'
@@ -2015,6 +2021,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@valibot/to-json-schema':
+        specifier: 'catalog:'
+        version: 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@vitest/browser':
         specifier: 'catalog:'
         version: 5.1.0(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.1.0)
@@ -6685,6 +6694,11 @@ packages:
 
   '@ungap/structured-clone@1.3.2':
     resolution: {integrity: sha512-5jsZFwgR5rTdKwidH9Qmat75RKwqfpKlWWB1frDkljN127mwqBu8K0PYo7/hFpF03IEJpfVPpCQDY/eDx3iHvA==}
+
+  '@valibot/to-json-schema@1.8.0':
+    resolution: {integrity: sha512-a0M+uwCuQZEPAo65NYkFSJ14O5c213KoSZmPdoCfuFvUhfULi4T2Z6Tpjv6lTVMW9RoLm74RpRAjNEa43KcN+g==}
+    peerDependencies:
+      valibot: ^1.5.0
 
   '@vitejs/plugin-vue@6.0.10':
     resolution: {integrity: sha512-b80aUQh3n+qEzzZm5oQp3rT2QImeCx58K6eFl/RkJ3d65KW0kTuv5lNsLRVAjbW9YRUpo/wzmvzMgV34bTAItA==}
@@ -12683,6 +12697,10 @@ snapshots:
       preact: 10.4.8
 
   '@ungap/structured-clone@1.3.2': {}
+
+  '@valibot/to-json-schema@1.8.0(valibot@1.5.0(typescript@7.0.2))':
+    dependencies:
+      valibot: 1.5.0(typescript@7.0.2)
 
   '@vitejs/plugin-vue@6.0.10(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vue@3.5.45(typescript@7.0.2))':
     dependencies:

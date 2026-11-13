@@ -14,10 +14,7 @@ it('records the demo sequence as the normalised log', async () => {
   router.stateService.defaultErrorHandler(() => {});
   demoStates().forEach((state) => router.stateRegistry.register(state));
 
-  const recorder = record(router, {
-    redact: (key, value) =>
-      key === 'starId' && value === 'vega' ? '[redacted]' : value,
-  });
+  const recorder = record(router);
 
   router.urlService.rules.initial({
     state: 'galaxy.stars.star',
@@ -30,11 +27,12 @@ it('records the demo sequence as the normalised log', async () => {
   await settled(recorder);
 
   const log = transitions(recorder).map(
-    ({ id, to, outcome, reason, redirectedFrom }) => ({
+    ({ id, to, outcome, by, message, redirectedFrom }) => ({
       id,
       to,
       outcome,
-      reason,
+      by,
+      message,
       redirectedFrom,
     }),
   );
@@ -44,103 +42,144 @@ it('records the demo sequence as the normalised log', async () => {
       id: 0,
       to: 'galaxy.stars.star',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 1,
       to: 'galaxy.stars',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 2,
       to: 'galaxy.stars.star',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 3,
       to: 'galaxy',
       outcome: 'redirected',
-      reason: 'Redirected to 004',
+      by: 4,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 4,
       to: 'galaxy.stars',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: 3,
     },
     {
       id: 5,
       to: 'galaxy.astronaut',
       outcome: 'superseded',
-      reason: 'Superseded by 006',
+      by: 6,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 6,
       to: 'galaxy.stars.star',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 7,
       to: 'galaxy.stars.star',
       outcome: 'ignored',
-      reason: 'Same state and params; pass reload: true to run it again',
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 8,
       to: 'galaxy.stars.star',
       outcome: 'ignored',
-      reason: 'Same state and params; pass reload: true to run it again',
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 9,
       to: 'galaxy.blackhole',
       outcome: 'error',
-      reason: 'Resolve "horizon" rejected: no data escapes',
+      by: null,
+      message: 'Resolve "horizon" rejected: no data escapes',
       redirectedFrom: null,
     },
     {
       id: 10,
       to: 'galaxy.astronaut',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 11,
       to: 'galaxy.stars.star',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: 12,
       to: 'galaxy.stars.star',
       outcome: 'success',
-      reason: null,
+      by: null,
+      message: null,
       redirectedFrom: null,
     },
     {
       id: null,
       to: 'galaxy.planets',
       outcome: 'invalid',
-      reason: "No state named 'galaxy.planets'",
+      by: null,
+      message: null,
+      redirectedFrom: null,
+    },
+    {
+      id: 13,
+      to: 'galaxy.stars.star',
+      outcome: 'invalid',
+      by: null,
+      message:
+        "The following parameter values are not valid for state 'galaxy.stars.star': [starId:undefined]",
       redirectedFrom: null,
     },
   ]);
 
-  expect(transitions(recorder)[2]?.params).toEqual({ starId: '[redacted]' });
+  expect(transitions(recorder)[2]?.params).toEqual({ starId: 'vega' });
+
+  const exported = recorder.session();
+
+  const second = exported.events.find(
+    (event) => event.type === 'transition' && event.id === 2,
+  );
+
+  expect(second?.type === 'transition' && second.toParams).toEqual({
+    starId: '[redacted]',
+  });
+  expect(exported.redaction).toEqual({ params: [], messages: true });
+  expect(exported).toMatchObject({
+    format: 'ui-router-session',
+    v: 1,
+    generator: { name: 'ui-router-devtools' },
+    dropped: 0,
+    timeResolves: false,
+  });
 
   const [url, replace, reload] = recorder.events.filter(
     (event) => event.type === 'transition' && event.id >= 10,

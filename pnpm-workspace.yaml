@@ -60,6 +60,7 @@ catalog:
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
+  '@valibot/to-json-schema': ^1.8.0
   '@vitest/browser': ^5.0.5
   '@vitest/browser-playwright': ^5.1.0
   '@vitest/coverage-v8': ^5.1.0

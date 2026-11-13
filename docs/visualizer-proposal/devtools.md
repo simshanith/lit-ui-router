@@ -183,11 +183,12 @@ behind a flag, because any script on the page can reach a global.
 - **A no-op in production.** TanStack's devtools packages resolve to a no-op
   build unless the `development` export condition is set; the same shape fits
   here, beside a documented dynamic import behind a dev guard.
-- **A versioned schema.** Each event carries a version, and each transport opens
-  with a handshake naming the schema, the router and the adapter. Payloads stay
-  structured-clone-safe so they pass through `postMessage`, RPC, agent tools and
-  test attachments unchanged. A redaction option covers params that may hold
-  secrets.
+- **A versioned schema.** Each event carries a version and a sequence number,
+  and each transport opens with a handshake naming the schema, the router and
+  the adapter. Payloads stay structured-clone-safe so they pass through
+  `postMessage`, RPC, agent tools and test attachments unchanged. Within v1 a
+  reader ignores fields and event types it does not know and tolerates values of
+  an open enum it does not know.
 - **Naming.** Across the ecosystem "devtools" is the umbrella word (Vue, React,
   Angular, Redux, Vite, TanStack), "inspector" names narrower tools, and
   "visualizer" names static pictures. That supports `ui-router-devtools` for the
@@ -232,16 +233,21 @@ Left out:
   vocabulary and no consumer short of a visualiser built for it, so it stays an
   idea.
 
-What the session needs before it is exported widely:
+What the session file carries for an exporter, described by the JSON Schema
+the package ships (`ui-router-devtools/session.schema.json`):
 
-- A count of the events the recorder's ring buffer dropped. Without it every
-  exported count is a lower bound, silently.
-- A scrub at export time. The `redact` hook covers params, not the free-text
-  `message` and `reason` fields, and it does not run on an imported session.
-  The default is an allowlist of param keys.
+- A count of the events the recorder dropped. The ring buffer drops whole
+  transitions, so no kept transition is missing its start or its result, and a
+  count of 0 means the session is complete since recording began.
+- The redaction applied at export: an allowlist of param keys whose values are
+  kept, the other keys staying with `[redacted]` values, and a switch for the
+  free-text messages. It applies again when an imported session is re-exported,
+  and `ui-router-otel` takes the same model for its spans.
 - A session id and the generator's name and version.
-- Which transition superseded another. An exporter can only assume the next
-  one.
+- Which transition took over: a result's `by` names a redirect's successor or
+  the transition that superseded it. Core's own superseded detail is whichever
+  transition is current when the superseded one notices, possibly a later one
+  or none, so the adapter takes the next transition to leave the before phase.
 
 ## Revised stages
 

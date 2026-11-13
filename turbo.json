@@ -15,10 +15,16 @@
       "outputs": ["dist/**"]
     },
     "build:js": {
+      // oxc-emit inlines the exported @repo/* sources; no task edge hashes them
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/shared/*/src/*.ts",
+        "$TURBO_ROOT$/packages/shared/*/package.json"
+      ],
       "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
     },
     "build:types": {
-      // self-chain to build types transitively
+      // self-chain to build types transitively; the edge also hashes the @repo/* sources a package declares and inlines
       "dependsOn": ["^build:types"],
       "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },

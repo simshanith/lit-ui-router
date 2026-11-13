@@ -186,18 +186,20 @@ fall back to the router context when `router` is unset; that lookup belongs in a
 
 The adapter's events, as the package defines them in
 [`src/schema.ts`](../../packages/ui-router-devtools/src/schema.ts). Every event carries a
-schema version. A `transition` also carries its options (source, location,
-reload, inherit), and a `result` carries a plain-language reason:
+schema version and a sequence number. A `transition` also carries its options
+(source, location, reload, inherit), and a `result` carries the fields the panel
+words its reason from:
 
-| Event        | Payload                                                                              | Source in core                                                   |
-| ------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `states`     | name, parent, url, params, resolve tokens, future, abstract, redirectTo, dsr, sticky | `stateRegistry.get()`, `onStatesChanged`                         |
-| `transition` | id, from, to, params, entering, exiting, retained, `redirectedFrom`                  | `onBefore`, `Transition.$id`, `treeChanges()`                    |
-| `phase`      | id, phase, start or end, state                                                       | each hook type registered at a very high and a very low priority |
-| `resolve`    | id, token, state, start, end, ok, cached                                             | see the gap below                                                |
-| `result`     | id, outcome (success, error, redirected, superseded, aborted, ignored, invalid)      | `Transition.promise`, `Rejection.type`                           |
-| `config`     | location kind, base href, hash prefix, strict mode, plugin names                     | `urlService.config`, `getPlugin()`                               |
-| `current`    | name, params                                                                         | `globals.current`, `globals.params`                              |
+| Event        | Payload                                                                                                                | Source in core                                                   |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `states`     | name, parent, url, params, resolve tokens, future, abstract, redirectTo, dsr, sticky                                   | `stateRegistry.get()`, `onStatesChanged`                         |
+| `transition` | id, from, to, params, entering, exiting, retained, `redirectedFrom`                                                    | `onBefore`, `Transition.$id`, `treeChanges()`                    |
+| `phase`      | id, phase, start or end, state                                                                                         | each hook type registered at a very high and a very low priority |
+| `resolve`    | id, token, state, start, end, ok, cached                                                                               | see the gap below                                                |
+| `result`     | id, outcome (success, error, redirected, superseded, aborted, ignored, invalid), by, message, errorName, invalidParams | `Transition.promise`, `Rejection.type`, `Transition.error()`     |
+| `invalid`    | from, to, params of a target that names no state                                                                       | `stateService.onInvalid`                                         |
+| `config`     | location kind, base href, hash prefix, strict mode, plugin names                                                       | `urlService.config`, `getPlugin()`                               |
+| `current`    | name, params                                                                                                           | `globals.current`, `globals.params`                              |
 
 ### What the adapter established about the data
 
@@ -248,8 +250,9 @@ Later stages:
    stage, an opt-in that writes transitions to a custom track in the Chrome
    Performance panel through `performance.measure` with `detail.devtools`
    (Chrome 128 and later).
-3. **Stage 4:** publish the event schema once a second consumer exists, and offer
-   the element to the wider UI-Router family.
+3. **Stage 4:** offer the element to the wider UI-Router family. The event
+   schema is public as v1 in `ui-router-devtools`, with `ui-router-otel` as its
+   second consumer.
 
 ## Design direction
 

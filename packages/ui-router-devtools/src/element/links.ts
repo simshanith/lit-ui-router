@@ -1,6 +1,6 @@
 import { html, type TemplateResult } from 'lit';
 import { hierarchy, tree } from 'd3-hierarchy';
-import type { UIRouterDevtools } from '../ui-router-devtools.ts';
+import type { DevtoolsPanel } from './panel.ts';
 import type { StateInfo } from '../schema.ts';
 import { segment } from '../notation.ts';
 import { depthClass, stateMarks, type Role } from './glyphs.ts';
@@ -16,7 +16,7 @@ const CHAR = 7.2;
 
 type MapNode = { state: StateInfo | null; children: MapNode[] };
 
-export const renderMap = (host: UIRouterDevtools): TemplateResult => {
+export const renderMap = (host: DevtoolsPanel): TemplateResult => {
   const children = host._children();
 
   const build = (parent: string | null): MapNode[] =>

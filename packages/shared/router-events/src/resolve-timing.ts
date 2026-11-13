@@ -1,10 +1,10 @@
 import type { PathNode, Transition } from '@uirouter/core';
 
-import { messageOf } from './transition-reasons.ts';
+import { errorNameOf, messageOf } from './thrown.ts';
 import type { ResolveEvent } from './event-schema.ts';
 
-/** A resolve event before the adapter stamps its schema version and time. */
-export type ResolveDraft = Omit<ResolveEvent, 'v' | 't'>;
+/** A resolve event before the adapter stamps its schema version, sequence number and time. */
+export type ResolveDraft = Omit<ResolveEvent, 'v' | 'seq' | 't'>;
 
 // Opt-in monkey-patch: core has no resolve notification, so this wraps each per-transition Resolvable clone's resolveFn.
 export const timeResolvables = (
@@ -41,20 +41,40 @@ export const timeResolvables = (
     resolvable.resolveFn = (...deps: unknown[]) => {
       const start = now();
 
-      const done = (ok: boolean, message?: string) =>
-        emit({ ...base, start, end: now(), ok, cached: false, message });
+      // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
+      const done = (error?: unknown) => {
+        const end = now();
+
+        if (error === undefined) {
+          emit({ ...base, start, end, ok: true, cached: false });
+
+          return;
+        }
+
+        const errorName = errorNameOf(error);
+
+        emit({
+          ...base,
+          start,
+          end,
+          ok: false,
+          cached: false,
+          message: messageOf(error),
+          ...(errorName !== undefined && { errorName }),
+        });
+      };
 
       try {
         const value: unknown = original(...deps);
         Promise.resolve(value).then(
-          () => done(true),
+          () => done(),
           // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-          (error: unknown) => done(false, messageOf(error)),
+          (error: unknown) => done(error ?? 'rejected'),
         );
 
         return value;
       } catch (error) {
-        done(false, messageOf(error));
+        done(error ?? 'threw');
         throw error;
       }
     };

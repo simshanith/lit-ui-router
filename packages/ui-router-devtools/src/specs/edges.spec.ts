@@ -1,8 +1,7 @@
 import { expect, it } from 'vitest';
 
 import { edgeWeight, observedEdges } from '../edges.ts';
-import { fold } from '../fold.ts';
-import type { DevtoolsEvent, Outcome, StateInfo } from '../schema.ts';
+import type { Outcome, RouterEvent, StateInfo } from '../schema.ts';
 
 const state = (name: string): StateInfo => ({
   name,
@@ -30,10 +29,11 @@ const tx = (
   from: string,
   to: string,
   outcome?: Outcome,
-): DevtoolsEvent[] => [
+): RouterEvent[] => [
   {
     v: 1,
-    t: clock++,
+    seq: ++clock,
+    t: clock,
     type: 'transition',
     id,
     from,
@@ -48,20 +48,22 @@ const tx = (
     dynamic: false,
   },
   ...(outcome
-    ? [{ v: 1, t: clock++, type: 'result', id, outcome, reason: null } as const]
+    ? [{ v: 1, seq: ++clock, t: clock, type: 'result', id, outcome } as const]
     : []),
 ];
 
-const session = (...events: DevtoolsEvent[][]) =>
-  fold([
+const session = (...events: RouterEvent[][]) => ({
+  events: [
     {
       v: 1,
+      seq: 0,
       t: 0,
       type: 'states',
       states: [state('a'), state('b'), state('c')],
     },
     ...events.flat(),
-  ]);
+  ] satisfies RouterEvent[],
+});
 
 it('aggregates transitions per ordered pair, with outcomes and ids', () => {
   const edges = observedEdges(
@@ -98,19 +100,20 @@ it('has no edge for a target that names no state', () => {
 });
 
 it('counts an invalid target against no pair', () => {
-  const model = fold([
-    { v: 1, t: 0, type: 'states', states: [state('a')] },
-    {
-      v: 1,
-      t: 1,
-      type: 'invalid',
-      key: 1,
-      from: 'a',
-      to: 'nowhere',
-      toParams: {},
-      reason: 'No such state',
-    },
-  ]);
+  const model = {
+    events: [
+      { v: 1, seq: 1, t: 0, type: 'states', states: [state('a')] },
+      {
+        v: 1,
+        seq: 2,
+        t: 1,
+        type: 'invalid',
+        from: 'a',
+        to: 'nowhere',
+        toParams: {},
+      },
+    ] satisfies RouterEvent[],
+  };
 
   expect(observedEdges(model)).toEqual([]);
 });

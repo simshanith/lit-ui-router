@@ -1,0 +1,946 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ui-router-devtools session",
+  "description": "A recorded UI-Router session, schema v1. A v1 reader ignores fields and event types it does not know and tolerates values it does not know of an open enum, written as `anyOf` the known values and any string; `format` identifies the file.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "ui-router-session"
+    },
+    "v": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "generator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "routerId": {
+      "type": "string"
+    },
+    "timeOrigin": {
+      "type": "number"
+    },
+    "t": {
+      "type": "number"
+    },
+    "dropped": {
+      "type": "number"
+    },
+    "timeResolves": {
+      "type": "boolean"
+    },
+    "redaction": {
+      "type": "object",
+      "properties": {
+        "params": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "const": "all"
+            }
+          ]
+        },
+        "messages": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "params",
+        "messages"
+      ]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ConfigEvent"
+          },
+          {
+            "$ref": "#/$defs/StatesEvent"
+          },
+          {
+            "$ref": "#/$defs/TransitionEvent"
+          },
+          {
+            "$ref": "#/$defs/PhaseEvent"
+          },
+          {
+            "$ref": "#/$defs/ResolveEvent"
+          },
+          {
+            "$ref": "#/$defs/ResultEvent"
+          },
+          {
+            "$ref": "#/$defs/InvalidEvent"
+          },
+          {
+            "$ref": "#/$defs/CurrentEvent"
+          },
+          {
+            "$ref": "#/$defs/LaterEvent"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "format",
+    "v",
+    "id",
+    "generator",
+    "routerId",
+    "timeOrigin",
+    "t",
+    "dropped",
+    "timeResolves",
+    "redaction",
+    "events"
+  ],
+  "$defs": {
+    "ConfigEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "config"
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hash",
+                    "pushState",
+                    "memory",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "plugin": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "baseHref": {
+              "type": "string"
+            },
+            "hashPrefix": {
+              "type": "string"
+            },
+            "html5Mode": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "plugin",
+            "baseHref",
+            "hashPrefix",
+            "html5Mode"
+          ]
+        },
+        "strictMode": {
+          "type": "boolean"
+        },
+        "caseInsensitive": {
+          "type": "boolean"
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "location",
+        "strictMode",
+        "caseInsensitive",
+        "plugins"
+      ]
+    },
+    "StatesEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "states"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "params": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "optional": {
+                      "type": "boolean"
+                    },
+                    "dynamic": {
+                      "type": "boolean"
+                    },
+                    "array": {
+                      "type": "boolean"
+                    },
+                    "inherit": {
+                      "type": "boolean"
+                    },
+                    "squash": {
+                      "anyOf": [
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "optional",
+                    "dynamic",
+                    "array",
+                    "inherit",
+                    "squash"
+                  ]
+                }
+              },
+              "resolves": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "future": {
+                "type": "boolean"
+              },
+              "abstract": {
+                "type": "boolean"
+              },
+              "redirects": {
+                "type": "boolean"
+              },
+              "redirectTo": {
+                "type": "string"
+              },
+              "dsr": {
+                "type": "object",
+                "properties": {
+                  "default": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "default"
+                ]
+              },
+              "sticky": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "parent",
+              "url",
+              "params",
+              "resolves",
+              "future",
+              "abstract",
+              "redirects"
+            ]
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "states"
+      ]
+    },
+    "TransitionEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "transition"
+        },
+        "id": {
+          "type": "number"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "fromParams": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "toParams": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "entering": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exiting": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "retained": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redirectedFrom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "sref",
+                    "url",
+                    "redirect",
+                    "otherwise",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "const": "replace"
+                }
+              ]
+            },
+            "reload": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "inherit": {
+              "type": "boolean"
+            },
+            "supercede": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "source",
+            "location",
+            "reload",
+            "inherit",
+            "supercede"
+          ]
+        },
+        "dynamic": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "id",
+        "from",
+        "to",
+        "fromParams",
+        "toParams",
+        "entering",
+        "exiting",
+        "retained",
+        "redirectedFrom",
+        "options",
+        "dynamic"
+      ]
+    },
+    "PhaseEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "phase"
+        },
+        "id": {
+          "type": "number"
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "enum": [
+                "before",
+                "start",
+                "exit",
+                "retain",
+                "enter",
+                "finish",
+                "success",
+                "error"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "edge": {
+          "enum": [
+            "start",
+            "end"
+          ],
+          "type": "string"
+        },
+        "state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "id",
+        "phase",
+        "edge",
+        "state"
+      ]
+    },
+    "ResolveEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "resolve"
+        },
+        "id": {
+          "type": "number"
+        },
+        "token": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        },
+        "end": {
+          "type": "number"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "cached": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "errorName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "id",
+        "token",
+        "state",
+        "start",
+        "end",
+        "ok",
+        "cached"
+      ]
+    },
+    "ResultEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "result"
+        },
+        "id": {
+          "type": "number"
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "success",
+                "error",
+                "redirected",
+                "superseded",
+                "aborted",
+                "ignored",
+                "invalid"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "by": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        },
+        "errorName": {
+          "type": "string"
+        },
+        "invalidParams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "id",
+        "outcome"
+      ]
+    },
+    "InvalidEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "invalid"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "toParams": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "from",
+        "to",
+        "toParams"
+      ]
+    },
+    "CurrentEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "current"
+        },
+        "name": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "name",
+        "params"
+      ]
+    },
+    "LaterEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string",
+          "not": {
+            "enum": [
+              "config",
+              "states",
+              "transition",
+              "phase",
+              "resolve",
+              "result",
+              "invalid",
+              "current"
+            ]
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type"
+      ]
+    }
+  }
+}

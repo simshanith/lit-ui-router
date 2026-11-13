@@ -1,24 +1,19 @@
 import type {
   ConfigEvent,
-  DevtoolsEvent,
   InvalidEvent,
-  Outcome,
   Params,
   PhaseEvent,
   ResolveEvent,
+  ResultEvent,
+  RouterEvent,
   StateInfo,
   TransitionEvent,
 } from './schema.ts';
 
-export interface TxResult {
-  t: number;
-  outcome: Outcome;
-  reason: string | null;
-  message?: string;
-}
+export type TxResult = Omit<ResultEvent, 'v' | 'seq' | 'type' | 'id'>;
 
-// One log entry. Invalid targets have no Transition, so they take a negative id.
-export interface Tx extends Omit<TransitionEvent, 'v' | 'type'> {
+// One log entry. Invalid targets have no Transition, so they take their event's negated `seq` as id.
+export interface Tx extends Omit<TransitionEvent, 'v' | 'seq' | 'type'> {
   marks: PhaseEvent[];
   resolves: ResolveEvent[];
   result?: TxResult;
@@ -46,8 +41,32 @@ const patch = (model: Model, id: number, change: (tx: Tx) => Partial<Tx>) => ({
 
 const has = (model: Model, id: number) => model.txs.some((tx) => tx.id === id);
 
-// Events for transitions the ring buffer has already dropped are ignored.
-export const apply = (model: Model, event: DevtoolsEvent): Model => {
+const invalidTx = (invalid: InvalidEvent): Tx => ({
+  id: -invalid.seq,
+  t: invalid.t,
+  from: invalid.from,
+  to: invalid.to,
+  fromParams: {},
+  toParams: invalid.toParams,
+  entering: [],
+  exiting: [],
+  retained: [],
+  redirectedFrom: null,
+  options: {
+    source: 'unknown',
+    location: true,
+    reload: false,
+    inherit: true,
+    supercede: true,
+  },
+  dynamic: false,
+  marks: [],
+  resolves: [],
+  result: { t: invalid.t, outcome: 'invalid' },
+});
+
+// Events for transitions the ring buffer has already dropped are ignored, and so are event types this version does not know.
+export const apply = (model: Model, event: RouterEvent): Model => {
   switch (event.type) {
     case 'config':
       return { ...model, config: event };
@@ -56,7 +75,7 @@ export const apply = (model: Model, event: DevtoolsEvent): Model => {
     case 'current':
       return { ...model, current: { name: event.name, params: event.params } };
     case 'transition': {
-      const { v: _v, type: _type, ...start } = event;
+      const { v: _v, seq: _seq, type: _type, ...start } = event;
 
       const next = {
         ...model,
@@ -79,57 +98,19 @@ export const apply = (model: Model, event: DevtoolsEvent): Model => {
           }))
         : model;
     case 'result': {
-      const { t, outcome, reason, message } = event;
+      const { v: _v, seq: _seq, type: _type, id, ...result } = event;
 
-      return has(model, event.id)
-        ? patch(model, event.id, () => ({
-            result: { t, outcome, reason, message },
-          }))
-        : model;
+      return has(model, id) ? patch(model, id, () => ({ result })) : model;
     }
 
-    default: {
-      // the last event type; a new one fails this assignment until it has a case
-      const invalid: InvalidEvent = event;
-
-      return {
-        ...model,
-        txs: [
-          ...model.txs,
-          {
-            id: -invalid.key,
-            t: invalid.t,
-            from: invalid.from,
-            to: invalid.to,
-            fromParams: {},
-            toParams: invalid.toParams,
-            entering: [],
-            exiting: [],
-            retained: [],
-            redirectedFrom: null,
-            options: {
-              source: 'unknown',
-              location: true,
-              reload: false,
-              inherit: true,
-              supercede: true,
-            },
-            dynamic: false,
-            marks: [],
-            resolves: [],
-            result: {
-              t: invalid.t,
-              outcome: 'invalid',
-              reason: invalid.reason,
-            },
-          },
-        ],
-      };
-    }
+    case 'invalid':
+      return { ...model, txs: [...model.txs, invalidTx(event)] };
+    default:
+      return model;
   }
 };
 
-export const fold = (events: readonly DevtoolsEvent[]): Model =>
+export const fold = (events: readonly RouterEvent[]): Model =>
   events.reduce(apply, emptyModel());
 
 // A future state registers as `name.**`; a redirect names it without the suffix.

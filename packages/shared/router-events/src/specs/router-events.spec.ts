@@ -4,6 +4,7 @@ import {
   Rejection,
   servicesPlugin,
   UIRouter,
+  type RawParams,
   type StateDeclaration,
 } from '@uirouter/core';
 
@@ -314,5 +315,97 @@ describe('resolve timing', () => {
 
     for (const resolve of resolves)
       expect(resolve.end).toBeGreaterThanOrEqual(resolve.start);
+  });
+});
+
+describe('param values', () => {
+  const recorded = async (params: RawParams) => {
+    const router = makeRouter([
+      {
+        name: 'a',
+        url: '/a',
+        params: Object.fromEntries(
+          Object.keys(params).map((key) => [key, { value: null }]),
+        ),
+      },
+    ]);
+
+    const events: RouterEvent[] = [];
+    observe(router, (event) => events.push(event));
+    await router.stateService.go('a', params);
+    router.dispose();
+
+    const transition = events.find((event) => event.type === 'transition');
+
+    return transition?.type === 'transition' ? transition.toParams : {};
+  };
+
+  it('keep scalars and arrays, and tag what JSON cannot hold', async () => {
+    interface Cycle {
+      self?: Cycle;
+    }
+
+    const cycle: Cycle = {};
+    cycle.self = cycle;
+
+    const params = await recorded({
+      text: 'x',
+      count: 2,
+      flag: false,
+      none: null,
+      list: ['a', 1, Number.NaN],
+      when: new Date(Date.UTC(2026, 10, 12)),
+      bad: Number.POSITIVE_INFINITY,
+      fn: () => {},
+      big: 1n,
+      sym: Symbol('s'),
+      cycle,
+      object: { id: 1 },
+    });
+
+    expect(params).toEqual({
+      text: 'x',
+      count: 2,
+      flag: false,
+      none: null,
+      list: ['a', 1, 'NaN'],
+      when: '2026-11-12T00:00:00.000Z',
+      bad: 'Infinity',
+      fn: '[function]',
+      big: '[bigint 1n]',
+      sym: '[symbol]',
+      cycle: '[unserializable]',
+      object: '{"id":1}',
+    });
+    expect(JSON.parse(JSON.stringify(params))).toEqual(params);
+  });
+});
+
+describe('resolve tokens', () => {
+  it('name a class or function token by its name, not its source', () => {
+    class Session {}
+
+    function loadUser() {}
+
+    const router = makeRouter([
+      {
+        name: 'a',
+        resolve: [
+          { token: Session, resolveFn: () => new Session() },
+          { token: loadUser, resolveFn: () => 1 },
+          { token: 'plain', resolveFn: () => 2 },
+        ],
+      },
+    ]);
+
+    const events: RouterEvent[] = [];
+    observe(router, (event) => events.push(event))();
+    router.dispose();
+
+    const states = events.flatMap((event) =>
+      event.type === 'states' ? event.states : [],
+    );
+
+    expect(states[0]?.resolves).toEqual(['Session', 'loadUser', 'plain']);
   });
 });

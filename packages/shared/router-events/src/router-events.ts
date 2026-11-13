@@ -9,11 +9,7 @@ import {
   type Transition,
   type UIRouter,
 } from '@uirouter/core';
-import {
-  invalidTargetReason,
-  messageOf,
-  reasonFor,
-} from './transition-reasons.ts';
+import { errorNameOf, messageOf } from './thrown.ts';
 import { timeResolvables } from './resolve-timing.ts';
 import { sourceOf } from './transition-source.ts';
 import {
@@ -22,21 +18,21 @@ import {
   type RouterEvent,
   type LocationInfo,
   type Outcome,
+  type ParamValue,
   type Params,
-  type Phase,
-  type Redact,
+  type KnownPhase,
+  type ResultEvent,
+  type Scalar,
   type StateInfo,
   type TransitionOptionsInfo,
-  type Value,
 } from './event-schema.ts';
 
 export interface ObserveOptions {
-  redact?: Redact;
   /** Time each resolve by wrapping its `resolveFn`; off by default because it patches core objects. */
   timeResolves?: boolean;
 }
 
-type Draft<E> = E extends RouterEvent ? Omit<E, 'v' | 't'> : never;
+type Draft<E> = E extends RouterEvent ? Omit<E, 'v' | 'seq' | 't'> : never;
 
 type Emit = (event: Draft<RouterEvent>) => void;
 
@@ -52,46 +48,64 @@ declare function setTimeout(handler: () => void): void;
 
 const now = (): number => performance.now();
 
-// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a param value or a redact() result, which the app types
-const jsonSafe = (value: unknown): Value => {
-  if (value === null || value === undefined) return null;
-
-  /* oxlint-disable anti-slop/no-runtime-typeof -- JSON primitives pass through as they are */
-  if (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
-  )
-    return value;
-  /* oxlint-enable anti-slop/no-runtime-typeof */
-
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- an object param value, which the app types
+const jsonText = (value: unknown): string => {
   try {
-    return JSON.stringify(value);
+    // JSON.stringify returns undefined for a value whose toJSON returns undefined.
+    const text: string | undefined = JSON.stringify(value);
+
+    return text ?? '[unserializable]';
   } catch {
     return '[unserializable]';
   }
 };
 
-const paramsOf = (
-  params: RawParams,
-  where: Parameters<Redact>[2],
-  redact: Redact | undefined,
-): Params =>
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a param value, which the app types
+const scalarOf = (value: unknown): Scalar => {
+  if (value === null || value === undefined) return null;
+
+  if (value instanceof Date)
+    return Number.isNaN(value.getTime()) ? 'Invalid Date' : value.toISOString();
+
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- sorting an app's param value into what JSON can hold is this function's job
+  switch (typeof value) {
+    case 'string':
+    case 'boolean':
+      return value;
+    case 'number':
+      return Number.isFinite(value) ? value : String(value);
+    case 'bigint':
+      return `[bigint ${value}n]`;
+    case 'function':
+      return '[function]';
+    case 'symbol':
+      return '[symbol]';
+    default:
+      return jsonText(value);
+  }
+};
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a param value, which the app types
+const paramValueOf = (value: unknown): ParamValue =>
+  Array.isArray(value) ? value.map(scalarOf) : scalarOf(value);
+
+const paramsOf = (params: RawParams): Params =>
   Object.fromEntries(
     Object.entries(params)
       .filter(([key, value]) => !(key === '#' && value == null))
-      .map(([key, value]) => [
-        key,
-        jsonSafe(redact ? redact(key, value, where) : value),
-      ]),
+      .map(([key, value]) => [key, paramValueOf(value)]),
   );
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- core types resolve tokens any
+const tokenName = (token: unknown): string =>
+  token instanceof Function ? token.name || '[function]' : String(token);
 
 const resolveTokens = (decl: StateDeclaration): string[] => {
   const resolve = decl.resolve;
 
   return Array.isArray(resolve)
     ? resolve.map((entry) =>
-        String('token' in entry ? entry.token : entry.provide),
+        tokenName('token' in entry ? entry.token : entry.provide),
       )
     : Object.keys(resolve ?? {});
 };
@@ -266,6 +280,71 @@ const outcomeOf = (error: unknown): Outcome => {
   }
 };
 
+// Core's invalid-transition hook throws `trans.error()` as a plain Error's message, so the rejection arrives as an error.
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
+const invalidOf = (trans: Transition, error: unknown): Rejection | null => {
+  if (!(error instanceof Rejection) || error.type !== RejectType.ERROR)
+    return null;
+
+  const invalid: unknown = trans.error();
+
+  if (!(invalid instanceof Rejection) || invalid.type !== RejectType.INVALID)
+    return null;
+
+  const thrown: unknown = error.detail;
+
+  return thrown instanceof Error &&
+    thrown.message.includes(String(invalid.detail))
+    ? invalid
+    : null;
+};
+
+const invalidParamsOf = (trans: Transition): string[] => {
+  const values = trans.params();
+
+  return trans
+    .$to()
+    .parameters()
+    .filter((param) => !param.validates(values[param.id]))
+    .map((param) => param.id);
+};
+
+type Settled = Omit<Draft<ResultEvent>, 'type' | 'id'>;
+
+// What a rejection says, read from core's own objects rather than its printed form.
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
+const settledOf = (trans: Transition, error: unknown): Settled => {
+  const invalid = invalidOf(trans, error);
+
+  if (invalid) {
+    const invalidParams = invalidParamsOf(trans);
+
+    return {
+      outcome: 'invalid',
+      message: messageOf(invalid),
+      ...(invalidParams.length && { invalidParams }),
+    };
+  }
+
+  const outcome = outcomeOf(error);
+  const detail: unknown = error instanceof Rejection ? error.detail : null;
+
+  // Core says why it aborted: a hook returned false, or the router was disposed; abort() gives no reason.
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- core's abort reason is a string or nothing
+  if (outcome === 'aborted' && typeof detail === 'string')
+    return { outcome, message: detail };
+
+  if (outcome !== 'error' && outcome !== 'invalid') return { outcome };
+
+  const errorName = errorNameOf(error);
+
+  return {
+    outcome,
+    message: messageOf(error),
+    ...(errorName !== undefined && { errorName }),
+  };
+};
+
 const names = (nodes: PathNode[]): string[] =>
   nodes.flatMap((node) => (node.state.name ? [node.state.name] : []));
 
@@ -273,13 +352,16 @@ const names = (nodes: PathNode[]): string[] =>
 export const observe = (
   router: UIRouter,
   listener: (event: RouterEvent) => void,
-  { redact, timeResolves = false }: ObserveOptions = {},
+  { timeResolves = false }: ObserveOptions = {},
 ): (() => void) => {
+  let seq = 0;
+
   const emit: Emit = (draft) =>
-    listener({ v: SCHEMA_VERSION, t: now(), ...draft });
+    listener({ v: SCHEMA_VERSION, seq: ++seq, t: now(), ...draft });
 
   const started: { id: number; redirectedFrom: number | null }[] = [];
-  let invalidKey = 0;
+  // Ids in the order they left the before phase, the order core makes each the current transition.
+  const began: number[] = [];
   let lastConfig = '';
 
   const emitConfig = () => {
@@ -304,7 +386,7 @@ export const observe = (
     emit({
       type: 'current',
       name: router.globals.current.name ?? '',
-      params: paramsOf(router.globals.params, 'current', redact),
+      params: paramsOf(router.globals.params),
     });
 
   emitConfig();
@@ -314,32 +396,40 @@ export const observe = (
   // A redirect's origin rejects before its successor starts, so its result waits for the successor or a task.
   const pendingRedirects = new Map<number, () => void>();
 
+  // Core's superseded detail is whichever transition is current when this one notices: possibly a later one, or none.
+  const takenOverBy = (outcome: Outcome, id: number): number | undefined => {
+    if (outcome === 'redirected')
+      return started.find((s) => s.redirectedFrom === id)?.id;
+
+    if (outcome !== 'superseded') return undefined;
+
+    // An id that has left the window has no known successor.
+    const index = began.indexOf(id);
+
+    return index === -1 ? undefined : began[index + 1];
+  };
+
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a transition's rejection reason, which core types any
   const settle = (trans: Transition, error?: unknown) => {
     const id = trans.$id;
-    const outcome = error === undefined ? 'success' : outcomeOf(error);
-    const message = error === undefined ? '' : messageOf(error);
+
+    const settled: Settled =
+      error === undefined ? { outcome: 'success' } : settledOf(trans, error);
 
     const send = () => {
       pendingRedirects.delete(id);
 
-      const successor =
-        started.find((s) => s.redirectedFrom === id)?.id ?? null;
-
-      const supersededBy =
-        started.find((s) => s.id > id && s.redirectedFrom !== id)?.id ?? null;
+      const by = takenOverBy(settled.outcome, id);
 
       emit({
         type: 'result',
         id,
-        outcome,
-        reason: reasonFor({ outcome, message, successor, supersededBy }),
-        message:
-          outcome === 'error' || outcome === 'invalid' ? message : undefined,
+        ...settled,
+        ...(by !== undefined && { by }),
       });
     };
 
-    if (outcome !== 'redirected') {
+    if (settled.outcome !== 'redirected') {
       send();
 
       return;
@@ -357,10 +447,18 @@ export const observe = (
     deregister.push(fn as () => void);
 
   const mark =
-    (phase: Phase, edge: 'start' | 'end') =>
+    (phase: KnownPhase, edge: 'start' | 'end') =>
     (trans: Transition, state?: StateDeclaration) => {
       // State hooks also fire for the unnamed root state; it is not a row anywhere.
       if (state && !state.name) return;
+
+      // The lowest-priority before hook runs after core's ignore and validity checks, just before core makes the transition current.
+      if (phase === 'before' && edge === 'end') {
+        began.push(trans.$id);
+
+        if (began.length > 256) began.shift();
+      }
+
       emit({
         type: 'phase',
         id: trans.$id,
@@ -372,7 +470,7 @@ export const observe = (
 
   const bracket = (
     register: typeof service.onStart,
-    phase: Phase,
+    phase: KnownPhase,
     criteria: HookMatchCriteria = {},
   ) => {
     add(
@@ -402,8 +500,8 @@ export const observe = (
           id: trans.$id,
           from: trans.from().name ?? '',
           to: trans.to().name ?? '',
-          fromParams: paramsOf(trans.params('from'), 'from', redact),
-          toParams: paramsOf(trans.params('to'), 'to', redact),
+          fromParams: paramsOf(trans.params('from')),
+          toParams: paramsOf(trans.params('to')),
           entering: names(changes.entering),
           exiting: names(changes.exiting),
           retained: names(changes.retained),
@@ -447,15 +545,12 @@ export const observe = (
   // Returning undefined leaves core's onInvalid chain unchanged.
   add(
     router.stateService.onInvalid((to, from) => {
-      const name = to?.name() ?? '';
       emit({
         type: 'invalid',
-        key: ++invalidKey,
         // name() returns the state object for the root state, whose name is empty.
         from: from?.$state()?.name ?? router.globals.current.name ?? '',
-        to: name,
-        toParams: paramsOf(to?.params() ?? {}, 'invalid', redact),
-        reason: invalidTargetReason(name),
+        to: to?.name() ?? '',
+        toParams: paramsOf(to?.params() ?? {}),
       });
 
       return undefined;
