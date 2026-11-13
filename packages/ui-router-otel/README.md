@@ -2,7 +2,7 @@
 
 [OpenTelemetry](https://opentelemetry.io) spans for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: one span per transition, with a child span for each phase and, on request, each resolve.
 
-The package is private and unpublished, so it is workspace-only for now. Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
+The package is private and unpublished, so it is workspace-only for now. Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
 
 ## Usage
 
@@ -72,6 +72,32 @@ A redirect, a supersede and an abort are the router doing its job, so they leave
 A redirect's successor carries a span link to the transition it replaced, and a superseded transition carries a span link to the transition that superseded it.
 
 Each transition is the root of its own trace unless a span is active when it starts. The plugin installs no context manager; with one installed (for example `@opentelemetry/context-zone` in a browser), a transition started inside the app's own active span becomes that span's child.
+
+## The devtools Timeline
+
+`DevtoolsSpanProcessor` sends every span a tracer provider starts and ends to the [`ui-router-devtools`](../ui-router-devtools/README.md#timeline) panel, whose Timeline nests the app's spans, such as a fetch, under the transition they ran during. Add it to the provider the plugin's tracer comes from: the router's own spans are how the panel joins a span to a transition.
+
+```ts
+import { TracerProvider } from '@opentelemetry/sdk-trace';
+import type { UIRouter } from '@uirouter/core';
+import { DevtoolsSpanProcessor, OtelPlugin } from 'ui-router-otel';
+
+declare const router: UIRouter;
+
+const provider = new TracerProvider({
+  spanProcessors: [
+    new DevtoolsSpanProcessor(() =>
+      document.querySelector('ui-router-devtools'),
+    ),
+  ],
+});
+
+router.plugin(OtelPlugin, { tracer: provider.getTracer('my-app') });
+```
+
+The argument is asked for the panel on each span, so the panel may be created after the provider; a span with no panel to take it is dropped. `{ started: false }` sends spans only when they end. The processor reads spans structurally, through `ProcessedSpan`, typed from `@opentelemetry/api` alone: it fits the `SpanProcessor` of `@opentelemetry/sdk-trace-base` 1.x and 2.x and of `@opentelemetry/sdk-trace` 3.x without a peer on either, and reads the parent from `parentSpanContext` or, on 1.x, `parentSpanId`. An attribute value that is not a scalar or an array of scalars is sent as JSON text.
+
+The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](../ui-router-devtools/README.md#session-files-and-redaction). How a span is joined, and why a fetch in a resolve is joined as `during` rather than as a child, is in [the Timeline](../../docs/visualizer-proposal/timeline.md#joining-a-span).
 
 ## Not covered
 

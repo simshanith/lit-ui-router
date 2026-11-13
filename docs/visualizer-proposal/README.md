@@ -8,6 +8,8 @@ a private package that is not published.
 
 [Devtools scope and ecosystem](devtools.md) covers what the package can provide
 beyond the panel and which devtools hosts it can plug into.
+[The nested Map](map.md) and [the Timeline](timeline.md) record the rules of
+the panel's two drawings.
 
 ## Summary
 
