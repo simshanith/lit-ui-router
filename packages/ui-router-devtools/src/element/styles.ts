@@ -22,6 +22,7 @@ export const styles: CSSResult = css`
     --uird-depth-2: light-dark(oklch(57% 0.1 185), oklch(86% 0.12 185));
     --uird-depth-3: light-dark(oklch(64% 0.125 85), oklch(82% 0.13 85));
     --uird-depth-4: light-dark(oklch(46% 0.17 345), oklch(68% 0.13 345));
+    --uird-select: var(--uird-ink);
     --uird-unit: 4px;
     --uird-font:
       'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', 'Nimbus Sans',
@@ -263,6 +264,18 @@ export const styles: CSSResult = css`
     .nedge.leaving .reveal {
       animation: withdraw 160ms var(--uird-ease-out) forwards;
     }
+
+    /* A count appears once its line has drawn. */
+    .chip {
+      animation: fade-in 160ms var(--uird-ease-out)
+        calc(var(--uird-edge-delay, 0ms) + 200ms) backwards;
+    }
+
+    /* A transition that is still running marches along its line. */
+    .nedge.running .line {
+      stroke-dasharray: 6 4;
+      animation: march 500ms linear infinite;
+    }
   }
 
   /* Without motion nothing moves or draws: an edge and a new box only fade. */
@@ -288,6 +301,12 @@ export const styles: CSSResult = css`
   @keyframes draw {
     from {
       stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes march {
+    to {
+      stroke-dashoffset: -10;
     }
   }
 
@@ -648,10 +667,74 @@ export const styles: CSSResult = css`
     padding-inline: var(--uird-margin);
   }
 
-  /* The diagram keeps its natural size and sits in the middle of the viewport, so the room left over frames it evenly. */
+  /* The diagram keeps its natural size; the viewport places it with one translation and clips what it does not show. */
   .map-scroll:has(> .nested) {
+    position: relative;
     display: grid;
-    place-content: safe center;
+    place-content: start;
+    overflow: clip;
+    user-select: none;
+  }
+
+  /* A layout larger than its room is panned by a drag, which a touch does in place of scrolling the page. */
+  .map-scroll[data-pan] {
+    cursor: grab;
+    touch-action: pinch-zoom;
+  }
+
+  .map-scroll[data-panning] {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  /* The whole layout in small, drawn while it overflows, in the corner the inspector popover never takes. */
+  .minimap {
+    position: absolute;
+    inset-block-end: 8px;
+    inset-inline-start: var(--uird-margin);
+    box-sizing: content-box;
+    padding: 4px;
+    border: 1px solid var(--uird-rule);
+    border-radius: 4px;
+    background: var(--uird-surface);
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .minimap rect {
+    fill: var(--uird-id);
+    stroke: none;
+  }
+
+  .minimap rect.open {
+    fill: none;
+    stroke: var(--uird-id);
+    stroke-width: 1;
+  }
+
+  .minimap rect.current {
+    fill: var(--uird-ink);
+  }
+
+  .minimap rect.window {
+    fill: color-mix(in oklch, var(--uird-ink) 8%, transparent);
+    stroke: var(--uird-ink);
+    stroke-width: 1;
+  }
+
+  .view-tools {
+    gap: 8px;
+  }
+
+  .view-tools .step {
+    inline-size: 16px;
+    font-size: 14px;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
+  .view-tools button:disabled {
+    text-decoration: none;
   }
 
   .icon.max {
@@ -1163,12 +1246,15 @@ export const styles: CSSResult = css`
       3px 3px 0 0 var(--uird-line, var(--uird-rule-strong));
   }
 
+  /* Focus is drawn inside the border and selection outside it, so the two are told apart and neither covers the border. */
   .head:focus-visible {
+    outline-offset: -5px;
     border-radius: inherit;
   }
 
+  /* Selection is a layer of its own: a ring outside the box, in a colour that is neither a depth nor a status, so the border keeps saying what it said. */
   .box.selected {
-    outline: 1px solid var(--uird-ink);
+    outline: 1px solid var(--uird-select);
     outline-offset: 2px;
   }
 
@@ -1375,6 +1461,26 @@ export const styles: CSSResult = css`
 
   .nedge.edge-fault .head {
     fill: var(--uird-red);
+  }
+
+  /* A count chip sits on its line, on the surface colour, and is drawn left to right whatever the page's direction. */
+  .chip {
+    direction: ltr;
+  }
+
+  .chip rect {
+    fill: var(--uird-surface);
+  }
+
+  .chip text {
+    fill: var(--uird-ink);
+    font: 500 11px / 1 var(--uird-font-mono);
+    font-variant-numeric: tabular-nums;
+    dominant-baseline: central;
+  }
+
+  .chip path {
+    fill: var(--uird-ink);
   }
 
   /* No route was found, so the line is straight and dotted. */
@@ -1801,6 +1907,7 @@ export const styles: CSSResult = css`
       --uird-depth-2: CanvasText;
       --uird-depth-3: CanvasText;
       --uird-depth-4: CanvasText;
+      --uird-select: Highlight;
     }
 
     .nedge :is(.line, .cap),
@@ -1821,7 +1928,10 @@ export const styles: CSSResult = css`
       fill: none;
     }
 
-    .box.selected,
+    .box.selected {
+      outline-width: 2px;
+    }
+
     .tick.on {
       outline: 2px solid Highlight;
     }

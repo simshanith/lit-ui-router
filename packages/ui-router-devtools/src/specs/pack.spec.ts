@@ -276,7 +276,7 @@ describe('chooseRung', () => {
     merged: { width: 900, height: 200 },
     truncated: { width: 800, height: 200 },
     small: { width: 700, height: 180 },
-    tree: { width: 0, height: 0 },
+    pan: { width: 0, height: 0 },
   };
 
   const at = (width: number, previous?: Rung) =>
@@ -286,15 +286,16 @@ describe('chooseRung', () => {
     expect(at(1500)).toBe('expanded');
     expect(at(1200)).toBe('collapsed');
     expect(at(850)).toBe('truncated');
-    expect(at(600)).toBe('tree');
+    // Nothing fits, so the last rung is drawn and panned.
+    expect(at(600)).toBe('pan');
   });
 
   it('restores a milder rung only with a tenth of the room to spare', () => {
     expect(at(1050, 'merged')).toBe('merged');
     expect(at(1100, 'merged')).toBe('merged');
     expect(at(1120, 'merged')).toBe('collapsed');
-    expect(at(720, 'tree')).toBe('tree');
-    expect(at(780, 'tree')).toBe('small');
+    expect(at(720, 'pan')).toBe('pan');
+    expect(at(780, 'pan')).toBe('small');
   });
 });
 
@@ -307,7 +308,7 @@ describe('the enlarged rungs', () => {
     merged: { width: 400, height: 150 },
     truncated: { width: 300, height: 150 },
     small: { width: 200, height: 120 },
-    tree: { width: 0, height: 0 },
+    pan: { width: 0, height: 0 },
   };
 
   const at = (viewport: Size, enlarge: boolean) =>

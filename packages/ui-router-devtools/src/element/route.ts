@@ -24,6 +24,8 @@ export interface RouteEdge {
   /** The end stands for a state inside a collapsed box. */
   fromStub?: boolean;
   toStub?: boolean;
+  /** The line carries traffic both ways, so its start has a head too. */
+  both?: boolean;
 }
 
 export interface Point {
@@ -44,6 +46,8 @@ export interface Routed {
   d: string;
   /** The arrowhead's tip and its rotation in degrees, 0 pointing along +x. */
   head: Point & { angle: number };
+  /** The head at the start of a line that runs both ways. */
+  tail?: Point & { angle: number };
   caps: Cap[];
 }
 
@@ -192,23 +196,30 @@ const clearance = (
 const leadOf = (clear: number, { margin, lead }: Settings): number =>
   Math.max(margin, Math.min(lead, Math.floor(clear / 2)));
 
+// The middle of a box's side, as a coordinate along it; an inner side is the room under the header.
+const midOf = (box: RouteBox, side: Side, inner: boolean): number => {
+  const { x, y, width, height } = box.rect;
+
+  if (side % 2 === 1) return Math.round(x + width / 2);
+
+  return Math.round((inner ? y + box.head + y + height : y * 2 + height) / 2);
+};
+
+// A port on a box's side at `along`, a coordinate on that side; an inner top side is the header's bottom edge.
 const portAt = (
   box: RouteBox,
   side: Side,
   inner: boolean,
-  offset: number,
+  along: number,
   reach: number,
 ): Port => {
   const { x, y, width, height } = box.rect;
-  const top = inner ? y + box.head : y;
-  const cx = Math.round(x + width / 2) + offset;
-  const cy = Math.round((inner ? top + y + height : y * 2 + height) / 2);
 
   const border = [
-    { x: x + width, y: cy + offset },
-    { x: cx, y: y + height },
-    { x, y: cy + offset },
-    { x: cx, y: top },
+    { x: x + width, y: along },
+    { x: along, y: y + height },
+    { x, y: along },
+    { x: along, y: inner ? y + box.head : y },
   ][side];
 
   const clear = inner ? -reach : reach;
@@ -825,6 +836,20 @@ const capsOf = (edge: RouteEdge, points: readonly Point[]): Cap[] => {
   return caps;
 };
 
+const angleOf = (from: Point, to: Point): number =>
+  Math.round((Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI);
+
+// An end moved back along its segment by the head's inset.
+const pulledIn = (end: Point, prev: Point): Point => {
+  const length = Math.hypot(end.x - prev.x, end.y - prev.y) || 1;
+  const inset = Math.min(HEAD_INSET, length / 2);
+
+  return {
+    x: end.x - ((end.x - prev.x) / length) * inset,
+    y: end.y - ((end.y - prev.y) / length) * inset,
+  };
+};
+
 const finish = (
   edge: RouteEdge,
   kind: Routed['kind'],
@@ -839,17 +864,13 @@ const finish = (
   }));
 
   const tip = points.at(-1)!;
-  const prev = points.at(-2)!;
-  const length = Math.hypot(tip.x - prev.x, tip.y - prev.y) || 1;
-  const inset = Math.min(HEAD_INSET, length / 2);
+  const start = points[0];
 
-  // The line stops inside the arrowhead, so a heavy stroke never shows past its tip.
+  // The line stops inside each arrowhead, so a heavy stroke never shows past a tip.
   const drawn = [
-    ...points.slice(0, -1),
-    {
-      x: tip.x - ((tip.x - prev.x) / length) * inset,
-      y: tip.y - ((tip.y - prev.y) / length) * inset,
-    },
+    edge.both ? pulledIn(start, points[1]) : start,
+    ...points.slice(1, -1),
+    pulledIn(tip, points.at(-2)!),
   ];
 
   return {
@@ -857,28 +878,28 @@ const finish = (
     kind,
     points,
     d: pathOf(drawn, settings.radius),
-    head: {
-      ...tip,
-      angle: Math.round(
-        (Math.atan2(tip.y - prev.y, tip.x - prev.x) * 180) / Math.PI,
-      ),
-    },
+    head: { ...tip, angle: angleOf(points.at(-2)!, tip) },
+    tail: edge.both
+      ? { ...start, angle: angleOf(points[1], start) }
+      : undefined,
     caps: capsOf(edge, points),
   };
 };
 
 // A self-loop is a fixed shape, not a search: out of the top or bottom near a corner and back into the side beside it.
-// It takes the end side and the top unless routed edges already use them and the other is free.
+interface Corner {
+  west: boolean;
+  south: boolean;
+}
+
 const loop = (
   edge: RouteEdge,
   box: RouteBox,
   boxes: ReadonlyMap<string, RouteBox>,
-  taken: ReadonlySet<Side>,
+  { west, south }: Corner,
   settings: Settings,
 ): Routed => {
   const { x, y, width, height } = box.rect;
-  const west = taken.has(0) && !taken.has(2);
-  const south = taken.has(3) && !taken.has(1);
   const sx = west ? -1 : 1;
   const sy = south ? 1 : -1;
   const side = west ? x : x + width;
@@ -923,32 +944,221 @@ const fallback = (
   const forward = flat ? b.x >= a.x : b.y >= a.y;
   const sides: readonly Side[] = flat ? [0, 2] : [1, 3];
   const side = sides[forward ? 0 : 1];
+  const facing = FACING[side];
 
   return finish(
     edge,
     'fallback',
     [
-      portAt(from, side, false, 0, 0).border,
-      portAt(to, FACING[side], false, 0, 0).border,
+      portAt(from, side, false, midOf(from, side, false), 0).border,
+      portAt(to, facing, false, midOf(to, facing, false), 0).border,
     ],
     settings,
   );
 };
 
-// Routing
+// Planning: every end gets a side and a place on it before any edge is routed.
+
+interface End {
+  edge: RouteEdge;
+  start: boolean;
+  box: RouteBox;
+  /** The box is an ancestor of the other end, so the port is on its header, met from inside. */
+  inner: boolean;
+  /** One end of a compound's edge to a box inside it; these claim their sides first. */
+  nest: boolean;
+  /** Sides in order of preference; a full side passes the end to the next. */
+  ranked: readonly Side[];
+  /** Where the other end lies; ports on one side are ordered by it. */
+  toward: Point;
+  side: Side;
+  /** The port's coordinate along its side. A header port's is set by its lane or its partner. */
+  along?: number;
+  /** The other end of a compound's edge to a box inside it, straight below the header. */
+  under?: End;
+}
 
 interface Job {
   edge: RouteEdge;
   from: RouteBox;
   to: RouteBox;
-  /** `from` is an ancestor of `to`, or the reverse. */
-  fromInner: boolean;
-  toInner: boolean;
   through: Set<string>;
+  ends: [End, End];
   starts: Port[];
   goals: Port[];
   found?: Found;
 }
+
+// The gap between two spans, signed toward the other; 0 where they overlap.
+const gap = (low: number, size: number, other: number, length: number) => {
+  if (other >= low + size) return other - low - size;
+
+  return other + length <= low ? other + length - low : 0;
+};
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  a.x < b.x + b.width &&
+  b.x < a.x + a.width &&
+  a.y < b.y + b.height &&
+  b.y < a.y + a.height;
+
+// What an edge cannot cross: every box but its ends and their ancestors, and those ancestors' header rows.
+const blockers = (
+  boxes: ReadonlyMap<string, RouteBox>,
+  from: RouteBox,
+  to: RouteBox,
+  through: ReadonlySet<string>,
+): Rect[] =>
+  [...boxes.values()].flatMap((box) => {
+    if (box === from || box === to) return [];
+
+    if (!through.has(box.id)) return [box.rect];
+
+    return box.rect.height > box.head + 1
+      ? [{ ...box.rect, height: box.head }]
+      : [];
+  });
+
+// The strip a straight lead would run in, from a box's side to the middle of the other box.
+const lane = (a: Rect, b: Rect, side: Side): Rect => {
+  const cx = b.x + b.width / 2;
+  const cy = b.y + b.height / 2;
+
+  return [
+    {
+      x: a.x + a.width,
+      y: a.y + 1,
+      width: cx - a.x - a.width,
+      height: a.height - 2,
+    },
+    {
+      x: a.x + 1,
+      y: a.y + a.height,
+      width: a.width - 2,
+      height: cy - a.y - a.height,
+    },
+    { x: cx, y: a.y + 1, width: a.x - cx, height: a.height - 2 },
+    { x: a.x + 1, y: cy, width: a.width - 2, height: a.y - cy },
+  ][side];
+};
+
+// The sides of `a` in order of preference for an edge to `b`: the side that faces it, and for a diagonal the axis with a clear lead.
+// One end of a diagonal takes the longer axis and the other the shorter, so the route has one bend.
+const rankSides = (
+  a: Rect,
+  b: Rect,
+  long: boolean,
+  blocked: readonly Rect[],
+): Side[] => {
+  const dx = gap(a.x, a.width, b.x, b.width);
+  const dy = gap(a.y, a.height, b.y, b.height);
+  const h: Side = (dx || b.x + b.width / 2 - a.x - a.width / 2) >= 0 ? 0 : 2;
+  const v: Side = (dy || b.y + b.height / 2 - a.y - a.height / 2) >= 0 ? 1 : 3;
+
+  const clear = (side: Side) =>
+    !blocked.some((rect) => overlaps(rect, lane(a, b, side)));
+
+  const diagonal =
+    clear(h) === clear(v) ? Math.abs(dx) >= Math.abs(dy) === long : clear(h);
+
+  const flat = dx && dy ? diagonal : dx !== 0;
+
+  return flat ? [h, v, FACING[v], FACING[h]] : [v, h, FACING[h], FACING[v]];
+};
+
+interface Nest {
+  side: Side;
+  /** The header port's place, beside the branch; unset when the port sits straight above the box. */
+  lane?: number;
+}
+
+// A compound's edge to a box inside it ends on the compound's header: straight above a child with nothing between,
+// else down a lane beside the branch that holds the box.
+const nestPlan = (
+  outer: RouteBox,
+  inner: RouteBox,
+  boxes: ReadonlyMap<string, RouteBox>,
+  blocked: readonly Rect[],
+  margin: number,
+): Nest => {
+  const chain = [inner.id, ...ancestorsOf(boxes, inner.id)];
+  const branch = boxes.get(chain[chain.indexOf(outer.id) - 1]) ?? inner;
+  const top = outer.rect.y + outer.head;
+  const { x, y, width, height } = inner.rect;
+
+  const free = (area: Rect) => !blocked.some((rect) => overlaps(rect, area));
+
+  if (branch === inner && free({ x, y: top, width, height: y - top }))
+    return { side: 3 };
+
+  const low = outer.rect.x + margin;
+  const high = outer.rect.x + outer.rect.width - margin;
+  const cy = y + height / 2;
+
+  const lanes = ([2, 0] as const).map((side) => {
+    const at = side
+      ? branch.rect.x - margin * 2
+      : branch.rect.x + branch.rect.width + margin * 2;
+
+    const along = Math.min(high, Math.max(low, at));
+
+    return {
+      side,
+      lane: along,
+      far: Math.abs(along - x - width / 2),
+      shut: !free({ x: along - 1, y: top, width: 2, height: cy - top }),
+    };
+  });
+
+  lanes.sort((a, b) => Number(a.shut) - Number(b.shut) || a.far - b.far);
+
+  return lanes[0];
+};
+
+// A box inside a compound the edge has to leave cannot use its top: the compound's header is in the way.
+const underHeader = (ranked: Side[], shut: boolean): Side[] =>
+  shut ? [...ranked.filter((side) => side !== 3), 3] : ranked;
+
+const nestEnds = (
+  edge: RouteEdge,
+  from: RouteBox,
+  to: RouteBox,
+  fromInner: boolean,
+  nest: Nest,
+): [End, End] => {
+  const outer = fromInner ? from : to;
+  const inside = fromInner ? to : from;
+  const { side, lane: along } = nest;
+
+  const below: End = {
+    edge,
+    start: !fromInner,
+    box: inside,
+    inner: false,
+    nest: true,
+    ranked: [side, ...SIDES.filter((other) => other !== side && other !== 3)],
+    toward: {
+      x: along ?? middle(inside).x,
+      y: outer.rect.y + outer.head,
+    },
+    side,
+  };
+
+  const above: End = {
+    edge,
+    start: fromInner,
+    box: outer,
+    inner: true,
+    nest: true,
+    ranked: [3],
+    toward: middle(inside),
+    side: 3,
+    along,
+    under: along === undefined ? below : undefined,
+  };
+
+  return fromInner ? [above, below] : [below, above];
+};
 
 const makeJob = (
   edge: RouteEdge,
@@ -963,30 +1173,171 @@ const makeJob = (
   const above = ancestorsOf(boxes, from.id);
   const below = ancestorsOf(boxes, to.id);
   const fromInner = below.includes(from.id);
-  const toInner = above.includes(to.id);
+  const through = new Set([...above, ...below]);
+  const blocked = blockers(boxes, from, to, through);
+  const job = { edge, from, to, through, starts: [], goals: [] };
 
-  const portsOf = (box: RouteBox, inner: boolean) =>
-    SIDES.map((side) =>
-      portAt(
-        box,
-        side,
-        inner,
-        0,
-        inner ? settings.margin : leadOf(clearance(box, side, boxes), settings),
-      ),
+  if (fromInner || above.includes(to.id)) {
+    const [outer, inner] = fromInner ? [from, to] : [to, from];
+    const nest = nestPlan(outer, inner, boxes, blocked, settings.margin);
+
+    return { ...job, ends: nestEnds(edge, from, to, fromInner, nest) };
+  }
+
+  const end = (box: RouteBox, other: RouteBox, start: boolean): End => {
+    const own = start ? above : below;
+    const shared = start ? below : above;
+
+    const ranked = underHeader(
+      rankSides(box.rect, other.rect, start, blocked),
+      own.some((id) => !shared.includes(id)),
     );
 
-  return {
-    edge,
-    from,
-    to,
-    fromInner,
-    toInner,
-    through: new Set([...above, ...below]),
-    starts: portsOf(from, fromInner),
-    goals: portsOf(to, toInner),
+    return {
+      edge,
+      start,
+      box,
+      inner: false,
+      nest: false,
+      ranked,
+      toward: middle(other),
+      side: ranked[0],
+    };
   };
+
+  return { ...job, ends: [end(from, to, true), end(to, from, false)] };
 };
+
+const sideKey = (end: End, side: Side = end.side): string =>
+  JSON.stringify([end.box.id, side, end.inner]);
+
+const sideLength = ({ box, inner }: End, side: Side): number => {
+  if (side % 2 === 1) return box.rect.width;
+
+  return box.rect.height - (inner ? box.head : 0);
+};
+
+/** How many ports a side holds a step apart and clear of its corners: two on a leaf's 24px end. */
+const capacityOf = (end: End, side: Side): number =>
+  Math.floor(Math.max(0, sideLength(end, side) - PORT_INSET * 2) / PORT_STEP) +
+  1;
+
+type Budget = Map<string, End[]>;
+
+// Each end takes the first side it prefers that has a port to spare; when no side has, its first choice, where it shares one.
+const assign = (ends: readonly End[]): Budget => {
+  const budget: Budget = new Map();
+
+  const held = (end: End, side: Side) =>
+    budget.get(sideKey(end, side))?.length ?? 0;
+
+  for (const end of ends) {
+    end.side =
+      end.ranked.find((side) => held(end, side) < capacityOf(end, side)) ??
+      end.ranked[0];
+
+    budget.set(sideKey(end), [...(budget.get(sideKey(end)) ?? []), end]);
+  }
+
+  return budget;
+};
+
+// Which way a port keeps along its side so that opposite edges each stay on their right.
+const keepOf = ({ side, inner, start }: End): number => {
+  const dir = inner === start ? opposite(side) : side;
+
+  return side % 2 === 0 ? DX[dir] : -DY[dir];
+};
+
+const along = (end: End): number =>
+  end.side % 2 === 0 ? end.toward.y : end.toward.x;
+
+// Ports on one side sit a step apart around its middle, in the order of where their edges go, so none cross on the way out.
+// Ends past the side's count share ports with their neighbours in that order: one trunk into the box.
+const spread = (ends: End[]): void => {
+  const [first] = ends;
+  const room = Math.max(0, sideLength(first, first.side) - PORT_INSET * 2);
+  const slots = Math.min(ends.length, capacityOf(first, first.side));
+  const step = slots > 1 ? Math.min(PORT_STEP, room / (slots - 1)) : 0;
+  const mid = midOf(first.box, first.side, first.inner);
+
+  ends.sort(
+    (a, b) =>
+      along(a) - along(b) ||
+      keepOf(a) - keepOf(b) ||
+      a.edge.id.localeCompare(b.edge.id),
+  );
+
+  ends.forEach((end, order) => {
+    const slot = Math.floor((order * slots) / ends.length);
+    end.along = mid + Math.round((slot - (slots - 1) / 2) * step);
+  });
+};
+
+// A header port sits over the box it serves, or over its lane, and keeps clear of the header's corners.
+const overChild = (end: End): void => {
+  const { x, width } = end.box.rect;
+  const child = end.under;
+  const straight = child?.side === 3 ? child.along : undefined;
+  const at = end.along ?? straight ?? (child ? middle(child.box).x : x);
+
+  end.along = Math.min(
+    x + width - PORT_INSET,
+    Math.max(x + PORT_INSET, Math.round(at)),
+  );
+};
+
+const place = (budget: Budget): void => {
+  const sides = [...budget.values()];
+
+  for (const ends of sides) if (!ends[0].inner) spread(ends);
+
+  for (const ends of sides) if (ends[0].inner) ends.forEach(overChild);
+};
+
+const CORNERS: readonly Corner[] = [
+  { west: false, south: false },
+  { west: false, south: true },
+  { west: true, south: false },
+  { west: true, south: true },
+];
+
+// A loop takes the corner whose two sides hold the fewest ports, and of those the one with most room: the top at the end first.
+const loopCorner = (
+  box: RouteBox,
+  boxes: ReadonlyMap<string, RouteBox>,
+  budget: Budget,
+  settings: Settings,
+): Corner => {
+  const cost = (side: Side) =>
+    (budget.get(JSON.stringify([box.id, side, false]))?.length ?? 0) * 2 +
+    (clearance(box, side, boxes) < settings.margin * 2 ? 1 : 0);
+
+  const costs = CORNERS.map(
+    ({ west, south }) => cost(west ? 2 : 0) + cost(south ? 1 : 3),
+  );
+
+  return CORNERS[costs.indexOf(Math.min(...costs))];
+};
+
+const portOf = (
+  end: End,
+  boxes: ReadonlyMap<string, RouteBox>,
+  settings: Settings,
+  side: Side = end.side,
+  free = false,
+): Port =>
+  portAt(
+    end.box,
+    side,
+    end.inner,
+    free || end.along === undefined
+      ? midOf(end.box, side, end.inner)
+      : end.along,
+    end.inner
+      ? settings.margin
+      : leadOf(clearance(end.box, side, boxes), settings),
+  );
 
 const runJobs = (
   jobs: readonly Job[],
@@ -999,131 +1350,16 @@ const runJobs = (
     settings.margin,
   );
 
-  for (const job of jobs) {
-    const found = search({
-      grid,
-      walls: buildWalls(grid, boxes, job.through),
-      starts: job.starts,
-      goals: job.goals,
-      bend: settings.bend,
-      lead: settings.lead,
-    });
-
-    if (found || !job.found) job.found = found ?? undefined;
-  }
-};
-
-interface Claim {
-  job: Job;
-  start: boolean;
-  port: Port;
-  /** Where the edge's other end sits along this side. */
-  toward: number;
-}
-
-const claimsOf = (job: Job): Claim[] => {
-  if (!job.found) return [];
-
-  const { start, goal } = job.found;
-
-  const along = (port: Port, other: Port) =>
-    port.side % 2 === 0 ? other.border.y : other.border.x;
-
-  return [
-    { job, start: true, port: start, toward: along(start, goal) },
-    { job, start: false, port: goal, toward: along(goal, start) },
-  ];
-};
-
-// Which way a port keeps along its side so that opposite edges each stay on their right.
-const keepOf = ({ port, start }: Claim): number => {
-  const dir = travel(port, start);
-
-  return port.side % 2 === 0 ? DX[dir] : -DY[dir];
-};
-
-const boxOf = (claim: Claim): RouteBox =>
-  claim.start ? claim.job.from : claim.job.to;
-
-const sideLength = (claim: Claim): number =>
-  claim.port.side % 2 === 0
-    ? boxOf(claim).rect.height
-    : boxOf(claim).rect.width;
-
-const claimsBySide = (jobs: readonly Job[]): Claim[][] => {
-  const sides = new Map<string, Claim[]>();
-
-  for (const claim of jobs.flatMap(claimsOf)) {
-    const key = JSON.stringify([
-      boxOf(claim).id,
-      claim.port.side,
-      claim.port.inner,
-    ]);
-
-    sides.set(key, [...(sides.get(key) ?? []), claim]);
-  }
-
-  return [...sides.values()];
-};
-
-// A side holds as many ports as fit a step apart; the edges past that lose the side, so the next pass tries another.
-// A box with a self-loop keeps its end side for the loop.
-const relieve = (
-  jobs: readonly Job[],
-  looped: ReadonlySet<string>,
-): boolean => {
-  let changed = false;
-
-  for (const claims of claimsBySide(jobs)) {
-    const [{ port }] = claims;
-
-    const kept =
-      port.side === 0 && !port.inner && looped.has(boxOf(claims[0]).id);
-
-    const room = kept
-      ? 0
-      : Math.floor(
-          Math.max(0, sideLength(claims[0]) - PORT_INSET * 2) / PORT_STEP,
-        ) + 1;
-
-    for (const claim of claims.slice(room)) {
-      const key = claim.start ? 'starts' : 'goals';
-      const rest = claim.job[key].filter((port) => port !== claim.port);
-
-      if (!rest.length) continue;
-      claim.job[key] = rest;
-      changed = true;
-    }
-  }
-
-  return changed;
-};
-
-// Ports on one side spread in the order of where their edges go; the last pass routes from them.
-const spreadPorts = (jobs: readonly Job[]): void => {
-  for (const claims of claimsBySide(jobs)) {
-    claims.sort(
-      (a, b) =>
-        a.toward - b.toward ||
-        keepOf(a) - keepOf(b) ||
-        a.job.edge.id.localeCompare(b.job.edge.id),
-    );
-
-    const gap = Math.min(
-      PORT_STEP,
-      Math.max(0, sideLength(claims[0]) - PORT_INSET * 2) /
-        Math.max(1, claims.length - 1),
-    );
-
-    claims.forEach((claim, order) => {
-      const { side, inner, reach } = claim.port;
-      const offset = Math.round((order - (claims.length - 1) / 2) * gap);
-      const port = portAt(boxOf(claim), side, inner, offset, reach);
-
-      if (claim.start) claim.job.starts = [port];
-      else claim.job.goals = [port];
-    });
-  }
+  for (const job of jobs)
+    job.found =
+      search({
+        grid,
+        walls: buildWalls(grid, boxes, job.through),
+        starts: job.starts,
+        goals: job.goals,
+        bend: settings.bend,
+        lead: settings.lead,
+      }) ?? undefined;
 };
 
 const polyline = (job: Job): Point[] | undefined =>
@@ -1143,6 +1379,31 @@ const rounded = (box: RouteBox): RouteBox => ({
     height: Math.round(box.rect.height),
   },
 });
+
+// Routes from the planned ports; an edge the plan leaves without a route is searched again from the middle of every side.
+const routeJobs = (
+  jobs: readonly Job[],
+  drawn: readonly RouteBox[],
+  byId: ReadonlyMap<string, RouteBox>,
+  settings: Settings,
+): void => {
+  for (const job of jobs) {
+    job.starts = [portOf(job.ends[0], byId, settings)];
+    job.goals = [portOf(job.ends[1], byId, settings)];
+  }
+
+  runJobs(jobs, drawn, settings);
+
+  const lost = jobs.filter((job) => !job.found);
+
+  for (const job of lost) {
+    const [from, to] = job.ends;
+    job.starts = SIDES.map((side) => portOf(from, byId, settings, side, true));
+    job.goals = SIDES.map((side) => portOf(to, byId, settings, side, true));
+  }
+
+  if (lost.length) runJobs(lost, drawn, settings);
+};
 
 /**
  * Routes edges around boxes. The same boxes and edges give the same paths, whatever their order.
@@ -1167,19 +1428,16 @@ export const route = (
   const ordered = edges.toSorted((a, b) => a.id.localeCompare(b.id));
 
   const jobs = ordered.flatMap((edge) => makeJob(edge, byId, settings) ?? []);
+  const ends = jobs.flatMap((job) => job.ends);
 
-  // The first passes pick each end's side from the side midpoints; the last routes from the spread ports.
-  runJobs(jobs, drawn, settings);
+  // A header's edges claim their sides first, since those are fixed by where the boxes sit.
+  const budget = assign([
+    ...ends.filter((end) => end.nest),
+    ...ends.filter((end) => !end.nest),
+  ]);
 
-  const looped = new Set(
-    ordered.flatMap((edge) => (edge.from === edge.to ? [edge.from] : [])),
-  );
-
-  for (let round = 0; round < 2 && relieve(jobs, looped); round++)
-    runJobs(jobs, drawn, settings);
-
-  spreadPorts(jobs);
-  runJobs(jobs, drawn, settings);
+  place(budget);
+  routeJobs(jobs, drawn, byId, settings);
 
   const lines = jobs.map((job) => {
     const points = polyline(job);
@@ -1205,20 +1463,19 @@ export const route = (
     }),
   );
 
-  const taken = (box: RouteBox) =>
-    new Set(
-      jobs
-        .flatMap(claimsOf)
-        .flatMap((claim) =>
-          boxOf(claim) === box && !claim.port.inner ? [claim.port.side] : [],
-        ),
-    );
-
   return ordered.flatMap((edge) => {
     const box = edge.from === edge.to ? byId.get(edge.from) : undefined;
 
     return box
-      ? [loop(edge, box, byId, taken(box), settings)]
+      ? [
+          loop(
+            edge,
+            box,
+            byId,
+            loopCorner(box, byId, budget, settings),
+            settings,
+          ),
+        ]
       : (routed.get(edge.id) ?? []);
   });
 };

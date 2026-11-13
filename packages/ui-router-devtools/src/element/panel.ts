@@ -49,6 +49,7 @@ import type { NestedLayout } from './nested.ts';
 import type { Metrics, Rung, Size } from './pack.ts';
 import type { Rect } from './route.ts';
 import { placeBeside } from './popover.ts';
+import type { Room, View } from './viewport.ts';
 import { renderScrubber } from './scrubber.ts';
 import { renderLog } from './log.ts';
 import {
@@ -137,33 +138,22 @@ const rectOf = (element: Element, origin: DOMRect): Rect => {
   };
 };
 
-// Where an element is laid out inside an ancestor, whatever transform is animating it.
-const offsetIn = (element: HTMLElement, ancestor: Element): Rect => {
-  let x = 0;
-  let y = 0;
-
-  for (
-    let at: Element | null = element;
-    at instanceof HTMLElement && at !== ancestor;
-    at = at.offsetParent
-  ) {
-    x += at.offsetLeft - (at === element ? 0 : at.scrollLeft);
-    y += at.offsetTop - (at === element ? 0 : at.scrollTop);
-  }
-
-  return { x, y, width: element.offsetWidth, height: element.offsetHeight };
-};
-
 // The Map's root and every element that stands for a state, parents first.
 const MOVERS = ':is(.nested, .map), [data-name]';
 
 const moverKey = (element: HTMLElement): string => element.dataset.name ?? '';
 
+// The key the Map's room is measured under, beside its movers; no state has a name with a space.
+const ROOM = ' room';
+
 // A change of type size is one object changing size: the diagram scales from its old outline and its boxes ride it.
-const rescale = (root: HTMLElement, was: DOMRect): void => {
+const rescale = (
+  root: HTMLElement,
+  was: DOMRect,
+  shift: { x: number; y: number },
+): void => {
   const now = root.getBoundingClientRect();
-  // The panel changes size at once and its viewport clips, so the diagram grows about its own middle on the block axis.
-  const from = `translate(${was.x - now.x}px, ${(now.height - was.height) / 2}px) scale(${was.width / now.width}, ${was.height / now.height})`;
+  const from = `translate(${was.x + shift.x - now.x}px, ${was.y + shift.y - now.y}px) scale(${was.width / now.width}, ${was.height / now.height})`;
 
   root.animate(
     [
@@ -173,6 +163,10 @@ const rescale = (root: HTMLElement, was: DOMRect): void => {
     { id: RESCALE, duration: SETTLE, easing: EASE_OUT },
   );
 };
+
+// Whether two outlines have the same proportions, within a tenth.
+const alike = (a: DOMRect, b: DOMRect): boolean =>
+  Math.abs(Math.log((a.width * b.height) / (a.height * b.width || 1))) < 0.1;
 
 // While a box changes size its header keeps its final width, so no name is elided mid-flight, and what the box does not hold yet stays out of sight.
 const holdInside = (box: HTMLElement, rtl: boolean): (() => void) => {
@@ -252,6 +246,8 @@ export class DevtoolsPanel extends LitElement {
     _mapSize: { state: true },
     _mapOpen: { state: true },
     _mapFailed: { state: true },
+    _mapPan: { state: true },
+    _mapZoom: { state: true },
     _selectedTx: { state: true },
     _previewTx: { state: true },
     _selectedState: { state: true },
@@ -280,6 +276,9 @@ export class DevtoolsPanel extends LitElement {
   declare _mapOpen: ReadonlyMap<string, boolean>;
   // The Map's chunk failed to load; choosing the Map view again retries it.
   declare _mapFailed: boolean;
+  // Where the Map was panned to, and the type step it was zoomed to; `null` is the fitted view.
+  declare _mapPan: View | null;
+  declare _mapZoom: number | null;
   declare _selectedTx: number | null;
   declare _previewTx: number | null;
   declare _selectedState: string | null;
@@ -307,6 +306,13 @@ export class DevtoolsPanel extends LitElement {
   // What the Map last drew, and where its states were before a change to it.
   #geometry: readonly unknown[] = [];
   #before: Map<string, DOMRect> | null = null;
+  // The layout last drawn, and whether the view was last moved by hand, which is not animated.
+  #layout: NestedLayout | null = null;
+  #direct = false;
+  readonly #onWheel = {
+    handleEvent: (event: WheelEvent) => this._map?.wheelPan(this, event),
+    passive: false,
+  };
   // The Map's type step, and whether the last change to the Map changed it.
   #step: Metrics | undefined;
   #resized = false;
@@ -331,6 +337,8 @@ export class DevtoolsPanel extends LitElement {
     this._mapSize = { width: 0, height: 0 };
     this._mapFailed = false;
     this._mapOpen = new Map();
+    this._mapPan = null;
+    this._mapZoom = null;
     this._inspect = 'none';
     this.#resetSelection();
     this._collapsed = new Set();
@@ -395,6 +403,7 @@ export class DevtoolsPanel extends LitElement {
     )
       this.#loadMap();
 
+    this.#followMap(changed);
     this.#syncTicker();
   }
 
@@ -434,6 +443,41 @@ export class DevtoolsPanel extends LitElement {
     );
   }
 
+  // A panned view follows its layout: a zoom holds the middle of the room still, and a re-pack the focused box.
+  #followMap(changed: PropertyValues<this>) {
+    const nested = this._view === 'map' ? this._nested() : null;
+    const last = this.#layout;
+    const pan = this._mapPan;
+
+    this.#layout = nested;
+
+    if (!nested || !this._map) return;
+
+    if (pan && last && last !== nested)
+      this._mapPan = changed.has('_mapZoom')
+        ? this._map.zoomView(
+            pan,
+            last.placed,
+            nested.placed,
+            this._room(nested),
+          )
+        : this.#anchored(pan, last, nested);
+
+    // Focus moved by the keyboard or from the inspector brings its box into view.
+    if (this._moveFocus && this._focusState)
+      this._reveal(nested, this._focusState);
+  }
+
+  #anchored(pan: View, last: NestedLayout, nested: NestedLayout): View {
+    const name = this._focusState ?? this._selectedState ?? '';
+    const was = last.rects.get(name);
+    const now = nested.rects.get(name);
+
+    return was && now
+      ? { x: pan.x + was.x - now.x, y: pan.y + was.y - now.y }
+      : pan;
+  }
+
   // A re-pack can move the focused box to another row, which rebuilds it; focus then returns to the same state.
   protected update(changed: PropertyValues<this>): void {
     if (this.shadowRoot?.activeElement?.matches('.box > .head'))
@@ -446,17 +490,16 @@ export class DevtoolsPanel extends LitElement {
   // The Map's drawing changes with its view, its layout and the panel's size; anything else leaves boxes where they are.
   #mapMoved(): boolean {
     const nested = this._view === 'map' ? this._nested() : null;
-
-    const geometry =
-      this._view === 'map'
-        ? [nested?.placed ?? this._layoutPref, this._max]
-        : [];
+    const geometry = this.#drawnGeometry(nested);
+    const direct = this.#direct;
 
     const moved =
       geometry.length !== this.#geometry.length ||
       geometry.some((part, index) => part !== this.#geometry[index]);
 
     const drawn = this.#geometry.length > 0;
+
+    this.#direct = false;
     this.#geometry = geometry;
     this.#resized = Boolean(
       this.#step && nested && this.#step !== nested.metrics,
@@ -466,9 +509,18 @@ export class DevtoolsPanel extends LitElement {
     return (
       moved &&
       drawn &&
+      !direct &&
       geometry.length > 0 &&
       !matchMedia('(prefers-reduced-motion: reduce)').matches
     );
+  }
+
+  #drawnGeometry(nested: NestedLayout | null): readonly unknown[] {
+    if (this._view !== 'map') return [];
+
+    const view = nested && this._viewOf(nested);
+
+    return [nested?.placed ?? this._layoutPref, this._max, view?.x, view?.y];
   }
 
   get #movers(): HTMLElement[] {
@@ -481,16 +533,39 @@ export class DevtoolsPanel extends LitElement {
 
   // Where each state is drawn now, mid-flight included, so an interrupted move starts from what the eye sees.
   #measureMovers(): Map<string, DOMRect> {
-    return new Map(
-      this.#movers.map((element) => [
-        moverKey(element),
-        element.getBoundingClientRect(),
-      ]),
-    );
+    const room = this.renderRoot.querySelector('.map-scroll');
+
+    return new Map([
+      ...this.#movers.map(
+        (element) =>
+          [moverKey(element), element.getBoundingClientRect()] as const,
+      ),
+      ...(room ? [[ROOM, room.getBoundingClientRect()] as const] : []),
+    ]);
+  }
+
+  // How far the middle of the Map's room has moved on the page since `before` was read: the panel changes size at once, and the diagram is followed from where it sat in the room.
+  #roomShift(before: ReadonlyMap<string, DOMRect>): { x: number; y: number } {
+    const was = before.get(ROOM);
+
+    const now = this.renderRoot
+      .querySelector('.map-scroll')
+      ?.getBoundingClientRect();
+
+    return was && now
+      ? {
+          x: now.x + now.width / 2 - was.x - was.width / 2,
+          y: now.y + now.height / 2 - was.y - was.height / 2,
+        }
+      : { x: 0, y: 0 };
   }
 
   // Ends the moves in flight and, when the type size changed, starts the one that scales the whole diagram.
-  #rescaled(root: HTMLElement | undefined, outline: DOMRect | undefined) {
+  #rescaled(
+    root: HTMLElement | undefined,
+    outline: DOMRect | undefined,
+    shift: { x: number; y: number },
+  ) {
     // The panel's own resize re-packs once more while the diagram is still changing size; that stays one move.
     const rescaling =
       this.#resized ||
@@ -504,7 +579,10 @@ export class DevtoolsPanel extends LitElement {
     if (!rescaling || !root?.matches('.nested') || !outline?.width)
       return false;
 
-    rescale(root, outline);
+    // One object changing size keeps its proportions; a step that also rearranges the boxes moves them one by one.
+    if (!alike(outline, root.getBoundingClientRect())) return false;
+
+    rescale(root, outline, shift);
 
     return true;
   }
@@ -512,8 +590,9 @@ export class DevtoolsPanel extends LitElement {
   // FLIP: each state's element starts where and as large as the state was and eases to its new place and size; a child moves relative to its parent.
   #flip(before: ReadonlyMap<string, DOMRect>) {
     const movers = this.#movers;
+    const room = this.#roomShift(before);
 
-    if (this.#rescaled(movers[0], before.get(''))) return;
+    if (this.#rescaled(movers[0], before.get(''), room)) return;
 
     // A box hangs from its parent's inline-start edge, so that is the edge a shift is measured at.
     const rtl = getComputedStyle(this).direction === 'rtl';
@@ -522,8 +601,12 @@ export class DevtoolsPanel extends LitElement {
 
     // Every box is read before any is animated, since a parent's animation would move what its children report.
     const plans = movers.map((element) => {
-      const was = before.get(moverKey(element));
+      const read = before.get(moverKey(element));
       const now = element.getBoundingClientRect();
+
+      const was =
+        read &&
+        new DOMRect(read.x + room.x, read.y + room.y, read.width, read.height);
 
       const carried = shifts.get(
         element.parentElement?.closest(MOVERS) ?? element,
@@ -600,7 +683,12 @@ export class DevtoolsPanel extends LitElement {
     if (!panel || !popover || this._view !== 'map' || this._max) return;
 
     const origin = panel.getBoundingClientRect();
-    const at = root ? offsetIn(root, panel) : { x: 0, y: 0 };
+    // The diagram's place in the panel as drawn, its viewport's translation included.
+    const drawn = root?.getBoundingClientRect();
+
+    const at = drawn
+      ? { x: drawn.x - origin.x, y: drawn.y - origin.y }
+      : { x: 0, y: 0 };
 
     const inPanel = <R extends Rect>(rect: R): R => ({
       ...rect,
@@ -843,6 +931,81 @@ export class DevtoolsPanel extends LitElement {
     return Math.max(0, Math.min(ASIDE, ASIDE * 2 - spare));
   }
 
+  // The room the Map is shown in, for the view of a layout.
+  _room(nested: NestedLayout): Room {
+    return {
+      ...this._mapSize,
+      reserve: this._reserve(nested),
+      // A dock without the column has the popover over the diagram, which can then be pulled out from under it.
+      slack: this._max || this._beside(nested) ? 0 : ASIDE,
+      foot: this._map?.MINI_FOOT ?? 0,
+      rtl: nested.rtl,
+    };
+  }
+
+  // Where the diagram sits: where it was panned to, else fitted, and when it overflows with the current state in the middle.
+  _viewOf(nested: NestedLayout): View {
+    const map = this._map;
+    const room = this._room(nested);
+    const size = nested.placed;
+
+    if (!map) return { x: 0, y: 0 };
+
+    if (this._mapPan) return map.clampView(this._mapPan, size, room);
+
+    const current = nested.rects.get(this._model.current.name);
+
+    return current && map.overflows(size, room)
+      ? map.centreView(current, size, room)
+      : map.fitView(size, room);
+  }
+
+  _pans(nested: NestedLayout): boolean {
+    return Boolean(this._map?.overflows(nested.placed, this._mapSize));
+  }
+
+  // Moves the view and says whether it moved; a drag or the wheel moves it at once, anything else eases.
+  _panTo(nested: NestedLayout, view: View, eased: boolean): boolean {
+    const now = this._viewOf(nested);
+
+    const next =
+      this._map?.clampView(view, nested.placed, this._room(nested)) ?? now;
+
+    if (next.x === now.x && next.y === now.y) return false;
+
+    this.#direct = !eased;
+    this._mapPan = next;
+
+    return true;
+  }
+
+  _reveal(nested: NestedLayout, name: string): void {
+    const rect = nested.rects.get(name);
+
+    if (!rect || !this._map) return;
+
+    const view = this._map.revealView(
+      this._viewOf(nested),
+      rect,
+      nested.placed,
+      this._room(nested),
+    );
+
+    this._panTo(nested, view, true);
+  }
+
+  _zoomBy(nested: NestedLayout, steps: number): void {
+    const last = (this._map?.ZOOMS.length ?? 1) - 1;
+    const step = Math.min(last, Math.max(0, nested.step + steps));
+
+    if (step !== nested.step) this._mapZoom = step;
+  }
+
+  _fit(): void {
+    this._mapPan = null;
+    this._mapZoom = null;
+  }
+
   _depthClass(name: string): string {
     return depthClass(ancestorsOf(this._model.states, name).length + 1);
   }
@@ -854,7 +1017,7 @@ export class DevtoolsPanel extends LitElement {
     return this._inspect === 'state' ? 'state' : 'rest';
   }
 
-  // The nested layout, when it is loaded, chosen, offered at this width and fits.
+  // The nested layout, when it is loaded, chosen and offered at this width.
   _nested(): NestedLayout | null {
     if (
       !this._map ||
@@ -864,9 +1027,7 @@ export class DevtoolsPanel extends LitElement {
     )
       return null;
 
-    const layout = this._map.layoutNested(this);
-
-    return layout.rung === 'tree' ? null : layout;
+    return this._map.layoutNested(this);
   }
 
   #chooseLayout(layout: MapLayout) {
@@ -1194,7 +1355,12 @@ export class DevtoolsPanel extends LitElement {
     const nested = this._nested();
     const map = this._map;
 
-    return html`<div class="scroll map-scroll">
+    return html`<div
+      class="scroll map-scroll"
+      ?data-pan=${nested && this._pans(nested)}
+      @pointerdown=${(event: PointerEvent) => map?.startPan(this, event)}
+      @wheel=${this.#onWheel}
+    >
       ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : this.#mapNotice()}
     </div>`;
   }
@@ -1206,13 +1372,10 @@ export class DevtoolsPanel extends LitElement {
   // Outline or Map, and on the Map the nested boxes or the node-link tree.
   #renderSwitch() {
     const map = this._view === 'map';
-    const nested = Boolean(this._nested());
+    const layout = this._nested();
+    const nested = Boolean(layout);
     const narrow = this._mapSize.width < NESTED_MIN_WIDTH;
-    const unfit = !narrow && this._layoutPref === 'nested' && !nested;
-
-    const why = narrow
-      ? `Nested boxes need ${NESTED_MIN_WIDTH}px of width`
-      : 'Nested boxes do not fit this tree';
+    const why = `Nested boxes need ${NESTED_MIN_WIDTH}px of width`;
 
     return html`<div class="switch" role="group" aria-label="State view">
         ${(['outline', 'map'] as const).map(
@@ -1228,24 +1391,63 @@ export class DevtoolsPanel extends LitElement {
       ${
         map
           ? html`<div class="switch" role="group" aria-label="Map layout">
-              <button
-                aria-pressed=${nested}
-                ?disabled=${narrow || unfit}
-                title=${narrow || unfit ? why : 'Child states inside their parent'}
-                @click=${() => this.#chooseLayout('nested')}
-              >
-                Nested
-              </button>
-              <button
-                aria-pressed=${!nested}
-                title="Node-link tree"
-                @click=${() => this.#chooseLayout('tree')}
-              >
-                Tree
-              </button>
-            </div>`
+                <button
+                  aria-pressed=${nested}
+                  ?disabled=${narrow}
+                  title=${narrow ? why : 'Child states inside their parent'}
+                  @click=${() => this.#chooseLayout('nested')}
+                >
+                  Nested
+                </button>
+                <button
+                  aria-pressed=${!nested}
+                  title="Node-link tree"
+                  @click=${() => this.#chooseLayout('tree')}
+                >
+                  Tree
+                </button>
+              </div>
+              ${layout ? this.#renderViewTools(layout) : nothing}`
           : nothing
       }`;
+  }
+
+  // The view of the Map: its type step, and the way back to the fitted view.
+  #renderViewTools(layout: NestedLayout) {
+    const last = (this._map?.ZOOMS.length ?? 1) - 1;
+    const fitted = this._mapPan === null && this._mapZoom === null;
+
+    return html`<div
+      class="switch view-tools"
+      role="group"
+      aria-label="Map view"
+    >
+      <button
+        class="step"
+        aria-label="Zoom out"
+        title="Smaller type (−)"
+        ?disabled=${layout.step <= 0}
+        @click=${() => this._zoomBy(layout, -1)}
+      >
+        −
+      </button>
+      <button
+        class="step"
+        aria-label="Zoom in"
+        title="Larger type (+)"
+        ?disabled=${layout.step >= last}
+        @click=${() => this._zoomBy(layout, 1)}
+      >
+        +
+      </button>
+      <button
+        title="Fit the map to the panel (0)"
+        ?disabled=${fitted}
+        @click=${() => this._fit()}
+      >
+        Fit
+      </button>
+    </div>`;
   }
 
   #inspectorAside(): string | undefined {
@@ -1452,7 +1654,10 @@ export class DevtoolsPanel extends LitElement {
         aria-pressed=${this._max}
         aria-label="Maximise devtools"
         title=${this._max ? 'Restore the dock' : 'Maximise'}
-        @click=${() => (this._max = !this._max)}
+        @click=${() => {
+          this._max = !this._max;
+          this._fit();
+        }}
       >
         ${this._max ? minGlyph : maxGlyph}
       </button>

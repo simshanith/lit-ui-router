@@ -968,6 +968,91 @@ describe('the nested Map', () => {
     expect(border('contacts')).not.toBe(border('messagelist'));
   });
 
+  it('rings a selected box outside its border, and leaves the border saying what it said in every mode', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+
+    const box = (name: string) =>
+      getByRole(map, 'treeitem', { name }).parentElement!;
+
+    const border = (name: string) => {
+      const style = getComputedStyle(box(name), '::before');
+
+      return [style.borderTopColor, style.borderTopWidth, style.borderTopStyle];
+    };
+
+    const ring = (name: string) => {
+      const style = getComputedStyle(box(name));
+
+      return [style.outlineStyle, style.outlineWidth, style.outlineOffset];
+    };
+
+    const mode = () =>
+      getByRole(shadow(element), 'region', { name: 'Router devtools' }).dataset
+        .mode;
+
+    const select = async (name: string) => {
+      getByRole(map, 'treeitem', { name }).click();
+      await waitFor(() =>
+        expect(
+          getByRole(map, 'treeitem', { name }).getAttribute('aria-selected'),
+        ).toBe('true'),
+      );
+    };
+
+    // Identity at rest: the ring is added and the border keeps its colour, weight and line.
+    const resting = border('messagelist');
+
+    expect(ring('messagelist')[0]).toBe('none');
+    await select('messagelist');
+    expect(mode()).toBe('state');
+    expect(ring('messagelist')).toEqual(['solid', '1px', '2px']);
+    expect(border('messagelist')).toEqual(resting);
+    // The ring is the ink, which is no depth's colour.
+    expect(getComputedStyle(box('messagelist')).outlineColor).toBe(
+      getComputedStyle(element).color,
+    );
+
+    for (const name of ['app', 'mymessages', 'messagelist', 'message'])
+      expect(getComputedStyle(box(name)).outlineColor).not.toBe(
+        border(name)[0],
+      );
+
+    // Status while a transition is in focus: the selected box wears the status colour its neighbours do.
+    const options = getAllByRole(
+      getByRole(shadow(element), 'listbox', { name: /Transitions/ }),
+      'option',
+    );
+
+    options[1].click();
+    await waitFor(() => expect(mode()).toBe('tx'));
+    // The colour eases, so it is read once it has settled on its neighbour's.
+    await waitFor(() => {
+      expect(border('messagelist')).not.toEqual(resting);
+      expect(border('messagelist')[0]).toBe(border('mymessages')[0]);
+      expect(map.getAnimations({ subtree: true })).toHaveLength(0);
+    });
+
+    const status = border('mymessages');
+
+    expect(ring('messagelist')).toEqual(['solid', '1px', '2px']);
+    await select('mymessages');
+    expect(mode()).toBe('tx');
+    await waitFor(() => expect(border('mymessages')).toEqual(status));
+    expect(ring('mymessages')).toEqual(['solid', '1px', '2px']);
+    expect(ring('messagelist')[0]).toBe('none');
+
+    // Keyboard focus is a ring inside the border, so it is told from the selection ring outside it.
+    const head = getByRole(map, 'treeitem', { name: 'mymessages' });
+
+    head.focus({ focusVisible: true });
+    await waitFor(() =>
+      expect(getComputedStyle(head).outlineStyle).toBe('solid'),
+    );
+    expect(parseFloat(getComputedStyle(head).outlineOffset)).toBeLessThan(-2);
+    expect(getComputedStyle(head).outlineWidth).toBe('2px');
+  });
+
   it('moves focus in tree order with the arrow keys', async () => {
     const element = await openMap(1280);
     const map = await tree(element);
@@ -999,17 +1084,82 @@ describe('the nested Map', () => {
     expect(edges(element)).toHaveLength(0);
 
     getByRole(map, 'treeitem', { name: 'message' }).click();
-    // messagelist to message, contact to message, message to contact and message to messagelist
-    await waitFor(() => expect(edges(element)).toHaveLength(4));
+    // messagelist to message and back as a stub each, and one line both ways between contact and message
+    await waitFor(() => expect(edges(element)).toHaveLength(3));
     expect(
       getByRole(map, 'treeitem', { name: 'message' }).getAttribute(
         'aria-selected',
       ),
     ).toBe('true');
     expect(element.renderRoot.querySelectorAll('.nedge.w2')).toHaveLength(1);
-    expect(element.renderRoot.querySelectorAll('.nedge.fallback')).toHaveLength(
-      0,
+    expect(
+      [...edges(element)].map((edge) => edge.querySelectorAll('.head').length),
+    ).toEqual(expect.arrayContaining([1, 1, 2]));
+
+    // The count is a chip only where it is more than one: messagelist to message, twice.
+    const chips = element.renderRoot.querySelectorAll('.chip');
+    expect([...chips].map((chip) => chip.textContent?.trim())).toEqual(['×2']);
+
+    await settled(element);
+
+    // Geometry is read in the diagram's own coordinates, which every engine reports alike.
+    const origin = element.renderRoot
+      .querySelector('.nested')!
+      .getBoundingClientRect();
+
+    const inDiagram = (target: Element) => {
+      const rect = target.getBoundingClientRect();
+
+      return {
+        left: rect.left - origin.left,
+        right: rect.right - origin.left,
+        top: rect.top - origin.top,
+        bottom: rect.bottom - origin.top,
+      };
+    };
+
+    const [x, y] = chips[0]
+      .getAttribute('transform')!
+      .match(/-?[\d.]+/g)!
+      .map(Number);
+
+    const plate = chips[0].querySelector('rect')!;
+    const right = x + Number(plate.getAttribute('width'));
+    const bottom = y + Number(plate.getAttribute('height'));
+
+    // The chip is clear of every box's header and of every pill.
+    for (const head of element.renderRoot.querySelectorAll('.box > .head')) {
+      const rect = inDiagram(head);
+
+      expect(
+        x >= rect.right ||
+          right <= rect.left ||
+          y >= rect.bottom ||
+          bottom <= rect.top,
+      ).toBe(true);
+    }
+
+    // The stubs between messagelist and message end on the header's bottom edge, not on a border.
+    const list = inDiagram(getByRole(map, 'treeitem', { name: 'messagelist' }));
+
+    const message = inDiagram(
+      getByRole(map, 'treeitem', { name: 'message' }).parentElement!,
     );
+
+    const stubs = [...edges(element)].flatMap((edge) => {
+      const line = edge.querySelector<SVGPathElement>('.line')!.getBBox();
+
+      return line.width < 1 ? [line] : [];
+    });
+
+    expect(stubs).toHaveLength(2);
+
+    for (const stub of stubs) {
+      expect(stub.y).toBeGreaterThanOrEqual(list.bottom - 1);
+      expect(stub.y + stub.height).toBeLessThanOrEqual(message.top + 1);
+      expect(stub.x).toBeGreaterThan(message.left);
+      expect(stub.x).toBeLessThan(message.right);
+    }
 
     // The inspector names the same relations in words; each one selects and focuses its box.
     const inspector = getByRole(shadow(element), 'group', {
@@ -1063,7 +1213,7 @@ describe('the nested Map', () => {
     const element = await openMap(1680);
     const map = await tree(element);
     getByRole(map, 'treeitem', { name: 'message' }).click();
-    await waitFor(() => expect(edges(element)).toHaveLength(4));
+    await waitFor(() => expect(edges(element)).toHaveLength(3));
 
     await waitFor(() => {
       const panel = getByRole(shadow(element), 'region', {
@@ -1091,6 +1241,328 @@ describe('the nested Map', () => {
         );
       }
     });
+  });
+
+  const nestedRoot = (element: UIRouterDevtools) =>
+    element.renderRoot.querySelector<HTMLElement>('.nested')!;
+
+  // Each box's place inside the diagram, which a change of view leaves alone.
+  const placesIn = (element: UIRouterDevtools) => {
+    const origin = nestedRoot(element).getBoundingClientRect();
+
+    return [...element.renderRoot.querySelectorAll('.box')].map((box) => {
+      const rect = box.getBoundingClientRect();
+
+      return [
+        Math.round(rect.x - origin.x),
+        Math.round(rect.y - origin.y),
+        rect.width,
+        rect.height,
+      ];
+    });
+  };
+
+  it('keeps the layout and re-fits the view when the panel is resized to the same shape', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    await settled(element);
+
+    const before = placesIn(element);
+    const fitted = margins(element);
+
+    await page.viewport(1240, 800);
+    await waitFor(() => expect(margins(element).left).not.toBe(fitted.left));
+    await settled(element);
+
+    const after = margins(element);
+
+    expect(placesIn(element)).toEqual(before);
+    expect(Math.abs(after.top - after.bottom)).toBeLessThanOrEqual(1);
+    expect(after.right).toBeGreaterThanOrEqual(320);
+    expect(element.renderRoot.querySelector('.minimap')).toBeNull();
+    expect(
+      getByRole(shadow(element), 'button', { name: 'Fit' }),
+    ).toHaveProperty('disabled', true);
+  });
+
+  it('zooms in whole type steps, pans what then overflows, shows the minimap, and fits again', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const scroller = element.renderRoot.querySelector('.map-scroll')!;
+    const zoomIn = getByRole(shadow(element), 'button', { name: 'Zoom in' });
+    const fit = getByRole(shadow(element), 'button', { name: 'Fit' });
+
+    await settled(element);
+    expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('12px');
+    expect(scroller.hasAttribute('data-pan')).toBe(false);
+
+    zoomIn.click();
+    await element.updateComplete;
+    zoomIn.click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
+    );
+    await settled(element);
+
+    // The largest step is the last, and its diagram is taller than the dock.
+    expect(zoomIn).toHaveProperty('disabled', true);
+    expect(fit).toHaveProperty('disabled', false);
+    expect(scroller.hasAttribute('data-pan')).toBe(true);
+    expect(element.renderRoot.querySelector('.minimap')).toBeTruthy();
+    expect(getComputedStyle(scroller).overflow).toBe('clip');
+
+    // Every box sits on whole pixels: the view is a translation by whole pixels, never a scale.
+    for (const box of element.renderRoot.querySelectorAll('.box')) {
+      const rect = box.getBoundingClientRect();
+
+      expect([rect.x, rect.y].map((value) => Math.abs(value % 1))).toEqual([
+        0, 0,
+      ]);
+      expect(rect.height % 4).toBe(0);
+    }
+
+    const places = placesIn(element);
+
+    // How far the top of the diagram is above the top of the room.
+    const above = () =>
+      scroller.getBoundingClientRect().top +
+      parseFloat(getComputedStyle(scroller).paddingTop) -
+      nestedRoot(element).getBoundingClientRect().top;
+
+    // A press at the top of the minimap brings the top of the diagram into view.
+    const mini = element.renderRoot.querySelector('.minimap')!;
+    const thumb = mini.getBoundingClientRect();
+
+    mini.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        clientX: thumb.x + thumb.width / 2,
+        clientY: thumb.y + 5,
+        pointerId: 1,
+        bubbles: true,
+      }),
+    );
+    await element.updateComplete;
+    expect(above()).toBe(0);
+
+    getByRole(map, 'treeitem', { name: 'app' }).focus();
+    map.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        shiftKey: true,
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    await element.updateComplete;
+    await settled(element);
+
+    // Shift and an arrow pans, and moves neither focus nor any box inside the diagram.
+    expect(above()).toBeGreaterThan(0);
+    expect(above() % 1).toBe(0);
+    expect(placesIn(element)).toEqual(places);
+    expect(element.shadowRoot?.activeElement).toBe(
+      getByRole(map, 'treeitem', { name: 'app' }),
+    );
+
+    fit.click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('12px'),
+    );
+    expect(element.renderRoot.querySelector('.minimap')).toBeNull();
+    expect(fit).toHaveProperty('disabled', true);
+  });
+
+  it('pans by the wheel and by a drag, and changes the type step by the wheel with Control', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+
+    const scroller =
+      element.renderRoot.querySelector<HTMLElement>('.map-scroll')!;
+
+    const zoomIn = getByRole(shadow(element), 'button', { name: 'Zoom in' });
+
+    zoomIn.click();
+    await element.updateComplete;
+    zoomIn.click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
+    );
+    await settled(element);
+
+    const above = () =>
+      scroller.getBoundingClientRect().top +
+      parseFloat(getComputedStyle(scroller).paddingTop) -
+      nestedRoot(element).getBoundingClientRect().top;
+
+    // A drag across the minimap follows the pointer only while the button is down.
+    const mini = element.renderRoot.querySelector('.minimap')!;
+    const thumb = mini.getBoundingClientRect();
+
+    const glide = (y: number, buttons: number) =>
+      mini.dispatchEvent(
+        new PointerEvent('pointermove', {
+          clientX: thumb.x + thumb.width / 2,
+          clientY: y,
+          buttons,
+          bubbles: true,
+        }),
+      );
+
+    glide(thumb.bottom - 1, 1);
+    await element.updateComplete;
+    const low = above();
+    expect(low).toBeGreaterThan(0);
+    glide(thumb.y + 1, 0);
+    await element.updateComplete;
+    expect(above()).toBe(low);
+
+    const wheel = (init: WheelEventInit) => {
+      const event = new WheelEvent('wheel', {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      });
+
+      scroller.dispatchEvent(event);
+
+      return event;
+    };
+
+    wheel({ deltaY: -10_000 });
+    await element.updateComplete;
+    expect(above()).toBe(0);
+
+    // Past the top edge the wheel is left to scroll the page.
+    expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+
+    expect(wheel({ deltaY: 40 }).defaultPrevented).toBe(true);
+    await element.updateComplete;
+    expect(above()).toBe(40);
+
+    // A line-mode wheel moves 16px a line.
+    wheel({ deltaY: -1, deltaMode: WheelEvent.DOM_DELTA_LINE });
+    await element.updateComplete;
+    expect(above()).toBe(24);
+
+    const pointer = (type: string, x: number, y: number) =>
+      new PointerEvent(type, {
+        clientX: x,
+        clientY: y,
+        button: 0,
+        pointerId: 1,
+        bubbles: true,
+        composed: true,
+      });
+
+    const start = scroller.getBoundingClientRect();
+    const [x, y] = [start.x + 200, start.y + 200];
+
+    // A press that moves less than the drag threshold pans nothing.
+    scroller.dispatchEvent(pointer('pointerdown', x, y));
+    window.dispatchEvent(pointer('pointermove', x, y - 2));
+    window.dispatchEvent(pointer('pointerup', x, y - 2));
+    await element.updateComplete;
+    expect(above()).toBe(24);
+
+    scroller.dispatchEvent(pointer('pointerdown', x, y));
+    window.dispatchEvent(pointer('pointermove', x, y - 20));
+    expect(scroller.hasAttribute('data-panning')).toBe(true);
+    window.dispatchEvent(pointer('pointerup', x, y - 20));
+    await element.updateComplete;
+
+    expect(scroller.hasAttribute('data-panning')).toBe(false);
+    expect(above()).toBe(44);
+
+    // The click that ends a drag selects nothing.
+    const app = getByRole(shadow(element), 'treeitem', { name: 'app' });
+    app.click();
+    await element.updateComplete;
+    expect(panelOf(element)._selectedState).toBeNull();
+
+    // The next click selects as usual.
+    await tick(0);
+    app.click();
+    await element.updateComplete;
+    expect(panelOf(element)._selectedState).toBe('app');
+
+    // Control and the wheel change the type step once per notch, whatever the pan.
+    wheel({ deltaY: 30, ctrlKey: true });
+    await element.updateComplete;
+    expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px');
+    expect(wheel({ deltaY: 30, ctrlKey: true }).defaultPrevented).toBe(true);
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('16px'),
+    );
+
+    getByRole(shadow(element), 'button', { name: 'Zoom out' }).click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).not.toBe('16px'),
+    );
+  });
+
+  it('counts a line travelled both ways once in each direction', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+
+    await element.router!.stateService.go('app.contacts.contact');
+    await element.router!.stateService.go(MESSAGE);
+    getByRole(map, 'treeitem', { name: 'message' }).click();
+
+    await waitFor(() =>
+      expect(
+        [...element.renderRoot.querySelectorAll('.chip')].map((chip) =>
+          [...chip.querySelectorAll('text')].map((text) => text.textContent),
+        ),
+      ).toEqual(expect.arrayContaining([['2', '2']])),
+    );
+  });
+
+  it('pans a state into view when focus moves to it by keyboard', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const scroller = element.renderRoot.querySelector('.map-scroll')!;
+    const zoomIn = getByRole(shadow(element), 'button', { name: 'Zoom in' });
+
+    zoomIn.click();
+    await element.updateComplete;
+    zoomIn.click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
+    );
+    await settled(element);
+
+    const press = (key: string) =>
+      element.shadowRoot?.activeElement?.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, composed: true }),
+      );
+
+    getByRole(map, 'treeitem', { name: 'app' }).focus();
+
+    for (const key of ['End', 'Home']) {
+      press(key);
+      await element.updateComplete;
+      await settled(element);
+
+      const name = key === 'End' ? 'message' : 'app';
+
+      await waitFor(() =>
+        expect(element.shadowRoot?.activeElement).toBe(
+          getByRole(map, 'treeitem', { name }),
+        ),
+      );
+
+      // The header of the focused state is inside the Map's room.
+      await waitFor(() => {
+        const room = scroller.getBoundingClientRect();
+
+        const head = getByRole(map, 'treeitem', {
+          name,
+        }).getBoundingClientRect();
+
+        expect(head.top).toBeGreaterThanOrEqual(room.top);
+        expect(head.bottom).toBeLessThanOrEqual(room.bottom);
+      });
+    }
   });
 
   it('remembers the chosen layout', async () => {
