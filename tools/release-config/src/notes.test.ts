@@ -387,3 +387,58 @@ describe('release notes mentions', () => {
     );
   });
 });
+
+describe('a peer change a breaking note already states', () => {
+  let repo: string;
+  let bare: string;
+  let spanned: string;
+
+  const narrowed = '>=0.3.0 <0.4.0';
+
+  async function render(note: string): Promise<string> {
+    repo = fs.mkdtempSync(path.join(os.tmpdir(), 'release-config-said-'));
+    git(repo, 'init', '-q');
+    commitFiles(
+      repo,
+      {
+        'pnpm-workspace.yaml': workspaceYaml('^0.2.0'),
+        'packages/a/package.json': manifest('a', {
+          x: 'catalog:publishedPeerA',
+        }),
+      },
+      'chore: scaffold',
+    );
+    git(repo, 'tag', 'a@1.0.0');
+    commitFiles(
+      repo,
+      { 'pnpm-workspace.yaml': workspaceYaml(narrowed) },
+      `feat(a)!: require x 0.3 (#40)\n\nBREAKING CHANGE: ${note}`,
+    );
+
+    const notes = await renderNotes(path.join(repo, 'packages/a'), {
+      from: 'a@1.0.0',
+      context: { releaseVersion: '1.1.0', previousVersion: '1.0.0' },
+    });
+
+    fs.rmSync(repo, { recursive: true, force: true });
+
+    return notes;
+  }
+
+  before(async () => {
+    bare = await render(`the x peer is now ${narrowed}.`);
+    spanned = await render(`the x peer is now \`${narrowed}\`.`);
+  });
+
+  it('is stated once when the note names the range bare', () => {
+    assert.deepEqual(section(bare, '⚠ BREAKING CHANGES'), [
+      '* **a:** the x peer is now >=0.3.0 \\<0.4.0.',
+    ]);
+  });
+
+  it('is stated once when the note names the range in a code span', () => {
+    assert.deepEqual(section(spanned, '⚠ BREAKING CHANGES'), [
+      '* **a:** the x peer is now `>=0.3.0 <0.4.0`.',
+    ]);
+  });
+});
