@@ -23,6 +23,12 @@ export interface StateInfo {
   future: boolean;
   abstract: boolean;
   redirects: boolean;
+  // The `redirectTo` target, present only when the declaration names it statically.
+  redirectTo?: string;
+  // Deep state redirect (`@uirouter/dsr`); `default` is its static fallback target.
+  dsr?: { default: string | null };
+  // Sticky state (`@uirouter/sticky-states`).
+  sticky?: boolean;
 }
 
 export type Phase =

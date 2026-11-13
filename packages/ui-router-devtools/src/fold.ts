@@ -132,6 +132,10 @@ export const apply = (model: Model, event: DevtoolsEvent): Model => {
 export const fold = (events: readonly DevtoolsEvent[]): Model =>
   events.reduce(apply, emptyModel());
 
+// A future state registers as `name.**`; a redirect names it without the suffix.
+export const bareName = (name: string): string =>
+  name.endsWith('.**') ? name.slice(0, -3) : name;
+
 // A state's ancestors, nearest first, by the declared parent; a `parent` property need not match the dotted name.
 export const ancestorsOf = (
   states: readonly StateInfo[],

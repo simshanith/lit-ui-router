@@ -185,15 +185,15 @@ The adapter's events, as the package defines them in
 schema version. A `transition` also carries its options (source, location,
 reload, inherit), and a `result` carries a plain-language reason:
 
-| Event        | Payload                                                                         | Source in core                                                   |
-| ------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `states`     | name, parent, url, params, resolve tokens, future, abstract                     | `stateRegistry.get()`, `onStatesChanged`                         |
-| `transition` | id, from, to, params, entering, exiting, retained, `redirectedFrom`             | `onBefore`, `Transition.$id`, `treeChanges()`                    |
-| `phase`      | id, phase, start or end, state                                                  | each hook type registered at a very high and a very low priority |
-| `resolve`    | id, token, state, start, end, ok, cached                                        | see the gap below                                                |
-| `result`     | id, outcome (success, error, redirected, superseded, aborted, ignored, invalid) | `Transition.promise`, `Rejection.type`                           |
-| `config`     | location kind, base href, hash prefix, strict mode, plugin names                | `urlService.config`, `getPlugin()`                               |
-| `current`    | name, params                                                                    | `globals.current`, `globals.params`                              |
+| Event        | Payload                                                                              | Source in core                                                   |
+| ------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `states`     | name, parent, url, params, resolve tokens, future, abstract, redirectTo, dsr, sticky | `stateRegistry.get()`, `onStatesChanged`                         |
+| `transition` | id, from, to, params, entering, exiting, retained, `redirectedFrom`                  | `onBefore`, `Transition.$id`, `treeChanges()`                    |
+| `phase`      | id, phase, start or end, state                                                       | each hook type registered at a very high and a very low priority |
+| `resolve`    | id, token, state, start, end, ok, cached                                             | see the gap below                                                |
+| `result`     | id, outcome (success, error, redirected, superseded, aborted, ignored, invalid)      | `Transition.promise`, `Rejection.type`                           |
+| `config`     | location kind, base href, hash prefix, strict mode, plugin names                     | `urlService.config`, `getPlugin()`                               |
+| `current`    | name, params                                                                         | `globals.current`, `globals.params`                              |
 
 ### What the adapter established about the data
 
@@ -291,6 +291,22 @@ weight and has a text label for assistive technology.
 | Exiting         | minus in a ring                                                               | 2px dashed     |
 | Retained        | two bars in a ring; the deepest retained state, the pivot, is a solid diamond | 1px solid      |
 | Errored         | solid red square, X knocked out                                               | 2px solid, red |
+
+A second set of marks, borrowed from statecharts, shows what a state's
+declaration says. They are independent of the role, so a state can carry several.
+
+| Declaration                                    | Mark                       | Where it sits                                                                                |
+| ---------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| `abstract`                                     | box in place of the ring   | the role glyph; the role's dot, plus, minus or bars sit inside it                            |
+| `redirectTo`                                   | dot and arrow              | trailing; when the target is a child, its rail also starts at a dot and ends in an arrowhead |
+| `dsr` or `deepStateRedirect` (`@uirouter/dsr`) | circled H                  | trailing                                                                                     |
+| `sticky` (`@uirouter/sticky-states`)           | box split by a dashed line | trailing                                                                                     |
+
+Trailing marks are muted and sit at the row's end, before `LAZY`. Each has a
+`title`, the treeitem's description lists them after the role, and the state
+inspector names them in words beside the same glyph. A `redirectTo` target is
+named only when the declaration holds it as a string, a `{ state }` literal or
+a `TargetState`; a function's target is unknown until it runs.
 
 | Transition outcome | Glyph             | Row treatment                                                               |
 | ------------------ | ----------------- | --------------------------------------------------------------------------- |

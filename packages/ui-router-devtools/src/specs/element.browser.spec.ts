@@ -118,3 +118,19 @@ it('shows no duration for an imported transition that never finished', async () 
   expect(element._duration(element._runningTx!)).toBeUndefined();
   expect(pill.querySelector('.num')).toBeNull();
 });
+
+it('draws the default-child arrow to a lazy child', async () => {
+  const router = makeRouter();
+  router.stateRegistry.register({ name: 'admin', redirectTo: 'admin.users' });
+  router.stateRegistry.register({
+    name: 'admin.users.**',
+    url: '/users',
+    lazyLoad: () => new Promise(() => {}),
+  });
+  const element = router.plugin(DevtoolsPlugin).element;
+  await element.updateComplete;
+
+  await waitFor(() =>
+    expect(shadow(element).querySelectorAll('.rail-initial')).toHaveLength(1),
+  );
+});

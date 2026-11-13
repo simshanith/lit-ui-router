@@ -86,6 +86,94 @@ describe('onInvalid', () => {
   });
 });
 
+describe('state declarations', () => {
+  const describeStates = (states: PluginState[]) => {
+    const router = makeRouter(states);
+    const events: DevtoolsEvent[] = [];
+    observe(router, (event) => events.push(event))();
+    router.dispose();
+
+    return events
+      .flatMap((event) => (event.type === 'states' ? event.states : []))
+      .map(({ name, abstract, redirects, redirectTo, dsr, sticky }) => ({
+        name,
+        abstract,
+        redirects,
+        redirectTo,
+        dsr,
+        sticky,
+      }));
+  };
+
+  type Dsr =
+    | boolean
+    | string
+    | (() => boolean)
+    | { default?: string | { state: string }; fn?: () => boolean };
+
+  // The @uirouter/dsr and @uirouter/sticky-states properties, which core's StateDeclaration does not declare.
+  interface PluginState extends StateDeclaration {
+    dsr?: Dsr;
+    deepStateRedirect?: Dsr;
+    sticky?: boolean;
+  }
+
+  it('leaves a plain state without the optional fields', () => {
+    expect(describeStates([{ name: 'a' }])).toEqual([
+      { name: 'a', abstract: false, redirects: false },
+    ]);
+  });
+
+  it('names a redirectTo target only when it is declared as data', () => {
+    const router = new UIRouter();
+
+    expect(
+      describeStates([
+        { name: 'a', abstract: true, redirectTo: 'a.b' },
+        { name: 'a.b', redirectTo: { state: 'a.c', params: {} } },
+        { name: 'a.c', redirectTo: router.stateService.target('a') },
+        { name: 'a.d', redirectTo: () => 'a.b' },
+      ]),
+    ).toEqual([
+      { name: 'a', abstract: true, redirects: true, redirectTo: 'a.b' },
+      { name: 'a.b', abstract: false, redirects: true, redirectTo: 'a.c' },
+      { name: 'a.c', abstract: false, redirects: true, redirectTo: 'a' },
+      { name: 'a.d', abstract: false, redirects: true },
+    ]);
+    router.dispose();
+  });
+
+  it('reads the dsr and sticky declaration properties', () => {
+    const plain = { abstract: false, redirects: false };
+
+    expect(
+      describeStates([
+        { name: 'a', dsr: true, sticky: true },
+        { name: 'b', dsr: 'b.c' },
+        { name: 'b.c', deepStateRedirect: { default: 'b' } },
+        { name: 'd', dsr: { default: { state: 'b' }, fn: () => true } },
+        { name: 'e', dsr: () => true },
+        { name: 'f', dsr: false, sticky: false },
+      ]),
+    ).toEqual([
+      { name: 'a', ...plain, dsr: { default: null }, sticky: true },
+      { name: 'b', ...plain, dsr: { default: 'b.c' } },
+      { name: 'b.c', ...plain, dsr: { default: 'b' } },
+      { name: 'd', ...plain, dsr: { default: 'b' } },
+      { name: 'e', ...plain, dsr: { default: null } },
+      { name: 'f', ...plain },
+    ]);
+  });
+
+  it('keeps every state JSON-safe', () => {
+    const states = describeStates([
+      { name: 'a', redirectTo: () => 'a', dsr: () => true },
+    ]);
+
+    expect(JSON.parse(JSON.stringify(states))).toEqual(states);
+  });
+});
+
 describe('phase brackets', () => {
   it('open before and close after the hooks core runs at the default priority', async () => {
     const log: string[] = [];

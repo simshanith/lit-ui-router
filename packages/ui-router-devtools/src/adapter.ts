@@ -5,6 +5,7 @@ import {
   type PathNode,
   type RawParams,
   type StateDeclaration,
+  TargetState,
   type Transition,
   type UIRouter,
 } from '@uirouter/core';
@@ -85,7 +86,61 @@ const resolveTokens = (decl: StateDeclaration): string[] => {
     : Object.keys(resolve ?? {});
 };
 
-const describeState = (router: UIRouter, decl: StateDeclaration): StateInfo => {
+interface NamedTarget {
+  state?: string | StateDeclaration;
+}
+
+type DsrProp =
+  | boolean
+  | string
+  | ((...args: never[]) => void)
+  | { default?: string | NamedTarget };
+
+// The @uirouter/dsr and @uirouter/sticky-states declaration properties, which core does not declare.
+interface PluginDeclaration extends StateDeclaration {
+  dsr?: DsrProp;
+  deepStateRedirect?: DsrProp;
+  sticky?: boolean;
+}
+
+type DeclaredTarget =
+  | StateDeclaration['redirectTo']
+  | NamedTarget
+  | boolean
+  | ((...args: never[]) => void);
+
+// A target is named only when the declaration holds it as data; a function's result is unknown until it runs.
+const staticTarget = (target: DeclaredTarget): string | null => {
+  if (target instanceof TargetState) return target.name();
+
+  /* oxlint-disable anti-slop/no-runtime-typeof -- the declaration's own union: a name, a target literal or a function */
+  if (typeof target === 'string') return target;
+
+  if (typeof target !== 'object' || target === null) return null;
+
+  const state: NamedTarget['state'] = target.state;
+
+  return (typeof state === 'string' ? state : state?.name) ?? null;
+  /* oxlint-enable anti-slop/no-runtime-typeof */
+};
+
+const dsrOf = (decl: PluginDeclaration): StateInfo['dsr'] => {
+  const prop = decl.deepStateRedirect || decl.dsr;
+
+  if (!prop) return undefined;
+
+  return {
+    default: staticTarget(
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the plugin's own union: a config object or a bare target
+      typeof prop === 'object' ? prop.default : prop,
+    ),
+  };
+};
+
+const describeState = (
+  router: UIRouter,
+  decl: PluginDeclaration,
+): StateInfo => {
   const name = decl.name ?? '';
   const future = name.endsWith('.**');
   const bare = future ? name.slice(0, -3) : name;
@@ -110,6 +165,9 @@ const describeState = (router: UIRouter, decl: StateDeclaration): StateInfo => {
       squash: param.squash,
     }));
 
+  const redirectTo = staticTarget(decl.redirectTo);
+  const dsr = dsrOf(decl);
+
   return {
     name,
     parent: declaredParent ?? (dot === -1 ? null : bare.slice(0, dot)),
@@ -119,6 +177,9 @@ const describeState = (router: UIRouter, decl: StateDeclaration): StateInfo => {
     future,
     abstract: Boolean(decl.abstract),
     redirects: decl.redirectTo !== undefined,
+    ...(redirectTo !== null && { redirectTo }),
+    ...(dsr && { dsr }),
+    ...(decl.sticky && { sticky: true }),
   };
 };
 
