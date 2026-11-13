@@ -298,9 +298,10 @@ describe('redirectedTo', () => {
 
   it('reports nothing for a redirect onto the current state that leaves the url in place', async () => {
     const router = makeRouter();
-    await settle(router, '/b');
+    const landed = await settle(router, '/b');
     const transition = await settle(router, '/quiet');
-    assert.equal(transition.to().name, 'b');
+    assert.equal(transition, landed);
+    assert.equal(router.globals.successfulTransitions.peekTail(), landed);
     assert.equal(redirectedTo(router, transition), undefined);
   });
 

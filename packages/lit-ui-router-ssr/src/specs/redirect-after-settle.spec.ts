@@ -193,6 +193,45 @@ describe('a redirectTo function found at settle', () => {
     },
   );
 
+  it('prerenders a page for a redirect onto the current state that leaves the url in place', async () => {
+    const router = installServerLocation(new UIRouterLit(), {
+      urlConfig: { strict: false },
+    });
+
+    router.stateRegistry.register({ name: 'home', url: '/' });
+    router.stateRegistry.register({
+      name: 'quiet',
+      url: '/quiet',
+      redirectTo: (trans) =>
+        trans.router.stateService.target('home', {}, { location: false }),
+    });
+    const { files, write } = memoryWriter();
+
+    const result = await prerender({
+      mounts: {
+        '/': {
+          routes: [
+            { name: 'home', url: '/' },
+            { name: 'quiet', url: '/quiet' },
+          ],
+          config: { strict: false },
+        },
+      },
+      router,
+      outDir: 'dist',
+      paths: ['/', '/quiet'],
+      notFound: false,
+      write,
+      template: (r) => html`<p>${r.globals.current.name}</p>`,
+    });
+
+    expect([...files.keys()].sort()).toEqual([
+      'dist/index.html',
+      'dist/quiet/index.html',
+    ]);
+    expect(result.tally).toMatchObject({ shell: 2, redirect: 0 });
+  });
+
   it('writes the base once on the rules line under a base', async () => {
     const router = pageRouter('/solar/');
     const { files, write } = memoryWriter();

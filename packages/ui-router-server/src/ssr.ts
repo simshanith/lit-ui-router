@@ -99,7 +99,7 @@ export interface SettleOptions {
   maxRewrites?: number;
 }
 
-/** Lands a redirect core ignored because it ends on the state and params the router already stands on. */
+/** Lands a url-moving redirect core ignored because it ends on the state and params the router already stands on. */
 const landIgnoredRedirect = (
   router: UIRouter,
   redirect: Transition,
@@ -108,8 +108,7 @@ const landIgnoredRedirect = (
   const { navigable } = globals.$current;
 
   // Core's success hooks never ran for it: put the url on the landed state and record it as the landed transition.
-  if (redirect.options().location !== false && navigable)
-    urlService.url(navigable.url.format(globals.params), true);
+  if (navigable) urlService.url(navigable.url.format(globals.params), true);
   globals.successfulTransitions.enqueue(redirect);
 
   return redirect;
@@ -127,7 +126,8 @@ const landIgnoredRedirect = (
  * chain settles on its final state, and a path the router already stands on
  * resolves with the transition that brought it there. A redirect that ends
  * where the router already stands resolves with the redirected transition,
- * which becomes the router's last landed one.
+ * which becomes the router's last landed one, unless it leaves the url in
+ * place (`location: false`).
  *
  * A failed transition still reaches `stateService.defaultErrorHandler`,
  * which logs it unless replaced.
@@ -197,12 +197,17 @@ export const settle = (
 
       if (rejection.type === RejectType.IGNORED) {
         // Ignored with nothing in flight: the router already stands where the url points.
-        if (!globals.transition && globals.successfulTransitions.size() > 0)
+        if (!globals.transition && globals.successfulTransitions.size() > 0) {
+          const moved =
+            transition.redirectedFrom() &&
+            transition.options().location !== false;
+
           land(
-            transition.redirectedFrom()
+            moved
               ? landIgnoredRedirect(router, transition)
               : globals.successfulTransitions.peekTail(),
           );
+        }
 
         return;
       }
