@@ -129,7 +129,7 @@ export const registerTraceCategory = (router: UIRouter, name: string): void => {
     return;
   }
 
-  if (name in Category)
+  if (Object.hasOwn(Category, name))
     throw new Error(
       `registerTraceCategory: '${name}' is one of core's trace categories; enable it by name without registering`,
     );

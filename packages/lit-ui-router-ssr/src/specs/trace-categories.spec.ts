@@ -115,6 +115,17 @@ describe('registerTraceCategory', () => {
     expect(router.trace).toBe(before);
   });
 
+  it('registers a name only an inherited member of the enum shares', () => {
+    const router = registered('toString');
+
+    router.trace.enable('toString');
+
+    expect(router.trace.enabled('toString')).toBe(true);
+    expect(trace.enabled('TRANSITION')).toBe(false);
+
+    router.trace.disable('toString');
+  });
+
   it('installs one wrapper per router however often it registers', () => {
     const router = registered('HYDRATION');
     const wrapper = router.trace;
