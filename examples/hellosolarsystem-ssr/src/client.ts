@@ -10,8 +10,8 @@ const router = configure(new UIRouterLit());
 
 router.plugin(pushStateLocationPlugin);
 
-// Logs each transition to the console: after the first page, navigation is client-side, with no request.
-router.trace.enable('TRANSITION');
+// Logs whether each served view adopted, then each transition: after the first page, navigation is client-side, with no request.
+router.trace.enable('UIVIEW', 'TRANSITION');
 
 const container = document.getElementById('app');
 

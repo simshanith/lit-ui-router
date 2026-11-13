@@ -1,12 +1,6 @@
 // One prerender() over every path: the router decides what each path is, Eleventy writes the files.
-import { LitElementRenderer } from '@lit-labs/ssr';
 import { UIRouterLit } from 'lit-ui-router/pure';
-import {
-  LightElementRenderer,
-  prerender,
-  settle,
-  UiViewRenderer,
-} from 'lit-ui-router-ssr';
+import { prerender, shadowElementRenderers } from 'lit-ui-router-ssr';
 import { installServerLocation } from 'ui-router-server/location';
 import { redirectPages } from 'ui-router-server/prerender';
 
@@ -52,27 +46,19 @@ export async function renderSite(base = '/'): Promise<Site> {
       base,
       // `_redirects`, and a page per redirect whose body is its target, for the layout to wrap.
       rules: redirectPages({ redirectsFile: true, page: ({ to }) => to }),
-      // The default omits LitElementRenderer, which <app-root>'s shadow root needs.
-      elementRenderers: [
-        UiViewRenderer,
-        LightElementRenderer,
-        LitElementRenderer,
-      ],
+      // <app-root> holds the <ui-view> in its shadow root.
+      elementRenderers: shadowElementRenderers,
       // `{}` dehydrates with defaults: each page embeds its resolved data; client adopts the resolves instead of rerunning
       dehydrate: {},
-      renderShell: async (_verdict, { path }) => {
-        await settle(router, path);
-
-        return page(router);
-      },
+      template: page,
       write: (file, body) => {
         files.set(file, body);
       },
     });
 
-    const pages = result.pages.map(({ file, verdict }) => ({
+    const pages = result.pages.map(({ file, status }) => ({
       file,
-      status: ('status' in verdict && verdict.status) || 200,
+      status,
       body: files.get(file) ?? '',
     }));
 
