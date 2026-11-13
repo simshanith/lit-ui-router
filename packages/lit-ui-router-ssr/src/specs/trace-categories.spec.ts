@@ -105,6 +105,16 @@ describe('registerTraceCategory', () => {
     expect(first.trace).not.toBe(trace);
   });
 
+  it("throws for one of core's own category names and installs nothing", () => {
+    const router = new UIRouter();
+    const before = router.trace;
+
+    expect(() => registerTraceCategory(router, 'TRANSITION')).toThrow(
+      "'TRANSITION' is one of core's trace categories",
+    );
+    expect(router.trace).toBe(before);
+  });
+
   it('installs one wrapper per router however often it registers', () => {
     const router = registered('HYDRATION');
     const wrapper = router.trace;

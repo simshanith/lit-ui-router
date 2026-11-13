@@ -700,7 +700,7 @@ await bootstrap(router, root, page(router));
 
 The prerender script does the same with `PRERENDER`, imported from `lit-ui-router-ssr`, for the per-path lines alone.
 
-Core reads every category name through a fixed enum, so on its own an unregistered name such as `'HYDRATION'` shares one key with every other unknown name. `registerTraceCategory` keeps registered names apart by wrapping `router.trace`: the wrapper answers `enable`, `disable` and `enabled` for registered names, including a no-argument `enable()` or `disable()`, and hands everything else to core's trace. Every router that shares core's trace sees the same switches.
+Core reads every category name through a fixed enum, so on its own an unregistered name such as `'HYDRATION'` shares one key with every other unknown name. `registerTraceCategory` keeps registered names apart by wrapping `router.trace`: the wrapper answers `enable`, `disable` and `enabled` for registered names, including a no-argument `enable()` or `disable()`, and hands everything else to core's trace. Every router registered over the same trace sees the same switches for registered names. A router that never called `registerTraceCategory` reads core's trace unwrapped, and core's imported `trace.disable()` leaves registered names on. Registering one of core's own names, such as `'TRANSITION'`, throws.
 
 ### Light-DOM elements
 

@@ -3,8 +3,8 @@
  * like a `trace.registerCategory` core could ship.
  */
 
-import { isFunction, isString, trace } from '@uirouter/core';
-import type { Category, Trace, UIRouter } from '@uirouter/core';
+import { Category, isFunction, isString, trace } from '@uirouter/core';
+import type { Trace, UIRouter } from '@uirouter/core';
 
 /** A category name as core's `enable`, `disable` and `enabled` take it. */
 type CategoryName = Category | string | number;
@@ -96,13 +96,16 @@ const wrap = (original: Trace, registry: Registry): Trace => {
  * a wrapper over `router.trace` that answers registered names itself and
  * forwards everything else to core's trace. Core's own code logs through the
  * imported `trace` singleton, which the wrapper leaves untouched. Registered
- * names are kept per underlying trace, so every router sharing core's
- * singleton agrees on them.
+ * names are kept per underlying trace, so every router registered over core's
+ * singleton agrees on them; a router that never registers reads core's trace
+ * unwrapped, and core's imported `trace.disable()` leaves registered names on.
  *
  * When `router.trace` has a `registerCategory` of its own, this delegates to
  * it and installs nothing.
  *
  * Register before enabling: call it right after creating the router.
+ *
+ * @throws an `Error` for one of core's own category names, such as `'TRANSITION'`
  *
  * @param router - the router whose `trace` gains the category
  * @param name - the category's name, such as `'HYDRATION'`
@@ -125,6 +128,11 @@ export const registerTraceCategory = (router: UIRouter, name: string): void => {
 
     return;
   }
+
+  if (name in Category)
+    throw new Error(
+      `registerTraceCategory: '${name}' is one of core's trace categories; enable it by name without registering`,
+    );
 
   const original = wrapped.get(current) ?? current;
   const registry = registryOf(original);
