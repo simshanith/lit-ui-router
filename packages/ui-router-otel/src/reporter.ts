@@ -9,11 +9,13 @@ import {
   type Span,
   type Tracer,
 } from '@opentelemetry/api';
+import { redactionOf, redactParams } from '@repo/router-events/redaction';
 import type {
   InvalidEvent,
   Outcome,
   Params,
   PhaseEvent,
+  Redaction,
   ResolveEvent,
   ResultEvent,
   RouterEvent,
@@ -24,10 +26,12 @@ import type {
 declare const performance: { readonly timeOrigin: number };
 
 export interface ReportOptions {
-  /** Param keys recorded as `ui_router.param.<key>` on the transition span; none by default. */
-  params?: readonly string[];
-  /** Maps an error message before it reaches a span's status and exception event; return `undefined` to drop it. */
-  errorMessage?: (message: string) => string | undefined;
+  /**
+   * What reaches a span, as in a devtools export: every param is a `uirouter.param.<key>` attribute, with its value
+   * only for the keys `params` lists (`'all'` for every key) and `[redacted]` otherwise; `messages: false` keeps error
+   * messages out of span status and exception events. By default no value is kept and messages are.
+   */
+  redaction?: Partial<Redaction>;
   /** Report transitions core ignores as a no-op (same state and params); off by default. */
   includeIgnored?: boolean;
 }
@@ -55,29 +59,26 @@ const KEEP = 64;
 
 const ERRORS = new Set<Outcome>(['error', 'invalid']);
 
-// Core's RejectType for each outcome; redirected and superseded share SUPERSEDED.
-const REJECTION: Partial<Record<Outcome, string>> = {
-  redirected: 'superseded',
-  superseded: 'superseded',
-  aborted: 'aborted',
-  invalid: 'invalid',
-  ignored: 'ignored',
-  error: 'error',
-};
+// The semantic conventions' value for an error with no better type.
+const OTHER = '_OTHER';
 
 const at = (t: number): number => performance.timeOrigin + t;
 
+// An attribute value is a scalar or a homogeneous array, so a list param becomes strings.
 const paramAttributes = (
   params: Params,
-  allowed: readonly string[],
+  keep: Redaction['params'],
 ): Attributes =>
   Object.fromEntries(
-    allowed.flatMap((key) => {
-      const value = params[key];
+    Object.entries(redactParams(params, keep)).flatMap(([key, value]) => {
+      if (value === null) return [];
 
-      return value === undefined || value === null
-        ? []
-        : [[`ui_router.param.${key}`, value]];
+      return [
+        [
+          `uirouter.param.${key}`,
+          Array.isArray(value) ? value.map(String) : value,
+        ],
+      ];
     }),
   );
 
@@ -92,32 +93,37 @@ const transitionAttributes = (
     retained,
     toParams,
   }: TransitionEvent,
-  allowed: readonly string[],
+  keep: Redaction['params'],
 ): Attributes => ({
-  'ui_router.transition_id': id,
-  'ui_router.from': from,
-  'ui_router.to': to,
-  'ui_router.source': options.source,
-  'ui_router.reload': options.reload !== false,
+  'uirouter.transition_id': id,
+  'uirouter.from': from,
+  'uirouter.to': to,
+  'uirouter.source': options.source,
+  'uirouter.reload': options.reload !== false,
   // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the schema's own union: a flag or the reloaded state's name
   ...(typeof options.reload === 'string' && {
-    'ui_router.reload_state': options.reload,
+    'uirouter.reload_state': options.reload,
   }),
-  'ui_router.location': String(options.location),
-  'ui_router.entering': entering,
-  'ui_router.exiting': exiting,
-  'ui_router.retained': retained,
-  ...paramAttributes(toParams, allowed),
+  'uirouter.location': String(options.location),
+  'uirouter.entering': entering,
+  'uirouter.exiting': exiting,
+  'uirouter.retained': retained,
+  ...paramAttributes(toParams, keep),
 });
 
-const outcomeAttributes = (outcome: Outcome): Attributes => {
-  const rejection = REJECTION[outcome];
-
-  return {
-    'ui_router.outcome': outcome,
-    ...(rejection && { 'ui_router.rejection_type': rejection }),
-  };
-};
+const resultAttributes = ({
+  outcome,
+  errorName,
+  invalidParams,
+}: Pick<
+  ResultEvent,
+  'outcome' | 'errorName' | 'invalidParams'
+>): Attributes => ({
+  'uirouter.outcome': outcome,
+  ...(invalidParams && { 'uirouter.invalid_params': invalidParams }),
+  ...(outcome === 'invalid' && { 'error.type': 'invalid' }),
+  ...(outcome === 'error' && { 'error.type': errorName ?? OTHER }),
+});
 
 const phaseKey = ({ phase, state }: PhaseEvent): string =>
   state ? `${phase} ${state}` : phase;
@@ -125,19 +131,16 @@ const phaseKey = ({ phase, state }: PhaseEvent): string =>
 /** Turns the adapter's event stream into spans on `tracer`; feed it with `report`. */
 export const reportToTracer = (
   tracer: Tracer,
-  {
-    params = [],
-    errorMessage = (message) => message,
-    includeIgnored = false,
-  }: ReportOptions = {},
+  { redaction, includeIgnored = false }: ReportOptions = {},
 ): TracerReporter => {
+  const { params, messages } = redactionOf(redaction);
   const txs = new Map<number, Tx>();
 
-  const fail = (span: Span, message: string, t: number) => {
-    const mapped = errorMessage(message);
-    span.setStatus({ code: SpanStatusCode.ERROR, message: mapped });
+  const fail = (span: Span, message: string | undefined, t: number) => {
+    const description = messages ? message : undefined;
+    span.setStatus({ code: SpanStatusCode.ERROR, message: description });
 
-    if (mapped) span.recordException({ message: mapped }, at(t));
+    if (description) span.recordException({ message: description }, at(t));
   };
 
   // Created on first need, so a transition core ignores in onBefore leaves no span.
@@ -186,8 +189,8 @@ export const reportToTracer = (
 
   const phaseSpan = (tx: Tx, start: PhaseEvent): Span =>
     childOf(tx, phaseKey(start), start.t, {
-      'ui_router.phase': start.phase,
-      ...(start.state && { 'ui_router.state': start.state }),
+      'uirouter.phase': start.phase,
+      ...(start.state && { 'uirouter.state': start.state }),
     });
 
   // A phase cut short by a redirect, a supersede or dispose() ends with it.
@@ -220,11 +223,15 @@ export const reportToTracer = (
     if (event.cached) return;
 
     const span = childOf(tx, `resolve ${event.token}`, event.start, {
-      'ui_router.resolve': event.token,
-      'ui_router.state': event.state,
+      'uirouter.resolve': event.token,
+      'uirouter.state': event.state,
     });
 
-    if (!event.ok) fail(span, event.message ?? '', event.end);
+    if (!event.ok) {
+      span.setAttribute('error.type', event.errorName ?? OTHER);
+      fail(span, event.message, event.end);
+    }
+
     span.end(at(event.end));
   };
 
@@ -247,9 +254,17 @@ export const reportToTracer = (
 
     const span = spanOf(tx);
     endOpen(tx, event.t);
-    span.setAttributes(outcomeAttributes(event.outcome));
+    span.setAttributes(resultAttributes(event));
 
-    if (ERRORS.has(event.outcome)) fail(span, event.message ?? '', event.t);
+    // The successor of a redirect links back at its start; a superseded transition links forward to its superseder.
+    const superseder =
+      event.outcome === 'superseded' && event.by !== undefined
+        ? txs.get(event.by)
+        : undefined;
+
+    if (superseder) span.addLink({ context: spanOf(superseder).spanContext() });
+
+    if (ERRORS.has(event.outcome)) fail(span, event.message, event.t);
     span.end(at(event.t));
     prune();
   };
@@ -262,16 +277,16 @@ export const reportToTracer = (
         kind: SpanKind.INTERNAL,
         startTime: at(event.t),
         attributes: {
-          'ui_router.from': event.from,
-          'ui_router.to': event.to,
-          ...outcomeAttributes('invalid'),
+          'uirouter.from': event.from,
+          'uirouter.to': event.to,
+          ...resultAttributes({ outcome: 'invalid' }),
           ...paramAttributes(event.toParams, params),
         },
       },
       context.active(),
     );
 
-    fail(span, event.reason, event.t);
+    fail(span, `No state named '${event.to}'`, event.t);
     span.end(at(event.t));
   };
 

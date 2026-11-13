@@ -98,16 +98,16 @@ describe('a successful transition', () => {
     expect(span.parentSpanContext).toBeUndefined();
 
     expect(span.attributes).toEqual({
-      'ui_router.transition_id': 0,
-      'ui_router.from': '',
-      'ui_router.to': 'a',
-      'ui_router.source': 'unknown',
-      'ui_router.reload': false,
-      'ui_router.location': 'true',
-      'ui_router.entering': ['a'],
-      'ui_router.exiting': [],
-      'ui_router.retained': [],
-      'ui_router.outcome': 'success',
+      'uirouter.transition_id': 0,
+      'uirouter.from': '',
+      'uirouter.to': 'a',
+      'uirouter.source': 'unknown',
+      'uirouter.reload': false,
+      'uirouter.location': 'true',
+      'uirouter.entering': ['a'],
+      'uirouter.exiting': [],
+      'uirouter.retained': [],
+      'uirouter.outcome': 'success',
     });
 
     expect(childrenOf(spans(), span)).toEqual([
@@ -119,8 +119,8 @@ describe('a successful transition', () => {
     ]);
 
     expect(named(spans(), 'enter a').attributes).toEqual({
-      'ui_router.phase': 'enter',
-      'ui_router.state': 'a',
+      'uirouter.phase': 'enter',
+      'uirouter.state': 'a',
     });
 
     // Event times, not the reporter's clock.
@@ -145,12 +145,12 @@ describe('a successful transition', () => {
     await go('b', {}, { location: 'replace', reload: 'a' });
 
     expect(named(spans(), 'b').attributes).toMatchObject({
-      'ui_router.from': 'a',
-      'ui_router.reload': true,
-      'ui_router.reload_state': 'a',
-      'ui_router.location': 'replace',
-      'ui_router.entering': ['b'],
-      'ui_router.exiting': ['a'],
+      'uirouter.from': 'a',
+      'uirouter.reload': true,
+      'uirouter.reload_state': 'a',
+      'uirouter.location': 'replace',
+      'uirouter.entering': ['b'],
+      'uirouter.exiting': ['a'],
     });
   });
 });
@@ -171,16 +171,15 @@ describe('a redirect chain', () => {
     const b = named(spans(), 'b');
 
     for (const origin of [r1, r2]) {
-      expect(origin.attributes['ui_router.outcome']).toBe('redirected');
-      expect(origin.attributes['ui_router.rejection_type']).toBe('superseded');
+      expect(origin.attributes['uirouter.outcome']).toBe('redirected');
       expect(origin.status.code).toBe(SpanStatusCode.UNSET);
     }
 
     expect(r1.links).toEqual([]);
     expect(r2.links.map((link) => link.context.spanId)).toEqual([idOf(r1)]);
     expect(b.links.map((link) => link.context.spanId)).toEqual([idOf(r2)]);
-    expect(b.attributes['ui_router.source']).toBe('redirect');
-    expect(b.attributes['ui_router.outcome']).toBe('success');
+    expect(b.attributes['uirouter.source']).toBe('redirect');
+    expect(b.attributes['uirouter.outcome']).toBe('success');
   });
 });
 
@@ -204,40 +203,52 @@ describe('a failed transition', () => {
       code: SpanStatusCode.ERROR,
       message: 'boom failed',
     });
-    expect(span.attributes['ui_router.outcome']).toBe('error');
-    expect(span.attributes['ui_router.rejection_type']).toBe('error');
+    expect(span.attributes['uirouter.outcome']).toBe('error');
+    expect(span.attributes['error.type']).toBe('Error');
     expect(span.events.map((event) => [event.name, event.attributes])).toEqual([
       ['exception', { 'exception.message': 'boom failed' }],
     ]);
   });
 
-  it('maps or drops the message through errorMessage', async () => {
+  it('leaves the message out when the redaction drops messages', async () => {
     const states = [
       {
         name: 'boom',
         url: '/boom',
         onEnter: () => {
-          throw new Error('user 42 not found');
+          throw new TypeError('user 42 not found');
         },
       },
     ];
 
-    const mapped = setup(states, {
-      errorMessage: (message) => message.replace(/\d+/g, '#'),
-    });
-
-    mapped.plugin();
-    await mapped.go('boom');
-    expect(named(mapped.spans(), 'boom').status.message).toBe(
-      'user # not found',
-    );
-
-    const dropped = setup(states, { errorMessage: () => undefined });
+    const dropped = setup(states, { redaction: { messages: false } });
     dropped.plugin();
     await dropped.go('boom');
     const span = named(dropped.spans(), 'boom');
     expect(span.status).toEqual({ code: SpanStatusCode.ERROR });
     expect(span.events).toEqual([]);
+    expect(span.attributes['error.type']).toBe('TypeError');
+  });
+
+  it('reports invalid param values as invalid, naming the params', async () => {
+    const { go, plugin, spans } = setup([
+      { name: 'n', url: '/n/:num', params: { num: { type: 'int' } } },
+    ]);
+
+    plugin();
+    await go('n', { num: 'x' });
+
+    const span = named(spans(), 'n');
+    expect(span.attributes).toMatchObject({
+      'uirouter.outcome': 'invalid',
+      'uirouter.invalid_params': ['num'],
+      'error.type': 'invalid',
+    });
+    expect(span.status).toEqual({
+      code: SpanStatusCode.ERROR,
+      message:
+        "The following parameter values are not valid for state 'n': [num:null]",
+    });
   });
 });
 
@@ -276,8 +287,8 @@ describe('resolves', () => {
       expect.arrayContaining(['resolve parent', 'resolve child']),
     );
     expect(named(spans(), 'resolve child').attributes).toEqual({
-      'ui_router.resolve': 'child',
-      'ui_router.state': 'p.ok',
+      'uirouter.resolve': 'child',
+      'uirouter.state': 'p.ok',
     });
 
     const fail = named(spans(), 'p.fail');
@@ -308,7 +319,7 @@ describe('resolves', () => {
 });
 
 describe('a transition that does not finish', () => {
-  it('ends with its outcome when superseded, closing the phase it was in', async () => {
+  it('ends with its outcome when superseded, closing the phase it was in and linking its superseder', async () => {
     const { router, go, flush, plugin, spans } = setup([
       {
         name: 'slow',
@@ -327,10 +338,11 @@ describe('a transition that does not finish', () => {
     await flush();
 
     const slow = named(spans(), 'slow');
-    expect(slow.attributes['ui_router.outcome']).toBe('superseded');
-    expect(slow.attributes['ui_router.rejection_type']).toBe('superseded');
+    expect(slow.attributes['uirouter.outcome']).toBe('superseded');
     expect(slow.status.code).toBe(SpanStatusCode.UNSET);
-    expect(slow.links).toEqual([]);
+    expect(slow.links.map((link) => link.context.spanId)).toEqual([
+      idOf(named(spans(), 'a')),
+    ]);
     expect(named(spans(), 'a').links).toEqual([]);
 
     const enter = spans().find(
@@ -348,8 +360,7 @@ describe('a transition that does not finish', () => {
     await go('a');
 
     const span = named(spans(), 'a');
-    expect(span.attributes['ui_router.outcome']).toBe('aborted');
-    expect(span.attributes['ui_router.rejection_type']).toBe('aborted');
+    expect(span.attributes['uirouter.outcome']).toBe('aborted');
     expect(span.status.code).toBe(SpanStatusCode.UNSET);
   });
 
@@ -366,7 +377,7 @@ describe('a transition that does not finish', () => {
     await loud.go('a');
     await loud.go('a');
     const [, ignored] = loud.spans().filter((s) => s.name === 'a');
-    expect(ignored?.attributes['ui_router.outcome']).toBe('ignored');
+    expect(ignored?.attributes['uirouter.outcome']).toBe('ignored');
     expect(ignored?.status.code).toBe(SpanStatusCode.UNSET);
     // The before phase never ends: core's ignore check rejects inside it.
     expect(childrenOf(loud.spans(), ignored)).toEqual(['error', 'before']);
@@ -387,38 +398,60 @@ describe('an invalid target', () => {
       message: "No state named 'nope'",
     });
     expect(span.attributes).toEqual({
-      'ui_router.from': '',
-      'ui_router.to': 'nope',
-      'ui_router.outcome': 'invalid',
-      'ui_router.rejection_type': 'invalid',
+      'uirouter.from': '',
+      'uirouter.to': 'nope',
+      'uirouter.outcome': 'invalid',
+      'error.type': 'invalid',
+      'uirouter.param.id': '[redacted]',
     });
   });
 });
 
 describe('params', () => {
   const states: StateDeclaration[] = [
-    { name: 'folder', url: '/folder/:folderId?q' },
+    {
+      name: 'folder',
+      url: '/folder/:folderId?q&tags',
+      params: { tags: { array: true } },
+    },
   ];
 
-  it('are attributes only when the allowlist names them', async () => {
-    const listed = setup(states, { params: ['folderId', 'missing'] });
+  const paramAttributes = (span: ReadableSpan) =>
+    Object.fromEntries(
+      Object.entries(span.attributes).filter(([key]) => key.includes('param')),
+    );
+
+  it('keep their keys, with values only for the keys the redaction lists', async () => {
+    const listed = setup(states, {
+      redaction: { params: ['folderId', 'missing'] },
+    });
+
     listed.plugin();
     await listed.go('folder', { folderId: '42', q: 'secret' });
 
-    const span = named(listed.spans(), 'folder');
-    expect(span.attributes['ui_router.param.folderId']).toBe('42');
-    expect(
-      Object.keys(span.attributes).filter((k) => k.includes('param')),
-    ).toEqual(['ui_router.param.folderId']);
+    expect(paramAttributes(named(listed.spans(), 'folder'))).toEqual({
+      'uirouter.param.folderId': '42',
+      'uirouter.param.q': '[redacted]',
+    });
 
     const unlisted = setup(states);
     unlisted.plugin();
     await unlisted.go('folder', { folderId: '42', q: 'secret' });
-    expect(
-      Object.keys(named(unlisted.spans(), 'folder').attributes).filter((k) =>
-        k.includes('param'),
-      ),
-    ).toEqual([]);
+    expect(paramAttributes(named(unlisted.spans(), 'folder'))).toEqual({
+      'uirouter.param.folderId': '[redacted]',
+      'uirouter.param.q': '[redacted]',
+    });
+  });
+
+  it('keep every value under all, a list as strings', async () => {
+    const all = setup(states, { redaction: { params: 'all' } });
+    all.plugin();
+    await all.go('folder', { folderId: '42', tags: ['a', 'b'] });
+
+    expect(paramAttributes(named(all.spans(), 'folder'))).toEqual({
+      'uirouter.param.folderId': '42',
+      'uirouter.param.tags': ['a', 'b'],
+    });
   });
 });
 
@@ -443,7 +476,7 @@ describe('dispose()', () => {
     await flush();
     const hang = named(spans(), 'hang');
     expect(hang.ended).toBe(true);
-    expect(hang.attributes['ui_router.outcome']).toBeUndefined();
+    expect(hang.attributes['uirouter.outcome']).toBeUndefined();
     // Core fetches resolves lazily on enter by default, so the transition waits there.
     expect(childrenOf(spans(), hang)).toEqual([
       'before',
@@ -515,7 +548,7 @@ describe('retention', () => {
     for (let i = 0; i < 70; i++) await go(i % 2 ? 'b' : 'a');
 
     expect(
-      spans().filter((s) => s.attributes['ui_router.outcome'] === 'success'),
+      spans().filter((s) => s.attributes['uirouter.outcome'] === 'success'),
     ).toHaveLength(70);
   });
 });
