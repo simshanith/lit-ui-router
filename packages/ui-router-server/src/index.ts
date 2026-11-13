@@ -815,10 +815,10 @@ const respelledVerdict = (
 };
 
 // Navigations only are respelled; a marked state answers a non-navigation at either spelling.
-const matcherVerdict = (
+const matchedRouteVerdict = (
   mount: Mount,
   subpath: string,
-  respelled = true,
+  respelled: boolean,
 ): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
@@ -840,6 +840,21 @@ const matcherVerdict = (
   return mount.config.otherwise
     ? otherwiseVerdict(mount)
     : notFoundVerdict(mount);
+};
+
+// A malformed percent-escape degrades to the shell, as a core throw does on a simulate mount.
+const matcherVerdict = (
+  mount: Mount,
+  subpath: string,
+  respelled = true,
+): Verdict => {
+  try {
+    return matchedRouteVerdict(mount, subpath, respelled);
+  } catch (error) {
+    if (error instanceof URIError) return shellVerdict(mount);
+
+    throw error;
+  }
 };
 
 // The matcher projection stands in for both strategies: they consume the same declaration subset.
