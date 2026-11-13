@@ -4,7 +4,7 @@ import { onXrefClick } from './fragment.ts';
 import type { FocusDetail, XrefDetail } from './fragment.ts';
 import { installLightbox } from './lightbox.ts';
 import { createRouter } from './router.ts';
-import { installPrefs } from './prefs.ts';
+import { installPrefs, installTrace } from './prefs.ts';
 import { applyTheme, readTheme } from './theme.ts';
 import { page } from './views.ts';
 import type { TypedStateService } from 'ui-router-registry';
@@ -45,6 +45,7 @@ installExperimental(router);
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
 
+installTrace();
 // THE BOOT: seed from the signature's payload, start, adopt or render cold; resolves when every awake <ui-view> has updated.
 const { outcome, signature, error } = await bootstrap(router, root, page(router), {
   // Every served view reports its wake; anything but an adoption is a finding.
@@ -56,7 +57,7 @@ const { outcome, signature, error } = await bootstrap(router, root, page(router)
 document.documentElement.dataset.boot = `${outcome}:${signature}`;
 if (import.meta.env.DEV && (outcome !== 'adopted' || signature !== 'matched' || error !== undefined))
   console.warn(`atlas: the boot came to ${outcome}:${signature}`, error);
-// the visualizer and trace switches, applied once the first transition has settled
+// the visualizer switch, applied once the first transition has settled
 installPrefs(router);
 
 // every figure's ENLARGE button and the url's `?enlarge=`, answered by the document's one lightbox

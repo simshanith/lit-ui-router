@@ -19,7 +19,7 @@ export interface PrefState {
 }
 
 const KEYS: Record<PrefName, string> = { visualizer: 'atlas-visualizer', trace: 'atlas-trace' };
-const TRACE_CATEGORIES = [Category.TRANSITION, Category.VIEWCONFIG, Category.UIVIEW];
+const TRACE_CATEGORIES = [Category.TRANSITION, Category.RESOLVE, Category.VIEWCONFIG, Category.UIVIEW];
 const PANES = ['uirStateVisualizer', 'uirTransitionVisualizer'];
 // Read at load: the router's first sync rewrites the url without the feature params.
 // Optional: @lit-labs/ssr's dom shim has no location (prerender.ts).
@@ -84,10 +84,14 @@ export function setVisualizer(on: boolean): Promise<void> {
   return applyVisualizer(on);
 }
 
-/** Seats the router and applies both stored preferences; after `router.start()`. */
+/** Applies the stored trace preference; before the boot, whose hydration the trace logs. */
+export function installTrace(): void {
+  applyTrace(readPref('trace').on);
+}
+
+/** Seats the router and applies the stored visualizer preference; after `router.start()`. */
 export function installPrefs(target: UIRouter): void {
   router = target;
-  applyTrace(readPref('trace').on);
   // the artifact is one offline file with no origin to serve the visualizer's icons
   if (!ARTIFACT) void applyVisualizer(readPref('visualizer').on);
 }

@@ -920,3 +920,41 @@ bundle, both preloads and each canonical link spell the base. In
   prefix, beside the page's own `<link rel="canonical">` for its url. The
   staged site is served by Pages with no adapter in front, so no deployed
   page carries the header.
+
+**Update, 2026-11-12.** The atlas is on `ui-router-server@0.11.0`,
+`lit-ui-router-ssr@0.11.0`, `lit-ui-router@1.20.0` and
+`ui-router-navigation-location-plugin@1.2.1`. The build reads as it did:
+75 pages and the 404, 76 of 76 renders, 150 rules, the signature's
+`"version":"0.11.0"`, and again under `MOUNT = '/atlas'` in a scratch
+build. What the releases answer, and what the app takes from them:
+
+- **The canonical `Link` names the page.** `vite preview` answers
+  `/sheet/7/` with `Link: </sheet/7/>; rel="canonical"`, `/about/` with
+  its own path, and `</atlas/sheet/7/>` under the prefix: the header and
+  the page's `<link rel="canonical">` agree on every shell page. The bare
+  plate is the one page where they differ: `/plate/7/` is headed
+  `</plate/7/>` and its document names `/sheet/7/`, the sheet it is a
+  plate of. Pages serves the staged site with no adapter in front, so no
+  deployed page carries the header.
+- **`withBase` is the package's.** `served()` in `prerender.ts` calls
+  `withBase(BASE, path)` from `ui-router-server/prerender` where it spelled
+  the join itself.
+- **The trace switch shows the boot.** `lit-ui-router-ssr` logs hydration
+  through core's trace, so the app applies its stored trace preference
+  before `bootstrap()` and the switch takes `RESOLVE` beside `TRANSITION`,
+  `VIEWCONFIG` and `UIVIEW`. A hard load of `/sheet/7/` with the switch on
+  prints `Seeded from payload: adopted [atlas.sheet.sheet], re-runs
+  [atlas.manifest, atlas.sheet.fragment]`, one `Adopted` line per
+  `<ui-view>`, and `bootstrap: adopted, signature matched`; the two re-runs
+  are the tokens `LEFT_OUT` keeps out of the payload.
+- **A path that begins with `//` collapses.** `//about` answers 308 to
+  `/about/` in preview, `/atlas//about` to `/atlas/about/`; `/sheet//7/`
+  is a 404.
+
+Read and left where they are: `template` takes a page that needs only a
+settle, and `renderShell` here reads the route ref after the settle and
+returns the bare plate as a string; the default `<!--app-->` document
+fills a body, and `document()` here rewrites each page's head;
+`routesFromStates` strips a state table to its route fields, and
+`src/routes.ts` is data only; no routed class declares `uiViewProps` or
+`_uiViewProps`.

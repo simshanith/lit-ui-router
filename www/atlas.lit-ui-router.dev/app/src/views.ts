@@ -593,7 +593,7 @@ export class AtlasPrefs extends LightDomHydrating(LitElement) {
                     'VISUALIZER',
                     'the state tree and transition log, drawn over the page',
                   )}
-              ${this.#row('trace', 'TRACE', 'transition, view config and ui-view logging in the console')}
+              ${this.#row('trace', 'TRACE', 'transition, resolve, view config and ui-view logging in the console')}
             </div>
           `
         : nothing}

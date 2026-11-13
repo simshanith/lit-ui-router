@@ -50,6 +50,7 @@ import { definePrerender } from 'lit-ui-router-ssr/vite';
 import type { PrerenderEntry } from 'lit-ui-router-ssr/vite';
 import { createServerRouter, diagnoseMounts } from 'ui-router-server';
 import { installServerLocation } from 'ui-router-server/location';
+import { withBase } from 'ui-router-server/prerender';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
 import { BASE, SHEET_ALIASES, SITE, URL_CONFIG, href, mountsFor, routes } from './src/routes.ts';
@@ -190,7 +191,7 @@ router.urlService.rules.initial((_match, parsed) => ({
 router.urlService.rules.otherwise({ state: 'atlas.notFound' });
 
 /** A hook's path as its page is served: the hooks get each path with the base taken off, the tables below spell it. */
-const served = (path: string): string => `${BASE}${path.slice(1)}`;
+const served = (path: string): string => withBase(BASE, path);
 
 /** The sheet each `/sheet/*` page is, by path. */
 const sheetOf = new Map(PLATES.map((row): [string, string] => [href.sheet(row.num), row.num]));
