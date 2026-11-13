@@ -72,9 +72,8 @@ const result = await prerender({
 
 Each page in `result.pages` names the file it belongs at, such as
 `planets/3/index.html` or `404.html`, and `page.status` is the status it
-answers with. The
-other collected files are `_redirects` and the redirect pages. From there
-Eleventy does the writing:
+answers with. The other collected files are `_redirects` and the redirect
+pages. From there Eleventy does the writing:
 
 - A [paginated](https://www.11ty.dev/docs/pagination/) template writes one
   page per entry in `result.pages`, at its `file`, wrapped in the layout.
