@@ -86,6 +86,11 @@ describe('isListedMessage', () => {
     assert.ok(!isListedMessage('chore: x\n\nno BREAKING CHANGE: here', TYPES));
   });
 
+  it('lists a release-as line in the body of any type, never in the header', () => {
+    assert.ok(isListedMessage('chore: tidy\n\nrelease-as: 1.2.3', TYPES));
+    assert.ok(!isListedMessage('chore: mention release-as: 1.2.3', TYPES));
+  });
+
   it('lists a git revert and ignores a header that is not conventional', () => {
     assert.ok(
       isListedMessage('Revert "feat: a"\n\nThis reverts commit 1.', TYPES),

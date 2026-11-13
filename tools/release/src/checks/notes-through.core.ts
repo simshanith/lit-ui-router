@@ -9,6 +9,10 @@ const HEADER = /^(\w*)(?:\((.*)\))?(!?): (.*)$/;
 // The commit parser's note pattern: any case, optionally a `* ` bullet, under any header.
 const BREAKING_NOTE = /^(?:\*\s+)?BREAKING[ -]CHANGE:/im;
 
+// The preset writer's own pattern: a matching body or footer line lists a commit of any type.
+const RELEASE_AS =
+  /release-as:\s*\w*@?([0-9]+\.[0-9]+\.[0-9a-z]+(-[0-9a-z.]+)?)\s*/i;
+
 /**
  * The sha a message's last `Notes-Through:` line names, wherever it sits: a
  * squash merge appends its own trailers after a blank line, so git's
@@ -20,7 +24,7 @@ export function parseNotesThrough(message: string): string | undefined {
 
 /**
  * Whether the notes writer would list a commit by its message alone: a listed
- * type, a breaking change under any type, or a git revert. Errs towards
+ * type, a breaking change or `release-as:` line under any type, or a git revert. Errs towards
  * listing: the writer's scope and revert-pair rules only move a commit into
  * the closing `Also touched` list, which still names it.
  */
@@ -30,7 +34,14 @@ export function isListedMessage(
 ): boolean {
   const header = message.split('\n', 1)[0] ?? '';
 
-  if (/^Revert\b/.test(header) || BREAKING_NOTE.test(message)) return true;
+  const rest = message.slice(header.length);
+
+  if (
+    /^Revert\b/.test(header) ||
+    BREAKING_NOTE.test(message) ||
+    RELEASE_AS.test(rest)
+  )
+    return true;
 
   const match = HEADER.exec(header);
 
