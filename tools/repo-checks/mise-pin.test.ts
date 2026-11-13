@@ -19,9 +19,13 @@ const MISE_RELEASE = /^\d{4}\.\d{1,2}\.\d+$/;
 
 // They run with `cache: false` on the publish path, so they install fresh.
 const RELEASE_WORKFLOWS = new Set(
-  ['bump-version', 'dependency-audit', 'publish-gh', 'publish-npm'].map(
-    (name) => `.github/workflows/${name}.yml`,
-  ),
+  [
+    'bump-version',
+    'dependency-audit',
+    'publish-gh',
+    'publish-npm',
+    'release-notes-resync',
+  ].map((name) => `.github/workflows/${name}.yml`),
 );
 
 /** A step's `with:` value as YAML parses it. */
