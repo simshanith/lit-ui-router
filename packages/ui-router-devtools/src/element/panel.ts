@@ -920,11 +920,18 @@ export class DevtoolsPanel extends LitElement {
     this._announcement = 'Showing the live router.';
   }
 
-  #export() {
-    const session = this.session({
-      ...(this._keepValues && { params: 'all' }),
+  // The toggle decides both ways; off falls back to the configured allowlist, or to none when that is 'all'.
+  _exportSession(): Session | undefined {
+    const configured = this.redaction.params;
+
+    return this.session({
+      params: this._keepValues ? 'all' : configured === 'all' ? [] : configured,
       messages: this._keepMessages,
     });
+  }
+
+  #export() {
+    const session = this._exportSession();
 
     if (!session) return;
 

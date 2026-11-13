@@ -262,6 +262,50 @@ describe('session files', () => {
     ).toContain(`${dropped} earlier events dropped`);
   });
 
+  it('lets the Param values toggle redact or keep values whatever the redaction option says', async () => {
+    await page.viewport(1280, 800);
+
+    for (const [params, off] of [
+      ['all', '[redacted]'],
+      [['id'], '7'],
+      [[], '[redacted]'],
+    ] as const) {
+      const router = makeRouter();
+      router.stateRegistry.register({ name: 'item', url: '/item/:id' });
+
+      const { element } = router.plugin(DevtoolsPlugin, {
+        redaction: { params },
+      });
+
+      await router.stateService.go('item', { id: '7' });
+      await element.updateComplete;
+      getByRole(shadow(element), 'button', { name: /Router .*item/ }).click();
+      await element.updateComplete;
+      const panel = panelOf(element);
+
+      const values = within(
+        getByRole(shadow(element), 'group', { name: 'Export keeps' }),
+      ).getByRole('button', { name: 'Param values' });
+
+      const exported = () =>
+        panel._exportSession()?.events.find((e) => e.type === 'current');
+
+      for (const keep of [false, true]) {
+        if ((values.getAttribute('aria-pressed') === 'true') !== keep) {
+          values.click();
+          await element.updateComplete;
+        }
+
+        expect(exported()).toMatchObject({
+          params: { id: keep ? '7' : off },
+        });
+      }
+
+      router.dispose();
+      document.body.replaceChildren();
+    }
+  });
+
   it('starts the export toggles from the redaction option', async () => {
     const { element } = await open();
 
