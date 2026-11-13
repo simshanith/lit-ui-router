@@ -44,4 +44,6 @@ export type {
   ResponseHandlers,
 } from 'ui-router-server/ssr';
 
+export { registerTraceCategory } from './trace-categories.js';
+
 export { UiViewRenderer } from './ui-view-renderer.js';
