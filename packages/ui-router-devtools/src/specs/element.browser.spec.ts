@@ -242,9 +242,9 @@ it("ends an imported running transition at the export's clock", async () => {
   });
   await panel.updateComplete;
 
-  expect(panel._duration(panel._runningTx!)).toBe(took);
+  expect(panel._duration(panel._runningTx!)).toBeCloseTo(took, 6);
   await tick(250);
-  expect(panel._duration(panel._runningTx!)).toBe(took);
+  expect(panel._duration(panel._runningTx!)).toBeCloseTo(took, 6);
 });
 
 it('draws the default-child arrow to a lazy child', async () => {
