@@ -73,6 +73,14 @@ describe('composeNavigateUrl', () => {
     );
   });
 
+  it('counts past the tab, newline and carriage return the URL parser removes', () => {
+    expect(composeNavigateUrl('/\t/evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('/\n\\\r\tevil.example', '/')).toBe(
+      '/evil.example',
+    );
+    expect(composeNavigateUrl('/\tevil.example', '/')).toBe('/\tevil.example');
+  });
+
   it('leaves the url as written below a base prefix, where it names this origin', () => {
     expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
       '/app///evil.example',

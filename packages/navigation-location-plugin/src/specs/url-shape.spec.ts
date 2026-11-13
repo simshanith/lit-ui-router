@@ -107,22 +107,28 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
       },
     );
 
-    // Core encodes a backslash in a param, so only a url set directly reaches the plugin with one.
-    it('stays on this origin for a url set directly that begins with a backslash', async () => {
-      const router = new UIRouter();
-      router.urlService.config.baseHref = () => '/';
-      const plugin = navigationLocationPlugin(router);
-      const { origin } = window.location;
+    // Core encodes these in a param, so only a url set directly reaches the plugin with one.
+    it.each([
+      ['a backslash', '/\\x.invalid'],
+      ['a tab', '/\t/x.invalid'],
+    ])(
+      'stays on this origin for a url set directly that begins with %s',
+      async (_name, url) => {
+        const router = new UIRouter();
+        router.urlService.config.baseHref = () => '/';
+        const plugin = navigationLocationPlugin(router);
+        const { origin } = window.location;
 
-      router.urlService.url('/\\x.invalid');
+        router.urlService.url(url);
 
-      await vi.waitFor(() => {
-        expect(window.location.pathname).toBe('/x.invalid');
-      });
-      expect(leaving).toEqual([]);
-      expect(window.location.origin).toBe(origin);
+        await vi.waitFor(() => {
+          expect(window.location.pathname).toBe('/x.invalid');
+        });
+        expect(leaving).toEqual([]);
+        expect(window.location.origin).toBe(origin);
 
-      plugin.dispose?.(router);
-    });
+        plugin.dispose?.(router);
+      },
+    );
   });
 });
