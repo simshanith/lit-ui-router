@@ -9,7 +9,8 @@
     "./redaction": "./src/redaction.ts",
     "./resolve-timing": "./src/resolve-timing.ts",
     "./schema": "./src/event-schema.ts",
-    "./source": "./src/transition-source.ts"
+    "./source": "./src/transition-source.ts",
+    "./thrown": "./src/thrown.ts"
   },
   "scripts": {
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",

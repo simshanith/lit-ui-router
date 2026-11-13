@@ -15,6 +15,12 @@
       "outputs": ["dist/**"]
     },
     "build:js": {
+      // oxc-emit inlines the exported @repo/* sources; no task edge hashes them
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/shared/*/src/*.ts",
+        "$TURBO_ROOT$/packages/shared/*/package.json"
+      ],
       "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
     },
     "build:types": {

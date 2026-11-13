@@ -1,6 +1,9 @@
 // Stateless shared code ships inlined: @tools/oxc-emit compiles each canonical
 // file under packages/shared/*/src/ into every consumer's dist/shared/.
+import { posix } from 'node:path';
+
 import ts from 'typescript-6';
+import * as v from 'valibot';
 
 export const CANONICAL_GLOB = 'packages/shared/*/src/*.ts';
 
@@ -81,4 +84,26 @@ export function statefulStatements(file: string, source: string): string[] {
 
       return `${file}:${line + 1}: ${text}`;
     });
+}
+
+const ExportsSchema = v.record(v.string(), v.string());
+
+/**
+ * Canonical sources no `exports` subpath names: @tools/oxc-emit inlines only
+ * exported files, so a relative import of one breaks every consumer's dist.
+ * `exportsByPackage` maps each shared package dir to its manifest `exports`.
+ */
+export function unexportedSources(
+  canonicals: readonly string[],
+  exportsByPackage: ReadonlyMap<string, unknown>,
+): string[] {
+  const exported = new Set(
+    [...exportsByPackage].flatMap(([dir, exports]) =>
+      Object.values(v.parse(ExportsSchema, exports)).map((target) =>
+        posix.join(dir, target),
+      ),
+    ),
+  );
+
+  return canonicals.filter((file) => !exported.has(file));
 }
