@@ -1222,10 +1222,14 @@ describe('prerender path encoding', () => {
     assert.equal(result.pages[0]?.file, 'feeds/a b');
   });
 
-  it('encodes a space in an extraRules line of the _redirects file', async () => {
-    const { files } = await tags([], {
+  it('encodes a space in an extraRules line, in the file and in the result', async () => {
+    const { files, result } = await tags([], {
       extraRules: [{ from: '/old name/*', to: '/new/:splat', status: 301 }],
     });
+
+    assert.deepEqual(result.rules, [
+      { from: '/old%20name/*', to: '/new/:splat', status: 301 },
+    ]);
 
     assert.equal(
       files.get('dist/_redirects'),

@@ -497,6 +497,34 @@ describe('serverRouterPlugin prerender build step', () => {
     assert.equal(req.url, '/tags/a%20b/index.html');
   });
 
+  it('previews the shell for a page whose file name holds a # or ?', async (t) => {
+    const root = await mkdtemp(path.join(tmpdir(), 'preview-reserved-'));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    await mkdir(path.join(root, 'dist', 'tags', 'a#b'), { recursive: true });
+    await writeFile(path.join(root, 'dist', 'tags', 'a#b', 'index.html'), '');
+
+    const plugin = serverRouterPlugin(routerOf({ kind: 'shell', mount: '/' }), {
+      prerender: { entry: './entry.mjs' },
+    });
+
+    plugin.configResolved(configOf(root));
+    const server = fakeServer();
+    plugin.configurePreviewServer(server);
+
+    const req = {
+      url: '/tags/a%23b',
+      method: 'GET',
+      headers: { accept: 'text/html' },
+    };
+
+    const res = { writeHead: () => res, setHeader: () => res, end: () => res };
+
+    await new Promise<void>((resolve) => {
+      server.installed[0]?.(req, res, () => resolve());
+    });
+    assert.equal(req.url, '/');
+  });
+
   for (const base of ['/', '/atlas/'])
     it(`names a prerendered page itself as canonical under base '${base}'`, async (t) => {
       const root = await mkdtemp(path.join(tmpdir(), 'preview-canonical-'));

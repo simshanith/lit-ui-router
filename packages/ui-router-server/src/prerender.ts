@@ -220,7 +220,7 @@ export interface PrerenderOptions {
    * No SPA catch-all is ever written — one turns every 404 into a 200.
    */
   rules?: '_redirects' | 'none' | RulesWriter;
-  /** Lines prepended to the generated ones, verbatim — a site's own legacy redirects. */
+  /** Lines prepended to the generated ones, percent-encoded as they are — a site's own legacy redirects. */
   extraRules?: RedirectLine[];
   /** Writes each file; pass one over `node:fs`, a virtual fs, or memory. */
   write: FileWriter;
@@ -768,7 +768,7 @@ export async function prerender(
   }
 
   const lines = [
-    ...extraRules,
+    ...extraRules.map(encodedLine),
     ...uniqueLines(generated.map(encodedLine)).map((line) => ({
       ...line,
       from: fromUnderBase(base, line.from),
