@@ -771,6 +771,32 @@ describe('the template option', () => {
     expect(files).toEqual(hooked.files);
   });
 
+  it.each([
+    { mount: '/', baseHref: '/', path: '/about/' },
+    { mount: '/docs', baseHref: '/docs/', path: '/docs/about/' },
+  ])(
+    'settles $path with its trailing slash for a strict router',
+    async ({ mount, baseHref, path }) => {
+      const router = new UIRouterLit();
+      installServerLocation(router, { baseHref });
+      router.stateRegistry.register({ name: 'about', url: '/about/' });
+
+      const { files } = await run({
+        mounts: { [mount]: { routes: [{ name: 'about', url: '/about/' }] } },
+        paths: [path],
+        notFound: false,
+        renderShell: undefined,
+        router,
+        template: (r) => html`<p>${r.globals.current.name}</p>`,
+      });
+
+      expect([...files.keys()]).toEqual(['dist/about/index.html']);
+      expect(signatureIn(files.get('dist/about/index.html')!)).toMatchObject({
+        state: 'about',
+      });
+    },
+  );
+
   /** sheetRouter with the mount's notFound state registered. */
   const notFoundRouter = (): UIRouterLit => {
     const router = sheetRouter();

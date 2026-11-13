@@ -43,8 +43,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
 
 Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
 and `template` or an async `renderShell()` are the seams for them. `template` takes the router and
-returns the page's template; `prerender` settles the router on each path with `settle()` before
-calling it. That includes the 404 document's probe path, so a mount that projects an `otherwise`
+returns the page's template; `prerender` settles the router on each path within its mount with
+`settle()` before calling it. That includes the 404 document's probe path, so a mount that projects an `otherwise`
 needs the router to declare an `otherwise` rule of its own. A `renderShell()` hook, for a page that needs the verdict or more than a settle, calls
 `settle()` itself. Pass one or the other; passing both throws.
 
