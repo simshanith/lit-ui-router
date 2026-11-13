@@ -312,6 +312,25 @@ describe('joining spans', () => {
     expect(joined[2]).toMatchObject({ running: true, end: 1000 });
   });
 
+  // What ui-router-otel sends with activateResolveSpans: the app's fetch under the router's resolve span.
+  it("joins an app span under the router's resolve span as a child, not as during", () => {
+    const spans = [
+      routerSpan(users, 'r1'),
+      span('rs', 101, 250, {
+        traceId: 'trace-r1',
+        parentSpanId: 'r1',
+        attributes: { 'uirouter.resolve': 'users', 'uirouter.state': 'users' },
+      }),
+      span('fetch', 102, 240, { traceId: 'trace-r1', parentSpanId: 'rs' }),
+    ];
+
+    expect(
+      joinSpans([users], spans, placing)
+        .get(1)
+        ?.map((bar) => [bar.name, bar.relation]),
+    ).toEqual([['fetch', 'child']]);
+  });
+
   it("leaves a child of another transition's router span to that transition", () => {
     const spans = [
       routerSpan(users, 'r1'),

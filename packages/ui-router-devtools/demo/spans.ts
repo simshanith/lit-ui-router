@@ -18,8 +18,8 @@ const now = (): number => performance.timeOrigin + performance.now();
 
 /**
  * Sends the panel what an instrumented app would: ui-router-otel's span for each transition, and a fetch span for
- * each resolve. Only the `stars` fetch is parented to the transition's span, as if the app had passed it the
- * transition's context; the others start traces of their own, as a fetch does without a context manager.
+ * each resolve. The `stars` resolve is sent as `activateResolveSpans` sends it, with a resolve span its fetch is a
+ * child of; the other fetches start traces of their own, as they do with the option off.
  */
 export const demoTracing = (router: UIRouter, sink: SpanSink) => {
   let active: SpanRecord | undefined;
@@ -62,14 +62,15 @@ export const demoTracing = (router: UIRouter, sink: SpanSink) => {
 
   // A fetch, with a short parse of its body at the end as its child.
   const fetched = async <T>(token: string, load: () => Promise<T>) => {
-    const fetch = begin(
-      `GET /api/${token}`,
-      token === 'stars' ? active : undefined,
-      {
-        'http.request.method': 'GET',
-        'url.full': `https://api.example.test/${token}?session=demo`,
-      },
-    );
+    const resolve =
+      token === 'stars' && active
+        ? begin(`resolve ${token}`, active, { 'uirouter.resolve': token })
+        : undefined;
+
+    const fetch = begin(`GET /api/${token}`, resolve, {
+      'http.request.method': 'GET',
+      'url.full': `https://api.example.test/${token}?session=demo`,
+    });
 
     try {
       const value = await load();
@@ -78,9 +79,13 @@ export const demoTracing = (router: UIRouter, sink: SpanSink) => {
       end({ ...parse, startTime: parse.startTime - 3 });
       end(fetch);
 
+      if (resolve) end(resolve);
+
       return value;
     } catch (error) {
       end(fetch, 'error');
+
+      if (resolve) end(resolve, 'error');
       throw error;
     }
   };
