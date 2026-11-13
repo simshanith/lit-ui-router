@@ -424,6 +424,17 @@ discussion (see the tool README).
 - A maintainer will review and run CI on your behalf
 - Ensure your changes pass local tests before submitting
 
+### Screenshots
+
+A visual change to the docs site or a sample app carries before and after
+screenshots in a PR comment, at the widths where the layout changes, in light
+and dark. `gh` cannot upload attachments, so the images live in
+[`simshanith/assets`](https://github.com/simshanith/assets), never on a branch
+of this repo. Push them as an orphan commit to the branch
+`simshanith/lit-ui-router/pr/<number>` there and link each by commit SHA; its
+README has the layout and URL form. That repo deletes a branch 90 days after
+its PR closes, so the images are for review, not a permanent record.
+
 ### Automated review
 
 [Pullfrog](https://docs.pullfrog.com) is the first reviewer. Its GitHub App
