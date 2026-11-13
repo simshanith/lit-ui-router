@@ -1372,6 +1372,151 @@ describe('the nested Map', () => {
     expect(fit).toHaveProperty('disabled', true);
   });
 
+  it('pans by the wheel and by a drag, and changes the type step by the wheel with Control', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+
+    const scroller =
+      element.renderRoot.querySelector<HTMLElement>('.map-scroll')!;
+
+    const zoomIn = getByRole(shadow(element), 'button', { name: 'Zoom in' });
+
+    zoomIn.click();
+    await element.updateComplete;
+    zoomIn.click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px'),
+    );
+    await settled(element);
+
+    const above = () =>
+      scroller.getBoundingClientRect().top +
+      parseFloat(getComputedStyle(scroller).paddingTop) -
+      nestedRoot(element).getBoundingClientRect().top;
+
+    // A drag across the minimap follows the pointer only while the button is down.
+    const mini = element.renderRoot.querySelector('.minimap')!;
+    const thumb = mini.getBoundingClientRect();
+
+    const glide = (y: number, buttons: number) =>
+      mini.dispatchEvent(
+        new PointerEvent('pointermove', {
+          clientX: thumb.x + thumb.width / 2,
+          clientY: y,
+          buttons,
+          bubbles: true,
+        }),
+      );
+
+    glide(thumb.bottom - 1, 1);
+    await element.updateComplete;
+    const low = above();
+    expect(low).toBeGreaterThan(0);
+    glide(thumb.y + 1, 0);
+    await element.updateComplete;
+    expect(above()).toBe(low);
+
+    const wheel = (init: WheelEventInit) => {
+      const event = new WheelEvent('wheel', {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      });
+
+      scroller.dispatchEvent(event);
+
+      return event;
+    };
+
+    wheel({ deltaY: -10_000 });
+    await element.updateComplete;
+    expect(above()).toBe(0);
+
+    // Past the top edge the wheel is left to scroll the page.
+    expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+
+    expect(wheel({ deltaY: 40 }).defaultPrevented).toBe(true);
+    await element.updateComplete;
+    expect(above()).toBe(40);
+
+    // A line-mode wheel moves 16px a line.
+    wheel({ deltaY: -1, deltaMode: WheelEvent.DOM_DELTA_LINE });
+    await element.updateComplete;
+    expect(above()).toBe(24);
+
+    const pointer = (type: string, x: number, y: number) =>
+      new PointerEvent(type, {
+        clientX: x,
+        clientY: y,
+        button: 0,
+        pointerId: 1,
+        bubbles: true,
+        composed: true,
+      });
+
+    const start = scroller.getBoundingClientRect();
+    const [x, y] = [start.x + 200, start.y + 200];
+
+    // A press that moves less than the drag threshold pans nothing.
+    scroller.dispatchEvent(pointer('pointerdown', x, y));
+    window.dispatchEvent(pointer('pointermove', x, y - 2));
+    window.dispatchEvent(pointer('pointerup', x, y - 2));
+    await element.updateComplete;
+    expect(above()).toBe(24);
+
+    scroller.dispatchEvent(pointer('pointerdown', x, y));
+    window.dispatchEvent(pointer('pointermove', x, y - 20));
+    expect(scroller.hasAttribute('data-panning')).toBe(true);
+    window.dispatchEvent(pointer('pointerup', x, y - 20));
+    await element.updateComplete;
+
+    expect(scroller.hasAttribute('data-panning')).toBe(false);
+    expect(above()).toBe(44);
+
+    // The click that ends a drag selects nothing.
+    const app = getByRole(shadow(element), 'treeitem', { name: 'app' });
+    app.click();
+    await element.updateComplete;
+    expect(panelOf(element)._selectedState).toBeNull();
+
+    // The next click selects as usual.
+    await tick(0);
+    app.click();
+    await element.updateComplete;
+    expect(panelOf(element)._selectedState).toBe('app');
+
+    // Control and the wheel change the type step once per notch, whatever the pan.
+    wheel({ deltaY: 30, ctrlKey: true });
+    await element.updateComplete;
+    expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('20px');
+    expect(wheel({ deltaY: 30, ctrlKey: true }).defaultPrevented).toBe(true);
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).toBe('16px'),
+    );
+
+    getByRole(shadow(element), 'button', { name: 'Zoom out' }).click();
+    await waitFor(() =>
+      expect(getComputedStyle(nestedRoot(element)).fontSize).not.toBe('16px'),
+    );
+  });
+
+  it('counts a line travelled both ways once in each direction', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+
+    await element.router!.stateService.go('app.contacts.contact');
+    await element.router!.stateService.go(MESSAGE);
+    getByRole(map, 'treeitem', { name: 'message' }).click();
+
+    await waitFor(() =>
+      expect(
+        [...element.renderRoot.querySelectorAll('.chip')].map((chip) =>
+          [...chip.querySelectorAll('text')].map((text) => text.textContent),
+        ),
+      ).toEqual(expect.arrayContaining([['2', '2']])),
+    );
+  });
+
   it('pans a state into view when focus moves to it by keyboard', async () => {
     const element = await openMap(1280);
     const map = await tree(element);
