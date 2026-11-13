@@ -1,0 +1,32 @@
+{
+  "name": "@tools/changelog",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Reads and writes the published packages' CHANGELOG.md files, and backfills them from the release ledger",
+  "type": "module",
+  "exports": {
+    ".": "./src/changelog.ts"
+  },
+  "scripts": {
+    "backfill": "node src/backfill.ts",
+    "format:check:oxfmt": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "format:oxfmt": "oxfmt \"**/*.{ts,json,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"src/**/*.test.ts\"",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tools/bootstrap": "catalog:workspace",
+    "@tools/cli": "catalog:workspace",
+    "@tools/shared": "catalog:workspace",
+    "semver": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}
