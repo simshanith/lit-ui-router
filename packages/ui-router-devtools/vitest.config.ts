@@ -1,8 +1,17 @@
 import { configDefaults, defineConfig } from 'vitest/config';
 import { GithubActionsReporter } from 'vitest/node';
+import type { BrowserCommand } from 'vitest/node';
 import { playwright } from '@vitest/browser-playwright';
 
 import packageJson from './package.json' with { type: 'json' };
+
+// Playwright emulates the media feature for the whole page, the tester iframe included.
+const reduceMotion: BrowserCommand<[reduce: boolean]> = async (
+  context,
+  reduce,
+) => {
+  await context.page.emulateMedia({ reducedMotion: reduce ? 'reduce' : null });
+};
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
@@ -60,6 +69,7 @@ export default defineConfig({
             enabled: true,
             headless: true,
             provider: playwright({}),
+            commands: { reduceMotion },
             instances: [
               { name: 'chrome', browser: 'chromium', headless: true },
               { name: 'firefox', browser: 'firefox', headless: true },

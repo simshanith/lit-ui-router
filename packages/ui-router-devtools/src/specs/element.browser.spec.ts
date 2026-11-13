@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { commands, page } from 'vitest/browser';
 import {
+  configure,
   getAllByRole,
   getByRole,
   getByText,
+  getConfig,
   queryAllByRole,
   queryByRole,
   queryByText,
@@ -16,6 +18,23 @@ import '../define.ts';
 import { DevtoolsPlugin } from '../plugin.ts';
 import type { DevtoolsPanel } from '../element/panel.ts';
 import { UIRouterDevtools } from '../ui-router-devtools.ts';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    reduceMotion: (reduce: boolean) => Promise<void>;
+  }
+}
+
+const { getElementError } = getConfig();
+
+// prettyDOM takes no ShadowRoot, so a failed query in one names its host instead of throwing a TypeError.
+configure({
+  getElementError: (message, container) =>
+    getElementError(
+      message,
+      container instanceof ShadowRoot ? container.host : container,
+    ),
+});
 
 const routers: UIRouter[] = [];
 
@@ -640,8 +659,21 @@ describe('the nested Map', () => {
     return element;
   };
 
+  // The Map is lazy and is laid out from a ResizeObserver entry, which waits on the engine's next rendering update.
   const tree = (element: UIRouterDevtools) =>
-    waitFor(() => getByRole(shadow(element), 'tree', { name: 'State map' }));
+    waitFor(() => getByRole(shadow(element), 'tree', { name: 'State map' }), {
+      timeout: 5000,
+    });
+
+  // Colours ease with motion; without it they change at once, and only opacity fades.
+  const reduceMotion = async () => {
+    await commands.reduceMotion(true);
+    expect(matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true);
+  };
+
+  beforeAll(() => import('../element/map.ts'));
+
+  afterEach(() => commands.reduceMotion(false));
 
   const edges = (element: UIRouterDevtools) =>
     element.renderRoot.querySelectorAll('.nedge');
@@ -664,14 +696,20 @@ describe('the nested Map', () => {
     };
   };
 
-  const settled = (element: UIRouterDevtools) =>
-    waitFor(() =>
-      expect(
-        [...element.renderRoot.querySelectorAll('.nested, .box')].flatMap(
-          (box) => box.getAnimations().filter((a) => a.id.startsWith('uird-')),
-        ),
-      ).toHaveLength(0),
+  const moving = (element: UIRouterDevtools) =>
+    [...element.renderRoot.querySelectorAll('.nested, .box')].flatMap((box) =>
+      box.getAnimations().filter((a) => a.id.startsWith('uird-')),
     );
+
+  // A move that interrupts another cancels it, so a cancelled one is waited past too.
+  const settled = async (element: UIRouterDevtools) => {
+    let flights = moving(element);
+
+    while (flights.length > 0) {
+      await Promise.allSettled(flights.map((flight) => flight.finished));
+      flights = moving(element);
+    }
+  };
 
   it('is a tree of treeitems holding groups, named by header', async () => {
     const element = await openMap(1280);
@@ -927,6 +965,7 @@ describe('the nested Map', () => {
   });
 
   it('colours a state by its depth on the Map and in the Outline, and by status while a transition is in focus', async () => {
+    await reduceMotion();
     const element = await openMap(1280);
     const map = await tree(element);
 
@@ -969,6 +1008,7 @@ describe('the nested Map', () => {
   });
 
   it('rings a selected box outside its border, and leaves the border saying what it said in every mode', async () => {
+    await reduceMotion();
     const element = await openMap(1280);
     const map = await tree(element);
 
@@ -1026,11 +1066,9 @@ describe('the nested Map', () => {
 
     options[1].click();
     await waitFor(() => expect(mode()).toBe('tx'));
-    // The colour eases, so it is read once it has settled on its neighbour's.
     await waitFor(() => {
       expect(border('messagelist')).not.toEqual(resting);
       expect(border('messagelist')[0]).toBe(border('mymessages')[0]);
-      expect(map.getAnimations({ subtree: true })).toHaveLength(0);
     });
 
     const status = border('mymessages');
