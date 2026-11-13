@@ -1,5 +1,6 @@
 import { html } from 'lit';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { trace } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type {
@@ -297,6 +298,63 @@ describe('the resolves a signature carries', () => {
     expect(fns.when).toHaveBeenCalledOnce();
     expect(fns.detail).not.toHaveBeenCalled();
     expect(fns.greeting).not.toHaveBeenCalled();
+  });
+
+  it('log what the boot adopted and what re-runs under the RESOLVE trace', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const markup = await drawWith('/shell/when');
+    trace.enable('RESOLVE');
+
+    try {
+      await bootOver(markup, '/shell/when');
+    } finally {
+      trace.disable('RESOLVE');
+    }
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.includes('Seeded from payload')),
+    ).toEqual([
+      expect.stringMatching(
+        /^Transition #\d+-\d+: {9}Seeded from payload: adopted \[shell\.greeting, shell\.when\.detail\], re-runs \[shell\.when\.when\]$/,
+      ),
+    ]);
+  });
+
+  it('log a payload drawn for another transition under the RESOLVE trace', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const markup = await drawWith('/shell/when');
+    trace.enable('RESOLVE');
+
+    try {
+      await bootOver(markup, '/shell');
+    } finally {
+      trace.disable('RESOLVE');
+    }
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.includes('Seeded from payload')),
+    ).toEqual([
+      expect.stringMatching(
+        /^Transition #\d+-\d+: {9}Seeded from payload: drawn for another transition, re-runs \[.*\]$/,
+      ),
+    ]);
+  });
+
+  it("hand seed's report to the caller's onSeed", async () => {
+    const onSeed = vi.fn();
+
+    await bootOver(await drawWith('/shell/when'), '/shell/when', { onSeed });
+
+    expect(onSeed).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+      matched: true,
+      adopted: ['shell.greeting', 'shell.when.detail'],
+      rerun: ['shell.when.when'],
+    });
   });
 
   it('carry a value a transporter encoded, rebuilt by the same transport on boot', async () => {
