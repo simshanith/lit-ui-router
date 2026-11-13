@@ -9,7 +9,7 @@ import {
   type Span,
   type Tracer,
 } from '@opentelemetry/api';
-import { redactionOf, redactParams } from '@repo/router-events/redaction';
+import { redactionOf } from '@repo/router-events/redaction';
 import type {
   InvalidEvent,
   Outcome,
@@ -27,9 +27,9 @@ declare const performance: { readonly timeOrigin: number };
 
 export interface ReportOptions {
   /**
-   * What reaches a span, as in a devtools export: every param is a `uirouter.param.<key>` attribute, with its value
-   * only for the keys `params` lists (`'all'` for every key) and `[redacted]` otherwise; `messages: false` keeps error
-   * messages out of span status and exception events. By default no value is kept and messages are.
+   * What reaches a span, in the devtools export's shape: only the params `params` lists (`'all'` for every one)
+   * become `uirouter.param.<key>` attributes, and the rest are omitted rather than redacted; `messages: false` keeps
+   * error messages out of span status and exception events. By default no param is kept and messages are.
    */
   redaction?: Partial<Redaction>;
   /** Report transitions core ignores as a no-op (same state and params); off by default. */
@@ -70,8 +70,8 @@ const paramAttributes = (
   keep: Redaction['params'],
 ): Attributes =>
   Object.fromEntries(
-    Object.entries(redactParams(params, keep)).flatMap(([key, value]) => {
-      if (value === null) return [];
+    Object.entries(params).flatMap(([key, value]) => {
+      if (value === null || (keep !== 'all' && !keep.includes(key))) return [];
 
       return [
         [

@@ -230,7 +230,7 @@ describe('a failed transition', () => {
     expect(span.attributes['error.type']).toBe('TypeError');
   });
 
-  it('reports invalid param values as invalid, naming the params', async () => {
+  it('reports invalid param values as invalid, naming the params by default', async () => {
     const { go, plugin, spans } = setup([
       { name: 'n', url: '/n/:num', params: { num: { type: 'int' } } },
     ]);
@@ -244,6 +244,7 @@ describe('a failed transition', () => {
       'uirouter.invalid_params': ['num'],
       'error.type': 'invalid',
     });
+    expect(span.attributes).not.toHaveProperty('uirouter.param.num');
     expect(span.status).toEqual({
       code: SpanStatusCode.ERROR,
       message:
@@ -402,7 +403,6 @@ describe('an invalid target', () => {
       'uirouter.to': 'nope',
       'uirouter.outcome': 'invalid',
       'error.type': 'invalid',
-      'uirouter.param.id': '[redacted]',
     });
   });
 });
@@ -418,10 +418,12 @@ describe('params', () => {
 
   const paramAttributes = (span: ReadableSpan) =>
     Object.fromEntries(
-      Object.entries(span.attributes).filter(([key]) => key.includes('param')),
+      Object.entries(span.attributes).filter(([key]) =>
+        key.startsWith('uirouter.param.'),
+      ),
     );
 
-  it('keep their keys, with values only for the keys the redaction lists', async () => {
+  it('become attributes only for the keys the redaction lists', async () => {
     const listed = setup(states, {
       redaction: { params: ['folderId', 'missing'] },
     });
@@ -431,16 +433,12 @@ describe('params', () => {
 
     expect(paramAttributes(named(listed.spans(), 'folder'))).toEqual({
       'uirouter.param.folderId': '42',
-      'uirouter.param.q': '[redacted]',
     });
 
     const unlisted = setup(states);
     unlisted.plugin();
     await unlisted.go('folder', { folderId: '42', q: 'secret' });
-    expect(paramAttributes(named(unlisted.spans(), 'folder'))).toEqual({
-      'uirouter.param.folderId': '[redacted]',
-      'uirouter.param.q': '[redacted]',
-    });
+    expect(paramAttributes(named(unlisted.spans(), 'folder'))).toEqual({});
   });
 
   it('keep every value under all, a list as strings', async () => {
