@@ -280,6 +280,13 @@ for (const strategy of TIERS) {
       });
     });
 
+    it('serves the plain shell, not the 404, for a malformed percent-escape', async () => {
+      assert.deepEqual(await router.resolve('/app/contacts/100%'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+    });
+
     it('never outranks a route match or a redirect rule', async () => {
       // Precedence, as in the client: rules and matchers first, then 404.
       assert.deepEqual(await router.resolve('/app/welcome'), {

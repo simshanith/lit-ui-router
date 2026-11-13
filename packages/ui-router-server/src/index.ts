@@ -842,7 +842,7 @@ const matchedRouteVerdict = (
     : notFoundVerdict(mount);
 };
 
-// A malformed percent-escape degrades to the shell, as a core throw does on a simulate mount.
+// Any URIError degrades to the shell, a caller's own included, as a core throw does on a simulate mount.
 const matcherVerdict = (
   mount: Mount,
   subpath: string,
@@ -866,7 +866,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   try {
     verdict = matcherVerdict(mount, '');
   } catch {
-    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface any throw but a URIError.
     return null;
   }
 
