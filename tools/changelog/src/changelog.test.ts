@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   extractSection,
+  insertSection,
   mergeSections,
   parseChangelog,
   preamble,
@@ -139,6 +140,75 @@ describe('renderChangelog', () => {
     assert.equal(
       renderChangelog('ui-router-server', []),
       `${preamble('ui-router-server')}\n`,
+    );
+  });
+});
+
+describe('insertSection', () => {
+  const section = {
+    version: '1.21.0',
+    date: '2026-11-13T01:00:00Z',
+    body: '\n### Bug Fixes\n\n* two\n\n',
+  };
+
+  it('puts a new version first and keeps every other byte', () => {
+    const next = insertSection('lit-ui-router', FILE, section);
+
+    assert.equal(
+      next,
+      FILE.replace(
+        '## 1.20.0',
+        '## 1.21.0 (2026-11-13)\n\n### Bug Fixes\n\n* two\n\n## 1.20.0',
+      ),
+    );
+    assert.equal(extractSection(next, '1.21.0'), '### Bug Fixes\n\n* two');
+  });
+
+  it('files a backport patch under its own line', () => {
+    const next = insertSection('lit-ui-router', FILE, {
+      ...section,
+      version: '1.2.1',
+    });
+
+    assert.deepEqual(
+      parseChangelog(next).sections.map(({ version }) => version),
+      ['1.20.0', '1.3.0', '1.2.1', '1.2.0'],
+    );
+  });
+
+  it('appends below the lowest version', () => {
+    const next = insertSection('lit-ui-router', FILE, {
+      ...section,
+      version: '1.0.0',
+    });
+
+    assert.ok(
+      next.endsWith(
+        '## 1.2.0 (2026-06-01)\n\n## 1.0.0 (2026-11-13)\n\n### Bug Fixes\n\n* two\n',
+      ),
+    );
+  });
+
+  it('starts a missing file with the fixed preamble and only this section', () => {
+    assert.equal(
+      insertSection('ui-router-server', undefined, { ...section, body: '' }),
+      `${preamble('ui-router-server')}\n\n## 1.21.0 (2026-11-13)\n`,
+    );
+  });
+
+  it('refuses a version that already has a section', () => {
+    assert.throws(
+      () =>
+        insertSection('lit-ui-router', FILE, { ...section, version: '1.3.0' }),
+      /already has a 1\.3\.0 section/,
+    );
+  });
+
+  it('refuses a heading that is not a version', () => {
+    assert.throws(
+      () =>
+        insertSection('lit-ui-router', FILE, { ...section, version: 'next' }),
+      /is not a version/,
     );
   });
 });

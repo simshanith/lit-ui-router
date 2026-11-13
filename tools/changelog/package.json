@@ -5,7 +5,9 @@
   "description": "Reads and writes the published packages' CHANGELOG.md files, and backfills them from the release ledger",
   "type": "module",
   "exports": {
-    ".": "./src/changelog.ts"
+    ".": "./src/changelog.ts",
+    "./extract.ts": "./src/extract.ts",
+    "./write-section.ts": "./src/write-section.ts"
   },
   "scripts": {
     "backfill": "node src/backfill.ts",

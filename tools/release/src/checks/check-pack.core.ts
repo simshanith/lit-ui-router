@@ -229,7 +229,8 @@ function mapProblems(
 }
 
 /**
- * Packed files whose imports or sourcemaps reach outside the tarball.
+ * Packed files whose imports or sourcemaps reach outside the tarball, and any
+ * packed CHANGELOG.md.
  * `paths` lists every packed file; `files` the text of the ones to scan.
  * `maps` holds each parsed `.map` by path.
  */
@@ -241,6 +242,13 @@ export function findPackedFileProblems(
   const packed = new Set(paths);
 
   return [
+    ...paths.flatMap((path) =>
+      /(?:^|\/)changelog\.md$/i.test(path)
+        ? [
+            `${path}: release notes live in the repo's CHANGELOG.md and the GitHub release, never the tarball`,
+          ]
+        : [],
+    ),
     ...files
       .filter((file) => EMITTED.test(file.path))
       .flatMap((file) => importProblems(file, packed)),
@@ -257,12 +265,12 @@ export function formatFileReport(
   if (bad.length === 0) {
     return {
       ok: true,
-      text: `✓ packed files check passed — every emitted import and sourcemap source resolves inside its tarball.`,
+      text: `✓ packed files check passed — every emitted import and sourcemap source resolves inside its tarball, and none packs a CHANGELOG.md.`,
     };
   }
 
   const lines = [
-    '✗ packed files check failed — emitted files reach outside their tarball:',
+    '✗ packed files check failed — emitted files reach outside their tarball, or a CHANGELOG.md is packed:',
     '',
   ];
 

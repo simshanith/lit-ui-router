@@ -6,6 +6,12 @@ of each published package.
 - [`src/changelog.ts`](./src/changelog.ts) (`.`): parse a file into its
   preamble and `##` sections, extract one version's body, merge sections
   newest first by semver, and render the file with its fixed preamble.
+- [`src/write-section.ts`](./src/write-section.ts): adds one version's
+  section, every other byte kept; the bump runs it from release-it's
+  `after:bump` hook ([Release notes](../../docs/RELEASE.md#release-notes)).
+- [`src/extract.ts`](./src/extract.ts): prints one version's section body, or
+  fails when there is none; the publish runs it as release-it's
+  `github.releaseNotes`.
 - [`src/normalise.ts`](./src/normalise.ts): the structural changes a GitHub
   release body takes on its way into a section. The words stay as published.
 - [`src/backfill.ts`](./src/backfill.ts): adds the sections a file lacks from

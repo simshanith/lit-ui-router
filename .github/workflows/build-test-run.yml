@@ -262,6 +262,15 @@ jobs:
           VITEST_ATTACHMENTS_ARTIFACT_URL: ${{ steps.vitest_attachments.outputs.artifact-url }}
           # Empty unless a format check failed.
           FORMAT_PATCH_ARTIFACT_URL: ${{ steps.format_patch.outputs.artifact-url }}
+      - name: Check release notes are current
+        # Release PRs only: fails when the base gained a commit the notes would
+        # list after the bump generated them (re-run the bump). Last, and
+        # `!cancelled()`, so a red build still reports here and this never hides it.
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release') }}
+        run: mise run //tools/release:check_notes_through
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
   plan:
     # Groups the default suites (apps/sample-app-lit-e2e/scripts/suites.ts)

@@ -165,3 +165,66 @@ export function renderChangelog(
 
   return `${blocks.join('\n\n')}\n`;
 }
+
+/** The line `version`'s section goes before: the first lower version's heading, or `undefined` for the end. */
+function insertionLine(text: string, version: string): number | undefined {
+  let index = -1;
+  let found: number | undefined;
+
+  eachLine(text, (line, fenced) => {
+    index += 1;
+
+    if (found !== undefined || fenced || !line.startsWith('## ')) return;
+
+    const token = line.slice(3).trim().split(/\s/, 1)[0] ?? '';
+
+    if (token === version) {
+      throw new Error(`the changelog already has a ${version} section`);
+    }
+
+    if (semver.valid(token) && semver.lt(token, version)) found = index;
+  });
+
+  return found;
+}
+
+/**
+ * `text` with `version`'s section added and every other byte kept; a missing
+ * file (`undefined`) becomes the fixed preamble and the section. Throws when
+ * `version` already has a section or is not a version.
+ */
+export function insertSection(
+  packageName: string,
+  text: string | undefined,
+  section: {
+    readonly version: string;
+    readonly date: string;
+    readonly body: string;
+  },
+): string {
+  const { version, date, body } = section;
+
+  if (semver.valid(version) === null) {
+    throw new Error(`${JSON.stringify(version)} is not a version`);
+  }
+
+  const heading = sectionHeading(version, date);
+  const trimmed = trimBlankLines(body.replace(/\r\n/g, '\n'));
+
+  if (text === undefined) {
+    return renderChangelog(packageName, [{ version, heading, body: trimmed }]);
+  }
+
+  const block =
+    trimmed === '' ? `## ${heading}` : `## ${heading}\n\n${trimmed}`;
+
+  const normalised = text.replace(/\r\n/g, '\n');
+  const at = insertionLine(normalised, version);
+
+  if (at === undefined)
+    return `${normalised.replace(/\n*$/, '')}\n\n${block}\n`;
+
+  const lines = normalised.split('\n');
+
+  return [...lines.slice(0, at), block, '', ...lines.slice(at)].join('\n');
+}

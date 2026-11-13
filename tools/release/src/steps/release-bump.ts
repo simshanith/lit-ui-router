@@ -8,18 +8,26 @@
 //   1. compute the bumped version (release-it --release-version, with the
 //      increment argv validated by release-increment-args.core.ts)
 //   2. create the release branch (skipped on dry runs, like the old `if:`)
-//   3. bump: release-it re-resolves the lockfile, runs the dependent floor
-//      gate (release-dependent-floor-gate.ts), then commits and pushes, message = "Release <version>" +
-//      the changelog, its range pinned to the package's previous tag in
-//      this lane or the repo root (#302, release-prev-tag.ts) — the same
-//      pin the publish driver applies, so the PR body, the squash commit
-//      and the GitHub release notes agree
+//   3. bump: capture the notes, their range pinned to the package's previous
+//      tag in this lane or the repo root (#302, release-prev-tag.ts); then
+//      release-it re-resolves the lockfile, runs the dependent floor gate
+//      (release-dependent-floor-gate.ts), adds the notes as the version's
+//      CHANGELOG.md section, and commits and pushes. The message names the
+//      section and carries a Notes-Through trailer: the commit the branch was
+//      cut from, which check-notes-through.ts compares the base against. A
+//      prerelease writes no section and its message carries the notes
 //   4. create the release PR via gh (skipped on dry runs; in-tool retry)
 //   5. with AUTO_MERGE, enable squash auto-merge on it (dry runs only report
 //      it); a refusal fails the run with the PR left open
 // Every release-it argv comes from the engine seam (release-it.core.ts).
 
-import { defaultStream } from '@tools/shared/exec.ts';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import semver from 'semver';
+
+import { defaultExec, defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '../lib/env.core.ts';
 import { createReleasePr, enableReleasePrAutoMerge } from '../lib/gh.ts';
 import { group, logNotice, logWarning, runMain } from '@tools/shared/gha.ts';
@@ -33,7 +41,24 @@ import {
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
 import { changelogRange } from './release-prev-tag.ts';
+import { changelogScript, packageNotes } from './release-notes-file.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+
+// outside the repo: release-it refuses to start on a dirty tree
+async function withNotesFile(
+  changelog: string,
+  run: (notesPath: string) => Promise<void>,
+): Promise<void> {
+  const scratch = await mkdtemp(join(tmpdir(), 'release-notes-'));
+  const notesPath = join(scratch, 'notes.md');
+
+  try {
+    await writeFile(notesPath, changelog);
+    await run(notesPath);
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+}
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');
@@ -57,6 +82,12 @@ runMain(async () => {
   });
 
   const branch = `${prefix}${version}`;
+  const stable = semver.prerelease(version) === null;
+  const notes = await packageNotes(packageName);
+
+  const notesThrough = (
+    await defaultExec('git', ['rev-parse', 'HEAD'], { cwd: workspaceRoot })
+  ).stdout.trim();
 
   if (!dryRun) {
     await group(`create branch ${branch}`, () =>
@@ -66,7 +97,7 @@ runMain(async () => {
     );
   }
 
-  const commitMessage = await group('changelog', async () => {
+  const { changelog, commitMessage } = await group('changelog', async () => {
     const { from, previousVersion } = await changelogRange(
       packageName,
       version,
@@ -74,23 +105,53 @@ runMain(async () => {
 
     console.log(`range start: ${from}`);
 
-    const changelog = await releaseItOutput(
+    const captured = await releaseItOutput(
       packageName,
       changelogArgs({ packageName, version, from, previousVersion }),
     );
 
-    const { message, warning } = releaseCommitMessage(version, changelog, from);
+    const { message, warning } = releaseCommitMessage({
+      version,
+      changelog: captured,
+      section: stable
+        ? { changelogPath: notes.changelogPath, notesThrough }
+        : undefined,
+      from,
+    });
 
     if (warning !== undefined) logWarning(warning);
-    console.log(message);
 
-    return message;
+    if (stable) {
+      console.log(
+        `${notes.changelogPath} gains the ${version} section:\n\n${captured}\n`,
+      );
+    }
+
+    console.log(`commit message:\n\n${message}`);
+
+    return { changelog: captured, commitMessage: message };
   });
 
   await group(`bump ${packageName} to ${version}`, () =>
-    releaseItRun(
-      packageName,
-      bumpArgs({ packageName, version, commitMessage, dryRun }),
+    withNotesFile(changelog, (notesPath) =>
+      releaseItRun(
+        packageName,
+        bumpArgs({
+          packageName,
+          version,
+          commitMessage,
+          section: stable
+            ? {
+                notes: {
+                  changelog: notes.changelog,
+                  script: changelogScript('write-section.ts'),
+                },
+                notesPath,
+              }
+            : undefined,
+          dryRun,
+        }),
+      ),
     ),
   );
 

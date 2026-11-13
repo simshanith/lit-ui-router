@@ -517,6 +517,9 @@ catalogs:
     '@tools/bundle-probe':
       specifier: workspace:*
       version: workspace:*
+    '@tools/changelog':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/cli':
       specifier: workspace:*
       version: workspace:*
@@ -3046,9 +3049,15 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/changelog':
+        specifier: catalog:workspace
+        version: link:../changelog
       '@tools/cli':
         specifier: catalog:workspace
         version: link:../cli
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../release-config
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../release-ledger
