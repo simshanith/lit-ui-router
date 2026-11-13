@@ -31,8 +31,9 @@ Prereleases and canaries are not listed here; see [all releases on GitHub](https
 
 One section per stable GitHub release, newest first; a version published to npm
 with no GitHub release, such as `lit-ui-router@0.0.1`, has none. The heading's first token is the
-version; the date is the release's publish day in UTC. Everything before the
-first `##` heading is the preamble, which every writer replaces with the fixed text.
+version; the date is the bump day in UTC, or the publish day for a backfilled
+section. Everything before the first `##` heading is the preamble: the backfill
+and a missing file write the fixed text, and `write-section` keeps what is there.
 oxfmt and rumdl skip these files (`.oxfmtrc.json`, `.config/rumdl.toml`), so a
 body stays byte for byte what was published.
 

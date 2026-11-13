@@ -6,7 +6,8 @@ const TRAILER = new RegExp(`^${NOTES_THROUGH}: ([0-9a-f]{40})[ \\t]*$`, 'gm');
 // The conventionalcommits preset's header pattern, with the breaking `!` captured.
 const HEADER = /^(\w*)(?:\((.*)\))?(!?): (.*)$/;
 
-const BREAKING_NOTE = /^BREAKING[ -]CHANGE:/m;
+// The commit parser's note pattern: any case, optionally a `* ` bullet, under any header.
+const BREAKING_NOTE = /^(?:\*\s+)?BREAKING[ -]CHANGE:/im;
 
 /**
  * The sha a message's last `Notes-Through:` line names, wherever it sits: a
@@ -29,7 +30,7 @@ export function isListedMessage(
 ): boolean {
   const header = message.split('\n', 1)[0] ?? '';
 
-  if (/^Revert\b/.test(header)) return true;
+  if (/^Revert\b/.test(header) || BREAKING_NOTE.test(message)) return true;
 
   const match = HEADER.exec(header);
 
@@ -37,7 +38,7 @@ export function isListedMessage(
 
   const [, type = '', , bang] = match;
 
-  return types.has(type) || bang === '!' || BREAKING_NOTE.test(message);
+  return types.has(type) || bang === '!';
 }
 
 /** A commit the notes would have listed but were generated without. */

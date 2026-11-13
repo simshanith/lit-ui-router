@@ -77,6 +77,15 @@ describe('isListedMessage', () => {
     assert.ok(isListedMessage('chore: x\n\nBREAKING CHANGE: y', TYPES));
   });
 
+  it('lists a breaking note in every form the parser reads, whatever the header', () => {
+    assert.ok(
+      isListedMessage('Merge pull request #12\n\nBREAKING CHANGE: y', TYPES),
+    );
+    assert.ok(isListedMessage('chore: x\n\nbreaking change: y', TYPES));
+    assert.ok(isListedMessage('chore: x\n\n* BREAKING-CHANGE: y', TYPES));
+    assert.ok(!isListedMessage('chore: x\n\nno BREAKING CHANGE: here', TYPES));
+  });
+
   it('lists a git revert and ignores a header that is not conventional', () => {
     assert.ok(
       isListedMessage('Revert "feat: a"\n\nThis reverts commit 1.', TYPES),
