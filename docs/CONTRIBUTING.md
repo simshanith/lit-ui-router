@@ -428,12 +428,16 @@ discussion (see the tool README).
 
 A visual change to the docs site or a sample app carries before and after
 screenshots in a PR comment, at the widths where the layout changes, in light
-and dark. `gh` cannot upload attachments, so the images live in
-[`simshanith/assets`](https://github.com/simshanith/assets), never on a branch
-of this repo. Push them as an orphan commit to the branch
-`simshanith/lit-ui-router/pr/<number>` there and link each by commit SHA; its
-README has the layout and URL form. That repo deletes a branch 90 days after
-its PR closes, so the images are for review, not a permanent record.
+and dark. Dragging the images into the comment box in the browser is the
+simplest way.
+
+`gh` cannot upload attachments, so an agent or script hosts the images in a
+repo of its operator's own and links each by commit SHA; never push them to a
+branch of this repo. The maintainer's agents use
+[`simshanith/assets`](https://github.com/simshanith/assets), on the branch
+`simshanith/lit-ui-router/pr/<number>`; its README has the layout and URL
+form. That repo deletes a branch 90 days after its PR closes, so those images
+are for review, not a permanent record.
 
 ### Automated review
 
