@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RouterEvent } from '../event-schema.ts';
+import type { RouterEvent, Session } from '../event-schema.ts';
 import {
   combineRedaction,
   redactEvent,
   redactionOf,
   redactParams,
+  redactSession,
 } from '../redaction.ts';
 
 describe('redactParams', () => {
@@ -86,6 +87,116 @@ describe('combineRedaction', () => {
     expect(redactionOf({ params: 'all' })).toEqual({
       params: 'all',
       messages: true,
+    });
+  });
+});
+
+describe('redactEvent params', () => {
+  const keepId = { params: ['id'], messages: true } as const;
+  const base = { v: 1, seq: 1, t: 0 } as const;
+
+  it('redacts both ends of a transition', () => {
+    const transition: RouterEvent = {
+      ...base,
+      type: 'transition',
+      id: 0,
+      from: 'a',
+      to: 'b',
+      fromParams: { id: '1', q: 'from' },
+      toParams: { id: '2', q: 'to' },
+      entering: ['b'],
+      exiting: ['a'],
+      retained: [],
+      redirectedFrom: null,
+      options: {
+        source: 'unknown',
+        location: true,
+        reload: false,
+        inherit: true,
+        supercede: true,
+      },
+      dynamic: false,
+    };
+
+    expect(redactEvent(transition, keepId)).toMatchObject({
+      fromParams: { id: '1', q: '[redacted]' },
+      toParams: { id: '2', q: '[redacted]' },
+    });
+  });
+
+  it("redacts an invalid target's params and the current params", () => {
+    expect(
+      redactEvent(
+        {
+          ...base,
+          type: 'invalid',
+          from: 'a',
+          to: 'typo',
+          toParams: { id: '1', q: 'x' },
+        },
+        keepId,
+      ),
+    ).toMatchObject({ toParams: { id: '1', q: '[redacted]' } });
+
+    expect(
+      redactEvent(
+        { ...base, type: 'current', name: 'b', params: { id: '1', q: 'x' } },
+        keepId,
+      ),
+    ).toMatchObject({ params: { id: '1', q: '[redacted]' } });
+  });
+
+  it("drops a failed resolve's message only when messages are not kept", () => {
+    const resolve: RouterEvent = {
+      ...base,
+      type: 'resolve',
+      id: 0,
+      token: 'user',
+      state: 'b',
+      start: 0,
+      end: 1,
+      ok: false,
+      cached: false,
+      message: 'no user 7',
+    };
+
+    expect(redactEvent(resolve, keepId)).toBe(resolve);
+    expect(
+      redactEvent(resolve, { params: 'all', messages: false }),
+    ).not.toHaveProperty('message');
+  });
+});
+
+describe('redactSession', () => {
+  it('redacts every event and records the stricter of the two redactions', () => {
+    const session: Session = {
+      format: 'ui-router-session',
+      v: 1,
+      id: 'session-1',
+      generator: { name: 'test', version: '0.0.0' },
+      routerId: 'router-1',
+      timeOrigin: 0,
+      t: 1,
+      dropped: 0,
+      timeResolves: false,
+      redaction: { params: ['id', 'q'], messages: true },
+      events: [
+        {
+          v: 1,
+          seq: 1,
+          t: 0,
+          type: 'current',
+          name: 'b',
+          params: { id: '1', q: 'x' },
+        },
+      ],
+    };
+
+    expect(
+      redactSession(session, { params: ['q'], messages: false }),
+    ).toMatchObject({
+      redaction: { params: ['q'], messages: false },
+      events: [{ params: { id: '[redacted]', q: 'x' } }],
     });
   });
 });
