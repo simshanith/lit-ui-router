@@ -302,7 +302,10 @@ const previewShell =
     };
 
     emitted().then((found) => {
-      req.url = withBase(base, found ? fileUrl(mount, file) : shellPath(mount));
+      req.url = withBase(
+        base,
+        found ? fileUrl(mount, encodeURI(file)) : shellPath(mount),
+      );
       next();
     }, next);
   };

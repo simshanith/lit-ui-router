@@ -22,7 +22,7 @@ import { warnStrictSlash, warnUnclaimed } from './dev-warn.ts';
 import { createServerRouter } from './index.ts';
 import type { MountConfig, ServerRouter, Verdict } from './index.ts';
 import { redirectsFileBody } from './redirect-pages.ts';
-import { fileFor, subpathIn } from './site-paths.ts';
+import { fileFor, fileName, rulePath, subpathIn } from './site-paths.ts';
 import { mountPolicyOf, slashOf } from './trailing-slash.ts';
 import type { TrailingSlash } from './trailing-slash.ts';
 
@@ -288,9 +288,9 @@ const PROBE_SEGMENT = '__ui-router-server-probe__';
 const joinPath = (dir: string, file: string): string =>
   dir === '' ? file : `${dir.replace(/\/+$/, '')}/${file}`;
 
-// The response body's file: the subpath as spelled, or 'index.html' at the mount root.
+// The response body's file: the subpath's name on disk, or 'index.html' at the mount root.
 const responseFileFor = (subpath: string): string =>
-  subpath.replace(/^\/+/, '').replace(/\/+$/, '') || 'index.html';
+  fileName(subpath.replace(/^\/+/, '').replace(/\/+$/, '')) || 'index.html';
 
 // The same path spelled the other way round, or undefined at the host root.
 const otherSpelling = (from: string): string | undefined => {
@@ -362,6 +362,13 @@ const respelledLines = async (
 // A generated line's `from` is a listed path or its other spelling, so it takes the base even where it begins with '//'.
 const fromUnderBase = (base: string, from: string): string =>
   from.startsWith('//') ? base.slice(0, -1) + from : withBase(base, from);
+
+// A generated line as a rules file spells it, whichever spelling the caller listed.
+const encodedLine = (line: RedirectLine): RedirectLine => ({
+  ...line,
+  from: rulePath(line.from),
+  to: rulePath(line.to),
+});
 
 const lineKey = ({ from, to, status }: RedirectLine): string =>
   `${from} ${to} ${status}`;
@@ -455,6 +462,12 @@ const resolverOf = (
  * slash. Under a {@link PrerenderOptions.base | base}, every generated line
  * carries it.
  *
+ * A path may be listed percent-encoded, as `href()` formats it, or decoded.
+ * Either way its file name is decoded, as a static host decodes the request
+ * path before its file lookup, and its rules lines are encoded. An escape for
+ * `/`, `\` or a dot segment stays encoded in the file name, as does a segment
+ * with a malformed escape.
+ *
  * It knows no renderer: `render` turns each shell verdict into the file's
  * text, so any template engine, or a `settle` and a string, can fill it.
  * `lit-ui-router-ssr`'s `prerender` wraps this loop with a lit render.
@@ -466,6 +479,7 @@ const resolverOf = (
  * @throws an `Error` when a mount of a resolver that declares no `base` already carries `base`
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when a path resolves to a verdict kind this package doesn't know
+ * @throws an `Error` when a path holds a malformed percent-escape its route cannot decode
  * @throws an `Error` when the 404 document's render answers a redirect
  * @throws an `Error` when a path matches a response state and no `respond` is supplied, or its answer is neither a 2xx nor a 3xx with a `Location`
  *
@@ -708,9 +722,24 @@ export async function prerender(
     return {};
   };
 
+  // The path's verdict, with the listed path named when its route cannot decode it.
+  const resolve = async (path: string, listed: string): Promise<Verdict> => {
+    try {
+      return await resolver.resolve(path);
+    } catch (error) {
+      if (!(error instanceof URIError)) throw error;
+
+      throw new Error(
+        `prerender: '${listed}' holds a malformed percent-escape, which its route cannot decode`,
+        { cause: error },
+      );
+    }
+  };
+
   const visit = async (listed: string): Promise<void> => {
     const path = baseFree(listed);
-    const verdict = await resolver.resolve(path);
+
+    const verdict = await resolve(path, listed);
 
     const outcome = await handle(verdict, path, listed);
 
@@ -740,7 +769,7 @@ export async function prerender(
 
   const lines = [
     ...extraRules,
-    ...uniqueLines(generated).map((line) => ({
+    ...uniqueLines(generated.map(encodedLine)).map((line) => ({
       ...line,
       from: fromUnderBase(base, line.from),
       to: withBase(base, line.to),

@@ -27,6 +27,7 @@ import type {
   RedirectLine,
   RenderContext,
 } from '../src/prerender.ts';
+import { fileFor } from '../src/site-paths.ts';
 import { stubDev } from './import-meta-env.ts';
 
 // The root mount projects an otherwise rule; the /app mount has none, so its unmatched paths verdict notFound.
@@ -1111,6 +1112,156 @@ describe('withBase', () => {
     assert.equal(
       withBase('/solar/', report?.redirect?.location ?? ''),
       result.rules[0]?.to,
+    );
+  });
+});
+
+describe('prerender path encoding', () => {
+  const tagMounts = {
+    '/': {
+      routes: [
+        { name: 'tag', url: '/tags/:tag' },
+        { name: 'short', url: '/t/:tag', redirectTo: 'tag' },
+        { name: 'feed', url: '/feeds/:tag', response: true },
+      ],
+      config: { strict: false },
+    },
+  } satisfies Record<string, MountConfig>;
+
+  const tags = (paths: string[], overrides: Partial<PrerenderOptions> = {}) =>
+    run({ mounts: tagMounts, paths, notFound: false, ...overrides });
+
+  for (const [spelling, page, short] of [
+    ['encoded', '/tags/a%20b', '/t/a%20b'],
+    ['decoded', '/tags/a b', '/t/a b'],
+  ] as const)
+    it(`writes a decoded file name and encoded rules lines for a space listed ${spelling}`, async () => {
+      const { files, result, contexts } = await tags([page, short]);
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/tags/a b/index.html', 'dist/_redirects'],
+      );
+      assert.equal(result.pages[0]?.file, 'tags/a b/index.html');
+      assert.equal(result.pages[0]?.path, page);
+      assert.equal(contexts[0]?.file, 'tags/a b/index.html');
+      assert.equal(
+        files.get('dist/_redirects'),
+        '/t/a%20b /tags/a%20b 302\n/t/a%20b/ /tags/a%20b 302\n',
+      );
+    });
+
+  for (const [spelling, page, short] of [
+    ['encoded', '/tags/caf%C3%A9', '/t/caf%C3%A9'],
+    ['decoded', '/tags/café', '/t/café'],
+  ] as const)
+    it(`writes a decoded file name and encoded rules lines for a non-ASCII path listed ${spelling}`, async () => {
+      const { files } = await tags([page, short]);
+
+      assert.deepEqual(
+        [...files.keys()],
+        ['dist/tags/café/index.html', 'dist/_redirects'],
+      );
+      assert.equal(
+        files.get('dist/_redirects'),
+        '/t/caf%C3%A9 /tags/caf%C3%A9 302\n/t/caf%C3%A9/ /tags/caf%C3%A9 302\n',
+      );
+    });
+
+  it('writes one set of lines for a redirect listed in both spellings', async () => {
+    const { result } = await tags(['/t/a b', '/t/a%20b']);
+
+    assert.deepEqual(
+      result.rules.map((line) => line.from),
+      ['/t/a%20b', '/t/a%20b/'],
+    );
+  });
+
+  it('keeps an encoded slash or backslash inside its segment', async () => {
+    const { files } = await tags(['/tags/a%2Fb%20c', '/tags/a%5Cb']);
+
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/tags/a%2Fb c/index.html', 'dist/tags/a%5Cb/index.html'],
+    );
+  });
+
+  it('keeps an encoded dot segment as listed, inside outDir', async () => {
+    const { files } = await tags(['/tags/%2E%2E', '/tags/%2e']);
+
+    assert.deepEqual(
+      [...files.keys()],
+      ['dist/tags/%2E%2E/index.html', 'dist/tags/%2e/index.html'],
+    );
+  });
+
+  it('names the listed path when its route cannot decode a malformed escape', async () => {
+    for (const path of ['/tags/100%', '/tags/%E0%A4%A'])
+      await assert.rejects(tags([path]), (error: Error) => {
+        assert.equal(
+          error.message,
+          `prerender: '${path}' holds a malformed percent-escape, which its route cannot decode`,
+        );
+        assert.ok(error.cause instanceof URIError);
+
+        return true;
+      });
+  });
+
+  it('keeps a segment with a malformed escape as listed', () => {
+    assert.equal(fileFor('/tags/100%/a%20b'), 'tags/100%/a b/index.html');
+    assert.equal(fileFor('/tags/%E0%A4%A'), 'tags/%E0%A4%A/index.html');
+  });
+
+  it('writes a response body at its decoded file name', async () => {
+    const { files, result } = await tags(['/feeds/a%20b', '/feeds/café'], {
+      respond: () => new Response('<feed/>'),
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/feeds/a b', 'dist/feeds/café']);
+    assert.equal(result.pages[0]?.file, 'feeds/a b');
+  });
+
+  it('encodes a space in an extraRules line of the _redirects file', async () => {
+    const { files } = await tags([], {
+      extraRules: [{ from: '/old name/*', to: '/new/:splat', status: 301 }],
+    });
+
+    assert.equal(
+      files.get('dist/_redirects'),
+      '/old%20name/* /new/:splat 301\n',
+    );
+  });
+
+  for (const [spelling, short] of [
+    ['encoded', '/t/a%20b'],
+    ['decoded', '/t/a b'],
+  ] as const)
+    it(`writes a redirect page at a decoded file name for a path listed ${spelling}`, async () => {
+      const { files } = await tags([short], { rules: redirectPages() });
+
+      assert.deepEqual([...files.keys()], ['dist/t/a b/index.html']);
+      assert.match(
+        files.get('dist/t/a b/index.html') ?? '',
+        /<link rel="canonical" href="\/tags\/a%20b">/,
+      );
+    });
+
+  it('throws for a redirect whose page would replace a prerendered one in another spelling', async () => {
+    await assert.rejects(
+      run({
+        mounts: {
+          '/': {
+            routes: [{ name: 'tag', url: '/tags/:tag' }],
+            config: { strict: false },
+          },
+        },
+        paths: ['/tags/a b'],
+        notFound: false,
+        extraRules: [{ from: '/tags/a%20b', to: '/elsewhere', status: 302 }],
+        rules: redirectPages(),
+      }),
+      /redirects, but prerender wrote a page at 'tags\/a b\/index.html'/,
     );
   });
 });
