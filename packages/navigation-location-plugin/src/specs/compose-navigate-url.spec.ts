@@ -64,6 +64,15 @@ describe('composeNavigateUrl', () => {
     expect(composeNavigateUrl('//', '/')).toBe('/');
   });
 
+  it('collapses a leading run that mixes in backslashes, which the URL parser reads as slashes', () => {
+    expect(composeNavigateUrl('/\\evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('\\evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('\\/evil.example', '/app')).toBe('/evil.example');
+    expect(composeNavigateUrl('/\\evil.example', '/app/')).toBe(
+      '/app/\\evil.example',
+    );
+  });
+
   it('leaves the url as written below a base prefix, where it names this origin', () => {
     expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
       '/app///evil.example',

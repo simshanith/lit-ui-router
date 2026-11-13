@@ -106,5 +106,23 @@ describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
         plugin.dispose?.(router);
       },
     );
+
+    // Core encodes a backslash in a param, so only a url set directly reaches the plugin with one.
+    it('stays on this origin for a url set directly that begins with a backslash', async () => {
+      const router = new UIRouter();
+      router.urlService.config.baseHref = () => '/';
+      const plugin = navigationLocationPlugin(router);
+      const { origin } = window.location;
+
+      router.urlService.url('/\\x.invalid');
+
+      await vi.waitFor(() => {
+        expect(window.location.pathname).toBe('/x.invalid');
+      });
+      expect(leaving).toEqual([]);
+      expect(window.location.origin).toBe(origin);
+
+      plugin.dispose?.(router);
+    });
   });
 });
