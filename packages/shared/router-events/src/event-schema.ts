@@ -187,6 +187,30 @@ export interface Redaction {
   messages: boolean;
 }
 
+/** A span attribute's value, as tracing libraries allow it: a scalar or an array of one kind of scalar. */
+export type SpanAttributeValue =
+  | string
+  | number
+  | boolean
+  | (string | number | boolean | null)[];
+
+/**
+ * A span from a tracer, in a shape that names no tracing library. Times are epoch milliseconds, so a span's offset on
+ * the event clock is `startTime - timeOrigin`.
+ */
+export interface SpanRecord {
+  traceId: string;
+  spanId: string;
+  /** Absent on the root of a trace. */
+  parentSpanId?: string;
+  name: string;
+  startTime: number;
+  /** Absent while the span is still running. */
+  endTime?: number;
+  status?: 'unset' | 'ok' | 'error';
+  attributes?: Record<string, SpanAttributeValue>;
+}
+
 export interface Session {
   format: 'ui-router-session';
   v: SchemaVersion;
@@ -207,4 +231,6 @@ export interface Session {
   redaction: Redaction;
   /** The latest config, states and current snapshots first, then the kept events in `seq` order. */
   events: RouterEvent[];
+  /** Spans that ran during a recorded transition, when the panel was given any; absent otherwise. */
+  spans?: SpanRecord[];
 }

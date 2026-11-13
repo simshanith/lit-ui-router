@@ -840,6 +840,11 @@ export const styles: CSSResult = css`
       border-block-end: 1px solid var(--uird-rule);
     }
 
+    /* A previewed transition redraws the Timeline; a fixed height keeps the log from moving under the pointer. */
+    .panel[data-view='timeline'] .tree-pane {
+      block-size: 40svh;
+    }
+
     .panel[data-inspect='router'] .body {
       grid-template-rows: minmax(0, 1fr);
     }
@@ -911,22 +916,25 @@ export const styles: CSSResult = css`
       padding-inline: var(--uird-margin);
     }
 
-    /* On the Map the diagram owns the panel: the log is a strip and the inspector a popover. */
-    .panel[data-view='map'] .body {
+    /* On the Map and the Timeline the drawing owns the panel: the log is a strip, and the Map's inspector a popover. */
+    .panel:is([data-view='map'], [data-view='timeline']) .body {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr) auto;
     }
 
-    .panel[data-view='map'] .tree-pane {
+    .panel:is([data-view='map'], [data-view='timeline']) .tree-pane {
       grid-template-rows: minmax(0, 1fr);
     }
 
-    .panel[data-view='map'] .tree-pane > .section,
-    .panel[data-view='map']:not([data-max]) .log-pane {
+    .panel:is([data-view='map'], [data-view='timeline']) .tree-pane > .section,
+    .panel:is([data-view='map'], [data-view='timeline']):not([data-max])
+      .log-pane,
+    .panel[data-view='timeline']:not([data-max]) .inspector-pane {
       display: none;
     }
 
-    .panel[data-view='map']:not([data-max]) .scrubber {
+    .panel:is([data-view='map'], [data-view='timeline']):not([data-max])
+      .scrubber {
       display: flex;
     }
 
@@ -968,18 +976,18 @@ export const styles: CSSResult = css`
       }
     }
 
-    /* Maximised: the diagram above the full log and inspector. */
-    .panel[data-view='map'][data-max] .body {
+    /* Maximised: the drawing above the full log and inspector. */
+    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .body {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
       grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
     }
 
-    .panel[data-view='map'][data-max] .tree-pane {
+    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .tree-pane {
       grid-column: 1 / -1;
       border-block-end: 1px solid var(--uird-rule);
     }
 
-    .panel[data-view='map'][data-max] .log-pane {
+    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .log-pane {
       border-inline-start: 0;
     }
   }
