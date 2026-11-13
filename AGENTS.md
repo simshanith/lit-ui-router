@@ -139,7 +139,7 @@ Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude
 
 A skill stays thin: when to use it and what an unattended run needs, linking the doc or package README that owns the recipe.
 
-Dependencies can ship skills too. pnpm links each one approved under `permissions` in `pnpm-workspace.yaml` into both folders as `pnpm-<package>-<skill>`, and its `.gitignore` in each folder keeps those links out of git.
+Dependencies can ship skills too. pnpm links each one approved under `permissions` in `pnpm-workspace.yaml` into both folders under the skill's own name, or as `pnpm-<package>-<skill>` when that name is taken. pnpm owns a `# pnpm` block in each folder's `.gitignore` that keeps those links out of git.
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.
