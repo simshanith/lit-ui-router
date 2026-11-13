@@ -2,7 +2,7 @@ import { html, nothing, svg, type TemplateResult } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
 import type { Row, UIRouterDevtools } from '../ui-router-devtools.ts';
 import type { StateInfo } from '../schema.ts';
-import { ancestorsOf, type Tx } from '../fold.ts';
+import { ancestorsOf, bareName, type Tx } from '../fold.ts';
 import { edgeWeight, observedEdges } from '../edges.ts';
 import { segment, truncateMiddle } from '../notation.ts';
 import {
@@ -170,7 +170,7 @@ const buildBox = (build: Build, state: StateInfo): Box => {
     children[0].children.length > 0;
 
   for (const child of children)
-    if (!merge && state.redirectTo === child.name) child.lead = LEAD;
+    if (!merge && state.redirectTo === bareName(child.name)) child.lead = LEAD;
 
   return {
     name: state.name,

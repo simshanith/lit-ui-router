@@ -282,6 +282,32 @@ describe('the nested Map', () => {
     expect(await tree(element)).toBeTruthy();
   });
 
+  it('leads a redirect to its lazy child', async () => {
+    await page.viewport(1280, 800);
+    const router = bareRouter();
+    router.stateRegistry.register({ name: 'admin', redirectTo: 'admin.users' });
+    router.stateRegistry.register({ name: 'admin.home' });
+    router.stateRegistry.register({
+      name: 'admin.users.**',
+      url: '/users',
+      lazyLoad: () => new Promise(() => {}),
+    });
+    const { element } = router.plugin(DevtoolsPlugin);
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'map' }).click();
+    await tree(element);
+
+    await waitFor(() =>
+      expect(
+        [...element.renderRoot.querySelectorAll('.box.led')].map((box) =>
+          box.getAttribute('data-name'),
+        ),
+      ).toEqual(['admin.users.**']),
+    );
+  });
+
   it("keeps boxes at their natural size in the dock, with the popover's column free, and enlarges them maximised", async () => {
     const element = await openMap(1280);
     const map = await tree(element);
