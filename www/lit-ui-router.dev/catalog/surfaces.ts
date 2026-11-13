@@ -46,6 +46,16 @@ export const SURFACES = [
     deadLinks: 'check',
   },
   {
+    // Generated from each package's CHANGELOG.md; local search reads page sources, and these have none.
+    id: 'changelogs',
+    paths: ['/packages/*/changelog'],
+    renderer: 'vitepress',
+    sitemap: true,
+    llms: 'pages',
+    search: false,
+    deadLinks: 'check',
+  },
+  {
     id: 'api-references',
     paths: ['/reference/*/*'],
     renderer: 'typedoc',

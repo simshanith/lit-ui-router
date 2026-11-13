@@ -263,6 +263,7 @@ is the galaxy tutorial rebuilt on these controllers, installed from npm.
 ## Further reading
 
 - [API reference](/reference/lit-ui-router-effect/)
+- [Changelog](/packages/lit-ui-router-effect/changelog) — every stable release, newest first
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-effect) — this package as

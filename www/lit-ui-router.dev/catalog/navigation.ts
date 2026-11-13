@@ -139,6 +139,10 @@ const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
   ],
 };
 
+/** A package's changelog page, built from its CHANGELOG.md. */
+export const changelogPath = (name: PackageName): string =>
+  `/packages/${name}/changelog`;
+
 /** The Packages sidebar groups, labelled and ordered by the catalog's roles. */
 export const packageGroups = ROLES.map(({ id, label }) => ({
   role: id,
@@ -215,6 +219,14 @@ export const SIDEBAR: SidebarEntry[] = [
         collapsed: false,
         items,
       })),
+      {
+        text: 'Changelogs',
+        collapsed: true,
+        items: PACKAGES.map(({ name }) => ({
+          text: name,
+          link: changelogPath(name),
+        })),
+      },
     ],
   },
   { text: 'Sample App', collapsed: true, items: sampleAppItems },

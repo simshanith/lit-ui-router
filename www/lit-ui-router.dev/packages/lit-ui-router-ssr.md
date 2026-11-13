@@ -1039,6 +1039,7 @@ expect(await page.evaluate('countRetained(servedStamp)')).toMatchObject({
 ## Further reading
 
 - [API reference](/reference/lit-ui-router-ssr/)
+- [Changelog](/packages/lit-ui-router-ssr/changelog) — every stable release, newest first
 - [Server-Side Routing guide](/guides/server-route-matching) — the verdicts
   this consumes, and the router hand-off it performs
 - [`ui-router-server`](/packages/ui-router-server) — the mount table and its verdicts

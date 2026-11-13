@@ -126,6 +126,7 @@ const stop = watchSelection(
 ## Further reading
 
 - [API reference](/reference/ui-router-signals/)
+- [Changelog](/packages/ui-router-signals/changelog) — every stable release, newest first
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-signals) — this package as
