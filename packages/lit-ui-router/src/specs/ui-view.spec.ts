@@ -1046,6 +1046,7 @@ describe('UiView', () => {
       const nested = uiView.querySelector('ui-view')!;
       expect(nested).toBeTruthy();
       expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested.uiViewData).toBe(nested['_uiViewData']);
 
       return { uiRouter, uiView, nested };
     }

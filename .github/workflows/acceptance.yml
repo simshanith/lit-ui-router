@@ -294,3 +294,56 @@ jobs:
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
+
+  links:
+    # lychee over the external URLs in READMEs, manifests and the docs pages'
+    # Markdown (`mise run check_links`, lychee.toml), reported as the job summary.
+    # Other servers decide the verdict, so a red run can be a timeout. Runs on
+    # every commit like its siblings; the day-long cache keeps a rerun to seconds.
+    name: acceptance (links)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
+      - name: Restore lychee cache
+        # Results from the last day skip the request; a fresh key saves each run's.
+        uses: actions/cache/restore@v6
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}
+          restore-keys: lychee-
+      - name: Links
+        id: links
+        continue-on-error: true
+        run: mise run check_links --output "$RUNNER_TEMP/links.md"
+        env:
+          # github.com URLs go through the API, which rate-limits anonymous calls.
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Links summary
+        # Goes red after a broken link, so a red job opens on the report; a run
+        # that died before lychee wrote one has none to show.
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/links.md" ]; then
+            tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/links.md"
+          fi
+          test "$LINKS_OUTCOME" = success
+        env:
+          LINKS_OUTCOME: ${{ steps.links.outcome }}
+      - name: Save lychee cache
+        # A separate save: the combined action saves only from a green job.
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v6
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.run_id }}

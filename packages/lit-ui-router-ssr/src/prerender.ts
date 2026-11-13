@@ -4,12 +4,16 @@ import type { TemplateResult } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { provideRouter } from 'lit-ui-router/context';
-import { isString } from '@uirouter/core';
+import { isString, trace } from '@uirouter/core';
 import type { Verdict } from 'ui-router-server';
-import { prerender as prerenderSite } from 'ui-router-server/prerender';
+import {
+  prerender as prerenderSite,
+  withBase,
+} from 'ui-router-server/prerender';
 import type {
   EmittedPage,
   FileWriter,
+  PathReport,
   PrerenderOptions as SitePrerenderOptions,
   PrerenderResult as SitePrerenderResult,
   RenderContext as SiteRenderContext,
@@ -18,6 +22,7 @@ import type {
 import {
   dehydrate as dehydrateLanded,
   redirectedTo,
+  settle,
 } from 'ui-router-server/ssr';
 import type {
   DehydrateOptions,
@@ -32,11 +37,13 @@ import {
 } from './render.js';
 import type { PagePayload } from './render.js';
 import { responder } from './respond.js';
+import { traceCategoryEnabled } from './trace-categories.js';
 import type { BoundResponses } from './respond.js';
 
 export type {
   EmittedPage,
   FileWriter,
+  PathReport,
   PrerenderTally,
   RedirectLine,
   RenderedRedirect,
@@ -65,16 +72,22 @@ const trimmed = (path: string): string => path.replace(/\/+$/, '');
 const pathOf = (url: string): string => url.replace(/[?#].*$/, '');
 
 // The router's hrefs are its baseHref plus its url, so after a settle they must spell the page's served path.
+const placement = (router: UIRouterLit, base: string, path: string) => {
+  const url = pathOf(router.urlService.url());
+  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
+  const served = `${trimmed(base)}${pathOf(path)}`;
+
+  return { url, linked, served, at: trimmed(linked) === trimmed(served) };
+};
+
 const checkSettled = (
   router: UIRouterLit,
   base: string,
   path: string,
 ): void => {
-  const url = pathOf(router.urlService.url());
-  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
-  const served = `${trimmed(base)}${pathOf(path)}`;
+  const { url, linked, served, at } = placement(router, base, path);
 
-  if (trimmed(linked) === trimmed(served)) return;
+  if (at) return;
 
   const suggested = served.endsWith(url)
     ? `${trimmed(served.slice(0, served.length - url.length))}/`
@@ -82,6 +95,44 @@ const checkSettled = (
 
   throw new Error(
     `prerender: the router settled '${path}' at '${linked}', but the page is served at '${served}'; build the router with installServerLocation(router, { baseHref: ${suggested === undefined ? 'site.base' : `'${suggested}'`} })`,
+  );
+};
+
+/** What the trace adds to a path's report: where its render landed and what it dehydrated. */
+interface Landing {
+  state?: string;
+  tokens?: string[];
+}
+
+const tokensOf = ({ resolves }: ResolvePayload): string[] =>
+  Object.entries(resolves).flatMap(([state, tokens]) =>
+    Object.keys(tokens).map((token) => `${state}.${token}`),
+  );
+
+// The report's target is base-free; the line names it as the host serves it, and says so when the base changed it.
+const servedTarget = (base: string, location: string): string => {
+  const served = withBase(`${trimmed(base)}/`, location);
+
+  return served === location
+    ? `'${location}'`
+    : `'${served}' (with base '${trimmed(base)}/')`;
+};
+
+// One line per path under core's `TRANSITION` trace or the registered `PRERENDER`, in core's `console.log` style.
+const tracePath = (
+  base: string,
+  { path, verdict, redirect }: PathReport,
+  { state, tokens }: Landing,
+): void => {
+  if (!trace.enabled('TRANSITION') && !traceCategoryEnabled('PRERENDER'))
+    return;
+  console.log(
+    `prerender: '${path}' ${verdict.kind}` +
+      (state === undefined ? '' : `, landed '${state}'`) +
+      (redirect
+        ? `, redirect ${redirect.status} ${servedTarget(base, redirect.location)}`
+        : '') +
+      (tokens?.length ? `, dehydrated [${tokens.join(', ')}]` : ''),
   );
 };
 
@@ -99,6 +150,30 @@ const nodeWrite: FileWriter = async (file, body) => {
   if (dir) await mkdir(dir, { recursive: true });
   await writeFile(file, body, 'utf8');
 };
+
+/** A `renderShell` hook that settles `router` on the path and returns `template(router)`. */
+const settledTemplate =
+  (router: UIRouterLit, template: (router: UIRouterLit) => TemplateResult) =>
+  async (
+    verdict: ShellVerdict,
+    { path }: SiteRenderContext,
+  ): Promise<TemplateResult> => {
+    try {
+      await settle(router, path);
+    } catch (cause) {
+      if (verdict.status !== 404) throw cause;
+
+      // SAFETY: `settle` rejects with an `Error` only.
+      const { message } = cause as Error;
+
+      throw new Error(
+        `prerender: \`template\` settles the router on '${path}', which its mount answers from the otherwise projection, and the settle failed, usually because the router declares no \`otherwise\` rule of its own (${message})`,
+        { cause },
+      );
+    }
+
+    return template(router);
+  };
 
 /** What a render hook is handed besides the verdict. */
 export interface RenderContext extends SiteRenderContext {
@@ -121,7 +196,20 @@ export interface PrerenderOptions extends Omit<
    */
   router: UIRouterLit;
   /**
-   * Renders one shell verdict. Return a template and this package renders it,
+   * The page's template, read from {@link PrerenderOptions.router | router}
+   * once it stands on the path: for each shell verdict, `router` is settled
+   * on the path with `settle` from `ui-router-server/ssr` and the template
+   * this returns is rendered, as a {@link PrerenderOptions.renderShell | renderShell}
+   * hook that settles and returns `template(router)` would. Pass this or
+   * `renderShell`, not both. The 404 document's probe path is settled too, so
+   * a mount that projects an `otherwise` needs the router to declare an
+   * `otherwise` rule of its own, or the render rejects.
+   */
+  template?: (router: UIRouterLit) => TemplateResult;
+  /**
+   * Renders one shell verdict, in place of
+   * {@link PrerenderOptions.template | template}, for a page that needs the
+   * verdict or more than a settle. Return a template and this package renders it,
    * behind the hydration signature; return a string and it is written as-is.
    * Async, so a hook may drive {@link PrerenderOptions.router | router} to the
    * path before it returns. When the transition the router lands on during
@@ -130,7 +218,7 @@ export interface PrerenderOptions extends Omit<
    * `redirectStatusCode`, and no page: `redirectedTo` from
    * `ui-router-server/ssr` reports it.
    */
-  renderShell: (
+  renderShell?: (
     verdict: ShellVerdict,
     context: RenderContext,
   ) => TemplateResult | string | Promise<TemplateResult | string>;
@@ -158,7 +246,8 @@ export interface PrerenderOptions extends Omit<
    * shadow root, to draw those elements. Pass `[]` for a render with no
    * `<ui-view>` to fill. A shadow-DOM `LitElement` no renderer in the list
    * answers for renders as its bare tag, empty, and warns once per tag in
-   * development; put `LitElementRenderer` after `LightElementRenderer` to draw it.
+   * development; pass `shadowElementRenderers`, which adds `LitElementRenderer`
+   * after `LightElementRenderer`, to draw it.
    */
   elementRenderers?: RenderInfo['elementRenderers'];
   /**
@@ -185,8 +274,8 @@ export interface PrerenderOptions extends Omit<
   /**
    * Draws each rendered page's resolve payload with `dehydrate` from
    * `ui-router-server/ssr`, called with these options on the transition the
-   * router last landed, once `renderShell` has returned a template. The
-   * payload's `resolves` go into the page's hydration signature, beside the
+   * router last landed, once `template` or `renderShell` has returned a
+   * template. The payload's `resolves` go into the page's hydration signature, beside the
    * state and parameters the router stands on, and the client adopts them on
    * boot in place of running those resolve functions. Pass `{}` to draw every
    * resolve `dehydrate` draws by default. Without this option or
@@ -209,8 +298,9 @@ export interface PrerenderOptions extends Omit<
   /**
    * Draws the resolve payload for a rendered page by hand, in place of
    * {@link PrerenderOptions.dehydrate | `dehydrate`}: handed the transition the
-   * router last landed, once `renderShell` has returned a template, it returns
-   * the payload the page's signature carries, or `undefined` to write none.
+   * router last landed, once `template` or `renderShell` has returned a
+   * template, it returns the payload the page's signature carries, or
+   * `undefined` to write none.
    * Passing both this and `dehydrate` throws.
    *
    * @example
@@ -250,8 +340,9 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
 
 /**
  * Emits a static site from a mount table's verdicts: a shell verdict becomes
- * `<subpath>/index.html`, or a rules line when the transition its
- * `renderShell` landed was redirected, a response state becomes the body or rules line its
+ * `<subpath>/index.html`, or a rules line when the transition its render
+ * landed, through `template` or `renderShell`, was redirected, a response
+ * state becomes the body or rules line its
  * handler in {@link PrerenderOptions.responses | responses} answers, a
  * redirect becomes a rules line and no page, and the `otherwise` projection
  * becomes the 404 document. The loop is
@@ -288,18 +379,19 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
  * @throws an `Error` when the 404 document needs a default probe and only a `resolver` is supplied
  * @throws an `Error` when both `dehydrate` and `payload` are supplied
+ * @throws an `Error` when both `template` and `renderShell` are supplied, or neither
  * @throws an `Error` when a render settles the router where its links don't spell the page's served path: `baseHref()` plus its url, against `base` plus the path
  *
  * @example
  * ```ts
  * import type { TemplateResult } from 'lit';
  * import type { UIRouterLit } from 'lit-ui-router';
- * import { prerender, settle, type PrerenderOptions } from 'lit-ui-router-ssr';
+ * import { prerender, type PrerenderOptions } from 'lit-ui-router-ssr';
  *
  * declare const mounts: PrerenderOptions['mounts'];
  * declare const router: UIRouterLit;
  * declare const titles: Map<string, string>;
- * declare function page(): TemplateResult;
+ * declare function page(router: UIRouterLit): TemplateResult;
  * declare function fillShell(title: string | undefined, body: string): string;
  *
  * const result = await prerender({
@@ -307,10 +399,7 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  *   router,
  *   outDir: 'dist',
  *   paths: ['/', '/sheet/7B', '/legacy'],
- *   renderShell: async (verdict, { path }) => {
- *     await settle(router, path);
- *     return page();
- *   },
+ *   template: page,
  *   document: (body, { path }) => fillShell(titles.get(path), body),
  * });
  * ```
@@ -320,7 +409,8 @@ export async function prerender(
 ): Promise<PrerenderResult> {
   const {
     router,
-    renderShell,
+    template,
+    renderShell: shellHook,
     document,
     elementRenderers = defaultElementRenderers,
     root = new EventTarget(),
@@ -338,6 +428,17 @@ export async function prerender(
     throw new Error(
       'prerender: pass `dehydrate` or `payload`, not both; a `payload` hook calls `dehydrate()` itself',
     );
+
+  if (template && shellHook)
+    throw new Error(
+      'prerender: pass `template` or `renderShell`, not both; a `renderShell` hook settles the router itself',
+    );
+
+  const renderShell =
+    shellHook ?? (template && settledTemplate(router, template));
+
+  if (!renderShell)
+    throw new Error('prerender: pass `template` or `renderShell`');
 
   warnUnregistered();
 
@@ -382,17 +483,18 @@ export async function prerender(
 
   const reports = new Map<string, PagePayload>();
 
+  // The path being handled; renders run one at a time, and `onPath` follows each.
+  let landing: Landing = {};
+
   const renderTemplate = (
     body: TemplateResult,
     context: RenderContext,
   ): string => {
-    const page = renderDrawn(
-      body,
-      router,
-      root,
-      elementRenderers,
-      drawLanded(context),
-    );
+    const drawn = drawLanded(context);
+
+    if (drawn.payload) landing.tokens = tokensOf(drawn.payload);
+
+    const page = renderDrawn(body, router, root, elementRenderers, drawn);
 
     if (page.payload) reports.set(context.file, page.payload);
 
@@ -406,6 +508,15 @@ export async function prerender(
     const context: RenderContext = { ...siteContext, root };
     const before = lastLanded();
     const body = await renderShell(verdict, context);
+    const landed = lastLanded();
+
+    // A path the router already stands on settles on the transition that put it there.
+    if (
+      landed &&
+      (landed !== before || placement(router, base, context.path).at)
+    )
+      landing.state = landed.$to().name;
+
     const redirect = redirectOf(verdict, before);
 
     if (redirect) return redirect;
@@ -429,10 +540,18 @@ export async function prerender(
           `prerender: '${path}' matched response state '${verdict.state}'; pass \`responses\` to answer it`,
         );
 
+      landing.state = verdict.state;
+
       return responder(router, responses)(
         verdict,
         new Request(new URL(`${base.replace(/\/+$/, '')}${path}`, origin)),
       );
+    };
+
+    const onPath = (report: PathReport): void => {
+      tracePath(base, report, landing);
+      landing = {};
+      site.onPath?.(report);
     };
 
     const result = await prerenderSite({
@@ -440,6 +559,7 @@ export async function prerender(
       render: renderLit,
       respond,
       write,
+      onPath,
     });
 
     const pages = result.pages.map((page): PrerenderedPage => {

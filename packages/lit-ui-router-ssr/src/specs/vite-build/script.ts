@@ -19,7 +19,7 @@ export const scriptFor = (
   for (const state of states) router.stateRegistry.register(state);
   router.urlService.rules.otherwise({ state: 'notFound' });
 
-  return definePrerender((site) => ({
+  return definePrerender(() => ({
     mounts,
     router,
     paths,
@@ -28,6 +28,5 @@ export const scriptFor = (
 
       return template(router);
     },
-    document: (body) => site.shellHtml.replace('<!--app-->', body),
   }));
 };

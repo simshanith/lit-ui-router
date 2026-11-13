@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { runInNewContext } from 'node:vm';
 import type { TestContext } from 'node:test';
 
+import { createFetchHandler } from '../src/fetch.ts';
 import { createServerRouter } from '../src/index.ts';
 import type {
   MountConfig,
@@ -13,9 +14,15 @@ import type {
   TrailingSlashPolicy,
   Verdict,
 } from '../src/index.ts';
-import { prerender, redirectPage, redirectPages } from '../src/prerender.ts';
+import {
+  prerender,
+  redirectPage,
+  redirectPages,
+  withBase,
+} from '../src/prerender.ts';
 import type {
   FileWriter,
+  PathReport,
   PrerenderOptions,
   RedirectLine,
   RenderContext,
@@ -420,6 +427,48 @@ describe('prerender', () => {
       );
     });
 
+    it("reports each page's status as the fetch adapter answers its path", async () => {
+      // A 203 badge proves the page keeps the answer's own 2xx.
+      const respond = (verdict: Verdict & { kind: 'response' }) =>
+        verdict.state === 'badge'
+          ? new Response('<svg/>', { status: 203 })
+          : answers.latest();
+
+      const { result } = await run({
+        mounts: responding,
+        paths: ['/', '/sheet/7B', '/app/badge.svg', '/app/latest'],
+        respond,
+      });
+
+      const handler = createFetchHandler(
+        createServerRouter({ mounts: responding }),
+        {
+          serveShell: () => new Response('shell'),
+          serveResponse: respond,
+        },
+      );
+
+      const answered = await Promise.all(
+        result.pages.map(async ({ path, status }) => {
+          const res = await handler(
+            new Request(`https://example.test${path}`, {
+              headers: { accept: 'text/html' },
+            }),
+          );
+
+          return [path, status, res?.status];
+        }),
+      );
+
+      assert.deepEqual(answered, [
+        ['/', 200, 200],
+        ['/sheet/7B', 200, 200],
+        ['/app/badge.svg', 203, 203],
+        [result.pages[3]?.path, 404, 404],
+      ]);
+      assert.equal(result.pages[3]?.file, '404.html');
+    });
+
     it('throws when no respond is supplied', async () => {
       await assert.rejects(
         run({ mounts: responding, paths: ['/app/badge.svg'], notFound: false }),
@@ -476,6 +525,43 @@ describe('prerender', () => {
     );
     assert.equal(result.tally.shell, 1);
     assert.equal(result.tally.redirect, 1);
+  });
+
+  it('reports each listed path once, in order, with its page or redirect', async (t) => {
+    silenceWarn(t);
+    const reports: PathReport[] = [];
+
+    await run({
+      paths: ['/', '/sheet/7B', '/app/legacy', '/app/nope'],
+      render: (_verdict, { path }) =>
+        path === '/sheet/7B' ? { location: '/sheet/7', status: 308 } : '<p/>',
+      onPath: (report) => reports.push(report),
+    });
+
+    assert.deepEqual(
+      reports.map(({ path, verdict, page, redirect }) => [
+        path,
+        verdict.kind,
+        page?.file,
+        redirect,
+      ]),
+      [
+        ['/', 'shell', 'index.html', undefined],
+        [
+          '/sheet/7B',
+          'shell',
+          undefined,
+          { location: '/sheet/7', status: 308 },
+        ],
+        [
+          '/app/legacy',
+          'redirect',
+          undefined,
+          { location: '/app/welcome', status: 302 },
+        ],
+        ['/app/nope', 'notFound', undefined, undefined],
+      ],
+    );
   });
 
   it('throws when the 404 document’s render answers a redirect', async () => {
@@ -971,6 +1057,60 @@ describe('redirectPages', () => {
         rules: redirectPages({ page: linePage, base: '/app' }),
       }),
       /'\/old' lies outside base '\/app'/,
+    );
+  });
+});
+
+describe('withBase', () => {
+  it('puts a base, with or without its trailing slash, in front of a host-absolute path', () => {
+    assert.equal(withBase('/solar/', '/contacts'), '/solar/contacts');
+    assert.equal(withBase('/solar', '/contacts'), '/solar/contacts');
+    assert.equal(withBase('/solar/', '/'), '/solar/');
+    assert.equal(
+      withBase('/a/b/', '/contacts?q=1#top'),
+      '/a/b/contacts?q=1#top',
+    );
+  });
+
+  it('leaves the path as written under the root base', () => {
+    assert.equal(withBase('/', '/contacts'), '/contacts');
+  });
+
+  it('leaves a full url, a protocol-relative url and a relative path as written', () => {
+    for (const target of [
+      'https://example.test/contacts',
+      '//example.test/contacts',
+      'contacts',
+      './contacts',
+      '?q=1',
+    ])
+      assert.equal(withBase('/solar/', target), target);
+  });
+
+  it('adds the base to a path that already carries it', () => {
+    assert.equal(
+      withBase('/solar/', '/solar/contacts'),
+      '/solar/solar/contacts',
+    );
+  });
+
+  it('spells a reported redirect as the run’s rules line does', async (t) => {
+    silenceWarn(t);
+    const reports: PathReport[] = [];
+
+    const { result } = await run({
+      base: '/solar/',
+      rules: 'none',
+      paths: ['/app/legacy'],
+      notFound: false,
+      onPath: (report) => reports.push(report),
+    });
+
+    const [report] = reports;
+    assert.equal(report?.redirect?.location, '/app/welcome');
+    assert.equal(
+      withBase('/solar/', report?.redirect?.location ?? ''),
+      result.rules[0]?.to,
     );
   });
 });

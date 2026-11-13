@@ -65,6 +65,21 @@ re-derive mise's environment before every command, for that command's starting
 directory. New sessions pick it up; `mise run agent_hook --remove` takes it out.
 The settings file is per checkout, so run it in each worktree you use.
 
+### JSON output from tools scripts
+
+A `tools/` CLI that emits machine-readable output takes one JSON destination,
+following [clig.dev](https://clig.dev/#output):
+
+- `--json-out <path>` writes the JSON document to `<path>`; `-` is stdout.
+- `--json` is shorthand for `--json-out -`.
+- With neither flag, a script that keeps a default file (a turbo task output or
+  a `.cache/` report) writes it there; any other script writes no JSON.
+- JSON on stdout is the only thing on stdout; the human report moves to stderr
+  or is dropped. JSON to a file leaves the human report on stdout.
+
+[`tools/cli/src/json-output.ts`](../tools/cli/src/json-output.ts) parses
+the flags and writes the document; new scripts use it.
+
 ## Running Tests
 
 ```bash
@@ -371,7 +386,7 @@ resolves the sample app's route table through `ui-router-server`.
   it times stale code.
 - Alternate the versions on one machine (A, B, A, B) and keep every run's
   report. Each run overwrites `apps/sample-app-routes/.cache/routes-bench.json`
-  unless given `--json <path>`; `BENCH_TIME_MS` sets tinybench's time budget
+  unless given `--json-out <path>`, or `--json` for stdout; `BENCH_TIME_MS` sets tinybench's time budget
   per task. A single run, or a CI run compared against a local one, is not
   evidence.
 - Judge a gap against how much the same task moves between runs, not against
@@ -410,6 +425,36 @@ discussion (see the tool README).
 - Ensure your changes pass local tests before submitting
 
 ### Automated review
+
+[Pullfrog](https://docs.pullfrog.com) is the first reviewer. Its GitHub App
+dispatches [`pullfrog.yml`](../.github/workflows/pullfrog.yml), which runs the
+review on a free OpenCode Zen model named in that workflow. The job signs in to
+OpenCode over OIDC, so no provider key is stored, and no other credential
+reaches it, so nothing metered can run. Which PRs it reviews is set in
+the Pullfrog console, and what it looks for in
+[`.github/pullfrog/review.md`](../.github/pullfrog/review.md). Comment
+`@pullfrog` on a PR to ask for a run; only collaborators can. It cannot push. It
+approves a PR when it finds no issues, but no approval is required to merge, so
+like CodeRabbit it is advisory.
+
+Drafts get no automatic review, so on a draft ask for one with an
+`@pullfrog review this PR` comment once the local gate passes, and again after
+each round of fixes. Marking the PR ready triggers a review of its own, and
+every push after that gets a re-review of the new commits. Each run shows on
+the PR as the `pullfrog` check: a first review typically takes 10–20 minutes,
+a re-review 2–5. `gh pr checks <n>` shows its state without waiting. To wait,
+call the `pr_wait` tool of Pullfrog's MCP server (`npx pullfrog mcp`) or
+`npx pullfrog watch --pr <n> --once` in a loop: each returns on new activity or
+after under a minute with nothing, so call again until the review arrives.
+`gh pr checks <n> --watch` waits for every check, not just this one.
+
+Judge each finding on its merits. Fix the sound ones in new commits; for one
+you reject, reply in its thread with the reason and leave the thread open for
+the maintainer. Pullfrog resolves its own threads when a re-review finds them
+addressed, so don't resolve them yourself. The cycle ends when a re-review
+reports no new issues, or when every finding left open has a reply saying why
+it stands; then summarize what is still open on the PR. Asking CodeRabbit for
+a review stays the maintainer's call.
 
 [CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
 the free OSS tier meters reviews, so they are worth spending deliberately. Label
@@ -474,6 +519,11 @@ built from the PR itself:
   footer in a commit message (or `!` in the PR title) is what signals a major.
 - **PR description → review artifact only.** It never lands in git history;
   write whatever helps reviewers, HTML comments and all.
+- **Reverts name their target.** A `revert` PR carries a `Reverts: #N`
+  trailer in a branch commit, naming the PR it reverts, so the release notes
+  can drop the pair when both land in one release
+  ([RELEASE: Release notes](RELEASE.md#release-notes)). A PR description's
+  `Reverts #N` never reaches git.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
 title on every PR. It runs only when GitHub can build a merge ref, so it skips

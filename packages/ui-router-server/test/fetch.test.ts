@@ -139,10 +139,46 @@ describe('createFetchHandler', () => {
     assert.equal(shell.calls.length, 1);
     assert.equal(shell.calls[0].mount, '/app');
     assert.equal(shell.calls[0].request.url, `${ORIGIN}/app`);
-    // The wrapped response carries the canonical Link and the asset's status/body.
-    assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
+    // The wrapped response names its own path canonical and keeps the asset's status/body.
+    assert.equal(res.headers.get('Link'), '</app/about>; rel="canonical"');
     assert.equal(res.status, 200);
     assert.equal(await bodyText(res), '<html>shell</html>');
+  });
+
+  it("names the policy's spelling of a page canonical, without the query or fragment", async () => {
+    const handler = createFetchHandler(
+      createServerRouter({
+        mounts: {
+          '/': {
+            routes: [{ name: 'sheet', url: '/sheet/:id' }],
+            config: { strict: false, trailingSlash: { pages: 'always' } },
+          },
+        },
+      }),
+      { serveShell: () => new Response('<html>shell</html>') },
+    );
+
+    const respelled = await handler(navigation('/sheet/7?view=full'));
+    assert.equal(respelled?.status, 308);
+    assert.equal(respelled?.headers.get('Location'), '/sheet/7/?view=full');
+    assert.equal(respelled?.headers.get('Link'), null);
+
+    const page = await handler(navigation('/sheet/7/?view=full#notes'));
+    assert.equal(page?.status, 200);
+    assert.equal(page?.headers.get('Link'), '</sheet/7/>; rel="canonical"');
+  });
+
+  it('keeps the canonical Link on its own origin for a path with a doubled leading slash', async () => {
+    const handler = createFetchHandler(
+      routerOf({ kind: 'shell', mount: '/' }),
+      { serveShell: () => new Response('<html>shell</html>') },
+    );
+
+    const res = await handler(navigation('//elsewhere.test/about'));
+    assert.equal(
+      res?.headers.get('Link'),
+      '</elsewhere.test/about>; rel="canonical"',
+    );
   });
 
   it('strips validators and relabels the status for a status’d shell', async () => {
@@ -289,12 +325,12 @@ describe('createFetchHandler', () => {
       serveShell: shell.serveShell,
     });
 
-    // A matched route -> shell at the mount base, canonical Link.
+    // A matched route -> shell at the mount base, its own path canonical.
     {
       const res = await handler(navigation('/app/about'));
       assert.ok(res);
       assert.equal(shell.calls.at(-1)?.request.url, `${ORIGIN}/app`);
-      assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
+      assert.equal(res.headers.get('Link'), '</app/about>; rel="canonical"');
     }
 
     // A redirect rule -> 302.
@@ -771,7 +807,7 @@ describe('createFetchHandler under a base', () => {
     const res = await handler(navigation('/solar/about?x=1'));
     assert.equal(res?.status, 200);
     assert.equal(spy.calls[0]?.request.url, `${ORIGIN}/solar/`);
-    assert.equal(res?.headers.get('Link'), '</solar/>; rel="canonical"');
+    assert.equal(res?.headers.get('Link'), '</solar/about>; rel="canonical"');
   });
 
   it('puts the base back on a redirect Location', async () => {

@@ -89,11 +89,11 @@ The `galaxy` state's component is a shell: section navigation plus a `<ui-view>`
 @customElement('galaxy-shell')
 class GalaxyShellComponent extends LitElement {
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
@@ -128,15 +128,15 @@ The `galaxy.stars` component splits into a list column and a detail panel. The d
 @customElement('stars-container')
 class StarsContainerComponent extends LitElement {
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   get stars(): Star[] {
-    return this._uiViewProps.resolves!.stars;
+    return this.uiViewProps.resolves!.stars;
   }
 
   render() {
@@ -276,11 +276,11 @@ Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of
 @customElement('astronaut-detail')
 class AstronautDetailComponent extends LitElement {
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   render() {
@@ -335,12 +335,17 @@ Note the resolve: instead of a top-level `import '@google/model-viewer'`, the st
 
 ## Router Setup
 
+As in Hello Solar System, the router logs each transition to the browser console, and the [UI Router visualizer](https://github.com/ui-router/visualizer) loads only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellogalaxy/?visualizer" target="_self">running example</a>.
+
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+router.trace.enable('TRANSITION');
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 router.stateRegistry.register(galaxyState);
 router.stateRegistry.register(starsState);
 router.stateRegistry.register(starState);

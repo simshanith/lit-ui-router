@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
-import { benchBudget, writeBenchReport } from '@tools/shared/bench-report.ts';
+import { benchBudget, benchReport } from '@tools/shared/bench-report.ts';
 import { Bench } from 'tinybench';
 
 import { createServerRouter } from '../src/index.ts';
@@ -29,6 +29,11 @@ const assertKind = async (
   for (const path of paths)
     assert.equal((await router.resolve(path)).kind, kind, path);
 };
+
+// Reads --json / --json-out before the run, so a bad flag fails fast.
+const report = benchReport({
+  defaultPath: join(import.meta.dirname, '..', '.cache', 'resolve-bench.json'),
+});
 
 const bench = new Bench({
   name: 'ui-router-server resolve',
@@ -59,12 +64,8 @@ for (const strategy of STRATEGIES) {
 
 await bench.run();
 
-console.log(`${process.version} ${process.platform}-${process.arch}`);
+report.console.log(`${process.version} ${process.platform}-${process.arch}`);
 
-console.table(bench.table());
+report.console.table(bench.table());
 
-const reportPath = await writeBenchReport(bench.tasks, {
-  defaultPath: join(import.meta.dirname, '..', '.cache', 'resolve-bench.json'),
-});
-
-console.log(`wrote ${reportPath}`);
+await report.write(bench.tasks);

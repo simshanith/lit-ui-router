@@ -11,6 +11,10 @@ import { stripLastPathElement } from '@uirouter/core';
  * - anything else is prefixed with the base prefix
  *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
  *   the caller may have omitted.
+ * - a result that would begin with two or more of `/` or `\`, counting past
+ *   the tab, newline and carriage return the URL parser removes, begins with
+ *   one slash, so it never names another host. Under a base prefix the url
+ *   stays as written.
  *
  * @internal
  */
@@ -21,5 +25,8 @@ export function composeNavigateUrl(url: string, baseHref: string): string {
 
   const slash = url.startsWith('/') ? '' : '/';
 
-  return stripLastPathElement(baseHref) + slash + url;
+  return (stripLastPathElement(baseHref) + slash + url).replace(
+    /^(?:[\t\n\r]*[/\\]){2,}[\t\n\r]*/,
+    '/',
+  );
 }

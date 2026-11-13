@@ -1,0 +1,78 @@
+# Runs Pullfrog (https://docs.pullfrog.com) agent reviews. Pullfrog's GitHub
+# App dispatches this workflow from the default branch with the prompt for the
+# PR or comment it is answering, so the `prompt`/`name` inputs are its contract.
+#
+# The job signs in to OpenCode over OIDC, so no provider key is stored. That
+# token is the only credential the agent gets, and the model is set here, so
+# only the free OpenCode Zen model can run. The console's repo model must stay
+# "Custom (set in workflow)": a model stored there beats the `model` input.
+name: Pullfrog
+run-name: ${{ inputs.name || github.workflow }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        type: string
+        description: Agent prompt
+      name:
+        type: string
+        description: Run name
+
+permissions: {}
+
+jobs:
+  pullfrog:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 40
+    permissions:
+      # OIDC: the OpenCode sign-in, and the action's own short-lived GitHub token
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Fetch the full history of main
+        # Not `fetch-depth: 0`, which also fetches every branch, asset branches included
+        run: git fetch --unshallow --no-tags origin main
+      - name: Setup mise
+        # Puts mise and the pinned tools on PATH, which the agent's shell inherits
+        uses: jdx/mise-action@v5
+        with:
+          auto_update: true
+        env:
+          # Adds the agent-only tools in .config/mise/config.agent.toml
+          MISE_ENV: agent
+      - name: Install dependencies
+        # Before the agent starts, so its first commands never meet a half-written node_modules
+        run: mise run setup
+      - name: Sign in to OpenCode
+        id: opencode
+        shell: bash
+        env:
+          AUDIENCE: https://opencode.ai/console
+          CLIENT_ID: ${{ vars.OPENCODE_CLIENT_ID }}
+        run: |
+          oidc=$(curl -sSf --oauth2-bearer "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er .value)
+          echo "::add-mask::$oidc"
+          token=$(curl -sSf https://opencode.ai/console/auth/oauth/token \
+            -d grant_type=urn:ietf:params:oauth:grant-type:token-exchange \
+            -d subject_token_type=urn:ietf:params:oauth:token-type:jwt \
+            -d client_id="$CLIENT_ID" \
+            -d subject_token="$oidc" | jq -er .access_token)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Run agent
+        uses: pullfrog/pullfrog@0741f79ecebfa4469a010644d2aed2d96d32d489 # v0.1.127
+        with:
+          prompt: ${{ inputs.prompt }}
+          model: opencode/deepseek-v4.1-flash-free
+          push: disabled
+          timeout: 30m
+        env:
+          # The only provider credential; the OpenCode workspace decides what it can run
+          OPENCODE_API_KEY: ${{ steps.opencode.outputs.token }}

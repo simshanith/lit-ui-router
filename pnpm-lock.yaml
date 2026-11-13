@@ -226,12 +226,18 @@ catalogs:
     eslint-plugin-wc:
       specifier: ^3.1.0
       version: 3.1.0
+    fast-xml-parser:
+      specifier: ^5.12.0
+      version: 5.12.0
+    fast-xml-validator:
+      specifier: ^1.4.2
+      version: 1.4.2
     happy-dom:
       specifier: ^21.0.4
       version: 21.0.4
     hono:
-      specifier: ^4.13.17
-      version: 4.13.17
+      specifier: ^4.13.18
+      version: 4.13.18
     husky:
       specifier: ^9.1.7
       version: 9.1.7
@@ -316,6 +322,9 @@ catalogs:
     signal-polyfill:
       specifier: ^0.2.2
       version: 0.2.2
+    sitemap:
+      specifier: ^10.0.0
+      version: 10.0.0
     start-server-and-test:
       specifier: ^3.0.13
       version: 3.0.13
@@ -456,11 +465,11 @@ catalogs:
       specifier: npm:@lit-labs/ssr@4.1.0
       version: 4.1.0
     lit-ui-router-floor:
-      specifier: npm:lit-ui-router@1.19.0
-      version: 1.19.0
+      specifier: npm:lit-ui-router@1.20.0
+      version: npm:lit-ui-router@1.20.0
     ui-router-server-floor:
-      specifier: npm:ui-router-server@0.10.0
-      version: npm:ui-router-server@0.10.0
+      specifier: npm:ui-router-server@0.11.0
+      version: npm:ui-router-server@0.11.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -506,6 +515,9 @@ catalogs:
       specifier: workspace:*
       version: workspace:*
     '@tools/bundle-probe':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/cli':
       specifier: workspace:*
       version: workspace:*
     '@tools/cloudflare-api':
@@ -1682,7 +1694,7 @@ importers:
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloorSsr
-        version: lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3)
+        version: link:../lit-ui-router
       oxfmt:
         specifier: 'catalog:'
         version: 0.78.0
@@ -2221,7 +2233,7 @@ importers:
         version: 21.0.4
       hono:
         specifier: 'catalog:'
-        version: 4.13.17
+        version: 4.13.18
       hono-floor:
         specifier: catalog:peerFloor
         version: hono@4.0.0
@@ -2352,6 +2364,9 @@ importers:
       '@axe-core/playwright':
         specifier: 'catalog:'
         version: 4.14.0(playwright-core@1.65.0)
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
@@ -2460,6 +2475,21 @@ importers:
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@7.0.2)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.78.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.93.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/cli:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -2598,7 +2628,7 @@ importers:
         version: 4.1.2
       hono:
         specifier: 'catalog:'
-        version: 4.13.17
+        version: 4.13.18
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -2672,6 +2702,9 @@ importers:
         specifier: catalog:workspace
         version: link:../bootstrap
     devDependencies:
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
@@ -2979,6 +3012,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../release-ledger
@@ -3024,6 +3060,9 @@ importers:
 
   tools/release-config:
     dependencies:
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.6
       yaml:
         specifier: 'catalog:'
         version: 2.9.1
@@ -3034,6 +3073,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       conventional-changelog:
         specifier: 'catalog:'
         version: 8.1.3
@@ -3134,6 +3176,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -3288,6 +3333,9 @@ importers:
       examples:
         specifier: catalog:workspace
         version: link:../../examples
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.18
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -3343,6 +3391,9 @@ importers:
       '@tools/lit-test-env':
         specifier: catalog:workspace
         version: link:../../tools/lit-test-env
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
       '@tools/release-ledger':
         specifier: catalog:workspace
         version: link:../../tools/release-ledger
@@ -3361,6 +3412,12 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
+      fast-xml-parser:
+        specifier: 'catalog:'
+        version: 5.12.0
+      fast-xml-validator:
+        specifier: 'catalog:'
+        version: 1.4.2
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -3382,6 +3439,9 @@ importers:
       postcss-html:
         specifier: 'catalog:'
         version: 2.0.0(postcss@8.5.32)
+      sitemap:
+        specifier: 'catalog:'
+        version: 10.0.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -4529,6 +4589,18 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@nodable/base-output-builder@2.0.1':
+    resolution: {integrity: sha512-dZ5tRk1YEjKjwEJh/xcPlKWfuuuILj7Nqltlswm4GImQ4pFX94wF83UJ+0Q1YLCTlw8czA7yTGOTbX3++mfbTw==}
+
+  '@nodable/compact-builder@2.0.1':
+    resolution: {integrity: sha512-DyDr1Fo2HW2gXF1AdFHM1X7sGK8Fx7zd+P4bveXymOWyP6kn9HXhtSxBDpTAmGvafQb/pBlQVAPhH8haHv//yA==}
+
+  '@nodable/entities@3.1.0':
+    resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
+
+  '@nodable/flexible-xml-parser@1.11.4':
+    resolution: {integrity: sha512-KzMTEsfLL9OQL7E7TWVM+8dXpwuhteW8jCrmaT+mQaE4NlZhs6AHzfkpY4kTT0qVSeV/lDPKRJW63QwiYjG+kA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -6058,6 +6130,9 @@ packages:
   '@types/parse5@2.2.34':
     resolution: {integrity: sha512-p3qOvaRsRpFyEmaS36RtLzpdxZZnmxGuT1GMgzkTtTJVFuEw7KFjGK83MFODpJExgX1bEzy9r0NYjMC3IMfi7w==}
 
+  '@types/sax@1.2.7':
+    resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
+
   '@types/semver@7.8.0':
     resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
@@ -6743,6 +6818,9 @@ packages:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
     engines: {node: '>= 8'}
 
+  anynum@1.0.1:
+    resolution: {integrity: sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A==}
+
   arg@5.0.2:
     resolution: {integrity: sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==}
 
@@ -6813,8 +6891,8 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
-  basic-ftp@6.2.1:
-    resolution: {integrity: sha512-bK67isD+lKq46AU8vNtjvMaT2ZqAOAmNCbxUHlFBRD4k15NWxyEjmaKtZPlgce58So4BNTjITGQOVTjL9y0ECA==}
+  basic-ftp@6.2.6:
+    resolution: {integrity: sha512-0EjZCaodOz6yiokv2JA1VyKGNdGxULZ+GGlPgG9tm4d+T/bHtX1hUch8CumDneBfpIbiSdn7TaCGwpM+gwsOlw==}
     engines: {node: '>=10.0.0'}
 
   before-after-hook@4.0.0:
@@ -7191,6 +7269,9 @@ packages:
 
   destr@2.0.5:
     resolution: {integrity: sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA==}
+
+  detailed-xml-validator@2.2.0:
+    resolution: {integrity: sha512-dffr/kTqIqq2BpybOEddhQRF1KBQcLdKHww9/urAKwZC1+epDnPnbT5IOb0ffCT4QTioAvKYEsojXeOYk030UQ==}
 
   detect-indent@7.0.2:
     resolution: {integrity: sha512-y+8xyqdGLL+6sh0tVeHcfP/QDd8gUgbasolJJpY7NgeQGSZ739bDtSiaiDgtoicy+mtYB81dKLxO9xRhCyIB3A==}
@@ -7581,6 +7662,16 @@ packages:
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
 
+  fast-xml-builder@1.3.1:
+    resolution: {integrity: sha512-pIM/1n3ntFXKYrUZwW7QCK0gAW7XY+wzj1YMIV3tLDvPj/V+zTGJK5e3/4WJfwj0qWw2ElNXiTixda/R+3YSug==}
+
+  fast-xml-parser@5.12.0:
+    resolution: {integrity: sha512-/pXxRBtwxY9w8z7YbgsvIPPcPvFDsTbIkWwTQJhzNJPokj+TbN6ftmcv4j/pEQDvOCNnKGDzuk5Bo2oogIOiFg==}
+    hasBin: true
+
+  fast-xml-validator@1.4.2:
+    resolution: {integrity: sha512-dN1Z5tBDxhJ1e8ccerKI+MWdwZ8oUWhWTSYISFeHKUOzlaZrwnwxcHKN3d7R9IOqtCtk6ynbEiZhjo/8RtDwIA==}
+
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
 
@@ -7796,8 +7887,8 @@ packages:
     resolution: {integrity: sha512-8dKhuBBpRZEodUttQhrSFJ6PQqHRjXHyeeegfxOf132pvgbf0tOb9qqb7q7eYwAWpOcYrsUOsWdJ0sQIIovhZg==}
     engines: {node: '>=16.0.0'}
 
-  hono@4.13.17:
-    resolution: {integrity: sha512-vZIcbkvjOR5hHRWERbGkr8fGfF0GGM1ooYkuH448iO3b2AdVEr3AXZSw4Z3Kn+1L5z0CVoVeyV29VGYmFh05kQ==}
+  hono@4.13.18:
+    resolution: {integrity: sha512-H9q/E1XizaWstJxUW881dmLxEj+t/TrGGnyxINkm4+sK0qUwsMtFdo2BWI9Vs3cIS19MU6b6iCijoUoEf4f3DA==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -7970,6 +8061,9 @@ packages:
   is-unicode-supported@2.1.0:
     resolution: {integrity: sha512-mE00Gnza5EEB3Ds0HfMyllZzbBrmLOX3vfWoj9A9PEnTfratQ/BcaJOuMhnkhjXvb2+FkY3VuHqtAGpTPmglFQ==}
     engines: {node: '>=18'}
+
+  is-unsafe@2.0.3:
+    resolution: {integrity: sha512-ZBllczCCO267vgdFb6Tq3pv+LhHaCiGMdr+ZsuL+OopruAg7S+3ZDs1vD0RPC0uSrkjzbraxaGjtX1YBxjPeFQ==}
 
   is-valid-element-name@1.0.0:
     resolution: {integrity: sha512-GZITEJY2LkSjQfaIPBha7eyZv+ge0PhBR7KITeCCWvy7VBQrCUdFkvpI+HrAPQjVtVjy1LvlEkqQTHckoszruw==}
@@ -8208,12 +8302,6 @@ packages:
 
   lit-ui-router@1.16.0:
     resolution: {integrity: sha512-Pnk1LY1Feb2HwSRsh/WeL0Umx+31aQ0AlNUusKQ1NhT3fbp9oH94CciEYJDqY1EvNdZLvp4u17c03aLGxluzCg==}
-    peerDependencies:
-      '@uirouter/core': ^6.0.8
-      lit: ^2.0.0 || ^3.0.0
-
-  lit-ui-router@1.19.0:
-    resolution: {integrity: sha512-zhNUixJo7Z8qCoeGD+AkRABOX/WvqVTE9MIcj4dyZdgoDRaOu9irx71yxBBgD+A9NGCyvUYGge2J0QLFb3G0QQ==}
     peerDependencies:
       '@uirouter/core': ^6.0.8
       lit: ^2.0.0 || ^3.0.0
@@ -8818,6 +8906,10 @@ packages:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
     engines: {node: '>=8'}
 
+  path-expression-matcher@1.6.2:
+    resolution: {integrity: sha512-enSlaiat05iasnzmgNxRj8reFdj3puY2QpNgP1aPIaVfT6nn9ICuPoFlKHk8EN22HcwewshO+mN2DGbkCEOtqQ==}
+    engines: {node: '>=14.0.0'}
+
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
@@ -9151,6 +9243,10 @@ packages:
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
+  sax@1.6.1:
+    resolution: {integrity: sha512-42tBVwLWnaQvW5zc4HbZrTuWccECCZfBi92FDuwtqxasH+JbPB3/FOKb1m222K42R4WxuxzzMsTswfzgtSu64Q==}
+    engines: {node: '>=11.0.0'}
+
   section-matter@1.0.0:
     resolution: {integrity: sha512-vfD3pmTzGpufjScBh50YHKzEu2lxBWhVEHsNGoEXmCmn2hKGfeNLYMzCJpe8cD7gqX7TJluOVpBkAequ6dgMmA==}
     engines: {node: '>=4'}
@@ -9208,6 +9304,11 @@ packages:
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
+
+  sitemap@10.0.0:
+    resolution: {integrity: sha512-KSjl4H4KBEnGX5KXgzInPAycdOFhwLar0EmksDcYn6NqW2O+zLiMGeV2THE6tpuv3LCVdv+6xsSo2SWLGaBDKw==}
+    engines: {node: '>=22.22.1', npm: '>=10.8.2'}
+    hasBin: true
 
   skin-tone@2.0.0:
     resolution: {integrity: sha512-kUMbT1oBJCpgrnKoSr0o6wPtvRWT9W9UKvGLwfJYO2WuahZRHOpEyL1ckyMGgMWh0UdpmaoFqKKD29WTomNEGA==}
@@ -9339,6 +9440,9 @@ packages:
   strip-json-comments@5.0.3:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
+
+  strnum@2.5.1:
+    resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
 
   stylelint-config-recommended@19.0.0:
     resolution: {integrity: sha512-Y15XB19RManqBOpbRC42tF8R/Hfe314xYLzedRlnnYxYzZ0777RakDQIGcqYfrz9jWGoVyjaGTdpSl9F+roOOw==}
@@ -9952,6 +10056,10 @@ packages:
   wsl-utils@1.0.0:
     resolution: {integrity: sha512-Hl0ZOAs672vg+06kfujwRhoS6/jehvULrlFkuF2dRu6pHgA8U06h3xqNIqNNU1LTXPcedxByAR4GS6pwQK0mgA==}
     engines: {node: '>=20'}
+
+  xml-naming@0.3.0:
+    resolution: {integrity: sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ==}
+    engines: {node: '>=16.0.0'}
 
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
@@ -10965,6 +11073,27 @@ snapshots:
       '@emnapi/runtime': 1.11.2
       '@tybys/wasm-util': 0.10.3
     optional: true
+
+  '@nodable/base-output-builder@2.0.1':
+    dependencies:
+      '@nodable/entities': 3.1.0
+      is-unsafe: 2.0.3
+      path-expression-matcher: 1.6.2
+      strnum: 2.5.1
+
+  '@nodable/compact-builder@2.0.1':
+    dependencies:
+      '@nodable/base-output-builder': 2.0.1
+      path-expression-matcher: 1.6.2
+
+  '@nodable/entities@3.1.0': {}
+
+  '@nodable/flexible-xml-parser@1.11.4':
+    dependencies:
+      '@nodable/base-output-builder': 2.0.1
+      '@nodable/compact-builder': 2.0.1
+      path-expression-matcher: 1.6.2
+      xml-naming: 0.3.0
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -12075,6 +12204,10 @@ snapshots:
     dependencies:
       '@types/node': 24.19.2
 
+  '@types/sax@1.2.7':
+    dependencies:
+      '@types/node': 24.19.2
+
   '@types/semver@7.8.0': {}
 
   '@types/ssri@7.1.5':
@@ -12670,6 +12803,8 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.2
 
+  anynum@1.0.1: {}
+
   arg@5.0.2: {}
 
   argparse@2.0.1: {}
@@ -12728,7 +12863,7 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  basic-ftp@6.2.1: {}
+  basic-ftp@6.2.6: {}
 
   before-after-hook@4.0.0: {}
 
@@ -13111,6 +13246,12 @@ snapshots:
   dequal@2.0.3: {}
 
   destr@2.0.5: {}
+
+  detailed-xml-validator@2.2.0:
+    dependencies:
+      '@nodable/base-output-builder': 2.0.1
+      '@nodable/compact-builder': 2.0.1
+      '@nodable/flexible-xml-parser': 1.11.4
 
   detect-indent@7.0.2: {}
 
@@ -13602,6 +13743,26 @@ snapshots:
     dependencies:
       fast-string-width: 3.0.2
 
+  fast-xml-builder@1.3.1:
+    dependencies:
+      path-expression-matcher: 1.6.2
+      xml-naming: 0.3.0
+
+  fast-xml-parser@5.12.0:
+    dependencies:
+      '@nodable/entities': 3.1.0
+      fast-xml-builder: 1.3.1
+      is-unsafe: 2.0.3
+      path-expression-matcher: 1.6.2
+      strnum: 2.5.1
+      xml-naming: 0.3.0
+
+  fast-xml-validator@1.4.2:
+    dependencies:
+      detailed-xml-validator: 2.2.0
+      path-expression-matcher: 1.6.2
+      xml-naming: 0.3.0
+
   fastq@1.20.1:
     dependencies:
       reusify: 1.1.0
@@ -13734,7 +13895,7 @@ snapshots:
 
   get-uri@8.0.1(supports-color@10.2.2):
     dependencies:
-      basic-ftp: 6.2.1
+      basic-ftp: 6.2.6
       data-uri-to-buffer: 8.0.0
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
@@ -13843,7 +14004,7 @@ snapshots:
 
   hono@4.0.0: {}
 
-  hono@4.13.17: {}
+  hono@4.13.18: {}
 
   hookable@5.5.3: {}
 
@@ -13977,6 +14138,8 @@ snapshots:
   is-stream@4.0.1: {}
 
   is-unicode-supported@2.1.0: {}
+
+  is-unsafe@2.0.3: {}
 
   is-valid-element-name@1.0.0:
     dependencies:
@@ -14189,12 +14352,6 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   lit-ui-router@1.16.0(@uirouter/core@6.1.2)(lit@3.3.3):
-    dependencies:
-      '@oxc-project/runtime': 0.158.0
-      '@uirouter/core': 6.1.2
-      lit: 3.3.3
-
-  lit-ui-router@1.19.0(@uirouter/core@6.1.2)(lit@3.3.3):
     dependencies:
       '@oxc-project/runtime': 0.158.0
       '@uirouter/core': 6.1.2
@@ -15079,6 +15236,8 @@ snapshots:
 
   path-exists@4.0.0: {}
 
+  path-expression-matcher@1.6.2: {}
+
   path-key@3.1.1: {}
 
   path-key@4.0.0: {}
@@ -15468,6 +15627,8 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
+  sax@1.6.1: {}
+
   section-matter@1.0.0:
     dependencies:
       extend-shallow: 2.0.1
@@ -15554,6 +15715,12 @@ snapshots:
       '@polka/url': 1.0.0-next.29
       mrmime: 2.0.1
       totalist: 3.0.1
+
+  sitemap@10.0.0:
+    dependencies:
+      '@types/node': 24.19.2
+      '@types/sax': 1.2.7
+      sax: 1.6.1
 
   skin-tone@2.0.0:
     dependencies:
@@ -15689,6 +15856,10 @@ snapshots:
   strip-json-comments@3.1.1: {}
 
   strip-json-comments@5.0.3: {}
+
+  strnum@2.5.1:
+    dependencies:
+      anynum: 1.0.1
 
   stylelint-config-recommended@19.0.0(stylelint@18.0.0):
     dependencies:
@@ -16274,6 +16445,8 @@ snapshots:
     dependencies:
       is-wsl: 3.1.1
       powershell-utils: 0.1.0
+
+  xml-naming@0.3.0: {}
 
   y18n@5.0.8: {}
 

@@ -64,6 +64,15 @@ describe('lit-ui-router-ssr/vite serverRouterPlugin', () => {
       'index.html',
     ]);
 
+    // The script returns no document, so each page lands at the shell's <!--app--> marker.
+    const shell = element(
+      parseMarkup(await page(outDir, 'index.html')),
+      'div',
+      { id: 'app' },
+    );
+
+    expect(element(shell, 'ui-view')).toBeDefined();
+
     const home = await routedView(outDir, 'index.html');
     expect(labels(home)).toEqual([
       expect.stringMatching(/^<!--lit-part /),

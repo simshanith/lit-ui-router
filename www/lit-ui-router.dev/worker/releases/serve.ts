@@ -36,6 +36,7 @@ const headOf = (router: UIRouterLit): PageHead => {
       title: `${pkg} ${from}...${to}`,
       description: `What changed in the files ${pkg} published to npm between ${from} and ${to}.`,
       script: DIFF_SCRIPT,
+      noindex: true,
     };
   }
 

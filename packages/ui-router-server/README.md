@@ -50,8 +50,49 @@ route, an earlier middleware, or in Hono a route registered before the router's 
 outside every mount already pass through (the fetch adapter returns `null`, and the Hono and Connect
 middleware call `next()`), so the host keeps its own fallthrough and 404 handling. A path a mount
 owns but no state matches is that mount's 404, which `serveNotFound` can answer with the app's own
-404 page. See
+404 page. A path that begins with `//` below its mount (`//about`, `/docs//about` in a `/docs`
+mount) is answered from its collapsed spelling, so no state matches it with an empty leading param:
+a `302` to that spelling, the redirect that spelling itself answers, or `notFound` when it matches
+no route. A non-navigation request to a response state or a delegate is matched as written. See
 [when to use it](https://lit-ui-router.dev/packages/ui-router-server#when-to-use-it).
+
+## Sharing states with the client
+
+Keep one data-only module of names, urls and redirects. The client spreads each entry into a state
+and adds its component and resolves; the server compiles its mount from the same module with
+`routesFromStates`:
+
+```ts
+// states.ts: data only, so vite.config.ts and a Worker can import it.
+import type { StateDeclaration } from '@uirouter/core';
+
+export const states = [
+  { name: 'planets', url: '/' },
+  { name: 'planet', url: '/planets/:planetId' },
+  { name: 'legacy', url: '/legacy', redirectTo: 'planets' },
+  { name: 'notFound' },
+] as const satisfies readonly StateDeclaration[];
+```
+
+Keep `as const satisfies`: an array annotated `readonly StateDeclaration[]` loses its literal names
+and no longer fits `routesFromStates`.
+
+```ts
+// vite.config.ts
+import { createServerRouter, routesFromStates } from 'ui-router-server';
+
+import { states } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': { routes: routesFromStates(states), otherwise: { state: 'notFound' } },
+  },
+});
+```
+
+Each route keeps only the fields a mount reads, and a function or `TargetState` `redirectTo`, or an
+abstract state with a url, throws at the call. See
+[sharing states with the client](https://lit-ui-router.dev/packages/ui-router-server#sharing-states-with-the-client).
 
 ## After `vite build`
 
@@ -160,7 +201,7 @@ const urlConfig = {
 `pages` covers states answered with a page and `responses` covers response states, each
 `'always'`, `'never'` or `'as-requested'` (the default). A delegating state's url belongs to its
 host handler and keeps the spelling requested. A navigation in the other spelling verdicts as a
-`308` redirect to the canonical one, a data `redirectTo` lands in its target's canonical spelling,
+`308` redirect to the canonical one, so a shell's canonical `Link` names that spelling, a data `redirectTo` lands in its target's canonical spelling,
 and a non-navigation request to a response state or delegate is answered at either spelling. The
 policy needs `strict: false`, so both spellings match before it picks one; `createServerRouter`,
 `compileRedirects` and `applyUrlConfig` throw without it. `applyUrlConfig` installs a

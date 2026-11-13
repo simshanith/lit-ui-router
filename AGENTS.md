@@ -20,7 +20,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
 - Cloudflare account changes go through the `cf` CLI: find the command with `cf cli search "<task>"` (no names or IDs in the query) and run it with `--dry-run` first.
-- CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`.
+- CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`. JSON output takes `--json`/`--json-out` through `tools/cli/src/json-output.ts` ([CONTRIBUTING: JSON output from tools scripts](docs/CONTRIBUTING.md#json-output-from-tools-scripts)).
 - A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
 - pnpm links a package's `bin` into its dependents only, never its own `.bin`. A package's own task execs the file directly (0755 plus shebang), as `tools/build_and_test/mise.toml` does.
 - `.config/` holds config only for tools that search it natively (mise, rumdl, taplo). Others keep their conventional location.
@@ -100,6 +100,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 ## PRs, commits, releases
 
 - Squash-only: the PR title is the commit subject, so one PR is one changelog entry. Split changes of different types ([CONTRIBUTING: Commit conventions](docs/CONTRIBUTING.md#commit-conventions)).
+- Once the local gate passes, take your PR through Pullfrog review: request it on a draft, wait for the `pullfrog` check, then address or answer each finding ([CONTRIBUTING: Automated review](docs/CONTRIBUTING.md#automated-review)).
 - After a stack's base squash-merges, check siblings for silent reverts before merging.
 - The `release` label belongs to bump-version PRs only.
 - Releases: [docs/RELEASE.md](docs/RELEASE.md).
@@ -137,6 +138,8 @@ Agents never:
 Skills live in `.agents/skills/<name>/SKILL.md`. Claude Code reads only `.claude/skills/`, so each skill also gets a relative symlink there (`.claude/skills/<name> -> ../../.agents/skills/<name>`).
 
 A skill stays thin: when to use it and what an unattended run needs, linking the doc or package README that owns the recipe.
+
+Dependencies can ship skills too. pnpm links each one approved under `permissions` in `pnpm-workspace.yaml` into both folders under the skill's own name, or as `pnpm-<package>-<skill>` when that name is taken. pnpm owns a `# pnpm` block in each folder's `.gitignore` that keeps those links out of git.
 
 - `ci-failure-repro`: reproduce a red GitHub Actions run locally from its `repro:` line.
 - `ci-log-sweep`: sweep a green run's task-log artifacts for warnings and odd timings.

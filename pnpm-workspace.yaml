@@ -83,8 +83,10 @@ catalog:
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.10
   eslint-plugin-wc: ^3.1.0
+  fast-xml-parser: ^5.12.0
+  fast-xml-validator: ^1.4.2
   happy-dom: ^21.0.4
-  hono: ^4.13.17
+  hono: ^4.13.18
   husky: ^9.1.7
   jose: ^6.2.17
   jsonc-parser: ^3.3.1
@@ -113,6 +115,7 @@ catalog:
   rolldown: ~1.2.18
   semver: ^7.8.6
   signal-polyfill: ^0.2.2
+  sitemap: ^10.0.0
   start-server-and-test: ^3.0.13
   stylelint: ^18.0.0
   stylelint-config-recommended: ^19.0.0
@@ -170,8 +173,8 @@ catalogs:
   peerFloorSsr:
     '@lit-labs/ssr-client-floor': npm:@lit-labs/ssr-client@1.1.7
     '@lit-labs/ssr-floor': npm:@lit-labs/ssr@4.1.0
-    lit-ui-router-floor: npm:lit-ui-router@1.19.0
-    ui-router-server-floor: npm:ui-router-server@0.10.0
+    lit-ui-router-floor: npm:lit-ui-router@1.20.0
+    ui-router-server-floor: npm:ui-router-server@0.11.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     escape-html: ^1.0.3
@@ -198,8 +201,8 @@ catalogs:
     '@lit-labs/ssr': ^4.1.0
     '@lit-labs/ssr-client': ^1.1.7
     lit: ^3.1.2
-    lit-ui-router: ^1.19.0
-    ui-router-server: ^0.10.0
+    lit-ui-router: ^1.20.0
+    ui-router-server: ^0.11.0
   vite7-compat:
     vite-7: npm:vite@^7.3.7
   typescript6-compat:
@@ -215,6 +218,7 @@ catalogs:
     '@tools/bootstrap': workspace:*
     '@tools/build_and_test': workspace:*
     '@tools/bundle-probe': workspace:*
+    '@tools/cli': workspace:*
     '@tools/cloudflare-api': workspace:*
     '@tools/compat-guards': workspace:*
     '@tools/crap': workspace:*
@@ -332,3 +336,7 @@ trustPolicy: no-downgrade
 trustPolicyExcludePrune: true
 
 trustPolicyIgnoreAfter: 43200
+
+permissions:
+  '@playwright/cli':
+    skills: true

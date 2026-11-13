@@ -59,7 +59,7 @@ state's `redirectStatusCode`.
   [`prerender`](/packages/ui-router-server#emitting-a-static-site) from
   `ui-router-server/prerender`, which takes any render. This package's `prerender`
   supplies the lit one and takes the same options, plus `router`,
-  `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
+  `template` or `renderShell`, `document`, `root`, `elementRenderers`, `dehydrate`,
   `payload` and `responses`. No SPA catch-all is ever written: one turns every 404 into a 200.
 - **One page for a host that owns the request.**
   [`renderToString`](#rendering-one-page-per-request) is that render alone,
@@ -69,14 +69,19 @@ state's `redirectStatusCode`.
   transition landed with.
 
 Path enumeration, the html document, and `<title>` stay with the caller —
-`paths`, `document()`, and an async `renderShell()` are the seams for them.
-[`settle()`](#settling-the-router-on-each-path) drives the router to each path
-inside `renderShell()`.
+`paths`, `document()`, and `template` or an async `renderShell()` are the
+seams for them. `template` takes the router and returns the page's template;
+`prerender` [settles](#settling-the-router-on-each-path) the router on each path
+before calling it. That includes the 404 document's probe path, so a mount that
+projects an `otherwise` needs the router to declare an `otherwise` rule of its
+own. A `renderShell()` hook, for a page that needs the verdict or
+more than a settle, calls `settle()` itself. Pass one or the other; passing
+both throws.
 
 ## Quick start
 
 ```ts
-import { prerender, settle } from 'lit-ui-router-ssr';
+import { prerender } from 'lit-ui-router-ssr';
 
 const result = await prerender({
   mounts,
@@ -84,18 +89,16 @@ const result = await prerender({
   outDir: 'dist',
   paths: ['/', '/sheet/7B', '/legacy'],
   extraRules: [{ from: '/megacanvas', to: '/megacanvas.html', status: 301 }],
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-    return page();
-  },
+  template: page,
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
 console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
 ```
 
-`renderShell` returns a template and this package renders it; return a string
-and it is written as-is. `dryRun: true` plans everything and writes nothing.
+`template` returns the page for the router `prerender` has settled; this
+package renders it. A `renderShell` hook returns a template the same way, or a
+string, which is written as-is. `dryRun: true` plans everything and writes nothing.
 
 ## Settling the router on each path
 
@@ -197,8 +200,8 @@ if (redirect)
   });
 ```
 
-`prerender` does the same after each `renderShell`: when the transition the
-hook landed was redirected, the path gets a rules line,
+`prerender` does the same after each render, through `template` or
+`renderShell`: when the transition it landed was redirected, the path gets a rules line,
 `/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
 `tally.redirect`.
 [`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
@@ -265,7 +268,7 @@ to draw every resolve:
 import { prerender } from 'lit-ui-router-ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   dehydrate: {
     shouldDehydrate: ({ token }) => token !== 'manifest',
   },
@@ -300,7 +303,7 @@ one or the other; passing both throws.
 import { dehydrate } from 'ui-router-server/ssr';
 
 await prerender({
-  // mounts, router, paths, renderShell, …
+  // mounts, router, paths, template, …
   payload: (transition, { path }) =>
     path.startsWith('/drafts/')
       ? undefined
@@ -328,14 +331,14 @@ for (const { path, payload } of pages) {
 
 ## Verdict to artefact
 
-| Verdict               | What is emitted                                                                                                                                                                  |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shell`               | `<subpath>/index.html`, rendered through `renderShell` and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
-| `redirect`            | a rules line (`from to status`), no page                                                                                                                                         |
-| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                             |
-| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                             |
-| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                    |
-| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                 |
+| Verdict               | What is emitted                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell`               | `<subpath>/index.html`, rendered through `template` or `renderShell`, and `document`; a [redirect found at settle](#page-response-state-or-redirect-which-decides-when) is a rules line instead |
+| `redirect`            | a rules line (`from to status`), no page                                                                                                                                                        |
+| `notFound`            | nothing, and the path is listed in `result.warnings`                                                                                                                                            |
+| `delegate`            | nothing: the path is listed in `result.delegated` for a host handler                                                                                                                            |
+| `response`            | the handler's 2xx body at its url, or its 3xx as a rules line                                                                                                                                   |
+| the `otherwise` probe | the 404 document, `404.html` by default, rendered like any shell                                                                                                                                |
 
 [`PrerenderResult`](/reference/lit-ui-router-ssr/index/interfaces/PrerenderResult) carries
 all of it: `pages` lists every artefact in enumeration order, `rules` every
@@ -409,7 +412,7 @@ with no redirect rules.
 The router builds its hrefs under its own `baseHref`, so build it with
 `installServerLocation(router, { baseHref: site.base })`; `prerender()`
 throws when a render settles the router where its links don't reach the page: `baseHref()` plus the router's url has to spell `base` plus the path. A response state's handler gets a request for
-the path under the base, and a redirect `renderShell` lands on gets the base
+the path under the base, and a redirect the render lands on gets the base
 once in its rules line. [Prerender with Vite](/guides/prerender-with-vite#serving-under-a-base-path)
 shows the setup.
 
@@ -560,22 +563,18 @@ everything the server drew inside it and renders cold. The served card and its
 children go, the client draws the empty card in their place, and in development
 the console warns that the element could not adopt the server render.
 
-The other answer is a renderer for the card. `LitElementRenderer` from
-`@lit-labs/ssr`, passed beside `UiViewRenderer`, sets the property on the
-server and draws the card's `render()` into a declarative shadow root:
+The other answer is a renderer for the card.
+[`shadowElementRenderers`](/reference/lit-ui-router-ssr/index/variables/shadowElementRenderers)
+is the default list with `@lit-labs/ssr`'s `LitElementRenderer` after it,
+which sets the property on the server and draws the card's `render()` into a
+declarative shadow root:
 
 ```ts
-import { LitElementRenderer } from '@lit-labs/ssr';
-import {
-  LightElementRenderer,
-  prerender,
-  UiViewRenderer,
-} from 'lit-ui-router-ssr';
+import { prerender, shadowElementRenderers } from 'lit-ui-router-ssr';
 
 await prerender({
   // …
-  // The list replaces the default; LightElementRenderer stays ahead of the shadow-root renderer.
-  elementRenderers: [UiViewRenderer, LightElementRenderer, LitElementRenderer],
+  elementRenderers: shadowElementRenderers,
 });
 ```
 
@@ -595,8 +594,9 @@ default avoids.
 A shell element needs that list too: a shadow-DOM component that holds
 `<ui-view>` in its own template, such as an `<app-root>`. Under the default it
 renders as its bare tag, empty, and the views inside it are missing with it.
-With `LitElementRenderer` after `LightElementRenderer`, the `<ui-view>` in its
-shadow root renders, hydrates and adopts. In development, `prerender()` and
+Under `shadowElementRenderers`, the `<ui-view>` in its shadow root renders,
+hydrates and adopts. A list of your own keeps `LitElementRenderer` after
+the package's own renderers, `UiViewRenderer` and `LightElementRenderer`: the first renderer that matches a class wins. In development, `prerender()` and
 `renderToString()` warn once per tag when a shadow-DOM `LitElement` reaches no
 renderer that draws it; `<ui-router>`, whose shadow root is a bare slot, is left
 out.
@@ -678,14 +678,17 @@ plugins: [
 // src/prerender.ts
 import { definePrerender } from 'lit-ui-router-ssr/vite';
 
-export default definePrerender((site) => ({
+export default definePrerender(() => ({
   mounts,
   router,
   paths,
-  renderShell,
-  document,
+  template: page,
 }));
 ```
+
+With no `document` in the options, `definePrerender` puts each page's body
+into the built `index.html` in place of its `<!--app-->` marker, and a shell
+without one fails the build. A `document` the entry returns wins.
 
 The entry then uses plain static imports; see
 [Prerender with Vite](/guides/prerender-with-vite). An entry node runs directly
@@ -829,6 +832,59 @@ await bootstrap(router, root, page(router), {
   },
 });
 ```
+
+### Tracing hydration
+
+`@uirouter/core`'s trace logs hydration too, so `router.trace.enable(...)` is the one switch for watching a page wake:
+
+- **`UIVIEW`:** each served view logs its outcome once, through core's `traceUIViewEvent`: `Adopted`, `Fell back` with the cause, or `Rendered cold` for a view with nothing to adopt.
+- **`TRANSITION`:** `bootstrap` logs how the boot compared with the document's hydration signature, the state it was drawn for and the state it booted into, and each view's outcome.
+- **`RESOLVE`:** `bootstrap` logs which resolves the boot transition adopted from the payload and which re-run on the client.
+
+```ts
+router.trace.enable('UIVIEW', 'TRANSITION', 'RESOLVE');
+await bootstrap(router, root, page(router));
+```
+
+```text
+Transition #0-0:         Seeded from payload: adopted [app.contacts.contacts], re-runs []
+ui-view: Adopted                        [ui-view#0 lit:$default ($default@(root))] for state='app'
+ui-view: Adopted                        [ui-view#1 lit:$default.$default ($default@app)] for state='app.contacts'
+bootstrap: adopted, signature matched (drawn for 'app.contacts', booted into 'app.contacts'), views: $default=adopted $default.$default=adopted
+```
+
+Core's own lines for those categories interleave with these. Like them, these lines are gated at runtime rather than folded out of the production build, so a deployed page can turn them on.
+
+The trace is a module singleton, so it reaches the prerender script's router too. With `TRANSITION` on there, `prerender` logs one line per listed path: its verdict kind, the state its render landed on, any redirect, and the resolves it dehydrated:
+
+```ts
+router.trace.enable('TRANSITION');
+await prerender({ router, mounts, paths, outDir, renderShell, dehydrate: {} });
+```
+
+```text
+prerender: '/contacts' shell, landed 'app.contacts', dehydrated [app.contacts.contacts]
+prerender: '/old' redirect, redirect 302 '/contacts'
+prerender: '/api/health' delegate
+```
+
+The path is as it was listed. A redirect's target is as the host serves it, so under a `base` other than `/` it carries the base and the line says so: `prerender: '/old' redirect, redirect 302 '/solar/contacts' (with base '/solar/')`. The report the caller's own `onPath` receives stays base-free.
+
+#### A dedicated switch
+
+Core's categories also turn on core's own lines. To watch hydration alone, register the `HYDRATION` category with `registerTraceCategory` and enable it by name. It turns on every line above except core's own, and leaves core's categories as they are. Register it right after creating the router, before anything enables it and before `bootstrap`:
+
+```ts
+import { bootstrap, registerTraceCategory } from 'lit-ui-router-ssr/client';
+
+registerTraceCategory(router, 'HYDRATION');
+router.trace.enable('HYDRATION');
+await bootstrap(router, root, page(router));
+```
+
+The prerender script does the same with `PRERENDER`, imported from `lit-ui-router-ssr`, for the per-path lines alone.
+
+Core reads every category name through a fixed enum, so on its own an unregistered name such as `'HYDRATION'` shares one key with every other unknown name. `registerTraceCategory` keeps registered names apart by wrapping `router.trace`: the wrapper answers `enable`, `disable` and `enabled` for registered names, including a no-argument `enable()` or `disable()`, and hands everything else to core's trace. Every router registered over the same trace sees the same switches for registered names. A router that never called `registerTraceCategory` reads core's trace unwrapped, and core's imported `trace.disable()` leaves registered names on. Registering one of core's own names, such as `'TRANSITION'`, throws.
 
 ### Routed class views
 

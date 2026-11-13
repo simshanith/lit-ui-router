@@ -7,7 +7,7 @@
  * can take it.
  */
 
-import { Resolvable } from '@uirouter/core';
+import { isFunction, isString, Resolvable } from '@uirouter/core';
 import type { Transition, UIRouter } from '@uirouter/core';
 
 import { warnUntransported } from './dev-warn.ts';
@@ -32,6 +32,22 @@ export interface SeedOptions {
    * or one whose `decode` throws, runs its function instead.
    */
   readonly transport?: Readonly<Record<string, Transporter>>;
+  /**
+   * Called for each transition the seed checks against the payload, once its
+   * resolves are seeded: with which resolves it adopted and which run their
+   * functions.
+   */
+  readonly onSeed?: (transition: Transition, report: SeedReport) => void;
+}
+
+/** What {@link seed | `seed`} did to one transition, as {@link SeedOptions.onSeed} reports it. */
+export interface SeedReport {
+  /** Whether the transition's target state and url parameters are the ones the payload was drawn for. */
+  readonly matched: boolean;
+  /** Each resolve adopted from the payload, as `state.token`. */
+  readonly adopted: readonly string[];
+  /** Each other resolve of an entering state, as `state.token`: it runs its function. */
+  readonly rerun: readonly string[];
 }
 
 type Mark = NonNullable<ResolvePayload['transported']>[string][string][number];
@@ -109,6 +125,14 @@ const revive = (
   }
 };
 
+// A string token as itself, a class token by its name.
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- core types an injection token `any`
+const tokenName = (token: unknown): string => {
+  if (isString(token)) return token;
+
+  return isFunction(token) ? token.name : String(token);
+};
+
 /**
  * Seeds `router` with a resolve payload, so the transition it was drawn for
  * adopts the payload's values in place of running their resolve functions.
@@ -153,19 +177,19 @@ const revive = (
 export const seed = (
   router: UIRouter,
   payload: ResolvePayload | undefined,
-  { transport = {} }: SeedOptions = {},
+  { transport = {}, onSeed }: SeedOptions = {},
 ): (() => void) => {
   if (payload === undefined) return () => {};
 
   const values = new Map(
     Object.entries(payload.resolves).map(([state, tokens]) => {
       const marked = payload.transported?.[state] ?? {};
-      const adoptable: [string, unknown][] = [];
+      const adoptable = new Map<string, unknown>();
 
       for (const [token, value] of Object.entries(tokens)) {
         const revived = revive(value, marked[token] ?? [], transport);
 
-        if (revived.ok) adoptable.push([token, revived.value]);
+        if (revived.ok) adoptable.set(token, revived.value);
         else warnUntransported(state, token, revived.type, revived.reason);
       }
 
@@ -179,22 +203,40 @@ export const seed = (
   const adopt = (transition: Transition): void => {
     const to = transition.$to();
 
-    if (drawnFor(to.name, urlParams(to, transition.params())) !== drawn) return;
+    const matched =
+      drawnFor(to.name, urlParams(to, transition.params())) === drawn;
 
-    for (const { state, resolvables } of transition.treeChanges().entering) {
-      for (const [token, value] of values.get(state.name) ?? []) {
-        const declared = resolvables.find(
-          (resolvable) => resolvable.token === token,
-        );
+    const adopted: string[] = [];
+    const rerun: string[] = [];
 
-        if (declared === undefined || isNowait(declared, state)) continue;
+    for (const { state } of transition.treeChanges().entering) {
+      const seeded = values.get(state.name);
 
+      // The state's own resolves, not the `$state$` core adds to each node.
+      for (const declared of state.resolvables) {
+        const token: unknown = declared.token;
+        const name = `${state.name}.${tokenName(token)}`;
+
+        if (
+          !matched ||
+          !isString(token) ||
+          !seeded?.has(token) ||
+          isNowait(declared, state)
+        ) {
+          rerun.push(name);
+          continue;
+        }
+
+        const value = seeded.get(token);
+        adopted.push(name);
         transition.addResolvable(
           new Resolvable(token, () => value, [], declared.policy, value),
           state,
         );
       }
     }
+
+    onSeed?.(transition, { matched, adopted, rerun });
   };
 
   // Ahead of any onBefore hook that reads a resolve, which would start the function.

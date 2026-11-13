@@ -60,3 +60,60 @@ export async function createReleasePr(
 
   return stdout.trim();
 }
+
+/** argv resolving a PR URL to the GraphQL node id the auto-merge mutation takes. */
+export function prNodeIdArgs(prUrl: string): string[] {
+  if (prUrl.trim() === '') throw new Error('prUrl must be non-empty');
+
+  return ['pr', 'view', prUrl, '--json', 'id', '--jq', '.id'];
+}
+
+// Not `gh pr merge --auto`: gh merges at once when the PR is already
+// mergeable, and this must never merge before the required checks report.
+const ENABLE_AUTO_MERGE = `mutation($pullRequestId: ID!) {
+  enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }) {
+    pullRequest { autoMergeRequest { mergeMethod } }
+  }
+}`;
+
+/** argv enabling squash auto-merge on a PR by node id. */
+export function enableAutoMergeArgs(pullRequestId: string): string[] {
+  if (pullRequestId.trim() === '') {
+    throw new Error('pullRequestId must be non-empty');
+  }
+
+  return [
+    'api',
+    'graphql',
+    '-f',
+    `query=${ENABLE_AUTO_MERGE}`,
+    '-f',
+    `pullRequestId=${pullRequestId}`,
+  ];
+}
+
+/**
+ * Enable squash auto-merge on the release PR, with in-tool retry. Throws
+ * when GitHub refuses, e.g. a PR that is already clean: the run fails
+ * loudly with the PR open and auto-merge off, never merging it early.
+ */
+export async function enableReleasePrAutoMerge(
+  prUrl: string,
+  exec: Exec = defaultExec,
+): Promise<void> {
+  await ensureGh(exec);
+
+  const run = (args: string[], label: string) =>
+    withRetry(() => exec('gh', args, { cwd: workspaceRoot }), {
+      onRetry: (error, attempt) => {
+        console.error(
+          `${label} attempt ${attempt} failed, retrying: ${messageOf(error)}`,
+        );
+      },
+    });
+
+  const { stdout } = await run(prNodeIdArgs(prUrl), 'gh pr view');
+  const pullRequestId = stdout.trim();
+
+  await run(enableAutoMergeArgs(pullRequestId), 'enable auto-merge');
+}

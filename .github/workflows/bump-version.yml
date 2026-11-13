@@ -58,6 +58,11 @@ on:
         required: false
         default: false
         type: boolean
+      autoMerge:
+        description: 'Enable squash auto-merge on the release PR (merges once required checks pass)'
+        required: false
+        default: false
+        type: boolean
 
 # Load-bearing: the commit-msg hook rejects release-it's "Release X.Y.Z" commit by design.
 env:
@@ -114,5 +119,6 @@ jobs:
           PR_BASE: ${{ inputs.prBase }}
           BRANCH_PREFIX_INPUT: ${{ inputs.branchPrefix }}
           DRY_RUN: ${{ inputs.dryRun }}
-          # PAT scoped to this step only: gh pr create must trigger workflows on merge
+          AUTO_MERGE: ${{ inputs.autoMerge }}
+          # PAT scoped to this step only: gh pr create and auto-merge must trigger workflows on merge
           GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}

@@ -10,7 +10,12 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { assertRespellable, respell, slashOf } from './trailing-slash.ts';
+import {
+  assertRespellable,
+  onOrigin,
+  respell,
+  slashOf,
+} from './trailing-slash.ts';
 import type { TrailingSlash } from './trailing-slash.ts';
 import type { RouterUrlConfig } from './url-config.ts';
 import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
@@ -435,7 +440,9 @@ export function compileResolver(
     const formatted = format(state.matcher, carried);
 
     const path =
-      formatted === null ? null : respell(formatted, slashFor(state.name));
+      formatted === null
+        ? null
+        : onOrigin(respell(formatted, slashFor(state.name)));
 
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;

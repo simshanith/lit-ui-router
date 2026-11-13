@@ -26,6 +26,8 @@ import { fileFor, subpathIn } from './site-paths.ts';
 import { mountPolicyOf, slashOf } from './trailing-slash.ts';
 import type { TrailingSlash } from './trailing-slash.ts';
 
+export { withBase } from './base-path.ts';
+
 export { redirectPage, redirectPages } from './redirect-pages.ts';
 
 export type { RedirectPagesOptions } from './redirect-pages.ts';
@@ -36,8 +38,10 @@ export interface EmittedPage {
   path: string;
   /** Path relative to `outDir` — `sheet/7B/index.html`. */
   file: string;
-  /** The verdict that produced it; `status` carries the otherwise projection's 404. */
+  /** The verdict that produced it; `verdict.status` carries the otherwise projection's 404. */
   verdict: Verdict;
+  /** Status the page answers with, as the adapters answer the same path. */
+  readonly status: number;
   /** Bytes written, or planned under `dryRun`. */
   bytes: number;
 }
@@ -61,6 +65,21 @@ export interface RenderedRedirect {
   location: string;
   /** Status the host answers with. */
   status: number;
+}
+
+/** What {@link prerender} did with one listed path, as {@link PrerenderOptions.onPath} reports it. */
+export interface PathReport {
+  /** The path, exactly as the caller listed it. */
+  path: string;
+  /** The verdict the path resolved to. */
+  verdict: Verdict;
+  /** The page written for it, when one was. */
+  page?: EmittedPage;
+  /**
+   * Where it redirects, when its verdict, render or response answered a redirect.
+   * The location is base-free, like `path` and `verdict`; the rules line for it carries `base`.
+   */
+  redirect?: RenderedRedirect;
 }
 
 /** What a render hook is handed besides the verdict. */
@@ -207,6 +226,12 @@ export interface PrerenderOptions {
   write: FileWriter;
   /** Plans everything and writes nothing — neither pages nor the rules file. */
   dryRun?: boolean;
+  /**
+   * Called once per listed path, in enumeration order, after the path is
+   * handled: with its verdict, and the page written or redirect answered for
+   * it. Not called for the 404 document.
+   */
+  onPath?: (report: PathReport) => void;
 }
 
 /** Counts of what {@link prerender} emitted. */
@@ -249,6 +274,8 @@ export interface PrerenderResult {
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 
 type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
+
+type Outcome = Pick<PathReport, 'page' | 'redirect'>;
 
 const DEFAULT_NOT_FOUND_FILE = '404.html';
 
@@ -331,6 +358,10 @@ const respelledLines = async (
     ? [{ from: other, to: path, status: verdict.status }]
     : [];
 };
+
+// A generated line's `from` is a listed path or its other spelling, so it takes the base even where it begins with '//'.
+const fromUnderBase = (base: string, from: string): string =>
+  from.startsWith('//') ? base.slice(0, -1) + from : withBase(base, from);
 
 const lineKey = ({ from, to, status }: RedirectLine): string =>
   `${from} ${to} ${status}`;
@@ -479,6 +510,7 @@ export async function prerender(
     extraRules = [],
     write,
     dryRun = false,
+    onPath,
   } = options;
 
   const base = baseFor(options.resolver ?? {}, options.base, 'prerender');
@@ -503,38 +535,53 @@ export async function prerender(
   const warnings: string[] = [];
   const delegated: string[] = [];
 
-  // Whether the render wrote a page or answered a redirect.
+  // Records the page a path wrote.
+  const emitPage = async (
+    verdict: Verdict,
+    listed: string,
+    file: string,
+    status: number,
+    body: string,
+  ): Promise<Outcome> => {
+    if (!dryRun) await write(joinPath(outDir, file), body);
+
+    const page: EmittedPage = {
+      path: listed,
+      file,
+      verdict,
+      status,
+      bytes: new TextEncoder().encode(body).length,
+    };
+
+    pages.push(page);
+
+    return { page };
+  };
+
+  // The page the render wrote, or the redirect it answered.
   const emit = async (
     verdict: ShellVerdict,
     path: string,
     subpath: string,
     file: string,
     listed = path,
-  ): Promise<'shell' | 'redirect'> => {
+  ): Promise<Outcome> => {
     const html = await render(verdict, { path, subpath, file });
 
     if (!isPage(html)) {
       generated.push(...redirectLines(path, html));
 
-      return 'redirect';
+      return { redirect: html };
     }
 
-    if (!dryRun) await write(joinPath(outDir, file), html);
-    pages.push({
-      path: listed,
-      file,
-      verdict,
-      bytes: new TextEncoder().encode(html).length,
-    });
-
-    return 'shell';
+    return emitPage(verdict, listed, file, verdict.status ?? 200, html);
   };
 
   const answer = async (
     verdict: ResponseVerdict,
     path: string,
     listed: string,
-  ): Promise<void> => {
+  ): Promise<Outcome> => {
     const subpath = subpathIn(verdict.mount, path);
     const file = responseFileFor(subpath);
 
@@ -550,25 +597,27 @@ export async function prerender(
     if (status >= 300 && status < 400 && location !== null) {
       generated.push(...redirectLines(path, { location, status }));
 
-      return;
+      return { redirect: { location, status } };
     }
 
     if (status < 200 || status >= 300)
       throw new Error(
         `prerender: response state '${verdict.state}' answered '${path}' with ${status}, which a static host cannot serve`,
       );
-    const body = await response.text();
 
-    if (!dryRun) await write(joinPath(outDir, file), body);
-    pages.push({
-      path: listed,
-      file,
+    const outcome = await emitPage(
       verdict,
-      bytes: new TextEncoder().encode(body).length,
-    });
+      listed,
+      file,
+      status,
+      await response.text(),
+    );
+
     generated.push(
       ...(await respelledLines(resolver, path, slashFor(resolver, verdict))),
     );
+
+    return outcome;
   };
 
   let slashProbed = false;
@@ -586,9 +635,11 @@ export async function prerender(
     return path;
   };
 
-  const visit = async (listed: string): Promise<void> => {
-    const path = baseFree(listed);
-    const verdict = await resolver.resolve(path);
+  const handle = async (
+    verdict: Verdict,
+    path: string,
+    listed: string,
+  ): Promise<Outcome> => {
     // Read before narrowing: a structural resolver may return a kind the Verdict union lacks.
     const kind: string = verdict.kind;
 
@@ -615,33 +666,34 @@ export async function prerender(
         listed,
       );
 
-      tally[emitted] += 1;
+      if (emitted.redirect) {
+        tally.redirect += 1;
 
-      if (emitted === 'shell')
-        generated.push(...(await respelledLines(resolver, path, slash)));
+        return emitted;
+      }
 
-      return;
+      tally.shell += 1;
+      generated.push(...(await respelledLines(resolver, path, slash)));
+
+      return emitted;
     }
 
     if (verdict.kind === 'redirect') {
       tally.redirect += 1;
       generated.push(...redirectLines(path, verdict));
+      const { location, status } = verdict;
 
-      return;
+      return { redirect: { location, status } };
     }
 
-    if (verdict.kind === 'response') {
-      await answer(verdict, path, listed);
-
-      return;
-    }
+    if (verdict.kind === 'response') return answer(verdict, path, listed);
 
     if (verdict.kind === 'notFound') {
       tally.notFound += 1;
       warnings.push(listed);
       warnUnclaimed(listed);
 
-      return;
+      return {};
     }
 
     if (kind !== 'delegate') {
@@ -652,6 +704,17 @@ export async function prerender(
 
     tally.delegate += 1;
     delegated.push(listed);
+
+    return {};
+  };
+
+  const visit = async (listed: string): Promise<void> => {
+    const path = baseFree(listed);
+    const verdict = await resolver.resolve(path);
+
+    const outcome = await handle(verdict, path, listed);
+
+    onPath?.({ path: listed, verdict, ...outcome });
   };
 
   for await (const path of paths) await visit(path);
@@ -667,8 +730,8 @@ export async function prerender(
     const { verdict, probe, file } = page;
 
     if (
-      (await emit(verdict, probe, subpathIn(verdict.mount, probe), file)) !==
-      'shell'
+      (await emit(verdict, probe, subpathIn(verdict.mount, probe), file))
+        .redirect
     )
       throw new Error(
         `prerender: the 404 document's render for '${probe}' answered a redirect; it must render a page`,
@@ -679,7 +742,7 @@ export async function prerender(
     ...extraRules,
     ...uniqueLines(generated).map((line) => ({
       ...line,
-      from: withBase(base, line.from),
+      from: fromUnderBase(base, line.from),
       to: withBase(base, line.to),
     })),
   ];

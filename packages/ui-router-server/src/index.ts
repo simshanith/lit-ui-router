@@ -13,7 +13,7 @@
 
 import type { RawParams, StateRule } from '@uirouter/core';
 
-import { mountsUnder, normalizeBase as siteBase } from './base-path.ts';
+import { mountsUnder, normalizeBase as siteBase, pathOf } from './base-path.ts';
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
@@ -29,7 +29,7 @@ import type {
   RouteMatch,
   RouteTableConfig,
 } from './redirects.ts';
-import { registerMountPolicies, respell } from './trailing-slash.ts';
+import { onOrigin, registerMountPolicies, respell } from './trailing-slash.ts';
 
 export type {
   RedirectRule,
@@ -43,6 +43,10 @@ export type {
 export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
 
 export { routeTrie } from './route-trie.ts';
+
+export { routesFromStates } from './state-routes.ts';
+
+export type { StateRoutes } from './state-routes.ts';
 
 declare module '@uirouter/core' {
   interface StateDeclaration {
@@ -200,9 +204,19 @@ export type Verdict =
       kind: 'redirect';
       /** Base of the mount that owned the pathname. */
       mount: string;
-      /** The mount-joined target path; merge the request's search with {@link mergeSearch}. */
+      /**
+       * The mount-joined target path; merge the request's search with {@link mergeSearch}.
+       * A route's `redirectTo` names a state, never a url, so a location `createServerRouter`
+       * formats can only mean a path on this site: it starts with exactly one `/`, and a
+       * leading `//` an empty param would format collapses to one. The adapters answer
+       * `location` as written: a custom resolver that returns a `//host` or full-url location
+       * redirects there.
+       */
       location: string;
-      /** Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode}, else 302. */
+      /**
+       * Redirect status to answer with: the matched state's {@link RouteDeclaration.redirectStatusCode},
+       * else 302; 308 for a trailing-slash respelling.
+       */
       status: number;
     }
   /**
@@ -280,6 +294,11 @@ export interface ServerRouter<
    * (URL, Location). Under a {@link ServerRouter.base | base}, the pathname
    * lies under it, with the base taken off, as the adapters hand it over;
    * verdict mounts and redirect locations come back the same way.
+   *
+   * A path that begins with `//` below its mount is answered from its
+   * collapsed spelling, so no state matches it with an empty leading param:
+   * a `302` to that spelling, the redirect that spelling itself answers, or
+   * `notFound` when it matches no route.
    */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
   /**
@@ -357,14 +376,8 @@ interface Mount {
 const isUrlText = (input: string | { pathname: string }): input is string =>
   typeof input === 'string';
 
-const pathnameOf = (input: string | { pathname: string }): string => {
-  if (!isUrlText(input)) return input.pathname;
-  // Accept absolute urls without requiring a URL global (runtime-neutral).
-  const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
-  const end = path.search(/[?#]/);
-
-  return end === -1 ? path : path.substring(0, end);
-};
+const pathnameOf = (input: string | { pathname: string }): string =>
+  isUrlText(input) ? pathOf(input) : input.pathname;
 
 // The pathname within the mount, or null when the mount doesn't own it.
 const subpathIn = (base: string, pathname: string): string | null => {
@@ -721,7 +734,7 @@ const redirectVerdict = (
 ): Verdict => ({
   kind: 'redirect',
   mount: mount.base,
-  location: join(mount.base, path),
+  location: onOrigin(join(mount.base, path)),
   status,
 });
 
@@ -941,7 +954,7 @@ const replayVerdict = async (
     return otherwiseVerdict(mount);
   // The memory location only moves when the client's address bar would:
   // core skips the url push for url-sourced transitions.
-  const landed = router.urlService.url();
+  const landed = onOrigin(router.urlService.url());
 
   return landed === subpath
     ? (respelledVerdict(mount, subpath, router.globals.$current.name) ??
@@ -1067,22 +1080,40 @@ export function createServerRouter<
       .then((simulate) => prewarmPools(simulate, mounts))
       .catch(() => {});
 
+  const verdictFor = async (pathname: string): Promise<Verdict> => {
+    for (const mount of mounts) {
+      const subpath = subpathIn(mount.base, pathname);
+
+      if (subpath === null) continue;
+
+      const collapsed = onOrigin(subpath);
+
+      if (collapsed !== subpath) return collapsedVerdict(mount, collapsed);
+
+      if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
+
+      return simulateVerdict(await loadSimulate(), mount, subpath);
+    }
+
+    return { kind: 'notFound' };
+  };
+
+  // A subpath that begins with '//' is answered from its collapsed spelling, so no state matches it with an empty leading param.
+  const collapsedVerdict = async (
+    mount: Mount,
+    collapsed: string,
+  ): Promise<Verdict> => {
+    const verdict = await verdictFor(join(mount.base, collapsed));
+
+    if (verdict.kind === 'notFound') return notFoundVerdict(mount);
+
+    return verdict.kind === 'redirect'
+      ? { ...verdict, mount: mount.base }
+      : redirectVerdict(mount, collapsed, 302);
+  };
+
   const routing: ServerRouter = {
-    async resolve(pathnameOrUrl) {
-      const pathname = pathnameOf(pathnameOrUrl);
-
-      for (const mount of mounts) {
-        const subpath = subpathIn(mount.base, pathname);
-
-        if (subpath === null) continue;
-
-        if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
-
-        return simulateVerdict(await loadSimulate(), mount, subpath);
-      }
-
-      return { kind: 'notFound' };
-    },
+    resolve: (pathnameOrUrl) => verdictFor(pathnameOf(pathnameOrUrl)),
   };
 
   const router: ServerRouter =

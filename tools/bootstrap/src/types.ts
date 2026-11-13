@@ -28,6 +28,7 @@ export interface ExportsConditions {
 export type PackageManifest = {
   name?: string;
   version?: string;
+  description?: string;
   private?: boolean;
   // `<name>@<version>+<integrity>`; the root manifest's is the pnpm authority
   packageManager?: string;

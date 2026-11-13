@@ -47,4 +47,59 @@ describe('composeNavigateUrl', () => {
       '/app/users?q=1#top',
     );
   });
+
+  it.each([
+    ['/', '/evil.example'],
+    ['/app', '/evil.example'],
+    ['/app/', '/app//evil.example'],
+  ])(
+    'keeps a URL that begins with // on this origin under %s',
+    (baseHref, expected) => {
+      expect(composeNavigateUrl('//evil.example', baseHref)).toBe(expected);
+    },
+  );
+
+  it('collapses a longer leading run of slashes to one', () => {
+    expect(composeNavigateUrl('///evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('//', '/')).toBe('/');
+  });
+
+  it('collapses a leading run that mixes in backslashes, which the URL parser reads as slashes', () => {
+    expect(composeNavigateUrl('/\\evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('\\evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('\\/evil.example', '/app')).toBe('/evil.example');
+    expect(composeNavigateUrl('/\\evil.example', '/app/')).toBe(
+      '/app/\\evil.example',
+    );
+  });
+
+  it('counts past the tab, newline and carriage return the URL parser removes', () => {
+    expect(composeNavigateUrl('/\t/evil.example', '/')).toBe('/evil.example');
+    expect(composeNavigateUrl('/\n\\\r\tevil.example', '/')).toBe(
+      '/evil.example',
+    );
+    expect(composeNavigateUrl('/\tevil.example', '/')).toBe('/\tevil.example');
+  });
+
+  it('leaves the url as written below a base prefix, where it names this origin', () => {
+    expect(composeNavigateUrl('///evil.example', '/app/')).toBe(
+      '/app///evil.example',
+    );
+    expect(composeNavigateUrl('//', '/app/')).toBe('/app//');
+  });
+
+  it('keeps the query and hash of a URL that begins with //', () => {
+    expect(composeNavigateUrl('//evil.example/a?q=1#top', '/')).toBe(
+      '/evil.example/a?q=1#top',
+    );
+    expect(composeNavigateUrl('//evil.example/a?q=1#top', '/app/')).toBe(
+      '/app//evil.example/a?q=1#top',
+    );
+  });
+
+  it('leaves slashes below the first segment as written', () => {
+    expect(composeNavigateUrl('/a//b?next=//c#//d', '/app/')).toBe(
+      '/app/a//b?next=//c#//d',
+    );
+  });
 });

@@ -32,14 +32,14 @@ export class Compose extends LitElement {
 
   /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<ComposeResolves>;
+  uiViewProps!: UIViewInjectedProps<ComposeResolves>;
 
   canExit = false;
 
-  constructor(_uiViewProps: UIViewInjectedProps<ComposeResolves>) {
+  constructor(uiViewProps: UIViewInjectedProps<ComposeResolves>) {
     super();
-    this._uiViewProps = _uiViewProps;
-    this.resetMessage(_uiViewProps?.resolves?.$stateParams?.message);
+    this.uiViewProps = uiViewProps;
+    this.resetMessage(uiViewProps?.resolves?.$stateParams?.message);
   }
 
   // Resets the draft from the `message` route param signal. Sticky
@@ -107,7 +107,7 @@ export class Compose extends LitElement {
    * - If there is no previous state (because the user deep-linked in, etc), then go to 'mymessages.messagelist'
    */
   gotoPreviousState() {
-    const { transition, router } = this._uiViewProps;
+    const { transition, router } = this.uiViewProps;
     const hasPrevious = !!transition?.from().name;
     const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
     const params = hasPrevious ? transition.params('from') : {};
@@ -129,7 +129,7 @@ export class Compose extends LitElement {
    */
   finishDraft() {
     dsrForgetFinishedState(
-      this._uiViewProps.router,
+      this.uiViewProps.router,
       'mymessages',
       'mymessages.compose',
     );

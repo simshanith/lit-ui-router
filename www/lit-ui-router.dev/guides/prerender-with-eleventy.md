@@ -21,11 +21,17 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
 - [`src/app.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/app.ts)
   holds the components, the states, `configure(router)` and `page(router)`,
   the template both halves render.
-- [`src/route-table.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/route-table.ts)
-  is the route table: the same names and urls as plain data, and the paths to
-  emit.
+- [`src/routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/routes.ts)
+  holds the states as data: names, urls, the redirect, `otherwise` and
+  `strict`. `src/app.ts` spreads it into the states it registers, and the
+  server's mount compiles it with
+  [`routesFromStates()`](/packages/ui-router-server#sharing-states-with-the-client),
+  so the two halves can't drift.
+- [`src/bodies.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/bodies.ts)
+  holds the solar-system data.
 - [`src/prerender.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/prerender.ts)
-  runs one `prerender()` over those paths and returns the pages and rules.
+  runs one `prerender()` over a path per body, plus `/` and `/legacy`, and
+  returns the pages and rules.
 - [`site/`](https://github.com/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-eleventy/site)
   is Eleventy's input: a template per output kind, and the layout.
 - [`src/client.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/src/client.ts)
@@ -36,45 +42,53 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
   [`render.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/render.js),
   which calls `src/prerender.ts`, before each Eleventy build.
   [`build.js`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-eleventy/build.js)
-  records the base path and starts Eleventy.
+  starts Eleventy with `--base=` as its
+  [path prefix](https://www.11ty.dev/docs/config/#deploy-to-a-subdirectory-with-a-path-prefix).
 
 ## Who writes what
 
 `prerender()` runs before each Eleventy build, and its result becomes
 [global data](https://www.11ty.dev/docs/data-global-custom/). Its `write`
-collects each page body in memory instead of writing files, and `rules: 'none'`
-skips the `_redirects` file, leaving the redirect lines on the result:
+collects each file in memory instead of writing it. `base` puts the path
+prefix on every redirect line, and
+[`redirectPages()`](/packages/ui-router-server#hosts-without-redirect-rules) writes `_redirects`
+and a page per redirect, whose body here is just its target:
 
 ```ts
 const result = await prerender({
   mounts,
   router,
-  paths,
+  paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
   outDir: '',
-  rules: 'none',
+  base,
+  rules: redirectPages({ redirectsFile: true, page: ({ to }) => to }),
   dehydrate: {},
-  renderShell: async (_verdict, { path }) => {
-    await settle(router, path);
-
-    return page(router);
-  },
+  template: page,
   write: (file, body) => {
-    bodies.set(file, body);
+    files.set(file, body);
   },
 });
 ```
 
 Each page in `result.pages` names the file it belongs at, such as
-`planets/3/index.html` or `404.html`, and its verdict carries the status. From
-there Eleventy does the writing:
+`planets/3/index.html` or `404.html`, and `page.status` is the status it
+answers with. The other collected files are `_redirects` and the redirect
+pages. From there Eleventy does the writing:
 
 - A [paginated](https://www.11ty.dev/docs/pagination/) template writes one
   page per entry in `result.pages`, at its `file`, wrapped in the layout.
-- A second template writes `_redirects` from `result.rules`. A third writes a
-  page per redirect that sends the browser on, for hosts that don't read
-  `_redirects`.
+- A second template writes `_redirects` as `prerender()` wrote it. A third
+  wraps each redirect page in the layout, which sends the browser on, for
+  hosts that don't read `_redirects`.
 - The layout owns the document: the `<head>`, the client script, and a
   `<base>` for a site served under a path prefix.
+
+The path prefix has one source, `eleventyConfig.pathPrefix`, which
+`eleventy.config.js` hands to the Vite client build as `base`, to the render
+as `prerender()`'s `base`, and to the layout. Eleventy's
+[HTML `<base>` plugin](https://www.11ty.dev/docs/plugins/html-base/) is left
+out: the router already put the prefix on every link in the page bodies, and
+the plugin would add it again.
 
 Vite builds the two halves Eleventy can't compile itself: the server module
 that renders the pages, and the client bundle Eleventy copies through. Under
@@ -94,8 +108,9 @@ Links bind `href=${srefHref(...)}` rather than `uiSref`. The server renders
 attribute parts and skips element parts, so a `uiSref` link would be served as
 an `<a>` with no `href` until the client boots.
 
-`<app-root>` renders into a shadow root, so the render lists
-`LitElementRenderer` beside the package's own renderers. The
+`<app-root>` renders into a shadow root, so the render needs
+`LitElementRenderer` after the package's own renderers;
+`elementRenderers: shadowElementRenderers` is that list. The
 [default](/packages/lit-ui-router-ssr#property-bindings-on-the-server) leaves it out, and
 `<app-root>` would render empty.
 

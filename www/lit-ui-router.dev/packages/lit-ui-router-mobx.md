@@ -208,7 +208,7 @@ composition-friendly alternative:
 `error` — not resolves. Resolved data reaches a routed component exactly as it
 does without these bindings: as
 [`UIViewInjectedProps`](/reference/lit-ui-router/types/UIViewInjectedProps)
-on `_uiViewProps`, scoped to that component's own view.
+on `uiViewProps`, scoped to that component's own view.
 
 There is no resolve accessor on the store, and
 `store.transition?.injector().get(token)` is not a substitute: that is the
@@ -217,7 +217,7 @@ a different token set than the component's own view sees.
 
 The split both the live example below and the MobX sample app follow:
 
-- resolved data → `_uiViewProps.resolves`
+- resolved data → `uiViewProps.resolves`
 - active state, and anything that outlives a single activation → the store,
   selected by reaction controllers
 

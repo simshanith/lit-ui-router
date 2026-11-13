@@ -18,6 +18,7 @@ const clientSpecs = [
   'src/specs/resolve-payload.spec.ts',
   'src/specs/served-view.spec.ts',
   'src/specs/testing.spec.ts',
+  'src/specs/trace.spec.ts',
 ];
 
 // One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports. A routed class renders into a shadow root, so its specs need that support too.
@@ -28,8 +29,11 @@ const coexistSpecs = [
   'src/specs/shadow-shell.spec.ts',
 ];
 
-// Real `vite build`s, whose prerender runs in a worker over this package's dist: no shim and no document in the test's own realm.
-const viteSpecs = ['src/specs/vite-build.spec.ts'];
+// Specs that reach `ui-router-server/vite`, which resolves into dist: the one lane that needs a prior build. No shim and no document in the test's own realm.
+const viteSpecs = [
+  'src/specs/define-prerender.spec.ts',
+  'src/specs/vite-build.spec.ts',
+];
 
 // Specs that must also hold against the published build of `@lit-labs/ssr-client`.
 const prodSpecs = ['src/specs/render-light-flag.spec.ts'];

@@ -23,6 +23,7 @@ export {
   type RenderedPage,
   renderToString,
   type RenderToStringOptions,
+  shadowElementRenderers,
 } from './render.js';
 
 export {
@@ -42,5 +43,7 @@ export type {
   ResponseHandler,
   ResponseHandlers,
 } from 'ui-router-server/ssr';
+
+export { registerTraceCategory } from './trace-categories.js';
 
 export { UiViewRenderer } from './ui-view-renderer.js';

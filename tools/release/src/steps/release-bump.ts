@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Drives the whole bump-version job — one task instead of five run blocks:
 //   env in: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE,
-//           BRANCH_PREFIX_INPUT, DRY_RUN,
-//           GH_TOKEN (gh pr create; release-it pushes the branch over the
+//           BRANCH_PREFIX_INPUT, DRY_RUN, AUTO_MERGE,
+//           GH_TOKEN (gh pr create and auto-merge; release-it pushes the branch over the
 //           checkout's persisted PAT credentials, not this env)
 // Phases mirror the old steps, each in its own log group:
 //   1. compute the bumped version (release-it --release-version, with the
@@ -15,11 +15,13 @@
 //      pin the publish driver applies, so the PR body, the squash commit
 //      and the GitHub release notes agree
 //   4. create the release PR via gh (skipped on dry runs; in-tool retry)
+//   5. with AUTO_MERGE, enable squash auto-merge on it (dry runs only report
+//      it); a refusal fails the run with the PR left open
 // Every release-it argv comes from the engine seam (release-it.core.ts).
 
 import { defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '../lib/env.core.ts';
-import { createReleasePr } from '../lib/gh.ts';
+import { createReleasePr, enableReleasePrAutoMerge } from '../lib/gh.ts';
 import { group, logNotice, logWarning, runMain } from '@tools/shared/gha.ts';
 import { branchPrefix, releaseCommitMessage } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';
@@ -30,7 +32,7 @@ import {
   releaseVersionArgs,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
-import { changelogFrom } from './release-prev-tag.ts';
+import { changelogRange } from './release-prev-tag.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
@@ -39,6 +41,7 @@ runMain(async () => {
   const otherIncrement = process.env.OTHER_INCREMENT ?? '';
   const prBase = requireEnv(process.env, 'PR_BASE');
   const dryRun = boolEnv(process.env, 'DRY_RUN');
+  const autoMerge = boolEnv(process.env, 'AUTO_MERGE');
   const prefix = branchPrefix(process.env.BRANCH_PREFIX_INPUT, packageName);
 
   const version = await group('calculate bumped version', async () => {
@@ -64,12 +67,16 @@ runMain(async () => {
   }
 
   const commitMessage = await group('changelog', async () => {
-    const from = await changelogFrom(packageName, version);
+    const { from, previousVersion } = await changelogRange(
+      packageName,
+      version,
+    );
+
     console.log(`range start: ${from}`);
 
     const changelog = await releaseItOutput(
       packageName,
-      changelogArgs({ packageName, from }),
+      changelogArgs({ packageName, version, from, previousVersion }),
     );
 
     const { message, warning } = releaseCommitMessage(version, changelog, from);
@@ -87,11 +94,23 @@ runMain(async () => {
     ),
   );
 
-  if (!dryRun) {
-    const url = await group(`create PR against ${prBase}`, () =>
-      createReleasePr(prBase, branch),
+  if (dryRun) {
+    if (autoMerge) logNotice('dry run: would enable squash auto-merge');
+
+    return;
+  }
+
+  const url = await group(`create PR against ${prBase}`, () =>
+    createReleasePr(prBase, branch),
+  );
+
+  logNotice(`release PR: ${url}`);
+
+  if (autoMerge) {
+    await group('enable squash auto-merge', () =>
+      enableReleasePrAutoMerge(url),
     );
 
-    logNotice(`release PR: ${url}`);
+    logNotice(`auto-merge enabled: ${url}`);
   }
 });

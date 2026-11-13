@@ -308,13 +308,12 @@ class PlanetListComponent extends LitElement {
   `;
 
   // The router constructs routed components with injected props.
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ planets: SolarBody[] }>;
+  uiViewProps!: UIViewInjectedProps<{ planets: SolarBody[] }>;
 
   constructor(props: UIViewInjectedProps<{ planets: SolarBody[] }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   @consume({ context: distanceUnitContext })
@@ -327,7 +326,7 @@ class PlanetListComponent extends LitElement {
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this._uiViewProps.resolves.planets;
+    return this.uiViewProps.resolves.planets;
   }
 
   render() {
@@ -438,13 +437,12 @@ class PlanetDetailComponent extends LitElement {
     }
   `;
 
-  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
+  uiViewProps!: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
 
   constructor(props: UIViewInjectedProps<{ planet: SolarBody | undefined }>) {
     super();
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
   @consume({ context: distanceUnitContext })
@@ -459,7 +457,7 @@ class PlanetDetailComponent extends LitElement {
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this._uiViewProps.resolves.planet;
+    return this.uiViewProps.resolves.planet;
   }
 
   private renderLight(planet: SolarBody) {
@@ -746,9 +744,15 @@ const router = new UIRouterLit();
 
 router.plugin(hashLocationPlugin);
 
-void import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
+// Logs each transition to the console.
+router.trace.enable('TRANSITION');
+
+// The state visualizer is opt-in: add ?visualizer to the page url, before the #.
+if (new URLSearchParams(location.search).has('visualizer')) {
+  void import('@uirouter/visualizer').then(({ Visualizer }) =>
+    router.plugin(Visualizer),
+  );
+}
 
 router.stateRegistry.register(planetsState);
 

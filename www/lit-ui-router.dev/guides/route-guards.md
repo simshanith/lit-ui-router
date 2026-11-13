@@ -123,7 +123,7 @@ function returnTo($transition$: Transition) {
 After authenticating, the login component navigates to the resolved target:
 
 ```ts
-const { returnTo } = this._uiViewProps.resolves;
+const { returnTo } = this.uiViewProps.resolves;
 router.stateService.go(returnTo.state(), returnTo.params(), {
   reload: true,
 });

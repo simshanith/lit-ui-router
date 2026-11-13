@@ -45,7 +45,7 @@ The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens
 
 ### Repository Variables (Turbo Remote Cache)
 
-The following [repository variables](https://docs.github.com/en/actions/reference/variables) enable turborepo remote caching via Cloudflare R2:
+The following [repository variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables) enable turborepo remote caching via Cloudflare R2:
 
 | Variable     | Purpose                                      |
 | ------------ | -------------------------------------------- |
@@ -135,6 +135,15 @@ Creates a release PR by:
 - `other` - Custom version string (when using `other`)
 - `prBase` - Target branch (default: `main`)
 - `branchPrefix` - Branch prefix (default: `release/lit-ui-router/v`)
+- `autoMerge` - Enable squash auto-merge on the release PR (default: off)
+
+With `autoMerge`, the workflow enables GitHub auto-merge on the PR it opens,
+using the PAT so the merge still triggers tagging and publishing. The PR then
+merges itself once the `main` ruleset's required checks pass; the ruleset
+requires no approving review, so nothing else holds it. A `dryRun` only
+reports that it would enable auto-merge. If GitHub refuses to enable it, for
+example because the PR is already mergeable, the run fails with the PR left
+open and unmerged; merge it by hand or enable auto-merge on the PR.
 
 ### 3. Tag & Push (`publish-gh.yml`)
 
@@ -262,6 +271,12 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 - `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
   (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
   so it goes red only when a bench crashes.
+- `acceptance (links)`: lychee over the external URLs in the root and `docs/`
+  Markdown, package READMEs and manifests, and the docs site's Markdown pages
+  (`mise run check_links`, [`lychee.toml`](../lychee.toml)), with the broken ones
+  listed per file in the job summary. `lit-ui-router.dev` URLs are left to the
+  build's offline check. Results are cached for a day, so most runs make few
+  requests; a red run can be another server's timeout or rate limit.
 - `acceptance (npm-diff)`: the patch the release-diffs worker stores against
   `npm diff`, byte for byte but for a final blank context line npm trims, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.
@@ -275,13 +290,17 @@ these check runs.
 ### Standard Release
 
 1. **Start the version bump:**
-   - Preview the release notes first: `pnpm --silent changelog` in the
-     package directory runs the real release-it config, so its output is what
-     ships (see [Release Configuration](#release-configuration)); dispatching
-     with `dryRun` shows the same
+   - Preview the release notes first: in the package directory, on a clean
+     working tree, `pnpm --silent changelog` runs the real release-it config,
+     peer statement included (see [Release notes](#release-notes)). Add the
+     version you mean to release to get the whole body, docs-site links
+     included:
+     `pnpm --silent changelog --plugins.@release-it/conventional-changelog.context.releaseVersion=<version>`
    - Go to Actions → "Bump version"
    - Click "Run workflow"
    - Select increment type (`patch`, `minor`, or `major`)
+   - Tick `autoMerge` to have the release PR merge itself once its
+     required checks pass; step 3 then needs no action
    - Run the workflow
 
 2. **Review the release PR:**
@@ -538,7 +557,7 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 ## Release Configuration
 
 Release behavior is configured once, in `@tools/release-config`
-(`tools/release-config/src/release-it.js`):
+(`tools/release-config/src/release-it.ts`):
 
 ```js
 export default {
@@ -564,7 +583,7 @@ The config defaults most options to `false` so workflows can enable them explici
 A package's range is the commits that touched its directory, plus commits to
 `pnpm-workspace.yaml` that changed a catalog entry its `dependencies`,
 `peerDependencies` or `optionalDependencies` resolve through `catalog:`
-(`tools/release-config/src/catalog-commits.js`).
+(`tools/release-config/src/catalog-commits.ts`).
 
 The changelog lists its commit types explicitly, with the `conventionalcommits`
 preset's section names. A package range made only of unlisted types renders
@@ -572,5 +591,53 @@ empty, and release-it silently falls back to a flat repo-wide git log; a range
 mixing listed and unlisted types silently omits the unlisted commits. Preview
 with `pnpm --silent changelog` before a bump.
 
-It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
+It is code rather than JSON because `conventional-changelog-writer` 9 takes
 template partials as functions.
+
+### Release notes
+
+The bump (release PR body and squash commit) and the publish (GitHub release
+body) render the notes from the same config, range and context, so both carry
+the same text. The writer's `finalizeContext` and `footerPartial`
+(`tools/release-config/src/notes.ts`) shape them:
+
+- A `BREAKING CHANGE:` note ends at the first `* type(scope): …` line, so a
+  squash body's sub-commit list stays out of the breaking block.
+- A revert and the commit it reverts leave the main sections when both fall in
+  the range. A revert names its target with a `Reverts: #N` trailer
+  ([commit conventions](CONTRIBUTING.md#commit-conventions)), GitHub's
+  `Reverts owner/repo#N` line, or git's `This reverts commit <sha>.`
+  (`reverts.ts`). A revert of a revert restores the original.
+- A commit whose scope names another workspace member (`scopes.ts`; short
+  scopes such as `ssr` map through `SCOPE_ALIASES`) stays in the main sections
+  only when it changed what this package ships: `src/` or `bin/` outside
+  specs, a packed manifest field, or a catalog entry the package's shipped
+  fields consume. Its breaking notes are dropped either way, since they
+  describe the other package. Unscoped commits and scopes naming no member
+  (`deps`) behave like the package's own.
+- Commits that left the main sections close the notes in a collapsed
+  `Also touched this package (N)` list, each revert pair annotated. When
+  nothing else remains, the body opens with `No changes to this package's
+  published code.`
+- Peer changes come from the manifests (`peer-changes.ts`): the previous
+  release tag's manifest and the manifest about to publish, each with its
+  `catalog:` specs resolved through that revision's catalogs. A narrowed
+  range, a new required peer, or an optional peer made required goes under
+  `⚠ BREAKING CHANGES`; widened, removed, newly optional and non-semver
+  changes go under `Peer Dependencies`. A statement a kept breaking note
+  already makes (it names the peer and the new range) is left out.
+- An `@name` (a JSDoc tag, npm scope or decorator) renders as code, never as a
+  user link or a GitHub mention; only `#<digits>` references are linked. A `<`
+  in commit text is escaped, so a placeholder such as `<name>` is not dropped
+  as an HTML tag.
+- The body ends with links to the release's page on lit-ui-router.dev and,
+  after a package's first release in the lane, to the diff from the previous
+  version (`/releases/<pkg>/<version>/`, `/releases/<pkg>/diff/<from>...<to>/`).
+
+The drivers pass `context.releaseVersion` and `context.previousVersion` (the
+previous tag in the lane, empty on a first release) through the
+`changelogArgs` and `publishArgs` argv in `@tools/release`. Without
+`previousVersion`, the notes compare against the package's latest stable tag,
+as the drivers do for a stable release; a prerelease preview passes
+`--plugins.@release-it/conventional-changelog.context.previousVersion=<version>`
+too. Without `releaseVersion`, the links are left out.

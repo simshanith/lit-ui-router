@@ -31,7 +31,7 @@ const warnShadowFallback = (tagName: string): void => {
     'lit-ui-router-ssr: a LitElement that renders into a shadow root reached no renderer that writes one, so it was prerendered as its bare tag, empty: ' +
       `<${tagName}>. ` +
       'A shell element around <ui-view> takes its views with it. ' +
-      'Put LitElementRenderer after LightElementRenderer in elementRenderers to draw it.',
+      'Pass elementRenderers: shadowElementRenderers to draw it.',
   );
 };
 

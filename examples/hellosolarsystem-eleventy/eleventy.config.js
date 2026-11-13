@@ -3,13 +3,10 @@ import { readFileSync } from 'node:fs';
 
 import { build } from 'vite';
 
-const readJson = (file) =>
-  JSON.parse(readFileSync(`node_modules/.build/${file}`, 'utf8'));
-
 // A fresh process per render: importing the rebuilt module again would redefine the app's elements.
-const render = () =>
+const render = (base) =>
   new Promise((resolve, reject) => {
-    const child = spawn('node', ['render.js'], { stdio: 'inherit' });
+    const child = spawn('node', ['render.js', base], { stdio: 'inherit' });
 
     child.on('error', reject);
     child.on('exit', (code) =>
@@ -23,11 +20,16 @@ export default function (eleventyConfig) {
 
   eleventyConfig.on('eleventy.before', async () => {
     await build({ build: { ssr: true } });
-    await build({ base: readJson('base.json') });
-    await render();
+    await build({ base: eleventyConfig.pathPrefix });
+    await render(eleventyConfig.pathPrefix);
   });
 
-  eleventyConfig.addGlobalData('site', () => readJson('site.json'));
+  // The path the site is served under: `/`, or `/examples/<name>/` in the docs site, from `--pathprefix`.
+  eleventyConfig.addGlobalData('base', () => eleventyConfig.pathPrefix);
+
+  eleventyConfig.addGlobalData('site', () =>
+    JSON.parse(readFileSync('node_modules/.build/site.json', 'utf8')),
+  );
 
   eleventyConfig.addPassthroughCopy({
     'node_modules/.build/client/assets': 'assets',
