@@ -45,7 +45,7 @@ The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens
 
 ### Repository Variables (Turbo Remote Cache)
 
-The following [repository variables](https://docs.github.com/en/actions/reference/variables) enable turborepo remote caching via Cloudflare R2:
+The following [repository variables](https://docs.github.com/en/actions/reference/workflows-and-actions/variables) enable turborepo remote caching via Cloudflare R2:
 
 | Variable     | Purpose                                      |
 | ------------ | -------------------------------------------- |
@@ -271,6 +271,12 @@ one job and reports one check run on the commit, named `acceptance (<suite>)`:
 - `acceptance (bench)`: ui-router-server's tinybench timings on a short budget
   (`mise run bench_pulse`), reported as the job summary. It has no thresholds,
   so it goes red only when a bench crashes.
+- `acceptance (links)`: lychee over the external URLs in the root and `docs/`
+  Markdown, package READMEs and manifests, and the docs site's Markdown pages
+  (`mise run check_links`, [`lychee.toml`](../lychee.toml)), with the broken ones
+  listed per file in the job summary. `lit-ui-router.dev` URLs are left to the
+  build's offline check. Results are cached for a day, so most runs make few
+  requests; a red run can be another server's timeout or rate limit.
 - `acceptance (npm-diff)`: the patch the release-diffs worker stores against
   `npm diff`, byte for byte but for a final blank context line npm trims, for a few published version pairs (`mise run npm_diff_parity`).
   Both read the npm registry.

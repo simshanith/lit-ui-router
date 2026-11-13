@@ -1,0 +1,42 @@
+# lychee config for `mise run check_links` and the `acceptance (links)` job.
+# Keys: https://lychee.cli.rs/guides/config/
+
+# External URLs only; relative links are the docs build's job.
+scheme = ["https", "http"]
+exclude_all_private = true
+
+no_progress = true
+format = "markdown"
+
+cache = true
+max_cache_age = "1d"
+# Retry rate limits and server errors on the next run instead of caching them.
+cache_exclude_status = "429, 500.."
+
+timeout = 20
+max_retries = 3
+retry_wait_time = 2
+max_concurrency = 16
+host_concurrency = 4
+user_agent = "Mozilla/5.0 (compatible; lychee link checker)"
+
+# Manifest `repository.url` is a git+https clone URL; check its web page.
+# npmjs.com answers datacenter runners 403; the registry checks the same package.
+remap = [
+  '^git\+(https://github\.com/.+)\.git$ $1',
+  '^https://www\.npmjs\.com/package/((@[^/]+/)?[^/?#]+)/?$ https://registry.npmjs.org/$1',
+]
+
+exclude = [
+  # Owned by the offline published-link check in the build.
+  '^https?://(www\.)?lit-ui-router\.dev',
+  # Placeholder and documentation hosts.
+  '^https?://([a-z0-9-]+\.)*example\.(com|org|net)',
+  '^https?://([a-z0-9-]+\.)*(localhost|test|invalid)(:\d+)?([/?#]|$)',
+  # npmjs.com answers datacenter runners 403, and the home page has no registry twin.
+  '^https://www\.npmjs\.com/?$',
+]
+
+# The abbreviated packument keeps registry checks small.
+[hosts."registry.npmjs.org"]
+headers = { "accept" = "application/vnd.npm.install-v1+json" }
