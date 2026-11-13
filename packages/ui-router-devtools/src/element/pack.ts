@@ -255,7 +255,7 @@ const frameSize = (rows: Placed[][], frame: Frame, metrics: Metrics): Size => {
   };
 };
 
-const fits = (size: Size, room: Size | undefined): boolean =>
+export const fits = (size: Size, room: Size | undefined): boolean =>
   !room || (size.width <= room.width && size.height <= room.height);
 
 const area = (cells: readonly Placed[]): number =>
@@ -478,7 +478,7 @@ export const mostSlack = (placed: Placed, metrics: Metrics): number => {
   return Math.max(own, ...inner.map((item) => mostSlack(item.placed, metrics)));
 };
 
-/** The fit ladder, mildest first; each rung keeps the ones before it. The first two enlarge and the last is the node-link tree. */
+/** The fit ladder, mildest first; each rung keeps the ones before it. The first two enlarge, and the last fits nothing: its diagram is panned. */
 export const RUNGS = [
   'large',
   'roomy',
@@ -487,7 +487,7 @@ export const RUNGS = [
   'merged',
   'truncated',
   'small',
-  'tree',
+  'pan',
 ] as const;
 
 export type Rung = (typeof RUNGS)[number];
@@ -497,7 +497,7 @@ const SPARE = 0.9;
 const NATURAL = RUNGS.indexOf('expanded');
 
 /**
- * The first rung whose packed size fits the viewport. A rung milder than the previous one
+ * The first rung whose packed size fits the viewport, or `pan` when none does. A rung milder than the previous one
  * must fit with a tenth of the inline size to spare, so a resize does not flicker between layouts.
  * The enlarged rungs are tried only when `enlarge` is set, and must leave a tenth of each axis as margin.
  */
@@ -512,7 +512,7 @@ export const chooseRung = (
   const framed = { ...spare, height: viewport.height * SPARE };
 
   for (const [index, rung] of RUNGS.entries()) {
-    if (rung === 'tree') break;
+    if (rung === 'pan') break;
 
     if (index < NATURAL && !enlarge) continue;
 
@@ -522,5 +522,5 @@ export const chooseRung = (
     if (fits(sizeAt(rung, room), room)) return rung;
   }
 
-  return 'tree';
+  return 'pan';
 };

@@ -38,6 +38,8 @@ interface Shot {
   name: string;
   width: number;
   open: boolean;
+  /** The demo page's query; the fixed demo sequence unless the shot wants the stress tree. */
+  query?: string;
   setup?: (page: Page, scheme: Scheme) => Promise<void>;
   capture?: (page: Page) => Promise<Buffer>;
   forced?: boolean;
@@ -47,8 +49,12 @@ interface Shot {
 const row = (page: Page, text: string) =>
   page.locator(`${TAG} .tx > .line`, { hasText: text }).first();
 
-const showMap = (page: Page) =>
-  page.locator(`${TAG} .switch button:visible`, { hasText: 'map' }).click();
+const showMap = async (page: Page) => {
+  await page
+    .locator(`${TAG} .switch button:visible`, { hasText: 'map' })
+    .click();
+  await page.waitForSelector(`${TAG} .nested`);
+};
 
 const panel = (page: Page) => page.locator(`${TAG} .panel`);
 
@@ -95,6 +101,19 @@ const stack = async (
 
   return shot;
 };
+
+const OPENED = [
+  'accounts',
+  'billing',
+  'catalog',
+  'events',
+  'files',
+  'inbox',
+  'jobs',
+  'reports',
+  'settings',
+  'teams',
+];
 
 const browser = await chromium.launch();
 
@@ -147,6 +166,22 @@ const shots: Shot[] = [
       await page
         .locator(`${TAG} .box[data-name="galaxy.stars.star"] > .head`)
         .click({ position: { x: 14, y: 12 } });
+    },
+  },
+  {
+    name: '3-dock-map-pan',
+    width: 1280,
+    open: true,
+    axe: true,
+    query: 'stress=1',
+    setup: async (page) => {
+      await showMap(page);
+
+      // Opened by hand, these make the stress tree larger than the dock, so it pans and the minimap shows.
+      for (const name of OPENED)
+        await page
+          .locator(`${TAG} .box[data-name="${name}"] > .head .fold`)
+          .dispatchEvent('click');
     },
   },
   {
@@ -252,7 +287,7 @@ for (const shot of shots) {
 
     const page = await context.newPage();
     const imported = shot.name.startsWith('9-');
-    await page.goto(imported ? base : `${base}?demo=1`);
+    await page.goto(imported ? base : `${base}?${shot.query ?? 'demo=1'}`);
 
     if (imported) await page.waitForTimeout(800);
     else

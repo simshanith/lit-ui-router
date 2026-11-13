@@ -16,6 +16,7 @@ import {
 import {
   chooseRung,
   drawnIn,
+  fits,
   LARGE_METRICS,
   METRICS,
   pack,
@@ -28,6 +29,7 @@ import {
   type Rung,
   type Size,
 } from './pack.ts';
+import { renderMinimap, viewKey } from './mapview.ts';
 import {
   route,
   visibleEnd,
@@ -36,6 +38,7 @@ import {
   type Routed,
   type RouteEdge,
 } from './route.ts';
+import { placeChips, type Chip } from './chips.ts';
 import type { Avoid } from './popover.ts';
 import { facts, label, onTreeKey, words } from './tree.ts';
 
@@ -60,7 +63,7 @@ const OPEN = { collapse: false, merge: false, truncate: false };
 
 const SHUT = { collapse: true, merge: true, truncate: true };
 
-const OPTIONS: Record<Exclude<Rung, 'tree'>, Options> = {
+const OPTIONS: Record<Rung, Options> = {
   large: { ...OPEN, metrics: LARGE_METRICS },
   roomy: { ...OPEN, metrics: ROOMY_METRICS },
   expanded: { ...OPEN, metrics: METRICS },
@@ -68,7 +71,20 @@ const OPTIONS: Record<Exclude<Rung, 'tree'>, Options> = {
   merged: { ...SHUT, truncate: false, metrics: METRICS },
   truncated: { ...SHUT, metrics: METRICS },
   small: { ...SHUT, metrics: SMALL_METRICS },
+  // Nothing fits, so the type stays the dock's, names stay whole and the viewport pans.
+  pan: { ...SHUT, truncate: false, metrics: METRICS },
 };
+
+/** The type steps a diagram can be drawn at; zooming moves between them, so type and hairlines are never scaled. */
+export const ZOOMS: readonly Metrics[] = [
+  SMALL_METRICS,
+  METRICS,
+  ROOMY_METRICS,
+  LARGE_METRICS,
+];
+
+/** How far a room's width over height may move from the one a layout was packed for before the layout is packed again. */
+const REPACK_RATIO = 1.25;
 
 const STEP = new Map([
   [LARGE_METRICS, 'large'],
@@ -91,6 +107,11 @@ export interface NestedLayout {
   rows: Row[];
   /** Names of the compounds drawn with their children. */
   open: ReadonlySet<string>;
+  /** The monospace face the labels were measured in. */
+  family: string;
+  rtl: boolean;
+  /** The layout's place in `ZOOMS`. */
+  step: number;
 }
 
 let context: CanvasRenderingContext2D | null | undefined;
@@ -226,8 +247,14 @@ const openOf = (boxes: readonly Box[]): string[] =>
 
 const cache = new WeakMap<
   DevtoolsPanel,
-  { content: string; key: string; layout: NestedLayout }
+  { content: string; key: string; layout: NestedLayout; room: Size }
 >();
+
+const sameAspect = (a: Size, b: Size): boolean => {
+  const ratio = (a.width * b.height) / Math.max(1, a.height * b.width);
+
+  return ratio < REPACK_RATIO && ratio > 1 / REPACK_RATIO;
+};
 
 const rectsOf = (
   placed: Placed,
@@ -270,7 +297,10 @@ const allRects = (
   return rects;
 };
 
-/** Packs the state tree for the Map viewport, stepping down the fit ladder until it fits. */
+/**
+ * Packs the state tree for the Map viewport, stepping down the fit ladder until it fits.
+ * A resize that leaves the rung and the room's shape as they were keeps the layout, and only the view of it moves.
+ */
 export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
@@ -297,6 +327,7 @@ export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
     family,
     rtl,
     host._max,
+    host._mapZoom,
   ]);
 
   const key = content + JSON.stringify(viewport);
@@ -305,43 +336,59 @@ export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
 
   if (cached?.key === key) return cached.layout;
 
-  const byName = new Map(states.map((state) => [state.name, state]));
-
-  const metricsAt = (rung: Exclude<Rung, 'tree'>) => OPTIONS[rung].metrics;
-
-  const boxesAt = (rung: Exclude<Rung, 'tree'>) => {
-    const build = { host, children, keep, options: OPTIONS[rung], family };
+  const boxesWith = (options: Options) => {
+    const build = { host, children, keep, options, family };
 
     return (children.get(null) ?? []).map((state) => buildBox(build, state));
   };
 
-  const packAt = (rung: Exclude<Rung, 'tree'>, room: Size) =>
-    pack(boxesAt(rung), room, metricsAt(rung));
-
   const sizeAt = (rung: Rung, room: Size): Size =>
-    rung === 'tree' ? { width: 0, height: 0 } : packAt(rung, room);
+    pack(boxesWith(OPTIONS[rung]), room, OPTIONS[rung].metrics);
 
   // The ladder holds its rung across a resize only; a changed tree or selection starts from the top.
-  const held = cached?.content === content ? host._rung : undefined;
-  const rung = chooseRung(sizeAt, viewport, held, host._max);
-  // The tree fallback still needs a packed tree to measure against on the next resize.
-  const shown = rung === 'tree' ? 'small' : rung;
-  const boxes = boxesAt(shown);
-  const placed = packAt(shown, viewport);
-  const metrics = metricsAt(shown);
+  const same = cached?.content === content ? cached : undefined;
+  const rung = chooseRung(sizeAt, viewport, same && host._rung, host._max);
+  const zoom = host._mapZoom === null ? undefined : ZOOMS[host._mapZoom];
+
+  host._rung = rung;
+
+  if (
+    same?.layout.rung === rung &&
+    sameAspect(same.room, viewport) &&
+    (zoom || rung === 'pan' || fits(same.layout.placed, viewport))
+  ) {
+    cache.set(host, { ...same, key });
+
+    return same.layout;
+  }
+
+  // A zoomed diagram is packed for a room scaled with its type, so it keeps the arrangement the fitted one has.
+  const options = zoom ? { ...OPTIONS[rung], metrics: zoom } : OPTIONS[rung];
+  const scale = options.metrics.type / OPTIONS[rung].metrics.type;
+  const boxes = boxesWith(options);
+
+  const placed = pack(
+    boxes,
+    { width: viewport.width * scale, height: viewport.height * scale },
+    options.metrics,
+  );
+
+  const byName = new Map(states.map((state) => [state.name, state]));
 
   const layout = {
     rung,
-    options: OPTIONS[shown],
-    metrics,
+    options,
+    metrics: options.metrics,
     placed,
-    rects: allRects(placed, metrics, rtl),
+    rects: allRects(placed, options.metrics, rtl),
     rows: rowsOf(boxes, byName, children),
     open: new Set(openOf(boxes)),
+    family,
+    rtl,
+    step: ZOOMS.indexOf(options.metrics),
   };
 
-  host._rung = rung;
-  cache.set(host, { content, key, layout });
+  cache.set(host, { content, key, layout, room: viewport });
 
   return layout;
 };
@@ -352,6 +399,11 @@ type EdgeStyle = 'ok' | 'redirect' | 'fault';
 
 interface MapEdge extends RouteEdge {
   style: EdgeStyle;
+  /** Transitions seen along the line, and against it when it runs both ways; 0 for a selected transition's own edge. */
+  count: number;
+  back: number;
+  /** The transition has not finished. */
+  running?: boolean;
 }
 
 const styleOf = (tx: Tx): EdgeStyle => {
@@ -367,6 +419,7 @@ interface Wanted {
   to: string;
   style: EdgeStyle;
   count?: number;
+  running?: boolean;
 }
 
 // A selected transition shows its own edge and, for a redirect, a dashed one from its origin.
@@ -377,7 +430,7 @@ const txEdges = (host: DevtoolsPanel, tx: Tx): Wanted[] => {
     ...(origin
       ? [{ from: origin.from, to: origin.to, style: 'redirect' as const }]
       : []),
-    { from: tx.from, to: tx.to, style: styleOf(tx) },
+    { from: tx.from, to: tx.to, style: styleOf(tx), running: !tx.result },
   ];
 };
 
@@ -415,7 +468,7 @@ const mapEdges = (
       (at) => drawn.has(at),
     );
 
-  const edges = new Map<string, MapEdge & { count: number }>();
+  const edges = new Map<string, MapEdge>();
 
   for (const wanted of wantedEdges(host)) {
     const from = end(wanted.from);
@@ -425,37 +478,151 @@ const mapEdges = (
 
     const id = JSON.stringify([from.id, to.id, wanted.style]);
     const edge = edges.get(id);
-    const count = (edge?.count ?? 0) + (wanted.count ?? 2);
 
     edges.set(id, {
       id,
       from: from.id,
       to: to.id,
       style: wanted.style,
-      count,
-      width: wanted.count ? edgeWeight(count) : 2,
+      count: (edge?.count ?? 0) + (wanted.count ?? 0),
+      back: 0,
+      running: wanted.running,
       fromStub: edge?.fromStub || from.stub,
       toStub: edge?.toStub || to.stub,
     });
   }
 
-  return [...edges.values()];
+  const nested = (a: string, b: string) =>
+    ancestorsOf(host._model.states, a).includes(b) ||
+    ancestorsOf(host._model.states, b).includes(a);
+
+  return twoWay([...edges.values()], nested).map((edge) => ({
+    ...edge,
+    width: edge.count ? edgeWeight(Math.max(edge.count, edge.back)) : 2,
+  }));
+};
+
+// Opposite traffic between one pair shares a line with a head at each end, so a box has one port per neighbour.
+// A compound and a box inside it keep an arrow each way: those are stubs, too short for two heads.
+const twoWay = (
+  edges: readonly MapEdge[],
+  nested: (a: string, b: string) => boolean,
+): MapEdge[] => {
+  const byId = new Map(edges.map((edge) => [edge.id, edge]));
+
+  return edges.flatMap((edge) => {
+    const reverse = byId.get(JSON.stringify([edge.to, edge.from, edge.style]));
+
+    if (!reverse || reverse === edge || nested(edge.from, edge.to))
+      return [edge];
+
+    // The pair is drawn once, from the end that sorts first.
+    return edge.from > edge.to
+      ? []
+      : [
+          {
+            ...edge,
+            both: true,
+            back: reverse.count,
+            fromStub: edge.fromStub || reverse.toStub,
+            toStub: edge.toStub || reverse.fromStub,
+          },
+        ];
+  });
 };
 
 type Drawing = Routed & { edge: MapEdge };
 
+interface ChipPart {
+  text: string;
+  /** The way this count's traffic travels; a lone count has no arrow. */
+  dir?: number;
+  /** Where the part starts inside the chip. */
+  x: number;
+}
+
+interface CountChip extends Chip {
+  parts: ChipPart[];
+}
+
+interface Routes {
+  routed: Drawing[];
+  chips: CountChip[];
+}
+
 const routes = new WeakMap<
   DevtoolsPanel,
-  { key: string; layout: NestedLayout; routed: Drawing[] }
+  Routes & { key: string; layout: NestedLayout }
 >();
 
-const routeEdges = (host: DevtoolsPanel, layout: NestedLayout): Drawing[] => {
+const CHIP = { height: 12, pad: 3, arrow: 6, gap: 4 };
+
+const CHIP_FONT = '500 11px';
+
+// A chip says how often a line was travelled, when more than once: one count, or one each way with its arrow.
+const chipCounts = (
+  { count, back, both }: MapEdge,
+  dir: number,
+): Omit<ChipPart, 'x'>[] => {
+  if (Math.max(count, back) < 2) return [];
+
+  if (!both) return [{ text: `×${count}` }];
+
+  const forward = { text: String(count), dir };
+  const against = { text: String(back), dir: (dir + 2) % 4 };
+
+  // The count going west or north comes first.
+  return dir >= 2 ? [forward, against] : [against, forward];
+};
+
+interface ChipText {
+  parts: ChipPart[];
+  width: number;
+}
+
+const chipParts = (edge: MapEdge, dir: number, family: string): ChipText => {
+  let x = CHIP.pad - CHIP.gap;
+
+  const parts = chipCounts(edge, dir).map((part) => {
+    const start = x + CHIP.gap;
+
+    x =
+      start +
+      (part.dir === undefined ? 0 : CHIP.arrow) +
+      textWidth(part.text, `${CHIP_FONT} ${family}`);
+
+    return { ...part, x: start };
+  });
+
+  return { parts, width: Math.ceil(x + CHIP.pad) };
+};
+
+const countChips = (
+  routed: readonly Drawing[],
+  boxes: readonly RouteBox[],
+  family: string,
+): CountChip[] => {
+  const byId = new Map(routed.map((r) => [r.id, r.edge]));
+
+  const wants = routed.flatMap(({ id, edge }) => {
+    const { parts, width } = chipParts(edge, 0, family);
+
+    return parts.length ? [{ id, width, height: CHIP.height }] : [];
+  });
+
+  return placeChips(routed, boxes, wants).map((chip) => ({
+    ...chip,
+    parts: chipParts(byId.get(chip.id)!, chip.dir, family).parts,
+  }));
+};
+
+const routeEdges = (host: DevtoolsPanel, layout: NestedLayout): Routes => {
   const { rects } = layout;
   const edges = mapEdges(host, new Set(rects.keys()));
   const key = JSON.stringify(edges);
   const cached = routes.get(host);
 
-  if (cached?.key === key && cached.layout === layout) return cached.routed;
+  if (cached?.key === key && cached.layout === layout) return cached;
 
   const parents = new Map(host._model.states.map((s) => [s.name, s.parent]));
 
@@ -472,14 +639,18 @@ const routeEdges = (host: DevtoolsPanel, layout: NestedLayout): Drawing[] => {
     dpr: globalThis.devicePixelRatio || 1,
   }).map((r) => ({ ...r, edge: byId.get(r.id)! }));
 
-  routes.set(host, { key, layout, routed });
+  const drawn = {
+    routed,
+    chips: countChips(routed, boxes, layout.family),
+  };
 
-  return routed;
+  routes.set(host, { key, layout, ...drawn });
+
+  return drawn;
 };
 
-interface Shown {
+interface Shown extends Routes {
   layout: NestedLayout;
-  routed: Drawing[];
   /** Edges no longer wanted, kept until they have withdrawn. */
   leaving: (Drawing & { until: number })[];
   /** Counts re-packs, so an edge that survives one is redrawn once its boxes have settled. */
@@ -489,8 +660,7 @@ interface Shown {
 
 const shown = new WeakMap<DevtoolsPanel, Shown>();
 
-interface EdgesToDraw {
-  routed: Drawing[];
+interface EdgesToDraw extends Routes {
   leaving: Drawing[];
   /** The boxes were re-packed since the last render. */
   moved: boolean;
@@ -502,7 +672,7 @@ const edgesToDraw = (
   host: DevtoolsPanel,
   layout: NestedLayout,
 ): EdgesToDraw => {
-  const routed = routeEdges(host, layout);
+  const { routed, chips } = routeEdges(host, layout);
   const before = shown.get(host);
   const moved = before !== undefined && before.layout !== layout;
   const now = performance.now();
@@ -525,6 +695,7 @@ const edgesToDraw = (
   shown.set(host, {
     layout,
     routed,
+    chips,
     leaving,
     pass,
     timer: leaving.length
@@ -532,7 +703,7 @@ const edgesToDraw = (
       : undefined,
   });
 
-  return { routed, leaving, moved, pass };
+  return { routed, chips, leaving, moved, pass };
 };
 
 /** The drawn box that stands for the state the inspector popover sits beside. */
@@ -562,7 +733,7 @@ export const keepClear = (
 ): Avoid[] => {
   const pad = 6;
 
-  const drawn = routeEdges(host, layout).flatMap(({ edge, points }) => [
+  const drawn = routeEdges(host, layout).routed.flatMap(({ edge, points }) => [
     ...[edge.from, edge.to].flatMap((id) => layout.rects.get(id) ?? []),
     ...points.slice(1).map((point, index) => {
       const prev = points[index];
@@ -588,7 +759,7 @@ export const keepClear = (
 
 // The mask draws an edge in from its start and withdraws it toward its end; the path runs to the arrowhead's tip.
 const renderEdge = (
-  { edge, kind, d, points, head, caps }: Drawing,
+  { edge, kind, d, points, head, tail, caps }: Drawing,
   index: number,
   leaving: boolean,
   frame: Size,
@@ -596,17 +767,19 @@ const renderEdge = (
   const id = `uird-edge-${leaving ? 'out' : 'in'}-${index}`;
   const reveal = `M${points.map((point) => `${point.x} ${point.y}`).join('L')}`;
 
-  return svg`<g class="nedge edge-${edge.style} w${edge.width ?? 1} ${kind === 'fallback' ? 'fallback' : ''} ${leaving ? 'leaving' : ''}">
+  const tip =
+    edge.style === 'redirect' ? 'M-6.5 -3.5L0 0L-6.5 3.5' : 'M0 0L-7 -3.5V3.5z';
+
+  return svg`<g class="nedge edge-${edge.style} w${edge.width ?? 1} ${kind === 'fallback' ? 'fallback' : ''} ${edge.running ? 'running' : ''} ${leaving ? 'leaving' : ''}">
     <mask id=${id} maskUnits="userSpaceOnUse" x="-24" y="-24" width=${frame.width + 48} height=${frame.height + 48}>
       <path class="reveal" pathLength="1" d=${reveal} />
     </mask>
     <g mask="url(#${id})">
       <path class="halo" d=${d} /><path class="line" d=${d} />
-      <path
-        class="head"
-        transform="translate(${head.x} ${head.y}) rotate(${head.angle})"
-        d=${edge.style === 'redirect' ? 'M-6.5 -3.5L0 0L-6.5 3.5' : 'M0 0L-7 -3.5V3.5z'}
-      />
+      ${[head, ...(tail ? [tail] : [])].map(
+        (at) =>
+          svg`<path class="head" transform="translate(${at.x} ${at.y}) rotate(${at.angle})" d=${tip} />`,
+      )}
       ${caps.map(
         (cap) =>
           svg`<path class="cap" d=${cap.upright ? `M${cap.x} ${cap.y - 4}v8` : `M${cap.x - 4} ${cap.y}h8`} />`,
@@ -614,6 +787,19 @@ const renderEdge = (
     </g>
   </g>`;
 };
+
+const renderChip = ({ x, y, width, height, parts }: CountChip) =>
+  svg`<g class="chip" transform="translate(${x} ${y})">
+    <rect width=${width} height=${height} rx="2" />
+    ${parts.map(
+      (part) =>
+        svg`${
+          part.dir === undefined
+            ? nothing
+            : svg`<path transform="translate(${part.x + 2.5} ${height / 2}) rotate(${part.dir * 90})" d="M-2 -3L2 0L-2 3z" />`
+        }<text x=${part.x + (part.dir === undefined ? 0 : CHIP.arrow)} y=${height / 2}>${part.text}</text>`,
+    )}
+  </g>`;
 
 // Boxes
 
@@ -804,7 +990,7 @@ export const renderNested = (
   const { states, current } = host._model;
   const { rows, placed, options } = layout;
   const drawn = new Set(rows.map((row) => row.state.name));
-  const { routed, leaving, moved, pass } = edgesToDraw(host, layout);
+  const { routed, chips, leaving, moved, pass } = edgesToDraw(host, layout);
   const frame = { width: placed.width, height: placed.height };
 
   const top: Drawn[] = placed.box
@@ -842,6 +1028,12 @@ export const renderNested = (
       return;
     }
 
+    if (viewKey(host, layout, event)) {
+      event.preventDefault();
+
+      return;
+    }
+
     onTreeKey(host, event, rows, focus, nestedKeys(host, layout));
   };
 
@@ -854,32 +1046,49 @@ export const renderNested = (
   const focusIn = (event: Event) => {
     const name = boxName(event);
 
-    if (name) host._focusState = name;
+    if (!name) return;
+    host._focusState = name;
+
+    // Focus that arrives by keyboard pans its box into view; a click never moves what is under the pointer.
+    // SAFETY: the listener sits on the tree, whose event targets are its own elements
+    if ((event.target as Element).matches(':focus-visible'))
+      host._reveal(layout, name);
   };
+
+  const room = host._room(layout);
+  const at = host._viewOf(layout);
+  // The tree is laid out at the room's inline start, so the view is taken from there.
+  const from = layout.rtl ? room.width - placed.width : 0;
 
   /* oxlint-disable lit-a11y/click-events-have-key-events -- the tree's keydown handler moves focus and selects for every treeitem */
   return html`<div
-    class="nested ${STEP.get(options.metrics) ?? ''}"
-    role="tree"
-    aria-label="State map"
-    style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-end:${host._reserve(layout)}px"
-    @keydown=${onKey}
-    @click=${select}
-    @focusin=${focusIn}
-  >
-    ${top.length ? renderBox(view, top[0]) : renderBoxes(view, placed)}
-    <svg
-      class="nedges"
-      aria-hidden="true"
-      style="--uird-edge-delay:${moved ? SETTLE : 0}ms"
+      class="nested ${STEP.get(options.metrics) ?? ''}"
+      role="tree"
+      aria-label="State map"
+      style="inline-size:${placed.width}px;block-size:${placed.height}px;translate:${at.x - from}px ${at.y}px"
+      @keydown=${onKey}
+      @click=${select}
+      @focusin=${focusIn}
     >
-      ${repeat(
-        routed,
-        (r) => `${pass} ${r.id}`,
-        (r, index) => renderEdge(r, index, false, frame),
-      )}
-      ${leaving.map((r, index) => renderEdge(r, index, true, frame))}
-    </svg>
-  </div>`;
+      ${top.length ? renderBox(view, top[0]) : renderBoxes(view, placed)}
+      <svg
+        class="nedges"
+        aria-hidden="true"
+        style="--uird-edge-delay:${moved ? SETTLE : 0}ms"
+      >
+        ${repeat(
+          routed,
+          (r) => `${pass} ${r.id}`,
+          (r, index) => renderEdge(r, index, false, frame),
+        )}
+        ${leaving.map((r, index) => renderEdge(r, index, true, frame))}
+        ${repeat(
+          chips,
+          (chip) => `${pass} ${chip.id}`,
+          (chip) => renderChip(chip),
+        )}
+      </svg>
+    </div>
+    ${renderMinimap(host, layout, at, room)}`;
   /* oxlint-enable lit-a11y/click-events-have-key-events */
 };
