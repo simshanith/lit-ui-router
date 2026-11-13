@@ -23,7 +23,8 @@ Prereleases and canaries are not listed here; see [all releases on GitHub](https
 <body>
 ```
 
-One section per stable release, newest first. The heading's first token is the
+One section per stable GitHub release, newest first; a version published to npm
+with no GitHub release, such as `lit-ui-router@0.0.1`, has none. The heading's first token is the
 version; the date is the release's publish day in UTC. Everything before the
 first `##` heading is the preamble, which every writer replaces with the fixed text.
 oxfmt and rumdl skip these files (`.oxfmtrc.json`, `.config/rumdl.toml`), so a
