@@ -649,9 +649,9 @@ A published stable release's notes are corrected file first, never on GitHub:
    Once it merges, the `changelog` check run on `main`
    ([Release signals](#5-release-signals-release-signalsyml)) reports the
    section as differing from the published notes.
-2. A maintainer runs
-   [Actions ▸ Release notes re-sync ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-notes-resync.yml)
-   (`release-notes-resync.yml`) with the package and version, as a dry run
+2. A maintainer runs Actions ▸ Release notes re-sync ▸ **Run workflow**
+   ([`release-notes-resync.yml`](../.github/workflows/release-notes-resync.yml))
+   with the package and version, as a dry run
    first. Its job summary lists each release whose GitHub body differs from
    its section, with a unified diff; unticking `dry_run` makes the edits,
    from `main` only.
