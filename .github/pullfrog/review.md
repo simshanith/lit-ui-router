@@ -12,7 +12,8 @@ practice.
   report what oxlint, ESLint, stylelint, oxfmt, rumdl, actionlint, zizmor or
   shellcheck would catch.
 - Skip lockfiles and `dist/`.
-- Comment only. Do not approve, request changes, push or edit the PR.
+- Approve only when you find no issues. Never request changes, push or edit
+  the PR.
 
 ## Tone
 
