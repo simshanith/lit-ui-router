@@ -35,7 +35,7 @@ describe('compileRouteTrie: expressibility', () => {
     ['an escaped slash', { name: 'r', url: '/s/{v:a\\/b}' }],
     ['a legacy octal escape', { name: 'r', url: '/s/{v:\\057}' }],
     ['a hex escape for /', { name: 'r', url: '/s/{v:\\x2f}' }],
-    // Squash strings embed unchecked: `^/s/(a)|(b|[^/]*)?$` matches any url starting /s/a.
+    // The classifier reads a squash string as regexp source, a superset of the escaped literal.
     [
       'a squash string that breaks out of its group',
       {

@@ -203,6 +203,49 @@ describe('custom ParamType objects', () => {
   });
 });
 
+describe('string squash policies match literal text', () => {
+  const squashed = (squash: string) =>
+    compile('/s/:id', { params: { id: { value: 'v', squash } } });
+
+  it('keeps a squash string from breaking out of its group', () => {
+    const matcher = squashed('a)|(?:b');
+    assert.equal(exec(matcher, '/unrelated/route'), null);
+    assert.equal(exec(matcher, '/s'), null);
+    assert.equal(exec(matcher, '/s/a/anything/else'), null);
+    assert.deepEqual(exec(matcher, '/s/a)|(?:b'), { id: 'v' });
+    assert.deepEqual(exec(matcher, '/s/x'), { id: 'x' });
+  });
+
+  it('adds no capture group for a squash string that opens one', () => {
+    const matcher = squashed('a)|(b');
+    assert.deepEqual(exec(matcher, '/s/x'), { id: 'x' });
+    assert.deepEqual(exec(matcher, '/s/a)|(b'), { id: 'v' });
+  });
+
+  it('matches a squash dot only as a dot', () => {
+    const matcher = squashed('.');
+    assert.deepEqual(exec(matcher, '/s/.'), { id: 'v' });
+    assert.deepEqual(exec(matcher, '/s/z'), { id: 'z' });
+    assert.equal(exec(matcher, '/s//'), null);
+  });
+
+  it('escapes quantifiers and alternation in the compiled regexp', () => {
+    assert.equal(squashed('a+').regexp.source, String.raw`^\/s\/(a\+|[^/]*)?$`);
+    assert.equal(
+      squashed('x|y').regexp.source,
+      String.raw`^\/s\/(x\|y|[^/]*)?$`,
+    );
+    assert.deepEqual(exec(squashed('a+'), '/s/a+'), { id: 'v' });
+    assert.deepEqual(exec(squashed('x|y'), '/s/x'), { id: 'x' });
+  });
+
+  it('formats the default value as the squash string verbatim', () => {
+    const matcher = squashed('a)|(?:b');
+    assert.equal(format(matcher, {}), '/s/a)|(?:b');
+    assert.deepEqual(exec(matcher, format(matcher, {}) ?? ''), { id: 'v' });
+  });
+});
+
 describe('format', () => {
   it('builds a url from param values, percent-encoding them', () => {
     const matcher = compile('/user/:id?q');

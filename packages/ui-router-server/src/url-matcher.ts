@@ -169,9 +169,9 @@ const unsupportedTypes = new Set(['hash', 'json', 'any']);
  * Relaxation vs core: `type` also accepts a plain-object
  * {@link ParamType}, and `value` must be static (functions are rejected).
  *
- * A string `squash` is regexp source, as in core: it is spliced into the
- * url regexp unescaped, so regexp metacharacters change what the route
- * matches, while `format` emits it verbatim.
+ * A string `squash` is literal url text: matching escapes it and `format`
+ * emits it verbatim. Divergence from core, which splices it into the url
+ * regexp unescaped.
  */
 export interface ParamDeclaration extends Pick<
   CoreParamDeclaration,
@@ -411,9 +411,12 @@ const paramValidates = (param: CompiledParam, input: unknown): boolean => {
   return !(isString(encoded) && !param.type.pattern.exec(encoded));
 };
 
+const escapeRegExp = (text: string): string =>
+  text.replace(/[\\[\]^$*+?.()|{}]/g, '\\$&');
+
 /** Escapes a static segment; with a param, appends its capture group per squash policy. */
 const quoteRegExp = (segment: string, param?: CompiledParam): string => {
-  let result = segment.replace(/[\\[\]^$*+?.()|{}]/g, '\\$&');
+  let result = escapeRegExp(segment);
 
   if (!param) return result;
   let surround: [string, string];
@@ -427,7 +430,7 @@ const quoteRegExp = (segment: string, param?: CompiledParam): string => {
       surround = ['(?:/(', ')|/)?'];
       break;
     default:
-      surround = [`(${param.squash}|`, ')?'];
+      surround = [`(${escapeRegExp(param.squash)}|`, ')?'];
       break;
   }
 

@@ -265,6 +265,9 @@ const featureCases: DifferentialCase[] = [
   { pattern: '/café/:x', urls: ['/café/1', '/caf%C3%A9/1', '/cafe/1'] },
 ];
 
+// #1286: exec escapes a metacharacter squash that core splices in raw, so those run only in format().
+const metacharSquashes = ['a)|(?:b', 'a)|(b', '.', 'a+', 'x|y'];
+
 const allCases = [...appCases, ...featureCases];
 
 const comparisons = allCases.reduce((sum, c) => sum + c.urls.length, 0);
@@ -470,6 +473,11 @@ const formatCases: FormatCase[] = [
     options: { params: { id: { value: 'fallback', squash: '~' } } },
     values: [{}, { id: 'fallback' }, { id: '7' }],
   },
+  ...metacharSquashes.map((squash) => ({
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash } } },
+    values: [{}, { id: 'fallback' }, { id: '7' }],
+  })),
   {
     pattern: '/n/{id:int}',
     options: { params: { id: { value: 42, squash: true } } },
