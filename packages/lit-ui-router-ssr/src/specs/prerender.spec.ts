@@ -1251,6 +1251,24 @@ describe('the TRANSITION trace', () => {
     expect(reported).toEqual([['/old', '/plain']]);
   });
 
+  it('names the state of a path the router already stands on, and no segment for an empty payload', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    trace.enable('TRANSITION');
+
+    await plates(['/plate/7B', '/plate/7B/'], {
+      dehydrate: { shouldDehydrate: () => false },
+    });
+
+    expect(
+      log.mock.calls
+        .map(([line]) => String(line))
+        .filter((line) => line.startsWith('prerender: ')),
+    ).toEqual([
+      "prerender: '/plate/7B' shell, landed 'plate'",
+      "prerender: '/plate/7B/' shell, landed 'plate'",
+    ]);
+  });
+
   it('logs nothing with the trace off', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 

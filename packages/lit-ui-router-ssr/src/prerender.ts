@@ -71,16 +71,22 @@ const trimmed = (path: string): string => path.replace(/\/+$/, '');
 const pathOf = (url: string): string => url.replace(/[?#].*$/, '');
 
 // The router's hrefs are its baseHref plus its url, so after a settle they must spell the page's served path.
+const placement = (router: UIRouterLit, base: string, path: string) => {
+  const url = pathOf(router.urlService.url());
+  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
+  const served = `${trimmed(base)}${pathOf(path)}`;
+
+  return { url, linked, served, at: trimmed(linked) === trimmed(served) };
+};
+
 const checkSettled = (
   router: UIRouterLit,
   base: string,
   path: string,
 ): void => {
-  const url = pathOf(router.urlService.url());
-  const linked = `${trimmed(router.urlService.config.baseHref())}${url}`;
-  const served = `${trimmed(base)}${pathOf(path)}`;
+  const { url, linked, served, at } = placement(router, base, path);
 
-  if (trimmed(linked) === trimmed(served)) return;
+  if (at) return;
 
   const suggested = served.endsWith(url)
     ? `${trimmed(served.slice(0, served.length - url.length))}/`
@@ -125,7 +131,7 @@ const tracePath = (
       (redirect
         ? `, redirect ${redirect.status} ${servedTarget(base, redirect.location)}`
         : '') +
-      (tokens ? `, dehydrated [${tokens.join(', ')}]` : ''),
+      (tokens?.length ? `, dehydrated [${tokens.join(', ')}]` : ''),
   );
 };
 
@@ -503,7 +509,12 @@ export async function prerender(
     const body = await renderShell(verdict, context);
     const landed = lastLanded();
 
-    if (landed !== before) landing.state = landed?.$to().name;
+    // A path the router already stands on settles on the transition that put it there.
+    if (
+      landed &&
+      (landed !== before || placement(router, base, context.path).at)
+    )
+      landing.state = landed.$to().name;
 
     const redirect = redirectOf(verdict, before);
 
