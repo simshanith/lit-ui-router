@@ -24,9 +24,10 @@ for (const { file, stem, inlined: embed } of units) {
 
   // The JS pass's rewriteImportExtensions has no isolated-declarations
   // counterpart; same-length .ts → .js keeps the sourcemap columns valid.
+  // Side-effect imports (`import "./x.ts"`) survive into the d.ts too.
   const code = rewriteInlined(
     declaration.code.replace(
-      /((?:from|import\()\s*")(\.[^"]*)\.ts(?=")/g,
+      /((?:from|import\(?)\s*")(\.[^"]*)\.ts(?=")/g,
       '$1$2.js',
     ),
     stem,
