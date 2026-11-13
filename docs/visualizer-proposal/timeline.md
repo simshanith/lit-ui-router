@@ -125,16 +125,24 @@ recorder does not start spans and cannot know their ids without depending on
 the tracer, and the events would then name one tracing library. The event
 schema and the envelope's existing fields are unchanged.
 
-### Why `during` is common
+### When a span is a child
 
 `ui-router-otel` starts its spans with the context that was active when the
-transition started, and does not make its own span active while hooks and
-resolves run. A fetch started in a resolve is therefore never a child of the
-transition's span, even under a context manager that follows async work: it is
-a child of whatever span was active, or the root of a trace of its own. With
-`@opentelemetry/context-zone` and a span around the user's click, the
-transition and the fetch share that click's trace and the fetch is `in trace`.
-Without one, the fetch is its own trace and only `during`.
+transition started. By default it makes none of its own spans active, so a
+fetch started in a resolve is a child of whatever span was active, or the root
+of a trace of its own. With `@opentelemetry/context-zone` and a span around
+the user's click, the transition and the fetch share that click's trace and
+the fetch is `in trace`. Without one, the fetch is its own trace and only
+`during`.
+
+With the plugin's `activateResolveSpans` option, each resolve's function runs
+with that resolve's span active, and a span the app starts there is the
+resolve span's child, which the Timeline joins as `child`. Under a context
+manager that tracks only synchronous code that holds until the resolve's
+first `await`; under one that follows async work, such as
+`@opentelemetry/context-zone`, it holds for the whole resolve. App hooks and
+lazy loads do not run with a router span active, so spans started there are
+joined by trace or by time.
 
 A `during` span is drawn under the transition of the chain that was the latest
 to start before it, and a span that overlaps two separate transitions, such as
@@ -193,8 +201,9 @@ Timeline does not load it. The join and the layout are
 
 ## Not covered
 
-- The router's span is never made active while its hooks and resolves run, so
-  `child` needs an app that parents its spans to the router's by hand.
+- Only resolve functions run with a router span active, and only with
+  `activateResolveSpans`; a span started in an app hook or a lazy load is
+  `child` only when the app parents it to a router span by hand.
 - A transition's spans are not shown on the Map or in the log.
 - A server's spans for the same request are not fetched; only what reaches the
   page's tracer provider is drawn.

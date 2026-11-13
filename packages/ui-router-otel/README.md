@@ -28,12 +28,13 @@ otel.dispose();
 
 ## Options
 
-| Option           | Default                          | Effect                                                                                                                             |
-| ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `tracer`         | required                         | The `Tracer` every span starts on                                                                                                  |
-| `redaction`      | `{ params: [], messages: true }` | What reaches a span; the same model as a devtools session export, below                                                            |
-| `timeResolves`   | `false`                          | Times each resolve as a child span by wrapping its `resolveFn`; off by default because it patches core objects, as in the devtools |
-| `includeIgnored` | `false`                          | Reports transitions core ignores (same state and params, no `reload`)                                                              |
+| Option                 | Default                          | Effect                                                                                                                                                            |
+| ---------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tracer`               | required                         | The `Tracer` every span starts on                                                                                                                                 |
+| `redaction`            | `{ params: [], messages: true }` | What reaches a span; the same model as a devtools session export, below                                                                                           |
+| `timeResolves`         | `false`                          | Times each resolve as a child span by wrapping its `resolveFn`; off by default because it patches core objects, as in the devtools                                |
+| `activateResolveSpans` | `false`                          | Runs each resolve's function with its resolve span active, so a span the app starts there is that span's child; see [Active resolve spans](#active-resolve-spans) |
+| `includeIgnored`       | `false`                          | Reports transitions core ignores (same state and params, no `reload`)                                                                                             |
 
 `redaction` has the two parts of a [`ui-router-devtools`](../ui-router-devtools/README.md#session-files-and-redaction) export:
 
@@ -73,6 +74,20 @@ A redirect's successor carries a span link to the transition it replaced, and a 
 
 Each transition is the root of its own trace unless a span is active when it starts. The plugin installs no context manager; with one installed (for example `@opentelemetry/context-zone` in a browser), a transition started inside the app's own active span becomes that span's child.
 
+## Active resolve spans
+
+With `activateResolveSpans: true` the plugin starts each resolve's span when core calls the resolve's function and makes it the active span while that function runs, so a span the app starts in a resolve, such as an instrumented `fetch()`, is the resolve span's child and in the transition's trace. The plugin then spans resolves itself, so `timeResolves` adds nothing beside it and a resolve is never spanned twice.
+
+How long the span stays active depends on the app's context manager:
+
+| Context manager                                                                                                        | The span is active for                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| None                                                                                                                   | Nothing: the API's default manager keeps no context, so no span is a child                                           |
+| One that tracks only synchronous code, such as `StackContextManager`                                                   | The resolve function's synchronous part: a `fetch()` called before its first `await` is a child; one after it is not |
+| One that follows async work: `@opentelemetry/context-zone` in a browser, `AsyncLocalStorageContextManager` on a server | The whole resolve, `await`s included                                                                                 |
+
+It covers resolve functions only, each per-transition copy of the resolvable wrapped once, beside the devtools recorder's own `timeResolves` wrapper in either order. App transition hooks (`onEnter`, `onStart` and the rest) and a state's `lazyLoad` are not covered: core invokes hooks through registrations the plugin does not own, so activating a span around them would mean patching core's hook invoker or every registered hook for every router on the page, and a lazy load runs in `onBefore`, before the plugin creates the transition's span, which it holds back until core can no longer ignore the transition.
+
 ## The devtools Timeline
 
 `DevtoolsSpanProcessor` sends every span a tracer provider starts and ends to the [`ui-router-devtools`](../ui-router-devtools/README.md#timeline) panel, whose Timeline nests the app's spans, such as a fetch, under the transition they ran during. Add it to the provider the plugin's tracer comes from: the router's own spans are how the panel joins a span to a transition.
@@ -97,11 +112,11 @@ router.plugin(OtelPlugin, { tracer: provider.getTracer('my-app') });
 
 The argument is asked for the panel on each span, so the panel may be created after the provider; a span with no panel to take it is dropped. `{ started: false }` sends spans only when they end. The processor reads spans structurally, through `ProcessedSpan`, typed from `@opentelemetry/api` alone: it fits the `SpanProcessor` of `@opentelemetry/sdk-trace-base` 1.x and 2.x and of `@opentelemetry/sdk-trace` 3.x without a peer on either, and reads the parent from `parentSpanContext` or, on 1.x, `parentSpanId`. An attribute value that is not a scalar or an array of scalars is sent as JSON text.
 
-The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](../ui-router-devtools/README.md#session-files-and-redaction). How a span is joined, and why a fetch in a resolve is joined as `during` rather than as a child, is in [the Timeline](../../docs/visualizer-proposal/timeline.md#joining-a-span).
+The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](../ui-router-devtools/README.md#session-files-and-redaction). How a span is joined, and why a fetch in a resolve is joined as `during` unless `activateResolveSpans` is on, is in [the Timeline](../../docs/visualizer-proposal/timeline.md#joining-a-span).
 
 ## Not covered
 
-- Resolve and fetch nesting. A resolve's `fetch` span does not nest under the resolve span: the plugin does not make the transition span active while resolves run.
+- Hooks and lazy loads as active spans. Only resolve functions run with a router span active, and only with `activateResolveSpans`.
 - Recorded sessions. Turning a recorded devtools `Session` into OTLP JSON after the fact is not built.
 - Sentry's navigation span.
 - Server transitions, the render that follows them, and trace continuity from a server-rendered page to its first client transition, tracked in [issue 2098](https://github.com/simshanith/lit-ui-router/issues/2098).

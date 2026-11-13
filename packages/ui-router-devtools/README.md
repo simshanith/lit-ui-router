@@ -91,7 +91,7 @@ The published JSON Schema writes an open enum as `anyOf` of the known values and
 pnpm -C packages/ui-router-devtools dev --port 5391 --strictPort
 ```
 
-Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true`, an invalid target and a transition with an invalid param value. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?spans` sends the panel spans as an instrumented app would: a router span per transition and a fetch span per resolve, the `stars` fetch parented to its transition's span and the others in traces of their own, for the Timeline. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
+Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true`, an invalid target and a transition with an invalid param value. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?spans` sends the panel spans as an instrumented app would: a router span per transition and a fetch span per resolve, the `stars` fetch under a resolve span as `ui-router-otel`'s `activateResolveSpans` sends it, and the others in traces of their own, for the Timeline. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
 
 The demo fakes what a real app would supply:
 
