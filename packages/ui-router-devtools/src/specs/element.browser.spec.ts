@@ -97,3 +97,24 @@ it('stops ticking when removed mid-transition', async () => {
 
   expect(element._now).toBe(removed);
 });
+
+it('shows no duration for an imported transition that never finished', async () => {
+  const router = makeRouter();
+  const devtools = router.plugin(DevtoolsPlugin);
+  const element = devtools.element;
+  pending(router);
+  await waitFor(() => expect(element._runningTx?.to).toBe('slow'));
+
+  // The exporting page's clock ran far ahead of this one.
+  const session = element.session()!;
+  element.importSession({
+    ...session,
+    events: session.events.map((event) => ({ ...event, t: event.t + 1e7 })),
+  });
+  await element.updateComplete;
+
+  const pill = getByRole(shadow(element), 'button', { name: /Router .*slow/ });
+
+  expect(element._duration(element._runningTx!)).toBeUndefined();
+  expect(pill.querySelector('.num')).toBeNull();
+});

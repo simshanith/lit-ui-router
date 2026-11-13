@@ -93,14 +93,15 @@ const hidden = (s: Status) =>
 const valueCell = (host: UIRouterDevtools, tx: Tx, status: Status) => {
   const tags = sourceTags(tx);
   const muted = status === 'superseded' || status === 'aborted';
+  const duration = tx.id < 0 ? undefined : host._duration(tx);
 
   return html`<span class="value"
     >${tags.map((tag) => html`<span class="tag source">${tag}</span>`)}${
       muted
         ? html`<span class="tag">${status}</span>`
-        : tx.id < 0
+        : duration === undefined
           ? nothing
-          : html`<span class="num">${ms(host._duration(tx))}</span>`
+          : html`<span class="num">${ms(duration)}</span>`
     }</span
   >`;
 };
@@ -213,7 +214,7 @@ export const renderTiming = (
 ): TemplateResult | typeof nothing => {
   if (tx.id < 0) return nothing;
   const t0 = (host._origin(tx) ?? tx).t;
-  const end = tx.result?.t ?? host._now;
+  const end = host._end(tx) ?? t0;
   const total = Math.max(end - t0, ...tx.resolves.map((r) => r.end - t0), 0.1);
 
   const pct = (t: number) =>

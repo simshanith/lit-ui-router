@@ -254,8 +254,15 @@ export class UIRouterDevtools extends LitElement {
     return originOf(this._model.txs, tx);
   }
 
-  _duration(tx: Tx): number {
-    return durationOf(this._model.txs, tx, this._now);
+  // An imported row with no result never settles, since the exporting page's clock is not this page's.
+  _end(tx: Tx): number | undefined {
+    return tx.result?.t ?? (this._imported ? undefined : this._now);
+  }
+
+  _duration(tx: Tx): number | undefined {
+    const end = this._end(tx);
+
+    return end === undefined ? undefined : durationOf(this._model.txs, tx, end);
   }
 
   #announce(id: number) {
@@ -267,7 +274,7 @@ export class UIRouterDevtools extends LitElement {
       return;
     this._announcement =
       outcome === 'success'
-        ? `Transition ${tx.id} succeeded: ${tx.to}, ${ms(this._duration(tx))}`
+        ? `Transition ${tx.id} succeeded: ${tx.to}, ${ms(durationOf(this._live.txs, tx, this._now))}`
         : `${tx.id < 0 ? 'Target' : `Transition ${tx.id}`} failed: ${tx.to}. ${tx.result?.reason ?? ''}`;
   }
 
@@ -567,6 +574,7 @@ export class UIRouterDevtools extends LitElement {
       : (last?.result?.outcome ?? 'success');
 
     const tx = running ?? last;
+    const duration = tx && tx.id >= 0 ? this._duration(tx) : undefined;
 
     const name =
       running?.to ??
@@ -577,7 +585,7 @@ export class UIRouterDevtools extends LitElement {
     return {
       status,
       name: name || '(root)',
-      took: tx && tx.id >= 0 ? ms(this._duration(tx)) : '',
+      took: duration === undefined ? '' : ms(duration),
     };
   }
 
