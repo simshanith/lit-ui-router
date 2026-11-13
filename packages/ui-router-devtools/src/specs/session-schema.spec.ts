@@ -60,7 +60,7 @@ describe('readSession', () => {
     ).toHaveProperty('extra', true);
   });
 
-  it('falls back on an enum value it does not know', async () => {
+  it('falls back on an outcome it does not know', async () => {
     const session = await recorded();
 
     const read = readSession({
@@ -76,6 +76,37 @@ describe('readSession', () => {
           event.type === 'result' ? [event.outcome] : [],
         ),
     ).toEqual(['aborted', 'aborted', 'aborted']);
+  });
+
+  it('keeps a phase it does not know by its own name', async () => {
+    const session = await recorded();
+    const id = session.events.find((event) => event.type === 'result')?.id;
+
+    const later = (seq: number, edge: string) => ({
+      v: 1,
+      seq,
+      t: 0.5,
+      type: 'phase',
+      id,
+      phase: 'inactivate',
+      edge,
+      state: 'a',
+    });
+
+    const read = readSession({
+      ...session,
+      events: [...session.events, later(900, 'start'), later(901, 'end')],
+    });
+
+    expect(read.ok && read.skipped).toBe(0);
+
+    const tx = read.ok
+      ? fold(read.session.events).txs.find((each) => each.id === id)
+      : undefined;
+
+    expect(
+      tx?.marks.filter((mark) => mark.phase === 'inactivate'),
+    ).toMatchObject([{ edge: 'start' }, { edge: 'end' }]);
   });
 
   it('refuses a file that is not a session', () => {

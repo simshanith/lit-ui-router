@@ -16,7 +16,7 @@ import { roleGlyph, statusGlyph, statusLabel, took } from './glyphs.ts';
 
 const SLOW_MS = 150;
 
-const PHASES = [
+const PHASES: readonly string[] = [
   'before',
   'start',
   'exit',
@@ -25,7 +25,14 @@ const PHASES = [
   'finish',
   'success',
   'error',
-] as const;
+];
+
+// Known phases in core's order, then any a later v1 adds, in the order they started.
+const phaseRank = (phase: string): number => {
+  const rank = PHASES.indexOf(phase);
+
+  return rank < 0 ? PHASES.length : rank;
+};
 
 const FAULTS: ReadonlySet<Status> = new Set(['error', 'invalid']);
 
@@ -254,11 +261,15 @@ export const renderTiming = (
   const pct = (t: number) =>
     `${(Math.min(Math.max(0, t - t0), total) / total) * 100}%`;
 
-  const phases = PHASES.flatMap((phase) => {
-    const t = tx.marks.find((m) => m.phase === phase && m.edge === 'start')?.t;
+  const firstStarts = new Map<string, number>();
 
-    return t === undefined ? [] : [{ phase, t }];
-  });
+  for (const m of tx.marks)
+    if (m.edge === 'start' && !firstStarts.has(m.phase))
+      firstStarts.set(m.phase, m.t);
+
+  const phases = [...firstStarts]
+    .map(([phase, t]) => ({ phase, t }))
+    .sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase));
 
   const byState = [...tx.retained, ...tx.entering].flatMap((state) => {
     const resolves = tx.resolves.filter((r) => r.state === state);

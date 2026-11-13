@@ -11,7 +11,7 @@ const OUT = fileURLToPath(
   new URL('../dist/session.schema.json', import.meta.url),
 );
 
-// The input side: an open enum documents its known values and accepts others, before the panel's fallback.
+// The input side: an open enum documents its known values and accepts others, before any fallback the panel applies.
 export const sessionJsonSchema = () => {
   const { $schema, ...schema } = toJsonSchema(sessionSchema(), {
     target: 'draft-2020-12',
@@ -23,7 +23,7 @@ export const sessionJsonSchema = () => {
     $schema,
     title: 'ui-router-devtools session',
     description:
-      'A recorded UI-Router session, schema v1. A v1 reader ignores fields and event types it does not know and falls back on enum values it does not know; `format` identifies the file.',
+      'A recorded UI-Router session, schema v1. A v1 reader ignores fields and event types it does not know and tolerates values it does not know of an open enum, written as `anyOf` the known values and any string; `format` identifies the file.',
     ...schema,
   };
 };

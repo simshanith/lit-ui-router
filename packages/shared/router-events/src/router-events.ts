@@ -20,7 +20,7 @@ import {
   type Outcome,
   type ParamValue,
   type Params,
-  type Phase,
+  type KnownPhase,
   type ResultEvent,
   type Scalar,
   type StateInfo,
@@ -442,7 +442,7 @@ export const observe = (
     deregister.push(fn as () => void);
 
   const mark =
-    (phase: Phase, edge: 'start' | 'end') =>
+    (phase: KnownPhase, edge: 'start' | 'end') =>
     (trans: Transition, state?: StateDeclaration) => {
       // State hooks also fire for the unnamed root state; it is not a row anywhere.
       if (state && !state.name) return;
@@ -465,7 +465,7 @@ export const observe = (
 
   const bracket = (
     register: typeof service.onStart,
-    phase: Phase,
+    phase: KnownPhase,
     criteria: HookMatchCriteria = {},
   ) => {
     add(

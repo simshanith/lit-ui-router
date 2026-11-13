@@ -1,6 +1,6 @@
 /**
- * Bumped only by a breaking change. Added optional fields, new event types and new enum values keep it,
- * so a reader ignores fields and event types it does not know and falls back on enum values it does not know.
+ * Bumped only by a breaking change. Added optional fields, new event types and new values of an open enum keep it,
+ * so a reader ignores fields and event types it does not know and tolerates open-enum values it does not know.
  */
 export const SCHEMA_VERSION = 1;
 
@@ -39,7 +39,8 @@ export interface StateInfo {
   sticky?: boolean;
 }
 
-export type Phase =
+/** The phases the adapter emits. */
+export type KnownPhase =
   | 'before'
   | 'start'
   | 'exit'
@@ -48,6 +49,9 @@ export type Phase =
   | 'finish'
   | 'success'
   | 'error';
+
+/** A known phase, or one a later v1 adds (a plugin's hook type, say), kept by its own name. */
+export type Phase = KnownPhase | (string & {});
 
 export type Outcome =
   | 'success'

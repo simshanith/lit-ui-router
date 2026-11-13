@@ -16,7 +16,14 @@ import {
   type TransitionOptions,
 } from '@uirouter/core';
 
+import type {
+  PhaseEvent,
+  RouterEvent,
+  TransitionEvent,
+} from '@repo/router-events/schema';
+
 import { OtelPlugin, type OtelPluginOptions } from '../index.ts';
+import { reportToTracer } from '../reporter.ts';
 
 type Options = Omit<OtelPluginOptions, 'tracer'>;
 
@@ -548,5 +555,91 @@ describe('retention', () => {
     expect(
       spans().filter((s) => s.attributes['uirouter.outcome'] === 'success'),
     ).toHaveLength(70);
+  });
+});
+
+describe('a phase a later v1 adds', () => {
+  const start: TransitionEvent = {
+    v: 1,
+    seq: 1,
+    t: 1,
+    type: 'transition',
+    id: 0,
+    from: '',
+    to: 'a',
+    fromParams: {},
+    toParams: {},
+    entering: ['a'],
+    exiting: [],
+    retained: [],
+    redirectedFrom: null,
+    options: {
+      source: 'unknown',
+      location: true,
+      reload: false,
+      inherit: true,
+      supercede: true,
+    },
+    dynamic: false,
+  };
+
+  const phase = (
+    seq: number,
+    name: string,
+    edge: 'start' | 'end',
+    state: string | null = null,
+  ): PhaseEvent => ({
+    v: 1,
+    seq,
+    t: seq,
+    type: 'phase',
+    id: 0,
+    phase: name,
+    edge,
+    state,
+  });
+
+  it('is a child span under its own name, paired only with its own edges', () => {
+    const exporter = new InMemorySpanExporter();
+
+    const provider = new TracerProvider({
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
+    });
+
+    const reporter = reportToTracer(provider.getTracer('spec'));
+
+    const events: RouterEvent[] = [
+      start,
+      phase(2, 'before', 'start'),
+      phase(3, 'before', 'end'),
+      phase(4, 'inactivate', 'start', 'a'),
+      phase(5, 'enter', 'end', 'a'),
+      phase(6, 'inactivate', 'end', 'a'),
+      phase(7, 'reactivate', 'end', 'a'),
+      phase(8, 'reactivate', 'start'),
+      { v: 1, seq: 9, t: 9, type: 'result', id: 0, outcome: 'success' },
+    ];
+
+    for (const event of events) reporter.report(event);
+
+    const spans = exporter.getFinishedSpans();
+    const span = named(spans, 'a');
+
+    expect(childrenOf(spans, span)).toEqual([
+      'before',
+      'inactivate a',
+      'reactivate',
+    ]);
+    expect(named(spans, 'inactivate a').attributes).toEqual({
+      'uirouter.phase': 'inactivate',
+      'uirouter.state': 'a',
+    });
+    expect(ms(named(spans, 'inactivate a').endTime)).toBe(
+      performance.timeOrigin + 6,
+    );
+    // Opened without a close, it ends with its transition.
+    expect(ms(named(spans, 'reactivate').endTime)).toBe(
+      performance.timeOrigin + 9,
+    );
   });
 });

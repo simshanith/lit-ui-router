@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "ui-router-devtools session",
-  "description": "A recorded UI-Router session, schema v1. A v1 reader ignores fields and event types it does not know and falls back on enum values it does not know; `format` identifies the file.",
+  "description": "A recorded UI-Router session, schema v1. A v1 reader ignores fields and event types it does not know and tolerates values it does not know of an open enum, written as `anyOf` the known values and any string; `format` identifies the file.",
   "type": "object",
   "properties": {
     "format": {
@@ -590,17 +590,24 @@
           "type": "number"
         },
         "phase": {
-          "enum": [
-            "before",
-            "start",
-            "exit",
-            "retain",
-            "enter",
-            "finish",
-            "success",
-            "error"
-          ],
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "before",
+                "start",
+                "exit",
+                "retain",
+                "enter",
+                "finish",
+                "success",
+                "error"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "edge": {
           "enum": [

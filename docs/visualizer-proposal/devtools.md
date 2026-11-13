@@ -187,8 +187,8 @@ behind a flag, because any script on the page can reach a global.
   and each transport opens with a handshake naming the schema, the router and
   the adapter. Payloads stay structured-clone-safe so they pass through
   `postMessage`, RPC, agent tools and test attachments unchanged. Within v1 a
-  reader ignores fields and event types it does not know and falls back on enum
-  values it does not know.
+  reader ignores fields and event types it does not know and tolerates values of
+  an open enum it does not know.
 - **Naming.** Across the ecosystem "devtools" is the umbrella word (Vue, React,
   Angular, Redux, Vite, TanStack), "inspector" names narrower tools, and
   "visualizer" names static pictures. That supports `ui-router-devtools` for the

@@ -4,6 +4,7 @@ export {
   type CurrentEvent,
   type EventBase,
   type InvalidEvent,
+  type KnownPhase,
   type LocationInfo,
   type Outcome,
   type ParamInfo,

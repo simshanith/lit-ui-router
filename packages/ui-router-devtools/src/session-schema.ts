@@ -98,16 +98,21 @@ const phaseEvent = v.looseObject({
   ...base,
   type: v.literal('phase'),
   id: v.number(),
-  phase: v.picklist([
-    'before',
-    'start',
-    'exit',
-    'retain',
-    'enter',
-    'finish',
-    'success',
-    'error',
+  // Open, with no fallback: an unknown phase keeps its name rather than read as a known one.
+  phase: v.union([
+    v.picklist([
+      'before',
+      'start',
+      'exit',
+      'retain',
+      'enter',
+      'finish',
+      'success',
+      'error',
+    ]),
+    v.string(),
   ]),
+  // Closed: a reader pairs a phase's two edges, and could not pair a third kind.
   edge: v.picklist(['start', 'end']),
   state: v.nullable(v.string()),
 });
