@@ -2,6 +2,19 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=lit-ui-router-effect%40&expanded=true).
 
+## 0.7.1 (2026-11-13)
+
+### Features
+
+* **www:** move the API reference to /reference/\<npm-name>/ ([#2028](https://github.com/simshanith/lit-ui-router/issues/2028)) ([9044ab3](https://github.com/simshanith/lit-ui-router/commit/9044ab32a5fe2b882ae7eb8de4700f184094c663)), references [#1566](https://github.com/simshanith/lit-ui-router/issues/1566)
+
+### Build System
+
+* drop stale overrides, knip ignores and lint disables from the exception lists ([#1909](https://github.com/simshanith/lit-ui-router/issues/1909)) ([52faefd](https://github.com/simshanith/lit-ui-router/commit/52faefd28347d7437db68607d629f5a6f02c8ad7)), references [#721](https://github.com/simshanith/lit-ui-router/issues/721) [#1448](https://github.com/simshanith/lit-ui-router/issues/1448) [#1474](https://github.com/simshanith/lit-ui-router/issues/1474) [#1534](https://github.com/simshanith/lit-ui-router/issues/1534) [#1907](https://github.com/simshanith/lit-ui-router/issues/1907) [#1901](https://github.com/simshanith/lit-ui-router/issues/1901)
+* **lint:** type-check opted-in Markdown ts blocks on the TypeScript 7.1 API ([#1663](https://github.com/simshanith/lit-ui-router/issues/1663)) ([1ee0ce3](https://github.com/simshanith/lit-ui-router/commit/1ee0ce3464c1a66d3d4655e10c4ef17eab936566))
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router-effect/0.7.1/) · [Diff from 0.7.0](https://lit-ui-router.dev/releases/lit-ui-router-effect/diff/0.7.0...0.7.1/)
+
 ## 0.7.0 (2026-11-02)
 
 ### Features
