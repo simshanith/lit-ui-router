@@ -179,6 +179,10 @@ Nothing else is required: `@uirouter/core` (only for
 `hono` are **optional** peer
 dependencies, and every other adapter targets a host you already have.
 
+That is the runtime requirement: the other entries' type declarations still
+reference `@uirouter/core` types, so a TypeScript project without it either
+installs it as a dev dependency or keeps `skipLibCheck` on.
+
 `latest` is the stable line (`0.1.0` today), and the only dist-tag — the
 pre-release seed tags have been retired.
 

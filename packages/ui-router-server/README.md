@@ -21,7 +21,10 @@ npm install ui-router-server
 
 `@uirouter/core` (only for `simulate` mounts and the `/location`, `/ssr` and
 `/ssr/client` entries) and `hono` are optional peer
-dependencies. Full docs:
+dependencies. That is the runtime requirement: the other entries' type
+declarations still reference `@uirouter/core` types, so a TypeScript project
+without it either installs it as a dev dependency or keeps `skipLibCheck` on.
+Full docs:
 [lit-ui-router.dev/packages/ui-router-server](https://lit-ui-router.dev/packages/ui-router-server).
 
 ## When to use it
