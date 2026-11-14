@@ -22,7 +22,7 @@ import { RouterSignals, watchSelection } from 'ui-router-signals';
 
 // Data Service
 interface SolarBody {
-  id: number;
+  id: string;
   name: string;
   kind: 'star' | 'rocky planet' | 'gas giant' | 'ice giant' | 'dwarf planet';
   distanceAu: number;
@@ -36,7 +36,7 @@ interface SolarBody {
 // Ordered by distance from the Sun.
 const solarBodies: SolarBody[] = [
   {
-    id: 1,
+    id: 'sun',
     name: 'Sun',
     kind: 'star',
     distanceAu: 0,
@@ -48,7 +48,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #fff7ae, #ffb703 55%, #d00000)',
   },
   {
-    id: 2,
+    id: 'mercury',
     name: 'Mercury',
     kind: 'rocky planet',
     distanceAu: 0.39,
@@ -60,7 +60,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #d8d8d8, #8d8d8d 60%, #4a4a4a)',
   },
   {
-    id: 3,
+    id: 'venus',
     name: 'Venus',
     kind: 'rocky planet',
     distanceAu: 0.72,
@@ -72,7 +72,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f5e3b3, #e0b060 60%, #9c6f2f)',
   },
   {
-    id: 4,
+    id: 'earth',
     name: 'Earth',
     kind: 'rocky planet',
     distanceAu: 1,
@@ -84,7 +84,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #9bd4f5, #2a7fd4 55%, #123c7a)',
   },
   {
-    id: 5,
+    id: 'mars',
     name: 'Mars',
     kind: 'rocky planet',
     distanceAu: 1.52,
@@ -96,7 +96,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f0a075, #c1440e 60%, #6e2408)',
   },
   {
-    id: 6,
+    id: 'jupiter',
     name: 'Jupiter',
     kind: 'gas giant',
     distanceAu: 5.2,
@@ -108,7 +108,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f3ddc0, #c88b3a 55%, #7a4a1f)',
   },
   {
-    id: 7,
+    id: 'saturn',
     name: 'Saturn',
     kind: 'gas giant',
     distanceAu: 9.5,
@@ -120,7 +120,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f7e7b8, #d9b36c 60%, #8f6f3a)',
   },
   {
-    id: 8,
+    id: 'uranus',
     name: 'Uranus',
     kind: 'ice giant',
     distanceAu: 19.2,
@@ -132,7 +132,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #d8f7f7, #7fd4d4 60%, #3a8f9c)',
   },
   {
-    id: 9,
+    id: 'neptune',
     name: 'Neptune',
     kind: 'ice giant',
     distanceAu: 30.1,
@@ -144,7 +144,7 @@ const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #9fb8f5, #3b5bdb 60%, #1a2f7a)',
   },
   {
-    id: 10,
+    id: 'pluto',
     name: 'Pluto',
     kind: 'dwarf planet',
     distanceAu: 39.5,
@@ -163,9 +163,14 @@ const delay = <T>(value: T, ms = 300): Promise<T> =>
 
 const SolarSystemService = {
   getAllBodies: (): Promise<SolarBody[]> => delay(solarBodies),
-  getBody: (id: number): Promise<SolarBody | undefined> =>
+  getBody: (id: string): Promise<SolarBody | undefined> =>
     delay(solarBodies.find((b) => b.id === id)),
 };
+
+// The first urls numbered the bodies outward from the Sun, so /planets/4 was
+// Earth. Those urls still work: each number maps to its body's slug.
+const legacyPlanetId = (planetId: string): string | undefined =>
+  /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;
 
 // Log scale keeps the Sun and Pluto on the same screen.
 const dotSize = (diameterKm: number): number =>
@@ -715,19 +720,28 @@ const planetsState = {
 
 const planetState = {
   name: 'planet',
-  // The `int` param type decodes to a number, and `/planets/4x` matches no state.
-  url: '/planets/{planetId:int}',
+  url: '/planets/:planetId',
   component: PlanetDetailComponent,
+  // A numbered url redirects to the slug, the canonical url. A redirect from
+  // the address bar replaces its history entry.
+  redirectTo: ($transition$: Transition) => {
+    const planetId = legacyPlanetId(
+      $transition$.params<{ planetId: string }>().planetId,
+    );
+
+    return planetId === undefined
+      ? undefined
+      : $transition$.targetState().withParams({ planetId });
+  },
   // deps injects $transition$ so the resolve can read the route parameter.
   resolve: [
     {
       token: 'planet',
       deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) => {
-        const { planetId } = $transition$.params<{ planetId: number }>();
-
-        return SolarSystemService.getBody(planetId);
-      },
+      resolveFn: ($transition$: Transition) =>
+        SolarSystemService.getBody(
+          $transition$.params<{ planetId: string }>().planetId,
+        ),
     },
   ],
 } as const satisfies LitStateDeclaration<{ planet: SolarBody | undefined }>;

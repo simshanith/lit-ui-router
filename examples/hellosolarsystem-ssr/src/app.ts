@@ -14,7 +14,7 @@ import {
   type UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 
-import { solarBodies, type SolarBody } from './bodies.ts';
+import { legacyPlanetId, solarBodies, type SolarBody } from './bodies.ts';
 import { mount, routes } from './routes.ts';
 
 // Data Service
@@ -24,7 +24,7 @@ const delay = <T>(value: T, ms = 300): Promise<T> =>
 
 const SolarSystemService = {
   getAllBodies: (): Promise<SolarBody[]> => delay(solarBodies),
-  getBody: (id: number): Promise<SolarBody | undefined> =>
+  getBody: (id: string): Promise<SolarBody | undefined> =>
     delay(solarBodies.find((b) => b.id === id)),
 };
 
@@ -306,18 +306,26 @@ export const planetState: LitStateDeclaration<{
 }> = {
   ...routes.planet,
   component: PlanetDetailComponent,
+  // A numbered url redirects to the slug, the canonical url. The server follows
+  // it in `settle`; in the browser it replaces the history entry.
+  redirectTo: ($transition$: Transition) => {
+    const planetId = legacyPlanetId(
+      $transition$.params<{ planetId: string }>().planetId,
+    );
+
+    return planetId === undefined
+      ? undefined
+      : $transition$.targetState().withParams({ planetId });
+  },
   // deps injects $transition$ so the resolve can read the route parameter.
   resolve: [
     {
       token: 'planet',
       deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) => {
-        const planetId = parseInt(
+      resolveFn: ($transition$: Transition) =>
+        SolarSystemService.getBody(
           $transition$.params<{ planetId: string }>().planetId,
-        );
-
-        return SolarSystemService.getBody(planetId);
-      },
+        ),
     },
   ],
 };

@@ -1,6 +1,6 @@
 // The solar system's data: no lit, so the prerender script can read it too.
 export interface SolarBody {
-  id: number;
+  id: string;
   name: string;
   kind: 'star' | 'rocky planet' | 'gas giant' | 'ice giant' | 'dwarf planet';
   distanceAu: number;
@@ -14,7 +14,7 @@ export interface SolarBody {
 // Ordered by distance from the Sun.
 export const solarBodies: SolarBody[] = [
   {
-    id: 1,
+    id: 'sun',
     name: 'Sun',
     kind: 'star',
     distanceAu: 0,
@@ -26,7 +26,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #fff7ae, #ffb703 55%, #d00000)',
   },
   {
-    id: 2,
+    id: 'mercury',
     name: 'Mercury',
     kind: 'rocky planet',
     distanceAu: 0.39,
@@ -38,7 +38,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #d8d8d8, #8d8d8d 60%, #4a4a4a)',
   },
   {
-    id: 3,
+    id: 'venus',
     name: 'Venus',
     kind: 'rocky planet',
     distanceAu: 0.72,
@@ -50,7 +50,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f5e3b3, #e0b060 60%, #9c6f2f)',
   },
   {
-    id: 4,
+    id: 'earth',
     name: 'Earth',
     kind: 'rocky planet',
     distanceAu: 1,
@@ -62,7 +62,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #9bd4f5, #2a7fd4 55%, #123c7a)',
   },
   {
-    id: 5,
+    id: 'mars',
     name: 'Mars',
     kind: 'rocky planet',
     distanceAu: 1.52,
@@ -74,7 +74,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f0a075, #c1440e 60%, #6e2408)',
   },
   {
-    id: 6,
+    id: 'jupiter',
     name: 'Jupiter',
     kind: 'gas giant',
     distanceAu: 5.2,
@@ -86,7 +86,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f3ddc0, #c88b3a 55%, #7a4a1f)',
   },
   {
-    id: 7,
+    id: 'saturn',
     name: 'Saturn',
     kind: 'gas giant',
     distanceAu: 9.5,
@@ -98,7 +98,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #f7e7b8, #d9b36c 60%, #8f6f3a)',
   },
   {
-    id: 8,
+    id: 'uranus',
     name: 'Uranus',
     kind: 'ice giant',
     distanceAu: 19.2,
@@ -110,7 +110,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #d8f7f7, #7fd4d4 60%, #3a8f9c)',
   },
   {
-    id: 9,
+    id: 'neptune',
     name: 'Neptune',
     kind: 'ice giant',
     distanceAu: 30.1,
@@ -122,7 +122,7 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #9fb8f5, #3b5bdb 60%, #1a2f7a)',
   },
   {
-    id: 10,
+    id: 'pluto',
     name: 'Pluto',
     kind: 'dwarf planet',
     distanceAu: 39.5,
@@ -134,3 +134,8 @@ export const solarBodies: SolarBody[] = [
       'radial-gradient(circle at 35% 35%, #e8d8c8, #b09880 60%, #6a5a4a)',
   },
 ];
+
+// The first urls numbered the bodies outward from the Sun, so /planets/4 was
+// Earth. Those urls still work: each number maps to its body's slug.
+export const legacyPlanetId = (planetId: string): string | undefined =>
+  /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;
