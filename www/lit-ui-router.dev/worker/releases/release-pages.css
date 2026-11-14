@@ -227,6 +227,41 @@ time {
 .hash {
   overflow-wrap: anywhere;
 }
+.notice {
+  margin-block: 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-inline-start: 0.25rem solid var(--site-color-line);
+  background: var(--site-color-surface-soft);
+  border-radius: 0.25rem;
+}
+.facts :target {
+  color: var(--site-color-text);
+  font-weight: 600;
+}
+.pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block-start: 2rem;
+  padding-block-start: 1rem;
+  border-block-start: var(--site-border-width) solid var(--site-color-line);
+}
+.pager a {
+  display: flex;
+  flex-direction: column;
+  padding-block: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.pager .next {
+  grid-column: 2;
+  text-align: end;
+}
+.pager-label {
+  font-size: 0.875rem;
+  color: var(--site-color-text-muted);
+}
 .compare {
   display: flex;
   flex-wrap: wrap;
@@ -521,6 +556,9 @@ ui-view {
   }
   a:hover {
     text-decoration-thickness: 2px;
+  }
+  .pager a:hover {
+    text-decoration: underline;
   }
   .compare button:hover {
     background: var(--vp-button-brand-hover-bg);

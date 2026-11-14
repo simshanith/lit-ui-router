@@ -1,4 +1,4 @@
-import { API_REFERENCES } from '../catalog/navigation.ts';
+import { API_REFERENCES } from '../catalog/references.ts';
 import { PACKAGES, ROLES } from '../catalog/packages.ts';
 
 /** One section per role, each package linking its API reference, or its package page when it has none. */

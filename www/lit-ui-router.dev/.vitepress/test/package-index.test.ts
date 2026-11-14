@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { API_REFERENCES } from '../../catalog/navigation.ts';
+import { API_REFERENCES } from '../../catalog/references.ts';
 import { PACKAGES, RUNTIMES } from '../../catalog/packages.ts';
 import {
   entryPoints,

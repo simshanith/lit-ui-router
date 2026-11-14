@@ -10,7 +10,12 @@ import { installServerLocation } from 'ui-router-server/location';
 import type { ReleaseDiffs } from './diff-data.ts';
 import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
-import { type LedgerReader, NotInLedger } from './ledger.ts';
+import {
+  adjacentIn,
+  type LedgerReader,
+  type LedgerVersion,
+  NotInLedger,
+} from './ledger.ts';
 import { mounts, urlConfig } from './routes.ts';
 import {
   type ReleaseState,
@@ -23,6 +28,29 @@ export const resolver = createServerRouter({ mounts });
 
 const isNotInLedger = (error: Error): boolean =>
   error.cause instanceof Rejection && error.cause.detail instanceof NotInLedger;
+
+/** A version page's neighbours, as its pager links them. */
+const seriesOf = (router: UIRouterLit): Pick<PageHead, 'prev' | 'next'> => {
+  const injector = router.globals.successfulTransitions.peekTail()?.injector();
+
+  if (!injector) return {};
+
+  // The version state resolves both tokens to these shapes.
+  const versions = injector.get<LedgerVersion[]>('versions');
+  const release = injector.get<LedgerVersion>('release');
+
+  const { older, newer } = adjacentIn(versions, release);
+
+  const href = (row: LedgerVersion | null) =>
+    row
+      ? router.stateService.href('releases.package.version', {
+          pkg: row.name,
+          version: row.version,
+        })
+      : undefined;
+
+  return { prev: href(older), next: href(newer) };
+};
 
 const headOf = (router: UIRouterLit): PageHead => {
   const { current, params } = router.globals;
@@ -44,6 +72,7 @@ const headOf = (router: UIRouterLit): PageHead => {
     return {
       title: `${pkg}@${version}`,
       description: `The ${pkg}@${version} release: its npm publish, git tag and GitHub release.`,
+      ...seriesOf(router),
     };
 
   if (current.name === 'releases.package')

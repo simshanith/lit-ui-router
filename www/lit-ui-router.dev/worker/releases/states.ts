@@ -65,6 +65,7 @@ interface ResolvesOf {
   'releases.package.version': {
     release: LedgerVersion;
     versions: LedgerVersion[];
+    latest: LedgerVersion | null;
   };
   githubRelease: { latest: LedgerVersion };
   notFound: object;
@@ -306,6 +307,12 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
         deps: ['versions', '$transition$'],
         resolveFn: (versions: LedgerVersion[], trans: Transition) =>
           versionIn(versions, paramsOf(trans)),
+      },
+      {
+        token: 'latest',
+        deps: ['$transition$'],
+        resolveFn: (trans: Transition) =>
+          ledger.tagged(paramsOf(trans).pkg, 'latest'),
       },
     ],
   },

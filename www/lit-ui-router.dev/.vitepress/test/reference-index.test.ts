@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { API_REFERENCES } from '../../catalog/navigation.ts';
+import { API_REFERENCES } from '../../catalog/references.ts';
 import { PACKAGES } from '../../catalog/packages.ts';
 import { expandIndexes, INDEX_MARKERS } from '../index-pages.ts';
 import { referenceIndex } from '../reference-index.ts';
