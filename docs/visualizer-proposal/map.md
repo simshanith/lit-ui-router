@@ -45,14 +45,16 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
 The Map does not make one picture carry every encoding. Colour and arrows have
 a different job in each mode, and `data-mode` on the panel names the mode.
 
-| Mode                         | Colour                                                                                                                 | Arrows                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| At rest (`rest`)             | identity, on every border and glyph                                                                                    | none                                               |
-| A state selected (`state`)   | identity, so the named boxes can be found                                                                              | the state's traffic, with counts                   |
-| A transition in focus (`tx`) | status: `--uird-active` on what it enters or retains, `--uird-exit` on what it exits, red on a fault; identity recedes | that transition's edge, and its redirect's, dashed |
+| Mode                         | Colour                                                                                                                 | Arrows                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| At rest (`rest`)             | identity, on every border and glyph                                                                                    | none                                                       |
+| A state selected (`state`)   | identity, so the named boxes can be found                                                                              | the state's traffic, with counts                           |
+| A transition in focus (`tx`) | status: `--uird-active` on what it enters or retains, `--uird-exit` on what it exits, red on a fault; identity recedes | the selected transition's edge, and its redirect's, dashed |
 
 A transition is in focus while it is selected, previewed from the strip or
-running.
+running, and the status colours apply to any of them. Only the selected
+transition draws its edge, and its redirect's; a previewed or running one
+recolours the boxes without an arrow.
 
 Weight, dash, wash and glyph say the rest, and they do not change with the
 mode, so greyscale and forced colours read the same:
@@ -331,8 +333,8 @@ through the change by its colour and its movement.
   toward its end in 160ms. After a re-pack the edges wait the 200ms the boxes
   take, and then draw, so none is stranded beside a moving box. A count chip
   fades in once its line has drawn.
-- **A running transition marches.** Its edge is dashed and the dashes travel
-  toward its head until the transition settles.
+- **A running transition marches.** Selected while it runs, its edge is
+  dashed and the dashes travel toward its head until the transition settles.
 - **The popover fades in** over 160ms where it is placed.
 - **Reduced motion.** Positions change at once. Edges, new boxes and the
   popover fade, a running transition's edge is solid, and nothing else
