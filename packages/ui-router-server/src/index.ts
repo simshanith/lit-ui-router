@@ -1166,6 +1166,27 @@ export function createServerRouter<
 
       return null;
     },
+    undecodable(pathnameOrUrl) {
+      const pathname = pathnameOf(pathnameOrUrl);
+
+      for (const mount of mounts) {
+        const subpath = subpathIn(mount.base, pathname);
+
+        if (subpath === null) continue;
+
+        try {
+          matchedRouteVerdict(mount, onOrigin(subpath), false);
+        } catch (error) {
+          if (error instanceof URIError) return error;
+
+          throw error;
+        }
+
+        return null;
+      }
+
+      return null;
+    },
   });
 
   // Folded out of dist/*.js, so a bundle that never calls diagnoseMounts drops it.

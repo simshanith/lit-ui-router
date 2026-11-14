@@ -9,6 +9,7 @@
 
 // Verdicts turned into files and host rules; the page body comes from the caller's render.
 import { devGate } from '#dev-gate';
+import { registeredDelegates } from './delegate-registry.ts';
 
 import {
   baseFor,
@@ -722,18 +723,25 @@ export async function prerender(
     return {};
   };
 
+  const undecodable = (listed: string, cause: URIError): Error =>
+    new Error(
+      `prerender: '${listed}' holds a malformed percent-escape, which its route cannot decode`,
+      { cause },
+    );
+
   // A request for such a path gets the shell; a build that lists one names it instead.
   const resolve = async (path: string, listed: string): Promise<Verdict> => {
-    try {
-      decodeURIComponent(path.replace(/[?#].*$/, ''));
-    } catch (error) {
-      throw new Error(
-        `prerender: '${listed}' holds a malformed percent-escape, which its route cannot decode`,
-        { cause: error },
-      );
-    }
+    const cause = registeredDelegates(resolver)?.undecodable(path);
 
-    return resolver.resolve(path);
+    if (cause) throw undecodable(listed, cause);
+
+    try {
+      return await resolver.resolve(path);
+    } catch (error) {
+      if (!(error instanceof URIError)) throw error;
+
+      throw undecodable(listed, error);
+    }
   };
 
   const visit = async (listed: string): Promise<void> => {
