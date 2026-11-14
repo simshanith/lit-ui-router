@@ -5,11 +5,20 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import type { TemplateResult } from 'lit';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
+import * as v from 'valibot';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import { PACKAGES, ROLES } from '../../catalog/packages.ts';
 import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
+import {
+  type Line,
+  lineAnchor,
+  linesOf,
+  PRERELEASES_PARAM,
+  type PrereleaseView,
+  PrereleasesParam,
+} from './lines.ts';
 import type { ReleaseNote, ReleaseNotes } from './notes.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
@@ -226,7 +235,11 @@ const compareForm = (
     : html`<form
         class="compare"
         method="get"
-        action=${router.stateService.href('releases.package.diff', { pkg })}
+        action=${router.stateService.href(
+          'releases.package.diff',
+          { pkg },
+          { inherit: false },
+        )}
         aria-label="Compare two versions"
         target="_blank"
         rel="noopener"
@@ -271,16 +284,25 @@ const compareForm = (
  * input reaches it. As static markup, lit caches its template per isolate, so
  * a section is parsed once rather than on every request.
  */
-const notesBody = (note: ReleaseNote): TemplateResult =>
-  staticHtml`<div class="notes">${unsafeStatic(note.html)}</div>`;
+const notesBody = (note: ReleaseNote, notesHtml = note.html): TemplateResult =>
+  staticHtml`<div class="notes">${unsafeStatic(notesHtml)}</div>`;
+
+/** Notes one heading level deeper, under a version heading that sits under its line's; the build escapes every `<` outside a tag. */
+const deeper = (notesHtml: string): string =>
+  notesHtml.replace(
+    /<(\/?)h([1-5])(?=[\s>])/g,
+    (_tag, close: string, level: string) => `<${close}h${Number(level) + 1}`,
+  );
 
 const anchorOf = (version: string): string => `v${version}`;
 
+// Not inherited, so a version page's url never carries the package page's view.
 const versionHref = (router: UIRouter, row: LedgerVersion): string =>
-  router.stateService.href('releases.package.version', {
-    pkg: row.name,
-    version: row.version,
-  });
+  router.stateService.href(
+    'releases.package.version',
+    { pkg: row.name, version: row.version },
+    { inherit: false },
+  );
 
 /** A release page link and the DiffsHub diff from the previous version, unless the body already ends with its own. */
 const releaseLinks = (
@@ -319,7 +341,7 @@ const releaseEntry = (
   note: ReleaseNote,
 ): TemplateResult =>
   html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
-    <h2 id=${anchorOf(row.version)}>${row.version}</h2>
+    <h3 id=${anchorOf(row.version)}>${row.version}</h3>
     <p class="release-meta">
       ${date(row.npm_published_at ?? note.date)}${releaseLinks(
         router,
@@ -328,12 +350,12 @@ const releaseEntry = (
         note,
       )}
     </p>
-    ${notesBody(note)}
+    ${notesBody(note, deeper(note.html))}
   </article>`;
 
 /** A version without notes, a prerelease or canary among them: one line linking its release page. */
 const versionLine = (router: UIRouter, row: LedgerVersion): TemplateResult =>
-  html`<li>
+  html`<li id=${anchorOf(row.version)}>
     <a href=${versionHref(router, row)}
       ><span class="visually-hidden">${row.name}@</span>${row.version}</a
     >${
@@ -366,61 +388,113 @@ const entriesOf = (
     return entries;
   }, []);
 
-/** The versions with notes, as in-page links. */
+/** The lines on the page, as in-page links. */
 const outline = (
-  versions: readonly LedgerVersion[],
-  notes: ReleaseNotes,
-): TemplateResult | typeof nothing => {
-  const noted = versions.filter(({ version }) => notes[version]);
-
-  return noted.length === 0
+  lines: readonly Line<LedgerVersion>[],
+): TemplateResult | typeof nothing =>
+  lines.length < 2
     ? nothing
     : html`<nav class="outline" aria-label="Versions">
         <ol>
-          ${noted.map(
-            ({ version }) =>
-              html`<li><a href=${`#${anchorOf(version)}`}>${version}</a></li>`,
+          ${lines.map(
+            ({ name }) =>
+              html`<li><a href=${`#${lineAnchor(name)}`}>${name}</a></li>`,
           )}
         </ol>
       </nav>`;
+
+const plural = (count: number, noun: string): string =>
+  `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+/** How many prereleases the view hides or shows, and the one link that flips it. */
+const prereleaseToggle = (
+  router: UIRouter,
+  pkg: string,
+  view: PrereleaseView,
+  count: number,
+): TemplateResult | typeof nothing => {
+  if (count === 0) return nothing;
+
+  const shown = view === 'show';
+
+  const href = router.stateService.href('releases.package', {
+    pkg,
+    [PRERELEASES_PARAM]: shown ? 'hide' : 'show',
+  });
+
+  return html`<p class="prereleases">
+    ${
+      shown
+        ? html`Showing ${plural(count, 'prerelease')}.
+            <a href=${href}>Hide prereleases</a>`
+        : html`${plural(count, 'prerelease')} hidden.
+            <a href=${href}>Show prereleases</a>`
+    }
+  </p>`;
 };
+
+/** One minor line: its heading, then its versions as notes or one-line rows. */
+const lineSection = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  notes: ReleaseNotes,
+  { name, rows }: Line<LedgerVersion>,
+): TemplateResult =>
+  html`<section class="line" aria-labelledby=${lineAnchor(name)}>
+    <h2 id=${lineAnchor(name)}>${name}</h2>
+    ${entriesOf(rows, notes).map((entry) =>
+      entry.kind === 'notes'
+        ? releaseEntry(router, versions, entry.row, entry.note)
+        : html`<ul class="version-lines">
+            ${entry.rows.map((row) => versionLine(router, row))}
+          </ul>`,
+    )}
+  </section>`;
 
 const packagePage = (
   router: UIRouter,
   pkg: string,
   versions: readonly LedgerVersion[],
   notes: ReleaseNotes,
-): TemplateResult => html`
-  ${crumbs(router, [{ label: pkg }])}
-  <h1>${pkg}</h1>
-  <p>
-    Every version of <code>${pkg}</code> the release ledger records, newest
-    first, with the release notes of each stable release. Its npm page is
-    <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
-  </p>
-  ${compareForm(router, pkg, versions)} ${outline(versions, notes)}
-  ${entriesOf(versions, notes).map((entry) =>
-    entry.kind === 'notes'
-      ? releaseEntry(router, versions, entry.row, entry.note)
-      : html`<ul class="version-lines">
-          ${entry.rows.map((row) => versionLine(router, row))}
-        </ul>`,
-  )}
-`;
+  view: PrereleaseView,
+): TemplateResult => {
+  const stable = versions.filter((row) => isStable(row.version));
+  const lines = linesOf(view === 'show' ? versions : stable);
 
-/** `releases.package`: one package's versions, newest first. */
+  return html`
+    ${crumbs(router, [{ label: pkg }])}
+    <h1>${pkg}</h1>
+    <p>
+      Every version of <code>${pkg}</code> the release ledger records, newest
+      first and grouped by minor, with the release notes of each stable release.
+      Prereleases, canaries among them, stay folded away until shown. Its npm
+      page is
+      <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
+    </p>
+    ${compareForm(router, pkg, versions)}
+    ${prereleaseToggle(router, pkg, view, versions.length - stable.length)}
+    ${outline(lines)}
+    ${lines.map((line) => lineSection(router, versions, notes, line))}
+  `;
+};
+
+/** `releases.package`: one package's versions, newest first, by minor line; prereleases show when the url asks. */
 export const PackageView: RoutedLitTemplate<{
   versions: LedgerVersion[];
   notes: ReleaseNotes;
-}> = ({ router, resolves, transition }) =>
-  isLeaf(router, 'releases.package')
-    ? packagePage(
-        router,
-        String(transition?.params().pkg),
-        resolves.versions,
-        resolves.notes,
-      )
-    : uiView();
+}> = ({ router, resolves, transition }) => {
+  if (!isLeaf(router, 'releases.package')) return uiView();
+
+  const params = transition?.params() ?? {};
+
+  return packagePage(
+    router,
+    String(params.pkg),
+    resolves.versions,
+    resolves.notes,
+    v.parse(PrereleasesParam, params[PRERELEASES_PARAM]),
+  );
+};
 
 const npmFacts = (row: LedgerVersion): TemplateResult => {
   if (row.npm_integrity === null)
