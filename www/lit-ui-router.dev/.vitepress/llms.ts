@@ -11,6 +11,7 @@ import {
 } from './theme/components/examples.ts';
 import { RELEASES_PATH } from './release-stubs.ts';
 import { pageGlobs, surfaceOf } from './surfaces.ts';
+import { SITE_ORIGIN } from './versions.ts';
 
 const LIVE_EXAMPLE = /^<LiveExample\s([^>]*?)\/>[ \t]*$/gm;
 
@@ -107,10 +108,8 @@ npx tiged simshanith/lit-ui-router/examples/helloworld my-app
 
 For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-plugins.md) guide recommends \`navigationLocationPlugin\` where the browser has the Navigation API and \`pushStateLocationPlugin\` where it doesn't; the tutorial uses hash URLs, which need no host configuration.`;
 
-const DOMAIN = 'https://lit-ui-router.dev';
-
 /** The worker renders the release pages, so no Markdown source or sidebar item can list them. */
-export const LLMS_RELEASES = `- [Releases](${DOMAIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${DOMAIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`;
+export const LLMS_RELEASES = `- [Releases](${SITE_ORIGIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${SITE_ORIGIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`;
 
 // The plugin's default template plus the Releases section; `{toc}` ends with its own blank line.
 const LLMS_TEMPLATE = `# {title}
@@ -186,7 +185,7 @@ export function llmsPlugins(): Plugin[] {
     liveExampleSourcesPlugin(),
     ...inPathOrder(
       llmstxt({
-        domain: DOMAIN,
+        domain: SITE_ORIGIN,
         customLLMsTxtTemplate: LLMS_TEMPLATE,
         customTemplateVariables: {
           details: LLMS_DETAILS,
