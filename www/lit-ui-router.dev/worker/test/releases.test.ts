@@ -909,7 +909,7 @@ describe('the /releases pages', () => {
 
     assert.deepEqual(
       getAllByRole(main, 'link', {
-        name: /^(lit-ui-router@|Release page for )/,
+        name: /^(lit-ui-router@|Release page)/,
       }).map((link) => link.getAttribute('href')),
       ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map(
         (version) => `/releases/lit-ui-router/${version}/`,
@@ -934,11 +934,15 @@ describe('the /releases pages', () => {
       hrefOf(release, 'Diff from 1.9.0 to 1.10.0'),
       `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
     );
-    assert.equal(
-      queryByRole(getByRole(main, 'article', { name: '1.2.0' }), 'link', {
-        name: /^Diff from /,
-      }),
-      null,
+
+    // A body that links its own release page keeps the only copy of that line.
+    const linked = getByRole(main, 'article', { name: '1.2.0' });
+
+    assert.deepEqual(
+      within(linked)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+      ['Release page'],
     );
   });
 

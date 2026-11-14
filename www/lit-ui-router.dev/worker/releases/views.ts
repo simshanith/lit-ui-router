@@ -282,35 +282,54 @@ const versionHref = (router: UIRouter, row: LedgerVersion): string =>
     version: row.version,
   });
 
+/** A release page link and the DiffsHub diff from the previous version, unless the body already ends with its own. */
+const releaseLinks = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+  note: ReleaseNote,
+): TemplateResult | typeof nothing => {
+  const href = versionHref(router, row);
+
+  if (note.html.includes(`href="${href}"`)) return nothing;
+
+  const previous = previousIn(versions, row);
+  const source = previous && diffUrl(previous, row);
+
+  return html` ·
+    <a href=${href} aria-label=${`Release page for ${row.version}`}
+      >Release page</a
+    >${
+      previous && source
+        ? html` ·
+            <a
+              href=${source}
+              aria-label=${`Diff from ${previous.version} to ${row.version}`}
+              >Diff from ${previous.version}</a
+            >`
+        : nothing
+    }`;
+};
+
 /** A version with notes: its heading, date, links and notes. */
 const releaseEntry = (
   router: UIRouter,
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
   note: ReleaseNote,
-): TemplateResult => {
-  const previous = previousIn(versions, row);
-  const source = previous && diffUrl(previous, row);
-
-  return html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
+): TemplateResult =>
+  html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
     <h2 id=${anchorOf(row.version)}>${row.version}</h2>
     <p class="release-meta">
-      ${date(row.npm_published_at ?? note.date)} ·
-      <a href=${versionHref(router, row)}
-        >Release page <span class="visually-hidden">for ${row.version}</span></a
-      >${
-        previous && source
-          ? html` ·
-              <a href=${source}
-                >Diff from ${previous.version}
-                <span class="visually-hidden">to ${row.version}</span></a
-              >`
-          : nothing
-      }
+      ${date(row.npm_published_at ?? note.date)}${releaseLinks(
+        router,
+        versions,
+        row,
+        note,
+      )}
     </p>
     ${notesBody(note)}
   </article>`;
-};
 
 /** A version without notes, a prerelease or canary among them: one line linking its release page. */
 const versionLine = (router: UIRouter, row: LedgerVersion): TemplateResult =>

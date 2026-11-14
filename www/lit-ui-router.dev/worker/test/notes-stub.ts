@@ -11,7 +11,7 @@ export const FIXTURE_NOTES = {
     },
     '1.2.0': {
       date: '2025-01-01',
-      html: '<h3>Bug Fixes</h3>\n<ul>\n<li>first fix</li>\n</ul>\n',
+      html: '<h3>Bug Fixes</h3>\n<ul>\n<li>first fix</li>\n</ul>\n<p><a href="/releases/lit-ui-router/1.2.0/" target="_self">Release page</a></p>\n',
     },
   },
 } as const satisfies Readonly<Record<string, ReleaseNotes>>;
