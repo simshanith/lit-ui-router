@@ -1301,10 +1301,11 @@ describe('the nested Map', () => {
   });
 
   it('scrolls the scrubber to its newest transition only when one is added', async () => {
-    const element = await openMap(1280);
+    // Just wide enough to show the strip, so few transitions overflow it.
+    const element = await openMap(900);
     const router = routers.at(-1)!;
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 12; i++) {
       await router.stateService.go('app.login');
       await router.stateService.go('app.welcome');
     }
@@ -1332,10 +1333,11 @@ describe('the nested Map', () => {
   });
 
   it('scrolls the scrubber to its newest transition when a hidden strip is shown again', async () => {
-    const element = await openMap(1280);
+    // Just wide enough to show the strip, so few transitions overflow it.
+    const element = await openMap(900);
     const router = routers.at(-1)!;
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 12; i++) {
       await router.stateService.go('app.login');
       await router.stateService.go('app.welcome');
     }
