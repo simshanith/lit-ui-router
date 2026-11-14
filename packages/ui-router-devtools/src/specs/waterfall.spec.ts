@@ -173,9 +173,9 @@ describe('waterfall', () => {
     const [before, , users, roles] = roots[0].children;
 
     // a sub-millisecond phase keeps its own duration beside a long resolve
-    expect(before.end! - before.start!).toBeCloseTo(0.2);
-    expect(users.end! - users.start!).toBeCloseTo(388.9);
-    expect(roles).toMatchObject({ start: null, note: 'cached' });
+    expect(before.time!.end - before.time!.start).toBeCloseTo(0.2);
+    expect(users.time!.end - users.time!.start).toBeCloseTo(388.9);
+    expect(roles).toMatchObject({ time: null, note: 'cached' });
   });
 
   it('lists the declared resolves untimed when the session did not time them', () => {
@@ -188,7 +188,7 @@ describe('waterfall', () => {
     expect(
       roots[0].children
         .filter((bar) => bar.kind === 'resolve')
-        .map((bar) => [bar.name, bar.start, bar.note]),
+        .map((bar) => [bar.name, bar.time, bar.note]),
     ).toEqual([
       ['resolve users', null, 'untimed'],
       ['resolve roles', null, 'untimed'],
@@ -204,8 +204,16 @@ describe('waterfall', () => {
 
     const enter = roots[0].children.find((bar) => bar.name === 'enter users');
 
-    expect(roots[0]).toMatchObject({ running: true, end: 600, note: null });
-    expect(enter).toMatchObject({ running: true, end: 600, note: null });
+    expect(roots[0]).toMatchObject({
+      running: true,
+      time: { end: 600 },
+      note: null,
+    });
+    expect(enter).toMatchObject({
+      running: true,
+      time: { end: 600 },
+      note: null,
+    });
     expect(length).toBe(590);
   });
 
@@ -229,8 +237,18 @@ describe('waterfall', () => {
     ]);
     expect(roots[0].children[0]).toMatchObject({
       name: 'start',
-      end: 1,
+      time: { end: 1 },
       note: 'cut short',
+    });
+  });
+
+  // Core makes a Transition to the abstract root state and rejects it as invalid.
+  it('names a transition to the root state', () => {
+    const txs = txsOf([start(5, 0, ''), result(5, 1, 'error')]);
+
+    expect(waterfall(input(txs, 5)).roots[0]).toMatchObject({
+      name: '(root)',
+      state: '',
     });
   });
 
@@ -249,6 +267,53 @@ describe('waterfall', () => {
       fault: false,
     });
     expect(roots[0].children[0]).toMatchObject({ fault: true, note: 'failed' });
+  });
+});
+
+describe('a session the recorder did not write whole', () => {
+  // Two recordings joined into one file repeat ids, and their redirect links can then close a loop.
+  it('draws a redirect loop in a file that repeats a transition id once round, and stops', () => {
+    const txs = txsOf([
+      start(1, 0, 'a'),
+      start(2, 1, 'b', { redirectedFrom: 1 }),
+      start(1, 2, 'a', { redirectedFrom: 2 }),
+    ]);
+
+    expect(chainOf(txs, txs[0]).map((tx) => tx.id)).toEqual([2, 1]);
+  });
+
+  it('says only redirected or superseded when the transition that took over is not in the session', () => {
+    const txs = txsOf([
+      start(1, 0, 'a'),
+      result(1, 1, 'redirected'),
+      start(2, 2, 'b'),
+      result(2, 3, 'superseded'),
+    ]);
+
+    expect(waterfall(input(txs, 1)).roots.map((bar) => bar.note)).toEqual([
+      'redirected',
+    ]);
+    expect(waterfall(input(txs, 2)).roots[0].note).toBe('superseded');
+  });
+
+  it('stops a chain at a successor the ring buffer dropped', () => {
+    const txs = txsOf([start(1, 0, 'a'), result(1, 1, 'redirected')]);
+
+    txs[0] = { ...txs[0], successor: 9 };
+
+    expect(chainOf(txs, txs[0]).map((tx) => tx.id)).toEqual([1]);
+  });
+
+  it('leaves out a phase whose start it never read, and the untimed resolves of a state it has no snapshot of', () => {
+    const txs = txsOf([
+      start(1, 0, 'ghost'),
+      phase(1, 1, 'enter', 'end', 'ghost'),
+      result(1, 2, 'success'),
+    ]);
+
+    expect(
+      waterfall(input(txs, 1, { timeResolves: false })).roots[0].children,
+    ).toEqual([]);
   });
 });
 
@@ -309,7 +374,7 @@ describe('joining spans', () => {
       ['during', 'during'],
     ]);
     expect(names(joined[2].children)).toEqual(['parse']);
-    expect(joined[2]).toMatchObject({ running: true, end: 1000 });
+    expect(joined[2]).toMatchObject({ running: true, time: { end: 1000 } });
   });
 
   // What ui-router-otel sends with activateResolveSpans: the app's fetch under the router's resolve span.
@@ -353,8 +418,7 @@ describe('joining spans', () => {
     expect(roots[0].children[0]).toMatchObject({
       kind: 'span',
       relation: 'during',
-      start: 90,
-      end: 110,
+      time: { start: 90, end: 110 },
     });
   });
 });
@@ -367,8 +431,7 @@ describe('rows, ticks and the span buffer', () => {
       tx: 1,
       name: key,
       state: null,
-      start: 0,
-      end: 1,
+      time: { start: 0, end: 1 },
       running: false,
       fault: false,
       note: null,
@@ -404,6 +467,13 @@ describe('rows, ticks and the span buffer', () => {
     expect(ticks(0.4)).toEqual([0, 0.1, 0.2, 0.3, 0.4]);
   });
 
+  // The Timeline sizes its gridline background from the second line.
+  it('gives every axis from the shortest a transition has, 0.1 ms, up to minutes at least two lines past zero', () => {
+    const lengths = Array.from({ length: 700 }, (_, i) => 0.1 * 1.02 ** i);
+
+    expect(lengths.filter((length) => ticks(length).length < 3)).toEqual([]);
+  });
+
   it('replaces a span by id and drops the oldest past the limit', () => {
     const spans = new Map<string, SpanRecord>();
 
@@ -416,20 +486,26 @@ describe('rows, ticks and the span buffer', () => {
     expect(spans.get('a')?.endTime).toBe(ORIGIN + 3);
   });
 
-  it('keeps for a session file the spans that overlap a transition', () => {
-    const txs = txsOf([start(1, 100, 'users'), result(1, 300, 'success')]);
+  it('keeps for a session file the spans that overlap a transition, a running one up to the clock, and not an invalid target, which ran nothing', () => {
+    const txs = txsOf([
+      start(1, 100, 'users'),
+      result(1, 300, 'success'),
+      { ...at(450), type: 'invalid', from: 'users', to: 'typo', toParams: {} },
+      start(2, 600, 'roles', { from: 'users' }),
+    ]);
 
     const kept = spansDuring(
       [
         span('in', 150, 160),
         span('out', 400, 500),
         span('open', 250, undefined),
+        span('late', 900, 950),
       ],
       txs,
       ORIGIN,
       1000,
     );
 
-    expect(kept.map((each) => each.spanId)).toEqual(['in', 'open']);
+    expect(kept.map((each) => each.spanId)).toEqual(['in', 'open', 'late']);
   });
 });
