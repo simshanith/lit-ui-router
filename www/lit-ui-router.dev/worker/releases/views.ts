@@ -8,7 +8,15 @@ import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import { PACKAGES, ROLES } from '../../catalog/packages.ts';
-import { isStable, pickerPair, previousIn } from './ledger.ts';
+import { API_REFERENCES } from '../../catalog/references.ts';
+import {
+  adjacentIn,
+  isOlderThan,
+  isStable,
+  pickerPair,
+  prereleaseKind,
+  previousIn,
+} from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
@@ -325,16 +333,16 @@ export const PackageView: RoutedLitTemplate<{
 
 const npmFacts = (row: LedgerVersion): TemplateResult => {
   if (row.npm_integrity === null)
-    return html`<dt>npm</dt>
+    return html`<dt id="npm">npm</dt>
       <dd>Not published</dd>`;
 
-  return html`<dt>Published to npm</dt>
+  return html`<dt id="npm">Published to npm</dt>
     <dd>${date(row.npm_published_at)}</dd>
     ${
       row.npm_deprecated === null
-        ? html`<dt>Integrity</dt>
+        ? html`<dt id="integrity">Integrity</dt>
             <dd><code class="hash">${row.npm_integrity}</code></dd>`
-        : html`<dt>Deprecated</dt>
+        : html`<dt id="deprecated">Deprecated</dt>
             <dd>${row.npm_deprecated}</dd>`
     }`;
 };
@@ -343,9 +351,9 @@ const tagFacts = (row: LedgerVersion): TemplateResult => {
   const tag = tagOf(row);
 
   return row.git_sha === null
-    ? html`<dt>Git tag</dt>
+    ? html`<dt id="tag">Git tag</dt>
         <dd>None recorded</dd>`
-    : html`<dt>Git tag</dt>
+    : html`<dt id="tag">Git tag</dt>
         <dd>
           <a href=${`${REPOSITORY}/tree/${encodeURIComponent(tag)}`}
             ><code>${tag}</code></a
@@ -363,22 +371,109 @@ const diffFacts = (
 
   return html`${
     source
-      ? html`<dt>Diff</dt>
+      ? html`<dt id="diff">Diff</dt>
           <dd>${source} on DiffsHub</dd>`
       : nothing
   }${
     files
-      ? html`<dt>Published files</dt>
+      ? html`<dt id="files">Published files</dt>
           <dd>${files}</dd>`
       : nothing
   }`;
+};
+
+const PRERELEASE_NOTES = {
+  canary: 'A canary build, published for testing ahead of a release.',
+  prerelease: 'A prerelease, published ahead of a stable release.',
+} as const;
+
+/** The prerelease marker, and a note when a newer stable version exists. */
+const versionNotices = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+  latest: LedgerVersion | null,
+): TemplateResult => {
+  const kind = prereleaseKind(row.version);
+
+  return html`${
+    kind
+      ? html`<p class="notice" role="note">
+          <span class="tag">${kind}</span> ${PRERELEASE_NOTES[kind]}
+        </p>`
+      : nothing
+  }${
+    latest && isOlderThan(versions, row, latest)
+      ? html`<p class="notice" role="note">
+          A newer stable version exists.
+          <a
+            href=${router.stateService.href('releases.package.latest', {
+              pkg: row.name,
+            })}
+            >See the latest, ${latest.version}</a
+          >.
+        </p>`
+      : nothing
+  }`;
+};
+
+const isCataloged = (name: string): name is keyof typeof API_REFERENCES =>
+  Object.hasOwn(API_REFERENCES, name);
+
+/** The package's docs page and API reference, for a package the catalog lists. */
+const docsFacts = (name: string): TemplateResult | typeof nothing => {
+  if (!isCataloged(name)) return nothing;
+
+  const reference = API_REFERENCES[name];
+
+  return html`<dt id="docs">Docs</dt>
+    <dd>
+      <a href=${`/packages/${name}`}>Package page</a>${
+        reference === null
+          ? nothing
+          : html`, <a href=${reference}>API reference</a>`
+      }
+    </dd>`;
+};
+
+const versionLink = (
+  router: UIRouter,
+  { name: pkg, version }: LedgerVersion,
+  rel: 'prev' | 'next',
+): TemplateResult =>
+  html`<a
+    class=${rel}
+    rel=${rel}
+    href=${router.stateService.href('releases.package.version', {
+      pkg,
+      version,
+    })}
+    ><span class="pager-label">${rel === 'prev' ? 'Previous' : 'Next'}</span>
+    ${version}</a
+  >`;
+
+/** The versions either side of this one, in the package page's order; an end of the list links nothing. */
+const versionPager = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+): TemplateResult | typeof nothing => {
+  const { older, newer } = adjacentIn(versions, row);
+
+  if (!older && !newer) return nothing;
+
+  return html`<nav class="pager" aria-label="Previous and next versions">
+    ${older ? versionLink(router, older, 'prev') : nothing}
+    ${newer ? versionLink(router, newer, 'next') : nothing}
+  </nav>`;
 };
 
 /** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
 export const VersionView: RoutedLitTemplate<{
   release: LedgerVersion;
   versions: LedgerVersion[];
-}> = ({ router, resolves: { release: row, versions } }) => html`
+  latest: LedgerVersion | null;
+}> = ({ router, resolves: { release: row, versions, latest } }) => html`
   ${crumbs(router, [
     {
       label: row.name,
@@ -387,8 +482,9 @@ export const VersionView: RoutedLitTemplate<{
     { label: row.version },
   ])}
   <h1>${row.name}@${row.version}</h1>
+  ${versionNotices(router, versions, row, latest)}
   <dl class="facts">
-    <dt>Status</dt>
+    <dt id="status">Status</dt>
     <dd>${row.status}</dd>
     ${npmFacts(row)} ${tagFacts(row)}
     <dt>Release notes</dt>
@@ -399,8 +495,9 @@ export const VersionView: RoutedLitTemplate<{
           : html`, ${date(row.gh_published_at)}`
       }
     </dd>
-    ${diffFacts(versions, row)}
+    ${diffFacts(versions, row)} ${docsFacts(row.name)}
   </dl>
+  ${versionPager(router, versions, row)}
 `;
 
 /** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
