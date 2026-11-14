@@ -171,27 +171,69 @@ const resolveBars = (tx: Tx): Bar[] =>
     children: [],
   }));
 
-// Without resolve timing the entering states' declared resolves still ran; they are listed, with no bar.
-const untimedBars = (tx: Tx, states: readonly StateInfo[]): Bar[] =>
+const resolveKey = (state: string, token: string): string =>
+  `${state} ${token}`;
+
+// A declared resolve timed by the router's own resolve span, from ui-router-otel's activateResolveSpans.
+const spannedBar = (
+  bar: Bar,
+  span: SpanRecord,
+  { timeOrigin, clock }: Placing,
+): Bar => ({
+  ...bar,
+  time: spanWindow(span, timeOrigin, clock),
+  running: span.endTime === undefined,
+  fault: span.status === 'error',
+  note: span.status === 'error' ? 'failed' : null,
+  span,
+});
+
+// The entering states' declared resolves still ran when no event timed them: a router resolve span times one, else it is listed untimed.
+const declaredBars = (
+  tx: Tx,
+  states: readonly StateInfo[],
+  spans: ReadonlyMap<string, SpanRecord>,
+  placing: Placing,
+): Bar[] =>
   tx.entering.flatMap((name) =>
     (states.find((state) => state.name === name)?.resolves ?? []).map(
-      (token): Bar => ({
-        key: `${tx.id}:u${name}:${token}`,
-        kind: 'resolve',
-        tx: tx.id,
-        name: `resolve ${token}`,
-        state: name,
-        time: null,
-        running: false,
-        fault: false,
-        note: 'untimed',
-        children: [],
-      }),
+      (token): Bar => {
+        const bar: Bar = {
+          key: `${tx.id}:u${name}:${token}`,
+          kind: 'resolve',
+          tx: tx.id,
+          name: `resolve ${token}`,
+          state: name,
+          time: null,
+          running: false,
+          fault: false,
+          note: 'untimed',
+          children: [],
+        };
+
+        const span = spans.get(resolveKey(name, token));
+
+        return span ? spannedBar(bar, span, placing) : bar;
+      },
     ),
   );
 
 const isRouterSpan = (span: SpanRecord): boolean =>
   Object.keys(span.attributes ?? {}).some((key) => key.startsWith(ROUTER));
+
+// The router spans that could be `tx`'s: its transition id, its ends, and a start within `START_TOLERANCE`.
+const candidatesOf = (
+  tx: Tx,
+  spans: readonly SpanRecord[],
+  timeOrigin: number,
+): SpanRecord[] =>
+  spans.filter(
+    ({ attributes, startTime }) =>
+      attributes?.['uirouter.transition_id'] === tx.id &&
+      attributes['uirouter.to'] === tx.to &&
+      attributes['uirouter.from'] === tx.from &&
+      Math.abs(startTime - timeOrigin - tx.t) <= START_TOLERANCE,
+  );
 
 /**
  * The router's span for `tx`, from `ui-router-otel`: its transition id, its ends, and a start within
@@ -203,13 +245,7 @@ export const transitionSpanOf = (
   spans: readonly SpanRecord[],
   timeOrigin: number,
 ): SpanRecord | undefined => {
-  const found = spans.filter(
-    ({ attributes, startTime }) =>
-      attributes?.['uirouter.transition_id'] === tx.id &&
-      attributes['uirouter.to'] === tx.to &&
-      attributes['uirouter.from'] === tx.from &&
-      Math.abs(startTime - timeOrigin - tx.t) <= START_TOLERANCE,
-  );
+  const found = candidatesOf(tx, spans, timeOrigin);
 
   return found.length === 1 ? found[0] : undefined;
 };
@@ -275,25 +311,53 @@ const spanBar = (
   };
 };
 
-// The router's span for each transition in the chain, and the ids of that span and its phase and resolve children.
+// A router span and its phase and resolve children.
+const familyOf = (index: SpanIndex, span: SpanRecord): SpanRecord[] => [
+  span,
+  ...(index.children.get(span.spanId) ?? []).filter(isRouterSpan),
+];
+
+const resolvesOf = (family: readonly SpanRecord[]) =>
+  new Map(
+    family.flatMap(({ attributes }, at) => {
+      const token = attributes?.['uirouter.resolve'];
+      const state = attributes?.['uirouter.state'];
+
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- attribute values are a union; the router writes these two as strings
+      return typeof token === 'string' && typeof state === 'string'
+        ? [[resolveKey(state, token), family[at]] as const]
+        : [];
+    }),
+  );
+
+/**
+ * For each transition in the chain: its router span, the ids of that span's family, and its resolve spans by state and
+ * token. When two router spans match a transition, neither is its; their families' ids are `ambiguous`.
+ */
 const routerSpansOf = (
   chain: readonly Tx[],
   index: SpanIndex,
   timeOrigin: number,
 ) =>
   chain.map((tx) => {
-    const span = transitionSpanOf(tx, index.spans, timeOrigin);
+    const found = candidatesOf(tx, index.spans, timeOrigin);
+    const span = found.length === 1 ? found[0] : undefined;
+    const family = span ? familyOf(index, span) : [];
 
-    const ids = span
-      ? [
-          span.spanId,
-          ...(index.children.get(span.spanId) ?? [])
-            .filter(isRouterSpan)
-            .map((child) => child.spanId),
-        ]
-      : [];
+    const ambiguous =
+      found.length > 1
+        ? found
+            .flatMap((each) => familyOf(index, each))
+            .map((each) => each.spanId)
+        : [];
 
-    return { tx, span, ids: new Set(ids) };
+    return {
+      tx,
+      span,
+      ids: new Set(family.map((each) => each.spanId)),
+      ambiguous: new Set(ambiguous),
+      resolves: resolvesOf(family),
+    };
   });
 
 // A span that is not the router's and whose parent is no such span either: the top of what is joined.
@@ -332,8 +396,13 @@ const joinOf = (
 
   if (owner) return { tx: owner.tx, relation: 'child' };
 
-  // A child of another transition's router span is that transition's.
-  if (parent && index.routerIds.has(parent)) return null;
+  // A child of another transition's router span is that transition's; one whose router span is ambiguous is joined by time.
+  if (
+    parent &&
+    index.routerIds.has(parent) &&
+    !routers.some(({ ambiguous }) => ambiguous.has(parent))
+  )
+    return null;
 
   const window = spanWindow(root, placing.timeOrigin, placing.clock);
   const chain = routers.map(({ tx }) => tx);
@@ -354,15 +423,22 @@ const joinOf = (
     : null;
 };
 
-/** The spans drawn under each transition of `chain`, keyed by transition id. */
+export interface JoinedSpans {
+  /** The spans drawn under each transition, keyed by transition id. */
+  bars: Map<number, Bar[]>;
+  /** Each transition's router resolve spans, keyed by state and token. */
+  resolves: Map<number, ReadonlyMap<string, SpanRecord>>;
+}
+
+/** Joins spans to the transitions of `chain`: the ones drawn under each, and the router's resolve spans for each. */
 export const joinSpans = (
   chain: readonly Tx[],
   spans: readonly SpanRecord[],
   placing: Placing,
-): Map<number, Bar[]> => {
+): JoinedSpans => {
   const index = indexSpans(spans);
   const routers = routerSpansOf(chain, index, placing.timeOrigin);
-  const joined = new Map<number, Bar[]>();
+  const bars = new Map<number, Bar[]>();
   const seen = new Set<string>();
 
   for (const root of foreignRoots(index)) {
@@ -375,20 +451,40 @@ export const joinSpans = (
       relation: join.relation,
     };
 
-    joined.set(join.tx.id, [...(joined.get(join.tx.id) ?? []), bar]);
+    bars.set(join.tx.id, [...(bars.get(join.tx.id) ?? []), bar]);
   }
 
-  return joined;
+  return {
+    bars,
+    resolves: new Map(routers.map(({ tx, resolves }) => [tx.id, resolves])),
+  };
+};
+
+const NO_SPANS: JoinedSpans = { bars: new Map(), resolves: new Map() };
+
+// Recorded resolve events win over resolve spans: they are on the panel's own clock and know a cached resolve.
+const resolveRows = (
+  input: WaterfallInput,
+  tx: Tx,
+  spans: JoinedSpans,
+): Bar[] => {
+  if (input.timeResolves || tx.resolves.length) return resolveBars(tx);
+
+  return declaredBars(
+    tx,
+    input.states,
+    spans.resolves.get(tx.id) ?? new Map(),
+    input,
+  );
 };
 
 const transitionBar = (
   input: WaterfallInput,
   tx: Tx,
-  spans: readonly Bar[],
+  spans: JoinedSpans,
 ): Bar => {
-  const { clock, states, timeResolves } = input;
+  const { clock } = input;
   const status: Status = tx.result?.outcome ?? 'running';
-  const timed = timeResolves || tx.resolves.length > 0;
 
   return {
     key: `${tx.id}`,
@@ -403,9 +499,8 @@ const transitionBar = (
     status,
     children: [
       ...phaseBars(tx, clock),
-      ...resolveBars(tx),
-      ...spans,
-      ...(timed ? [] : untimedBars(tx, states)),
+      ...resolveRows(input, tx, spans),
+      ...(spans.bars.get(tx.id) ?? []),
     ].sort(byStart),
   };
 };
@@ -423,11 +518,9 @@ export const waterfall = (input: WaterfallInput): Waterfall => {
 
   const spans = input.spans.length
     ? joinSpans(chain, input.spans, input)
-    : new Map<number, Bar[]>();
+    : NO_SPANS;
 
-  const roots = chain.map((tx) =>
-    transitionBar(input, tx, spans.get(tx.id) ?? []),
-  );
+  const roots = chain.map((tx) => transitionBar(input, tx, spans));
 
   const timed = windows(roots);
   const zero = Math.min(...timed.map((time) => time.start));

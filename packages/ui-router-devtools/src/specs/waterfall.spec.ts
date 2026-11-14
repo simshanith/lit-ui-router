@@ -366,7 +366,7 @@ describe('joining spans', () => {
       span('before', 0, 50),
     ];
 
-    const joined = joinSpans([users], spans, placing).get(1) ?? [];
+    const joined = joinSpans([users], spans, placing).bars.get(1) ?? [];
 
     expect(joined.map((bar) => [bar.name, bar.relation])).toEqual([
       ['child', 'child'],
@@ -391,9 +391,35 @@ describe('joining spans', () => {
 
     expect(
       joinSpans([users], spans, placing)
-        .get(1)
+        .bars.get(1)
         ?.map((bar) => [bar.name, bar.relation]),
     ).toEqual([['fetch', 'child']]);
+  });
+
+  it('joins a child of an ambiguous router span by time, as during', () => {
+    const own = routerSpan(users, 'r1');
+    const twin = { ...own, spanId: 'r3' };
+
+    const spans = [
+      own,
+      twin,
+      span('rs', 101, 250, {
+        traceId: 'trace-r1',
+        parentSpanId: 'r1',
+        attributes: { 'uirouter.resolve': 'users', 'uirouter.state': 'users' },
+      }),
+      span('fetch', 102, 240, { traceId: 'trace-r1', parentSpanId: 'rs' }),
+      span('twin fetch', 103, 200, { traceId: 'trace-r1', parentSpanId: 'r3' }),
+    ];
+
+    expect(
+      joinSpans([users], spans, placing)
+        .bars.get(1)
+        ?.map((bar) => [bar.name, bar.relation]),
+    ).toEqual([
+      ['fetch', 'during'],
+      ['twin fetch', 'during'],
+    ]);
   });
 
   it("leaves a child of another transition's router span to that transition", () => {
@@ -403,8 +429,8 @@ describe('joining spans', () => {
       span('fetch', 410, 450, { traceId: 'trace-r2', parentSpanId: 'r2' }),
     ];
 
-    expect(joinSpans([users], spans, placing).size).toBe(0);
-    expect(joinSpans([roles], spans, placing).get(2)?.[0]?.relation).toBe(
+    expect(joinSpans([users], spans, placing).bars.size).toBe(0);
+    expect(joinSpans([roles], spans, placing).bars.get(2)?.[0]?.relation).toBe(
       'child',
     );
   });
@@ -420,6 +446,63 @@ describe('joining spans', () => {
       relation: 'during',
       time: { start: 90, end: 110 },
     });
+  });
+});
+
+describe('resolve rows timed by the router’s resolve spans', () => {
+  const txs = txsOf([start(1, 100, 'users'), result(1, 300, 'success')]);
+  const [users] = txs;
+
+  // What ui-router-otel sends with activateResolveSpans: a resolve span under the transition's span.
+  const resolveSpan = (more: Partial<SpanRecord> = {}) =>
+    span('rs', 105, 250, {
+      traceId: 'trace-r1',
+      parentSpanId: 'r1',
+      attributes: { 'uirouter.resolve': 'users', 'uirouter.state': 'users' },
+      ...more,
+    });
+
+  const resolves = (spans: SpanRecord[], events = txs) =>
+    waterfall(input(events, 1, { timeResolves: false, spans }))
+      .roots[0].children.filter((bar) => bar.kind === 'resolve')
+      .map((bar) => [bar.name, bar.time, bar.note, bar.fault]);
+
+  it('times a declared resolve from its span when no event timed it, and lists the rest untimed', () => {
+    expect(resolves([routerSpan(users, 'r1'), resolveSpan()])).toEqual([
+      ['resolve users', { start: 105, end: 250 }, null, false],
+      ['resolve roles', null, 'untimed', false],
+    ]);
+  });
+
+  it('marks a failed resolve span, and grows a running one to the clock', () => {
+    expect(
+      resolves([routerSpan(users, 'r1'), resolveSpan({ status: 'error' })])[0],
+    ).toEqual(['resolve users', { start: 105, end: 250 }, 'failed', true]);
+    expect(
+      resolves([
+        routerSpan(users, 'r1'),
+        resolveSpan({ endTime: undefined }),
+      ])[0],
+    ).toEqual(['resolve users', { start: 105, end: 1000 }, null, false]);
+  });
+
+  it('takes the recorded resolve event over the span when both time a resolve', () => {
+    const recorded = txsOf([
+      start(1, 100, 'users'),
+      resolve(1, 'users', 'users', 110, 200),
+      result(1, 300, 'success'),
+    ]);
+
+    expect(
+      resolves([routerSpan(users, 'r1'), resolveSpan()], recorded),
+    ).toEqual([['resolve users', { start: 110, end: 200 }, null, false]]);
+  });
+
+  it('lists every declared resolve untimed when neither an event nor a span timed it', () => {
+    expect(resolves([routerSpan(users, 'r1')])).toEqual([
+      ['resolve users', null, 'untimed', false],
+      ['resolve roles', null, 'untimed', false],
+    ]);
   });
 });
 
