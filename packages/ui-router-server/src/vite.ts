@@ -311,8 +311,16 @@ const previewShell =
       );
     };
 
+    // The static layer cuts a url at `#` or `?` and never decodes `%23` or `%3F`: such a name gets the shell.
+    const addressable = !/[#?]/.test(file);
+
     emitted().then((found) => {
-      req.url = withBase(base, found ? fileUrl(mount, file) : shellPath(mount));
+      req.url = withBase(
+        base,
+        found && addressable
+          ? fileUrl(mount, encodeURI(file))
+          : shellPath(mount),
+      );
       next();
     }, next);
   };
