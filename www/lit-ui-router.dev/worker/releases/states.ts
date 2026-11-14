@@ -22,6 +22,7 @@ import {
   versionsOf,
 } from './ledger.ts';
 import { FILE_FILTERS, type FileFilter } from './npm-diff/file-filter.ts';
+import type { NotesReader, ReleaseNotes } from './notes.ts';
 import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
 import {
   inSitemap,
@@ -50,7 +51,7 @@ type ResponseName = ResponseState<Route>;
 interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
   'releases.sitemap': { sitemap: SitemapEntry[] };
-  'releases.package': { versions: LedgerVersion[] };
+  'releases.package': { versions: LedgerVersion[]; notes: ReleaseNotes };
   'releases.package.latest': { latest: LedgerVersion };
   'releases.package.diff': { compare: string };
   'releases.package.compare': {
@@ -65,6 +66,7 @@ interface ResolvesOf {
   'releases.package.version': {
     release: LedgerVersion;
     versions: LedgerVersion[];
+    notes: ReleaseNotes;
   };
   githubRelease: { latest: LedgerVersion };
   notFound: object;
@@ -211,7 +213,23 @@ const presetOf = (trans: Transition): FileFilter => {
 const patchFilename = ({ from, to }: PublishedPair): string =>
   `${to.name.replace('/', '-')}-${from.version}...${to.version}.patch`;
 
-const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
+/** The pages that show notes; the diff routes below the package never read them. */
+const SHOWS_NOTES = new Set(['releases.package', 'releases.package.version']);
+
+const notesResolve = (notes: NotesReader) => ({
+  token: 'notes',
+  deps: ['$transition$'],
+  resolveFn: (trans: Transition): Promise<ReleaseNotes> =>
+    SHOWS_NOTES.has(trans.to().name ?? '')
+      ? notes(paramsOf(trans).pkg)
+      : Promise.resolve({}),
+});
+
+const attach = (
+  ledger: LedgerReader,
+  diffs: ReleaseDiffs,
+  notes: NotesReader,
+): Attached => ({
   releases: {
     component: ReleasesView,
     resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
@@ -230,6 +248,7 @@ const attach = (ledger: LedgerReader, diffs: ReleaseDiffs): Attached => ({
         deps: ['$transition$'],
         resolveFn: (trans: Transition) => versionsOf(ledger)(paramsOf(trans)),
       },
+      notesResolve(notes),
     ],
   },
   'releases.package.latest': { resolve: [latestResolve(ledger)] },
@@ -344,13 +363,14 @@ export const releaseResponses = {
     ),
 } satisfies ResponseHandlers<Route, ResolvesOf>;
 
-/** The states of the tree at `mount` for one request, reading `ledger` and, for the diff page's data, `diffs`. */
+/** The states of the tree at `mount` for one request, reading `ledger`, the package and version pages' `notes` and, for the diff page's data, `diffs`. */
 export const releaseStates = (
   mount: string,
   ledger: LedgerReader,
   diffs: ReleaseDiffs,
+  notes: NotesReader,
 ): ReleaseState[] => {
-  const attached = attach(ledger, diffs);
+  const attached = attach(ledger, diffs, notes);
   const routes = mount === GH_MOUNT ? ghRoutes : releaseRoutes;
 
   return routes.map((route) => ({ ...route, ...attached[route.name] }));

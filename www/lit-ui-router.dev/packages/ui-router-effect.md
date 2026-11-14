@@ -179,7 +179,7 @@ declare module 'ui-router-effect' {
 ## Further reading
 
 - [API reference](/reference/ui-router-effect/)
-- [Changelog](/packages/ui-router-effect/changelog) — every stable release, newest first
+- [Releases](/releases/ui-router-effect/){target="_self"} — every version, newest first, with its release notes
 - [lit-ui-router-effect](/packages/lit-ui-router-effect)
 - [Effect — SubscriptionRef](https://effect.website/docs/state-management/subscriptionref/)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-effect) — this package as

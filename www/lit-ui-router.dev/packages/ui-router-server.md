@@ -1130,7 +1130,7 @@ matches any value, so narrow it to the known ids when the build can list them
 
 - [API reference](/reference/ui-router-server/) — every entry point, one module
   per subpath import
-- [Changelog](/packages/ui-router-server/changelog) — every stable release, newest first
+- [Releases](/releases/ui-router-server/){target="_self"} — every version, newest first, with its release notes
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts
 - [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) — these verdicts prerendered into a

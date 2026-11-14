@@ -6,18 +6,15 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { parseChangelog, preamble } from '@tools/changelog';
 import MarkdownIt from 'markdown-it';
 import * as v from 'valibot';
-import type { PageData } from 'vitepress';
+import type { Plugin } from 'vite';
 
+import { PACKAGES } from '../catalog/packages.ts';
 import {
-  changelogPath,
-  PACKAGES,
-  type PackageName,
-} from '../catalog/packages.ts';
+  notesAsset,
+  type ReleaseNote,
+  type ReleaseNotes,
+} from '../worker/releases/notes.ts';
 import { mounts } from '../worker/releases/routes.ts';
-import { releasesPath } from './release-stubs.ts';
-
-/** Every package's changelog file, which the paths loader watches. */
-export const CHANGELOG_GLOB = join(workspaceRoot, 'packages/*/CHANGELOG.md');
 
 /** `<version> (<YYYY-MM-DD>)`, the heading `@tools/changelog` writes. */
 const Heading = v.pipe(
@@ -27,25 +24,6 @@ const Heading = v.pipe(
     'expected "<version> (<YYYY-MM-DD>)"',
   ),
 );
-
-/** One rendered section; its body is HTML that only `v-html` ever sees. */
-export interface ChangelogSection {
-  version: string;
-  heading: string;
-  /** `v<version>`: the heading id, and the page param holding the body. */
-  anchor: string;
-  /** The release page, unless the body already links it. */
-  release?: string;
-  html: string;
-}
-
-export interface ChangelogPage {
-  name: PackageName;
-  preambleHtml: string;
-  sections: ChangelogSection[];
-  /** The page as Markdown, for the llms outputs only. */
-  markdown: string;
-}
 
 // GitHub release bodies: raw HTML passes through, bare URLs link.
 const md = new MarkdownIt({ html: true, linkify: true });
@@ -77,7 +55,7 @@ md.core.ruler.push('same-site-links', (state) => {
   }
 });
 
-/** A release body as HTML, never compiled as a Vue template. */
+/** A release body as HTML, as GitHub renders it. */
 export const renderBody = (body: string): string => md.render(body);
 
 /** Each package's CHANGELOG.md, keyed by package name; a package without one has none yet. */
@@ -94,15 +72,21 @@ export function changelogFiles(): Map<string, string> {
   );
 }
 
-/** A package's page from its changelog text; a package with no file gets the fixed preamble and no sections. */
-export function changelogPage(
-  name: PackageName,
-  text: string = preamble(name),
-): ChangelogPage {
-  const changelog = parseChangelog(text);
-  const seen = new Set<string>();
+/** A package's changelog text; a package with no file has the fixed preamble and no sections. */
+export const changelogText = (
+  name: string,
+  files: ReadonlyMap<string, string> = changelogFiles(),
+): string => {
+  const file = files.get(name);
 
-  const sections = changelog.sections.map(({ version, heading, body }) => {
+  return file === undefined ? preamble(name) : readFileSync(file, 'utf8');
+};
+
+/** Every section of a changelog rendered, by version, newest first; throws on a heading off the contract or a repeated version. */
+export function releaseNotes(name: string, text: string): ReleaseNotes {
+  const notes: Record<string, ReleaseNote> = {};
+
+  for (const { version, heading, body } of parseChangelog(text).sections) {
     const result = v.safeParse(Heading, heading);
 
     if (!result.success) {
@@ -111,127 +95,47 @@ export function changelogPage(
       );
     }
 
-    if (seen.has(version)) {
+    if (Object.hasOwn(notes, version)) {
       throw new Error(`${name} CHANGELOG.md: two ${version} sections`);
     }
 
-    seen.add(version);
+    notes[version] = { date: heading.slice(-11, -1), html: renderBody(body) };
+  }
 
-    const release = `${releasesPath(name)}${version}/`;
-
-    const section: ChangelogSection = {
-      version,
-      heading,
-      anchor: `v${version}`,
-      html: renderBody(body),
-    };
-
-    if (!body.includes(release)) section.release = release;
-
-    return section;
-  });
-
-  const intro = changelog.preamble.replace(/^# .*\n*/, '');
-
-  return {
-    name,
-    preambleHtml: renderBody(intro),
-    sections,
-    markdown: [
-      intro,
-      ...changelog.sections.map(({ heading, body }) =>
-        body ? `## ${heading}\n\n${body}` : `## ${heading}`,
-      ),
-    ].join('\n\n'),
-  };
+  return notes;
 }
 
-/**
- * The page's Markdown: headings and links only, every body a `v-html` of its
- * page param, and the Markdown copy behind a placeholder the llms plugin fills.
- */
-export function changelogContent({ name, sections }: ChangelogPage): string {
-  return [
-    `# ${name} changelog`,
-    '',
-    '<llm-exclude>',
-    '',
-    '<div class="changelog-preamble" v-html="$params.preamble"></div>',
-    '',
-    ...sections.flatMap(({ heading, anchor, release }) => [
-      `## ${heading} {#${anchor}}`,
-      '',
-      ...(release ? [`[Release page](${release}){target="_self"}`, ''] : []),
-      `<div class="changelog-body" v-html="$params['${anchor}']"></div>`,
-      '',
-    ]),
-    '</llm-exclude>',
-    '',
-    '<llm-only>',
-    '',
-    '{{ $params.llms }}',
-    '',
-    '</llm-only>',
-    '',
-  ].join('\n');
-}
+/** Where the build copies a package's CHANGELOG.md for llms.txt: a static file outside every page and mount. */
+export const changelogMarkdownPath = (name: string): string =>
+  `/changelogs/${name}.md`;
 
-/** A package's page, read from its file in `files`. */
-function readPage(
-  name: PackageName,
-  files: ReadonlyMap<string, string>,
-): ChangelogPage {
-  const file = files.get(name);
+/** The files the build emits per catalog package: its rendered notes for the worker, and its changelog as Markdown for llms.txt. */
+export function changelogAssets(
+  files: ReadonlyMap<string, string> = changelogFiles(),
+): { fileName: string; source: string }[] {
+  return PACKAGES.flatMap(({ name }) => {
+    const text = changelogText(name, files);
 
-  return changelogPage(
-    name,
-    file === undefined ? undefined : readFileSync(file, 'utf8'),
-  );
-}
-
-/** One dynamic route per package: its params carry the rendered bodies and the llms copy. */
-export function changelogRoutes(
-  files = changelogFiles(),
-): { params: Record<string, string>; content: string }[] {
-  return PACKAGES.map(({ name }) => {
-    const page = readPage(name, files);
-
-    return {
-      params: {
-        pkg: name,
-        preamble: page.preambleHtml,
-        llms: page.markdown,
-        ...Object.fromEntries(
-          page.sections.map(({ anchor, html }) => [anchor, html]),
-        ),
+    return [
+      {
+        fileName: notesAsset(name).slice(1),
+        source: JSON.stringify(releaseNotes(name, text)),
       },
-      content: changelogContent(page),
-    };
+      { fileName: changelogMarkdownPath(name).slice(1), source: text },
+    ];
   });
 }
 
-/** The heading ids a package's changelog page has, or `undefined` when the path is no changelog page. */
-export function changelogAnchors(path: string): Set<string> | undefined {
-  const entry = PACKAGES.find(({ name }) => changelogPath(name) === path);
-
-  if (!entry) return undefined;
-
-  return new Set(
-    readPage(entry.name, changelogFiles()).sections.map(({ anchor }) => anchor),
-  );
-}
-
-/** Drops the llms copy from the page data the client loads, and names the package in the description. */
-export function changelogTransform({
-  params = {},
-  frontmatter,
-}: Pick<PageData, 'params' | 'frontmatter'>): Partial<PageData> {
-  const { llms: _llms, ...rest } = params;
-  const description = `Every stable release of ${String(rest.pkg)}, newest first, with its release notes.`;
-
+/** Emits each package's rendered notes and Markdown changelog with the client build. */
+export function changelogAssetsPlugin(): Plugin {
   return {
-    params: rest,
-    description,
-    frontmatter: { ...frontmatter, description },
+    name: 'changelog-assets',
+    apply: (_config, { command, isSsrBuild }) =>
+      command === 'build' && !isSsrBuild,
+    generateBundle() {
+      for (const { fileName, source } of changelogAssets()) {
+        this.emitFile({ type: 'asset', fileName, source });
+      }
+    },
   };
 }

@@ -11,6 +11,7 @@ import type { ReleaseDiffs } from './diff-data.ts';
 import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
+import type { NotesReader } from './notes.ts';
 import { mounts, urlConfig } from './routes.ts';
 import {
   type ReleaseState,
@@ -43,13 +44,13 @@ const headOf = (router: UIRouterLit): PageHead => {
   if (current.name === 'releases.package.version')
     return {
       title: `${pkg}@${version}`,
-      description: `The ${pkg}@${version} release: its npm publish, git tag and GitHub release.`,
+      description: `The ${pkg}@${version} release: its release notes, npm publish, git tag and GitHub release.`,
     };
 
   if (current.name === 'releases.package')
     return {
       title: `${pkg} releases`,
-      description: `Every ${pkg} release, newest first, linking to each GitHub release.`,
+      description: `Every ${pkg} release, newest first, with its release notes.`,
     };
 
   if (current.name === 'releases')
@@ -85,6 +86,7 @@ const routerFor = (
   mount: string,
   ledger: LedgerReader,
   diffs: ReleaseDiffs,
+  notes: NotesReader,
 ) => {
   const router = installServerLocation(new UIRouterLit(), {
     baseHref: `${mount}/`,
@@ -93,7 +95,7 @@ const routerFor = (
 
   const states = new Map<string, ReleaseState>();
 
-  for (const state of releaseStates(mount, ledger, diffs)) {
+  for (const state of releaseStates(mount, ledger, diffs, notes)) {
     router.stateRegistry.register(state);
     states.set(state.name, state);
   }
@@ -258,11 +260,12 @@ const cacheKeyOf = (
     ? states.get(verdict.state)?.cacheKey?.(request)
     : undefined;
 
-/** Serves a /releases or /gh request, or returns null for a path neither mount owns; `edge` caches the states that name a key. */
+/** Serves a /releases or /gh request, or returns null for a path neither mount owns; `notes` are the prebuilt release notes, and `edge` caches the states that name a key. */
 export const serveReleases = async (
   request: Request,
   ledger: LedgerReader,
   diffs: ReleaseDiffs,
+  notes: NotesReader,
   edge?: EdgeCache,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
@@ -280,7 +283,7 @@ export const serveReleases = async (
   // Both mounts project otherwise and name no delegates, so only pages and response states remain.
   if (verdict.kind !== 'shell' && verdict.kind !== 'response') return null;
 
-  const pageRouter = routerFor(mount, ledger, diffs);
+  const pageRouter = routerFor(mount, ledger, diffs, notes);
   const fresh = () => answer(request, pageRouter, verdict);
 
   const key = cacheKeyOf(pageRouter, verdict, request);

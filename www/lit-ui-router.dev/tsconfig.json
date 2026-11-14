@@ -17,7 +17,6 @@
     ".vitepress/**/*",
     "catalog/**/*",
     "dev-port.ts",
-    "packages/**/*.paths.ts",
     "scripts/**/*",
     "worker/releases/release-diff.ts"
   ],

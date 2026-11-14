@@ -149,12 +149,8 @@ const workspaces = {
   },
   'tools/shared': { entry: ['src/**/*.test-d.ts'] },
   'www/lit-ui-router.dev': {
-    // is-server.ts is the wrangler alias target for lit-html/is-server.js; VitePress loads each dynamic route's paths file
-    entry: [
-      '.vitepress/vite.config.ts',
-      'worker/is-server.ts',
-      'packages/**/*.paths.ts',
-    ],
+    // is-server.ts is the wrangler alias target for lit-html/is-server.js
+    entry: ['.vitepress/vite.config.ts', 'worker/is-server.ts'],
     // copied out of node_modules/<name>/dist by path in the vite config
     ignoreDependencies: [
       'sample-app-lit-vanilla',

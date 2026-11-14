@@ -34,6 +34,7 @@ import { serveReleases } from '../releases/serve.ts';
 import { diffUrl } from '../releases/views.ts';
 import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
+import { fixtureNotes } from './notes-stub.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -48,7 +49,12 @@ const NO_DIFFS: ReleaseDiffs = {
 };
 
 const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
-  serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, NO_DIFFS);
+  serveReleases(
+    new Request(`${ORIGIN}${path}`, init),
+    ledger,
+    NO_DIFFS,
+    fixtureNotes,
+  );
 
 const DOWN: LedgerReader = {
   packages: () => Promise.reject(new Error('ledger down')),
@@ -675,6 +681,7 @@ describe('the /gh edge cache', () => {
       new Request(`${ORIGIN}${path}`, init),
       ledger,
       NO_DIFFS,
+      fixtureNotes,
       memory.edge,
     );
 
@@ -896,60 +903,99 @@ describe('the /releases pages', () => {
     assert.equal(hrefOf(doc.body, 'a-new-package'), '/releases/a-new-package/');
   });
 
-  it("lists a package's versions, each linking to its GitHub release", async () => {
+  it("lists a package's versions newest first, notes inline where its changelog has a section", async () => {
     const doc = await page('/releases/lit-ui-router/');
+    const main = getByRole(doc.body, 'main');
 
     assert.deepEqual(
-      getAllByRole(getByRole(doc.body, 'table'), 'rowheader').map((header) =>
-        within(header).getByRole('link').getAttribute('href'),
-      ),
+      getAllByRole(main, 'link', {
+        name: /^(lit-ui-router@|Release page for )/,
+      }).map((link) => link.getAttribute('href')),
       ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map(
         (version) => `/releases/lit-ui-router/${version}/`,
       ),
     );
-    assert.equal(
-      hrefOf(doc.body, 'GitHub release for lit-ui-router@1.10.0'),
-      'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
+    assert.deepEqual(
+      getAllByRole(main, 'article').map((article) => [
+        within(article).getByRole('heading', { level: 2 }).id,
+        article.getAttribute('aria-labelledby'),
+      ]),
+      [
+        ['v1.10.0', 'v1.10.0'],
+        ['v1.2.0', 'v1.2.0'],
+      ],
     );
-    getByRole(doc.body, 'rowheader', { name: '1.11.0-rc.0 prerelease' });
+
+    const release = getByRole(main, 'article', { name: '1.10.0' });
+
+    within(release).getByRole('heading', { level: 3, name: 'Features' });
+    within(release).getByRole('group');
     assert.equal(
-      hrefOf(doc.body, 'Diff from 1.9.0 to 1.10.0'),
+      hrefOf(release, 'Diff from 1.9.0 to 1.10.0'),
       `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
     );
     assert.equal(
-      hrefOf(doc.body, 'Diff from 1.10.0 to 1.11.0-rc.0'),
-      `${DIFFS}/lit-ui-router%401.10.0...lit-ui-router%401.11.0-rc.0`,
-    );
-    assert.equal(
-      getAllByRole(doc.body, 'link', { name: /^Diff from / }).length,
-      3,
+      queryByRole(getByRole(main, 'article', { name: '1.2.0' }), 'link', {
+        name: /^Diff from /,
+      }),
+      null,
     );
   });
 
-  it("links a catalog package's changelog page, and no changelog for another", async () => {
+  it('keeps a version with no section, a prerelease among them, to one line', async () => {
+    const doc = await page('/releases/lit-ui-router/');
+    const main = getByRole(doc.body, 'main');
+
+    const lines = getAllByRole(main, 'listitem').filter(
+      (item) => queryByRole(item, 'link', { name: /^lit-ui-router@/ }) !== null,
+    );
+
+    assert.deepEqual(
+      lines.map((item) => within(item).getAllByRole('link')[0]?.textContent),
+      ['lit-ui-router@1.11.0-rc.0', 'lit-ui-router@1.9.0'],
+    );
+    assert.ok(within(lines[0] ?? main).getByText('prerelease'));
+    assert.equal(queryByRole(lines[1] ?? main, 'heading'), null);
+  });
+
+  it('leaves out a section the ledger does not list yet', async () => {
     const doc = await page('/releases/lit-ui-router/');
 
+    assert.equal(queryByRole(doc.body, 'heading', { name: '1.12.0' }), null);
+    assert.equal(queryByText(doc.body, 'Not released yet.'), null);
+  });
+
+  it('outlines the versions with notes in a nav that needs no script, each anchor unique', async () => {
+    const doc = await page('/releases/lit-ui-router/');
+    const outline = getByRole(doc.body, 'navigation', { name: 'Versions' });
+
+    const targets = within(outline)
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
+
+    assert.deepEqual(targets, ['#v1.10.0', '#v1.2.0']);
+
+    // An id has no role; the anchors must be unique for the outline to land.
+    const ids = [...doc.querySelectorAll('[id]')].map(({ id }) => id);
+
+    assert.equal(new Set(ids).size, ids.length);
+
+    for (const target of targets)
+      assert.ok(ids.includes(target?.slice(1) ?? ''));
+  });
+
+  it('lists a package with no notes without an outline', async () => {
+    const doc = await page('/releases/ui-router-server/');
+
     assert.equal(
-      hrefOf(doc.body, 'Changelog'),
-      '/packages/lit-ui-router/changelog',
+      queryByRole(doc.body, 'navigation', { name: 'Versions' }),
+      null,
     );
-
-    const ledger: LedgerReader = {
-      ...fixtureLedger,
-      versions: (name) =>
-        fixtureLedger.versions(
-          name === 'a-new-package' ? 'lit-ui-router' : name,
-        ),
-    };
-
-    const other = parseHtml(
-      (await (
-        await serve('/releases/a-new-package/', undefined, ledger)
-      )?.text()) ?? '',
+    assert.equal(queryByRole(doc.body, 'article'), null);
+    assert.equal(
+      hrefOf(doc.body, 'ui-router-server@0.3.0'),
+      '/releases/ui-router-server/0.3.0/',
     );
-
-    getByRole(other.body, 'heading', { level: 1, name: 'a-new-package' });
-    assert.equal(queryByRole(other.body, 'link', { name: 'Changelog' }), null);
   });
 
   it('picks a diff with a form that needs no script', async () => {
@@ -1039,6 +1085,98 @@ describe('the /releases pages', () => {
       hrefOf(files as HTMLElement, 'Diff from 1.2.0 to 1.9.0'),
       `${FILES}/1.2.0...1.9.0/`,
     );
+  });
+
+  it("shows a version's notes above its facts when its changelog has a section", async () => {
+    const doc = await page('/releases/lit-ui-router/1.10.0/');
+    const main = getByRole(doc.body, 'main');
+
+    const notes = getByRole(main, 'heading', {
+      level: 2,
+      name: 'Release notes',
+    });
+
+    within(main).getByRole('heading', { level: 3, name: 'Features' });
+    getByRole(main, 'group');
+
+    const github = getByText(main, 'GitHub release', { selector: 'dt' });
+
+    assert.ok(
+      notes.compareDocumentPosition(github) & notes.DOCUMENT_POSITION_FOLLOWING,
+    );
+    assert.equal(queryByText(main, 'Release notes', { selector: 'dt' }), null);
+    assert.equal(
+      hrefOf(main, 'GitHub release for lit-ui-router@1.10.0'),
+      'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
+    );
+  });
+
+  it('links the GitHub release as before for a version with no section', async () => {
+    const response = await serveReleases(
+      new Request(`${ORIGIN}/releases/lit-ui-router/1.10.0/`),
+      fixtureLedger,
+      NO_DIFFS,
+      () => Promise.resolve({}),
+    );
+
+    const main = getByRole(
+      parseHtml((await response?.text()) ?? '').body,
+      'main',
+    );
+
+    assert.equal(queryByRole(main, 'heading', { name: 'Release notes' }), null);
+
+    // A definition takes no accessible name from its content, so its term finds it.
+    const notes = getByText(main, 'Release notes', {
+      selector: 'dt',
+    }).nextElementSibling;
+
+    assert.ok(notes);
+    assert.equal(
+      // SAFETY: a dt's sibling in a parsed page is an HTML element.
+      hrefOf(notes as HTMLElement, 'GitHub release for lit-ui-router@1.10.0'),
+      'https://github.com/simshanith/lit-ui-router/releases/tag/lit-ui-router%401.10.0',
+    );
+  });
+
+  it('shows no notes for a prerelease', async () => {
+    const doc = await page('/releases/lit-ui-router/1.11.0-rc.0/');
+
+    assert.equal(
+      queryByRole(doc.body, 'heading', { name: 'Release notes' }),
+      null,
+    );
+    assert.equal(
+      getByText(doc.body, 'Release notes', {
+        selector: 'dt',
+      }).nextElementSibling?.textContent?.trim(),
+      'None recorded',
+    );
+  });
+
+  it('reads notes only for the package and version pages', async () => {
+    const reads: string[] = [];
+
+    const counting = (name: string) => {
+      reads.push(name);
+
+      return fixtureNotes(name);
+    };
+
+    for (const path of [
+      '/releases/',
+      '/releases/lit-ui-router/',
+      '/releases/lit-ui-router/1.10.0/',
+      `${FILES}/1.9.0...1.10.0/`,
+    ])
+      await serveReleases(
+        new Request(`${ORIGIN}${path}`),
+        fixtureLedger,
+        NO_DIFFS,
+        counting,
+      );
+
+    assert.deepEqual(reads, ['lit-ui-router', 'lit-ui-router']);
   });
 
   it('reads the versions once for a version page and its diff', async () => {

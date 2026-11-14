@@ -11,7 +11,6 @@ import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress';
 import { PACKAGES } from '../catalog/packages.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
 import { mounts as releaseMounts } from '../worker/releases/routes.ts';
-import { changelogAnchors } from './changelog.ts';
 import { matchRedirect, redirectLines } from './redirects.ts';
 import { surfaceOf } from './surfaces.ts';
 
@@ -206,14 +205,6 @@ async function pageProblem(
   path: string,
   fragment: string,
 ): Promise<string | undefined> {
-  const changelog = changelogAnchors(decodeURIComponent(path));
-
-  if (changelog) {
-    return !fragment || changelog.has(fragment)
-      ? undefined
-      : `no section #${fragment} in the changelog`;
-  }
-
   const source = pageSource(path);
 
   if (!source) {

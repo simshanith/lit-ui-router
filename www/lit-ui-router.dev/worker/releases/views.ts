@@ -7,9 +7,10 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
-import { changelogPath, PACKAGES, ROLES } from '../../catalog/packages.ts';
+import { PACKAGES, ROLES } from '../../catalog/packages.ts';
 import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
+import type { ReleaseNote, ReleaseNotes } from './notes.ts';
 import { RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
@@ -263,75 +264,143 @@ const compareForm = (
       </form>`;
 };
 
-/** The docs site's changelog page for a catalog package; the ledger may hold others. */
-const changelogLink = (pkg: string): TemplateResult | typeof nothing => {
-  const entry = PACKAGES.find(({ name }) => name === pkg);
+/**
+ * A version's notes as the build rendered them from its CHANGELOG.md section.
+ * The HTML is the repository's own release notes, rendered from Markdown at
+ * build time and read from this deployment's static assets, so no request
+ * input reaches it. As static markup, lit caches its template per isolate, so
+ * a section is parsed once rather than on every request.
+ */
+const notesBody = (note: ReleaseNote): TemplateResult =>
+  staticHtml`<div class="notes">${unsafeStatic(note.html)}</div>`;
 
-  return entry
-    ? html` Its stable release notes are collected in its
-        <a href=${changelogPath(entry.name)}>Changelog</a>.`
-    : nothing;
+const anchorOf = (version: string): string => `v${version}`;
+
+const versionHref = (router: UIRouter, row: LedgerVersion): string =>
+  router.stateService.href('releases.package.version', {
+    pkg: row.name,
+    version: row.version,
+  });
+
+/** A version with notes: its heading, date, links and notes. */
+const releaseEntry = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  row: LedgerVersion,
+  note: ReleaseNote,
+): TemplateResult => {
+  const previous = previousIn(versions, row);
+  const source = previous && diffUrl(previous, row);
+
+  return html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
+    <h2 id=${anchorOf(row.version)}>${row.version}</h2>
+    <p class="release-meta">
+      ${date(row.npm_published_at ?? note.date)} ·
+      <a href=${versionHref(router, row)}
+        >Release page <span class="visually-hidden">for ${row.version}</span></a
+      >${
+        previous && source
+          ? html` ·
+              <a href=${source}
+                >Diff from ${previous.version}
+                <span class="visually-hidden">to ${row.version}</span></a
+              >`
+          : nothing
+      }
+    </p>
+    ${notesBody(note)}
+  </article>`;
+};
+
+/** A version without notes, a prerelease or canary among them: one line linking its release page. */
+const versionLine = (router: UIRouter, row: LedgerVersion): TemplateResult =>
+  html`<li>
+    <a href=${versionHref(router, row)}
+      ><span class="visually-hidden">${row.name}@</span>${row.version}</a
+    >${
+      isStable(row.version)
+        ? nothing
+        : html` <span class="tag">prerelease</span>`
+    }
+    ${date(row.npm_published_at)}${
+      releaseUrl(row) ? html` ${githubRelease(row)}` : nothing
+    }
+  </li>`;
+
+type Entry =
+  | { kind: 'notes'; row: LedgerVersion; note: ReleaseNote }
+  | { kind: 'lines'; rows: LedgerVersion[] };
+
+/** The versions in order, each run of versions without notes grouped as one list. */
+const entriesOf = (
+  versions: readonly LedgerVersion[],
+  notes: ReleaseNotes,
+): Entry[] =>
+  versions.reduce<Entry[]>((entries, row) => {
+    const note = notes[row.version];
+    const last = entries.at(-1);
+
+    if (note) entries.push({ kind: 'notes', row, note });
+    else if (last?.kind === 'lines') last.rows.push(row);
+    else entries.push({ kind: 'lines', rows: [row] });
+
+    return entries;
+  }, []);
+
+/** The versions with notes, as in-page links. */
+const outline = (
+  versions: readonly LedgerVersion[],
+  notes: ReleaseNotes,
+): TemplateResult | typeof nothing => {
+  const noted = versions.filter(({ version }) => notes[version]);
+
+  return noted.length === 0
+    ? nothing
+    : html`<nav class="outline" aria-label="Versions">
+        <ol>
+          ${noted.map(
+            ({ version }) =>
+              html`<li><a href=${`#${anchorOf(version)}`}>${version}</a></li>`,
+          )}
+        </ol>
+      </nav>`;
 };
 
 const packagePage = (
   router: UIRouter,
   pkg: string,
   versions: readonly LedgerVersion[],
+  notes: ReleaseNotes,
 ): TemplateResult => html`
   ${crumbs(router, [{ label: pkg }])}
   <h1>${pkg}</h1>
   <p>
     Every version of <code>${pkg}</code> the release ledger records, newest
-    first. Its npm page is
-    <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a
-    >.${changelogLink(pkg)}
+    first, with the release notes of each stable release. Its npm page is
+    <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
   </p>
-  ${compareForm(router, pkg, versions)}
-  <div class="table">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Version</th>
-          <th scope="col">Status</th>
-          <th scope="col">Published</th>
-          <th scope="col">Notes</th>
-          <th scope="col">Diff</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${versions.map(
-          (row) =>
-            html`<tr>
-              <th scope="row">
-                <a
-                  href=${router.stateService.href('releases.package.version', {
-                    pkg,
-                    version: row.version,
-                  })}
-                  >${row.version}</a
-                >${
-                  isStable(row.version)
-                    ? nothing
-                    : html` <span class="tag">prerelease</span>`
-                }
-              </th>
-              <td>${row.status}</td>
-              <td>${date(row.npm_published_at)}</td>
-              <td>${githubRelease(row)}</td>
-              <td>${diff(versions, row) ?? '—'}</td>
-            </tr>`,
-        )}
-      </tbody>
-    </table>
-  </div>
+  ${compareForm(router, pkg, versions)} ${outline(versions, notes)}
+  ${entriesOf(versions, notes).map((entry) =>
+    entry.kind === 'notes'
+      ? releaseEntry(router, versions, entry.row, entry.note)
+      : html`<ul class="version-lines">
+          ${entry.rows.map((row) => versionLine(router, row))}
+        </ul>`,
+  )}
 `;
 
 /** `releases.package`: one package's versions, newest first. */
 export const PackageView: RoutedLitTemplate<{
   versions: LedgerVersion[];
+  notes: ReleaseNotes;
 }> = ({ router, resolves, transition }) =>
   isLeaf(router, 'releases.package')
-    ? packagePage(router, String(transition?.params().pkg), resolves.versions)
+    ? packagePage(
+        router,
+        String(transition?.params().pkg),
+        resolves.versions,
+        resolves.notes,
+      )
     : uiView();
 
 const npmFacts = (row: LedgerVersion): TemplateResult => {
@@ -385,34 +454,49 @@ const diffFacts = (
   }`;
 };
 
-/** `releases.package.version`: one version's facts, linking out to its GitHub release and its diff. */
-export const VersionView: RoutedLitTemplate<{
-  release: LedgerVersion;
-  versions: LedgerVersion[];
-}> = ({ router, resolves: { release: row, versions } }) => html`
-  ${crumbs(router, [
-    {
-      label: row.name,
-      href: router.stateService.href('releases.package', { pkg: row.name }),
-    },
-    { label: row.version },
-  ])}
-  <h1>${row.name}@${row.version}</h1>
-  <dl class="facts">
-    <dt>Status</dt>
-    <dd>${row.status}</dd>
-    ${npmFacts(row)} ${tagFacts(row)}
-    <dt>Release notes</dt>
+const ghFacts = (row: LedgerVersion, term: string): TemplateResult =>
+  html`<dt>${term}</dt>
     <dd>
       ${githubRelease(row)}${
         row.gh_published_at === null
           ? nothing
           : html`, ${date(row.gh_published_at)}`
       }
-    </dd>
-    ${diffFacts(versions, row)}
-  </dl>
-`;
+    </dd>`;
+
+/** `releases.package.version`: one version's notes when its changelog has a section, then its facts, linking out to its GitHub release and its diff. */
+export const VersionView: RoutedLitTemplate<{
+  release: LedgerVersion;
+  versions: LedgerVersion[];
+  notes: ReleaseNotes;
+}> = ({ router, resolves: { release: row, versions, notes } }) => {
+  const note = notes[row.version];
+
+  return html`
+    ${crumbs(router, [
+      {
+        label: row.name,
+        href: router.stateService.href('releases.package', { pkg: row.name }),
+      },
+      { label: row.version },
+    ])}
+    <h1>${row.name}@${row.version}</h1>
+    ${
+      note
+        ? html`<h2 id="notes">Release notes</h2>
+            ${notesBody(note)}
+            <h2 id="details">Details</h2>`
+        : nothing
+    }
+    <dl class="facts">
+      <dt>Status</dt>
+      <dd>${row.status}</dd>
+      ${npmFacts(row)} ${tagFacts(row)}
+      ${ghFacts(row, note ? 'GitHub release' : 'Release notes')}
+      ${diffFacts(versions, row)}
+    </dl>
+  `;
+};
 
 /** `releases.package.compare`: the files two versions published to npm, diffed once on the server and rendered by `release-diff.ts`. */
 /** The patch link without JavaScript; a binding can't sit inside raw-text <noscript>, so the layout is baked into the template. */

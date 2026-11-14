@@ -76,7 +76,7 @@
         "docs:release-stubs",
         "types:worker"
       ],
-      // The generated index pages read these manifests, the embeds list and the example sources; the changelog pages read each CHANGELOG.md.
+      // The generated index pages read these manifests, the embeds list and the example sources; the release notes and the llms changelogs read each CHANGELOG.md.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/*/package.json",

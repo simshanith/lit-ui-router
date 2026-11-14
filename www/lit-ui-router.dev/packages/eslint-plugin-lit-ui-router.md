@@ -220,7 +220,7 @@ tightening, and pin accordingly.
 
 ## Further reading
 
-- [Changelog](/packages/eslint-plugin-lit-ui-router/changelog) — every stable release, newest first
+- [Releases](/releases/eslint-plugin-lit-ui-router/){target="_self"} — every version, newest first, with its release notes
 - [Design System Links](/guides/design-system-links) — what `uiSref` does to
   an anchor, and why the href only exists at runtime
 - [`uiSref` API](/reference/lit-ui-router/directives/uiSref) — the directive itself,

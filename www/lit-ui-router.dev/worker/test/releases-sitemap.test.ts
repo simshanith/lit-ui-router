@@ -12,6 +12,7 @@ import { serveReleases } from '../releases/serve.ts';
 import { MAX_URLS, sitemapEntries, sitemapXml } from '../releases/sitemap.ts';
 import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
+import { fixtureNotes, unreadNotes } from './notes-stub.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -24,7 +25,12 @@ const unread = () => Promise.reject(new Error('read a diff'));
 const NO_DIFFS: ReleaseDiffs = { index: unread, files: unread, patch: unread };
 
 const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
-  serveReleases(new Request(`${ORIGIN}${path}`, init), ledger, NO_DIFFS);
+  serveReleases(
+    new Request(`${ORIGIN}${path}`, init),
+    ledger,
+    NO_DIFFS,
+    fixtureNotes,
+  );
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -190,6 +196,7 @@ describe('the /releases sitemap', () => {
       new Request(`${ORIGIN}${SITEMAP}`),
       { packages: down, tagged: down, versions: down },
       NO_DIFFS,
+      unreadNotes,
       memory.edge,
     );
 
@@ -208,6 +215,7 @@ describe('the /releases sitemap', () => {
         new Request(`${ORIGIN}${SITEMAP}`),
         ledger,
         NO_DIFFS,
+        unreadNotes,
         memory.edge,
       );
 
