@@ -495,6 +495,134 @@ body:has(.npm-diff) > .content-grid {
       translate 200ms var(--ease-out);
   }
 }
+.outline ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  padding: 0;
+  margin-block: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.outline a {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-pill);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.release {
+  border-block-start: var(--site-border-width) solid var(--site-color-line);
+  padding-block-start: 0.25rem;
+  margin-block-start: 2rem;
+}
+.release h2,
+:target {
+  scroll-margin-block-start: 1rem;
+}
+.release h2 {
+  margin-block: 1rem 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.release-meta {
+  margin-block: 0 1rem;
+  color: var(--site-color-text-muted);
+  font-size: 0.875rem;
+}
+.version-lines {
+  list-style: none;
+  padding: 0;
+  margin-block: 1.5rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--site-color-text-muted);
+}
+.version-lines a:first-child {
+  font-variant-numeric: tabular-nums;
+}
+/* Release bodies as GitHub renders them: Markdown, raw HTML and <details>. */
+.notes > :first-child {
+  margin-block-start: 0;
+}
+.notes h3,
+.notes h4 {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-block: 1.25rem 0.5rem;
+}
+.notes h4 {
+  color: var(--site-color-text-muted);
+}
+.notes p,
+.notes ul,
+.notes ol,
+.notes pre,
+.notes blockquote,
+.notes details {
+  margin-block: 0 0.75rem;
+}
+.notes ul,
+.notes ol {
+  padding-inline-start: 1.25rem;
+}
+.notes li + li,
+.notes li > ul,
+.notes li > ol {
+  margin-block-start: 0.25rem;
+}
+.notes li > ul,
+.notes li > ol {
+  margin-block-end: 0;
+}
+.notes a {
+  overflow-wrap: anywhere;
+}
+.notes :not(pre) > code {
+  padding: 0.125em 0.375em;
+  border-radius: 0.25rem;
+  background: var(--site-color-surface-soft);
+  overflow-wrap: anywhere;
+}
+.notes pre {
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
+  background: var(--site-color-surface-soft);
+}
+.notes blockquote {
+  padding-inline-start: 1rem;
+  border-inline-start: 0.25rem solid var(--site-color-line);
+  margin-inline: 0;
+  color: var(--site-color-text-muted);
+}
+.notes details {
+  padding: 0.5rem 0.75rem;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
+}
+.notes details[open] > summary {
+  margin-block-end: 0.5rem;
+}
+.notes summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.notes details > :last-child {
+  margin-block-end: 0;
+}
+.notes table {
+  display: block;
+  overflow-x: auto;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  margin-block: 0 0.75rem;
+}
+.notes img {
+  display: inline-block;
+}
 .visually-hidden {
   position: absolute;
   inline-size: 1px;
@@ -528,6 +656,12 @@ ui-view {
   .diff-file-toggle:hover {
     color: var(--site-color-text);
     background: var(--site-color-surface-soft);
+  }
+  .outline a:hover {
+    border-color: var(--site-color-interaction);
+  }
+  .notes summary:hover {
+    color: var(--site-color-interaction);
   }
 }
 

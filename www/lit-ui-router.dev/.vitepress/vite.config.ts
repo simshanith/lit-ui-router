@@ -12,6 +12,7 @@ import { gzipSync } from 'node:zlib';
 import { build, defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
+import { changelogAssetsPlugin } from './changelog.ts';
 import { llmsPlugins } from './llms.ts';
 import { redirectsPlugin } from './redirects.ts';
 import { indexPagesPlugin } from './index-pages.ts';
@@ -275,6 +276,7 @@ export default defineConfig({
     ...llmsPlugins(),
     chunkSizePlugin(),
     releasePagesStylesheetPlugin(),
+    changelogAssetsPlugin(),
     releaseDiffScriptPlugin(),
     serverRouterPlugin(router, {
       shellPath: (mount) => SHELL_PATHS.get(mount) ?? mount,

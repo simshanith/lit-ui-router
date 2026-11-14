@@ -119,6 +119,7 @@ declare module 'ui-router-mobx' {
 ## Further reading
 
 - [API reference](/reference/ui-router-mobx/)
+- [Releases](/releases/ui-router-mobx/){target="_self"} — every version, newest first, with its release notes
 - [lit-ui-router-mobx](/packages/lit-ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-mobx) — this package as

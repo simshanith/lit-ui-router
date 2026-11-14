@@ -125,6 +125,16 @@ export const SURFACES = [
     deadLinks: 'check',
   },
   {
+    // Each package's CHANGELOG.md, copied for llms.txt; the release pages show the same notes.
+    id: 'changelogs',
+    paths: ['/changelogs/*'],
+    renderer: 'static',
+    sitemap: false,
+    llms: 'section',
+    search: false,
+    deadLinks: 'check',
+  },
+  {
     id: 'gh',
     paths: ['/gh', '/gh/*'],
     renderer: 'worker',

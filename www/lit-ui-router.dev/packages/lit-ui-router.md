@@ -356,6 +356,7 @@ reads from them.
 ## Further reading
 
 - [API reference](/reference/lit-ui-router/)
+- [Releases](/releases/lit-ui-router/){target="_self"} — every version, newest first, with its release notes
 - [Tutorial](/tutorial/helloworld)
 - [Location Plugins](/guides/location-plugins) — hash, pushState and Navigation API URLs
 - [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server) — the router hand-off in `lit-ui-router/context`

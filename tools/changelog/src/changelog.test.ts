@@ -29,10 +29,17 @@ const FILE = `${preamble('lit-ui-router')}
 `;
 
 describe('preamble', () => {
-  it('links the package’s GitHub releases with the @ encoded', () => {
+  it('links the package’s releases page on the docs site', () => {
     assert.match(
       preamble('lit-ui-router'),
-      /\(https:\/\/github\.com\/simshanith\/lit-ui-router\/releases\?q=lit-ui-router%40&expanded=true\)/,
+      /\[all releases\]\(https:\/\/lit-ui-router\.dev\/releases\/lit-ui-router\/\)/,
+    );
+  });
+
+  it('encodes a scoped name as one path segment', () => {
+    assert.match(
+      preamble('@uirouter/lit'),
+      /\(https:\/\/lit-ui-router\.dev\/releases\/%40uirouter%2Flit\/\)/,
     );
   });
 });

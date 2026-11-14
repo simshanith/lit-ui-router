@@ -6,6 +6,7 @@ import { createFetchHandler } from 'ui-router-server/fetch';
 
 import type { ReleaseDiffs } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
+import { assetNotes } from './releases/notes.ts';
 import { serveReleases } from './releases/serve.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
@@ -65,7 +66,9 @@ export default {
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
     const diffs = env.RELEASE_DIFFS as unknown as ReleaseDiffs;
 
-    const releases = await serveReleases(request, ledger, diffs, {
+    const notes = assetNotes(env.ASSETS, url.origin);
+
+    const releases = await serveReleases(request, ledger, diffs, notes, {
       cache: caches.default,
       waitUntil: (promise) => ctx.waitUntil(promise),
       now: Date.now,

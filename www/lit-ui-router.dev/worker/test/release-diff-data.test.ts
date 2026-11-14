@@ -9,6 +9,7 @@ import { serveReleases } from '../releases/serve.ts';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
+import { unreadNotes } from './notes-stub.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -78,6 +79,7 @@ const serve = (
     new Request(`${ORIGIN}${path}`, init),
     fixtureLedger,
     diffs,
+    unreadNotes,
     edge,
   );
 
@@ -170,6 +172,7 @@ describe('the diff page data routes', () => {
           ),
       },
       diffs,
+      unreadNotes,
     );
 
     assert.equal(response?.status, 404);
@@ -218,6 +221,7 @@ describe('the diff page data routes at the edge', () => {
         versions: () => Promise.reject(new Error('ledger read')),
       },
       second.diffs,
+      unreadNotes,
       memory.edge,
     );
 
