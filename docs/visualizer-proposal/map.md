@@ -337,8 +337,8 @@ through the change by its colour and its movement.
   dashed and the dashes travel toward its head until the transition settles.
 - **The popover fades in** over 160ms where it is placed.
 - **Reduced motion.** Positions change at once. Edges, new boxes and the
-  popover fade, a running transition's edge is solid, and nothing else
-  animates.
+  popover fade, the edge of a transition selected while it runs is solid, and
+  nothing else animates.
 
 The mechanism is FLIP on the Web Animations API. Before a render that changes
 the Map's geometry the panel reads where each state's element is drawn, and
