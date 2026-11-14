@@ -77,10 +77,8 @@
         "types:worker"
       ],
       // The generated index pages read these manifests, the embeds list and the example sources; the release notes and the llms changelogs read each CHANGELOG.md.
-      // snapshots/ is gitignored, so $TURBO_DEFAULT$ skips the copy step's source.
       "inputs": [
         "$TURBO_DEFAULT$",
-        "snapshots/**",
         "$TURBO_ROOT$/packages/*/package.json",
         "$TURBO_ROOT$/packages/*/CHANGELOG.md",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",

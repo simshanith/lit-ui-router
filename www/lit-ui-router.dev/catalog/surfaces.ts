@@ -73,10 +73,10 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
-    // The frozen 1.x docs, copied in from snapshots/v1; its own llms.txt and 404 page sit inside.
+    // The frozen 1.x docs: the worker hands the whole prefix to their own Worker, with its llms.txt and 404 page.
     id: 'snapshot-v1',
-    paths: ['/v1/', '/v1/*'],
-    renderer: 'static',
+    paths: ['/v1', '/v1/*'],
+    renderer: 'worker',
     sitemap: false,
     llms: false,
     search: false,

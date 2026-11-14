@@ -1,0 +1,14 @@
+{
+  "name": "@www/v1.versions.lit-ui-router.dev",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The frozen 1.x docs: an assets-only Worker the docs worker hands /v1/* to, deployed by hand",
+  "type": "module",
+  "scripts": {
+    "deploy": "cf deploy"
+  },
+  "devDependencies": {
+    "cf": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

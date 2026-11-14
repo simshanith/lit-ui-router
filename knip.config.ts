@@ -165,6 +165,10 @@ const workspaces = {
   'www/release-diffs.lit-ui-router.dev': {
     entry: ['cloudflare.config.ts'],
   },
+  // cf reads both configs from its working directory
+  'www/v1.versions.lit-ui-router.dev': {
+    entry: ['cloudflare.config.ts', 'wrangler.config.ts'],
+  },
 } satisfies Record<string, WorkspaceProjectConfig>;
 
 export default async function config(): Promise<KnipConfiguration> {

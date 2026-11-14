@@ -15,6 +15,7 @@
     "docs:preview": "vitepress preview .",
     "docs:release-stubs": "node ./scripts/release-stubs.ts",
     "docs:snapshot": "node ./scripts/docs-snapshot.ts",
+    "docs:snapshot:publish": "node ./scripts/docs-snapshot-publish.ts",
     "format:check:oxfmt": "oxfmt --check \"**/*.{md,json,ts,vue,css}\"",
     "format:oxfmt": "oxfmt \"**/*.{md,json,ts,vue,css}\"",
     "lint:oxlint": "oxlint .",
