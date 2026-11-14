@@ -15,15 +15,17 @@ export class AppRoot extends LitElement {
     nav a {
       padding: 8px 16px;
       text-decoration: none;
-      color: #333;
+      color: inherit;
       border-radius: 4px;
     }
-    nav a:hover {
-      background: #f0f0f0;
+    @media (hover: hover) and (pointer: fine) {
+      nav a:hover {
+        background: light-dark(#f0f0f0, #2c2c2c);
+      }
     }
     nav a.active {
       font-weight: bold;
-      background: #e0e0e0;
+      background: light-dark(#e0e0e0, #444);
     }
   `;
 
