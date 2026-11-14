@@ -208,7 +208,7 @@ deliberately out of scope here, not at risk.
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
 
-| import                        | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
+| import                        | needs `@uirouter/core` at runtime?    | cost                                | what it answers                                                                        |
 | ----------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
 | `ui-router-server/matcher`    | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
 | `ui-router-server/redirects`  | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |

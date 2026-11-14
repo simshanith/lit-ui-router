@@ -112,7 +112,7 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                   | Needs `@uirouter/core`?               | Cost             | What it answers                                                                        |
+| Entry point                   | Needs `@uirouter/core` at runtime?    | Cost             | What it answers                                                                        |
 | ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
 | `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
 | `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
@@ -178,6 +178,10 @@ Nothing else is required: `@uirouter/core` (only for
 [`simulate` mounts and the `/location`, `/ssr` and `/ssr/client` entries](#the-tiers)) and
 `hono` are **optional** peer
 dependencies, and every other adapter targets a host you already have.
+
+That is the runtime requirement: the other entries' type declarations still
+reference `@uirouter/core` types, so a TypeScript project without it either
+installs it as a dev dependency or keeps `skipLibCheck` on.
 
 `latest` is the stable line (`0.1.0` today), and the only dist-tag — the
 pre-release seed tags have been retired.
