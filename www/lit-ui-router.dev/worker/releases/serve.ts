@@ -11,6 +11,7 @@ import type { ReleaseDiffs } from './diff-data.ts';
 import { DIFF_SCRIPT, type PageHead, releaseDocument } from './document.ts';
 import { type Answer, cached, type EdgeCache } from './edge-cache.ts';
 import { type LedgerReader, NotInLedger } from './ledger.ts';
+import { PRERELEASES_PARAM } from './lines.ts';
 import type { NotesReader } from './notes.ts';
 import { mounts, urlConfig } from './routes.ts';
 import {
@@ -51,6 +52,8 @@ const headOf = (router: UIRouterLit): PageHead => {
     return {
       title: `${pkg} releases`,
       description: `Every ${pkg} release, newest first, with its release notes.`,
+      // Any spelling of the view is a filtered copy of the page the sitemap lists.
+      noindex: router.urlService.search()[PRERELEASES_PARAM] !== undefined,
     };
 
   if (current.name === 'releases')
@@ -134,7 +137,11 @@ const render = async (
     renderShell: async (_verdict, { subpath }) => {
       try {
         if (failure) throw failure;
-        const landed = await settle(router, subpath);
+
+        const landed = await settle(
+          router,
+          `${subpath}${new URL(request.url).search}`,
+        );
 
         if (landed.redirectedFrom()) {
           page = {

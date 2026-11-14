@@ -841,8 +841,8 @@ describe('the /gh edge cache', () => {
 });
 
 describe('the /releases pages', () => {
-  const page = async (path: string) =>
-    parseHtml((await (await serve(path))?.text()) ?? '');
+  const page = async (path: string, ledger = fixtureLedger) =>
+    parseHtml((await (await serve(path, undefined, ledger))?.text()) ?? '');
 
   const hrefOf = (container: HTMLElement, name: string) =>
     getByRole(container, 'link', { name }).getAttribute('href');
@@ -903,7 +903,7 @@ describe('the /releases pages', () => {
     assert.equal(hrefOf(doc.body, 'a-new-package'), '/releases/a-new-package/');
   });
 
-  it("lists a package's versions newest first, notes inline where its changelog has a section", async () => {
+  it("lists a package's stable versions newest first, notes inline where its changelog has a section", async () => {
     const doc = await page('/releases/lit-ui-router/');
     const main = getByRole(doc.body, 'main');
 
@@ -911,13 +911,13 @@ describe('the /releases pages', () => {
       getAllByRole(main, 'link', {
         name: /^(lit-ui-router@|Release page)/,
       }).map((link) => link.getAttribute('href')),
-      ['1.11.0-rc.0', '1.10.0', '1.9.0', '1.2.0'].map(
+      ['1.10.0', '1.9.0', '1.2.0'].map(
         (version) => `/releases/lit-ui-router/${version}/`,
       ),
     );
     assert.deepEqual(
       getAllByRole(main, 'article').map((article) => [
-        within(article).getByRole('heading', { level: 2 }).id,
+        within(article).getByRole('heading', { level: 3 }).id,
         article.getAttribute('aria-labelledby'),
       ]),
       [
@@ -928,7 +928,8 @@ describe('the /releases pages', () => {
 
     const release = getByRole(main, 'article', { name: '1.10.0' });
 
-    within(release).getByRole('heading', { level: 3, name: 'Features' });
+    // The notes' own headings sit a level below the version's.
+    within(release).getByRole('heading', { level: 4, name: 'Features' });
     within(release).getByRole('group');
     assert.equal(
       hrefOf(release, 'Diff from 1.9.0 to 1.10.0'),
@@ -947,7 +948,7 @@ describe('the /releases pages', () => {
   });
 
   it('keeps a version with no section, a prerelease among them, to one line', async () => {
-    const doc = await page('/releases/lit-ui-router/');
+    const doc = await page('/releases/lit-ui-router/?prereleases=show');
     const main = getByRole(doc.body, 'main');
 
     const lines = getAllByRole(main, 'listitem').filter(
@@ -960,6 +961,10 @@ describe('the /releases pages', () => {
     );
     assert.ok(within(lines[0] ?? main).getByText('prerelease'));
     assert.equal(queryByRole(lines[1] ?? main, 'heading'), null);
+    assert.deepEqual(
+      lines.map(({ id }) => id),
+      ['v1.11.0-rc.0', 'v1.9.0'],
+    );
   });
 
   it('leaves out a section the ledger does not list yet', async () => {
@@ -969,23 +974,173 @@ describe('the /releases pages', () => {
     assert.equal(queryByText(doc.body, 'Not released yet.'), null);
   });
 
-  it('outlines the versions with notes in a nav that needs no script, each anchor unique', async () => {
+  for (const [view, path, lines] of [
+    ['default', '/releases/lit-ui-router/', ['1.10', '1.9', '1.2']],
+    [
+      'revealed',
+      '/releases/lit-ui-router/?prereleases=show',
+      ['1.11', '1.10', '1.9', '1.2'],
+    ],
+  ] as const)
+    it(`outlines the ${view} view's minor lines in a nav that needs no script, each anchor unique`, async () => {
+      const doc = await page(path);
+      const outline = getByRole(doc.body, 'navigation', { name: 'Versions' });
+
+      const targets = within(outline)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href'));
+
+      assert.deepEqual(
+        targets,
+        lines.map((line) => `#line-${line}`),
+      );
+      assert.deepEqual(
+        getAllByRole(getByRole(doc.body, 'main'), 'region').map(
+          (region) => getByRole(region, 'heading', { level: 2 }).textContent,
+        ),
+        lines,
+      );
+
+      // An id has no role; the anchors must be unique for the outline to land.
+      const ids = [...doc.querySelectorAll('[id]')].map(({ id }) => id);
+
+      assert.equal(new Set(ids).size, ids.length);
+
+      for (const target of targets)
+        assert.ok(ids.includes(target?.slice(1) ?? ''));
+    });
+
+  it('hides prereleases by default, counts them and links the view that shows them', async () => {
     const doc = await page('/releases/lit-ui-router/');
-    const outline = getByRole(doc.body, 'navigation', { name: 'Versions' });
+    const main = getByRole(doc.body, 'main');
 
-    const targets = within(outline)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'));
+    assert.equal(queryByRole(main, 'link', { name: /-rc\./ }), null);
+    getByText(main, /^1 prerelease hidden\./);
+    assert.equal(
+      hrefOf(main, 'Show prereleases'),
+      '/releases/lit-ui-router/?prereleases=show',
+    );
+    assert.equal(queryByRole(main, 'link', { name: 'Hide prereleases' }), null);
+    // A meta element has no role.
+    assert.equal(doc.querySelector('meta[name="robots"]'), null);
+  });
 
-    assert.deepEqual(targets, ['#v1.10.0', '#v1.2.0']);
+  it('shows prereleases in their minor line when the url asks, off the index', async () => {
+    const doc = await page('/releases/lit-ui-router/?prereleases=show');
+    const main = getByRole(doc.body, 'main');
+    const line = getByRole(main, 'region', { name: '1.11' });
 
-    // An id has no role; the anchors must be unique for the outline to land.
-    const ids = [...doc.querySelectorAll('[id]')].map(({ id }) => id);
+    assert.equal(
+      hrefOf(line, 'lit-ui-router@1.11.0-rc.0'),
+      '/releases/lit-ui-router/1.11.0-rc.0/',
+    );
+    getByText(main, /^Showing 1 prerelease\./);
+    assert.equal(hrefOf(main, 'Hide prereleases'), '/releases/lit-ui-router/');
+    assert.equal(queryByRole(main, 'link', { name: 'Show prereleases' }), null);
+    assert.equal(
+      getByRole(main, 'form', { name: 'Compare two versions' }).getAttribute(
+        'action',
+      ),
+      '/releases/lit-ui-router/diff',
+    );
+    assert.equal(
+      doc.querySelector('meta[name="robots"]')?.getAttribute('content'),
+      'noindex',
+    );
+  });
 
-    assert.equal(new Set(ids).size, ids.length);
+  it('reads an unknown view as the default, off the index', async () => {
+    const response = await serve('/releases/lit-ui-router/?prereleases=all');
+    const doc = parseHtml((await response?.text()) ?? '');
+    const main = getByRole(doc.body, 'main');
 
-    for (const target of targets)
-      assert.ok(ids.includes(target?.slice(1) ?? ''));
+    assert.equal(response?.status, 200);
+    assert.equal(queryByRole(main, 'region', { name: '1.11' }), null);
+    assert.equal(
+      hrefOf(main, 'Show prereleases'),
+      '/releases/lit-ui-router/?prereleases=show',
+    );
+    assert.equal(
+      doc.querySelector('meta[name="robots"]')?.getAttribute('content'),
+      'noindex',
+    );
+  });
+
+  it('keeps the view across the trailing-slash redirect', async () => {
+    const response = await serve('/releases/lit-ui-router?prereleases=show');
+
+    assert.equal(response?.status, 308);
+    assert.equal(
+      response?.headers.get('Location'),
+      '/releases/lit-ui-router/?prereleases=show',
+    );
+  });
+
+  const ledgerOf = (
+    name: string,
+    versions: readonly string[],
+  ): LedgerReader => {
+    const [base] = FIXTURE_ROWS;
+    assert.ok(base);
+
+    return {
+      ...fixtureLedger,
+      versions: (pkg) =>
+        Promise.resolve(
+          pkg === name
+            ? versions.map((version) => ({ ...base, name, version }))
+            : [],
+        ),
+    };
+  };
+
+  it('groups a 0.x package by its minor', async () => {
+    const ledger = ledgerOf('ui-router-server', [
+      '0.1.0',
+      '0.2.0',
+      '0.2.1',
+      '0.3.0-rc.0',
+      '0.3.0',
+    ]);
+
+    const main = getByRole(
+      (await page('/releases/ui-router-server/', ledger)).body,
+      'main',
+    );
+
+    assert.deepEqual(
+      getAllByRole(main, 'region').map((region) => [
+        getByRole(region, 'heading', { level: 2 }).id,
+        getAllByRole(region, 'listitem').map(({ id }) => id),
+      ]),
+      [
+        ['line-0.3', ['v0.3.0']],
+        ['line-0.2', ['v0.2.1', 'v0.2.0']],
+        ['line-0.1', ['v0.1.0']],
+      ],
+    );
+    getByText(main, /^1 prerelease hidden\./);
+  });
+
+  it('lists no line for a package with only prereleases until they are shown', async () => {
+    const ledger = ledgerOf('ui-router-server', ['0.1.0-rc.0', '0.1.0-rc.1']);
+
+    const hidden = await page('/releases/ui-router-server/', ledger);
+
+    const shown = await page(
+      '/releases/ui-router-server/?prereleases=show',
+      ledger,
+    );
+
+    assert.equal(queryByRole(hidden.body, 'region'), null);
+    getByText(hidden.body, /^2 prereleases hidden\./);
+    assert.deepEqual(
+      getAllByRole(
+        getByRole(shown.body, 'region', { name: '0.1' }),
+        'listitem',
+      ).map(({ id }) => id),
+      ['v0.1.0-rc.1', 'v0.1.0-rc.0'],
+    );
   });
 
   it('lists a package with no notes without an outline', async () => {

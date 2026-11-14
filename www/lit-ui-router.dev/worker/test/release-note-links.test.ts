@@ -12,6 +12,7 @@ import { releaseLinks, SITE_URL } from '@tools/release-config/notes.ts';
 import { createServerRouter } from 'ui-router-server';
 import { applyUrlConfig } from 'ui-router-server/url-config';
 
+import { DEFAULT_PRERELEASES, PRERELEASES_PARAM } from '../releases/lines.ts';
 import {
   DEFAULT_FILTER,
   FILTER_PARAM,
@@ -73,7 +74,7 @@ describe('the release-note footer links', () => {
       assert.ok(page?.pathname.endsWith('/'));
       assert.deepEqual(matchPage(page), {
         state: 'releases.package.version',
-        params: { pkg, version },
+        params: { pkg, version, [PRERELEASES_PARAM]: DEFAULT_PRERELEASES },
       });
       assert.deepEqual(await resolver.resolve(page), {
         kind: 'shell',
@@ -89,6 +90,7 @@ describe('the release-note footer links', () => {
           pkg,
           from: previous,
           to: version,
+          [PRERELEASES_PARAM]: DEFAULT_PRERELEASES,
           [FILTER_PARAM]: DEFAULT_FILTER,
         },
       });
