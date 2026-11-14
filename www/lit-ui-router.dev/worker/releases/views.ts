@@ -617,10 +617,11 @@ const versionLink = (
   html`<a
     class=${rel}
     rel=${rel}
-    href=${router.stateService.href('releases.package.version', {
-      pkg,
-      version,
-    })}
+    href=${router.stateService.href(
+      'releases.package.version',
+      { pkg, version },
+      { inherit: false },
+    )}
     ><span class="pager-label">${rel === 'prev' ? 'Previous' : 'Next'}</span>
     ${version}</a
   >`;

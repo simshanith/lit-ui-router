@@ -45,10 +45,11 @@ const seriesOf = (router: UIRouterLit): Pick<PageHead, 'prev' | 'next'> => {
 
   const href = (row: LedgerVersion | null) =>
     row
-      ? router.stateService.href('releases.package.version', {
-          pkg: row.name,
-          version: row.version,
-        })
+      ? router.stateService.href(
+          'releases.package.version',
+          { pkg: row.name, version: row.version },
+          { inherit: false },
+        )
       : undefined;
 
   return { prev: href(older), next: href(newer) };
@@ -58,6 +59,8 @@ const headOf = (router: UIRouterLit): PageHead => {
   const { current, params } = router.globals;
   const pkg = String(params.pkg);
   const version = String(params.version);
+  // Any spelling of the view is a filtered copy of a page the sitemap lists.
+  const filtered = router.urlService.search()[PRERELEASES_PARAM] !== undefined;
 
   if (current.name === 'releases.package.compare') {
     const [from, to] = [String(params.from), String(params.to)];
@@ -75,14 +78,14 @@ const headOf = (router: UIRouterLit): PageHead => {
       title: `${pkg}@${version}`,
       description: `The ${pkg}@${version} release: its release notes, npm publish, git tag and GitHub release.`,
       ...seriesOf(router),
+      noindex: filtered,
     };
 
   if (current.name === 'releases.package')
     return {
       title: `${pkg} releases`,
       description: `Every ${pkg} release, newest first, with its release notes.`,
-      // Any spelling of the view is a filtered copy of the page the sitemap lists.
-      noindex: router.urlService.search()[PRERELEASES_PARAM] !== undefined,
+      noindex: filtered,
     };
 
   if (current.name === 'releases')

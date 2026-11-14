@@ -1060,6 +1060,31 @@ describe('the /releases pages', () => {
     );
   });
 
+  it('keeps a version page that carries the view off the index, with clean neighbour links', async () => {
+    const response = await serve(
+      '/releases/lit-ui-router/1.10.0/?prereleases=show',
+    );
+
+    const doc = parseHtml((await response?.text()) ?? '');
+
+    assert.equal(response?.status, 200);
+    assert.equal(
+      doc.querySelector('meta[name="robots"]')?.getAttribute('content'),
+      'noindex',
+    );
+
+    const hrefs = [
+      ...doc.querySelectorAll('link[rel="prev"], link[rel="next"]'),
+      ...getByRole(doc.body, 'navigation', {
+        name: 'Previous and next versions',
+      }).querySelectorAll('a'),
+    ].map((link) => link.getAttribute('href') ?? '');
+
+    assert.equal(hrefs.length, 4);
+
+    for (const href of hrefs) assert.ok(!href.includes('?'), href);
+  });
+
   it('keeps the view across the trailing-slash redirect', async () => {
     const response = await serve('/releases/lit-ui-router?prereleases=show');
 
