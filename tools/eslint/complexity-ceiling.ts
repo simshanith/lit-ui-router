@@ -21,6 +21,7 @@ export default defineConfig(
     'www/lit-ui-router.dev/.vitepress/cache/**',
     'www/lit-ui-router.dev/.vitepress/.temp/**',
     'www/lit-ui-router.dev/reference/*/**',
+    'www/lit-ui-router.dev/snapshots/**',
     'www/lit-ui-router.dev/worker/worker-configuration.d.ts',
   ]),
   {

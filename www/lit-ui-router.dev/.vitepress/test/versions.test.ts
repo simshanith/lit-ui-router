@@ -32,8 +32,11 @@ describe('the bundled manifest', () => {
     assert.equal(BUNDLED_MANIFEST.current.path, '/');
   });
 
-  it('lists no version the site does not serve yet', () => {
-    assert.deepEqual(BUNDLED_MANIFEST.others, []);
+  it('lists 1.x, the one frozen snapshot', () => {
+    assert.deepEqual(
+      BUNDLED_MANIFEST.others.map(({ id }) => id),
+      ['v1'],
+    );
   });
 });
 

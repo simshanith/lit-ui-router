@@ -14,7 +14,7 @@ const site = join(import.meta.dirname, '../..');
 
 const pages = globSync('**/*.md', {
   cwd: site,
-  exclude: ['node_modules/**', 'dist/**', ...GENERATED_PAGES],
+  exclude: ['node_modules/**', 'dist/**', 'snapshots/**', ...GENERATED_PAGES],
 })
   .sort()
   .map((path) => ({ path, ...matter(readFileSync(join(site, path), 'utf8')) }))

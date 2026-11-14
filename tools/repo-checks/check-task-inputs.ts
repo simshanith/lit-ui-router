@@ -58,6 +58,10 @@ const ALLOWED: InputsAllowance[] = [
     why: 'types:worker output that type-aware oxlint genuinely reads through worker/tsconfig.json, so the lint key has to move with it',
   },
   {
+    path: 'www/lit-ui-router.dev/snapshots',
+    why: 'the docs build copies each frozen version snapshot into dist, so the build key has to move with it',
+  },
+  {
     path: 'tools/release/.cache/published-versions.json',
     why: 'resolve:published writes it immediately before check:published-diff, which hashes it to capture the movable dist-tag pointers (see tools/release/turbo.json)',
   },

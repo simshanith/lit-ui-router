@@ -14,3 +14,4 @@ reference/ui-router-server
 reference/ui-router-signals
 package-releases
 worker/worker-configuration.d.ts
+snapshots

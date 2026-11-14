@@ -127,7 +127,7 @@ const LIVE_EXAMPLE = /<LiveExample\s[^>]*name="([\w-]+)"/g;
 const TITLE = /^title:\s*(.+)$|^# (.+)$/m;
 
 const SKIPPED =
-  /(^|\/)(node_modules|dist)$|^(\.vitepress|reference|package-releases)$/;
+  /(^|\/)(node_modules|dist)$|^(\.vitepress|reference|package-releases|snapshots)$/;
 
 interface PageLink {
   title: string;

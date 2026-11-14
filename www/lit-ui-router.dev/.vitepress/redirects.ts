@@ -5,6 +5,7 @@ import type { RedirectLine } from 'ui-router-server/prerender';
 import type { Plugin } from 'vite';
 
 import { REDIRECTS } from '../catalog/redirects.ts';
+import { SURFACES } from '../catalog/surfaces.ts';
 import { globPattern } from './surfaces.ts';
 
 // https://developers.cloudflare.com/workers/static-assets/redirects/
@@ -41,6 +42,26 @@ export function spellings(rule: RedirectLine): RedirectLine[] {
 
   return froms.map((from) => ({ ...rule, from }));
 }
+
+/** The snapshot's paths under the worker's mounts, sent to the mounts: the worker runs only for the unversioned paths. */
+export const snapshotRedirects = (
+  base: string = SNAPSHOT_PREFIX,
+): RedirectLine[] =>
+  SURFACES.flatMap(({ renderer, paths }) =>
+    renderer === 'worker'
+      ? paths.map((path) => ({
+          from: `${base}${path.slice(1)}`,
+          to: path.replace(/\*$/, ':splat'),
+          status: 301,
+        }))
+      : [],
+  );
+
+/** A snapshot redirect: it may sit under the snapshot prefix, since the snapshot serves nothing at the worker's mounts. */
+const isSnapshotRedirect = (rule: RedirectLine): boolean =>
+  snapshotRedirects().some(
+    ({ from, to }) => from === rule.from && to === rule.to,
+  );
 
 /** The table's `_redirects` lines, every row with its spellings. */
 export const redirectLines = (rules: readonly RedirectLine[]): RedirectLine[] =>
@@ -130,7 +151,7 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
         'not root-anchored',
       ],
       [
-        rule.from.startsWith(SNAPSHOT_PREFIX),
+        rule.from.startsWith(SNAPSHOT_PREFIX) && !isSnapshotRedirect(rule),
         `source under ${SNAPSHOT_PREFIX}`,
       ],
       [
@@ -188,7 +209,7 @@ export function workerFirstProblems(
 }
 
 /** The files a path could be served from, as Cloudflare's html_handling resolves it. */
-const servedFiles = (outDir: string, path: string): string[] => {
+export const servedFiles = (outDir: string, path: string): string[] => {
   const file = join(outDir, decodeURIComponent(path));
 
   return path.endsWith('/')
@@ -245,14 +266,40 @@ export const reservedProblems = (outDir: string): string[] =>
     ? [`${RESERVED_PREFIX}: built files sit under the reserved prefix`]
     : [];
 
+/** Every `_redirects` line: the table's, then the snapshot's, statics ahead of the dynamic rules. */
+export function allRedirectLines(): RedirectLine[] {
+  const lines = [...redirectLines(REDIRECTS), ...snapshotRedirects()];
+
+  return [
+    ...lines.filter((rule) => !isDynamic(rule)),
+    ...lines.filter(isDynamic),
+  ];
+}
+
+/** Snapshot redirects whose source a built file answers, which the redirect would hide. */
+export function snapshotRedirectProblems(
+  rules: readonly RedirectLine[],
+  outDir: string,
+): string[] {
+  return rules.flatMap((rule) => {
+    const path = join(outDir, rule.from.replace(/\*$/, ''));
+
+    return existsSync(path) || existsSync(`${path}.html`)
+      ? [`${redirectsLine(rule)}: a built file sits under the source`]
+      : [];
+  });
+}
+
 /** The build's `buildEnd`: fails on a dead target, a live source or a lost moved URL, then writes `_redirects`. */
 export async function writeRedirects(outDir: string): Promise<void> {
-  const lines = redirectLines(REDIRECTS);
+  const table = redirectLines(REDIRECTS);
+  const lines = allRedirectLines();
 
   const problems = [
     ...tableProblems(lines),
-    ...builtProblems(lines, outDir),
-    ...movedProblems(lines, movedUrls(), outDir),
+    ...builtProblems(table, outDir),
+    ...snapshotRedirectProblems(snapshotRedirects(), outDir),
+    ...movedProblems(table, movedUrls(), outDir),
     ...reservedProblems(outDir),
   ];
 
@@ -264,7 +311,7 @@ export async function writeRedirects(outDir: string): Promise<void> {
 
 /** Dev parity with dist/_redirects: answers the same table with the same status. */
 export function redirectsPlugin(): Plugin {
-  const lines = redirectLines(REDIRECTS);
+  const lines = allRedirectLines();
 
   return {
     name: 'redirects',

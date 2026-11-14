@@ -73,6 +73,16 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
+    // The frozen 1.x docs, copied in from snapshots/v1; its own llms.txt and 404 page sit inside.
+    id: 'snapshot-v1',
+    paths: ['/v1/', '/v1/*'],
+    renderer: 'static',
+    sitemap: false,
+    llms: false,
+    search: false,
+    deadLinks: 'ignore',
+  },
+  {
     id: 'sample-apps',
     paths: [
       '/app',
