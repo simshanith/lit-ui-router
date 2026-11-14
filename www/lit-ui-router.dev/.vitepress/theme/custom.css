@@ -214,7 +214,7 @@ html:has(.site-expand:modal) {
   display: block;
   inline-size: 100%;
   margin-block: 0;
-  /* the picture is a 3:4 card with the model in its top 55%: the window is its top 4:3, inset */
+  /* the picture is a 3:4 card with the model in its top 55%: 3% 4% padding keeps the content box 4:3, so the window is the picture's rows 0-450 */
   box-sizing: border-box;
   padding: 3% 4%;
   aspect-ratio: 4 / 3;
