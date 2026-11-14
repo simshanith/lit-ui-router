@@ -1,6 +1,6 @@
 {
   "current": { "id": "latest", "label": "latest", "path": "/" },
-  "others": [],
+  "others": [{ "id": "v1", "label": "1.x", "path": "/v1/" }],
   "deprecated": [],
   "hidden": []
 }

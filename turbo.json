@@ -192,6 +192,7 @@
         "!**/.probe-scratch/**",
         "!.cache/**",
         "!**/.vitepress/cache/**",
+        "!**/snapshots/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_ROOT$/tools/lint-elements/elements.oxlintrc.json",
         "$TURBO_DEFAULT$"
@@ -334,7 +335,8 @@
         "!**/.probe-scratch/**",
         "!**/.vitepress/cache/**",
         "!**/.cloudflare/**",
-        "!**/worker-configuration.d.ts"
+        "!**/worker-configuration.d.ts",
+        "!www/lit-ui-router.dev/snapshots/**"
       ]
     },
     "//#lint:package-json": {
@@ -369,6 +371,7 @@
         "!**/dist/**",
         "!www/lit-ui-router.dev/reference/*/**",
         "!www/lit-ui-router.dev/package-releases/**",
+        "!www/lit-ui-router.dev/snapshots/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"

@@ -188,6 +188,37 @@ copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
 [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
 until none of those branches remain.
 
+### Frozen 1.x docs at `/v1/`
+
+The docs worker serves the 1.x docs at `/v1/` from its own assets: the build copies the frozen
+snapshot in `www/lit-ui-router.dev/snapshots/v1/` into `dist/v1/`. Every version that
+`public/versions.json` lists besides the current one needs its snapshot there, or the build fails.
+The snapshot directory is gitignored, and no stored copy reaches Workers Builds yet, so a deploy
+build has no `/v1/` to copy until the snapshot is stored where the build can fetch it.
+
+The snapshot is built once by
+[`scripts/docs-snapshot.ts`](lit-ui-router.dev/scripts/docs-snapshot.ts) (`pnpm run docs:snapshot`
+in the site package; mise and git required). It checks out the tag named for the version in
+`SNAPSHOT_TAGS` (`.vitepress/snapshot.ts`) in a throwaway worktree, copies in this checkout's
+version banner and menu, runs `mise run setup` and the site's turbo build there, then rebuilds the
+site with `vitepress build --base /v1/`. Before it replaces `snapshots/v1/`, it removes what the
+root serves live (`_headers`, `_redirects`, the sitemaps, `robots.txt`, `versions.json`) and what
+belongs to the worker (the sample-app shells and bundles, the release-page script and stylesheet).
+It also points links into the worker's mounts, such as `/releases` and `/app`, at the unversioned
+paths, moves the embedded examples under `/v1/examples/`, and rewrites `llms.txt` and
+`llms-full.txt` to list the `/v1/` pages. To replace the snapshot after a 1.x fix, cut the 1.x
+branch from the last tag, tag the release, update `SNAPSHOT_TAGS`, and run the script again.
+
+The main build's copy step adds each snapshot page's `<link rel="canonical">`: the same path on
+the main site if this build serves it, else where `catalog/redirects.ts` moved it, else the home
+page. It is resolved on every build because the main site keeps moving after the freeze. The
+build then fails if `sitemap-pages.xml`, `llms.txt` or `llms-full.txt` lists a `/v1/` URL.
+
+`/v1/` paths never run the worker. A miss under `/v1/` gets `/v1/404.html`, because
+`not_found_handling: "404-page"` serves the nearest `404.html`. `_redirects` sends `/v1/<mount>`
+and `/v1/<mount>/*` for every worker row in `catalog/surfaces.ts` to the unversioned mount: the
+VitePress client renders some nav links at runtime with the `/v1/` base, such as the mobile menu.
+
 ### Adding a site
 
 1. Add the package at `www/<domain>/`, named `@www/<domain>`, with a `wrangler.jsonc` or a

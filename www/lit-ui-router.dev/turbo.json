@@ -77,8 +77,10 @@
         "types:worker"
       ],
       // The generated index pages read these manifests, the embeds list and the example sources.
+      // snapshots/ is gitignored, so $TURBO_DEFAULT$ skips the copy step's source.
       "inputs": [
         "$TURBO_DEFAULT$",
+        "snapshots/**",
         "$TURBO_ROOT$/packages/*/package.json",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",
         "$TURBO_ROOT$/examples/embeds.ts",
