@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { describe, it } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
@@ -123,6 +125,59 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.req.url, '/app'); // default shellPath = mount base
     assert.equal(h.nextArgs.length, 1);
     assert.equal(h.ended, false); // the static layer ends it
+  });
+
+  for (const mode of ['setHeader', 'writeHead'] as const) {
+    it(`keeps the canonical Link when the downstream layer sends its own through ${mode}`, async () => {
+      const preload = '</app.js>; rel=preload; as=script';
+
+      const mw = createConnectMiddleware(
+        routerOf({ kind: 'shell', mount: '/app' }),
+      );
+
+      const server = http.createServer((req, res) =>
+        mw(req, res, () => {
+          if (mode === 'setHeader') res.setHeader('Link', preload);
+          else res.writeHead(200, { Link: preload });
+
+          res.end('<html>shell</html>');
+        }),
+      );
+
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve),
+      );
+
+      try {
+        // SAFETY: a listening TCP server's address is an AddressInfo.
+        const { port } = server.address() as AddressInfo;
+
+        const res = await fetch(`http://127.0.0.1:${port}/app/about`, {
+          headers: { accept: 'text/html' },
+        });
+
+        assert.equal(res.headers.get('Link'), `${CANONICAL_ABOUT}, ${preload}`);
+      } finally {
+        server.close();
+      }
+    });
+  }
+
+  it('sends the canonical Link once when the downstream layer re-sets it alongside its own', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    const both = `${h.headers.Link}, </app.js>; rel=preload`;
+    h.res.setHeader('Link', both);
+    h.res.setHeader('X-Other', 'kept');
+
+    assert.equal(h.headers.Link, both);
+    assert.equal(h.headers['X-Other'], 'kept');
   });
 
   it('percent-encodes what a raw request target cannot carry inside the Link', async () => {

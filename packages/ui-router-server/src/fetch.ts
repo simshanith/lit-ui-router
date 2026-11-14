@@ -580,7 +580,7 @@ export function createFetchHandler<
 
       // No canonical Link on a status'd shell: a 404 is not a page to index.
       if (verdict.status === undefined)
-        headers.set('Link', canonicalLink(base, url));
+        headers.append('Link', canonicalLink(base, url));
 
       return new Response(asset.body, {
         status: verdict.status ?? asset.status,
