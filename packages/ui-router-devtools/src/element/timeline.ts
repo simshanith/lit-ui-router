@@ -49,12 +49,6 @@ const RELATION_TEXT: Record<Relation, string> = {
   during: 'during the transition, not traced to it',
 };
 
-// Bars carry their place as fractions of the track; a bar narrower than a pixel is still drawn at 2px.
-const place = (bar: Bar, axis: Waterfall): string =>
-  bar.start === null || bar.end === null
-    ? ''
-    : `--s:${(bar.start - axis.zero) / axis.length};--w:${Math.max(0, bar.end - bar.start) / axis.length}`;
-
 const tags = (bar: Bar): string[] =>
   [
     bar.note,
@@ -62,10 +56,12 @@ const tags = (bar: Bar): string[] =>
     bar.running ? 'running' : null,
   ].filter((tag): tag is string => Boolean(tag));
 
-const timeOf = (bar: Bar, axis: Waterfall) =>
-  bar.start === null || bar.end === null
-    ? null
-    : { at: bar.start - axis.zero, took: bar.end - bar.start };
+const timeOf = ({ time }: Bar, axis: Waterfall) =>
+  time && { at: time.start - axis.zero, took: time.end - time.start };
+
+// Bars carry their place as fractions of the track; a bar narrower than a pixel is still drawn at 2px.
+const place = (time: { at: number; took: number }, axis: Waterfall): string =>
+  `--s:${time.at / axis.length};--w:${Math.max(0, time.took) / axis.length}`;
 
 /** What a row says to assistive technology: its name, when it ran, how long, and what the bar leaves out. */
 export const describeBar = (bar: Bar, axis: Waterfall): string => {
@@ -167,8 +163,6 @@ const onKey = (
   const key = (rtl && MIRRORED.get(event.key)) || event.key;
   const move = MOVES.get(key);
 
-  if (!row) return;
-
   let target: WaterfallRow | undefined;
 
   if (move) target = move(rows, index);
@@ -266,7 +260,7 @@ const renderRow = (
         time
           ? html`<span
               class="tl-bar ${barClass(bar)}"
-              style=${place(bar, axis)}
+              style=${place(time, axis)}
             ></span>`
           : nothing
       }</span
@@ -282,7 +276,7 @@ type Fact = readonly [term: string, value: string];
 const timeFacts = (bar: Bar, axis: Waterfall): Fact[] => {
   const time = timeOf(bar, axis);
 
-  if (!time) return [['Time', bar.note ?? 'untimed']];
+  if (!time) return [];
 
   return [
     ['Starts', duration(time.at)],
@@ -295,6 +289,8 @@ const facts = (bar: Bar, axis: Waterfall): Fact[] => {
 
   if (bar.state && bar.kind !== 'transition') list.push(['State', bar.state]);
   list.push(...timeFacts(bar, axis));
+
+  if (bar.note) list.push(['Note', bar.note]);
 
   if (bar.relation) list.push(['Joined', RELATION_TEXT[bar.relation]]);
 
@@ -372,12 +368,13 @@ export const renderTimeline = (host: DevtoolsPanel): TemplateResult => {
     (row) => row.bar.key === host._timelineSelected,
   )?.bar;
 
-  const tick = ticks(axis.length)[1];
+  // At most five lines past zero, so there are always at least two.
+  const [, tick] = ticks(axis.length);
 
   return html`<div
     class="timeline"
     ?data-detail=${Boolean(selected)}
-    style="--tick:${tick ? tick / axis.length : 1}"
+    style="--tick:${tick / axis.length}"
   >
     <div class="tl-main">
       ${renderAxis(axis)}
