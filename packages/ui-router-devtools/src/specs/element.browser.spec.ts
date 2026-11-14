@@ -1266,6 +1266,106 @@ describe('the nested Map', () => {
     );
   });
 
+  it('starts the scrubber keys at the first or last transition when none is selected', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const press = async (key: string) => {
+      listbox.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true }),
+      );
+      await element.updateComplete;
+      const [chosen] = getAllByRole(listbox, 'option', { selected: true });
+      listbox.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      );
+      await element.updateComplete;
+
+      return getAllByRole(listbox, 'option').indexOf(chosen);
+    };
+
+    expect(await press('ArrowRight')).toBe(0);
+    expect(await press('Home')).toBe(0);
+    expect(await press('ArrowLeft')).toBe(6);
+    expect(await press('End')).toBe(6);
+
+    element.dir = 'rtl';
+    await element.updateComplete;
+
+    expect(await press('ArrowLeft')).toBe(0);
+    expect(await press('ArrowRight')).toBe(6);
+  });
+
+  it('scrolls the scrubber to its newest transition only when one is added', async () => {
+    // Just wide enough to show the strip, so few transitions overflow it.
+    const element = await openMap(900);
+    const router = routers.at(-1)!;
+
+    for (let i = 0; i < 12; i++) {
+      await router.stateService.go('app.login');
+      await router.stateService.go('app.welcome');
+    }
+
+    await element.updateComplete;
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const end = () => listbox.scrollWidth - listbox.clientWidth;
+    expect(end()).toBeGreaterThan(0);
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+
+    listbox.scrollLeft = 0;
+    getAllByRole(listbox, 'option')[0].dispatchEvent(
+      new MouseEvent('mouseenter'),
+    );
+    await element.updateComplete;
+    expect(listbox.scrollLeft).toBe(0);
+
+    await router.stateService.go('app.login');
+    await element.updateComplete;
+    expect(listbox.scrollLeft).toBeCloseTo(end(), 0);
+  });
+
+  it('scrolls the scrubber to its newest transition when a hidden strip is shown again', async () => {
+    // Just wide enough to show the strip, so few transitions overflow it.
+    const element = await openMap(900);
+    const router = routers.at(-1)!;
+
+    for (let i = 0; i < 12; i++) {
+      await router.stateService.go('app.login');
+      await router.stateService.go('app.welcome');
+    }
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const end = () => listbox.scrollWidth - listbox.clientWidth;
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+
+    const maximise = getByRole(shadow(element), 'button', {
+      name: 'Maximise devtools',
+    });
+
+    listbox.scrollLeft = 0;
+    maximise.click();
+    await waitFor(() => expect(listbox.clientWidth).toBe(0));
+
+    // A transition recorded while the strip is hidden cannot scroll it.
+    await router.stateService.go('app.login');
+    await element.updateComplete;
+
+    maximise.click();
+    await waitFor(() => expect(end()).toBeGreaterThan(0));
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+  });
+
   it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
     // Wide enough that the popover has room beside the diagram.
     const element = await openMap(1680);
