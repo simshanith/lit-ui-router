@@ -395,7 +395,7 @@ export class DevtoolsPanel extends LitElement {
     this.#spans = new Map();
 
     for (const span of spans) upsertSpan(this.#spans, span);
-    this._spanCount = this.#spans.size;
+    this._spanCount += 1;
   }
 
   /** Adds a span, or replaces the one with its `spanId`, so a started span is sent again when it ends. */

@@ -2059,6 +2059,35 @@ describe('the Timeline', () => {
     );
   });
 
+  it('redraws when a list of the same length replaces the spans', async () => {
+    const { element, tree } = await open();
+    const tx = panelOf(element)._model.txs[0];
+    const at = performance.timeOrigin + tx.t + 1;
+
+    // Ended spans only, so no running span keeps the panel's clock ticking and redrawing on its own.
+    const fetch = {
+      traceId: 'a'.repeat(32),
+      spanId: 'b'.repeat(16),
+      name: 'GET /api/users',
+      startTime: at,
+      endTime: at + 5,
+    };
+
+    const item = (took: string) =>
+      getByRole(tree, 'treeitem', {
+        name: new RegExp(
+          `^GET /api/users, at [\\d.]+ ms, took ${took}, during$`,
+        ),
+      });
+
+    element.spans = [fetch];
+    await waitFor(() => item('5\\.0 ms'));
+
+    // The same span with a later end: one span in, one span out.
+    element.spans = [{ ...fetch, endTime: at + 9 }];
+    await waitFor(() => item('9\\.0 ms'));
+  });
+
   it('leaves a span that overlaps no transition out of the session file', async () => {
     const { element } = await open();
     const tx = panelOf(element)._model.txs[0];
