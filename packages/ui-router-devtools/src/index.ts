@@ -26,6 +26,8 @@ export {
   type SchemaVersion,
   type Session,
   type Source,
+  type SpanAttributeValue,
+  type SpanRecord,
   type StateInfo,
   type StatesEvent,
   type TransitionEvent,

@@ -10,6 +10,7 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import { redactionOf } from '@repo/router-events/redaction';
+import { errorNameOf, messageOf } from '@repo/router-events/thrown';
 import type {
   InvalidEvent,
   Outcome,
@@ -23,7 +24,7 @@ import type {
 } from '@repo/router-events/schema';
 
 // Every target runtime has it; declared here so the module compiles without DOM or node types.
-declare const performance: { readonly timeOrigin: number };
+declare const performance: { readonly timeOrigin: number; now(): number };
 
 export interface ReportOptions {
   /**
@@ -39,6 +40,13 @@ export interface ReportOptions {
 export interface TracerReporter {
   /** Feeds one adapter event to the reporter. */
   report(event: RouterEvent): void;
+  /** Starts a resolve's span now, as a child of its transition's span; none when the transition is not known. */
+  startResolve(id: number, token: string, state: string): Span | undefined;
+  /** Ends a span `startResolve` started. */
+  endResolve(span: Span): void;
+  /** Ends a span `startResolve` started as failed: its resolve threw or rejected with `error`. */
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
+  failResolve(span: Span, error: unknown): void;
   /** Ends every span still open and stops reporting. */
   dispose(): void;
 }
@@ -123,6 +131,11 @@ const resultAttributes = ({
   ...(invalidParams && { 'uirouter.invalid_params': invalidParams }),
   ...(outcome === 'invalid' && { 'error.type': 'invalid' }),
   ...(outcome === 'error' && { 'error.type': errorName ?? OTHER }),
+});
+
+const resolveAttributes = (token: string, state: string): Attributes => ({
+  'uirouter.resolve': token,
+  'uirouter.state': state,
 });
 
 const phaseKey = ({ phase, state }: PhaseEvent): string =>
@@ -222,10 +235,12 @@ export const reportToTracer = (
   const onResolve = (tx: Tx, event: ResolveEvent) => {
     if (event.cached) return;
 
-    const span = childOf(tx, `resolve ${event.token}`, event.start, {
-      'uirouter.resolve': event.token,
-      'uirouter.state': event.state,
-    });
+    const span = childOf(
+      tx,
+      `resolve ${event.token}`,
+      event.start,
+      resolveAttributes(event.token, event.state),
+    );
 
     if (!event.ok) {
       span.setAttribute('error.type', event.errorName ?? OTHER);
@@ -303,6 +318,26 @@ export const reportToTracer = (
   };
 
   return {
+    startResolve: (id, token, state) => {
+      const tx = txs.get(id);
+
+      return tx && !tx.settled
+        ? childOf(
+            tx,
+            `resolve ${token}`,
+            performance.now(),
+            resolveAttributes(token, state),
+          )
+        : undefined;
+    },
+    endResolve: (span) => span.end(at(performance.now())),
+    failResolve: (span, error) => {
+      const t = performance.now();
+
+      span.setAttribute('error.type', errorNameOf(error) ?? OTHER);
+      fail(span, messageOf(error), t);
+      span.end(at(t));
+    },
     report: (event) => {
       if (event.type === 'transition')
         txs.set(event.id, {

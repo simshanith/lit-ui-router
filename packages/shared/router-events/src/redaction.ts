@@ -3,6 +3,7 @@ import type {
   Redaction,
   RouterEvent,
   Session,
+  SpanRecord,
 } from './event-schema.ts';
 
 /** What a redacted param value becomes. */
@@ -80,6 +81,35 @@ export const combineRedaction = (
   messages: first.messages && second.messages,
 });
 
+const PARAM_ATTRIBUTE = 'uirouter.param.';
+
+// The router's own attributes name states and ids, except its params; any other library's can hold a URL or user data.
+const keepsAttribute = (key: string, keep: Redaction['params']): boolean => {
+  if (keep === 'all') return true;
+
+  if (key.startsWith(PARAM_ATTRIBUTE))
+    return keep.includes(key.slice(PARAM_ATTRIBUTE.length));
+
+  return key.startsWith('uirouter.');
+};
+
+/** Keeps a span's name, ids, times and status; an attribute value the param allowlist does not keep becomes `[redacted]`. */
+export const redactSpan = (
+  span: SpanRecord,
+  { params }: Redaction,
+): SpanRecord =>
+  span.attributes && params !== 'all'
+    ? {
+        ...span,
+        attributes: Object.fromEntries(
+          Object.entries(span.attributes).map(([key, value]) => [
+            key,
+            keepsAttribute(key, params) ? value : REDACTED,
+          ]),
+        ),
+      }
+    : span;
+
 /** The session with `redaction` applied on top of whatever it already scrubbed. */
 export const redactSession = (
   session: Session,
@@ -88,4 +118,7 @@ export const redactSession = (
   ...session,
   redaction: combineRedaction(session.redaction, redaction),
   events: session.events.map((event) => redactEvent(event, redaction)),
+  ...(session.spans && {
+    spans: session.spans.map((span) => redactSpan(span, redaction)),
+  }),
 });

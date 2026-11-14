@@ -34,6 +34,7 @@ catalog:
   '@lit-labs/ssr-dom-shim': ^1.6.0
   '@lit/context': ^1.1.6
   '@opentelemetry/api': ^1.10.0
+  '@opentelemetry/context-async-hooks': ^3.1.1
   '@opentelemetry/sdk-trace': ^3.1.1
   '@oxlint/plugins': 1.93.0
   '@pierre/diffs': 1.6.4

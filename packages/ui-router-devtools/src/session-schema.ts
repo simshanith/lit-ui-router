@@ -1,7 +1,7 @@
 // The session file's shape, for import and for the published JSON Schema; the panel loads it on first import.
 import * as v from 'valibot';
 
-import type { RouterEvent, Session } from './schema.ts';
+import type { RouterEvent, Session, SpanRecord } from './schema.ts';
 
 // An enum a later v1 may extend: the known values are documented, and an unknown one reads as `fallback`.
 const open = <const T extends string>(
@@ -179,6 +179,24 @@ const EVENTS = {
   current: currentEvent,
 };
 
+const attributeValue = v.union([
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.array(v.union([v.string(), v.number(), v.boolean(), v.null()])),
+]);
+
+const spanRecord = v.looseObject({
+  traceId: v.string(),
+  spanId: v.string(),
+  parentSpanId: v.optional(v.string()),
+  name: v.string(),
+  startTime: v.number(),
+  endTime: v.optional(v.number()),
+  status: v.optional(open(['unset', 'ok', 'error'], 'unset')),
+  attributes: v.optional(v.record(v.string(), attributeValue)),
+});
+
 const KNOWN = v.picklist([
   'config',
   'states',
@@ -215,11 +233,13 @@ const envelope = {
 const sessionFile = v.looseObject({
   ...envelope,
   events: v.array(v.union([...Object.values(EVENTS), laterEvent])),
+  spans: v.optional(v.array(spanRecord)),
 });
 
 const readable = v.looseObject({
   ...envelope,
   events: v.array(v.looseObject({ type: v.string() })),
+  spans: v.optional(v.array(v.unknown())),
 });
 
 /** The session file's schema, for the build that writes it out as JSON Schema. */
@@ -236,6 +256,7 @@ export interface EventSchemas {
   readonly InvalidEvent: v.GenericSchema;
   readonly CurrentEvent: v.GenericSchema;
   readonly LaterEvent: v.GenericSchema;
+  readonly SpanRecord: v.GenericSchema;
 }
 
 export const eventSchemas = (): EventSchemas => ({
@@ -248,10 +269,11 @@ export const eventSchemas = (): EventSchemas => ({
   InvalidEvent: invalidEvent,
   CurrentEvent: currentEvent,
   LaterEvent: laterEvent,
+  SpanRecord: spanRecord,
 });
 
 export type ReadResult =
-  | { ok: true; session: Session; skipped: number }
+  | { ok: true; session: Session; skipped: number; skippedSpans: number }
   | { ok: false; error: string };
 
 const issueText = (issues: readonly v.BaseIssue<unknown>[]): string => {
@@ -270,7 +292,7 @@ const readEvent = (event: { type: string }): RouterEvent | null => {
   return read.success ? read.output : null;
 };
 
-/** Reads a parsed session file: unknown fields pass through, and events of an unknown type or that do not read are skipped and counted. */
+/** Reads a parsed session file: unknown fields pass through, and events of an unknown type or that do not read, and spans that do not read, are skipped and counted. */
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a parsed file, which this function exists to check
 export const readSession = (json: unknown): ReadResult => {
   if (!v.is(v.looseObject({ format: v.literal('ui-router-session') }), json))
@@ -296,9 +318,18 @@ export const readSession = (json: unknown): ReadResult => {
     return known ? [known] : [];
   });
 
+  const { spans: listed, ...envelopeAndEvents } = read.output;
+
+  const spans = (listed ?? []).flatMap((span): SpanRecord[] => {
+    const known = v.safeParse(spanRecord, span);
+
+    return known.success ? [known.output] : [];
+  });
+
   return {
     ok: true,
-    session: { ...read.output, events },
+    session: { ...envelopeAndEvents, events, ...(listed && { spans }) },
     skipped: read.output.events.length - events.length,
+    skippedSpans: (listed?.length ?? 0) - spans.length,
   };
 };

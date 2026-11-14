@@ -101,6 +101,12 @@
           }
         ]
       }
+    },
+    "spans": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SpanRecord"
+      }
     }
   },
   "required": [
@@ -940,6 +946,88 @@
         "seq",
         "t",
         "type"
+      ]
+    },
+    "SpanRecord": {
+      "type": "object",
+      "properties": {
+        "traceId": {
+          "type": "string"
+        },
+        "spanId": {
+          "type": "string"
+        },
+        "parentSpanId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "startTime": {
+          "type": "number"
+        },
+        "endTime": {
+          "type": "number"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "enum": [
+                "unset",
+                "ok",
+                "error"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "traceId",
+        "spanId",
+        "name",
+        "startTime"
       ]
     }
   }

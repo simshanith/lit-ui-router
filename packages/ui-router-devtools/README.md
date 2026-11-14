@@ -12,17 +12,30 @@ A state has one colour wherever it appears: its box on the Map, its glyph and ra
 
 The package is private and unpublished, so it is workspace-only for now. The design, the screenshots and the open decisions are in the [router visualizer proposal](../../docs/visualizer-proposal/README.md) and its [devtools scope](../../docs/visualizer-proposal/devtools.md).
 
+## Timeline
+
+The Timeline view draws the transition in focus, or the latest, as a waterfall: the transition and its redirect chain as top bars, and its phases and resolves under them on one time axis, each row with its start and its duration as text. A running transition's bars grow with the clock. A phase cut short by a redirect or a supersede, a cached resolve and the resolves of a session recorded without `timeResolves` are tagged, not drawn as bars. The rows are a `tree` with the Outline's keys; Enter shows a bar's details. Its code and styles load on first use of the view. The rules are in [the Timeline](../../docs/visualizer-proposal/timeline.md).
+
+Given spans from a tracer, the Timeline nests the ones that ran during the transition under it, each tagged by how the panel knows it belongs: a child of the router's own span, a span of the same trace, or `during` when it only overlaps in time. The element takes spans in a shape that names no tracing library, `SpanRecord`:
+
+| Member          | Effect                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `spans`         | The spans the panel holds, the latest 2000; setting it replaces them all                   |
+| `addSpan(span)` | Adds a span, or replaces the one with its `spanId`, so a span can be sent at start and end |
+
+[`ui-router-otel`](../ui-router-otel/README.md#the-devtools-timeline)'s `DevtoolsSpanProcessor` feeds it from an OpenTelemetry tracer provider. A panel that is given no span shows nothing about spans.
+
 ## Entry points
 
-| Subpath                 | Contents                                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `SCHEMA_VERSION` and the event and session types |
-| `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                     |
-| `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                |
-| `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                  |
-| `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                               |
-| `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                              |
-| `./session.schema.json` | The session file's JSON Schema                                                                                                  |
+| Subpath                 | Contents                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `SCHEMA_VERSION` and the event, session and span types |
+| `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                           |
+| `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                      |
+| `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                        |
+| `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                                     |
+| `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                                    |
+| `./session.schema.json` | The session file's JSON Schema                                                                                                        |
 
 `lit` and `valibot` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
 
@@ -41,7 +54,9 @@ if (element.recorder) reportToPerformance(element.recorder);
 
 `recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states and current snapshots and the recorded events. The `id` names the recording, not the file: every export of one recorder carries the same `id`, and `(id, seq)` identifies an event across them. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
 
-A recorder's ring buffer drops whole transitions, oldest first, and counts the events it dropped in `dropped`; the panel notes them at the end of the log and in the router card. The panel's Import reads a file through the same schema: it refuses a file that is not a session, and skips and counts events of a type it does not know.
+A session file from a panel that was given spans also holds them, in an optional `spans` field: the spans that overlap any of its transitions, with epoch times. An export keeps a span's name, ids, times and status, and scrubs its attributes by the `params` field below: with `'all'` every value stays; otherwise the router's own `uirouter.*` attributes stay, a `uirouter.param.<key>` stays when `params` lists the key, and every other attribute keeps its key with `[redacted]` for its value, since span attributes carry URLs and query strings. A file without spans has no field.
+
+A recorder's ring buffer drops whole transitions, oldest first, and counts the events it dropped in `dropped`; the panel notes them at the end of the log and in the router card. The panel's Import reads a file through the same schema: it refuses a file that is not a session, and skips and counts events of a type it does not know and spans that do not read.
 
 An export is scrubbed by a `Redaction`, the model `ui-router-otel` shares:
 
@@ -76,12 +91,12 @@ The published JSON Schema writes an open enum as `anyOf` of the known values and
 pnpm -C packages/ui-router-devtools dev --port 5391 --strictPort
 ```
 
-Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true`, an invalid target and a transition with an invalid param value. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
+Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a param change, a redirect, a superseded transition, two ignored, an error, a URL change, `location: 'replace'`, `reload: true`, an invalid target and a transition with an invalid param value. `?perf=1` and `?console=1` turn on the two reporters. The demo opts into `timeResolves`. `?spans` sends the panel spans as an instrumented app would: a router span per transition and a fetch span per resolve, the `stars` fetch under a resolve span as `ui-router-otel`'s `activateResolveSpans` sends it, and the others in traces of their own, for the Timeline. `?stress=1` registers a 60-state tree instead, six levels deep with 20 top-level siblings and a 40-character segment, to exercise the nested Map's fit ladder.
 
 The demo fakes what a real app would supply:
 
 - States have no components; the page renders a stub line on success.
-- Resolves are `setTimeout` stubs (40 to 200 ms). `galaxy.blackhole` (a rejecting resolve), `mission` (an abstract state) and `admin.**` (a lazy future state) exist only here.
+- Resolves are `setTimeout` stubs (40 to 200 ms), and with `?spans` their fetch spans are made up too. `galaxy.blackhole` (a rejecting resolve), `mission` (an abstract state) and `admin.**` (a lazy future state) exist only here.
 - `galaxy.stars` declares `dsr` and `sticky` to show their marks; neither plugin is loaded, so the properties do nothing.
 - Inspector subsections for hooks and views are not built.
 

@@ -1,7 +1,9 @@
 import {
+  adoptStyles,
   html,
   LitElement,
   nothing,
+  type CSSResult,
   type CSSResultGroup,
   type PropertyDeclarations,
   type PropertyValues,
@@ -30,8 +32,11 @@ import {
   type Params,
   type Redaction,
   type Session,
+  type SpanRecord,
   type StateInfo,
 } from '../schema.ts';
+import { spansDuring, upsertSpan } from '../spans.ts';
+import type { WaterfallInput } from './waterfall.ts';
 import {
   closeGlyph,
   depthClass,
@@ -72,6 +77,10 @@ type MapLayout = 'nested' | 'tree';
 
 type MapModule = typeof import('./map.ts');
 
+type TimelineModule = typeof import('./timeline.ts');
+
+type StateView = 'outline' | 'map' | 'timeline';
+
 type SessionReader = typeof import('../session-schema.ts');
 
 // Kept outside the recorder's ring buffer, so not counted as recorded events.
@@ -90,6 +99,8 @@ interface Notice {
 }
 
 const MAP_FAILED = 'The Map did not load. Switch views to retry.';
+
+const TIMELINE_FAILED = 'The Timeline did not load. Switch views to retry.';
 
 /** Below this inline size the nested layout is the Outline with borders, so it is not offered. */
 const NESTED_MIN_WIDTH = 560;
@@ -259,6 +270,11 @@ export class DevtoolsPanel extends LitElement {
     _keepValues: { state: true },
     _keepMessages: { state: true },
     _notice: { state: true },
+    _timelineFailed: { state: true },
+    _timelineFocus: { state: true },
+    _timelineSelected: { state: true },
+    _timelineCollapsed: { state: true },
+    _spanCount: { state: true },
   };
 
   declare router: UIRouter | undefined;
@@ -269,7 +285,7 @@ export class DevtoolsPanel extends LitElement {
   declare _live: Model;
   declare _imported: { session: Session; model: Model } | null;
   declare _tab: 'tree' | 'log';
-  declare _view: 'outline' | 'map';
+  declare _view: StateView;
   declare _layoutPref: MapLayout;
   declare _max: boolean;
   declare _mapSize: Size;
@@ -291,6 +307,14 @@ export class DevtoolsPanel extends LitElement {
   declare _keepValues: boolean;
   declare _keepMessages: boolean;
   declare _notice: Notice | null;
+  // The Timeline's chunk failed to load; choosing the Timeline again retries it.
+  declare _timelineFailed: boolean;
+  // The Timeline row with the roving tab stop, the one whose details show, and the rows closed by hand.
+  declare _timelineFocus: string | null;
+  declare _timelineSelected: string | null;
+  declare _timelineCollapsed: ReadonlySet<string>;
+  // Bumped by every span added, so the Timeline redraws.
+  declare _spanCount: number;
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
@@ -298,6 +322,13 @@ export class DevtoolsPanel extends LitElement {
   _importReader = (): Promise<SessionReader> => import('../session-schema.ts');
   // Loads the Map's chunk; a spec swaps it to fail the load.
   _importMap = (): Promise<MapModule> => import('./map.ts');
+  // Loads the Timeline's chunk; a spec swaps it to fail the load.
+  _importTimeline = (): Promise<TimelineModule> => import('./timeline.ts');
+  // The Timeline's waterfall and its render, loaded on first use of the Timeline view.
+  _timeline: TimelineModule | undefined;
+  #timelineLoading = false;
+  // Spans from a tracer, by span id, oldest first.
+  #spans = new Map<string, SpanRecord>();
   // The fit ladder's last rung, for its hysteresis.
   _rung: Rung | undefined;
   // The Map's layouts and edge router, loaded on first use of the Map tab.
@@ -345,11 +376,55 @@ export class DevtoolsPanel extends LitElement {
     this._announcement = '';
     this._now = performance.now();
     this._notice = null;
+    this._timelineFailed = false;
+    this._timelineCollapsed = new Set();
+    this._spanCount = 0;
   }
 
   // The recorder behind the panel, for reporters that should share it.
   get recorder(): Recorder | undefined {
     return this.#recorder;
+  }
+
+  /** Spans from a tracer, for the Timeline; setting it replaces them all. */
+  get spans(): readonly SpanRecord[] {
+    return [...this.#spans.values()];
+  }
+
+  set spans(spans: readonly SpanRecord[]) {
+    this.#spans = new Map();
+
+    for (const span of spans) upsertSpan(this.#spans, span);
+    this._spanCount += 1;
+  }
+
+  /** Adds a span, or replaces the one with its `spanId`, so a started span is sent again when it ends. */
+  addSpan(span: SpanRecord): void {
+    upsertSpan(this.#spans, span);
+    this._spanCount += 1;
+  }
+
+  // The spans the Timeline joins: an imported session's own, else the ones given to the panel.
+  _spanList(): readonly SpanRecord[] {
+    return this._imported ? (this._imported.session.spans ?? []) : this.spans;
+  }
+
+  // The epoch time of the event clock's zero.
+  get _timeOrigin(): number {
+    return this._imported?.session.timeOrigin ?? performance.timeOrigin;
+  }
+
+  _timelineInput(): Omit<WaterfallInput, 'tx'> {
+    const model = this._model;
+
+    return {
+      txs: model.txs,
+      states: model.states,
+      clock: this._clock,
+      timeResolves: this._imported?.session.timeResolves ?? this.timeResolves,
+      spans: this._spanList(),
+      timeOrigin: this._timeOrigin,
+    };
   }
 
   get _model(): Model {
@@ -395,24 +470,19 @@ export class DevtoolsPanel extends LitElement {
       if (this.router && this.isConnected) this.#attach(this.router);
     }
 
-    if (
-      this._view === 'map' &&
-      !this._map &&
-      !this.#mapLoading &&
-      (!this._mapFailed || changed.has('_view'))
-    )
-      this.#loadMap();
-
+    this.#loadViews(changed);
     this.#followMap(changed);
     this.#syncTicker();
   }
 
-  // Durations of a live transition tick while it runs.
+  // Durations of a live transition tick while it runs, and on the Timeline so do the spans still running.
   #syncTicker() {
     const running =
       Boolean(this.#recorder) &&
       !this._imported &&
-      this._live.txs.some((tx) => !tx.result);
+      (this._live.txs.some((tx) => !tx.result) ||
+        (this._view === 'timeline' &&
+          this.spans.some((span) => span.endTime === undefined)));
 
     if (running && !this.#ticker)
       this.#ticker = setInterval(() => (this._now = performance.now()), 100);
@@ -421,6 +491,27 @@ export class DevtoolsPanel extends LitElement {
       clearInterval(this.#ticker);
       this.#ticker = undefined;
     }
+  }
+
+  // The Map and the Timeline load on first use; a failed load retries when the view is chosen again.
+  #loadViews(changed: PropertyValues<this>) {
+    const retry = changed.has('_view');
+
+    if (
+      this._view === 'map' &&
+      !this._map &&
+      !this.#mapLoading &&
+      (!this._mapFailed || retry)
+    )
+      this.#loadMap();
+
+    if (
+      this._view === 'timeline' &&
+      !this._timeline &&
+      !this.#timelineLoading &&
+      (!this._timelineFailed || retry)
+    )
+      this.#loadTimeline();
   }
 
   #loadMap() {
@@ -441,6 +532,36 @@ export class DevtoolsPanel extends LitElement {
         this._announcement = MAP_FAILED;
       },
     );
+  }
+
+  #loadTimeline() {
+    this.#timelineLoading = true;
+    this._timelineFailed = false;
+
+    if (this._announcement === TIMELINE_FAILED) this._announcement = '';
+
+    void this._importTimeline().then(
+      (timeline) => {
+        this._timeline = timeline;
+        this.#timelineLoading = false;
+        this.#adopt(timeline.timelineStyles);
+        this.requestUpdate();
+      },
+      () => {
+        this._timelineFailed = true;
+        this.#timelineLoading = false;
+        this._announcement = TIMELINE_FAILED;
+      },
+    );
+  }
+
+  // A chunk's own rules join the panel's once it loads; lit falls back to style elements where sheets cannot be adopted.
+  #adopt(styles: CSSResult) {
+    // SAFETY: a LitElement renders into its open shadow root unless createRenderRoot is overridden, and this one's is not
+    adoptStyles(this.renderRoot as ShadowRoot, [
+      ...DevtoolsPanel.elementStyles,
+      styles,
+    ]);
   }
 
   // A panned view follows its layout: a zoom holds the middle of the room still, and a re-pack the focused box.
@@ -799,6 +920,8 @@ export class DevtoolsPanel extends LitElement {
     this._previewTx = null;
     this._selectedState = null;
     this._focusState = null;
+    this._timelineFocus = null;
+    this._timelineSelected = null;
 
     if (this._inspect !== 'router') this._inspect = 'none';
   }
@@ -1038,13 +1161,28 @@ export class DevtoolsPanel extends LitElement {
   // Session export and import
 
   session(redaction?: Partial<Redaction>): Session | undefined {
-    const session =
-      this._imported?.session ?? this.#recorder?.session({ params: 'all' });
+    const session = this._imported?.session ?? this.#liveSession();
 
     return (
       session &&
       redactSession(session, redactionOf({ ...this.redaction, ...redaction }))
     );
+  }
+
+  // The recorder's session, with the spans that ran during its transitions when the panel was given any.
+  #liveSession(): Session | undefined {
+    const session = this.#recorder?.session({ params: 'all' });
+
+    if (!session || !this.#spans.size) return session;
+
+    const spans = spansDuring(
+      this.spans,
+      fold(session.events).txs,
+      session.timeOrigin,
+      session.t,
+    );
+
+    return spans.length ? { ...session, spans } : session;
   }
 
   importSession(session: Session): void {
@@ -1150,11 +1288,21 @@ export class DevtoolsPanel extends LitElement {
 
     this.importSession(read.session);
 
-    if (read.skipped)
-      this._notice = {
-        text: `${read.skipped} ${read.skipped === 1 ? 'event' : 'events'} of a kind this version does not read skipped`,
-        fault: false,
-      };
+    const skipped = [
+      ...(read.skipped
+        ? [
+            `${read.skipped} ${read.skipped === 1 ? 'event' : 'events'} of a kind this version does not read`,
+          ]
+        : []),
+      ...(read.skippedSpans
+        ? [
+            `${read.skippedSpans} ${read.skippedSpans === 1 ? 'span' : 'spans'} that did not read`,
+          ]
+        : []),
+    ];
+
+    if (skipped.length)
+      this._notice = { text: `${skipped.join(' and ')} skipped`, fault: false };
   }
 
   #onDrop(event: DragEvent) {
@@ -1285,11 +1433,11 @@ export class DevtoolsPanel extends LitElement {
             role="tabpanel"
             aria-labelledby="h-states"
           >
-            ${this.#sectionHead('1', 'States', 'h-states')}
+            ${this.#sectionHead('1', this._view === 'timeline' ? 'Timeline' : 'States', 'h-states')}
             <div class="pane-switch">${this.#renderSwitch()}</div>
             ${this.#renderStates()}
           </section>
-          ${this._view === 'map' ? renderScrubber(this) : nothing}
+          ${this._view === 'outline' ? nothing : renderScrubber(this)}
           <section
             class="pane log-pane"
             id="pane-log"
@@ -1352,6 +1500,17 @@ export class DevtoolsPanel extends LitElement {
         ${renderOutline(this)}
       </div>`;
 
+    if (this._view === 'timeline')
+      return html`<div class="scroll timeline-scroll">
+        ${
+          this._timeline
+            ? this._timeline.renderTimeline(this)
+            : this._timelineFailed
+              ? html`<p class="empty">${TIMELINE_FAILED}</p>`
+              : nothing
+        }
+      </div>`;
+
     const nested = this._nested();
     const map = this._map;
 
@@ -1378,7 +1537,7 @@ export class DevtoolsPanel extends LitElement {
     const why = `Nested boxes need ${NESTED_MIN_WIDTH}px of width`;
 
     return html`<div class="switch" role="group" aria-label="State view">
-        ${(['outline', 'map'] as const).map(
+        ${(['outline', 'map', 'timeline'] as const).map(
           (view) =>
             html`<button
               aria-pressed=${this._view === view}

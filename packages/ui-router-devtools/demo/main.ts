@@ -5,6 +5,7 @@ import { reportToConsole } from '../src/console.ts';
 import { demoStates, delay } from './states.ts';
 import { demoSequence, goByUrl, goQuietly } from './sequence.ts';
 import { stressSequence, stressStates } from './stress.ts';
+import { demoTracing } from './spans.ts';
 
 const query = new URLSearchParams(location.search);
 
@@ -16,8 +17,13 @@ router.plugin(hashLocationPlugin);
 
 const devtools = router.plugin(DevtoolsPlugin, { timeResolves: true });
 
+// `?spans` sends the panel spans as an instrumented app would, for the Timeline.
+const trace = query.has('spans')
+  ? demoTracing(router, devtools.element)
+  : <S>(state: S) => state;
+
 (query.has('stress') ? stressStates() : demoStates()).forEach((s) =>
-  router.stateRegistry.register(s),
+  router.stateRegistry.register(trace(s)),
 );
 
 const recorder = devtools.element.recorder;
