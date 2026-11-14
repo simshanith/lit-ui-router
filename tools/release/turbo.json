@@ -63,7 +63,9 @@
     },
     "resolve:published": {
       // Reads the live registry (the only mutable state here); never cache.
-      "cache": false
+      "cache": false,
+      // RELEASE names the version to wait for; GITHUB_ACTIONS turns a lapsed wait into a run annotation.
+      "passThroughEnv": ["RELEASE", "GITHUB_ACTIONS"]
     },
     "check:published-diff": {
       // Cached: the verdict is a pure function of the pack surface and the
