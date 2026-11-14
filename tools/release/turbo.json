@@ -64,7 +64,7 @@
     "resolve:published": {
       // Reads the live registry (the only mutable state here); never cache.
       "cache": false,
-      // RELEASE names the version to wait for; GITHUB_ACTIONS turns a lapsed wait into a run annotation.
+      // RELEASE turns on the wait for npm to list new versions; GITHUB_ACTIONS turns a lapsed wait into a run annotation.
       "passThroughEnv": ["RELEASE", "GITHUB_ACTIONS"]
     },
     "check:published-diff": {

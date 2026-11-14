@@ -1,50 +1,117 @@
-// Pure logic for resolve-published.ts: which release to wait for, and the wait itself over an injected registry read.
+// Pure logic for resolve-published.ts: which versions to wait for, and the wait itself over an injected registry read.
+
+import { messageOf } from '@tools/shared/errors.ts';
 
 import { type RetryOptions, withRetry } from '../lib/retry.ts';
+import type { PublishedVersions } from './published-versions.core.ts';
 import { releaseOf } from './ledger-check-runs.core.ts';
 
 type Tags = Record<string, string>;
 
+export type Target = { name: string; version: string };
+
 /** 5 s doubling over 7 reads: about 5¼ minutes of waiting, inside the npm job's 15-minute timeout. */
 export const WAIT_FOR_LISTING = { attempts: 7, baseDelayMs: 5000 } as const;
 
-/** The `<name>@<version>` to wait for, or undefined when blank, unparseable, or not a publishable member. */
+/** The `<name>@<version>` a post-publish run names, or undefined when blank, unparseable, or not a publishable member. */
 export function awaitedRelease(
   release: string,
   publishable: readonly string[],
-): { name: string; version: string } | undefined {
+): Target | undefined {
   const parsed = releaseOf(release.trim());
 
   return parsed && publishable.includes(parsed.name) ? parsed : undefined;
 }
 
-class NotListed extends Error {
-  readonly tags: Tags;
+/** Whether any dist-tag points at `version`. */
+export function isListed(tags: Tags | undefined, version: string): boolean {
+  return Object.values(tags ?? {}).includes(version);
+}
 
-  constructor(tags: Tags) {
-    super('version not on any dist-tag yet');
-    this.tags = tags;
+/**
+ * What a post-publish run waits for: the named release, plus every package
+ * already on npm whose checked-out version no dist-tag lists yet. No release
+ * named means no wait.
+ */
+export function pendingTargets(
+  release: Target | undefined,
+  members: readonly { name: string; version: string | undefined }[],
+  first: PublishedVersions,
+): Target[] {
+  if (!release) return [];
+
+  const targets = members.flatMap(({ name, version }): Target[] => {
+    if (name === release.name) return [release];
+
+    const onNpm = Object.keys(first[name] ?? {}).length > 0;
+
+    return onNpm && version !== undefined ? [{ name, version }] : [];
+  });
+
+  return targets.filter(({ name, version }) => !isListed(first[name], version));
+}
+
+export class NotListed extends Error {
+  readonly pending: readonly Target[];
+
+  constructor(pending: readonly Target[]) {
+    super('versions not on any dist-tag yet');
+    this.pending = pending;
   }
 }
 
-/** Re-reads the dist-tags until one points at `version`; `listed: false` carries the last read once the budget runs out. */
-export async function waitForListing(
-  read: () => Promise<Tags>,
-  version: string,
+export const specsOf = (targets: readonly Target[]): string =>
+  targets.map(({ name, version }) => `${name}@${version}`).join(', ');
+
+/** The log line for a retry: still unlisted, or a failed read. */
+export function retryMessage(
+  cause: unknown,
+  attempt: number,
+  attempts: number,
+): string {
+  return cause instanceof NotListed
+    ? `npm doesn't list ${specsOf(cause.pending)} yet (read ${attempt} of ${attempts}); waiting`
+    : `npm dist-tags read ${attempt} of ${attempts} failed: ${messageOf(cause)}; retrying`;
+}
+
+/**
+ * Re-reads only the pending packages, under one shared budget, until a
+ * dist-tag lists each; read 1 is `first`, so the budget counts it.
+ * `unlisted` names what npm still lags on once the budget runs out.
+ */
+export async function waitForListings(
+  read: (name: string) => Promise<Tags>,
+  pending: readonly Target[],
+  first: PublishedVersions,
   options: RetryOptions = WAIT_FOR_LISTING,
-): Promise<{ tags: Tags; listed: boolean }> {
-  const readListed = async () => {
-    const tags = await read();
+): Promise<{ versions: PublishedVersions; unlisted: Target[] }> {
+  const versions = { ...first };
+  let left = [...pending];
+  let reread = false;
 
-    if (!Object.values(tags).includes(version)) throw new NotListed(tags);
+  const check = async () => {
+    if (reread) {
+      const reads = await Promise.all(left.map(({ name }) => read(name)));
 
-    return tags;
+      left.forEach(({ name }, index) => {
+        versions[name] = reads[index] ?? {};
+      });
+    }
+
+    reread = true;
+    left = left.filter(
+      ({ name, version }) => !isListed(versions[name], version),
+    );
+
+    if (left.length > 0) throw new NotListed(left);
   };
 
   try {
-    return { tags: await withRetry(readListed, options), listed: true };
+    await withRetry(check, options);
+
+    return { versions, unlisted: [] };
   } catch (cause) {
-    if (cause instanceof NotListed) return { tags: cause.tags, listed: false };
+    if (cause instanceof NotListed) return { versions, unlisted: left };
 
     throw cause;
   }

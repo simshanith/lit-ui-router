@@ -32,7 +32,8 @@ on:
   # pushes the bump commit before npm `latest` moves, so the push-triggered
   # run sees stale drift; the post-publish run flips the badge green. npm's
   # dist-tags lag the publish by minutes, so that run's published diff first
-  # waits for them to list the `release` input.
+  # waits for them to list the `release` input and every other published
+  # package's version on main.
   workflow_dispatch:
     inputs:
       packages:
@@ -41,7 +42,7 @@ on:
         default: ''
         type: string
       release:
-        description: 'The <name>@<version> just published; the published diff waits for npm to list it, and the release-ledger check compares its tarball digest with npm. Empty skips both.'
+        description: "The <name>@<version> just published; the published diff waits for npm to list it and every other published package's version on main, and the release-ledger check compares its tarball digest with npm. Empty skips both."
         required: false
         default: ''
         type: string
@@ -92,7 +93,7 @@ jobs:
           # Empty on push, schedule, and post-publish runs = full set (the
           # empty string the tool treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
-          # Empty off the post-publish dispatch, which skips the wait for npm.
+          # Empty off the post-publish dispatch: no wait for npm.
           RELEASE: ${{ inputs.release }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

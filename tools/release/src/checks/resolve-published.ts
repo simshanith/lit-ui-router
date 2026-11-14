@@ -14,7 +14,10 @@ import { writePublishedVersions } from './published-versions.ts';
 import {
   WAIT_FOR_LISTING,
   awaitedRelease,
-  waitForListing,
+  pendingTargets,
+  retryMessage,
+  specsOf,
+  waitForListings,
 } from './resolve-published.core.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { logWarning } from '@tools/shared/gha.ts';
@@ -37,67 +40,59 @@ async function publishedTags(name: string): Promise<Record<string, string>> {
   }
 }
 
-/** `name`'s dist-tags once one points at `version`, or the last read when npm still lags after the wait. */
-async function listedTags(
-  name: string,
-  version: string,
-): Promise<Record<string, string>> {
-  const { tags, listed } = await waitForListing(
-    () => publishedTags(name),
-    version,
-    {
-      ...WAIT_FOR_LISTING,
-      onRetry: (_, attempt) =>
-        console.log(
-          `npm doesn't list ${name}@${version} yet (read ${attempt} of ${WAIT_FOR_LISTING.attempts}); waiting`,
-        ),
-    },
-  );
-
-  if (!listed) {
-    logWarning(
-      `npm's dist-tags for ${name} still don't list ${version} after the wait; published-diff compares against what npm lists`,
-    );
-  }
-
-  return tags;
-}
-
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const release = process.env.RELEASE?.trim() ?? '';
 
-  const awaited = awaitedRelease(
+  const named = awaitedRelease(
     release,
     publishable.map(({ name }) => name),
   );
 
-  const versions: PublishedVersions = {};
-  const summary: string[] = [];
-
-  if (release !== '' && !awaited) {
+  if (release !== '' && !named) {
     logWarning(
       `RELEASE ${release} is not <name>@<version> of a publishable package; resolving without waiting`,
     );
   }
 
-  for (const { name } of publishable) {
-    const tags =
-      name === awaited?.name
-        ? await listedTags(name, awaited.version)
-        : await publishedTags(name);
+  const first: PublishedVersions = {};
 
-    versions[name] = tags;
+  for (const { name } of publishable) first[name] = await publishedTags(name);
 
+  const pending = pendingTargets(
+    named,
+    publishable.map(({ name, manifest }) => ({
+      name,
+      version: manifest.version,
+    })),
+    first,
+  );
+
+  const { versions, unlisted } = await waitForListings(
+    publishedTags,
+    pending,
+    first,
+    {
+      ...WAIT_FOR_LISTING,
+      onRetry: (cause, attempt) =>
+        console.log(retryMessage(cause, attempt, WAIT_FOR_LISTING.attempts)),
+    },
+  );
+
+  if (unlisted.length > 0) {
+    logWarning(
+      `npm's dist-tags still don't list ${specsOf(unlisted)} after the wait; published-diff compares against what npm lists`,
+    );
+  }
+
+  const summary = Object.entries(versions).map(([name, tags]) => {
     const specs = Object.entries(tags)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([tag, version]) => `${tag}@${version}`);
 
-    summary.push(
-      `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
-    );
-  }
+    return `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`;
+  });
 
   await writePublishedVersions(versions);
   console.log(
