@@ -3550,6 +3550,15 @@ importers:
         specifier: 'catalog:'
         version: 4.159.0(@types/node@24.19.2)
 
+  www/v1.versions.lit-ui-router.dev:
+    devDependencies:
+      cf:
+        specifier: 'catalog:'
+        version: 1.0.0-beta.28(@types/node@24.19.2)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.159.0(@types/node@24.19.2)
+
 packages:
 
   '@11ty/gray-matter@2.1.0':

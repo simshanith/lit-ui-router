@@ -7,6 +7,7 @@ import { createFetchHandler } from 'ui-router-server/fetch';
 import type { ReleaseDiffs } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
 import { serveReleases } from './releases/serve.ts';
+import { isSnapshotPath, serveSnapshot } from './snapshot.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
 // turns a verdict into an HTTP Response. Module scope: the mount tables
@@ -56,6 +57,9 @@ const NAIVE_MOUNT = '/not-found-naive';
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (isSnapshotPath(url.pathname))
+      return serveSnapshot(request, env.DOCS_V1);
 
     // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them

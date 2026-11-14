@@ -44,6 +44,9 @@
       "/releases/*",
       "/gh",
       "/gh/*",
+      // The frozen 1.x docs, handed whole to their own Worker.
+      "/v1",
+      "/v1/*",
     ],
   },
   // Read-only RPC into the release ledger worker; the docs worker holds no D1 binding.
@@ -55,5 +58,7 @@
     },
     // The release-diffs worker's default entrypoint: each pair's npm diff, built once into R2.
     { "binding": "RELEASE_DIFFS", "service": "release-diffs" },
+    // The frozen 1.x docs: an assets-only Worker (www/v1.versions.lit-ui-router.dev), deployed by hand.
+    { "binding": "DOCS_V1", "service": "lit-ui-router-docs-v1" },
   ],
 }

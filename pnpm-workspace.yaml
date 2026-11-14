@@ -6,6 +6,7 @@ packages:
   - www/lit-ui-router.dev
   - www/release-diffs.lit-ui-router.dev
   - www/release-ledger.lit-ui-router.dev
+  - www/v1.versions.lit-ui-router.dev
   - examples
 
 catalog:

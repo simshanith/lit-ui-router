@@ -1,10 +1,17 @@
-import { existsSync, globSync } from 'node:fs';
-import { cp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { RedirectLine } from 'ui-router-server/prerender';
+import * as v from 'valibot';
 
 import { SURFACES } from '../catalog/surfaces.ts';
-import { matchRedirect, servedFiles } from './redirects.ts';
+import {
+  isDynamic,
+  matchRedirect,
+  redirectsFileBody,
+  servedFiles,
+} from './redirects.ts';
 import { SITE_ORIGIN, type VersionManifest } from './versions.ts';
 
 /** The tag each frozen snapshot is built from, keyed by version id. */
@@ -16,13 +23,19 @@ export const SNAPSHOT_TAGS = {
 export const hasSnapshotTag = (id: string): id is keyof typeof SNAPSHOT_TAGS =>
   Object.hasOwn(SNAPSHOT_TAGS, id);
 
-/** Where `scripts/docs-snapshot.ts` writes each snapshot's built output, one directory per version id. */
-export const SNAPSHOTS_DIR = join(import.meta.dirname, '..', 'snapshots');
+/** The `www/` package that holds a snapshot's Worker config and, gitignored, its built assets. */
+export const snapshotPackage = (id: string): string =>
+  `www/${id}.versions.lit-ui-router.dev`;
+
+/** A snapshot surface's row: a frozen version's whole prefix, handed to that version's Worker. */
+const isSnapshotRow = (id: string): boolean => id.startsWith('snapshot-');
 
 /** The worker's mounts: a snapshot serves none of them, so its links into them go to the main site's. */
 export const WORKER_MOUNTS: readonly string[] = SURFACES.flatMap(
-  ({ renderer, paths }) =>
-    renderer === 'worker' ? paths.filter((path) => !path.includes('*')) : [],
+  ({ id, renderer, paths }) =>
+    renderer === 'worker' && !isSnapshotRow(id)
+      ? paths.filter((path) => !path.includes('*'))
+      : [],
 );
 
 /** Built files a snapshot drops: the root serves the live copies, and the worker serves the mounts. */
@@ -159,20 +172,21 @@ export async function finishSnapshot(
   }
 }
 
+/** Whether a built site answers the path, as html_handling resolves it. */
+const isServed = (outDir: string, path: string): boolean =>
+  servedFiles(outDir, path).some((file) => existsSync(file));
+
 /** The latest page a snapshot page points its canonical at: the same path, else where the main site moved it, else the home page. */
 export function canonicalPath(
   path: string,
   outDir: string,
   redirects: readonly RedirectLine[],
 ): string {
-  const served = (candidate: string) =>
-    servedFiles(outDir, candidate).some((file) => existsSync(file));
-
-  if (served(path)) return path;
+  if (isServed(outDir, path)) return path;
 
   const moved = matchRedirect(redirects, path)?.location.split(/[?#]/)[0];
 
-  return moved && served(moved) ? moved : '/';
+  return moved && isServed(outDir, moved) ? moved : '/';
 }
 
 const CANONICAL = /<link rel="canonical"[^>]*>\n?/g;
@@ -183,46 +197,131 @@ export const withCanonical = (html: string, href: string): string =>
     .replace(CANONICAL, '')
     .replace('</head>', `<link rel="canonical" href="${href}">\n</head>`);
 
-/** The manifest's non-current versions, each with its snapshot directory and its path in the build output. */
-export const snapshotsOf = (manifest: VersionManifest) =>
-  manifest.others.map((version) => ({
-    version,
-    source: join(SNAPSHOTS_DIR, version.id),
-    target: version.path.slice(1),
-  }));
+/** The canonical link `withCanonical` wrote, read back as a path on the main site. */
+export function canonicalOf(html: string): string | undefined {
+  const href = /<link rel="canonical" href="([^"]+)">/.exec(html)?.[1];
+
+  return href?.startsWith(SITE_ORIGIN)
+    ? href.slice(SITE_ORIGIN.length)
+    : undefined;
+}
 
 /**
- * The build's copy step: puts each non-current version's snapshot under its path in `outDir`, and
- * points every page's canonical at its latest counterpart in this build. Main moves on after a
- * freeze, so the canonical is resolved here rather than stored.
+ * Points every page of a finished snapshot at its latest counterpart, resolved against the main
+ * site's build in `outDir`. The 404 page has none. Run again, it replaces the earlier links.
  */
-export async function copySnapshots(
-  manifest: VersionManifest,
+export async function bakeCanonicals(
+  dir: string,
   outDir: string,
   redirects: readonly RedirectLine[],
 ): Promise<void> {
-  for (const { version, source, target } of snapshotsOf(manifest)) {
-    if (!existsSync(join(source, 'index.html')))
-      throw new Error(
-        `versions.json lists ${version.id} at ${version.path}, but ${source} holds no snapshot: run scripts/docs-snapshot.ts ${version.id}`,
-      );
+  for (const file of await snapshotPages(dir)) {
+    if (file === '404.html') continue;
+    const path = join(dir, file);
+    const latest = canonicalPath(htmlPath(file), outDir, redirects);
 
-    const dir = join(outDir, target);
-
-    await rm(dir, { recursive: true, force: true });
-    await cp(source, dir, { recursive: true });
-
-    for (const file of await snapshotPages(dir)) {
-      if (file === '404.html') continue;
-      const path = join(dir, file);
-      const latest = canonicalPath(htmlPath(file), outDir, redirects);
-
-      await writeFile(
-        path,
-        withCanonical(await readFile(path, 'utf8'), `${SITE_ORIGIN}${latest}`),
-      );
-    }
+    await writeFile(
+      path,
+      withCanonical(await readFile(path, 'utf8'), `${SITE_ORIGIN}${latest}`),
+    );
   }
+}
+
+/** The snapshot's paths under the worker's mounts, sent to the mounts: its client renders some nav links with its base. */
+export const snapshotRedirects = (base: string): RedirectLine[] =>
+  SURFACES.flatMap(({ id, renderer, paths }) =>
+    renderer === 'worker' && !isSnapshotRow(id)
+      ? paths.map((path) => ({
+          from: `${base}${path.slice(1)}`,
+          to: path.replace(/\*$/, ':splat'),
+          status: 301,
+        }))
+      : [],
+  );
+
+/** The main site's `_headers` moved under the base: each rule's path and each `Link` target. */
+export const snapshotHeaders = (text: string, base: string): string =>
+  text
+    .replace(/^\/(\S*)$/gm, `${base}$1`)
+    .replace(/<\/([^>]*)>/g, `<${base}$1>`);
+
+/** Writes the snapshot Worker's `_redirects` and `_headers` at its assets root, beside the `base` folder. */
+export async function writeSnapshotRules(
+  root: string,
+  base: string,
+  headers: string,
+): Promise<void> {
+  const redirects = snapshotRedirects(base);
+
+  await writeFile(
+    join(root, '_redirects'),
+    redirectsFileBody([
+      ...redirects.filter((rule) => !isDynamic(rule)),
+      ...redirects.filter(isDynamic),
+    ]),
+  );
+  await writeFile(join(root, '_headers'), snapshotHeaders(headers, base));
+}
+
+/** The record of a deployed snapshot that the repo keeps instead of its files. */
+export const SnapshotManifest = v.object({
+  tag: v.pipe(v.string(), v.nonEmpty()),
+  files: v.pipe(v.number(), v.integer()),
+  bytes: v.pipe(v.number(), v.integer()),
+  /** sha256 of the `sha256sum` listing of every file under the assets root, sorted by path. */
+  sha256: v.pipe(v.string(), v.regex(/^[0-9a-f]{64}$/)),
+  /** Each snapshot page's path, mapped to the main-site path its canonical link names. */
+  pages: v.record(v.string(), v.string()),
+});
+
+export type SnapshotManifest = v.InferOutput<typeof SnapshotManifest>;
+
+/** Where the repo keeps a version's snapshot manifest. */
+export const manifestPath = (id: string): string =>
+  join(import.meta.dirname, '..', 'catalog', 'snapshots', `${id}.json`);
+
+/** A version's committed snapshot manifest. */
+export const readSnapshotManifest = (id: string): SnapshotManifest =>
+  v.parse(SnapshotManifest, JSON.parse(readFileSync(manifestPath(id), 'utf8')));
+
+/** The file count, byte total and digest of an assets root. */
+export function snapshotDigest(
+  root: string,
+): Pick<SnapshotManifest, 'files' | 'bytes' | 'sha256'> {
+  const files = globSync('**/*', { cwd: root })
+    .filter((file) => statSync(join(root, file)).isFile())
+    .sort();
+
+  const listing = files
+    .map(
+      (file) =>
+        `${createHash('sha256')
+          .update(readFileSync(join(root, file)))
+          .digest('hex')}  ${file}\n`,
+    )
+    .join('');
+
+  return {
+    files: files.length,
+    bytes: files.reduce(
+      (sum, file) => sum + statSync(join(root, file)).size,
+      0,
+    ),
+    sha256: createHash('sha256').update(listing).digest('hex'),
+  };
+}
+
+/** Canonical targets the main build in `outDir` neither serves nor redirects: a moved page owes a redirect. */
+export function canonicalProblems(
+  manifest: SnapshotManifest,
+  outDir: string,
+  redirects: readonly RedirectLine[],
+): string[] {
+  return Object.entries(manifest.pages).flatMap(([page, target]) =>
+    isServed(outDir, target) || matchRedirect(redirects, target)
+      ? []
+      : [`${page}: its canonical ${target} is neither served nor redirected`],
+  );
 }
 
 /** The main build's indexes that must not list a snapshot page. */

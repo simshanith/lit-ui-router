@@ -2,29 +2,37 @@
 import { execFileSync } from 'node:child_process';
 import {
   copyFileSync,
+  existsSync,
   globSync,
   mkdtempSync,
   readFileSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
-import { cp, rm } from 'node:fs/promises';
+import { cp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
+import { REDIRECTS } from '../catalog/redirects.ts';
+import { redirectLines } from '../.vitepress/redirects.ts';
 import {
+  bakeCanonicals,
   finishSnapshot,
   hasSnapshotTag,
+  snapshotDigest,
+  snapshotPackage,
   snapshotPages,
   SNAPSHOT_TAGS,
-  SNAPSHOTS_DIR,
+  writeSnapshotRules,
 } from '../.vitepress/snapshot.ts';
 import { BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
 
-// Builds a frozen docs snapshot: the whole site at a release tag, under its version's base.
-// Usage: docs-snapshot.ts [version-id], default v1. Writes snapshots/<id>/ in this package.
+// Builds a frozen docs snapshot: the whole site at a release tag, under its version's base, into
+// the assets directory of that version's Worker package (www/<id>.versions.lit-ui-router.dev/dist/).
+// Usage: docs-snapshot.ts [version-id] [--bake-only], default v1. --bake-only skips the tag build
+// and redoes the last step on the snapshot already there: its canonical links, _redirects and
+// _headers. That step reads this checkout's built site, so build it first.
 
 const SITE = 'www/lit-ui-router.dev';
 
@@ -97,21 +105,14 @@ const sampleAppAssets = (site: string): string[] =>
     (file) => basename(file),
   );
 
-const main = async (): Promise<void> => {
-  const id = process.argv[2] ?? 'v1';
-  const tag = hasSnapshotTag(id) ? SNAPSHOT_TAGS[id] : undefined;
-  const version = BUNDLED_MANIFEST.others.find((other) => other.id === id);
-
-  if (!tag || !version) {
-    console.error(
-      `docs-snapshot.ts: no snapshot tag or versions.json entry for ${id}`,
-    );
-    process.exitCode = 2;
-
-    return;
-  }
-
-  const checkout = mkdtempSync(join(tmpdir(), `docs-snapshot-${id}-`));
+/** Builds the tag's site under the version's base into `target`, finished but without canonical links. */
+async function buildAtTag(
+  tag: string,
+  path: string,
+  label: string,
+  target: string,
+): Promise<void> {
+  const checkout = mkdtempSync(join(tmpdir(), 'docs-snapshot-'));
   const out = join(checkout, 'snapshot-out');
   const site = join(checkout, SITE);
 
@@ -145,41 +146,77 @@ const main = async (): Promise<void> => {
       'build',
       '.',
       '--base',
-      version.path,
+      path,
       '--outDir',
       out,
     ]);
-    await finishSnapshot(
-      out,
-      version.path,
-      version.label,
-      sampleAppAssets(site),
-    );
+    await finishSnapshot(out, path, label, sampleAppAssets(site));
 
-    const pages = await snapshotPages(out);
-
-    if (!pages.includes('index.html')) throw new Error(`${out}: no index.html`);
-
-    const target = join(SNAPSHOTS_DIR, id);
+    if (!(await snapshotPages(out)).includes('index.html'))
+      throw new Error(`${out}: no index.html`);
 
     await rm(target, { recursive: true, force: true });
+    await mkdir(join(target, '..'), { recursive: true });
     await cp(out, target, { recursive: true });
-
-    const files = globSync('**/*', { cwd: target }).filter((file) =>
-      statSync(join(target, file)).isFile(),
-    );
-
-    const bytes = files.reduce(
-      (sum, file) => sum + statSync(join(target, file)).size,
-      0,
-    );
-
-    console.log(
-      `${relative(workspaceRoot, target)}: ${tag}, ${pages.length} pages, ${files.length} files, ${(bytes / 1e6).toFixed(1)} MB`,
-    );
   } finally {
     run(workspaceRoot, 'git', ['worktree', 'remove', '--force', checkout]);
   }
+}
+
+const main = async (): Promise<void> => {
+  const args = process.argv.slice(2);
+  const bakeOnly = args.includes('--bake-only');
+  const id = args.find((arg) => !arg.startsWith('--')) ?? 'v1';
+  const tag = hasSnapshotTag(id) ? SNAPSHOT_TAGS[id] : undefined;
+  const version = BUNDLED_MANIFEST.others.find((other) => other.id === id);
+
+  if (!tag || !version) {
+    console.error(
+      `docs-snapshot.ts: no snapshot tag or versions.json entry for ${id}`,
+    );
+    process.exitCode = 2;
+
+    return;
+  }
+
+  const mainBuild = join(PACKAGE, 'dist');
+
+  if (!existsSync(join(mainBuild, 'index.html'))) {
+    console.error(
+      `docs-snapshot.ts: ${relative(workspaceRoot, mainBuild)} holds no build to resolve canonical links against: run turbo run build --filter=@www/lit-ui-router.dev`,
+    );
+    process.exitCode = 2;
+
+    return;
+  }
+
+  const root = join(workspaceRoot, snapshotPackage(id), 'dist');
+  const target = join(root, id);
+
+  if (!bakeOnly) await buildAtTag(tag, version.path, version.label, target);
+
+  if (!existsSync(join(target, 'index.html'))) {
+    console.error(
+      `docs-snapshot.ts: ${relative(workspaceRoot, target)} holds no snapshot to bake: run without --bake-only`,
+    );
+    process.exitCode = 2;
+
+    return;
+  }
+
+  await bakeCanonicals(target, mainBuild, redirectLines(REDIRECTS));
+  await writeSnapshotRules(
+    root,
+    version.path,
+    readFileSync(join(PACKAGE, 'public', '_headers'), 'utf8'),
+  );
+
+  const pages = await snapshotPages(target);
+  const { files, bytes } = snapshotDigest(root);
+
+  console.log(
+    `${relative(workspaceRoot, root)}: ${tag}, ${pages.length} pages, ${files} files, ${(bytes / 1e6).toFixed(1)} MB`,
+  );
 };
 
 if (import.meta.main) await main();

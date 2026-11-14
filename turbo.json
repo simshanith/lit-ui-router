@@ -192,7 +192,6 @@
         "!**/.probe-scratch/**",
         "!.cache/**",
         "!**/.vitepress/cache/**",
-        "!**/snapshots/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_ROOT$/tools/lint-elements/elements.oxlintrc.json",
         "$TURBO_DEFAULT$"
@@ -335,8 +334,7 @@
         "!**/.probe-scratch/**",
         "!**/.vitepress/cache/**",
         "!**/.cloudflare/**",
-        "!**/worker-configuration.d.ts",
-        "!www/lit-ui-router.dev/snapshots/**"
+        "!**/worker-configuration.d.ts"
       ]
     },
     "//#lint:package-json": {
@@ -367,11 +365,12 @@
         "!**/node_modules/**",
         // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
         // the sample apps stage READMEs into dist, typedoc writes www api/,
-        // docs:release-stubs writes www package-releases/
+        // docs:release-stubs writes www package-releases/, cf build copies
+        // assets into .cloudflare/
         "!**/dist/**",
+        "!**/.cloudflare/**",
         "!www/lit-ui-router.dev/reference/*/**",
         "!www/lit-ui-router.dev/package-releases/**",
-        "!www/lit-ui-router.dev/snapshots/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
