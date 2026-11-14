@@ -4,8 +4,9 @@ import type { PathNode, Resolvable, UIRouter } from '@uirouter/core';
 /** Starts and ends the span a resolve runs in; the reporter's, so the span is a child of its transition's. */
 export interface ResolveSpans {
   startResolve(id: number, token: string, state: string): Span | undefined;
+  endResolve(span: Span): void;
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-  endResolve(span: Span, error?: unknown): void;
+  failResolve(span: Span, error: unknown): void;
 }
 
 // Before core's own resolve hooks, which run at priority 1000.
@@ -35,21 +36,22 @@ const wrap = (
 
     if (!span) return original(...deps);
 
+    // A resolve may throw or reject with nothing; its span still fails, as the adapter's resolve timing does.
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
+    const failed = (error: unknown) =>
+      spans.failResolve(span, error ?? 'rejected');
+
     try {
       const value: unknown = context.with(
         trace.setSpan(context.active(), span),
         () => original(...deps),
       );
 
-      Promise.resolve(value).then(
-        () => spans.endResolve(span),
-        // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-        (error: unknown) => spans.endResolve(span, error ?? 'rejected'),
-      );
+      Promise.resolve(value).then(() => spans.endResolve(span), failed);
 
       return value;
     } catch (error) {
-      spans.endResolve(span, error ?? 'threw');
+      failed(error);
       throw error;
     }
   };
