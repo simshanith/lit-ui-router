@@ -15,6 +15,7 @@ export default defineConfig(
     '**/.cache/**',
     '**/.vitest/**',
     '**/.wrangler/**',
+    '**/.cloudflare/**',
     '**/.claude/**',
     'tools/dts-backtest/.probe-scratch/**',
     'apps/sample-app-lit-e2e/test-results/**',

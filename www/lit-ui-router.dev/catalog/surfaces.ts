@@ -73,6 +73,16 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
+    // The frozen 1.x docs: the worker hands the whole prefix to their own Worker, with its llms.txt and 404 page.
+    id: 'snapshot-v1',
+    paths: ['/v1', '/v1/*'],
+    renderer: 'worker',
+    sitemap: false,
+    llms: false,
+    search: false,
+    deadLinks: 'ignore',
+  },
+  {
     id: 'sample-apps',
     paths: [
       '/app',

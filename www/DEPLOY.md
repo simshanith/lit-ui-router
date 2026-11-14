@@ -21,7 +21,7 @@ repo config, and whether the site it deploys is up. See
 ## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
 The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
-It deploys every Worker app under `www/` the same way: each is a package in `www/<domain>`, named
+It deploys every Worker app under `www/` the same way, except the [frozen 1.x docs](#frozen-1x-docs-at-v1), which are deployed by hand: each is a package in `www/<domain>`, named
 `@www/<domain>`, with its own worker config and its own Workers Builds triggers, and the domain is
 the site key that the build and deploy commands below take as their last argument. This section
 describes the docs site, the default when that argument is omitted; [Adding a site](#adding-a-site)
@@ -187,6 +187,53 @@ touch and `cf builds triggers list` does not return. Branches first pushed befor
 copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
 [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
 until none of those branches remain.
+
+### Frozen 1.x docs at `/v1/`
+
+The 1.x docs are their own Worker, `lit-ui-router-docs-v1`, configured in
+[`www/v1.versions.lit-ui-router.dev`](v1.versions.lit-ui-router.dev/README.md). It has static
+assets and no script: the snapshot sits under `v1/` in its assets, so it answers `/v1/...` paths
+itself, with the docs site's `auto-trailing-slash` HTML handling and its own `/v1/404.html` for a
+miss. Its `_redirects` sends `/v1/<mount>` and `/v1/<mount>/*` to the unversioned mount for every
+worker row in `catalog/surfaces.ts` but its own, since the VitePress client renders some nav links
+with the `/v1/` base, such as the mobile menu. Its `_headers` is the main site's, moved under
+`/v1/`.
+
+The docs worker lists `/v1` and `/v1/*` in `run_worker_first` and hands those requests unchanged to
+the `DOCS_V1` service binding (`worker/snapshot.ts`). A service binding reaches the bound Worker's
+production deployment, so the docs worker's branch versions serve `/v1/` too. Without the binding,
+or when the snapshot Worker fails, `/v1/*` answers a plain 503. The snapshot Worker has no route,
+custom domain, `workers.dev` URL or Workers Builds trigger, and no deploy of the docs site touches
+it; the docs build and its tests run without the snapshot.
+
+The repo keeps a manifest instead of the files:
+[`catalog/snapshots/v1.json`](lit-ui-router.dev/catalog/snapshots/v1.json) records the tag, the file
+count, the byte total, a digest (the sha256 of the `sha256sum` listing of every assets file, sorted
+by path) and each page's canonical target. The docs build fails if a target is neither a built page
+nor a `catalog/redirects.ts` source, so moving a page that 1.x points at owes a redirect. It also
+fails if `sitemap-pages.xml`, `llms.txt` or `llms-full.txt` lists a `/v1/` URL.
+
+To produce, deploy or replace the snapshot (mise and git required; `cf` logged in to the account):
+
+1. Build this checkout's site: `mise exec -- turbo run build --filter=@www/lit-ui-router.dev`.
+2. `pnpm run docs:snapshot` in the site package
+   ([`scripts/docs-snapshot.ts`](lit-ui-router.dev/scripts/docs-snapshot.ts)). It checks out the tag
+   named for the version in `SNAPSHOT_TAGS` (`.vitepress/snapshot.ts`) in a throwaway worktree,
+   copies in this checkout's version banner and menu, runs `mise run setup` and the site's turbo
+   build there, then rebuilds the site with `vitepress build --base /v1/` into
+   `www/v1.versions.lit-ui-router.dev/dist/v1/` (gitignored). It removes what the main site serves
+   (`_headers`, `_redirects`, the sitemaps, `robots.txt`, `versions.json`, the sample-app shells and
+   bundles, the release-page script and stylesheet), points links into the worker's mounts at the
+   unversioned paths, moves the embedded examples under `/v1/examples/`, and rewrites `llms.txt` and
+   `llms-full.txt` to list the `/v1/` pages. Last, it gives every page a canonical link to the same
+   path in step 1's build, else where `catalog/redirects.ts` sends it, else the home page, and
+   writes `_redirects` and `_headers`. `--bake-only` redoes only that last step.
+3. `pnpm run docs:snapshot:publish -- --dry-run`, then without `--dry-run`
+   ([`scripts/docs-snapshot-publish.ts`](lit-ui-router.dev/scripts/docs-snapshot-publish.ts)). It
+   runs `cf deploy` in the Worker's package and writes the manifest; commit it.
+
+A 1.x fix reaches the snapshot through the branch cut from the last tag: tag the release, update
+`SNAPSHOT_TAGS`, and run the three steps again.
 
 ### Adding a site
 

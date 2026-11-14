@@ -365,8 +365,10 @@
         "!**/node_modules/**",
         // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
         // the sample apps stage READMEs into dist, typedoc writes www api/,
-        // docs:release-stubs writes www package-releases/
+        // docs:release-stubs writes www package-releases/, cf build copies
+        // assets into .cloudflare/
         "!**/dist/**",
+        "!**/.cloudflare/**",
         "!www/lit-ui-router.dev/reference/*/**",
         "!www/lit-ui-router.dev/package-releases/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
