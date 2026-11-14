@@ -105,6 +105,20 @@ describe('pendingTargets', () => {
     assert.deepEqual(pendingTargets(release, MEMBERS, first), []);
   });
 
+  it('waits for the named package at its checked-out version, not the dispatched one', () => {
+    const first = {
+      'lit-ui-router': { latest: '1.21.0' },
+      'lit-ui-router-ssr': { latest: '0.11.0' },
+      'ui-router-registry': {},
+    };
+
+    const older = { name: 'lit-ui-router-ssr', version: '0.11.0' };
+
+    assert.deepEqual(pendingTargets(older, MEMBERS, first), [
+      { name: 'lit-ui-router-ssr', version: '0.11.1' },
+    ]);
+  });
+
   it('waits for the named release even on its first publish', () => {
     const first = {
       'lit-ui-router': { latest: '1.21.0' },

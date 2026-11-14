@@ -224,9 +224,10 @@ On the post-publish dispatch, Publish to NPM passes the new release as the
 `release` input. npm's dist-tags lag a publish by minutes, so `published-diff`
 first waits, about five minutes at most in all, until a dist-tag points at that
 version and at the workspace version of every other package already on npm.
-A batch of releases thus heals in whichever post-publish run survives, and a
-bump whose publish is still running or failed holds that run for the whole
-wait. Past it, the run warns with each version npm still doesn't list and
+Each post-publish run thus covers the whole batch of releases, and a bump
+whose publish is still running or failed holds that run for the whole wait.
+A push to `main` cancels a waiting run, and the push's own run does not wait,
+so its verdict can be stale until the next run. Past it, the run warns with each version npm still doesn't list and
 compares against what npm lists.
 
 The cloudflare job also posts the `release-ledger` check run. It reads the

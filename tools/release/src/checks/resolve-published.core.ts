@@ -29,9 +29,9 @@ export function isListed(tags: Tags | undefined, version: string): boolean {
 }
 
 /**
- * What a post-publish run waits for: the named release, plus every package
- * already on npm whose checked-out version no dist-tag lists yet. No release
- * named means no wait.
+ * What a post-publish run waits for: the checked-out version of the named
+ * package and of every package already on npm, where no dist-tag lists it
+ * yet. No release named means no wait.
  */
 export function pendingTargets(
   release: Target | undefined,
@@ -41,7 +41,10 @@ export function pendingTargets(
   if (!release) return [];
 
   const targets = members.flatMap(({ name, version }): Target[] => {
-    if (name === release.name) return [release];
+    // The diff compares against the checked-out manifest, which may be past the dispatched version.
+    if (name === release.name) {
+      return [{ name, version: version ?? release.version }];
+    }
 
     const onNpm = Object.keys(first[name] ?? {}).length > 0;
 

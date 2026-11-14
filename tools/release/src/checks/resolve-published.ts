@@ -27,8 +27,7 @@ import { failMain } from '../lib/fail-main.ts';
 /** `name`'s dist-tags, or `{}` when never published. */
 async function publishedTags(name: string): Promise<Record<string, string>> {
   try {
-    // npm serves max-age=300; without revalidation a poll re-reads pacote's disk cache.
-    const packument = await pacote.packument(name, { preferOnline: true });
+    const packument = await pacote.packument(name);
 
     return { ...packument['dist-tags'] };
   } catch (error) {
