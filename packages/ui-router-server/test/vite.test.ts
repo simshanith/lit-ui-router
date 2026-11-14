@@ -469,6 +469,39 @@ describe('serverRouterPlugin prerender build step', () => {
     assert.equal(req.url, '/app');
   });
 
+  it('previews the mount shell for a path that climbs out of outDir', async (t) => {
+    const root = await mkdtemp(path.join(tmpdir(), 'preview-contained-'));
+    t.after(() => rm(root, { recursive: true, force: true }));
+    await mkdir(path.join(root, 'dist'), { recursive: true });
+    await mkdir(path.join(root, 'secret'), { recursive: true });
+    await writeFile(path.join(root, 'secret', 'index.html'), '');
+
+    const plugin = serverRouterPlugin(
+      createServerRouter({
+        mounts: { '/': { routes: [{ name: 'pair', url: '/:a/:b' }] } },
+      }),
+      { prerender: { entry: './entry.mjs' } },
+    );
+
+    await plugin.configResolved(configOf(root));
+    const server = fakeServer();
+    plugin.configurePreviewServer(server);
+
+    const req = {
+      url: '/../secret',
+      method: 'GET',
+      headers: { accept: 'text/html' },
+    };
+
+    const res = { writeHead: () => res, setHeader: () => res, end: () => res };
+
+    await new Promise<void>((resolve) => {
+      server.installed[0]?.(req, res, () => resolve());
+    });
+
+    assert.equal(req.url, '/');
+  });
+
   for (const base of ['/', '/atlas/'])
     it(`names a prerendered page itself as canonical under base '${base}'`, async (t) => {
       const root = await mkdtemp(path.join(tmpdir(), 'preview-canonical-'));
