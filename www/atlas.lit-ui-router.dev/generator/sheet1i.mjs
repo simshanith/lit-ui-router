@@ -91,7 +91,7 @@ export const sheet1i = {
   title: 'THE RENDER LOOP, WALKED',
   scale: 'ONE PACKAGE',
   form: 'INTERACTIVE CIRCUIT',
-  sub: `ALTITUDE 1 — sheet 1's circuit, stepped · one navigation walked leg by leg · ${R.stations} STATIONS · ${R.legs} LEGS · ${R.steps} STEPS · ${BASIS}`,
+  sub: `ALTITUDE 1 — sheet 1's circuit, stepped · one navigation walked leg by leg · ${R.stations} stations · ${R.legs} legs · ${R.steps} steps · ${BASIS}`,
   caption: `The circuit, stood up and stepped. ${R.stations} stations and ${R.legs} legs, then one click — ${WALK_OF} — walked in ${R.steps} steps under the pointer, every step standing on the ${R.evidence} source lines the plate cites verbatim.`,
   notes: NOTES,
   key: KEY,

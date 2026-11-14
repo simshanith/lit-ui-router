@@ -107,7 +107,7 @@ export const BRICKS_META = {
   head: 'SHEET 2 · 3D',
   rev: 'A',
   title: 'THE BRICK ASSEMBLY, IN THE ROUND',
-  sub: `SHEET 2'S FINISHED MODEL IN THE ROUND · ${BRICK_ROWS.length} BRICKS · 2 PLATES · 2 LEVELS OF GROUND · ONE GLTF BINARY · THE SHEET'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THE SHEET'S THREE DRAWN CORNERS`,
+  sub: `sheet 2's finished model in the round · ${BRICK_ROWS.length} bricks · 2 plates · 2 levels of ground · one glTF binary · the sheet's explosion half again as high as its one clip, assemble ⇄ explode · the camera turns to the sheet's three drawn corners`,
   /** App-only: no bare plate of it. */
 };
 

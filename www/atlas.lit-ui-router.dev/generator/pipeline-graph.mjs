@@ -414,7 +414,7 @@ ${LANE_TOK_JS}
 })();
 `;
 
-const SUB = `THE CENSUS PIPELINE AS A LIVE GRAPH · ${A.stats.nodes} NODES · ${A.stats.edges} EDGES · ${A.stats.writes} WRITES / ${A.stats.reads} READS / ${A.stats.imports} IMPORTS`;
+const SUB = `the census pipeline as a live graph · ${A.stats.nodes} nodes · ${A.stats.edges} edges · ${A.stats.writes} writes / ${A.stats.reads} reads / ${A.stats.imports} imports`;
 // The gallery index's own FIT VERDICT line for this lane — one wording, two places.
 export const PIPELINE_VERDICT = "appendix A2's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero";
 const VERDICT = PIPELINE_VERDICT;

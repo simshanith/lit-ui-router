@@ -93,7 +93,7 @@ export const sheet12i = {
   title: 'THE REGISTER, WALKED',
   scale: 'PR CI GRAPH',
   form: 'INTERACTIVE REGISTER',
-  sub: `ALTITUDE 3¼ — sheet 12's plate, live under the pointer · the whole ${R.pipeline} graph carried node by node · ${fmt(R.nodes)} NODES · ${R.real} RUN A COMMAND · ${fmt(R.edges)} EDGES · ${R.realEdges} JOIN TWO REAL TASKS · ${BASIS}`,
+  sub: `ALTITUDE 3¼ — sheet 12's plate, live under the pointer · the whole ${R.pipeline} graph carried node by node · ${fmt(R.nodes)} nodes · ${R.real} run a command · ${fmt(R.edges)} edges · ${R.realEdges} join two real tasks · ${BASIS}`,
   caption: `The punchcard, stood up. Default view is the real subgraph alone — ${R.real} tasks that run a command over ${R.realEdges} edges that join two of them. PHANTOM SHROUD floods in the other ${SHROUD_N} nodes and ${fmt(SHROUD_E)} edges, and ${PCT}% of the graph stops being a statistic.`,
   notes: NOTES,
   key: KEY,

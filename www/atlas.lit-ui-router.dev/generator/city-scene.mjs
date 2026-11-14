@@ -125,7 +125,7 @@ export const CITY_META = {
   head: 'SHEET 7 · 3D',
   rev: REV,
   title: 'THE CITY, IN THE ROUND',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
+  sub: `sheet 7's census city in the round · ${CITY.length} members · ${MASSED} massed · ${ANNEXES} spec annexes · 4 districts · one glTF binary · one clip raises it from the ground, raise ⇄ ground · the camera orbits free and turns to the four true diagonals · a second lane relights the city from sheet 7A's filed shadow plate`,
   /** App-only: no bare plate of it. */
 };
 
@@ -135,7 +135,7 @@ export const PLANT_META = {
   head: 'SHEET 7B · 3D',
   rev: PLANT_REV,
   title: 'THE WORKING CITY, IN THE ROUND',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND, AT WORK · ${CITY.length} MEMBERS · ${MASSED} MASSED · EACH CROWNED BY A WORKING PLANT SIZED FROM ITS OWN CENSUS · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ONE GLTF BINARY · ONE CLIP RAISES IT FROM THE GROUND AND CROWNS IT, RAISE ⇄ GROUND · THE CAMERA ORBITS FREE AND TURNS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE`,
+  sub: `sheet 7's census city in the round, at work · ${CITY.length} members · ${MASSED} massed · each crowned by a working plant sized from its own census · ${ANNEXES} spec annexes · 4 districts · one glTF binary · one clip raises it from the ground and crowns it, raise ⇄ ground · the camera orbits free and turns to the four true diagonals · a second lane relights the city from sheet 7A's filed shadow plate`,
   /** App-only: no bare plate of it. */
 };
 

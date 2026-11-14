@@ -120,7 +120,7 @@ const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
 const BRICKS_IN = new Set(BUILD_MODELS.flatMap((m) => m.bricks.map((b) => b.n)));
 const PLATES_IN = new Set(BUILD_MODELS.flatMap((m) => m.plates.map((p) => p.letter)));
-const NAMES = BUILD_MODELS.map((m) => m.name.toUpperCase());
+const NAMES = BUILD_MODELS.map((m) => m.name);
 const CORDS = BUILD_MODELS.reduce((a, m) => a + m.cords.length, 0);
 const STRADDLES = BUILD_MODELS.reduce((a, m) => a + m.bricks.reduce((s, b) => s + b.straddles.length, 0), 0);
 const CABINET = BUILD_MODELS.filter((m) => !m.atlas);
@@ -132,7 +132,7 @@ export const BUILDS_META = {
   head: 'SHEET 2C · 3D',
   rev: 'A',
   title: 'THE BUILDS, IN THE ROUND',
-  sub: `SHEET 2C'S ${WORD[BUILD_MODELS.length].toUpperCase()} BUILDS IN THE ROUND — ${listOf(NAMES)} · ${WORD[BRICKS_IN.size].toUpperCase()} OF THE BOX'S ${WORD[BUILD_BOX.bricks].toUpperCase()} BRICKS AND ${WORD[PLATES_IN.size].toUpperCase()} OF ITS ${WORD[BUILD_BOX.plates].toUpperCase()} PLATES BUILT · ONE GLTF BINARY PER BUILD · EACH BUILD'S EXPLOSION HALF AGAIN AS HIGH AS ITS ONE CLIP, ASSEMBLE ⇄ EXPLODE · THE CAMERA TURNS TO THREE CORNERS`,
+  sub: `sheet 2C's ${WORD[BUILD_MODELS.length]} builds in the round — ${listOf(NAMES)} · ${WORD[BRICKS_IN.size]} of the box's ${WORD[BUILD_BOX.bricks]} bricks and ${WORD[PLATES_IN.size]} of its ${WORD[BUILD_BOX.plates]} plates built · one glTF binary per build · each build's explosion half again as high as its one clip, assemble ⇄ explode · the camera turns to three corners`,
 };
 
 /** The index row's verdict, derived from the models. */

@@ -1415,9 +1415,9 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
       </div>
       <h1 class="sheet-title">${THE}ISSUE LOG</h1>
       <p class="sheet-sub">
-        EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD,
-        READ FROM www/atlas.lit-ui-router.dev/HISTORY.md AT BUILD TIME; THE SHEETS THEMSELVES DESCRIBE
-        THEIR PRESENT STATE ONLY
+        every rev across every plate, latest first — the set's own revision record,
+        read from www/atlas.lit-ui-router.dev/HISTORY.md at build time; the sheets themselves describe
+        their present state only
       </p>
       <div class="issue-log issue-log-page" aria-label="issue log">
         <ol>
@@ -1626,10 +1626,10 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
       </div>
       <h1 class="sheet-title">${THE}TYPE SPECIMEN</h1>
       <p class="sheet-sub">
-        SIX PAIRINGS ON ONE MOCK SHEET — IT OPENS ON THE ONE THE SET SHIPS · SITE FACES
-        COME FROM ADOBE FONTS WHEN THE KIT IS STAGED, GOOGLE STAND-INS OTHERWISE · THE
-        READOUTS BELOW SAY WHICH ONE ACTUALLY RENDERED AND HOW ITS GLYPHS MEASURE
-        AGAINST TODAY'S MONO
+        six pairings on one mock sheet — it opens on the one the set ships · site faces
+        come from Adobe Fonts when the kit is staged, Google stand-ins otherwise · the
+        readouts below say which one actually rendered and how its glyphs measure
+        against today's mono
       </p>
       <atlas-specimen></atlas-specimen>
     </section>
@@ -1653,8 +1653,8 @@ export const ColourView: RoutedLitTemplate<ColourResolves> = (props) => {
       </div>
       <h1 class="sheet-title">${THE}COLOUR STANDARDS</h1>
       <p class="sheet-sub">
-        EVERY TOKEN THE SHEETS ARE INKED IN, READ OUT OF THE CHROME · ITS ROLE, THE GROUNDS IT
-        MAY STAND ON AND ITS CONTRAST IN LIGHT, DARK AND PRINT · THE NUMBERS ARE THE BUILD GUARD'S OWN
+        every token the sheets are inked in, read out of the chrome · its role, the grounds it
+        may stand on and its contrast in light, dark and print · the numbers are the build guard's own
       </p>
       <atlas-colour></atlas-colour>
     </section>
@@ -1804,8 +1804,8 @@ export const NotFoundView: RoutedLitTemplate = () => html`
     </div>
     <h1 class="sheet-title">NOT IN THE SET</h1>
     <p class="sheet-sub">
-      THE URL IS UNCHANGED ON PURPOSE — A URL-LESS <code>otherwise</code> STATE, WHICH IS
-      WHAT <code>ui-router-server</code> PROJECTS AS AN HTTP 404
+      the URL is unchanged on purpose — a URL-less <code>otherwise</code> state, which is
+      what <code>ui-router-server</code> projects as an HTTP 404
     </p>
     <div class="notes">
       <p>
