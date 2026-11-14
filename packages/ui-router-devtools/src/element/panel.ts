@@ -759,7 +759,9 @@ export class DevtoolsPanel extends LitElement {
       const id = this._model.txs.at(-1)?.id;
       const seen = this.#newestTick;
 
-      if (seen?.ticks === ticks && seen.id === id) return;
+      // A hidden strip cannot scroll, so its newest tick stays unseen until it shows.
+      if (!ticks.clientWidth || (seen?.ticks === ticks && seen.id === id))
+        return;
 
       this.#newestTick = { ticks, id };
       ticks.scrollLeft =

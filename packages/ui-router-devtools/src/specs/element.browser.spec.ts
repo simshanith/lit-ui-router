@@ -1331,6 +1331,39 @@ describe('the nested Map', () => {
     expect(listbox.scrollLeft).toBeCloseTo(end(), 0);
   });
 
+  it('scrolls the scrubber to its newest transition when a hidden strip is shown again', async () => {
+    const element = await openMap(1280);
+    const router = routers.at(-1)!;
+
+    for (let i = 0; i < 40; i++) {
+      await router.stateService.go('app.login');
+      await router.stateService.go('app.welcome');
+    }
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const end = () => listbox.scrollWidth - listbox.clientWidth;
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+
+    const maximise = getByRole(shadow(element), 'button', {
+      name: 'Maximise devtools',
+    });
+
+    listbox.scrollLeft = 0;
+    maximise.click();
+    await waitFor(() => expect(listbox.clientWidth).toBe(0));
+
+    // A transition recorded while the strip is hidden cannot scroll it.
+    await router.stateService.go('app.login');
+    await element.updateComplete;
+
+    maximise.click();
+    await waitFor(() => expect(end()).toBeGreaterThan(0));
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+  });
+
   it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
     // Wide enough that the popover has room beside the diagram.
     const element = await openMap(1680);
