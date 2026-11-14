@@ -614,11 +614,12 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   const prewarm = validatePrewarm(base, config);
   const responses = compileResponses(base, config);
   const delegates = compileDelegates(base, config);
+  const strategy = config.strategy ?? 'matcher';
 
   return {
     base: normalizeBase(base),
     config,
-    strategy: config.strategy ?? 'matcher',
+    strategy,
     prewarm,
     delegates,
     responses,
@@ -629,7 +630,11 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       {
         routes: config.routes,
         rules: config.redirects,
-        config: config.config,
+        // Core always decodes, so a simulate mount's projection does too.
+        config:
+          strategy === 'simulate'
+            ? { ...config.config, decodeParams: true }
+            : config.config,
       },
       mountIndex(base, config),
     ),

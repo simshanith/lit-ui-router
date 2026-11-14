@@ -1221,16 +1221,23 @@ describe('prerender path encoding', () => {
       });
   });
 
-  it('names the listed path on a simulate mount as on a matcher mount', async () => {
-    const [mount] = Object.values(tagMounts);
+  for (const decodeParams of [true, false])
+    it(`names the listed path on a simulate mount, decodeParams ${decodeParams}`, async () => {
+      const [mount] = Object.values(tagMounts);
 
-    await assert.rejects(
-      tags(['/tags/100%'], {
-        mounts: { '/': { ...mount, strategy: 'simulate' } },
-      }),
-      /'\/tags\/100%' holds a malformed percent-escape/,
-    );
-  });
+      await assert.rejects(
+        tags(['/tags/100%'], {
+          mounts: {
+            '/': {
+              ...mount,
+              strategy: 'simulate',
+              config: { strict: false, decodeParams },
+            },
+          },
+        }),
+        /'\/tags\/100%' holds a malformed percent-escape/,
+      );
+    });
 
   it('names the listed path when a resolver of its own throws the URIError', async () => {
     const resolver: ServerRouter = {
