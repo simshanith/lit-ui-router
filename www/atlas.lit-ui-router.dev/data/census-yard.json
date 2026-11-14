@@ -1,34 +1,34 @@
 {
   "ref": "origin/main",
-  "sha": "ef074136",
-  "commitDate": "2026-11-12T22:25:30-08:00",
-  "generatedAtTime": "2026-11-13T06:58:12.944Z",
+  "sha": "aa7f8bfb",
+  "commitDate": "2026-11-14T19:09:11Z",
+  "generatedAtTime": "2026-11-14T20:24:52.037Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ ef074136",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ aa7f8bfb",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src — packages/*/src","files":132,"sloc":13139},
+    {"instrument":"src — packages/*/src","files":170,"sloc":22628},
     {"instrument":"build — @tools/oxc-emit","files":7,"sloc":543},
-    {"instrument":"pack — packPublishTarball","files":12,"sloc":441},
+    {"instrument":"pack — packPublishTarball","files":12,"sloc":448},
     {"instrument":"published-diff","files":5,"sloc":474},
     {"instrument":"check:exports","files":2,"sloc":141},
     {"instrument":"peer-floor tier-1","files":2,"sloc":144},
     {"instrument":"peer-floor tier-2","files":4,"sloc":274},
     {"instrument":"docs deploy watch","files":10,"sloc":1318},
-    {"instrument":"publish — release-it","files":42,"sloc":3786},
+    {"instrument":"publish — release-it","files":59,"sloc":5411},
     {"instrument":"compat-guards","files":9,"sloc":294},
     {"instrument":"dts-backtest","files":9,"sloc":644},
     {"instrument":"tests — vitest harness","files":8,"sloc":554},
     {"instrument":"anti-slop — vendored oxlint rules","files":35,"sloc":3665},
     {"instrument":"lint & probe fleet","files":60,"sloc":8561},
-    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1553},
+    {"instrument":"repo checks — graph edges, task inputs, knip, patches","files":15,"sloc":1597},
     {"instrument":"bootstrap — pre-install manifest reads","files":3,"sloc":59},
     {"instrument":"@tools/shared","files":13,"sloc":688},
     {"instrument":"typedoc plugin","files":3,"sloc":363},
     {"instrument":"e2e — playwright","files":2,"sloc":99},
-    {"instrument":"sample apps","files":84,"sloc":4498}
+    {"instrument":"sample apps","files":84,"sloc":4514}
   ]
 }

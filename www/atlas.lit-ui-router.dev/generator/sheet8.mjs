@@ -15,7 +15,15 @@ const OX = 500, OY = 130;
 // measure dist/ — their registry-delivered shape. This file holds the drawing
 // order, the hand-placed districts and the prose only.
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-nm.json', import.meta.url), 'utf8'));
-const ROW = new Map(PLATE.rows.map((r) => [r.name, r]));
+// a package delivered at two versions is named name@version; any other by its name
+const KEY = (r) => `${r.name}@${r.version}`;
+const ROW = new Map(PLATE.rows.map((r) => [KEY(r), r]));
+const BY_NAME = Map.groupBy(PLATE.rows, (r) => r.name);
+const rowOf = (key) => {
+  const r = ROW.get(key) ?? (BY_NAME.get(key)?.length === 1 ? BY_NAME.get(key)[0] : null);
+  if (!r) throw new Error(`sheet 8: package ${key} is ${BY_NAME.get(key) ? 'delivered at more than one version — name it name@version' : 'missing from www/atlas.lit-ui-router.dev/data/census-nm.json'}`);
+  return r;
+};
 const BASIS = `measured at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)}), closure of ${PLATE.app}`;
 const fmt = (v) => v.toLocaleString('en-US');
 
@@ -25,21 +33,21 @@ const fmt = (v) => v.toLocaleString('en-US');
 const ORDER = {
   workspace: [
     'sample-app-shared', 'ui-router-server', 'lit-ui-router',
-    'sample-app-routes', 'ui-router-navigation-location-plugin',
+    'sample-app-routes', 'ui-router-navigation-location-plugin', 'ui-router-devtools',
   ],
   registry: [
     'lodash-es', 'dompurify', '@uirouter/core', 'marked', 'lit-html',
     '@uirouter/visualizer', '@oxc-project/runtime', '@lit/reactive-element', 'preact',
-    'd3-hierarchy', '@uirouter/dsr', '@lit/context', 'tslib', '@uirouter/sticky-states',
+    'd3-hierarchy@2.0.0', 'd3-hierarchy@3.1.3', 'valibot', '@uirouter/dsr', '@lit/context', 'tslib', '@uirouter/sticky-states',
     'd3-interpolate', 'd3-color', '@lit-labs/ssr-dom-shim', 'lit-element', 'lit',
     'lit-dialog', '@api-viewer/docs', '@api-viewer/tabs', '@api-viewer/common',
     'custom-elements-manifest', 'escape-html', '@types/marked', '@types/dompurify', '@types/trusted-types',
   ],
 };
 
-const item = (name) => {
-  const r = ROW.get(name);
-  if (!r) throw new Error(`sheet 8: package ${name} is missing from www/atlas.lit-ui-router.dev/data/census-nm.json`);
+const item = (key) => {
+  const r = rowOf(key);
+  const name = r.name;
   // unpublished workspace members carry 0.0.0 — no version worth printing
   return { name, label: r.version === '0.0.0' ? name : `${name} ${r.version}`,
     f: r.f, l: r.l, df: r.df, dl: r.dl };
@@ -63,17 +71,18 @@ const DATA = {
   workspace: ORDER.workspace.map(item),
   registry: ORDER.registry.map(item),
 };
-const missed = PLATE.rows.filter((r) => !ORDER.workspace.includes(r.name) && !ORDER.registry.includes(r.name));
+const DRAWN = new Set([...ORDER.workspace, ...ORDER.registry].map((k) => KEY(rowOf(k))));
+const missed = PLATE.rows.filter((r) => !DRAWN.has(KEY(r)));
 if (missed.length) throw new Error(`sheet 8: plate carries undrawn packages — ${missed.map((r) => r.name).join(', ')}`);
 
 const DELIVERED = PLATE.rows.length;
 // the buildings taller than lodash-es, and the server's optional peers the closure leaves out, both off the plates
-const TALLER = PLATE.rows.filter((r) => r.l > ROW.get('lodash-es').l).sort((a, b) => b.l - a.l).map((r) => r.name);
+const TALLER = PLATE.rows.filter((r) => r.l > rowOf('lodash-es').l).sort((a, b) => b.l - a.l).map((r) => r.name);
 const TALL_ORD = ['tallest', 'second-tallest', 'third-tallest', 'fourth-tallest', 'fifth-tallest'];
 if (!TALL_ORD[TALLER.length]) throw new Error(`sheet 8: lodash-es ranks ${TALLER.length + 1} by height — extend TALL_ORD`);
 const COUPLINGS = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const SERVER_OPT = COUPLINGS.rows.filter((r) => r.from === 'ui-router-server' && r.kind === 'peer' && r.optional).map((r) => r.to);
-const SERVER_OPT_OUT = SERVER_OPT.filter((n) => !ROW.has(n));
+const SERVER_OPT_OUT = SERVER_OPT.filter((n) => !BY_NAME.has(n));
 if (!SERVER_OPT_OUT.length) throw new Error('sheet 8: the notes say the server\'s optional peers stay out of the closure, and the plate carries every one');
 const listOf = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 const TOT_L = PLATE.rows.reduce((a, r) => a + r.l, 0);
@@ -129,13 +138,19 @@ const masses = all.flatMap(({ it, x, y, s, sa, district }) => {
   return out;
 });
 // Badges ride above the roofline; painted after the city so no wall crosses them.
+const BADGE_LIFT = {
+  '@lit/context': 26, 'ui-router-navigation-location-plugin': 26, '@api-viewer/tabs': 20,
+  'ui-router-server': 20, 'sample-app-shared': 20, 'lit-ui-router': 20, 'sample-app-routes': 20,
+};
+const BADGE_SHIFT = { '@uirouter/core': -16, lit: -16, preact: 18, 'lit-element': 18 };
+for (const k of [...Object.keys(BADGE_LIFT), ...Object.keys(BADGE_SHIFT)]) if (!BY_NAME.has(k)) throw new Error(`sheet 8: a badge seat names ${k}, which the plate does not carry`);
 const badges = all.map(({ it, x, y, s, n, district }) => {
   const accent = it.name === 'lit-ui-router' || district === 'consumer';
   const [bx, by] = isoPt(OX, OY, x + s / 2, y, HT(it.l));
-  // badges that otherwise land on a roof edge or the district outline
-  const lift = [12, 33].includes(n) ? 26 : [23, 29, 30, 31, 32].includes(n) ? 20 : 14;
-  // 3, 5, 6 stand against a neighbour's wall; slide them clear
-  const shift = n === 3 ? -16 : n === 5 ? -16 : n === 6 ? 18 : 0;
+  // badges that otherwise land on a roof edge or the district outline, keyed by package so a birth cannot renumber them
+  const lift = BADGE_LIFT[it.name] ?? 14;
+  // badges that stand against a neighbour's wall slide clear of it
+  const shift = BADGE_SHIFT[it.name] ?? 0;
   return `<circle cx="${(bx + shift).toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${accent ? 'ska fp' : 'sk fp'}"/>
 ${txt((bx + shift).toFixed(1), (by - lift + 3.4).toFixed(1), String(n), 'lbls', 'middle')}`;
 }).join('\n');
@@ -196,7 +211,7 @@ export const sheet8 = {
   num: 8, id: 'delivered',
   title: 'THE DELIVERED CITY',
   sub: `ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · ${DELIVERED} delivered packages, ${fmt(TOT_L)} lines of code and ${fmt(TOT_DL)} d.ts lines on disk, footprint from files and height from lines — ${BASIS}`,
-  rev: 'G',
+  rev: 'H',
   scale: 'ONE CONSUMER',
   form: 'DELIVERED CITY',
   svg,

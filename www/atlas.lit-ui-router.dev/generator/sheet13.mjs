@@ -58,7 +58,7 @@ const shortPath = (p, dir) => (p.startsWith(`${dir}/`) ? p.slice(dir.length + 1)
 // ---- geometry: sheet 7's plan footprints, flattened -----------------------------
 // Same placements, same side = 1.6·√sloc rule, same sloc plate — reused as pure
 // geometry so the two sheets reconcile by eye.
-const KS = 1.6, MIN = 12, K = 1.6, OX = 46, OY = 110;
+const KS = 1.6, MIN = 12, K = 1.6, OX = 46;
 const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
 const AG = 10;
 const X = (x) => OX + K * x, Y = (y) => OY + K * y;
@@ -78,10 +78,10 @@ const PLACED = [
   [9, 'sample-app-lit-e2e', 'apps/sample-app-lit-e2e', 'app', 668, 156],
   [10, 'docs', 'www/lit-ui-router.dev', 'site', 680, 400],
   [11, 'examples', 'examples', 'site', 680, 512],
-  [12, '@tools/release', 'tools/release', 'tool', 0, 482],
+  [12, '@tools/release', 'tools/release', 'tool', 0, 470],
   [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 486, 630],
   [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 380],
-  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 208, 524],
+  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 230, 524],
   [16, '@tools/shared', 'tools/shared', 'tool', 200, 642],
   [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 580],
   [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 346, 580],
@@ -122,15 +122,28 @@ const PLACED = [
   [54, '@repo/transition-status', 'packages/shared/transition-status', 'pkg', 548, 146],
   [55, '@tools/turbo-summary', 'tools/turbo-summary', 'tool', 236, 436],
   [56, 'postcss-lit-html', 'packages/postcss-lit-html', 'pkg', 356, 256],
-  [57, '@tools/doc-example-check', 'tools/doc-example-check', 'tool', 292, 524],
-  [58, '@tools/md-content-mapper', 'tools/md-content-mapper', 'tool', 366, 524],
+  [57, '@tools/doc-example-check', 'tools/doc-example-check', 'tool', 319, 524],
+  [58, '@tools/md-content-mapper', 'tools/md-content-mapper', 'tool', 393, 524],
   // a step south of sheet 7's lot, its badge clear of 19's ticks
   [59, '@tools/cloudflare-api', 'tools/cloudflare-api', 'tool', 130, 633],
   [60, '@tools/cli', 'tools/cli', 'tool', 585, 586],
+  [61, 'ui-router-devtools', 'packages/ui-router-devtools', 'pkg', 250, -168],
+  [62, 'ui-router-otel', 'packages/ui-router-otel', 'pkg', 511, -160],
+  [63, '@repo/router-events', 'packages/shared/router-events', 'pkg', 511, -110],
+  // west of sheet 7's lot, clear of the typedoc plugin's callout
+  [64, '@tools/changelog', 'tools/changelog', 'tool', 105, 670],
 ];
 // every census member stands on a lot, so the totals and the blocks cannot disagree
 const UNPLACED = CITY.rows.filter((r) => !PLACED.some((p) => p[2] === r.member)).map((r) => r.member);
 if (UNPLACED.length) throw new Error(`sheet 13: census-city.json carries ${UNPLACED.join(', ')} and PLACED gives ${UNPLACED.length === 1 ? 'it' : 'them'} no lot`);
+// the packages district's north edge stands at plan y -13.3 or the sheet moves down by what grew north of it
+const NORTH = Math.min(...PLACED.filter((p) => p[3] === 'pkg').map(([, , dir, , , y]) => {
+  const c = cityRow(dir);
+  return c.specSloc ? Math.min(y, y + (S(c.srcSloc) - S(c.specSloc)) / 2) : y;
+}));
+const OY = Math.max(110, Math.ceil(110 + K * (-13.3 - NORTH)));
+// the typed lettering and the timeline move with the city
+const DY = OY - 110;
 
 // [n, name, dist, x, y, srcSloc, specSloc,
 //  src:[n, seasons[I,II,III], t], spec or null,
@@ -284,7 +297,9 @@ const TOUCH = PLATE.months;
 const total = (mo) => (TOUCH[mo] ? TOUCH[mo].pkg + TOUCH[mo].app + TOUCH[mo].site + TOUCH[mo].tool : 0);
 // ROWH clears the tallest bar plus its value label — no bar climbs into the row above:
 // each scale is capped by the plate's own busiest month, and the four districts share one
-const TLX = 232, TLW = 75, TLY = 1296, ROWH = 56, BAR_MAX = ROWH - 22;
+// the timeline's title stands 36 px under the yard's frame, or where it stood
+const YARD_FOOT = Math.max(...D.filter((r) => r[2] === 'tool').map((r) => g(r[0]).y2)) + 22 + 8;
+const TLX = 232, TLW = 75, TLY = Math.max(1296 + DY, Math.ceil(YARD_FOOT + 54)), ROWH = 56, BAR_MAX = ROWH - 22;
 const DIST_PEAK = Math.max(...MONTHS.flatMap((mo) => ['pkg', 'app', 'site', 'tool'].map((k) => TOUCH[mo]?.[k] ?? 0)));
 const ALL_PEAK = Math.max(...MONTHS.map(total));
 const SC_ALL = Math.min(0.075, BAR_MAX / ALL_PEAK), SC_DIST = Math.min(0.19, BAR_MAX / DIST_PEAK);
@@ -353,10 +368,8 @@ const SIZE_ORD = ['the smallest', 'the second-smallest', 'the third-smallest', '
 const NAV_SIZE_RANK = D.filter((r) => r[2] === 'pkg').sort((a, b) => a[5] - b[5]).findIndex((r) => r[0] === 4);
 const NAV_SIZE_TXT = SIZE_ORD[NAV_SIZE_RANK];
 if (!NAV_SIZE_TXT) throw new Error(`sheet 13: navigation-location-plugin ranks ${NAV_SIZE_RANK + 1} by size among the packages — extend SIZE_ORD`);
-const MULTI = D.filter((r) => r[7] && r[7][0] > 1).sort((a, b) => b[7][2] / b[7][0] - a[7][2] / a[7][0]).map((r) => r[0]);
-const HOT_ORD = ['the hottest', 'the second-hottest', 'the third-hottest', 'the fourth-hottest', 'the fifth-hottest', 'the sixth-hottest', 'the seventh-hottest', 'the eighth-hottest', 'the ninth-hottest', 'the tenth-hottest', 'the eleventh-hottest', 'the twelfth-hottest', 'the thirteenth-hottest', 'the fourteenth-hottest', 'the fifteenth-hottest', 'the sixteenth-hottest'];
-const DOCS_HOT = HOT_ORD[MULTI.indexOf(10)];
-if (!DOCS_HOT) throw new Error(`sheet 13: the notes rank docs among the hottest multi-file block-averages, and the plate ranks it ${MULTI.indexOf(10) + 1} — extend HOT_ORD`);
+// the docs callout and the notes call config.ts the most-weathered wall in the city
+if (PLATE.rows.some((r) => r.touches > DCFG.touches)) throw new Error('sheet 13: the docs callout calls .vitepress/config.ts the most-weathered wall, and the plate has a file touched more');
 if (['pkg', 'app', 'site'].some((d) => distSloc(d) > distSloc('tool'))) throw new Error('sheet 13: the notes call the instrument yard the largest district by mass, and the plate says otherwise');
 // the examples callout hangs under its block, below the district's frame
 const EXB = g(11);
@@ -387,11 +400,11 @@ for (const [x, set, what] of [[EX_X, EX_LINES, 'examples'], [DOC_X, DOC_LINES, '
   if (hit) throw new Error(`sheet 13: the ${what} callout line "${s}" lands on №${hit[0]} ${hit[1]} — move it`);
 }
 const callouts = `
-${txt(60, 534, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
-${txt(60, 548, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
-${txt(60, 560, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
-${txt(60, 572, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
-${leader(58, 524, 56, 242)}
+${txt(60, 534 + DY, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
+${txt(60, 548 + DY, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
+${txt(60, 560 + DY, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
+${txt(60, 572 + DY, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
+${leader(58, 524 + DY, 56, 242 + DY)}
 
 ${DOC_LINES.map(([y, s, cls]) => txt(DOC_X, y, s, cls)).join('\n')}
 ${leader(DOC_X + 2, DOC_Y + 31, g(10).x + 5, g(10).y - 2)}
@@ -406,10 +419,10 @@ ${txt(60, g(12).y - 67, `@tools/release — ${filesOf(row(12))} walls, every one
 ${txt(60, g(12).y - 53, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
 ${leader(150, g(12).y - 48, 166, g(12).y - 2)}
 
-${txt(g(4).x - 92, 620, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
-${txt(g(4).x - 92, 634, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
-${txt(g(4).x - 92, 646, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
-${leader(g(4).x + g(4).s / 2, 609, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
+${txt(g(4).x - 92, 620 + DY, `navigation-location-plugin — ×${tpf(4)}/f`, 'lbls')}
+${txt(g(4).x - 92, 634 + DY, `its ${MONTH(NAV_IDX.first)} index.ts chiselled ${NAV_IDX.touches} times;`, 'lblf')}
+${txt(g(4).x - 92, 646 + DY, NAV_REST.length === 1 ? `one ${MONTH(NAV_REST[0].first)} wall beside it, touched ${NAV_REST[0].touches}×` : `${NAV_REST.length} younger walls beside it`, 'lblf')}
+${leader(g(4).x + g(4).s / 2, 609 + DY, g(4).x + g(4).s / 2, g(4).y + g(4).s + 16)}`;
 
 // ---- assemble --------------------------------------------------------------------
 // the figure ends 20 px under the timeline's season lettering
@@ -432,17 +445,17 @@ ${bodies}
 ${callouts}
 
 <!-- the district's north wall reaches x 187 now, so the note takes two short lines -->
-${txt(X(0), Y(20) - 54, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(X(0), Y(20) - 41, 'the only district with stone', 'lblf')}
-${txt(X(0), Y(20) - 29, 'from all three seasons', 'lblf')}
+${txt(X(0), Y(NORTH) - 16, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(X(0), Y(NORTH) - 3, 'the only district with stone', 'lblf')}
+${txt(X(0), Y(NORTH) + 9, 'from all three seasons', 'lblf')}
 
 ${txt(APP_LEFT, APP_BOTTOM + 14, 'apps/ — THE PROVING GROUND', 'lblb')}
 ${txt(APP_LEFT, APP_BOTTOM + 26, 'port-born shell, summer-rebuilt interior', 'lblf')}
 
 ${txt(SITE_LEFT + 6, SITE_TOP - 7, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 
-${txt(60, 652, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(60, 666, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
+${txt(60, 652 + DY, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
+${txt(60, 666 + DY, 'zero touches before 2026 · all but the typedoc plugin summer-built', 'lblf')}
 
 ${timeline}
 </svg>`;
@@ -454,7 +467,7 @@ const tree = (path) => `${REPO}/tree/main/${path}`;
 const blob = (path) => `${REPO}/blob/main/${path}`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'M',
+  num: 13, id: 'weathering', rev: 'N',
   title: 'THE WEATHERING MAP',
   sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · ${BASIS}`,
   scale: 'WORKSPACE × TIME',
@@ -466,7 +479,7 @@ export const sheet13 = {
 <p><strong>Method — one pass, renames followed.</strong> Every date on this sheet is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-weather.json</code>, ${BASIS}. Each file in the shared city universe was dated from a single <a href="${GIT_LOG}"><code>git log --name-status -M</code></a> pass over the history behind that ref, walked newest to oldest with rename chains followed backwards — equivalent to per-file <code>--follow</code> (spot-verified against it, including <code>tools/shared/workspace.ts</code>, which the plain path log mis-dates by a week) but one process instead of ${TOT_F}. Per file: first-commit date, last-touch date, touch count. Merge commits list no files under the default log, so a touch is a non-merge commit — the standard convention. <code>TODAY</code> is not a wall-clock date: it is the measured ref's own commit date, ${TODAY}, so every age and idle figure below is reproducible from the sha rather than from the day the sheet was drawn. Footprints come from sheet 7's plate, <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, reused as pure geometry so the two sheets reconcile by eye — and by count: ${TOT_F} dated files here against the same ${TOT_F} there.</p>
 <p><strong>The bands are campaigns, not round numbers.</strong> The age histogram is not a slope, it is three spikes: files born around day ${days('2025-07-21')} (July 2025), around day ${days('2026-01-11')} (January 2026), and within the last ${days(SEASON_FIRST[2])} days — with <em>nothing</em> between them, because the repo has source births or touches in only ${ALIVE} of its ${MONTHS.length} calendar months. So the map bins by season, where the distribution actually cuts: SEASON I, the port — ${SEASON_N[0]} files that arrived 2025-07-21 with the upstream sample-app lineage; SEASON II, the winter works — ${SEASON_N[1]} files including the <a href="${tree('tools/typedoc-plugin-lit-ui-router')}">typedoc plugin</a> and the <a href="${tree('examples')}">examples</a>; SEASON III, the summer — ${SEASON_N[2]} files, ${Math.round((SEASON_N[2] / TOT_F) * 100)}% of the city, none older than ${SEASON_FIRST[2]}. Churn tiers are editorial cuts on touches per file: HOT is ≥${HOT}, where ${HOT_BLOCKS} of the ${DATED_BLOCKS} dated blocks stand, and COLD sits below ${COLD}, under the per-file median of ${PER_FILE_MED}. SEALED is idle &gt;${SEAL} days — the idle histogram is empty from ${IDLE_GAP[0]} to ${IDLE_GAP[1]}, and ${SEALED_F} files sit beyond the gap.</p>
 <p><strong>The verdict: age and churn run opposite ways.</strong> Mean touches per file falls monotonically with youth — ×${SEASON_TPF[0]} for the port cohort, ×${SEASON_TPF[1]} for winter, ×${SEASON_TPF[2]} for summer — and ${ONCE} of ${TOT_F} files (${Math.round((ONCE / TOT_F) * 100)}%) have been touched exactly once, ever. The port's masonry is not museum stone: ${SREF.path.split('/').pop()} is at ×${SREF.touches} with the last chisel-mark dated ${SREF.last}, and the two most-weathered walls in the city are the port-era <a href="${tree('www/lit-ui-router.dev/.vitepress')}"><code>www/lit-ui-router.dev/.vitepress</code></a> pair — <a href="${blob('www/lit-ui-router.dev/.vitepress/config.ts')}"><code>config.ts</code></a> at ×${DCFG.touches} and <a href="${blob('www/lit-ui-router.dev/.vitepress/vite.config.ts')}"><code>vite.config.ts</code></a> at ×${file('www/lit-ui-router.dev/.vitepress/vite.config.ts').touches}. What survives from the first day is precisely what keeps being worked.</p>
-<p><strong>What each district's weather says.</strong> The instrument yard — ${fmt(distSloc('tool'))} sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is the <a href="${tree('tools/typedoc-plugin-lit-ui-router')}">typedoc plugin</a>, whose <code>index.ts</code> was laid ${SYM.first} and is still under the chisel — idle ${dayN(days(SYM.last))}; every sealed file on this map stands in <a href="${tree('examples')}"><code>examples/</code></a>. The shopfront splits in two: <code>docs</code> runs ${DOCS_HOT} multi-file block-average in the city (×${tpf(10)}/f src${MULTI[0] === 10 ? '' : `, under <code>${row(MULTI[0])[1]}</code>'s ×${tpf(MULTI[0])}/f at the top`}) while <code>examples</code> holds the oldest untouched stone — ${NUMW[SEALED_VITE]} vite configs idle ${dayN(days(SOLAR.last))}. And ${NAV_SIZE_TXT} package on the map still runs hot: <a href="${tree('packages/navigation-location-plugin')}"><code>navigation-location-plugin</code></a>'s ${MONTH(NAV_IDX.first)} <code>index.ts</code> has been chiselled ${NAV_IDX.touches} times, and its ${g(4).src[0]}-file block averages ×${tpf(4)}/f, ${NAV_RANK_TXT} on the map — matching its history as the extracted plugin that every routing change touches.</p>
+<p><strong>What each district's weather says.</strong> The instrument yard — ${fmt(distSloc('tool'))} sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is the <a href="${tree('tools/typedoc-plugin-lit-ui-router')}">typedoc plugin</a>, whose <code>index.ts</code> was laid ${SYM.first} and is still under the chisel — idle ${dayN(days(SYM.last))}; every sealed file on this map stands in <a href="${tree('examples')}"><code>examples/</code></a>. The shopfront splits in two: <code>docs</code> carries the most-weathered wall in the city, <code>.vitepress/config.ts</code>, repainted ${DCFG.touches} times, while <code>examples</code> holds the oldest untouched stone — ${NUMW[SEALED_VITE]} vite configs idle ${dayN(days(SOLAR.last))}. And ${NAV_SIZE_TXT} package on the map still runs hot: <a href="${tree('packages/navigation-location-plugin')}"><code>navigation-location-plugin</code></a>'s ${MONTH(NAV_IDX.first)} <code>index.ts</code> has been chiselled ${NAV_IDX.touches} times, and its ${g(4).src[0]}-file block averages ×${tpf(4)}/f, ${NAV_RANK_TXT} on the map — matching its history as the extracted plugin that every routing change touches.</p>
 <p><strong>See also — appendix A1, THE SPRITE STUDY.</strong> This map draws age and churn <em>flat</em>, as fills and edges, so the dating stays readable at city scale. The sprited reading of the same two measurements — wreck &amp; ruin ↔ shine &amp; splendor on the building itself — is the research filed as appendix A1, and its recommendation is what sheet 7B draws.</p>
 <p><strong>Approximations, so the numbers stay honest.</strong> Dates are author dates (<a href="${GIT_LOG}"><code>%as</code></a>); on this repo's squash-merge convention they equal the merge day of the PR that landed the change. Rename detection is git's <code>-M</code> heuristic: a file moved <em>and</em> rewritten in one commit can read as a fresh birth — the July 2026 <code>scripts/ → tools/</code> graduations are dated to that graduation where git saw no rename, which the yard's notes above already state as its story. Generated and vendored trees were never in the universe (the shared city rules); nothing else was excluded.</p>`,
   key: [

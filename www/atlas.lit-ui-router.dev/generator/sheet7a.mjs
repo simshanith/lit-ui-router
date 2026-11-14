@@ -56,7 +56,11 @@ const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
 const AG = 10;
 
 // ---- plan → screen (plan view: the same city seen from straight above) ----------
-const K = 1.15, MX = 132, MY = 128;
+const K = 1.15, MX = 132;
+// the packages district's north edge stands 94.3 px under the sheet's top, so a district grown north moves the plan down
+const MY = Math.max(128, Math.ceil(94.3 - K * DISTRICT_BOUNDS.pkg[1]));
+// the typed lettering under the light rule moves with the plan; the №1 callout keeps the top's air
+const DY = MY - 128;
 const X = (x) => (MX + K * x).toFixed(1);
 const Y = (y) => (MY + K * y).toFixed(1);
 
@@ -260,7 +264,7 @@ const NOTE = {
   13: 'builds the API pages, tests nothing',
   14: 'no self-suite — it IS the d.ts test',
   15: SH.get(15).shadow?.join() === 'src/branch-ci-gate.ts,src/upload-bundle-stats.ts' ? 'the gate\'s core lit, both CLI wrappers in shadow' : guardFail(15, 'both CLI wrappers are in shadow and the gate\'s core is lit'),
-  16: 'pale: exec.ts and workspace.ts',
+  16: `${SH.get(16).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
   17: SH.get(17).shadow?.length === 0 ? 'the deploy watch, every file lit' : guardFail(17, 'every file is lit'),
   18: 'size probe, advisory · its cores lit',
   19: 'ranges.ts lit; the CI guards unmetered',
@@ -304,6 +308,10 @@ const NOTE = {
   58: `${SH.get(58).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the rest lit`,
   59: SH.get(59).shadow?.length === 0 ? 'the Cloudflare client, every file lit' : guardFail(59, 'every file is lit'),
   60: SH.get(60).shadow?.length === 0 ? 'the JSON output flags, lit wall to wall' : guardFail(60, 'lit wall to wall'),
+  61: `private · ${SH.get(61).shadow.map((f) => f.replace(/^src\//, '')).join(' + ')} in shadow · the recorder and the panel lit`,
+  62: barrelOnly(62, 'private · the span reporter'),
+  63: SH.get(63).shadow?.length === 0 ? 'private · the event adapter, lit wall to wall' : guardFail(63, 'lit wall to wall'),
+  64: SH.get(64).shadow?.join() === 'src/backfill.ts' ? 'the backfill CLI wrapper in shadow, the readers and writers lit' : guardFail(64, 'only the backfill CLI wrapper is in shadow'),
 };
 const pctS = (v) => (v == null ? '—' : `${v}%`);
 // №12's callout stands under the shopfront district and east of the yard's edge; its leader ends on the lamp's east face
@@ -375,12 +383,12 @@ ${txt(1110, EDGE.app.y1 - 15, `${DA.metered} metered member${DA.metered === 1 ? 
 ${txt(1110, EDGE.app.y1 - 3, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
 <!-- east of the district's edge, under the №5 callout -->
-${txt(EDGE.site.x2 + 14, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(EDGE.site.x2 + 14, 573, 'the worker: fully lit —', 'lblf')}
-${txt(EDGE.site.x2 + 14, 585, `a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
-${txt(EDGE.site.x2 + 14, 597, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit,`, 'lblf')}
-${txt(EDGE.site.x2 + 14, 609, 'the copies dark', 'lblf')}
-${leader(EDGE.site.x2 + 8, 569, EDGE.site.x2, 569)}
+${txt(EDGE.site.x2 + 14, 560 + DY, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(EDGE.site.x2 + 14, 573 + DY, 'the worker: fully lit —', 'lblf')}
+${txt(EDGE.site.x2 + 14, 585 + DY, `a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
+${txt(EDGE.site.x2 + 14, 597 + DY, `examples: ${fmt(g(11).r[11] ?? 0)} of ${fmt(g(11).r[7])} sloc lit,`, 'lblf')}
+${txt(EDGE.site.x2 + 14, 609 + DY, 'the copies dark', 'lblf')}
+${leader(EDGE.site.x2 + 8, 569 + DY, EDGE.site.x2, 569 + DY)}
 
 <!-- under the district's south edge -->
 ${txt(96, YARD_Y, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
@@ -393,28 +401,28 @@ ${txt(620, 70, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(
 ${txt(620, 82, 'and interface.ts, which is type declarations', 'lblf')}
 ${leader(612, 78, X(g(1).ax + g(1).sa * 0.4), Y(g(1).ay + 20))}
 
-${txt(1144, 349, '№5 sample-app-shared — an outline of light:', 'lbls')}
-${txt(1144, 361, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
-${txt(1144, 373, 'load a meter the repo never installed', 'lblf')}
-${leader(1138, 357, EDGE.app.x2 + 5, Y(123.5))}
+${txt(1144, 349 + DY, '№5 sample-app-shared — an outline of light:', 'lbls')}
+${txt(1144, 361 + DY, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
+${txt(1144, 373 + DY, 'load a meter the repo never installed', 'lblf')}
+${leader(1138, 357 + DY, EDGE.app.x2 + 5, Y(123.5))}
 
-${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lbls')}
-${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}
-${txt(30, 454, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26).r[7]} sloc;`, 'lblf')}
-${txt(30, 466, 'append.ts is lit from №1’s lamp instead', 'lblf')}
-${leader(250, 474, X(g(26).x) - 3, Y(g(26).y) - 3)}
+${txt(30, 430 + DY, '№26 happy-dom — a lamp with half its light on itself:', 'lbls')}
+${txt(30, 442 + DY, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}
+${txt(30, 454 + DY, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26).r[7]} sloc;`, 'lblf')}
+${txt(30, 466 + DY, 'append.ts is lit from №1’s lamp instead', 'lblf')}
+${leader(250, 474 + DY, X(g(26).x) - 3, Y(g(26).y) - 3)}
 
 ${C12.lines.map(([s, cls], i) => txt(C12.x, C12.y[i], s, cls)).join('\n')}
 ${leader(C12.x - 6, C12.y[1] + 5, X(g(12).ax + g(12).sa), Y(g(12).ay + g(12).sa / 2))}
 
 ${txt(600, YARD_Y, `№16 @tools/shared — ${PALE_W} light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lbls')}
-${txt(600, YARD_Y + 13, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
+${txt(600, YARD_Y + 13, `${SH.get(16).shadow.map((f) => f.replace(/^src\//, '')).join(', ')} stand in shadow; the rest is lit`, 'lblf')}
 ${leader(594, YARD_Y - 4, X(g(16).x + g(16).s / 2), +Y(g(16).y + g(16).s) + 2)}
 
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'L',
+  num: '7A', id: 'shadow', rev: 'M',
   title: 'THE SHADOW SURVEY',
   sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · reach = the source each suite loads, brightness = line coverage of what it loads · ${BASIS}`,
   scale: 'WHOLE WORKSPACE',

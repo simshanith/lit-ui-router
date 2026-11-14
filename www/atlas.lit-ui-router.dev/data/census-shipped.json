@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "ef074136",
-  "commitDate": "2026-11-12T22:25:30-08:00",
-  "generatedAtTime": "2026-11-13T07:09:07.268Z",
+  "sha": "aa7f8bfb",
+  "commitDate": "2026-11-14T19:09:11Z",
+  "generatedAtTime": "2026-11-14T20:31:43.061Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ ef074136 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ aa7f8bfb + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -28,27 +28,27 @@
     "examples/*/_redirects"
   ],
   "totals": {
-    "files": 2257,
-    "rawBytes": 110264526,
-    "gzBytes": 11477628
+    "files": 2273,
+    "rawBytes": 110217105,
+    "gzBytes": 11458646
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":869033,"top":{"name":"assets/inter-italic-latin-ext.DvFXn_K6.woff2","gz":141152}},
-    {"district":"html pages","files":453,"gz":4917735,"top":{"name":"guides/server-route-matching.html","gz":44923}},
-    {"district":"markdown pages","files":431,"gz":650229,"top":{"name":"llms-full.txt","gz":247274}},
-    {"district":"examples","files":69,"gz":1733421,"top":{"name":"examples/hellogalaxy-effect/assets/model-viewer-DgoO7Igl.js","gz":282314}},
-    {"district":"page chunks","files":888,"gz":926076,"top":{"name":"assets/guides_server-route-matching.md.DbDIFB3K.js","gz":26921}},
-    {"district":"vp framework","files":12,"gz":305280,"top":{"name":"assets/chunks/@localSearchIndexroot.BYWl_ig5.js","gz":182038}},
-    {"district":"release diff","files":190,"gz":1181344,"top":{"name":"assets/release-diff/highlights-CpZm9DAR.BaERgbKm.js","gz":200842}},
+    {"district":"html pages","files":453,"gz":4919080,"top":{"name":"guides/server-route-matching.html","gz":44924}},
+    {"district":"markdown pages","files":431,"gz":652693,"top":{"name":"llms-full.txt","gz":248409}},
+    {"district":"examples","files":89,"gz":1743054,"top":{"name":"examples/hellogalaxy-effect/assets/model-viewer-DgoO7Igl.js","gz":282314}},
+    {"district":"page chunks","files":888,"gz":927717,"top":{"name":"assets/guides_server-route-matching.md.CyLgR9Bz.js","gz":26926}},
+    {"district":"vp framework","files":12,"gz":306017,"top":{"name":"assets/chunks/@localSearchIndexroot.BQLi1Rhn.js","gz":182757}},
+    {"district":"release diff","files":190,"gz":1181340,"top":{"name":"assets/release-diff/highlights-CpZm9DAR.BaERgbKm.js","gz":200842}},
     {"district":"images","files":106,"gz":343510,"top":{"name":"images/social-card.png","gz":167486}},
     {"district":"diagrams","files":28,"gz":55365,"top":{"name":"diagrams/prerender-with-vite-build-flow.svg","gz":4359}},
-    {"district":"app: vanilla","files":19,"gz":132990,"top":{"name":"assets/api-docs-CDKq9JyV.js","gz":28854}},
-    {"district":"app: mobx","files":10,"gz":73479,"top":{"name":"assets/decorate-Di6tBUTn.js","gz":26915}},
-    {"district":"app: effect","files":10,"gz":86979,"top":{"name":"assets/index-CgZ-WMq3.js","gz":30984}},
-    {"district":"app: hash","files":4,"gz":16850,"top":{"name":"assets/main-jJ2Vxuiu.js","gz":8482}},
-    {"district":"app: signals","files":13,"gz":101302,"top":{"name":"assets/api-docs-DAY78tpm.js","gz":28853}},
+    {"district":"app: vanilla","files":27,"gz":184246,"top":{"name":"assets/api-docs-Dw7hTdbt.js","gz":28897}},
+    {"district":"app: mobx","files":9,"gz":45961,"top":{"name":"assets/index-BXFnIC76.js","gz":17578}},
+    {"district":"app: effect","files":10,"gz":111233,"top":{"name":"assets/index-BpxkKdLO.js","gz":31052}},
+    {"district":"app: hash","files":4,"gz":17135,"top":{"name":"assets/main-B9PL7RNC.js","gz":8653}},
+    {"district":"app: signals","files":2,"gz":18094,"top":{"name":"assets/index-DllKf_5y.js","gz":9445}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
-    {"district":"site css","files":4,"gz":33296,"top":{"name":"assets/style.CsCjW7PW.css","gz":23282}}
+    {"district":"site css","files":4,"gz":33429,"top":{"name":"assets/style.Dcopjr1_.css","gz":23290}}
   ],
   "orphans": [
 

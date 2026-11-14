@@ -47,6 +47,11 @@ const GROUPS = [
   [/node_modules\/marked@|node_modules\/marked\//, 'marked'],
   [/node_modules\/dompurify@|node_modules\/dompurify\//, 'dompurify'],
   [/node_modules\/lodash-es@|node_modules\/lodash-es\//, 'lodash-es'],
+  // the devtools panel the sample apps load, with the two libraries it alone brings: valibot and d3-hierarchy 3
+  [/(^|\/)packages\/ui-router-devtools\//, 'ui-router-devtools'],
+  [/node_modules\/ui-router-devtools[@/]/, 'ui-router-devtools'],
+  [/node_modules\/valibot@|node_modules\/valibot\//, 'ui-router-devtools'],
+  [/\.pnpm\/d3-hierarchy@3\./, 'ui-router-devtools'],
   [/node_modules\/tslib@|node_modules\/tslib\//, 'runtime helpers'],
   [/^\0?(vite|rolldown|rollup)[/:]|^\0/, 'runtime helpers'],
   [/(^|\/)apps\/sample-app-shared\//, 'sample-app-shared'],

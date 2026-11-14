@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedule, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedule, arrow, isoBlock, isoPt, keyRow, leader } from './helpers.mjs';
 import { assertPlots, depthSort } from './iso-hidden.mjs';
 
 const P = 's3';
-const OX = 360, OY = 200;
+const OX = 360;
 
 // ---- census: every number below comes from www/atlas.lit-ui-router.dev/data/census-yard.json -------
 // Same basis as sheet 4: .ts/.tsx/.js/.mjs under each member's source dir,
@@ -88,21 +88,32 @@ const TIER_TEXT = {
   report: 'never gates', line: 'the line itself', art: 'the artifact', off: 'not massed',
 };
 
+// the src slab grows west and north from a fixed south-east corner, so the yard and the conveyor keep their lots
+const SRC_SE = [228, 207];
+const SRC_X = SRC_SE[0] - S(C('src — packages/*/src')[1]), SRC_Y = SRC_SE[1] - S(C('src — packages/*/src')[1]);
+// the slab's roof corner stands 36 px under the sheet's top, so a taller slab moves the drawing down
+const OY = Math.max(200, Math.ceil(36 + H(C('src — packages/*/src')[0]) - (SRC_X + SRC_Y) / 2));
+// the lettering under the scale line moves with the drawing
+const DY = OY - 200;
 // the shed stands east of the src slab by the run's trims and a unit of leg: 9 px off the slab, the shed's height plus 1.15 × 11.5 at its wall
-const SHED_X = Math.ceil(45 + S(C('src — packages/*/src')[1]) + 9 + H(C('build — @tools/oxc-emit')[0]) + 1.15 * 11.5 + 1);
+const SHED_X = Math.ceil(SRC_SE[0] + 9 + H(C('build — @tools/oxc-emit')[0]) + 1.15 * 11.5 + 1);
 // the packer stands east of the shed by the same rule
 const PACK_X = Math.ceil(SHED_X + S(C('build — @tools/oxc-emit')[1]) + 9 + H(C('pack — packPublishTarball')[0]) + 1.15 * 11.5 + 1);
 // the fleet stands south of the src slab by two units of air
-const FLEET_Y = Math.ceil(24 + S(C('src — packages/*/src')[1]) + 2);
+const FLEET_Y = Math.ceil(SRC_SE[1] + 2);
+// the registry boundary stands 4 units east of the publish slab, the registry 62.6 beyond it
+const PUB_X = 578.3;
+const BOUNDARY_X = Math.ceil(PUB_X + S(C('publish — release-it')[1])) + 4;
+const REG_X = BOUNDARY_X + 62.6;
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    45,    24, ...C('src — packages/*/src'), null, null, SRC_NOTE],
+  [1,  'src — packages/*/src',      'line',    SRC_X, SRC_Y, ...C('src — packages/*/src'), null, null, SRC_NOTE],
   [2,  'build — @tools/oxc-emit',   'line',   SHED_X, 63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   PACK_X, 55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
-  [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
-  [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
+  [5,  'publish — release-it',      'line',   PUB_X,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
+  [6,  'npm registry',              'off',    REG_X,  36,     0,    0,   70,   32, 'immutable once crossed'],
   // --- instrument yard, row A: the checks that stop a pull request --------------
   [7,  'tests — vitest harness',    'pr',     358,   215,    ...C('tests — vitest harness'), null, null, 'lit-test-env + happy-dom · 3 real browsers'],
   [8,  'compat-guards',             'pr',     399,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / effect 3 / vite 7 lanes'],
@@ -274,7 +285,7 @@ const overlapDepth = (A, B) => {
 const GATES = [...PR_GATES, 11];
 
 // ---- registry boundary --------------------------------------------------------------
-const [bx1, by1] = pt(680, -40), [bx2, by2] = pt(680, 150);
+const [bx1, by1] = pt(BOUNDARY_X, -40), [bx2, by2] = pt(BOUNDARY_X, 150);
 const boundary = `<line x1="${bx1.toFixed(1)}" y1="${by1.toFixed(1)}" x2="${bx2.toFixed(1)}" y2="${by2.toFixed(1)}" class="sks" stroke-dasharray="9 5"/>`;
 
 // ---- bodies, painted back to front, then every badge above them ----------------------
@@ -298,7 +309,7 @@ const SCHEDULE = schedule('STRUCTURE SCHEDULE — authored source per structure 
   ['#', 'structure', 'files', 'sloc', 'gate tier', 'note'], M.map(schedRow),
   `TOTAL — ${massed.length} massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · ${COUNTED} · gate tier is colour, never height`);
 // the return's lettering is the lowest line on the plate; the figure ends 20 px under it
-const RETURN_Y = 900, VH = RETURN_Y + 20;
+const RETURN_Y = 900 + DY, VH = RETURN_Y + 20;
 
 // ---- inset: the two task managers, drawn FLAT because the shape is a loop --------
 // Every figure read from the same two plates sheet 3A draws: census-handoff.json
@@ -357,48 +368,49 @@ ${drive}
 ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
-${txt(32, 170, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(32, 183, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(32, 195, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
-<line x1="244" y1="182" x2="276" y2="208" class="skf"/>
+${txt(32, 96, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(32, 109, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(32, 121, `${word(PKG_MEMBERS.length - PKG_PRIVATE)} published packages enter here`, 'lblf')}
+<!-- the packages lettering stands over the slab's west roof corner, its leader down onto the roof -->
+${leader(212, 106, ...pt(SRC_X + 0.25 * S(nl(1)), SRC_Y + 0.75 * S(nl(1)), H(nf(1))))}
 
-${txt(742, 398, 'THE TARBALL', 'lblb')}
-${txt(742, 411, 'one packer · many readers · never re-packed', 'lblf')}
-<line x1="736" y1="404" x2="712" y2="424" class="skf"/>
+${txt(742, 398 + DY, 'THE TARBALL', 'lblb')}
+${txt(742, 411 + DY, 'one packer · many readers · never re-packed', 'lblf')}
+<line x1="736" y1="${404 + DY}" x2="712" y2="${424 + DY}" class="skf"/>
 
-${txt(1060, 600, 'NPM REGISTRY', 'lblb')}
-${txt(1060, 613, 'beyond the boundary a release is immutable', 'lblf')}
-${txt(1060, 625, 'and only published-diff still reads it', 'lblf')}
-<line x1="1054" y1="596" x2="1037" y2="593" class="skf"/>
+${txt(1060, 600 + DY, 'NPM REGISTRY', 'lblb')}
+${txt(1060, 613 + DY, 'beyond the boundary a release is immutable', 'lblf')}
+${txt(1060, 625 + DY, 'and only published-diff still reads it', 'lblf')}
+<line x1="1054" y1="${596 + DY}" x2="1037" y2="${593 + DY}" class="skf"/>
 
-${txt(560, 535, 'published-diff — the only halt', 'lblr')}
-${txt(560, 548, `${nf(11)} files, ${fmt(nl(11))} sloc`, 'lblf')}
-<line x1="554" y1="532" x2="455" y2="499" class="skf"/>
+${txt(560, 535 + DY, 'published-diff — the only halt', 'lblr')}
+${txt(560, 548 + DY, `${nf(11)} files, ${fmt(nl(11))} sloc`, 'lblf')}
+<line x1="554" y1="${532 + DY}" x2="455" y2="${499 + DY}" class="skf"/>
 
-${txt(490, 812, 'docs deploy — gates the site', 'lbls')}
-<line x1="566" y1="799" x2="578" y2="768" class="skf"/>
+${txt(490, 812 + DY, 'docs deploy — gates the site', 'lbls')}
+<line x1="566" y1="${799 + DY}" x2="578" y2="${768 + DY}" class="skf"/>
 
-${txt(600, 645, `SAMPLE APPS — ${nf(18)}f · ${fmt(nl(18))} sloc`, 'lblb')}
-${txt(600, 658, `the ${rankOf(18)} mass on the sheet`, 'lblf')}
-${txt(600, 670, 'gates nothing at all', 'lblf')}
-<line x1="594" y1="652" x2="582" y2="712" class="skf"/>
+${txt(600, 645 + DY, `SAMPLE APPS — ${nf(18)}f · ${fmt(nl(18))} sloc`, 'lblb')}
+${txt(600, 658 + DY, `the ${rankOf(18)} mass on the sheet`, 'lblf')}
+${txt(600, 670 + DY, 'gates nothing at all', 'lblf')}
+<line x1="594" y1="${652 + DY}" x2="582" y2="${712 + DY}" class="skf"/>
 
-${txt(90, 555, 'e2e — playwright · stops the line', 'lblr')}
-${txt(90, 568, 'and drives the apps beside it', 'lblf')}
-<line x1="278" y1="559" x2="300" y2="588" class="skf"/>
+${txt(90, 555 + DY, 'e2e — playwright · stops the line', 'lblr')}
+${txt(90, 568 + DY, 'and drives the apps beside it', 'lblf')}
+<line x1="278" y1="${559 + DY}" x2="300" y2="${588 + DY}" class="skf"/>
 
 ${txt(620, RETURN_Y, 'the return: published-diff reads the LIVE npm tarball — the registry is inside the circuit, not at the end of it', 'lbla', 'middle')}
 
 <!-- district lettering -->
-${txt(700, 300, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
-${txt(40, 520, 'tools/ — the instrument yard', 'lblf')}
-${txt(40, 532, `${TOOLS} packages, mostly measurement`, 'lblf')}
-${txt(700, 830, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
+${txt(700, 300 + DY, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
+${txt(40, 520 + DY, 'tools/ — the instrument yard', 'lblf')}
+${txt(40, 532 + DY, `${TOOLS} packages, mostly measurement`, 'lblf')}
+${txt(700, 830 + DY, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
 
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'J',
+  num: 3, id: 'monorepo', rev: 'K',
   title: 'THE INSTRUMENT YARD',
   sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · every mass ${COUNTED} from www/atlas.lit-ui-router.dev/data/census-yard.json on scc Code lines — ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures, with the task-manager inset reading the same two plates sheet 3A draws`,
   scale: 'THE MONOREPO',

@@ -4,7 +4,7 @@ import { txt, box, isoBlock, isoPt, keyRow, npmUrl, schedule, leader } from './h
 import { assertPlots } from './iso-hidden.mjs';
 
 const P = 's10';
-const OX = 480, OY = 210;
+const OX = 480;
 
 // ---- census: every byte on this sheet comes from www/atlas.lit-ui-router.dev/data/census-bundle.json ----
 // The plate is the checked-in snapshot census-bundle.mjs writes: the REAL vite
@@ -86,7 +86,11 @@ const PLACED = [
   ['lodash-es', 'app'],
   ['app own src', 'app'],
   ['sample-app-routes', 'app'],
+  ['ui-router-devtools', 'devtools'],
 ];
+// every group the plate carries stands on the plan, the loud other row among them, so no byte drops off the drawing
+const UNPLACED = PLATE.rows.filter((r) => !PLACED.some(([name]) => name === r.group)).map((r) => r.group);
+if (UNPLACED.length) throw new Error(`sheet 10: census-bundle.json carries ${UNPLACED.join(', ')} and PLACED gives ${UNPLACED.length === 1 ? 'it' : 'them'} no lot`);
 
 const SIDE = (r) => Math.max(14, 0.28 * Math.sqrt(r));
 const HT = (gz) => Math.max(6, gz / 150);
@@ -107,6 +111,8 @@ const PLAN = {
   'lodash-es': [255, 300],
   'app own src': [352, 330],
   'sample-app-routes': [345, 385],
+  // its own lot behind the routing machine, where its height hides nothing and no lettering stands
+  'ui-router-devtools': [60, -175],
 };
 
 const all = PLACED.map(([name, district, opaque], i) => {
@@ -115,6 +121,8 @@ const all = PLACED.map(([name, district, opaque], i) => {
   return { name, district, opaque, x, y, r: p.rendered, gz: p.estGz, mods: p.modules, s: SIDE(p.rendered), h: HT(p.estGz), n: i + 1 };
 });
 const G = (name) => all.find((b) => b.name === name);
+// the tallest roof stands 25 px under the sheet's top, or the city stands where it stood
+const OY = Math.max(210, Math.ceil(25 + Math.max(...all.map((b) => b.h - (b.x + b.y) / 2))));
 // hand PLAN, data-driven sides: the plan may not ship overlapped
 assertPlots('sheet 10', all.map(({ n, name, x, y, s }) => ({ n, name, part: 'block', x, y, w: s, d: s })));
 
@@ -160,6 +168,7 @@ const TOPS = {
   'lodash-es': "_baseClone graph — isEqual's family",
   'app own src': 'the vanilla shell and its views',
   'sample-app-routes': 'the route table the sample apps and the docs site share',
+  'ui-router-devtools': 'the devtools panel the sample apps load, with valibot and d3-hierarchy 3',
 };
 const SCHEDULE = schedule(
   'STRUCTURE SCHEDULE — source bytes the bundler kept · gzipped wire share · modules · note',
@@ -168,7 +177,15 @@ const SCHEDULE = schedule(
   `TOTAL — ${all.length} groups in ${T.chunks} chunks · ${fmt(T.kept)} kept → ${fmt(T.emitted)} emitted → ${fmt(T.gz)} gz · ${BASIS}`,
 );
 
-const DY = 700;
+// the lettering under the scale line moves with the city
+const LDY = OY - 210;
+// the doors strip stands 25 px under the lowest ground corner on the plan and 40 under the app district's lettering, or at 700
+const DY = Math.max(700, Math.ceil(Math.max(...all.map((b) => isoPt(OX, OY, b.x + b.s, b.y + b.s)[1])) + 25), 660 + LDY + 40);
+const NUMW = (n) => { const w = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen'][n]; if (!w) throw new Error(`sheet 10: no number word for ${n}`); return w; };
+// the devtools' frame stands 12 out from its block, its lettering off the frame's east corner
+const DEV = G('ui-router-devtools');
+const DEV_FRAME = [DEV.x - 12, DEV.y - 12, DEV.x + DEV.s + 12, DEV.y + DEV.s + 12];
+const DEV_LABEL = isoPt(OX, OY, DEV_FRAME[2], DEV_FRAME[1]);
 // the doors strip is the plate's lowest lettering
 const VB_H = DY + 30 + 20;
 
@@ -199,29 +216,30 @@ const CORE_FACE = faceOf('@uirouter/core', 0.25, 1, 0.8);
 const LIT_FACE = faceOf('lit', 1, 0.5, 0.5);
 const MARKED_FACE = faceOf('marked', 0.75, 0.5, 1);
 
-const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of fourteen buildings in three districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at ${KB(G('@uirouter/core').gz)} while lit-ui-router itself is a small accent building at ${KB(G('lit-ui-router').gz)}; a single lit major stands, with no second copy; the demo-chrome district — visualizer, marked, dompurify, api-viewer, largely deferred to a lazy chunk — outweighs the machine; the app district holds the shared demo code, the ${KB(G('lodash-es').gz)} lodash-es remainder, the app's own source and a tiny building for the shared route table. A priced strip of the flagship's six entry doors and a schedule below the drawing give exact counts.">
+const svg = `<svg viewBox="0 0 1160 ${VB_H}" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of ${NUMW(all.length)} buildings in ${NUMW(new Set(all.map((b) => b.district)).size)} districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at ${KB(G('@uirouter/core').gz)} while lit-ui-router itself is a small accent building at ${KB(G('lit-ui-router').gz)}; a single lit major stands, with no second copy; the demo-chrome district — visualizer, marked, dompurify, api-viewer, largely deferred to a lazy chunk — outweighs the machine; behind the machine the devtools panel the sample apps load stands in a district of its own at ${KB(G('ui-router-devtools').gz)}; the app district holds the shared demo code, the ${KB(G('lodash-es').gz)} lodash-es remainder, the app's own source and a tiny building for the shared route table. A priced strip of the flagship's six entry doors and a schedule below the drawing give exact counts.">
 ${defs(P)}
 
-${groupOutline(20, 0, 395, 200, 'the routing machine', 150, 330)}
-${groupOutline(420, 0, 712, 212, 'the demo chrome', 872, 220)}
-${groupOutline(150, 270, 430, 412, 'the app itself', 336, 660)}
+${groupOutline(20, 0, 395, 200, 'the routing machine', 150, 330 + LDY)}
+${groupOutline(420, 0, 712, 212, 'the demo chrome', 872, 220 + LDY)}
+${groupOutline(...DEV_FRAME, 'the devtools', DEV_LABEL[0] - 14, DEV_LABEL[1] + 18)}
+${groupOutline(150, 270, 430, 412, 'the app itself', 336, 660 + LDY)}
 
 ${bodies}
 
 ${txt(60, 56, `the machine the skin wraps: core ${KB(G('@uirouter/core').gz)} gz (${pct(G('@uirouter/core').gz)}) —`, 'lbla')}
 ${txt(60, 68, `lit-ui-router itself is ${KB(G('lit-ui-router').gz)} (${pct(G('lit-ui-router').gz)})`, 'lbla')}
 ${leader(290, 66, ...CORE_FACE)}
-${txt(1150, 240, `one lit major here: ${KB(G('lit').gz)} across ${G('lit').mods} modules —`, 'lbl', 'end')}
-${txt(1150, 252, 'no second copy rides in with the chrome', 'lbl', 'end')}
-${leader(858, 236, ...LIT_FACE)}
-${txt(1150, 336, `marked + dompurify: ${KB(CHROME_GZ)}`, 'lbl', 'end')}
-${txt(1150, 348, `gz — ${Math.round(CHROME_GZ / G('lit-ui-router').gz)}× the router they`, 'lbl', 'end')}
-${txt(1150, 360, 'document, parked in a', 'lbl', 'end')}
-${txt(1150, 372, 'lazy api-docs chunk', 'lbl', 'end')}
-${leader(1060, 378, ...MARKED_FACE)}
-${txt(60, 585, `what the swap left: lodash-es ${KB(G('lodash-es').gz)} —`, 'lbla')}
-${txt(60, 597, `the true cost of four imports, ${G('lodash-es').mods} modules unmoved`, 'lbla')}
-${leader(352, 578, 378, 518)}
+${txt(1150, 240 + LDY, `one lit major here: ${KB(G('lit').gz)} across ${G('lit').mods} modules —`, 'lbl', 'end')}
+${txt(1150, 252 + LDY, 'no second copy rides in with the chrome', 'lbl', 'end')}
+${leader(858, 236 + LDY, ...LIT_FACE)}
+${txt(1150, 336 + LDY, `marked + dompurify: ${KB(CHROME_GZ)}`, 'lbl', 'end')}
+${txt(1150, 348 + LDY, `gz — ${Math.round(CHROME_GZ / G('lit-ui-router').gz)}× the router they`, 'lbl', 'end')}
+${txt(1150, 360 + LDY, 'document, parked in a', 'lbl', 'end')}
+${txt(1150, 372 + LDY, 'lazy api-docs chunk', 'lbl', 'end')}
+${leader(1060, 378 + LDY, ...MARKED_FACE)}
+${txt(60, 585 + LDY, `what the swap left: lodash-es ${KB(G('lodash-es').gz)} —`, 'lbla')}
+${txt(60, 597 + LDY, `the true cost of four imports, ${G('lodash-es').mods} modules unmoved`, 'lbla')}
+${leader(352, 578 + LDY, 378, 518 + LDY)}
 
 ${txt(1150, 26, 'SCALE — 1 px of height ≈ 150 gz bytes', 'lbls', 'end')}
 ${txt(1150, 40, BASIS, 'lblf', 'end')}
@@ -230,7 +248,7 @@ ${doors}
 </svg>`;
 
 export const sheet10 = {
-  num: 10, id: 'bundled', rev: 'F',
+  num: 10, id: 'bundled', rev: 'G',
   title: 'THE BUNDLED CITY',
   sub: `ALTITUDE 2⅞ — inside the wire: what the bundler kept · one production bundle: ${all.length} package groups in ${T.chunks} chunks, ${fmt(T.gz)} gz, footprint from source kept and height from wire share — ${BASIS}`,
   scale: 'ONE BUNDLE',
@@ -239,10 +257,10 @@ export const sheet10 = {
   schedule: SCHEDULE,
   caption: `One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to ${KB(T.gz)}.`,
   notes: `
-<p><strong>Method:</strong> a <a href="${HOME.hook}"><code>generateBundle</code></a> census on a real <a href="${HOME.vite}">production vite build</a> of <a href="${tree(PLATE.app)}"><code>${PLATE.app}</code></a>, run inside a materialized, installed archive of the measured ref rather than the working tree — ${BASIS}. Every rendered module is attributed to its package by an explicit grouping table whose misses land in a loud <code>other</code> row (this print: none), and every footprint, height, schedule row and door price is read from the checked-in plates at build time — a group the drawing places that the plate does not carry is a build error, not a stale constant. Footprint is post-tree-shake source kept; height is <em>${PLATE.method}</em> — the honest wire share. Beside it, the repo's own <a href="${HOME.codecov}">codecov bundle-analysis</a> probe (<a href="${tree('tools/bundle-probe')}"><code>tools/bundle-probe</code></a>, the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads) prices each exported entry at the same ref, read here from <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code>. This closes the survey as a quartet: the source (7), what npm delivers (8), what the wire carries (9) — and here, who occupies those bytes. Sheet 11 is this sheet's split view: the same probe cut by published package, every entry priced alone. Whole bundle: ${fmt(T.kept)} kept → ${fmt(T.emitted)} emitted → ${fmt(T.gz)} gz in ${T.chunks} chunks.</p>
+<p><strong>Method:</strong> a <a href="${HOME.hook}"><code>generateBundle</code></a> census on a real <a href="${HOME.vite}">production vite build</a> of <a href="${tree(PLATE.app)}"><code>${PLATE.app}</code></a>, run inside a materialized, installed archive of the measured ref rather than the working tree — ${BASIS}. Every rendered module is attributed to its package by an explicit grouping table whose misses land in a loud <code>other</code> row (this print: ${PLATE.otherIds?.length ? `${PLATE.otherIds.length} module ids` : 'none'}), and every footprint, height, schedule row and door price is read from the checked-in plates at build time — a group the drawing places that the plate does not carry is a build error, not a stale constant. Footprint is post-tree-shake source kept; height is <em>${PLATE.method}</em> — the honest wire share. Beside it, the repo's own <a href="${HOME.codecov}">codecov bundle-analysis</a> probe (<a href="${tree('tools/bundle-probe')}"><code>tools/bundle-probe</code></a>, the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads) prices each exported entry at the same ref, read here from <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code>. This closes the survey as a quartet: the source (7), what npm delivers (8), what the wire carries (9) — and here, who occupies those bytes. Sheet 11 is this sheet's split view: the same probe cut by published package, every entry priced alone. Whole bundle: ${fmt(T.kept)} kept → ${fmt(T.emitted)} emitted → ${fmt(T.gz)} gz in ${T.chunks} chunks.</p>
 <p><strong>Reconciliation with sheet 9.</strong> The two sheets do not meet at an identity, and the reason is a rule: on sheet 9 a chunk counts where it is <em>first claimed</em>, so <code>ui-router-visualizer.esm</code> sits inside <code>app: vanilla</code> rather than beside it. Straight from the two plates: sheet 9's vanilla district is ${fmt(VAN.gz)} gz over ${VAN.files} files; this bundle is ${fmt(T.gz)} gz over ${T.chunks} chunks; the residual is ${fmt(RESID)} gz over ${RESID_FILES} file. That file is the one emitted <em>asset</em> in the app's output that is not a chunk — the api-viewer <a href="${HOME.cem}">custom-elements manifest</a>, JSON a module census structurally cannot see, since it walks <code>bundle</code> entries of type <code>chunk</code>. The app's stylesheet is not in the gap: sheet 9's pattern table files <code>.css</code> under <em>site css</em> before the app districts are reached. So ${fmt(T.gz)} + ${fmt(RESID)} = ${fmt(VAN.gz)}, and the named residual is a manifest, not a rounding error.</p>
 <p><strong>The library is a skin over the machine.</strong> The biggest building in the bundle is not the router package — it is ${npmLink('@uirouter/core')} at ${KB(G('@uirouter/core').gz)} gz, ${pct(G('@uirouter/core').gz)} of the wire, ${G('@uirouter/core').mods} modules. ${npmLink('lit-ui-router')} itself is the small accent building: ${KB(G('lit-ui-router').gz)}, ${pct(G('lit-ui-router').gz)}, ${G('lit-ui-router').mods} modules. The two independent measurements reconcile: the codecov door prices the bare <code>.</code> entry at ${fmt(door('.').gz)} gz with deps external, and this app's census pulls ${fmt(G('lit-ui-router').gz)} of it — the ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% difference is what the app's own imports leave on the shelf.</p>
-<p><strong>The chrome outweighs the machine.</strong> ${npmLink('marked', 'marked')}, ${npmLink('dompurify', 'dompurify')} and <a href="${HOME.apiViewer}"><code>@api-viewer</code></a> total ${KB(CHROME_GZ + G('@api-viewer').gz)} gz — more than the routing machine they document — and the prebundled ${npmLink('@uirouter/visualizer')} adds ${KB(G('@uirouter/visualizer').gz)} on its own, opaque to tree-shaking because it arrives already bundled. None of it is on the eager path: the panel renders behind a feature flag and rides a lazy <code>api-docs</code> chunk. This census counts who occupies the bundle, not when they arrive; sheet 9 draws the critical path. One <a href="${HOME.lit}">lit</a> major serves all of it — ${KB(G('lit').gz)} gz across ${G('lit').mods} modules, no second copy riding in with the docs-viewer stack, because a scoped <a href="${HOME.overrides}">pnpm override</a> (<code>^3.3.3</code>, a floor, not a pin) holds <code>@api-viewer/*</code> and ${npmLink('lit-dialog')} to it.</p>
+<p><strong>The chrome outweighs the machine.</strong> ${npmLink('marked', 'marked')}, ${npmLink('dompurify', 'dompurify')} and <a href="${HOME.apiViewer}"><code>@api-viewer</code></a> total ${KB(CHROME_GZ + G('@api-viewer').gz)} gz — more than the routing machine they document — and the prebundled ${npmLink('@uirouter/visualizer')} adds ${KB(G('@uirouter/visualizer').gz)} on its own, opaque to tree-shaking because it arrives already bundled. None of it is on the eager path: the panel renders behind a feature flag and rides a lazy <code>api-docs</code> chunk. The devtools panel the sample apps load by default stands apart, behind the machine: <code>ui-router-devtools</code> with the valibot and d3-hierarchy 3 it alone brings is ${KB(G('ui-router-devtools').gz)} gz, ${G('ui-router-devtools').gz === Math.max(...all.map((b) => b.gz)) ? 'the heaviest group in the bundle' : `${pct(G('ui-router-devtools').gz)} of the wire`}. This census counts who occupies the bundle, not when they arrive; sheet 9 draws the critical path. One <a href="${HOME.lit}">lit</a> major serves all of it — ${KB(G('lit').gz)} gz across ${G('lit').mods} modules, no second copy riding in with the docs-viewer stack, because a scoped <a href="${HOME.overrides}">pnpm override</a> (<code>^3.3.3</code>, a floor, not a pin) holds <code>@api-viewer/*</code> and ${npmLink('lit-dialog')} to it.</p>
 <p><strong>The app's own district is the small one.</strong> ${npmLink('lodash-es')} is ${KB(G('lodash-es').gz)} gz from ${G('lodash-es').mods} modules and ${KB(G('lodash-es').r)} of kept source — <a href="${HOME.isEqual}"><code>isEqual</code></a>'s <code>_base*</code> family, the largest module count in the bundle and its own chunk, which is what four imports truly cost once tree-shaking has done its work. Beside it, the app's own source is ${KB(G('app own src').gz)} and <a href="${tree('apps/sample-app-routes')}"><code>sample-app-routes</code></a> — the route table the sample apps and the docs site import — is ${fmt(G('sample-app-routes').r)} bytes kept, ${fmt(G('sample-app-routes').gz)} on the wire, one module: the smallest building on the map.</p>
 <p><strong>The runtime tax is near-zero.</strong> All bundler machinery — <a href="${HOME.oxc}">oxc</a> decorator helpers, <a href="${HOME.vite}">vite</a>'s preload helper and polyfill, a stray <a href="${npmUrl('tslib')}"><code>tslib</code></a> — totals ${KB(G('runtime helpers').r)} kept, ${KB(G('runtime helpers').gz)} gz, ${((G('runtime helpers').r / T.kept) * 100).toFixed(1)}% of the kept source, in ${G('runtime helpers').mods} modules. No duplicated-helper problem.</p>`,
   key: [

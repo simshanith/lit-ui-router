@@ -90,7 +90,7 @@ const fmt = (v) => v.toLocaleString('en-US');
 
 // packages only — @tools/repo-checks is drawn whole as structure 1
 const TERRACE = [
-  '@tools/a11y', '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/ci-logs', '@tools/cli', '@tools/cloudflare-api', '@tools/compat-guards', '@tools/crap', '@tools/doc-example-check', '@tools/embed-heights',
+  '@tools/a11y', '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/changelog', '@tools/ci-logs', '@tools/cli', '@tools/cloudflare-api', '@tools/compat-guards', '@tools/crap', '@tools/doc-example-check', '@tools/embed-heights',
   '@tools/eslint', '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
   '@tools/lit-test-env', '@tools/md-content-mapper', '@tools/oxc-emit', '@tools/oxlint-anti-slop', '@tools/release-config', '@tools/release-ledger', '@tools/turbo-summary', '@tools/vue-check',
   '@tools/wintercg-globals', '@tools/workers-builds',
@@ -114,56 +114,63 @@ if (!SNAP.length || SNAP.some((r) => r.mass !== 1)) throw new Error('sheet 3B: q
 // the package quarters, and the plugin's rank among them by watched files
 const QUARTERS = [...FILES_PKGS];
 const quarterFiles = (pkg) => (BY_PKG.get(pkg) ?? []).reduce((a, r) => a + r.inputs, 0);
-const SIZE_ORD = ['the smallest', 'the second-smallest', 'the third-smallest', 'the fourth-smallest', 'the fifth-smallest', 'the sixth-smallest'];
+const SIZE_ORD = ['the smallest', 'the second-smallest', 'the third-smallest', 'the fourth-smallest', 'the fifth-smallest', 'the sixth-smallest', 'the seventh-smallest', 'the eighth-smallest', 'the ninth-smallest', 'the tenth-smallest'];
 const NAV_RANK = QUARTERS.map(quarterFiles).sort((a, b) => a - b).indexOf(quarterFiles('ui-router-navigation-location-plugin'));
 if (!SIZE_ORD[NAV_RANK]) throw new Error(`sheet 3B: the plugin ranks ${NAV_RANK + 1} by watched files among the quarters — extend SIZE_ORD`);
 const NAV_SIZE_NOTE = `${SIZE_ORD[NAV_RANK]} quarter by watched files, same block shape`;
 const MOBX_GUARDED = (BY_PKG.get('lit-ui-router-mobx') ?? []).filter((r) => r.cites.some((c) => /(lit2|mobx6)-compat-guard\.ts/.test(c))).length;
 
+// the root glob's slabs stand at their own side plus 1.5, packed west from the tower's lot at x 196
+const PITCH = Math.ceil(S(SURFACE) + 1.5);
+const COL = (k) => 196 - (4 - k) * PITCH, ROW2 = PITCH + 1;
 // [n, name, x, y, plate selector (task id, package, or packages), schedule note]
 const M = [
   // --- the guard house: a package of its own, sited by what it gates -------------
   // south-west of the yard: at 10, 155 its roof stood in the plate's title block
   [1,  'repo-checks',           355,  585, '@tools/repo-checks', `the guard house — ${cite(`@tools/repo-checks#${TALL_GUARD}`)}, its tallest one-file guard`],
   // --- the root yard (`//`) — every //# task drawn alone -------------------------
-  // the root glob's slabs stand at a 49 pitch: a side is 1.2 · √files, 47.5 at 1,565; the tall ones take the north edge's east end, where nothing stands behind them
-  [2,  '//#format:check:root',    0,    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
+  // the tall slabs take the north edge's east end, where nothing stands behind them
+  [2,  '//#format:check:root', COL(0),    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
   [3,  '//#format:check:toml',   88,  110, '//#format:check:toml', `mise run + tasks/${cite('//#format:check:toml')} — plate 3A, seam C`],
   [4,  '//#lint:actionlint',    144,  110, '//#lint:actionlint', 'mise run + config.toml run line'],
-  [5,  '//#lint:css',           49,    50, '//#lint:css', `one stylelint line · the same ${fmt(SURFACE)}-file surface`],
+  [5,  '//#lint:css',          COL(1), ROW2, '//#lint:css', `one stylelint line · the same ${fmt(SURFACE)}-file surface`],
   [6,  '//#lint:markdown',       56,  110, '//#lint:markdown', `mise run + tasks/${cite('//#lint:markdown')}`],
-  [7,  '//#lint:package-json',   147,   50, '//#lint:package-json', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
-  [8,  '//#lint:root',           49,    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
+  [7,  '//#lint:package-json',  COL(3), ROW2, '//#lint:package-json', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
+  [8,  '//#lint:root',          COL(1),    0, '//#lint:root', `one oxlint line · the same ${fmt(SURFACE)}-file surface`],
   [9,  '//#lint:shellcheck',     28,  110, '//#lint:shellcheck', `mise run + tasks/${cite('//#lint:shellcheck')}`],
-  [10, '//#lint:templates',     196,    0, '//#lint:templates', `${cite('//#lint:templates')} lowers every lit template and type-checks it`],
+  [10, '//#lint:templates',    COL(4),    0, '//#lint:templates', `${cite('//#lint:templates')} lowers every lit template and type-checks it`],
   [11, '//#lint:toml',          116,  110, '//#lint:toml', `mise run + tasks/${cite('//#lint:toml')} — chain hop ③`],
   [12, '//#lint:zizmor',        172,  110, '//#lint:zizmor', 'mise run + config.toml run line'],
-  [13, '//#typecheck:root',      0,    50, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
-  [14, '//#lint:complexity',    98,   50, '//#lint:complexity', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
+  [13, '//#typecheck:root',     COL(0), ROW2, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
+  [14, '//#lint:complexity',    COL(2), ROW2, '//#lint:complexity', `one eslint line · the same ${fmt(SURFACE)}-file surface`],
   // --- the package quarters — one block per packages/ member ----------------------
   [15, 'lit-ui-router',         250,   30, 'lit-ui-router', 'guards + oxc-emit + bundle-probe bins behind every task'],
-  [16, 'lit-ui-router-mobx',    292,   30, 'lit-ui-router-mobx', `the lit2 and mobx6 guards ride ${numw(MOBX_GUARDED)} tasks`],
-  [17, 'nav-location-plugin',   366,   30, 'ui-router-navigation-location-plugin', NAV_SIZE_NOTE],
-  [18, 'ui-router-server',      319,   30, 'ui-router-server', 'node:test + runtime-globals lanes'],
-  [19, 'eslint-plugin',         385,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
+  [16, 'lit-ui-router-mobx',    291.8, 30, 'lit-ui-router-mobx', `the lit2 and mobx6 guards ride ${numw(MOBX_GUARDED)} tasks`],
+  [17, 'nav-location-plugin',   367.4, 30, 'ui-router-navigation-location-plugin', NAV_SIZE_NOTE],
+  [18, 'ui-router-server',      318.6, 30, 'ui-router-server', 'node:test + runtime-globals lanes'],
+  [19, 'eslint-plugin',         386.2, 30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
   // born 2026-09-12 (#833)
-  [20, 'lit-ui-router-effect',   412,   30, 'lit-ui-router-effect', 'the sixth quarter — the effect bindings, running every lane'],
+  [20, 'lit-ui-router-effect',  412.6, 30, 'lit-ui-router-effect', 'the sixth quarter — the effect bindings, running every lane'],
   // born 2026-09-14 (#806)
-  [21, 'lit-ui-router-ssr',      439,   30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge'],
+  [21, 'lit-ui-router-ssr',     439.4, 30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge'],
   // born 2026-10-12/13 (#1185): the row's east end, west of the release road's x 560 leg
-  [30, 'lit-ui-router-signals',  476.5,   30, 'lit-ui-router-signals', 'the eighth quarter — the signals bindings'],
-  [31, 'ui-router-signals',      501,   30, 'ui-router-signals', 'the ninth quarter — the framework-agnostic signal mirror'],
-  [32, 'ui-router-effect',       518.5,   30, 'ui-router-effect', 'the tenth quarter — the framework-agnostic SubscriptionRef'],
+  [30, 'lit-ui-router-signals', 477.1, 30, 'lit-ui-router-signals', 'the eighth quarter — the signals bindings'],
+  [31, 'ui-router-signals',     501.4, 30, 'ui-router-signals', 'the ninth quarter — the framework-agnostic signal mirror'],
+  [32, 'ui-router-effect',      519,   30, 'ui-router-effect', 'the tenth quarter — the framework-agnostic SubscriptionRef'],
   [33, '@repo/route-snapshot',   440,   78, '@repo/route-snapshot', `the eleventh quarter — private, ${numw(SNAP.length)} one-line lanes, nothing to build`],
-  [34, 'ui-router-mobx',         539.5,   30, 'ui-router-mobx', 'the twelfth quarter — the framework-agnostic MobX store'],
+  [34, 'ui-router-mobx',        539.9, 30, 'ui-router-mobx', 'the twelfth quarter — the framework-agnostic MobX store'],
   // the private and the small quarters stand in a second row south of the arteries, their badges south of them
   [35, '@repo/dev-gate',         462,   78, '@repo/dev-gate', `the thirteenth quarter — private, the two halves of each package's #dev-gate import`],
   [36, 'ui-router-registry',     528,   78, 'ui-router-registry', 'the fourteenth quarter — types only, no test lane'],
   [37, 'postcss-lit-html',       506,   78, 'postcss-lit-html', 'the fifteenth quarter — private, the PostCSS syntax stylelint reads lit templates through'],
   [38, '@repo/transition-status', 484,  78, '@repo/transition-status', 'the sixteenth quarter — private, the transition status each agnostic core mirrors'],
+  // born 2026-11-13 (#2069, #2104): the devtools east of the registry, the two small ones in the second row's gaps
+  [41, 'ui-router-devtools',     548,   72, 'ui-router-devtools', 'the seventeenth quarter — private, the recorder, the panel and its JSON schema'],
+  [42, 'ui-router-otel',         470.5, 78, 'ui-router-otel', 'the eighteenth quarter — private, OpenTelemetry spans'],
+  [43, '@repo/router-events',    448.5, 78, '@repo/router-events', 'the nineteenth quarter — private, the event adapter devtools and otel share, nothing to build'],
   // born 2026-11-09 (#1769, #1663): two more slabs on the root surface, each a checker of its own behind one bin
-  [39, '//#lint:doc-examples',  147,    0, '//#lint:doc-examples', `${cite('//#lint:doc-examples')} type-checks the @example blocks`],
-  [40, '//#lint:md-examples',    98,    0, '//#lint:md-examples', `${cite('//#lint:md-examples')} type-checks the Markdown ts fences`],
+  [39, '//#lint:doc-examples',  COL(3),    0, '//#lint:doc-examples', `${cite('//#lint:doc-examples')} type-checks the @example blocks`],
+  [40, '//#lint:md-examples',   COL(2),    0, '//#lint:md-examples', `${cite('//#lint:md-examples')} type-checks the Markdown ts fences`],
   // --- the instrument end of town -------------------------------------------------
   [22, '@tools/release',        600,   15, '@tools/release', `${cite('@tools/release#pack:all')} + ${cite('@tools/release#check:exports')} live here`],
   [23, '@tools/dts-backtest',   700,   40, '@tools/dts-backtest', `${cite('@tools/dts-backtest#test')} on a ${TOWER}-file footprint — the TS 5.0 floor`],
@@ -385,7 +392,7 @@ ${txt(560, 740, `the harbour (${NO('www — the harbour')}): the site's build wa
 </svg>`;
 
 export const sheet3b = {
-  num: '3B', id: 'graphcity', rev: 'N',
+  num: '3B', id: 'graphcity', rev: 'O',
   title: 'THE WATCHED CITY',
   sub: `ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: ${CI.real} real tasks in ${M.length} massed structures · footprint = watched files (${fmt(TOT_I)} task-file hashes) · height = command sloc (${fmt(TOT_M)}) · ${fmt(PHANTOM)} phantom plots · every number imported from www/atlas.lit-ui-router.dev/data/census-mass3b.json, ${BASIS}`,
   scale: 'THE CI TASK GRAPH',

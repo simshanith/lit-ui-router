@@ -200,6 +200,21 @@ const pinAt = (page, n) => page.evaluate((k) => {
   const h = document.querySelector('#cs-viewer').queryHotspot(`hotspot-${k}`);
   return { x: h.canvasPosition.x, y: h.canvasPosition.y, y3: h.position.y };
 }, n);
+// the point `drop` under a member's pin, through a probe hotspot there, in css px within the viewer
+const capAt = async (page, n, drop) => {
+  await page.evaluate(([k, l]) => {
+    const mv = document.querySelector('#cs-viewer');
+    const { position: p } = mv.queryHotspot(`hotspot-${k}`);
+    let el = mv.querySelector('[slot="hotspot-cap-probe"]');
+    if (!el) { el = document.createElement('span'); el.slot = 'hotspot-cap-probe'; mv.appendChild(el); }
+    mv.updateHotspot({ name: 'hotspot-cap-probe', position: `${p.x}m ${p.y - l}m ${p.z}m` });
+  }, [n, drop]);
+  await page.waitForTimeout(100);
+  return page.evaluate(() => {
+    const h = document.querySelector('#cs-viewer').queryHotspot('hotspot-cap-probe');
+    return { x: h.canvasPosition.x, y: h.canvasPosition.y };
+  });
+};
 // the material under a point of the viewer, in css px within it
 const materialAt = (page, x, y) => page.evaluate(([px, py]) => {
   const mv = document.querySelector('#cs-viewer');
@@ -260,15 +275,16 @@ try {
       const pal = probeMaterials(`${tag} tier lane`, await materialsOf(page), 'tier');
       // under member 1's pin: the city shows its cap, line tier, no roof wash; the plant, its crown
       await page.evaluate(() => window.__cityScene.photo());
-      const p1 = await pinAt(page, 1);
+      // the city's probe lands on member 1's cap, the pin's own lift under it; the plant's 22 px under its pin, on the crown
+      const p1 = id === 'plant' ? await pinAt(page, 1).then((p) => ({ x: p.x, y: p.y + 22 })) : await capAt(page, 1, cityModel({ plant: false }).layout.lift);
       const crown = /^(plant-|lamp-|band-)/, foot = id === 'plant' ? CROWN_FOOT : 1;
-      await probePixel(page, `${tag} under member 1's pin`, p1.x, p1.y + 22, id === 'plant' ? crown : /^cap-line$/, cityDress(pal, (await materialsOf(page)).M, 'tier'), foot);
+      await probePixel(page, `${tag} under member 1's pin`, p1.x, p1.y, id === 'plant' ? crown : /^cap-line$/, cityDress(pal, (await materialsOf(page)).M, 'tier'), foot);
       await page.locator('#cs-lane').check();
       await page.waitForFunction(() => document.querySelector('#cs-viewer').variantName === 'test-light');
       await page.waitForTimeout(600);
       const lit = await materialsOf(page);
       probeMaterials(`${tag} test-light lane`, lit, 'light');
-      await probePixel(page, `${tag} test-light, under member 1's pin`, p1.x, p1.y + 22, id === 'plant' ? crown : /^L-b1-cap$/, cityDress(pal, lit.M, 'light'), foot);
+      await probePixel(page, `${tag} test-light, under member 1's pin`, p1.x, p1.y, id === 'plant' ? crown : /^L-b1-cap$/, cityDress(pal, lit.M, 'light'), foot);
       const p34 = await pinAt(page, 34);
       // samples down the cap: an edge line or a crown part over it is no reading of the face
       const shadows = [];

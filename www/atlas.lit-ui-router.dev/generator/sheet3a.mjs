@@ -90,9 +90,6 @@ const CACHE_X = 712, DX = 1120, DW = 240; // bottom band: three columns, even gu
 // it; the old 10.5 was cut for a mono that stood 2px shorter.
 const CLH = 13;
 const compH = (n) => 27 + (n - 1) * CLH + 12;
-// Both machines stand on one base line, and the duct band and caption band drop
-// with them: the compartments are now as tall as their task lists demand.
-const MACH_BOT = 577, DUCT_Y = 620, BAND_Y = 652;
 
 // A coupling gasket: two bolted plates across a trunk.
 function gasket(x, y, h, { hatch = null } = {}) {
@@ -116,12 +113,15 @@ const NO_MISE_LINES = NO_MISE.slice(1).reduce((ls, n) => {
   else ls.push(n);
   return ls;
 }, [`no mise: ${NO_MISE[0]}`]);
-// the rows close up as workflows join, so the last box clears the no-mise rule at 468
-const WF_STEP = Math.min(37, Math.floor((460 - 26 - 162) / Math.max(1, WF.length - 1)));
+// the rows close up as workflows join, down to a 30 pitch; past that the no-mise rule drops under the last box
+const RULE_Y = Math.max(468, 162 + (WF.length - 1) * 30 + 26 + 8);
+const WF_STEP = Math.min(37, Math.floor((RULE_Y - 8 - 26 - 162) / Math.max(1, WF.length - 1)));
 if (WF_STEP < 30) throw new Error(`sheet3a: ${WF.length} mise-calling workflows no longer fit the GITHUB ACTIONS panel`);
 const wfRowY = (i) => 162 + i * WF_STEP;
 // the branch-gate footnote rides below however many lines the no-mise list takes
-const NOTE_Y = Math.max(532, 482 + (NO_MISE_LINES.length - 1) * 12 + 16);
+const NOTE_Y = Math.max(532 + RULE_Y - 468, RULE_Y + 14 + (NO_MISE_LINES.length - 1) * 12 + 16);
+// both machines stand on the panel's floor, and the duct band and caption band drop with them
+const MACH_BOT = Math.max(577, NOTE_Y + 28), DUCT_Y = MACH_BOT + 43, BAND_Y = MACH_BOT + 75;
 if (NOTE_Y + 24 > MACH_BOT - 4) throw new Error(`sheet3a: the no-mise list (${NO_MISE_LINES.length} lines) pushes the branch-gate footnote past the panel floor`);
 const ghPanel = `${box(GX, 110, GW, MACH_BOT - 110, 'sk2 fp')}
 ${txt(GX + 12, 130, 'GITHUB ACTIONS', 'lblb')}
@@ -132,8 +132,8 @@ ${WF.map(({ name, callSites }, i) => {
 ${txt(GX + 20, y + 17, name, 'lbls')}
 ${txt(GX + GW - 20, y + 17, `·${callSites}`, 'lblf', 'end')}`;
 }).join('\n')}
-<line x1="${GX + 12}" y1="468" x2="${GX + GW - 12}" y2="468" class="skf"/>
-${lf(GX + 12, 482, NO_MISE_LINES)}
+<line x1="${GX + 12}" y1="${RULE_Y}" x2="${GX + GW - 12}" y2="${RULE_Y}" class="skf"/>
+${lf(GX + 12, RULE_Y + 14, NO_MISE_LINES)}
 ${lf(GX + 12, NOTE_Y, [
   ['branch_ci_gate needs', 'lbls'],
   ['NO setup — node builtins', 'lbls'],
@@ -173,6 +173,18 @@ const comp = (x, y, w, rows, head) =>
 ${txt(x + 8, y + 14, head, 'lbls')}
 ${rows.map(([s, cls], i) => txt(x + 8, y + 27 + i * CLH, s, cls)).join('\n')}`;
 
+// the release home letters each task once, its check-run reporters counted on one line
+const RELEASE_RUNS = H('tools/release/mise.toml').names.filter((n) => n.endsWith('_check_runs'));
+const RELEASE_ROWS = [
+  ['git_user · package_info', 'lblf'], ['pack · check_tarball', 'lblf'],
+  ['reconcile · tag · tag_push', 'lblf'], ['publish · bump', 'lblf'],
+  ['peer_floor_gate', 'lblf'], ['dependent_floor_gate', 'lblf'], [`${RELEASE_RUNS.length}× *_check_runs`, 'lblf'],
+  ['notes_resync', 'lblf'], ['check_notes_through', 'lblf'],
+  ['★ check_pack', 'lbla'], ['★ published_diff', 'lbla'],
+  ['   (runs turbo ×2)', 'lblf'], ['↩ check_release_closure', 'lblf'],
+];
+const RELEASE_DRAWN = [...RELEASE_ROWS.filter(([r]) => !/^\d+× |^ *\(/.test(r)).flatMap(([r]) => r.replace(/^[★↩] /, '').split(' · ')), ...RELEASE_RUNS].sort().join();
+if (RELEASE_DRAWN !== [...H('tools/release/mise.toml').names].sort().join()) throw new Error(`plate 3A: the release compartment letters [${RELEASE_DRAWN}], and the plate carries [${[...H('tools/release/mise.toml').names].sort()}]`);
 const mise = `${box(MX, 110, MW, MACH_BOT - 110, 'sk2 fp')}
 ${txt(MX + 12, 130, 'MISE — THE NODE-FREE UMBRELLA', 'lblb')}
 ${txt(MX + 12, 143, `${M.tasks} tasks · ${M.homes} homes · ${M.withDepends} use depends · ${M.withUsage} with $usage_* specs`, 'lblf')}
@@ -196,11 +208,7 @@ ${comp(MX + 12 + C1 + CGAP, 212, C2, [
   ['turbo loop-closer (manual)', 'lblf'],
 ], `${H('.config/mise/tasks/*').label} — ${H('.config/mise/tasks/*').count}`)}
 ${comp(MX + 12, 370, C1, [
-  ['git_user · package_info', 'lblf'], ['pack · check_tarball', 'lblf'],
-  ['reconcile · tag · tag_push', 'lblf'], ['publish · bump', 'lblf'],
-  ['peer_floor_gate', 'lblf'], ['3× *_check_runs', 'lblf'],
-  ['★ check_pack', 'lbla'], ['★ published_diff', 'lbla'],
-  ['   (runs turbo ×2)', 'lblf'], ['↩ check_release_closure', 'lblf'],
+  ...RELEASE_ROWS,
 ], `${H('tools/release/mise.toml').label} — ${H('tools/release/mise.toml').count}`)}
 ${comp(MX + 12 + C1 + CGAP, 370, C2, [
   ['② ★ ci · ★ ci_main', 'lbla'], ['★ build', 'lbla'],
@@ -357,7 +365,7 @@ ${doorsBox}
 export const SHEET3A_VERDICT = `turbo caches mise — and the loop is a DAG in a loop costume: the ${SHELLS} tasks that shell turbo and the ${REENTERS} turbo re-enters never touch; every count imported, turbo at ${T.definitions} definitions in ${T.files} files`;
 
 export const sheet3a = {
-  num: '3A', id: 'handoff', rev: 'G',
+  num: '3A', id: 'handoff', rev: 'H',
   title: 'THE HANDOFF WORKS',
   sub: `ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: ${W.calling} of ${W.files} workflows · ${M.tasks} mise tasks in ${M.homes} homes · turbo ci ${CI.nodes} nodes, ${CI.real} real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from www/atlas.lit-ui-router.dev/data/census-handoff.json + census-plate.json · ${BASIS}`,
   scale: 'TWO TASK MANAGERS',

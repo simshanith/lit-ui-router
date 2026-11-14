@@ -1,10 +1,10 @@
 {
   "ref": "www/atlas",
-  "sha": "909f478c",
-  "commitDate": "2026-11-12T22:52:14-08:00",
-  "generatedAtTime": "2026-11-13T07:08:27.296Z",
+  "sha": "a1793bc1",
+  "commitDate": "2026-11-14T12:18:31-08:00",
+  "generatedAtTime": "2026-11-14T20:34:46.892Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/survey-shipped.mjs",
-  "used": "git archive www/atlas @ 909f478c + npm ci + npm run build (vite build, prerender) -> www/atlas.lit-ui-router.dev/app/dist",
+  "used": "git archive www/atlas @ a1793bc1 + npm ci + npm run build (vite build, prerender) -> www/atlas.lit-ui-router.dev/app/dist",
   "wasAssociatedWith": [
     "npm",
     "vite",
@@ -20,21 +20,21 @@
   "scope": "www/atlas.lit-ui-router.dev/app/dist",
   "totals": {
     "files": 308,
-    "rawBytes": 26411217,
-    "gzBytes": 9554384
+    "rawBytes": 26835727,
+    "gzBytes": 9585956
   },
   "rows": [
-    {"district":"routed pages","files":43,"raw":7671795,"gz":1600104,"top":{"name":"sheet/A1/index.html","gz":283648}},
-    {"district":"bare plates","files":33,"raw":4056304,"gz":920524,"top":{"name":"plate/A1/index.html","gz":271143}},
-    {"district":"plate fragments","files":37,"raw":3815574,"gz":856174,"top":{"name":"sheets/a1.html","gz":267250}},
-    {"district":"card pictures","files":74,"raw":4127138,"gz":4084943,"top":{"name":"thumbs/a2i-dark.webp","gz":218548}},
+    {"district":"routed pages","files":43,"raw":7976036,"gz":1606334,"top":{"name":"sheet/A1/index.html","gz":283666}},
+    {"district":"bare plates","files":33,"raw":4094733,"gz":925874,"top":{"name":"plate/A1/index.html","gz":271143}},
+    {"district":"plate fragments","files":37,"raw":3855994,"gz":861345,"top":{"name":"sheets/a1.html","gz":267250}},
+    {"district":"card pictures","files":74,"raw":4137300,"gz":4094782,"top":{"name":"thumbs/a2i-dark.webp","gz":218546}},
     {"district":"the share card","files":3,"raw":481011,"gz":477701,"top":{"name":"brand/card.png","gz":361680}},
-    {"district":"models","files":14,"raw":2048792,"gz":311729,"top":{"name":"models/plant.glb","gz":102513}},
+    {"district":"models","files":14,"raw":2077352,"gz":316798,"top":{"name":"models/plant.glb","gz":104868}},
     {"district":"model viewer","files":8,"raw":2938256,"gz":874185,"top":{"name":"assets/model-viewer-CbwEdkNi.js","gz":288742}},
     {"district":"cytoscape","files":1,"raw":434717,"gz":136408,"top":{"name":"assets/cytoscape.esm-bn5iNprV.js","gz":136408}},
-    {"district":"the routed app","files":10,"raw":554001,"gz":168789,"top":{"name":"assets/index-BooMe2xQ.js","gz":103415}},
+    {"district":"the routed app","files":10,"raw":554078,"gz":168673,"top":{"name":"assets/index-DQs8Rs0R.js","gz":103279}},
     {"district":"icons","files":83,"raw":93123,"gz":88292,"top":{"name":"favicon.ico","gz":18937}},
-    {"district":"manifest","files":2,"raw":190506,"gz":35535,"top":{"name":"manifest.json","gz":34852}}
+    {"district":"manifest","files":2,"raw":193127,"gz":35564,"top":{"name":"manifest.json","gz":34881}}
   ],
   "orphans": [
 

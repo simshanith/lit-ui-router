@@ -38,7 +38,7 @@ const INSTRUMENTS = [
   ['peer-floor tier-1', [/^tools\/release\/src\/checks\/peer-floor-check-runs/]],
   ['peer-floor tier-2', [/^tools\/release\/src\/steps\/release-peer-floor-gate/, /^tools\/compat-guards\/src\/floor-(guard|legs)\./]],
   ['docs deploy watch', [/^tools\/release\/src\/checks\/workers-builds-check-runs/, /^tools\/workers-builds\//, /^tools\/cloudflare-api\//]],
-  ['publish — release-it', [/^tools\/release\//, /^tools\/release-config\//, /^tools\/release-ledger\//]],
+  ['publish — release-it', [/^tools\/release\//, /^tools\/release-config\//, /^tools\/release-ledger\//, /^tools\/changelog\//]],
   ['compat-guards', [/^tools\/compat-guards\//]],
   ['dts-backtest', [/^tools\/dts-backtest\//]],
   ['tests — vitest harness', [/^tools\/lit-test-env\//, /^tools\/happy-dom\//, /^tools\/wintercg-globals\//]],

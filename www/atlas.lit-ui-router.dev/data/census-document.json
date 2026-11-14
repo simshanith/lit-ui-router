@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "ef074136",
-  "commitDate": "2026-11-12T22:25:30-08:00",
-  "generatedAtTime": "2026-11-13T07:10:33.805Z",
+  "sha": "aa7f8bfb",
+  "commitDate": "2026-11-14T19:09:11Z",
+  "generatedAtTime": "2026-11-14T20:36:31.172Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-document.mjs",
-  "used": "git archive origin/main @ ef074136 (survey, declared rules) + chromium on apps/sample-app-lit-vanilla/dist/vanilla built at 909f478c (apps/ and packages/ identical to ef074136), 1280×900 and 390×844, after document.fonts.ready",
+  "used": "git archive origin/main @ aa7f8bfb (survey, declared rules) + chromium on apps/sample-app-lit-vanilla/dist/vanilla built at a1793bc1 (apps/ and packages/ identical to aa7f8bfb), 1280×900 and 390×844, after document.fonts.ready",
   "wasAssociatedWith": [
     "playwright chromium (tools/embed-heights)",
     "getBoundingClientRect",
@@ -14,7 +14,7 @@
   "build": {
     "app": "sample-app-lit-vanilla",
     "dir": "apps/sample-app-lit-vanilla/dist/vanilla",
-    "builtAt": "909f478c",
+    "builtAt": "a1793bc1",
     "flags": "visualizer off, api-docs off (sessionStorage featureFlags): the routed page alone",
     "listPath": "/app/contacts",
     "detailPath": "/app/contacts/fruiz"
