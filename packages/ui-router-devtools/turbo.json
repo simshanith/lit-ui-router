@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // the session JSON Schema is a published output: `build` is not done without it
+      "dependsOn": ["^build", "build:js", "build:types", "build:schema"],
+      // but it belongs to the task that writes it, not to both archives
+      "outputs": ["dist/**", "!dist/session.schema.json"]
+    },
+    "build:schema": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/session-schema.ts",
+        "scripts/json-schema.ts"
+      ],
+      "outputs": ["dist/session.schema.json"]
+    }
+  }
+}

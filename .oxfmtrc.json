@@ -4,6 +4,7 @@
   "printWidth": 80,
   "sortPackageJson": true,
   "ignorePatterns": [
+    "packages/*/CHANGELOG.md",
     "www/atlas.lit-ui-router.dev/*.html",
     "www/atlas.lit-ui-router.dev/README.md",
     "www/atlas.lit-ui-router.dev/data/*.json",

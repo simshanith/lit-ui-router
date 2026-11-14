@@ -38,11 +38,11 @@ never both. `@lit-labs/ssr-client` is optional: install it when you import
 `ui-router-server/vite`, so it takes `vite` through that package's optional
 peer.
 
-The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the
+The `lit-ui-router` peer is `^1.20.0`: the server renders a view through the
 helper `<ui-view>` renders through, and the client hands a served class element
 to the view it wakes.
 
-The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo`
+The `ui-router-server` peer is `^0.11.0`: `prerender` asks its `redirectedTo`
 whether a page's `redirectTo` fired, and reads the status from the redirecting
 state's `redirectStatusCode`.
 
@@ -72,7 +72,7 @@ Path enumeration, the html document, and `<title>` stay with the caller —
 `paths`, `document()`, and `template` or an async `renderShell()` are the
 seams for them. `template` takes the router and returns the page's template;
 `prerender` [settles](#settling-the-router-on-each-path) the router on each path
-before calling it. That includes the 404 document's probe path, so a mount that
+within its mount before calling it. That includes the 404 document's probe path, so a mount that
 projects an `otherwise` needs the router to declare an `otherwise` rule of its
 own. A `renderShell()` hook, for a page that needs the verdict or
 more than a settle, calls `settle()` itself. Pass one or the other; passing
@@ -93,7 +93,7 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, response: 0, document: 1 }
 ```
 
 `template` returns the page for the router `prerender` has settled; this
@@ -205,7 +205,9 @@ if (redirect)
 `/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
 `tally.redirect`.
 [`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
-runs this example both ways.
+runs this example both ways. The
+[Hello Solar System SSR example](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-ssr/src/app.ts)
+redirects its numbered URLs the same way.
 
 - A url rule that rewrites the url, `when('/old', '/new')`, starts a new
   transition rather than redirecting one, so `redirectedTo` reports nothing
@@ -772,7 +774,7 @@ It never executes, `hydrate()` walks comments only and reads past it, and every
 `<` and `>` in it is written `\u003c` and `\u003e`, so no value can close it.
 
 ```text
-<script type="application/json" data-lit-ui-router-ssr>{"version":"0.9.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
+<script type="application/json" data-lit-ui-router-ssr>{"version":"0.11.0","state":"sheet","params":{"num":"7B"},"views":["$default"]}</script>
 ```
 
 `hydrateRoot` reads it before it touches the document, and returns `false`

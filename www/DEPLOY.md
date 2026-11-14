@@ -41,6 +41,16 @@ All of them live in the site package, `www/lit-ui-router.dev/`:
 | `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP) and a `Link` header advertising `/llms.txt`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `catalog/`        | Site data the config, build and worker read: `navigation.ts` (sidebar and top nav), `packages.ts` (package roles), `redirects.ts` (moved docs URLs as [redirects](https://developers.cloudflare.com/workers/static-assets/redirects/); the build writes them to `dist/_redirects`, and the dev server answers them too) and `surfaces.ts` (each URL space's renderer, and whether the sitemap index (the build's `/sitemap.xml`, over `/sitemap-pages.xml` and each listed worker row's own), `llms.txt`, local search and the dead-link check include it; its test holds the worker rows to `run_worker_first`)              |
 
+Package READMEs, manifests and shipped sources link the site, and a published tarball can't
+change. `.vitepress/test/published-links.test.ts` resolves each such link against the page
+sources, the generated API reference, the worker's routes and `redirects.ts`, headings
+included. `catalog/published-urls.txt` lists every link a package ships, released or about
+to be, as a path or `path#fragment`, and the test fails until a new link is listed there.
+Every listed path and fragment must keep resolving, and a redirect rule that catches one
+carries `linkedFrom` naming the packages behind it. A fragment must match a Markdown
+heading id on the target page; raw `<a id>` anchors don't count. To rename a heading that
+a listed fragment names, keep the old id with `## New heading {#old-id}`.
+
 ### Wrangler Setup
 
 Wrangler is installed in both:

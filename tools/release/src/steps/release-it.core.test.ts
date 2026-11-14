@@ -7,8 +7,11 @@ import {
   currentReleaseVersionArgs,
   parseReleaseVersion,
   publishArgs,
+  releaseNotesCommand,
   releaseVersionArgs,
+  shellWord,
   tagArgs,
+  writeSectionCommand,
 } from './release-it.core.ts';
 import { pnpmReleaseItArgs } from './release-it.ts';
 
@@ -113,6 +116,67 @@ describe('bumpArgs', () => {
   });
 });
 
+describe('shellWord', () => {
+  it('single-quotes a word, quotes included', () => {
+    assert.equal(shellWord("/w/it's here"), `'/w/it'\\''s here'`);
+  });
+
+  it('refuses a ${ release-it would render as a template', () => {
+    assert.throws(() => shellWord('/w/${version}'), /release-it template/);
+  });
+});
+
+const notes = {
+  changelog: '/w/packages/lit-ui-router/CHANGELOG.md',
+  script: '/w/tools/changelog/src/write-section.ts',
+};
+
+describe('writeSectionCommand', () => {
+  it('runs the write-section CLI on absolute paths, each a quoted word', () => {
+    assert.equal(
+      writeSectionCommand({
+        notes,
+        packageName: 'lit-ui-router',
+        version: '1.8.0',
+        notesPath: '/tmp/release-notes-x/notes.md',
+      }),
+      "node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/release-notes-x/notes.md'",
+    );
+  });
+});
+
+describe('bumpArgs with a section', () => {
+  it('writes and stages the section after the floor gate, inside the run', () => {
+    const args = bumpArgs({
+      packageName: 'lit-ui-router',
+      version: '1.8.0',
+      commitMessage: 'Release 1.8.0',
+      section: { notes, notesPath: '/tmp/n.md' },
+      dryRun: false,
+    });
+
+    assert.equal(
+      args.at(-1),
+      'pnpm install --lockfile-only --fix-lockfile && ' +
+        "mise run //tools/release:dependent_floor_gate --package 'lit-ui-router' && " +
+        "node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/n.md' && " +
+        `git add ":(top)pnpm-lock.yaml" '/w/packages/lit-ui-router/CHANGELOG.md'`,
+    );
+  });
+});
+
+describe('releaseNotesCommand', () => {
+  it('runs the extract CLI on the absolute changelog, so release-it’s cwd does not matter', () => {
+    assert.equal(
+      releaseNotesCommand({
+        notes: { ...notes, script: '/w/tools/changelog/src/extract.ts' },
+        version: '1.8.0',
+      }),
+      "node '/w/tools/changelog/src/extract.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --version '1.8.0'",
+    );
+  });
+});
+
 describe('publishArgs', () => {
   const base = {
     releaseVersion: '1.8.0',
@@ -161,6 +225,18 @@ describe('publishArgs', () => {
 
   it('appends --dry-run last for manual dry runs', () => {
     assert.equal(publishArgs({ ...base, dryRun: true }).at(-1), '--dry-run');
+  });
+
+  it('passes a stable release’s notes command as github.releaseNotes', () => {
+    const args = publishArgs({ ...base, releaseNotes: "node '/w/x.ts'" });
+    const at = args.indexOf('--github.releaseNotes');
+
+    assert.equal(args[at + 1], "node '/w/x.ts'");
+    assert.equal(args[at - 2], '--github.assets');
+    assert.throws(
+      () => publishArgs({ ...base, releaseNotes: ' ' }),
+      /releaseNotes/,
+    );
   });
 
   it('rejects blank version/tarball/from', () => {

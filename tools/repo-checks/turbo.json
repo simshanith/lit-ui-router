@@ -113,6 +113,7 @@
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
+        "!$TURBO_ROOT$/**/.playwright-cli/**",
         "!$TURBO_ROOT$/www/lit-ui-router.dev/reference/*/**",
         "!$TURBO_ROOT$/**/.cloudflare/**",
         "!$TURBO_ROOT$/www/release-ledger.lit-ui-router.dev/worker/worker-configuration.d.ts",
@@ -125,8 +126,12 @@
       ]
     },
     "check:shared-source": {
-      // the canonical sources the consumers inline
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/shared/*/src/**"]
+      // the canonical sources the consumers inline, and the exports naming them
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/shared/*/src/**",
+        "$TURBO_ROOT$/packages/shared/*/package.json"
+      ]
     },
     "check:task-inputs": {
       // the audit is over every planned task, so any turbo.json or manifest

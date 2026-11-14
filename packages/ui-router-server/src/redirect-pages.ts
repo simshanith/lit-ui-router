@@ -6,6 +6,7 @@
 import escapeHtml from 'escape-html';
 
 import type { RedirectLine, RulesWriter } from './prerender.ts';
+import { fileName, rulePath } from './site-paths.ts';
 
 /** Options for {@link redirectPages}. */
 export interface RedirectPagesOptions {
@@ -33,7 +34,11 @@ export interface RedirectPagesOptions {
 
 /** The `_redirects` file body for the lines: one `from to status` line each. */
 export const redirectsFileBody = (lines: readonly RedirectLine[]): string =>
-  lines.map((line) => `${line.from} ${line.to} ${line.status}\n`).join('');
+  lines
+    .map(
+      (line) => `${rulePath(line.from)} ${rulePath(line.to)} ${line.status}\n`,
+    )
+    .join('');
 
 // JSON in a script: `<` escaped so the target can't close the element.
 const scriptString = (text: string): string =>
@@ -98,7 +103,7 @@ const pageFileFor = (from: string, base: string): string => {
 
   if (prefix !== '' && path !== prefix && !path.startsWith(`${prefix}/`))
     throw new Error(`redirectPages: '${from}' lies outside base '${base}'`);
-  const rest = trimSlashes(path.slice(prefix.length));
+  const rest = fileName(trimSlashes(path.slice(prefix.length)));
 
   return rest === '' ? 'index.html' : `${rest}/index.html`;
 };

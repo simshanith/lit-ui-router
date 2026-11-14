@@ -125,10 +125,28 @@
       // The worker contract tests run the worker module in node; workspace
       // sources resolve directly (no build), but the root task's src/**
       // inputs would miss worker/**, so over-approximate. The index-page tests
-      // read the same files the build does.
+      // read the same files the build does. The published-link test reads the
+      // generated API reference and what each package ships.
+      "dependsOn": [
+        "^build",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-effect#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-signals#docs:api",
+        "lit-ui-router-ssr#docs:api",
+        "ui-router-effect#docs:api",
+        "ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-registry#docs:api",
+        "ui-router-server#docs:api",
+        "ui-router-signals#docs:api"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/*/package.json",
+        "$TURBO_ROOT$/packages/*/README.md",
+        "$TURBO_ROOT$/packages/*/src/*.ts",
+        "$TURBO_ROOT$/packages/*/docs/**",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",
         "$TURBO_ROOT$/examples/embeds.ts",
         "$TURBO_ROOT$/examples/*/package.json",

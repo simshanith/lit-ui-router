@@ -614,11 +614,12 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   const prewarm = validatePrewarm(base, config);
   const responses = compileResponses(base, config);
   const delegates = compileDelegates(base, config);
+  const strategy = config.strategy ?? 'matcher';
 
   return {
     base: normalizeBase(base),
     config,
-    strategy: config.strategy ?? 'matcher',
+    strategy,
     prewarm,
     delegates,
     responses,
@@ -629,7 +630,11 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       {
         routes: config.routes,
         rules: config.redirects,
-        config: config.config,
+        // Core always decodes, so a simulate mount's projection does too.
+        config:
+          strategy === 'simulate'
+            ? { ...config.config, decodeParams: true }
+            : config.config,
       },
       mountIndex(base, config),
     ),
@@ -815,10 +820,10 @@ const respelledVerdict = (
 };
 
 // Navigations only are respelled; a marked state answers a non-navigation at either spelling.
-const matcherVerdict = (
+const matchedRouteVerdict = (
   mount: Mount,
   subpath: string,
-  respelled = true,
+  respelled: boolean,
 ): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
@@ -842,6 +847,21 @@ const matcherVerdict = (
     : notFoundVerdict(mount);
 };
 
+// Any URIError degrades to the shell, a caller's own included, as a core throw does on a simulate mount.
+const matcherVerdict = (
+  mount: Mount,
+  subpath: string,
+  respelled = true,
+): Verdict => {
+  try {
+    return matchedRouteVerdict(mount, subpath, respelled);
+  } catch (error) {
+    if (error instanceof URIError) return shellVerdict(mount);
+
+    throw error;
+  }
+};
+
 // The matcher projection stands in for both strategies: they consume the same declaration subset.
 const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   if (mount.base === '/') return null;
@@ -851,7 +871,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   try {
     verdict = matcherVerdict(mount, '');
   } catch {
-    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface any throw but a URIError.
     return null;
   }
 
@@ -1147,6 +1167,27 @@ export function createServerRouter<
         return verdict.kind === 'delegate' || verdict.kind === 'response'
           ? verdict
           : null;
+      }
+
+      return null;
+    },
+    undecodable(pathnameOrUrl) {
+      const pathname = pathnameOf(pathnameOrUrl);
+
+      for (const mount of mounts) {
+        const subpath = subpathIn(mount.base, pathname);
+
+        if (subpath === null) continue;
+
+        try {
+          matchedRouteVerdict(mount, onOrigin(subpath), false);
+        } catch (error) {
+          if (error instanceof URIError) return error;
+
+          throw error;
+        }
+
+        return null;
       }
 
       return null;

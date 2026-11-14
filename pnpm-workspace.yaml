@@ -33,6 +33,8 @@ catalog:
   '@lit-labs/ssr-client': ^1.1.8
   '@lit-labs/ssr-dom-shim': ^1.6.0
   '@lit/context': ^1.1.6
+  '@opentelemetry/api': ^1.10.0
+  '@opentelemetry/sdk-trace': ^3.1.1
   '@oxlint/plugins': 1.93.0
   '@pierre/diffs': 1.6.4
   '@pierre/trees': ^1.0.0-beta.6
@@ -44,6 +46,7 @@ catalog:
   '@pnpm/workspace.workspace-manifest-reader': 1100.3.2
   '@release-it/conventional-changelog': ^12.0.2
   '@testing-library/dom': ^10.4.2
+  '@types/d3-hierarchy': ^3.1.7
   '@types/dom-navigation': ^1.0.7
   '@types/escape-html': ^1.0.4
   '@types/lodash-es': ^4.17.12
@@ -57,6 +60,7 @@ catalog:
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
+  '@valibot/to-json-schema': ^1.8.0
   '@vitest/browser': ^5.0.5
   '@vitest/browser-playwright': ^5.1.0
   '@vitest/coverage-v8': ^5.1.0
@@ -69,6 +73,7 @@ catalog:
   concurrently: ^10.0.7
   conventional-changelog: ^8.1.3
   crap4ts: 2.0.0-rc.5
+  d3-hierarchy: ^3.1.2
   diff: ^9.0.0
   effect: ^4.1.2
   esbuild: ^0.28.2
@@ -213,11 +218,13 @@ catalogs:
   workspace:
     '@repo/dev-gate': workspace:*
     '@repo/route-snapshot': workspace:*
+    '@repo/router-events': workspace:*
     '@repo/transition-status': workspace:*
     '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*
     '@tools/build_and_test': workspace:*
     '@tools/bundle-probe': workspace:*
+    '@tools/changelog': workspace:*
     '@tools/cli': workspace:*
     '@tools/cloudflare-api': workspace:*
     '@tools/compat-guards': workspace:*
@@ -257,6 +264,7 @@ catalogs:
     sample-app-routes: workspace:*
     sample-app-shared: workspace:*
     ui-router-navigation-location-plugin: workspace:*
+    ui-router-devtools: workspace:*
     ui-router-effect: workspace:*
     ui-router-mobx: workspace:*
     ui-router-registry: workspace:*

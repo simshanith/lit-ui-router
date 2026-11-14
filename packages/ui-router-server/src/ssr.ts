@@ -99,6 +99,21 @@ export interface SettleOptions {
   maxRewrites?: number;
 }
 
+/** Lands a url-moving redirect core ignored because it ends on the state and params the router already stands on. */
+const landIgnoredRedirect = (
+  router: UIRouter,
+  redirect: Transition,
+): Transition => {
+  const { globals, urlService } = router;
+  const { navigable } = globals.$current;
+
+  // Core's success hooks never ran for it: put the url on the landed state and record it as the landed transition.
+  if (navigable) urlService.url(navigable.url.format(globals.params), true);
+  globals.successfulTransitions.enqueue(redirect);
+
+  return redirect;
+};
+
 /**
  * Moves `router` to `path` and resolves once the transition the url starts
  * has landed, resolves included, so a synchronous render reads the router
@@ -109,7 +124,10 @@ export interface SettleOptions {
  * url and syncs the router to it, whether or not the router is listening.
  * A page loop calls it once per path on the same router. A `redirectTo`
  * chain settles on its final state, and a path the router already stands on
- * resolves with the transition that brought it there.
+ * resolves with the transition that brought it there. A redirect that ends
+ * where the router already stands resolves with the redirected transition,
+ * which becomes the router's last landed one, unless it leaves the url in
+ * place (`location: false`).
  *
  * A failed transition still reaches `stateService.defaultErrorHandler`,
  * which logs it unless replaced.
@@ -179,8 +197,17 @@ export const settle = (
 
       if (rejection.type === RejectType.IGNORED) {
         // Ignored with nothing in flight: the router already stands where the url points.
-        if (!globals.transition && globals.successfulTransitions.size() > 0)
-          land(globals.successfulTransitions.peekTail());
+        if (!globals.transition && globals.successfulTransitions.size() > 0) {
+          const moved =
+            transition.redirectedFrom() &&
+            transition.options().location !== false;
+
+          land(
+            moved
+              ? landIgnoredRedirect(router, transition)
+              : globals.successfulTransitions.peekTail(),
+          );
+        }
 
         return;
       }

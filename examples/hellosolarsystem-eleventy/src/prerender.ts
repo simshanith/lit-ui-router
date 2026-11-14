@@ -40,8 +40,13 @@ export async function renderSite(base = '/'): Promise<Site> {
     const result = await prerender({
       mounts,
       router,
-      // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
-      paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
+      // Every path to emit. `/legacy` and the numbered planet urls emit redirect pages and `_redirects` lines; the 404 page comes from `otherwise` unlisted.
+      paths: [
+        '/',
+        ...solarBodies.map(({ id }) => `/planets/${id}`),
+        ...solarBodies.map((_, index) => `/planets/${index + 1}`),
+        '/legacy',
+      ],
       outDir: '',
       base,
       // `_redirects`, and a page per redirect whose body is its target, for the layout to wrap.

@@ -55,7 +55,8 @@ The smallest possible lit-ui-router app.
 
 A tour of the Sun, all 8 planets, and a beloved dwarf-planet easter egg — real facts (distance, diameter, moons, orbital period) with CSS-gradient orbs log-scaled by diameter. No extra dependencies.
 
-- Route parameters: a `planets` list state and a `planet` detail state at `/planets/:planetId`
+- Route parameters: a `planets` list state and a `planet` detail state at `/planets/:planetId`, keyed by a readable id such as `earth`
+- A `redirectTo` function that sends numbered URLs such as `/planets/4` to the named ones
 - Fetching data before a state activates with `resolve` and a data service with simulated async latency
 - Reading route parameters inside a resolve via `deps: ['$transition$']`
 - Consuming resolved data in components through `UIViewInjectedProps`
@@ -77,14 +78,14 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 
 ### hellosolarsystem-signals
 
-**hellosolarsystem** on [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), with the router's `RouterSignals` and the app's own `Signal.State`s read side by side. The states and resolves are the vanilla ones. The one change is that `planetId` uses ui-router's `int` param type, so it reaches every reader as a number.
+**hellosolarsystem** on [`lit-ui-router-signals`](https://lit-ui-router.dev/packages/lit-ui-router-signals), with the router's `RouterSignals` and the app's own `Signal.State`s read side by side. The states and resolves are the vanilla ones.
 
 - `<app-root>` sits outside every `<ui-view>`, so a `RouterSignalController` selects the body the URL names and renders previous/next links for it. The arrow keys step along the same links.
 - The routed list and detail are constructed by the router, so `<app-root>` cannot pass them props. It `@provide`s a distance-unit `Signal.State` instead, and each view `@consume`s it. Context delivers the signal once, when the view connects; the signal carries every change after that, read through `SignalController`, so the provider never re-provides and no request subscribes.
 - `<app-root>` `@consume`s `routerContext` from `lit-ui-router/context` for the arrow keys, rather than closing over the module's router. `<ui-router>` answers the request, the same one `RouterSignalController` makes to find the router.
 - The detail view's light-travel clock is a `Signal.State` whose `watched`/`unwatched` callbacks start and stop its timer, so the clock runs only while a view reads it.
 - `document.title` follows the route through a bare `watchSelection` from `ui-router-signals`, with no component involved.
-- The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry). Its `/signals` entry point types the `RouterSignals.route` snapshot, so `includes('planet')` narrows `params.planetId` to a number with no cast, and a `TypedStateService` checks the arrow keys' `go('planet', { planetId })`.
+- The states are declared `as const` and registered with [`ui-router-registry`](https://lit-ui-router.dev/packages/ui-router-registry). Its `/signals` entry point types the `RouterSignals.route` snapshot, so `includes('planet')` narrows `params.planetId` to a string with no cast, and a `TypedStateService` checks the arrow keys' `go('planet', { planetId })`.
 
 ### hellosolarsystem-eleventy
 
@@ -107,7 +108,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 - `redirectPages({ redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
 - The route table stays at `/`. The script builds its router with `baseHref: site.base`, Vite's `base`, and the rules lines and redirect pages carry the base on their own, so the same script builds the site at any base.
 - `src/client.ts` hydrates the prerendered page and turns on the router's transition trace, so the console logs each navigation. After the first page, navigation stays on the client, with no further requests.
-- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page. `npm run dev:base` does the same under `--base=/solar/`: `/solar/` and `/solar/planets/3` answer their pages, `/solar/legacy` answers 302 to `/solar/`, a path outside `/solar/` gets a 404, and `_redirects` reads `/solar/legacy /solar/ 302`.
+- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page. `npm run dev:base` does the same under `--base=/solar/`: `/solar/` and `/solar/planets/venus` answer their pages, `/solar/planets/3` answers its redirect page, which sends the browser to `/solar/planets/venus`, `/solar/legacy` answers 302 to `/solar/`, and a path outside `/solar/` gets a 404. `_redirects` reads `/solar/planets/3 /solar/planets/venus 308` for each numbered url, then `/solar/legacy /solar/ 302`.
 
 ### hellogalaxy
 

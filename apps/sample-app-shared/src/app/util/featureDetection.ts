@@ -134,6 +134,7 @@ export function bootedLocationPlugin(): ResolvedLocationPlugin | undefined {
 
 export interface FeatureFlagDefinitions {
   'location-plugin': LocationPluginFeatureSymbol | undefined;
+  'enable-devtools': boolean;
   'enable-visualizer': boolean;
   'enable-trace': boolean;
   'enable-api-docs': boolean;
@@ -145,7 +146,8 @@ const isBooleanFlag = (
 
 const FLAG_DEFAULTS: FeatureFlagDefinitions = {
   'location-plugin': undefined,
-  'enable-visualizer': true,
+  'enable-devtools': true,
+  'enable-visualizer': false,
   'enable-trace': import.meta.env.VITE_TRACE === 'true',
   'enable-api-docs': true,
 };
@@ -240,6 +242,7 @@ export class FeatureFlags {
   getAll(): FeatureFlagDefinitions {
     return {
       'location-plugin': this.get('location-plugin'),
+      'enable-devtools': this.get('enable-devtools'),
       'enable-visualizer': this.get('enable-visualizer'),
       'enable-trace': this.get('enable-trace'),
       'enable-api-docs': this.get('enable-api-docs'),

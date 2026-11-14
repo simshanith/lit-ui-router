@@ -24,7 +24,10 @@ public npm.
 ## Adding and consuming one
 
 - Model a new package on an existing one: each `exports` subpath names one
-  `.ts` file. Register it in the `workspace` catalog of `pnpm-workspace.yaml`.
+  `.ts` file, and every `src/*.ts` file but specs is named by one, including
+  helpers only a sibling imports. oxc-emit inlines exported files only, and
+  `check:shared-source` fails on a file it would leave out. Register the
+  package in the `workspace` catalog of `pnpm-workspace.yaml`.
 - Give it a codecov component in `.github/codecov.yml` and add its coverage
   files to the Codecov upload step of `.github/workflows/build-test-run.yml`.
 - A consumer lists it in `devDependencies` as `catalog:workspace`, which is

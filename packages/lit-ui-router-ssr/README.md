@@ -43,8 +43,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
 
 Path enumeration, the html document, and `<title>` stay with the caller — `paths`, `document()`,
 and `template` or an async `renderShell()` are the seams for them. `template` takes the router and
-returns the page's template; `prerender` settles the router on each path with `settle()` before
-calling it. That includes the 404 document's probe path, so a mount that projects an `otherwise`
+returns the page's template; `prerender` settles the router on each path within its mount with
+`settle()` before calling it. That includes the 404 document's probe path, so a mount that projects an `otherwise`
 needs the router to declare an `otherwise` rule of its own. A `renderShell()` hook, for a page that needs the verdict or more than a settle, calls
 `settle()` itself. Pass one or the other; passing both throws.
 
@@ -60,10 +60,10 @@ the client half, so a bundle takes one or the other, never both. `@lit-labs/ssr-
 install it when you import `lit-ui-router-ssr/client`. `lit-ui-router-ssr/vite` wraps
 `ui-router-server/vite`, so it takes `vite` through that package's optional peer.
 
-The `lit-ui-router` peer is `^1.19.0`: the server renders a view through the helper `<ui-view>`
+The `lit-ui-router` peer is `^1.20.0`: the server renders a view through the helper `<ui-view>`
 renders through, and the client hands a served class element to the view it wakes.
 
-The `ui-router-server` peer is `^0.9.0`: `prerender` asks its `redirectedTo` whether a page's
+The `ui-router-server` peer is `^0.11.0`: `prerender` asks its `redirectedTo` whether a page's
 `redirectTo` fired, and reads the status from the redirecting state's `redirectStatusCode`.
 
 ## Quick Start
@@ -81,7 +81,7 @@ const result = await prerender({
   document: (body, { path }) => fillShell(titles.get(path), body),
 });
 
-console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, document: 1 }
+console.log(result.tally); // { shell: 2, redirect: 1, notFound: 0, delegate: 0, response: 0, document: 1 }
 ```
 
 `result.delegated` lists the paths that matched a delegating state. They get no page and no rules

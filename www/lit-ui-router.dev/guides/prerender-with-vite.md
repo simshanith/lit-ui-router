@@ -183,7 +183,7 @@ export default definePrerender((site) => {
 
 The pages land in `dist/` as they do without a base, since `dist/` is what
 the host serves at `/solar/`. `_redirects` carries the base:
-`/solar/legacy /solar/about 302`. Lines in `extraRules` are written as given.
+`/solar/legacy /solar/about 302`. Lines in `extraRules` get no base.
 A relative base (`./`) or a full-URL base fails the build.
 
 `vite preview --base=/solar/` serves the build as the host would: `/solar/`
@@ -298,7 +298,9 @@ fails the build with its own message.
 **`vite preview`.** The plugin's middleware still answers redirects and paths
 with no route, so `/legacy` answers 302. Every other path gets the file the
 build wrote for it, `404.html` for a path the `otherwise` rule catches, and
-`index.html` for a path the build wrote no page for. A `serveShell` passed
+`index.html` for a path the build wrote no page for. Preview also serves
+`index.html` for a page whose file name holds a `#` or `?` from an encoded
+param, which a static host serves but preview can't address. A `serveShell` passed
 to the plugin replaces this.
 
 <DiagramEmbed src="/diagrams/prerender-with-vite-seq-6-preview.svg">

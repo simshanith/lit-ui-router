@@ -181,10 +181,19 @@ test.describe('docs site', () => {
     await expect(page).toHaveTitle(/Venus/);
   });
 
+  test('redirects a numbered planet url to its slug', async ({ page }) => {
+    await page.goto('/examples/hellosolarsystem-mobx/#/planets/4');
+    await expect(page).toHaveURL(/#\/planets\/earth$/);
+    await expect(
+      page.getByRole('heading', { name: 'Earth', exact: true }),
+    ).toBeVisible();
+    await expect(crumb(page)).toContainText('1 of 10 visited');
+  });
+
   test('rejects a non-integer planet id rather than rounding it', async ({
     page,
   }) => {
-    // parseInt('4x') is 4. One strict parser keeps Earth out of the detail
+    // parseInt('4x') is 4. The strict match keeps Earth out of the detail
     // view, the breadcrumb and the visited set alike.
     await page.goto('/examples/hellosolarsystem-mobx/#/planets/4x');
     await expect(page.getByText('Body not found')).toBeVisible();

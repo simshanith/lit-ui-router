@@ -51,6 +51,43 @@ export const previousIn = <Row extends { version: string }>(
   );
 };
 
+/** A prerelease's kind: `canary` for a canary build, `prerelease` for any other, or null for a stable version. */
+export const prereleaseKind = (
+  version: string,
+): 'canary' | 'prerelease' | null => {
+  const ids = prerelease(version);
+
+  if (ids === null) return null;
+
+  return ids[0] === 'canary' ? 'canary' : 'prerelease';
+};
+
+/** The versions either side of `row` in `versions` (newest first), each null at that end of the list. */
+export const adjacentIn = <Row extends { version: string }>(
+  versions: readonly Row[],
+  row: Row,
+): { older: Row | null; newer: Row | null } => {
+  const at = versions.findIndex(({ version }) => version === row.version);
+
+  return at === -1
+    ? { older: null, newer: null }
+    : { older: versions[at + 1] ?? null, newer: versions[at - 1] ?? null };
+};
+
+/** Whether `row` comes after `latest` in `versions` (newest first); false when either is missing from it. */
+export const isOlderThan = <Row extends { version: string }>(
+  versions: readonly Row[],
+  row: Row,
+  latest: Row,
+): boolean => {
+  const at = (target: Row) =>
+    versions.findIndex(({ version }) => version === target.version);
+
+  const [rowAt, latestAt] = [at(row), at(latest)];
+
+  return rowAt !== -1 && latestAt !== -1 && rowAt > latestAt;
+};
+
 /** Two versions to compare, older first; either is absent for a package with no versions. */
 export interface VersionPair<Row> {
   from: Row | undefined;

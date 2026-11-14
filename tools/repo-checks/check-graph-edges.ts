@@ -28,6 +28,10 @@ const CHECK = 'check-graph-edges';
 const hasScript = (task: string) => (member: Member) =>
   member.manifest?.scripts?.[task] !== undefined;
 
+// `packages/*` itself, published or private; `packages/shared/*` is inlined source with no dist of its own.
+const isTopLevelPackage = (member: Member) =>
+  /^packages\/[^/]+$/.test(member.dir);
+
 const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
   ...[
     '@www/lit-ui-router.dev#build',
@@ -62,8 +66,10 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
   {
     consumer: '//#lint:md-examples',
     producerTask: 'build:types',
+    // a private package's README fences import its dist d.ts too
     select: (member) =>
-      isPublishable(member) && hasScript('build:types')(member),
+      (isPublishable(member) || isTopLevelPackage(member)) &&
+      hasScript('build:types')(member),
     why: "the Markdown fence checker resolves each fence's imports to dist d.ts, so an unbuilt package checks fences against stale or missing types; add the line to turbo.json",
   },
 ];

@@ -35,6 +35,8 @@ export interface DelegateRegistration {
   markedFor(
     pathnameOrUrl: string,
   ): Promise<Extract<Verdict, { kind: 'delegate' | 'response' }> | null>;
+  /** The error a route's decode throws for a pathname or url, which `resolve` answers with the shell; null when none does. */
+  undecodable(pathnameOrUrl: string): URIError | null;
 }
 
 const registrations = sharedWeakMap<ServerRouter, DelegateRegistration>(

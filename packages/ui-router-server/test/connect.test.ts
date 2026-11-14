@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { describe, it } from 'node:test';
 
 import { createServerRouter } from '../src/index.ts';
@@ -123,6 +125,59 @@ describe('createConnectMiddleware', () => {
     assert.equal(h.req.url, '/app'); // default shellPath = mount base
     assert.equal(h.nextArgs.length, 1);
     assert.equal(h.ended, false); // the static layer ends it
+  });
+
+  for (const mode of ['setHeader', 'writeHead'] as const) {
+    it(`keeps the canonical Link when the downstream layer sends its own through ${mode}`, async () => {
+      const preload = '</app.js>; rel=preload; as=script';
+
+      const mw = createConnectMiddleware(
+        routerOf({ kind: 'shell', mount: '/app' }),
+      );
+
+      const server = http.createServer((req, res) =>
+        mw(req, res, () => {
+          if (mode === 'setHeader') res.setHeader('Link', preload);
+          else res.writeHead(200, { Link: preload });
+
+          res.end('<html>shell</html>');
+        }),
+      );
+
+      await new Promise<void>((resolve) =>
+        server.listen(0, '127.0.0.1', resolve),
+      );
+
+      try {
+        // SAFETY: a listening TCP server's address is an AddressInfo.
+        const { port } = server.address() as AddressInfo;
+
+        const res = await fetch(`http://127.0.0.1:${port}/app/about`, {
+          headers: { accept: 'text/html' },
+        });
+
+        assert.equal(res.headers.get('Link'), `${CANONICAL_ABOUT}, ${preload}`);
+      } finally {
+        server.close();
+      }
+    });
+  }
+
+  it('sends the canonical Link once when the downstream layer re-sets it alongside its own', async () => {
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    const both = `${h.headers.Link}, </app.js>; rel=preload`;
+    h.res.setHeader('Link', both);
+    h.res.setHeader('X-Other', 'kept');
+
+    assert.equal(h.headers.Link, both);
+    assert.equal(h.headers['X-Other'], 'kept');
   });
 
   it('percent-encodes what a raw request target cannot carry inside the Link', async () => {
@@ -353,6 +408,101 @@ describe('createConnectMiddleware', () => {
     assert.deepEqual(h.nextArgs, [[]]);
     assert.equal(h.req.url, '/app/badge.svg');
     assert.equal(h.headers.Link, undefined);
+  });
+
+  it('fails a throw from serveShell through next(error)', async () => {
+    const thrown = new Error('shell asset unreadable');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      {
+        serveShell: () => {
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('fails a throw from serveNotFound through next(error)', async () => {
+    const thrown = new Error('404 page unreadable');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'notFound', mount: '/app' }),
+      {
+        serveNotFound: () => {
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('fails a throw from the response writers through next(error)', async () => {
+    const thrown = new Error('headers already sent');
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+    );
+
+    const h = harness();
+
+    h.res.setHeader = () => {
+      throw thrown;
+    };
+
+    mw(h.req, h.res, h.next);
+    await h.done;
+
+    assert.deepEqual(h.nextArgs, [[thrown]]);
+  });
+
+  it('calls next once when serveShell passes the request on and then throws', async () => {
+    const thrown = new Error('after next');
+    const rejections: unknown[] = [];
+
+    // node:test fails a test on any unhandled rejection; take its listeners
+    // off for the one this case expects.
+    const runnerListeners = process.listeners('unhandledRejection');
+    process.removeAllListeners('unhandledRejection');
+    process.on('unhandledRejection', (reason) => rejections.push(reason));
+
+    const mw = createConnectMiddleware(
+      routerOf({ kind: 'shell', mount: '/app' }),
+      {
+        serveShell: (_mount, _req, _res, next) => {
+          next();
+
+          throw thrown;
+        },
+      },
+    );
+
+    const h = harness();
+
+    try {
+      mw(h.req, h.res, h.next);
+      await h.done;
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      process.removeAllListeners('unhandledRejection');
+
+      for (const listener of runnerListeners)
+        process.on('unhandledRejection', listener);
+    }
+
+    assert.deepEqual(h.nextArgs, [[]]);
+    assert.deepEqual(rejections, [thrown]);
   });
 
   it('never judges non-navigation requests (module and asset fetches pass)', async () => {

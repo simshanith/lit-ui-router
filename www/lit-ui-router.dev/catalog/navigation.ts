@@ -1,6 +1,7 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
 import { SAMPLE_APPS } from './examples.ts';
-import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
+import { PACKAGES, ROLES, type Role } from './packages.ts';
+import { API_REFERENCES } from './references.ts';
 
 /** A page link, in VitePress's shape. */
 export interface NavLink {
@@ -155,23 +156,6 @@ const sampleAppItems: NavLink[] = [
     target: '_self',
   })),
 ];
-
-/** Each package's API reference index; keyed by package, so a new catalog entry fails typecheck until it has a link or null. */
-export const API_REFERENCES = {
-  'lit-ui-router': '/reference/lit-ui-router/',
-  'ui-router-effect': '/reference/ui-router-effect/',
-  'lit-ui-router-effect': '/reference/lit-ui-router-effect/',
-  'ui-router-mobx': '/reference/ui-router-mobx/',
-  'lit-ui-router-mobx': '/reference/lit-ui-router-mobx/',
-  'ui-router-signals': '/reference/ui-router-signals/',
-  'lit-ui-router-signals': '/reference/lit-ui-router-signals/',
-  'ui-router-navigation-location-plugin':
-    '/reference/ui-router-navigation-location-plugin/',
-  'ui-router-server': '/reference/ui-router-server/',
-  'lit-ui-router-ssr': '/reference/lit-ui-router-ssr/',
-  'ui-router-registry': '/reference/ui-router-registry/',
-  'eslint-plugin-lit-ui-router': null,
-} as const satisfies Record<PackageName, string | null>;
 
 /** The sidebar sections, in order; each API reference entry gets its generated members in config.ts. */
 export const SIDEBAR: SidebarEntry[] = [

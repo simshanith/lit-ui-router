@@ -4,7 +4,8 @@
 # check-runs endpoint). All three answer "does the outside world still match
 # main?" — npm artifacts, peer ranges, and the Cloudflare deploy pipeline that
 # ships lit-ui-router.dev. "release-ledger" asks whether the D1 release ledger
-# still matches GitHub's tags and releases and npm. One more,
+# still matches GitHub's tags and releases and npm, and "changelog" whether
+# each CHANGELOG.md holds the release notes the ledger stores. One more,
 # "pages-deploy (altitude-atlas)", sits on the www/atlas head instead and asks
 # whether atlas.lit-ui-router.dev serves it. action_required renders orange =
 # a release, a floor-bump, a dashboard apply, an atlas deploy or a ledger fix
@@ -206,3 +207,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Empty off the post-publish dispatch, which skips the digest comparison.
           RELEASE: ${{ inputs.release }}
+      # Posts "changelog": action_required when a CHANGELOG.md section and the
+      # ledger's stored GitHub body differ, neutral when the ledger can't be
+      # read. Report only; exits 0 on every path.
+      - name: Changelog check run
+        run: mise run //tools/release:changelog_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

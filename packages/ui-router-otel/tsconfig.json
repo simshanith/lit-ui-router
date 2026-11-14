@@ -1,0 +1,10 @@
+{
+  // tooling umbrella (IDE, tsgolint): src and specs, no emit
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "isolatedDeclarations": false,
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

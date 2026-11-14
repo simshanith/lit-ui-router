@@ -78,7 +78,7 @@ Key concepts:
    - `galaxy`: `/galaxy`
    - `galaxy.stars`: `/stars` → `/galaxy/stars`
    - `galaxy.stars.star`: `/:starId` → `/galaxy/stars/:starId`
-3. **`redirectTo`**: Visiting the bare parent state (`/galaxy`) forwards to a sensible default child
+3. **`redirectTo`**: Visiting the bare parent state (`/galaxy`) forwards to a sensible default child. Hello Solar System used the [function form](./hellosolarsystem#redirecting-numbered-urls); a string names the state to go to
 4. **Resolve inheritance**: Child states can access parent resolves via `deps` (more below)
 
 ### The Parent Shell
@@ -264,7 +264,7 @@ This is powerful because:
 - No need to fetch the entire catalog again
 - The child resolve can filter or transform parent data
 
-Note the `:starId` parameter here is a string slug (`sirius`, `proxima-centauri`) rather than a number — no `parseInt` needed.
+Like Hello Solar System's `:planetId`, the `:starId` parameter is a string slug (`sirius`, `proxima-centauri`), so the resolve compares it to each star's `id` as is.
 
 ---
 
@@ -398,11 +398,11 @@ Here is the screen at a single URL. Each child state's URL appends to its parent
 
 You've now learned the core concepts of lit-ui-router:
 
-| Tutorial           | Concepts                                                                               |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| Hello World        | States, components, navigation with `uiSref`, basic routing                            |
-| Hello Solar System | Resolves for data fetching, state parameters, accessing route data                     |
-| Hello Galaxy       | Nested states, nested ui-views, `redirectTo`, relative references, resolve inheritance |
+| Tutorial           | Concepts                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| Hello World        | States, components, navigation with `uiSref`, basic routing                               |
+| Hello Solar System | Resolves for data fetching, state parameters, accessing route data, `redirectTo` function |
+| Hello Galaxy       | Nested states, nested ui-views, `redirectTo`, relative references, resolve inheritance    |
 
 ## What's Next?
 

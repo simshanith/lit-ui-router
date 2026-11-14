@@ -30,31 +30,98 @@ export function tagArgs(dryRun: boolean): string[] {
   ];
 }
 
+/** One shell word; release-it renders hook and notes commands as `${…}` templates first, so that sequence is refused. */
+export function shellWord(value: string): string {
+  if (value.includes('${')) {
+    throw new Error(
+      `${JSON.stringify(value)} would be read as a release-it template`,
+    );
+  }
+
+  return `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+/** Where a release's notes live and the @tools/changelog CLI that reads or writes them. */
+export interface NotesFile {
+  /** Absolute path of the package's CHANGELOG.md. */
+  changelog: string;
+  /** Absolute path of the @tools/changelog CLI script. */
+  script: string;
+}
+
+/** The after:bump command that adds `version`'s section, its body read from `notesPath`. */
+export function writeSectionCommand(options: {
+  notes: NotesFile;
+  packageName: string;
+  version: string;
+  notesPath: string;
+}): string {
+  const { notes, packageName, version, notesPath } = options;
+
+  return [
+    'node',
+    shellWord(notes.script),
+    '--file',
+    shellWord(notes.changelog),
+    '--package',
+    shellWord(packageName),
+    '--version',
+    shellWord(version),
+    '--notes',
+    shellWord(notesPath),
+  ].join(' ');
+}
+
+/** The `github.releaseNotes` command: its stdout, `version`'s section body, becomes the GitHub release body. */
+export function releaseNotesCommand(options: {
+  notes: NotesFile;
+  version: string;
+}): string {
+  const { notes, version } = options;
+
+  return [
+    'node',
+    shellWord(notes.script),
+    '--file',
+    shellWord(notes.changelog),
+    '--version',
+    shellWord(version),
+  ].join(' ');
+}
+
 // only --fix-lockfile unlinks a floor alias pnpm linked while the workspace sat at its version
-function bumpHook(packageName: string): string {
+function bumpHook(
+  packageName: string,
+  section: Parameters<typeof writeSectionCommand>[0] | undefined,
+): string {
+  const lockfile = '":(top)pnpm-lock.yaml"';
+
   return (
     'pnpm install --lockfile-only --fix-lockfile && ' +
     `mise run //tools/release:dependent_floor_gate --package '${packageName}' && ` +
-    'git add ":(top)pnpm-lock.yaml"'
+    (section === undefined
+      ? `git add ${lockfile}`
+      : `${writeSectionCommand(section)} && git add ${lockfile} ${shellWord(section.notes.changelog)}`)
   );
 }
 
 /**
  * bump-version.yml Bump version step: set the exact computed version,
  * re-resolve pnpm-lock.yaml against it, fail when a dependent's floor stops
- * proving its range (release-dependent-floor-gate.ts), commit, and push the
- * release branch. `--dry-run` makes release-it log every git/github/npm write (and
- * the hook) instead of performing it.
+ * proving its range (release-dependent-floor-gate.ts), add a stable version's
+ * CHANGELOG.md section from the captured notes (`section`; a prerelease has
+ * none), commit, and push the release branch. `--dry-run` makes release-it log every git/github/npm
+ * write (and the hook) instead of performing it.
  */
-// The commit message is passed whole, built from the pinned `changelogArgs`
-// run; release-it's own changelog here is unpinned and unused (no infile).
+// release-it requires a clean tree at start, so the section is written by the hook inside the run.
 export function bumpArgs(options: {
   packageName: string;
   version: string;
   commitMessage: string;
+  section?: { notes: NotesFile; notesPath: string };
   dryRun: boolean;
 }): string[] {
-  const { packageName, version, commitMessage, dryRun } = options;
+  const { packageName, version, commitMessage, section, dryRun } = options;
 
   if (!/^[\w@/.-]+$/.test(packageName)) {
     throw new Error(
@@ -75,7 +142,7 @@ export function bumpArgs(options: {
     '--git.commitMessage',
     commitMessage,
     '--hooks.after:bump',
-    bumpHook(packageName),
+    bumpHook(packageName, section && { ...section, packageName, version }),
   ];
 }
 
@@ -92,18 +159,29 @@ export function bumpArgs(options: {
  * - `gitRawCommitsOpts.from=<from>`: pins the conventional-changelog range
  *   to THIS package's previous tag, or the repo root on a first release
  *   (#302, release-prev-tag.ts)
- * - `context.releaseVersion` / `context.previousVersion`: the notes' peer statement
- *   and docs-site links, the same values the bump passes
+ * - `context.releaseVersion` / `context.previousVersion`: the same values the
+ *   bump passed, so the plugin's own (unpublished) changelog stays pinned
+ * - `--github.releaseNotes`: a stable release's body is the stdout of
+ *   `releaseNotes`, the version's CHANGELOG.md section (releaseNotesCommand);
+ *   release-it skips running it under `--dry-run`. A prerelease passes none,
+ *   so its body is the pinned changelog release-it generates.
  */
 export function publishArgs(options: {
   releaseVersion: string;
   tarballPath: string;
   from: string;
   previousVersion: string;
+  releaseNotes?: string;
   dryRun: boolean;
 }): string[] {
-  const { releaseVersion, tarballPath, from, previousVersion, dryRun } =
-    options;
+  const {
+    releaseVersion,
+    tarballPath,
+    from,
+    previousVersion,
+    releaseNotes,
+    dryRun,
+  } = options;
 
   if (releaseVersion.trim() === '') {
     throw new Error('releaseVersion must be non-empty');
@@ -111,6 +189,10 @@ export function publishArgs(options: {
 
   if (tarballPath.trim() === '') {
     throw new Error('tarballPath must be non-empty');
+  }
+
+  if (releaseNotes?.trim() === '') {
+    throw new Error('releaseNotes must be non-empty when passed');
   }
 
   return [
@@ -125,6 +207,9 @@ export function publishArgs(options: {
     'true',
     '--github.assets',
     tarballPath,
+    ...(releaseNotes === undefined
+      ? []
+      : ['--github.releaseNotes', releaseNotes]),
     '--git.tagExclude',
     `\${npm.name}@${releaseVersion}`,
     changelogFromArg(from),
@@ -134,9 +219,9 @@ export function publishArgs(options: {
 }
 
 /**
- * The bump driver's changelog capture — what the packages' `changelog`
- * script runs, plus the same range pin and notes context the publish argv
- * carries, so the PR body and the GitHub release body match. The
+ * The bump driver's notes capture, which becomes a stable version's
+ * CHANGELOG.md section — what the packages' `changelog` script runs, plus the
+ * range pin and notes context. The
  * package's own tag glob keeps release-it's latest-tag context (and its
  * flat-log fallback, #423) off other packages' tags; the pin is what sets
  * the range, since that glob still matches the package's prerelease tags.

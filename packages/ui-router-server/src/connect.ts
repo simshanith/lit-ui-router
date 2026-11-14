@@ -181,6 +181,21 @@ const relabel = (res: ConnectResponse, status: number): void => {
     writeHead(downstream === 304 ? downstream : status, ...rest);
 };
 
+// Node's setHeader replaces: a Link the downstream layer sets joins the canonical one.
+const setCanonical = (res: ConnectResponse, canonical: string): void => {
+  const setHeader = res.setHeader.bind(res);
+
+  res.setHeader = (name, value) =>
+    setHeader(
+      name,
+      name.toLowerCase() !== 'link' || value.includes(canonical)
+        ? value
+        : `${canonical}, ${value}`,
+    );
+
+  setHeader('Link', canonical);
+};
+
 const defaultServeNotFound = (
   mount: string,
   req: ConnectRequest,
@@ -276,6 +291,20 @@ export function createConnectMiddleware(
 
     const cut = url.indexOf('?');
     const search = cut === -1 ? '' : url.substring(cut);
+    let passed = false;
+
+    const pass: ConnectNext = (...args) => {
+      passed = true;
+      next(...args);
+    };
+
+    // A throw after the request was passed on has no second next() to take.
+    const fail: ConnectNext = (error) => {
+      if (passed) throw error;
+
+      next(error);
+    };
+
     ready
       .then(() => router.resolve(url))
       .then((verdict) => {
@@ -290,25 +319,25 @@ export function createConnectMiddleware(
 
         if (verdict.kind === 'shell') {
           if (verdict.status === undefined) {
-            res.setHeader('Link', canonicalLink(base, url));
+            setCanonical(res, canonicalLink(base, url));
           } else {
             stripValidators(req);
             relabel(res, verdict.status);
           }
 
-          serveShell(verdict.mount, req, res, next, verdict);
+          serveShell(verdict.mount, req, res, pass, verdict);
 
           return;
         }
 
         if (verdict.kind === 'delegate' && !passDelegates) {
-          next(unservedDelegate(verdict.delegate));
+          pass(unservedDelegate(verdict.delegate));
 
           return;
         }
 
         if (verdict.kind === 'response' && !passResponses) {
-          next(unservedResponse(verdict.state));
+          pass(unservedResponse(verdict.state));
 
           return;
         }
@@ -318,12 +347,13 @@ export function createConnectMiddleware(
           verdict.kind === 'response' ||
           verdict.mount === undefined
         ) {
-          next();
+          pass();
 
           return;
         }
 
-        serveNotFound(verdict.mount, req, res, next);
-      }, next);
+        serveNotFound(verdict.mount, req, res, pass);
+      })
+      .catch(fail);
   };
 }

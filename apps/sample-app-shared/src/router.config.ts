@@ -120,6 +120,12 @@ export function configureRouter(router = new UIRouterLit()) {
   router.plugin(locationPlugin, options);
   console.info(message);
 
+  if (featureFlags.get('enable-devtools')) {
+    void import('ui-router-devtools/plugin').then(({ DevtoolsPlugin }) =>
+      router.plugin(DevtoolsPlugin),
+    );
+  }
+
   if (featureFlags.get('enable-visualizer')) {
     void import('@uirouter/visualizer').then(({ Visualizer }) =>
       router.plugin(Visualizer),

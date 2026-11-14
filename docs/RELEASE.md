@@ -126,7 +126,8 @@ Creates a release PR by:
 
 1. Calculating the new version based on increment type
 2. Creating a release branch (`release/lit-ui-router/vX.Y.Z`)
-3. Committing version changes
+3. Committing version changes and, for a stable version, the version's
+   section in the package's `CHANGELOG.md` (see [Release notes](#release-notes))
 4. Opening a PR against `main`
 
 **Inputs:**
@@ -171,8 +172,14 @@ The final release stage:
 2. Creates a tarball
 3. Generates build provenance attestation
 4. Publishes to NPM using OIDC trusted publishing
-5. Creates a draft GitHub Release with the tarball
+5. Creates a draft GitHub Release with the tarball, its body read from the
+   version's `CHANGELOG.md` section
 6. Marks the GitHub Release as final
+
+Before anything publishes, a stable version must have its `CHANGELOG.md`
+section and pass the [Notes-Through check](#notes-through-check); either
+failure stops the run. A dry run reports a failed Notes-Through check as a
+warning.
 
 After the publish, the job's last step runs
 `mise run ledger_claim` ([`.config/mise/tasks/ledger_claim`](../.config/mise/tasks/ledger_claim)),
@@ -184,10 +191,12 @@ job summary, and posts nothing.
 The step is `continue-on-error`: a failed claim leaves a warning annotation and
 a job summary line, and the ledger's tag sweep records the release later.
 
-The repository has GitHub immutable releases enabled: a published release, its
+The repository has GitHub immutable releases enabled: a published release's
 assets and the tag it points at can never be edited or deleted, and npm
-versions are equally permanent. A bad release body or a missing asset ships
-for good, and test or canary publishes stay as evidence rather than cleanup.
+versions are equally permanent. A missing asset ships for good, and test or
+canary publishes stay as evidence rather than cleanup. A stable release's
+title and notes stay editable; its notes are corrected through its
+`CHANGELOG.md` section ([Correcting published notes](#correcting-published-notes)).
 
 ### 5. Release signals (`release-signals.yml`)
 
@@ -220,6 +229,15 @@ past an hour, `neutral` when a source can't be read. A deprecation is a note in
 the summary. On the post-publish dispatch, Publish to NPM passes the new release
 as the `release` input, and the check also compares its `.tgz` asset with npm's
 tarball.
+
+The cloudflare job's last step posts the `changelog` check run, from the same
+ledger read: each published package's `CHANGELOG.md` against the GitHub release
+bodies the ledger stores for its stable releases, trailing whitespace aside.
+It is `action_required` when a stored body has no section, a section's body
+differs from its stored body, or a section has no published release, and
+`neutral` when the ledger can't be read. A package's newest section, when its
+version is above every release with a stored body, is a note instead: its
+release PR has merged and the publish has not recorded the GitHub release yet.
 
 `eslint-plugin-lit-ui-router` has no check run: its floor is a published eslint,
 so `test:peer-floor` runs its rule suite on the `eslint-floor` alias in every PR.
@@ -304,9 +322,11 @@ these check runs.
    - Run the workflow
 
 2. **Review the release PR:**
-   - Wait for CI to pass
+   - Wait for CI to pass, including the
+     [Notes-Through check](#notes-through-check)
    - Review version changes in `package.json`
-   - Check changelog updates
+   - Read the new section of the package's `CHANGELOG.md`; to change the
+     notes, edit that section on the release branch
 
 3. **Merge the release PR:**
    - Merge with squash commit
@@ -491,6 +511,12 @@ branch verifies a tip that will never ship, so it is not part of the
 procedure. Merging such PRs ahead of an already-owed release makes that
 release their end-to-end check.
 
+A PR that changes where the bump writes release notes or where the publish
+reads them must not merge while a release PR is open: that release PR was
+bumped by the old drivers, so its notes are not where the new publish reads
+them. Merge or close open release PRs first, or re-run their bump after the
+change lands.
+
 ## Milestones
 
 A milestone gates one package's release train and is named for it:
@@ -545,6 +571,12 @@ which refuses a manifest that disagrees with its lock.
 - Verify OIDC trusted publishing is configured on npmjs.com
 - Check that the `publish` environment exists
 - Ensure tag format matches `lit-ui-router@*`
+- `has no <version> section`: the tagged commit's `CHANGELOG.md` lacks the
+  version. The bump writes it; the publish never regenerates it.
+- A failed [Notes-Through check](#notes-through-check): a commit the notes
+  would list reached `main` after the notes were rendered and before the
+  release commit, and the release PR's check last ran before it landed. The
+  version is tagged and unpublished; the maintainer decides how to recover.
 
 ### Fork PRs not running CI
 
@@ -596,10 +628,55 @@ template partials as functions.
 
 ### Release notes
 
-The bump (release PR body and squash commit) and the publish (GitHub release
-body) render the notes from the same config, range and context, so both carry
-the same text. The writer's `finalizeContext` and `footerPartial`
-(`tools/release-config/src/notes.ts`) shape them:
+A stable release's notes live in its package's `CHANGELOG.md`, one
+`## <version> (<YYYY-MM-DD>)` section per release
+([file contract](../tools/changelog/README.md#file-contract)). The bump
+renders them and writes the section, dated the bump day in UTC, from
+release-it's `after:bump` hook, so it lands in the release commit (`bumpArgs`
+in `tools/release/src/steps/release-it.core.ts`). The release commit and PR
+body name that section and end with a `Notes-Through: <sha>` trailer: the
+commit the release branch was cut from, where the notes were rendered. The
+publish passes `--github.releaseNotes` a command that prints the section
+(`tools/changelog/src/extract.ts`), so the GitHub release body is the section
+as merged. To change the notes, edit the section on the release branch before
+merging.
+
+#### Correcting published notes
+
+A published stable release's notes are corrected file first, never on GitHub:
+
+1. Open a PR that edits the release's section in `packages/<pkg>/CHANGELOG.md`.
+   Once it merges, the `changelog` check run on `main`
+   ([Release signals](#5-release-signals-release-signalsyml)) reports the
+   section as differing from the published notes.
+2. A maintainer runs Actions ▸ Release notes re-sync ▸ **Run workflow**
+   ([`release-notes-resync.yml`](../.github/workflows/release-notes-resync.yml))
+   with the package and version, as a dry run
+   first. Its job summary lists each release whose GitHub body differs from
+   its section, with a unified diff; unticking `dry_run` makes the edits,
+   from `main` only.
+
+The re-sync (`mise run //tools/release:notes_resync`,
+`tools/release/src/steps/release-notes-resync.ts`) writes only with
+`gh release edit <tag> --notes-file`, and only for an existing, non-draft,
+stable release whose section exists. It passes `--latest` as the release
+stands, since the update API's `make_latest` defaults to true, checks the
+Latest marker after each edit, and stops after putting it back if it moved.
+It sends no title, draft, prerelease or asset change.
+
+Until the ledger's next daily tag sweep re-reads the edited releases, the
+`release-ledger` check reports their notes as edited on GitHub and the
+`changelog` check still compares against the old bodies; both clear once the
+ledger records the new body. A manual claim through the ledger's `enqueue`
+script ([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md#backfill--manual-claims))
+records it sooner.
+
+A prerelease has no section: its release commit carries the notes, and its
+GitHub release body is the notes the publish renders from the same pinned
+range.
+
+The writer's `finalizeContext` and `footerPartial`
+(`tools/release-config/src/notes.ts`) shape the notes:
 
 - A `BREAKING CHANGE:` note ends at the first `* type(scope): …` line, so a
   squash body's sub-commit list stays out of the breaking block.
@@ -641,3 +718,27 @@ previous tag in the lane, empty on a first release) through the
 as the drivers do for a stable release; a prerelease preview passes
 `--plugins.@release-it/conventional-changelog.context.previousVersion=<version>`
 too. Without `releaseVersion`, the links are left out.
+
+#### Notes-Through check
+
+A commit that lands on `main` after the bump rendered the notes and before
+the release PR merges would ship in the tarball without appearing in any
+notes. `tools/release/src/checks/check-notes-through.ts` fails when
+`<Notes-Through>..<tip>` holds a commit the notes would list: one in the
+notes' path (`gitRawCommitsOpts.path`), of a listed type, breaking, a git
+revert or carrying a `release-as:` line, and not skipped as an unconsumed
+catalog change. Scopes are not consulted, since the notes list a foreign-scope
+commit too, in `Also touched this package`. A test, chore or CI commit that is
+none of those never trips it, and since it reads only commits, hand edits to
+the section never do either. It runs twice:
+
+- On release PRs (the `release` label), as the last step of
+  `build_and_test / run`, against the base branch's tip
+  (`mise run //tools/release:check_notes_through`).
+- In the publish driver, against the tagged commit, before anything is
+  published.
+
+A stable release commit without the trailer fails it. On a release PR, the
+remedy is to close the PR, delete its branch and run the bump again, which
+renders the notes through the new tip; carry over any hand edits to the
+section.

@@ -5,7 +5,7 @@ import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
-import { API_REFERENCES } from '../catalog/navigation.ts';
+import { API_REFERENCES } from '../catalog/references.ts';
 import {
   type Layer,
   PACKAGES,

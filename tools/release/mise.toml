@@ -149,6 +149,23 @@ flag "--release <release>" help="<name>@<version> to digest-check against npm; e
 '''
 run = 'RELEASE="${usage_release:-}" node src/checks/ledger-check-runs.ts'
 
+[tasks.changelog_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, ACTIONS_ID_TOKEN_REQUEST_* (id-token: write).
+description = "Create the changelog check run (CHANGELOG.md sections vs the ledger's published notes, non-gating)"
+run = "node src/checks/changelog-check-runs.ts"
+
+[tasks.notes_resync]
+# env: GH_TOKEN, GITHUB_REPOSITORY. Writes only through `gh release edit --notes-file`, and only when --dry-run is false.
+description = "Publish CHANGELOG.md sections to the GitHub releases whose notes differ (file to GitHub)"
+usage = '''
+flag "--package <package>" help="Published package, or all" default="all" env="PACKAGE"
+flag "--version <version>" help="Stable version, or all that differ" default="all" env="VERSION"
+flag "--dry-run <dry_run>" help="true lists the edits; false makes them" default="true" env="DRY_RUN" {
+  choices "true" "false"
+}
+'''
+run = 'node src/steps/release-notes-resync.ts --package "${usage_package?}" --version "${usage_version?}" --dry-run "${usage_dry_run?}"'
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.
@@ -182,6 +199,19 @@ flag "--dry-run" help="Show the computed version/changelog; skip branch push and
 flag "--auto-merge" help="Enable squash auto-merge on the release PR" env="AUTO_MERGE"
 '''
 run = 'PACKAGE="${usage_package?}" INCREMENT="${usage_increment?}" OTHER_INCREMENT="${usage_other_increment:-}" PR_BASE="${usage_pr_base?}" BRANCH_PREFIX_INPUT="${usage_branch_prefix:-}" DRY_RUN="${usage_dry_run:-}" AUTO_MERGE="${usage_auto_merge:-}" node src/steps/release-bump.ts'
+
+[tasks.check_notes_through]
+# The release-PR step of build-test-run.yml. On Actions it first unshallows the
+# checkout's history of the base branch and the PR head; locally it reads them as they are.
+description = "Fail a release PR whose notes miss a commit that landed on its base after the bump generated them"
+usage = '''
+flag "--base-ref <base_ref>" help="The release PR's base branch" required=#true env="BASE_REF"
+flag "--head <head>" help="The release PR's head commit" required=#true env="HEAD_SHA"
+'''
+run = [
+  '[ -z "${GITHUB_ACTIONS:-}" ] || git fetch --unshallow --no-tags origin "+refs/heads/${usage_base_ref?}:refs/remotes/origin/${usage_base_ref?}" "${usage_head?}"',
+  'node src/checks/check-notes-through.ts --base "origin/${usage_base_ref?}" --head "${usage_head?}"',
+]
 
 [tasks.check_release_closure]
 # turbo runs this as @tools/release#check:release-closure; a mise task so

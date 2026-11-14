@@ -17,7 +17,8 @@ Building on [Hello World](./helloworld), this tutorial introduces data fetching 
 - A `planets` state listing every body in the solar system, ordered by distance from the Sun
 - A `planet` state showing details of a selected body: kind, distance, diameter, moons, orbital period, and a fun fact
 - Data is fetched **before** each state is activated using resolves, from a service with simulated network latency
-- The URL includes a parameter for the selected body: `/planets/4` is Earth
+- The URL includes a parameter for the selected body: `/planets/earth` is Earth
+- Numbered URLs such as `/planets/4` redirect to the named ones
 
 ---
 
@@ -33,7 +34,7 @@ First, we create a data service. Each body carries real data plus a CSS gradient
 
 ```typescript check
 interface SolarBody {
-  id: number;
+  id: string;
   name: string;
   kind: 'star' | 'rocky planet' | 'gas giant' | 'ice giant' | 'dwarf planet';
   distanceAu: number;
@@ -47,7 +48,7 @@ interface SolarBody {
 // Ordered by distance from the Sun. (Abbreviated — the example has all ten bodies.)
 const solarBodies: SolarBody[] = [
   {
-    id: 1,
+    id: 'sun',
     name: 'Sun',
     kind: 'star',
     distanceAu: 0,
@@ -67,7 +68,7 @@ const delay = <T>(value: T, ms = 300): Promise<T> =>
 
 const SolarSystemService = {
   getAllBodies: (): Promise<SolarBody[]> => delay(solarBodies),
-  getBody: (id: number): Promise<SolarBody | undefined> =>
+  getBody: (id: string): Promise<SolarBody | undefined> =>
     delay(solarBodies.find((b) => b.id === id)),
 };
 ```
@@ -181,16 +182,14 @@ const planetState: LitStateDeclaration = {
     {
       token: 'planet',
       deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) => {
-        const planetId = parseInt($transition$.params().planetId);
-        return SolarSystemService.getBody(planetId);
-      },
+      resolveFn: ($transition$: Transition) =>
+        SolarSystemService.getBody($transition$.params().planetId),
     },
   ],
 };
 ```
 
-- **`:planetId`**: Defines a URL parameter. For `/planets/4`, `planetId` would be `"4"`
+- **`:planetId`**: Defines a URL parameter. For `/planets/earth`, `planetId` would be `"earth"`
 - **`deps: ['$transition$']`**: Inject the current transition object
 - **`$transition$.params()`**: Access all state parameters
 
@@ -202,7 +201,7 @@ Pass parameters when creating state links:
 html`<a ${uiSref('planet', { planetId: planet.id })}>${planet.name}</a>`;
 ```
 
-The second argument to `uiSref` is a parameters object. This generates a URL like `/planets/4`.
+The second argument to `uiSref` is a parameters object. This generates a URL like `/planets/earth`.
 
 ### The Planet Detail Component
 
@@ -258,7 +257,33 @@ class PlanetDetailComponent extends LitElement {
 }
 ```
 
-Note the graceful fallback: if the URL contains an unknown id (say `/planets/42`), the resolve returns `undefined` and the component renders "Body not found" with a link back to the list.
+Note the graceful fallback: if the URL contains an unknown id (say `/planets/vulcan`), the resolve returns `undefined` and the component renders "Body not found" with a link back to the list.
+
+### Redirecting Numbered URLs
+
+Numbered URLs also work: `/planets/4` is the fourth body from the Sun, and it redirects to `/planets/earth`. A `redirectTo` function on the `planet` state maps each number to its body's id.
+
+```typescript
+const numberedPlanetId = (planetId: string): string | undefined =>
+  /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;
+
+const planetState: LitStateDeclaration = {
+  name: 'planet',
+  url: '/planets/:planetId',
+  redirectTo: ($transition$: Transition) => {
+    const planetId = numberedPlanetId($transition$.params().planetId);
+
+    return planetId === undefined
+      ? undefined
+      : $transition$.targetState().withParams({ planetId });
+  },
+  // ...component and resolve as above
+};
+```
+
+Returning `undefined` lets the transition proceed. Returning a target state redirects, before any resolve runs. A redirect from a URL replaces the browser history entry, so the Back button skips the numbered URL.
+
+On a server or a prerendered site, the same function becomes an HTTP redirect. See [Page, response state or redirect](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ---
 
@@ -292,7 +317,7 @@ The complete source — including all ten solar bodies and the starfield styling
 Notice that the URL contains all the state information:
 
 - `/#/planets` - The full list
-- `/#/planets/4` - Earth's details
+- `/#/planets/earth` - Earth's details
 
 You can bookmark these URLs or refresh the page, and the application will restore to the same state — the resolves re-run and the data is re-fetched. This is one of the key benefits of state-based routing.
 

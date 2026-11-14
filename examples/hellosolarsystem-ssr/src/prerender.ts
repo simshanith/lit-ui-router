@@ -15,8 +15,13 @@ export default definePrerender((site) => ({
   router: configure(
     installServerLocation(new UIRouterLit(), { baseHref: site.base }),
   ),
-  // Every path to emit. `/legacy` emits its redirect page and `_redirects` line; the 404 page comes from `otherwise` unlisted.
-  paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
+  // Every path to emit. `/legacy` and the numbered planet urls emit redirect pages and `_redirects` lines; the 404 page comes from `otherwise` unlisted.
+  paths: [
+    '/',
+    ...solarBodies.map(({ id }) => `/planets/${id}`),
+    ...solarBodies.map((_, index) => `/planets/${index + 1}`),
+    '/legacy',
+  ],
   // `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
   rules: redirectPages({ redirectsFile: true }),
   // <app-root> holds the <ui-view> in its shadow root.

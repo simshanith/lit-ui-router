@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { statefulStatements } from './shared-source.core.ts';
+import { statefulStatements, unexportedSources } from './shared-source.core.ts';
 
 describe('statefulStatements', () => {
   it('allows imports, types, functions, ambient bindings and const functions or literals', () => {
@@ -34,6 +34,35 @@ describe('statefulStatements', () => {
     assert.deepEqual(
       statefulStatements('bad.ts', source).map((line) => line.split(':')[1]),
       ['1', '2', '3', '4', '5', '6', '7', '8'],
+    );
+  });
+});
+
+describe('unexportedSources', () => {
+  it('reports canonical sources no exports subpath names', () => {
+    const exports = new Map([
+      ['packages/shared/a', { '.': './src/a.ts', './b': './src/b.ts' }],
+    ]);
+
+    assert.deepEqual(
+      unexportedSources(
+        [
+          'packages/shared/a/src/a.ts',
+          'packages/shared/a/src/b.ts',
+          'packages/shared/a/src/helper.ts',
+        ],
+        exports,
+      ),
+      ['packages/shared/a/src/helper.ts'],
+    );
+  });
+
+  it('rejects an exports target that is not one file', () => {
+    assert.throws(() =>
+      unexportedSources(
+        [],
+        new Map([['packages/shared/a', { '.': { import: './src/a.ts' } }]]),
+      ),
     );
   });
 });

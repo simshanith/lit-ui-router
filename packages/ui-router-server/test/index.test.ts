@@ -109,6 +109,19 @@ for (const strategy of TIERS) {
       });
     });
 
+    it('serves the shell for a malformed percent-escape in a path param', async () => {
+      for (const url of [
+        '/app/contacts/100%',
+        '/app/contacts/%E0%A4%A',
+        '/app/contacts/100%?q=1',
+      ])
+        assert.deepEqual(
+          await router.resolve(url),
+          { kind: 'shell', mount: '/app' },
+          url,
+        );
+    });
+
     it('may carry the target query string inside location', async () => {
       // The pin for the query contract: consumers merge params into this,
       // never concatenate the request's search onto it.
@@ -264,6 +277,13 @@ for (const strategy of TIERS) {
         kind: 'shell',
         mount: '/app',
         status: 404,
+      });
+    });
+
+    it('serves the plain shell, not the 404, for a malformed percent-escape', async () => {
+      assert.deepEqual(await router.resolve('/app/contacts/100%'), {
+        kind: 'shell',
+        mount: '/app',
       });
     });
 
@@ -471,6 +491,17 @@ for (const strategy of TIERS) {
   describe(`delegate verdicts (${strategy} strategy)`, () => {
     const router = createServerRouter({
       mounts: { '/app': delegateMount(strategy) },
+    });
+
+    it('marks no state for a malformed percent-escape in a path param', async () => {
+      assert.deepEqual(await router.resolve('/app/claims/100%'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+      assert.equal(
+        await registeredDelegates(router)?.markedFor('/app/claims/100%'),
+        null,
+      );
     });
 
     it('delegates a delegating state with its key, state and params', async () => {

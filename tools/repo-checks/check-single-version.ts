@@ -26,6 +26,10 @@ const ALLOWED: SplitAllowance[] = [
     why: "chokidar 3's is-binary-path pins ^2, under the cem analyzer and vite-plugin-static-copy; the release-diffs worker's npm diff follows libnpmdiff's ^3 list",
   },
   {
+    name: 'd3-hierarchy',
+    why: '@uirouter/visualizer 7 pins 2.0.0 under the sample apps; ui-router-devtools, its replacement, takes the catalog 3',
+  },
+  {
     name: 'effect',
     why: 'the effect-3 alias (catalogs.effect3-compat) runs test:effect3-compat beside the effect 4 line',
   },

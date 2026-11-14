@@ -57,9 +57,10 @@ export default {
         formatUserUrl: () => '',
       },
       // Relative to cwd, so each package's notes stay scoped to its own dir,
-      // plus the workspace file whose catalogs feed its packed manifest.
+      // plus the workspace file whose catalogs feed its packed manifest. The
+      // package's CHANGELOG.md is release text, never a change to the package.
       gitRawCommitsOpts: {
-        path: ['.', `:(top)${WORKSPACE_FILE}`],
+        path: ['.', ':(exclude)CHANGELOG.md', `:(top)${WORKSPACE_FILE}`],
       },
       ignoreRecommendedBump: true,
       writerOpts: {

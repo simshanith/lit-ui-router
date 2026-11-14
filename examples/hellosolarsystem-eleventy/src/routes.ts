@@ -3,7 +3,12 @@ import { routesFromStates, type MountConfig } from 'ui-router-server';
 
 export const routes = {
   planets: { name: 'planets', url: '/' },
-  planet: { name: 'planet', url: '/planets/:planetId' },
+  // A numbered url's redirect to its slug never changes, so it is permanent.
+  planet: {
+    name: 'planet',
+    url: '/planets/:planetId',
+    redirectStatusCode: 308,
+  },
   legacy: { name: 'legacy', url: '/legacy', redirectTo: 'planets' },
   notFound: { name: 'notFound' },
 } as const;

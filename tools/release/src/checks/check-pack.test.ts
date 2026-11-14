@@ -231,6 +231,25 @@ describe('findPackedFileProblems', () => {
 
   const noMaps = new Map<string, PackedMap>();
 
+  it('fails a packed CHANGELOG.md, at any depth and in any case', () => {
+    assert.deepEqual(
+      findPackedFileProblems(
+        [
+          'package.json',
+          'CHANGELOG.md',
+          'dist/changelog.md',
+          'dist/changelog.md.js',
+        ],
+        [],
+        new Map(),
+      ),
+      [
+        "CHANGELOG.md: release notes live in the repo's CHANGELOG.md and the GitHub release, never the tarball",
+        "dist/changelog.md: release notes live in the repo's CHANGELOG.md and the GitHub release, never the tarball",
+      ],
+    );
+  });
+
   it('passes imports that resolve to packed files or declarations', () => {
     assert.deepEqual(
       findPackedFileProblems(

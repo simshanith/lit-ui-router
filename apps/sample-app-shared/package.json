@@ -28,6 +28,7 @@
     "lit-ui-router": "catalog:workspace",
     "lodash-es": "catalog:",
     "sample-app-routes": "catalog:workspace",
+    "ui-router-devtools": "catalog:workspace",
     "ui-router-navigation-location-plugin": "catalog:workspace"
   },
   "devDependencies": {

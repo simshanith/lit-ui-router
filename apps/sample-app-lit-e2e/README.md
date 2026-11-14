@@ -270,9 +270,9 @@ version, and `.playwright-cli/` collects what it writes. Turn what it finds into
 spec.
 
 Load the app once before the first spec. A cold vite server transforms the
-whole module graph on the first hit, and the transition that is still running
-can leave the visualizer `<svg>` covering a click target — `sample_app.spec.ts`
-("prompts to save a message being composed") is the usual casualty. A rerun
+whole module graph on the first hit, and a spec can click before the page has
+settled — `sample_app.spec.ts` ("prompts to save a message being composed") is
+the usual casualty. A rerun
 against the warm server passes.
 
 To verify `prefers-color-scheme` behavior, use `browser.newContext({ colorScheme })` for load time and

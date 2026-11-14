@@ -33,11 +33,15 @@ This sample app is intended to demonstrate a non-trivial ui-router lit applicati
 
 ---
 
-## Visualizer
+## Devtools
 
-We're using the [State and Transition Visualizer](http://github.com/ui-router/visualizer) to visually represent
-the current state tree, as well as the transitions between states. Explore how transitions work by hovering
-over them, and clicking to expand details (params and resolves).
+The app loads [`ui-router-devtools`](../../packages/ui-router-devtools/README.md) to show the current state tree and
+the transitions between states. Open the panel from the pill in the corner of the page, and select a transition
+to see its params, phases and the reason it ended as it did.
+
+Two feature flags choose the tooling: `enable-devtools` (on by default) loads the panel, and `enable-visualizer`
+(off by default) loads the [State and Transition Visualizer](http://github.com/ui-router/visualizer) it replaces.
+Set either on the Preferences page or in the URL, as `?feature-enable-visualizer=true`.
 
 Note how states are _entered_ when they were previously not active, _exited_ and re-_entered_ when parameters change,
 and how parent states whose parameters did not change are _retained_. Each of these (_exited, entered, retained_)

@@ -27,27 +27,7 @@ describe('catalog/redirects.ts', () => {
     assert.deepEqual(tableProblems(lines), []);
   });
 
-  it('keeps every rule a released package links to, at its target', () => {
-    const linked = REDIRECTS.flatMap((rule) =>
-      'linkedFrom' in rule ? [`${rule.from} -> ${rule.to}`] : [],
-    );
-
-    assert.deepEqual(
-      linked,
-      [
-        '/packages/eslint-plugin -> /packages/eslint-plugin-lit-ui-router',
-        '/packages/navigation-plugin -> /packages/ui-router-navigation-location-plugin',
-        '/packages/server -> /packages/ui-router-server',
-        '/packages/ssr -> /packages/lit-ui-router-ssr',
-        '/api/ -> /reference/',
-        '/api/lit-ui-router-ssr/ -> /reference/lit-ui-router-ssr/',
-        '/api/reference/* -> /reference/lit-ui-router/:splat',
-        '/api/ui-router-server/* -> /reference/ui-router-server/:splat',
-      ],
-      'released npm READMEs and homepage fields link these sources and cannot be republished; keep each rule, and retarget one only where its page moves again',
-    );
-  });
-
+  // published-links.test.ts holds the linkedFrom marks to catalog/published-urls.txt.
   it('sends every URL the API reference served to its page under /reference/<npm-name>/, in one hop', () => {
     const renamed = (url: string) =>
       url
