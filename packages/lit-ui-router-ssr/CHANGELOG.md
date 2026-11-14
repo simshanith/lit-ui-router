@@ -2,6 +2,25 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=lit-ui-router-ssr%40&expanded=true).
 
+## 0.11.1 (2026-11-14)
+
+### Bug Fixes
+
+* **lit-ui-router-ssr:** settle template on the path within its mount ([#2144](https://github.com/simshanith/lit-ui-router/issues/2144)) ([74fc4bb](https://github.com/simshanith/lit-ui-router/commit/74fc4bb9d4023c708dd7934970d04f2d8c1b8859))
+
+### Documentation
+
+* **lit-ui-router-ssr:** correct the peer ranges and the Quick Start tally ([#2148](https://github.com/simshanith/lit-ui-router/issues/2148)) ([f7d6121](https://github.com/simshanith/lit-ui-router/commit/f7d61210536be60048a8cd84d23d3ee26762da64))
+
+<details>
+<summary>Also touched this package (1)</summary>
+
+* **ui-router-server:** report a redirectTo that lands where the router already stands ([#2142](https://github.com/simshanith/lit-ui-router/pull/2142))
+
+</details>
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router-ssr/0.11.1/) · [Diff from 0.11.0](https://lit-ui-router.dev/releases/lit-ui-router-ssr/diff/0.11.0...0.11.1/)
+
 ## 0.11.0 (2026-11-13)
 
 ### ⚠ BREAKING CHANGES
