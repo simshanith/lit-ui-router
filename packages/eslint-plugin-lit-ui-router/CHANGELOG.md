@@ -2,6 +2,25 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=eslint-plugin-lit-ui-router%40&expanded=true).
 
+## 1.3.1 (2026-11-13)
+
+### Build System
+
+* drop stale overrides, knip ignores and lint disables from the exception lists ([#1909](https://github.com/simshanith/lit-ui-router/issues/1909)) ([52faefd](https://github.com/simshanith/lit-ui-router/commit/52faefd28347d7437db68607d629f5a6f02c8ad7)), references [#721](https://github.com/simshanith/lit-ui-router/issues/721) [#1448](https://github.com/simshanith/lit-ui-router/issues/1448) [#1474](https://github.com/simshanith/lit-ui-router/issues/1474) [#1534](https://github.com/simshanith/lit-ui-router/issues/1534) [#1907](https://github.com/simshanith/lit-ui-router/issues/1907) [#1901](https://github.com/simshanith/lit-ui-router/issues/1901)
+* **lint:** type-check doc-comment `@example` blocks on the TypeScript 7.1 API ([#1769](https://github.com/simshanith/lit-ui-router/issues/1769)) ([cc4269e](https://github.com/simshanith/lit-ui-router/commit/cc4269eaaac9d93b993d634f9ce017b15efa64b5)), closes [#1756](https://github.com/simshanith/lit-ui-router/issues/1756)
+* **lint:** type-check opted-in Markdown ts blocks on the TypeScript 7.1 API ([#1663](https://github.com/simshanith/lit-ui-router/issues/1663)) ([1ee0ce3](https://github.com/simshanith/lit-ui-router/commit/1ee0ce3464c1a66d3d4655e10c4ef17eab936566))
+* move the custom-element lint lane from ESLint to oxlint jsPlugins ([#1662](https://github.com/simshanith/lit-ui-router/issues/1662)) ([1199a70](https://github.com/simshanith/lit-ui-router/commit/1199a70ab2b9896e87066f56e90a151f50206d06))
+
+<details>
+<summary>Also touched this package (2)</summary>
+
+* **www:** move the API reference to /reference/\<npm-name>/ ([#2028](https://github.com/simshanith/lit-ui-router/pull/2028))
+* **www:** name package pages by npm name ([#2027](https://github.com/simshanith/lit-ui-router/pull/2027))
+
+</details>
+
+[Release page](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/1.3.1/) · [Diff from 1.3.0](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/diff/1.3.0...1.3.1/)
+
 ## 1.3.0 (2026-10-22)
 
 ### Features

@@ -220,6 +220,7 @@ interface NodeFsPromises {
 
 interface NodePath {
   resolve(...paths: string[]): string;
+  sep: string;
 }
 
 interface NodeStreamPromises {
@@ -292,10 +293,19 @@ const previewShell =
 
     const emitted = async (): Promise<boolean> => {
       if (resolved === undefined) return false;
-      const [{ stat }, { resolve }] = await Promise.all([nodeFs(), nodePath()]);
-      const { root, build } = resolved;
 
-      return stat(resolve(root, build.outDir, file)).then(
+      const [{ stat }, { resolve, sep }] = await Promise.all([
+        nodeFs(),
+        nodePath(),
+      ]);
+
+      const outDir = resolve(resolved.root, resolved.build.outDir);
+      const target = resolve(outDir, file);
+
+      // A request path with `..` segments names nothing the build wrote.
+      if (!target.startsWith(outDir + sep)) return false;
+
+      return stat(target).then(
         (stats) => stats.isFile(),
         () => false,
       );

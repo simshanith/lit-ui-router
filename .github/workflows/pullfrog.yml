@@ -3,9 +3,10 @@
 # PR or comment it is answering, so the `prompt`/`name` inputs are its contract.
 #
 # The job signs in to OpenCode over OIDC, so no provider key is stored. That
-# token is the only credential the agent gets, and the model is set here, so
-# only the free OpenCode Zen model can run. The console's repo model must stay
-# "Custom (set in workflow)": a model stored there beats the `model` input.
+# token is the only credential the agent gets. The model is the `PULLFROG_MODEL`
+# repository variable, or the free OpenCode Zen model below when that is unset.
+# The console's repo model must stay "Custom (set in workflow)": a model stored
+# there beats the `model` input.
 name: Pullfrog
 run-name: ${{ inputs.name || github.workflow }}
 
@@ -70,7 +71,7 @@ jobs:
         uses: pullfrog/pullfrog@0741f79ecebfa4469a010644d2aed2d96d32d489 # v0.1.127
         with:
           prompt: ${{ inputs.prompt }}
-          model: opencode/deepseek-v4.1-flash-free
+          model: ${{ vars.PULLFROG_MODEL || 'opencode/deepseek-v4.1-flash-free' }}
           push: disabled
           timeout: 30m
         env:

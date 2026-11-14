@@ -2,6 +2,27 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=ui-router-registry%40&expanded=true).
 
+## 0.4.1 (2026-11-13)
+
+### Build System
+
+* drop stale overrides, knip ignores and lint disables from the exception lists ([#1909](https://github.com/simshanith/lit-ui-router/issues/1909)) ([52faefd](https://github.com/simshanith/lit-ui-router/commit/52faefd28347d7437db68607d629f5a6f02c8ad7)), references [#721](https://github.com/simshanith/lit-ui-router/issues/721) [#1448](https://github.com/simshanith/lit-ui-router/issues/1448) [#1474](https://github.com/simshanith/lit-ui-router/issues/1474) [#1534](https://github.com/simshanith/lit-ui-router/issues/1534) [#1907](https://github.com/simshanith/lit-ui-router/issues/1907) [#1901](https://github.com/simshanith/lit-ui-router/issues/1901)
+* **lint:** type-check opted-in Markdown ts blocks on the TypeScript 7.1 API ([#1663](https://github.com/simshanith/lit-ui-router/issues/1663)) ([1ee0ce3](https://github.com/simshanith/lit-ui-router/commit/1ee0ce3464c1a66d3d4655e10c4ef17eab936566))
+
+### Documentation
+
+* **ui-router-registry:** stop naming the optional peers' range in prose ([#1826](https://github.com/simshanith/lit-ui-router/issues/1826)) ([0855342](https://github.com/simshanith/lit-ui-router/commit/0855342d60613e49c9e2d9d51f3726f7f46d0c03))
+
+<details>
+<summary>Also touched this package (2)</summary>
+
+* **lit-ui-router:** add uiViewProps beside a deprecated _uiViewProps ([#2071](https://github.com/simshanith/lit-ui-router/pull/2071))
+* **www:** move the API reference to /reference/\<npm-name>/ ([#2028](https://github.com/simshanith/lit-ui-router/pull/2028))
+
+</details>
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-registry/0.4.1/) · [Diff from 0.4.0](https://lit-ui-router.dev/releases/ui-router-registry/diff/0.4.0...0.4.1/)
+
 ## 0.4.0 (2026-11-02)
 
 ### Features
