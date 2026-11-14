@@ -220,6 +220,107 @@ describe('activateResolveSpans', () => {
     expect(resolve.attributes['error.type']).toBe('TypeError');
   });
 
+  it('fails the resolve span with no error type of its own when the resolve throws or rejects with no Error', async () => {
+    const { router, plugin, spans } = setup(
+      new StackContextManager(),
+      { activateResolveSpans: true },
+      () => [
+        {
+          name: 'throws',
+          resolve: [
+            {
+              token: 'user',
+              resolveFn: () => {
+                throw new RangeError('no such user');
+              },
+            },
+          ],
+        },
+        {
+          name: 'empty',
+          // oxlint-disable-next-line prefer-promise-reject-errors -- an app may reject with nothing, which is the case under test
+          resolve: [{ token: 'roles', resolveFn: () => Promise.reject() }],
+        },
+      ],
+    );
+
+    plugin();
+
+    const thrown = await router.stateService.go('throws').then(
+      () => 'resolved',
+      () => 'rejected',
+    );
+
+    await router.stateService.go('empty').catch(() => {});
+
+    const all = await spans();
+    const user = named(all, 'resolve user');
+    const roles = named(all, 'resolve roles');
+
+    expect(thrown).toBe('rejected');
+    expect(user.status).toMatchObject({ code: 2, message: 'no such user' });
+    expect(user.attributes['error.type']).toBe('RangeError');
+    expect(roles.status).toMatchObject({ code: 2, message: 'rejected' });
+    expect(roles.attributes['error.type']).toBe('_OTHER');
+  });
+
+  it('runs resolves as they are when the reporter has no transition for them, and never spans one without a string token', async () => {
+    const UsersToken = class {};
+
+    const { router, tracer, spans } = setup(
+      new StackContextManager(),
+      {},
+      (current) => [
+        {
+          name: 'users',
+          resolve: [
+            {
+              token: UsersToken,
+              resolveFn: () => {
+                current().startSpan('GET by class token').end();
+
+                return ['ada'];
+              },
+            },
+            {
+              token: 'roles',
+              resolveFn: () => {
+                current().startSpan('GET roles').end();
+
+                return ['admin'];
+              },
+            },
+          ],
+        },
+      ],
+    );
+
+    // No adapter feeds this reporter, so it knows no transition to parent a resolve span to.
+    const reporter = reportToTracer(tracer);
+
+    activateResolveSpans(router, reporter);
+
+    let resolved: unknown[] = [];
+
+    router.transitionService.onSuccess({}, (trans) => {
+      resolved = [
+        trans.injector().get(UsersToken),
+        trans.injector().get('roles'),
+      ];
+    });
+    await router.stateService.go('users');
+
+    const all = await spans();
+
+    expect(resolved).toEqual([['ada'], ['admin']]);
+    expect(reporter.startResolve(0, 'roles', 'users')).toBeUndefined();
+    expect(all.map((span) => span.name).sort()).toEqual([
+      'GET by class token',
+      'GET roles',
+    ]);
+    expect(all.map(parentOf)).toEqual([undefined, undefined]);
+  });
+
   it('wraps a resolve once when it is activated twice for one reporter', async () => {
     const { router, tracer, spans } = setup(new StackContextManager(), {});
     const reporter = reportToTracer(tracer);
