@@ -282,6 +282,18 @@ describe('a session the recorder did not write whole', () => {
     expect(chainOf(txs, txs[0]).map((tx) => tx.id)).toEqual([2, 1]);
   });
 
+  it('stops walking back when repeated ids close a loop that leaves the chosen transition out', () => {
+    const txs = txsOf([
+      start(2, 0, 'a'),
+      start(3, 1, 'b', { redirectedFrom: 2 }),
+      start(2, 2, 'a', { redirectedFrom: 3 }),
+    ]);
+
+    const last = txs[txs.length - 1];
+
+    expect(chainOf(txs, last).map((tx) => tx.id)).toEqual([2, 3]);
+  });
+
   it('says only redirected or superseded when the transition that took over is not in the session', () => {
     const txs = txsOf([
       start(1, 0, 'a'),
