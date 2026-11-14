@@ -1300,6 +1300,37 @@ describe('the nested Map', () => {
     expect(await press('ArrowRight')).toBe(6);
   });
 
+  it('scrolls the scrubber to its newest transition only when one is added', async () => {
+    const element = await openMap(1280);
+    const router = routers.at(-1)!;
+
+    for (let i = 0; i < 40; i++) {
+      await router.stateService.go('app.login');
+      await router.stateService.go('app.welcome');
+    }
+
+    await element.updateComplete;
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const end = () => listbox.scrollWidth - listbox.clientWidth;
+    expect(end()).toBeGreaterThan(0);
+    await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+
+    listbox.scrollLeft = 0;
+    getAllByRole(listbox, 'option')[0].dispatchEvent(
+      new MouseEvent('mouseenter'),
+    );
+    await element.updateComplete;
+    expect(listbox.scrollLeft).toBe(0);
+
+    await router.stateService.go('app.login');
+    await element.updateComplete;
+    expect(listbox.scrollLeft).toBeCloseTo(end(), 0);
+  });
+
   it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
     // Wide enough that the popover has room beside the diagram.
     const element = await openMap(1680);

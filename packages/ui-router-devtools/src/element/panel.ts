@@ -322,6 +322,8 @@ export class DevtoolsPanel extends LitElement {
   #attached: UIRouter | undefined;
   #unsubscribe: (() => void) | undefined;
   #ticker: ReturnType<typeof setInterval> | undefined;
+  // The scrubber and newest tick last scrolled to, so a render that adds no transition leaves the strip be.
+  #newestTick: { ticks: Element; id: number | undefined } | undefined;
 
   constructor() {
     super();
@@ -746,7 +748,7 @@ export class DevtoolsPanel extends LitElement {
     ]);
   }
 
-  // The scrubber keeps the selected transition in view, else the newest.
+  // The scrubber keeps the selected transition in view, else scrolls to a newest one that is new.
   #showTick() {
     const ticks = this.renderRoot.querySelector<HTMLElement>('.ticks');
     const tick = ticks?.querySelector<HTMLElement>('.tick.on');
@@ -754,6 +756,12 @@ export class DevtoolsPanel extends LitElement {
     if (!ticks) return;
 
     if (!tick) {
+      const id = this._model.txs.at(-1)?.id;
+      const seen = this.#newestTick;
+
+      if (seen?.ticks === ticks && seen.id === id) return;
+
+      this.#newestTick = { ticks, id };
       ticks.scrollLeft =
         ticks.scrollWidth * (ticks.matches(':dir(rtl)') ? -1 : 1);
 
