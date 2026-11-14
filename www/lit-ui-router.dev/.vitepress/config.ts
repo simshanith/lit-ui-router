@@ -6,13 +6,9 @@ import {
   type UserConfig,
 } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
-import {
-  API_REFERENCES,
-  NAV,
-  SIDEBAR,
-  type SidebarEntry,
-} from '../catalog/navigation.ts';
+import { NAV, SIDEBAR, type SidebarEntry } from '../catalog/navigation.ts';
 import type { PackageName } from '../catalog/packages.ts';
+import { API_REFERENCES } from '../catalog/references.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { writeRedirects } from './redirects.ts';
 import { renderForSearch } from './search-render.ts';
