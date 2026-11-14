@@ -1221,6 +1221,96 @@ describe('prerender path encoding', () => {
       });
   });
 
+  for (const decodeParams of [true, false])
+    it(`names the listed path on a simulate mount, decodeParams ${decodeParams}`, async () => {
+      const [mount] = Object.values(tagMounts);
+
+      await assert.rejects(
+        tags(['/tags/100%'], {
+          mounts: {
+            '/': {
+              ...mount,
+              strategy: 'simulate',
+              config: { strict: false, decodeParams },
+            },
+          },
+        }),
+        /'\/tags\/100%' holds a malformed percent-escape/,
+      );
+    });
+
+  it('names the listed path when a resolver of its own throws the URIError', async () => {
+    const resolver: ServerRouter = {
+      resolve: () => Promise.reject(new URIError('URI malformed')),
+    };
+
+    await assert.rejects(
+      tags(['/tags/100%'], { mounts: undefined, resolver }),
+      /'\/tags\/100%' holds a malformed percent-escape/,
+    );
+  });
+
+  it('writes a malformed escape no route decodes', async () => {
+    const [mount] = Object.values(tagMounts);
+
+    const { files } = await tags(['/tags/100%', '/none/100%'], {
+      mounts: {
+        '/': { ...mount, config: { strict: false, decodeParams: false } },
+      },
+    });
+
+    assert.deepEqual([...files.keys()], ['dist/tags/100%/index.html']);
+  });
+
+  it('writes nothing for a malformed escape outside every mount', async () => {
+    const [mount] = Object.values(tagMounts);
+
+    const { files } = await tags(['/other/100%'], {
+      mounts: { '/app': mount },
+    });
+
+    assert.deepEqual([...files.keys()], []);
+  });
+
+  it('passes on any other throw of a resolver of its own', async () => {
+    const resolver: ServerRouter = {
+      resolve: () => Promise.reject(new Error('down')),
+    };
+
+    await assert.rejects(
+      tags(['/tags/a'], { mounts: undefined, resolver }),
+      /down/,
+    );
+  });
+
+  it('passes on a throw that is the route’s own', async () => {
+    const tripped = {
+      name: 'tripped',
+      pattern: /[^/]*/,
+      is: (_value: unknown): _value is string => {
+        throw new Error('tripped');
+      },
+      decode: (value: string) => value,
+    };
+
+    await assert.rejects(
+      tags(['/trip/a'], {
+        mounts: {
+          '/': {
+            routes: [
+              {
+                name: 'trip',
+                url: '/trip/:id',
+                params: { id: { type: tripped } },
+              },
+            ],
+          },
+        },
+      }),
+      /tripped/,
+    );
+  });
+
   it('keeps a segment with a malformed escape as listed', () => {
     assert.equal(fileFor('/tags/100%/a%20b'), 'tags/100%/a b/index.html');
     assert.equal(fileFor('/tags/%E0%A4%A'), 'tags/%E0%A4%A/index.html');

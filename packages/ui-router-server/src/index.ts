@@ -614,11 +614,12 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
   const prewarm = validatePrewarm(base, config);
   const responses = compileResponses(base, config);
   const delegates = compileDelegates(base, config);
+  const strategy = config.strategy ?? 'matcher';
 
   return {
     base: normalizeBase(base),
     config,
-    strategy: config.strategy ?? 'matcher',
+    strategy,
     prewarm,
     delegates,
     responses,
@@ -629,7 +630,11 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       {
         routes: config.routes,
         rules: config.redirects,
-        config: config.config,
+        // Core always decodes, so a simulate mount's projection does too.
+        config:
+          strategy === 'simulate'
+            ? { ...config.config, decodeParams: true }
+            : config.config,
       },
       mountIndex(base, config),
     ),
@@ -1162,6 +1167,27 @@ export function createServerRouter<
         return verdict.kind === 'delegate' || verdict.kind === 'response'
           ? verdict
           : null;
+      }
+
+      return null;
+    },
+    undecodable(pathnameOrUrl) {
+      const pathname = pathnameOf(pathnameOrUrl);
+
+      for (const mount of mounts) {
+        const subpath = subpathIn(mount.base, pathname);
+
+        if (subpath === null) continue;
+
+        try {
+          matchedRouteVerdict(mount, onOrigin(subpath), false);
+        } catch (error) {
+          if (error instanceof URIError) return error;
+
+          throw error;
+        }
+
+        return null;
       }
 
       return null;
