@@ -18,7 +18,7 @@ const tickLabel = (host: DevtoolsPanel, tx: Tx): string => {
 
 const KEYS = new Map<string, (index: number, last: number) => number>([
   ['ArrowRight', (index, last) => Math.min(last, index + 1)],
-  ['ArrowLeft', (index) => Math.max(0, index - 1)],
+  ['ArrowLeft', (index, last) => (index < 0 ? last : Math.max(0, index - 1))],
   ['Home', () => 0],
   ['End', (_index, last) => last],
 ]);
@@ -34,8 +34,7 @@ const onKey = (host: DevtoolsPanel, event: KeyboardEvent, txs: Tx[]) => {
   const at = txs.findIndex((tx) => tx.id === host._selectedTx);
 
   if (event.key === 'Escape' && at >= 0) host._selectTx(null);
-  else if (move && txs.length)
-    host._selectTx(txs[at < 0 ? txs.length - 1 : move(at, txs.length - 1)].id);
+  else if (move && txs.length) host._selectTx(txs[move(at, txs.length - 1)].id);
   else return;
 
   event.preventDefault();

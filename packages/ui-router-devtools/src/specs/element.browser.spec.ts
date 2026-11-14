@@ -1266,6 +1266,40 @@ describe('the nested Map', () => {
     );
   });
 
+  it('starts the scrubber keys at the first or last transition when none is selected', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    const press = async (key: string) => {
+      listbox.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true }),
+      );
+      await element.updateComplete;
+      const [chosen] = getAllByRole(listbox, 'option', { selected: true });
+      listbox.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      );
+      await element.updateComplete;
+
+      return getAllByRole(listbox, 'option').indexOf(chosen);
+    };
+
+    expect(await press('ArrowRight')).toBe(0);
+    expect(await press('Home')).toBe(0);
+    expect(await press('ArrowLeft')).toBe(6);
+    expect(await press('End')).toBe(6);
+
+    element.dir = 'rtl';
+    await element.updateComplete;
+
+    expect(await press('ArrowLeft')).toBe(0);
+    expect(await press('ArrowRight')).toBe(6);
+  });
+
   it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
     // Wide enough that the popover has room beside the diagram.
     const element = await openMap(1680);
