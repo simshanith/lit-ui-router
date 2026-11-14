@@ -30,8 +30,10 @@ transition. The [proposal](README.md) holds the design direction, and
 - **What a bar cannot say is a tag.** A phase still open when its transition
   settled is `cut short` and ends with it. A resolve whose value was already
   there is `cached`, with no bar. Without `timeResolves` the entering states'
-  declared resolves are listed `untimed`, with no bar, because they ran and
-  nothing timed them. A redirected transition is `redirected to 007`, a
+  declared resolves are still listed: one the router's own resolve span
+  times, from `ui-router-otel`'s `activateResolveSpans`, takes that span's
+  start and duration, and one nothing timed is `untimed`, with no bar. A
+  redirected transition is `redirected to 007`, a
   superseded one `superseded by 008` when the recorder knows which, and a
   running bar is `running` and grows with the clock.
 - **Red means fault.** A failed resolve, the `error` phase and a span with an
@@ -98,8 +100,12 @@ which:
 
 The router's own spans are found among the spans the panel is given, so they
 reach it only when the `DevtoolsSpanProcessor` sits on the provider that the
-`OtelPlugin`'s tracer comes from. They are used to join and are not drawn: the
-session already holds what they say.
+`OtelPlugin`'s tracer comes from. They are used to join and are not drawn as
+bars of their own: the session already holds what they say. A router resolve
+span, with its `uirouter.resolve` and `uirouter.state`, times the row of the
+declared resolve it names when no recorded resolve event does; a recorded
+event wins, since it is on the panel's own clock and knows a cached resolve.
+An imported session joins its router spans the same way.
 
 ### The router's span for a transition
 
@@ -111,8 +117,11 @@ transition to be the one whose `uirouter.transition_id`, `uirouter.from` and
 the recorded start. The recorder and the reporter each read the clock in their
 own `onBefore` hook in the same synchronous pass, so the two starts differ by
 microseconds; another router's transition with the same id between the same
-states inside those 2ms is the one case this cannot tell apart, and then
-neither span is used and the spans fall back to `during`.
+states inside those 2ms is the one case this cannot tell apart. Then neither
+span is the transition's, its resolves are not timed from either, and a span
+under either one, or under one of their phase and resolve spans, is joined by
+time, as `during`. A span under the router span of another transition in the
+chain stays that transition's.
 
 A router or session id on the spans was weighed. The reporter and the
 recorder are separate packages with their own copy of the adapter, and core

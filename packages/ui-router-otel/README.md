@@ -76,7 +76,7 @@ Each transition is the root of its own trace unless a span is active when it sta
 
 ## Active resolve spans
 
-With `activateResolveSpans: true` the plugin starts each resolve's span when core calls the resolve's function and makes it the active span while that function runs, so a span the app starts in a resolve, such as an instrumented `fetch()`, is the resolve span's child and in the transition's trace. The plugin then spans resolves itself, so `timeResolves` adds nothing beside it and a resolve is never spanned twice.
+With `activateResolveSpans: true` the plugin starts each resolve's span when core calls the resolve's function and makes it the active span while that function runs, so a span the app starts in a resolve, such as an instrumented `fetch()`, is the resolve span's child and in the transition's trace. The plugin then spans resolves itself, so `timeResolves` adds nothing beside it and a resolve is never spanned twice. The devtools Timeline times its resolve rows from these spans when the devtools recorder did not time resolves itself.
 
 How long the span stays active depends on the app's context manager:
 
