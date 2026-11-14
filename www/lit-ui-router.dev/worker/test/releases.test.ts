@@ -220,11 +220,7 @@ describe('the /releases/<pkg>/diff redirects', () => {
   const diff = '/releases/lit-ui-router/diff';
 
   const cases = [
-    [
-      `${diff}?from=1.9.0&to=1.10.0`,
-      302,
-      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
-    ],
+    [`${diff}?from=1.9.0&to=1.10.0`, 302, `${FILES}/1.9.0...1.10.0/`],
     [
       `${diff}/?from=1.9.0&to=1.10.0&via=diffshub`,
       302,
@@ -241,14 +237,14 @@ describe('the /releases/<pkg>/diff redirects', () => {
       `${FILES}/1.9.0...1.10.0/`,
     ],
     [
-      `${diff}?from=1.11.0-rc.0&to=1.10.0`,
+      `${diff}?from=1.11.0-rc.0&to=1.10.0&via=diffshub`,
       302,
       `${DIFFS}/lit-ui-router%401.10.0...lit-ui-router%401.11.0-rc.0`,
     ],
     [`${diff}?from=1.10.0&to=1.10.0`, 404, null],
-    [`${diff}?from=1.10.0&to=1.10.0&via=files`, 404, null],
+    [`${diff}?from=1.10.0&to=1.10.0&via=diffshub`, 404, null],
     [`${diff}?from=1.9.0&to=9.9.9`, 404, null],
-    [`${diff}?from=9.9.9&to=1.10.0&via=files`, 404, null],
+    [`${diff}?from=9.9.9&to=1.10.0&via=diffshub`, 404, null],
     [`${diff}?from=1.9.0`, 404, null],
     [diff, 404, null],
     [`${diff}?from=1.9.0&to=1.10.0&via=github`, 404, null],
@@ -268,10 +264,7 @@ describe('the /releases/<pkg>/diff redirects', () => {
   it('drops the request search and caches like the pages', async () => {
     const response = await serve(`${diff}?from=1.9.0&to=1.10.0&ref=form`);
 
-    assert.equal(
-      response?.headers.get('Location'),
-      `${DIFFS}/lit-ui-router%401.9.0...lit-ui-router%401.10.0`,
-    );
+    assert.equal(response?.headers.get('Location'), `${FILES}/1.9.0...1.10.0/`);
     assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
   });
 
@@ -287,19 +280,19 @@ describe('the /releases/<pkg>/diff redirects', () => {
     const ledger = without('git_sha');
 
     assert.equal(
-      (await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger))?.status,
+      (await serve(`${diff}?from=1.9.0&to=1.10.0&via=diffshub`, {}, ledger))
+        ?.status,
       404,
     );
     assert.equal(
-      (await serve(`${diff}?from=1.9.0&to=1.10.0&via=files`, {}, ledger))
-        ?.status,
+      (await serve(`${diff}?from=1.9.0&to=1.10.0`, {}, ledger))?.status,
       302,
     );
   });
 
   it('answers 404 for a published-files diff of a version npm lacks', async () => {
     const response = await serve(
-      `${diff}?from=1.9.0&to=1.10.0&via=files`,
+      `${diff}?from=1.9.0&to=1.10.0`,
       {},
       without('npm_integrity'),
     );
@@ -968,12 +961,12 @@ describe('the /releases pages', () => {
         radio.getAttribute('value'),
       ]),
       [
-        ['via', 'diffshub'],
         ['via', 'files'],
+        ['via', 'diffshub'],
       ],
     );
-    getByRole(via, 'radio', { name: 'Git source on DiffsHub', checked: true });
-    getByRole(via, 'radio', { name: 'Published files', checked: false });
+    getByRole(via, 'radio', { name: 'Published files', checked: true });
+    getByRole(via, 'radio', { name: 'Git source on DiffsHub', checked: false });
   });
 
   it('offers no diff form for a package with one version', async () => {

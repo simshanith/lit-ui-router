@@ -22,7 +22,7 @@ export const releaseRoutes = [
   {
     name: 'releases.package.diff',
     url: '/diff?from&to&via',
-    params: { via: { value: 'diffshub', squash: true } },
+    params: { via: { value: 'files', squash: true } },
     response: true,
   },
   {
