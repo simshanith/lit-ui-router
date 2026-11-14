@@ -2,6 +2,24 @@
 
 Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=ui-router-server%40&expanded=true).
 
+## 0.11.1 (2026-11-14)
+
+### Bug Fixes
+
+* **ui-router-server:** keep the shell asset's own Link header beside the canonical one ([#2146](https://github.com/simshanith/lit-ui-router/issues/2146)) ([d09fac8](https://github.com/simshanith/lit-ui-router/commit/d09fac8d594fab2cc02d55694a02f8d460362d61))
+* **ui-router-server:** keep the vite preview page lookup inside outDir ([#2149](https://github.com/simshanith/lit-ui-router/issues/2149)) ([8e6c4f1](https://github.com/simshanith/lit-ui-router/commit/8e6c4f1511bccdbdf061fbe7a3aaa0235990242b))
+* **ui-router-server:** pass a throw inside the Connect verdict callback to next(error) ([#2138](https://github.com/simshanith/lit-ui-router/issues/2138)) ([ca404e6](https://github.com/simshanith/lit-ui-router/commit/ca404e6d26cf5aa58227e4b0751f3558c6321b75))
+* **ui-router-server:** reject a listed prerender path with a malformed percent-escape ([#2170](https://github.com/simshanith/lit-ui-router/issues/2170)) ([22271c1](https://github.com/simshanith/lit-ui-router/commit/22271c1e5df57fa363e340e317824107ff1dcdff))
+* **ui-router-server:** report a redirectTo that lands where the router already stands ([#2142](https://github.com/simshanith/lit-ui-router/issues/2142)) ([d9e12f7](https://github.com/simshanith/lit-ui-router/commit/d9e12f7b8881413ec47cce4ec5982dee7f9eee7b))
+* **ui-router-server:** serve the shell for a malformed percent-escape on matcher mounts ([#2140](https://github.com/simshanith/lit-ui-router/issues/2140)) ([52d3030](https://github.com/simshanith/lit-ui-router/commit/52d30303fe760d9706e7ca9570440257a5efc0fe))
+* **ui-router-server:** write decoded prerender file names and encoded _redirects lines ([#2155](https://github.com/simshanith/lit-ui-router/issues/2155)) ([4d3e227](https://github.com/simshanith/lit-ui-router/commit/4d3e227c4a3d3ceb0f001c4f1c1630fa82b6fee4)), closes [#2154](https://github.com/simshanith/lit-ui-router/issues/2154)
+
+### Documentation
+
+* **ui-router-server:** note that the core-free entries' types reference `@uirouter/core` ([#2156](https://github.com/simshanith/lit-ui-router/issues/2156)) ([838ffc6](https://github.com/simshanith/lit-ui-router/commit/838ffc6e34a95fcebf7bf1d662b8227c34b359b9))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-server/0.11.1/) · [Diff from 0.11.0](https://lit-ui-router.dev/releases/ui-router-server/diff/0.11.0...0.11.1/)
+
 ## 0.11.0 (2026-11-12)
 
 ### ⚠ BREAKING CHANGES
