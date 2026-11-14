@@ -1,7 +1,7 @@
 // The Timeline's model: a transition, its redirect chain, its phases, resolves and joined spans, on one time axis. No DOM.
 import { originOf, type Tx } from '../fold.ts';
 import type { PhaseEvent, SpanRecord, StateInfo } from '../schema.ts';
-import { spanWindow } from '../spans.ts';
+import { spanWindow, type SpanWindow } from '../spans.ts';
 import { seq, type Status } from '../notation.ts';
 
 export type BarKind = 'transition' | 'phase' | 'resolve' | 'span';
@@ -21,8 +21,7 @@ export interface Bar {
   name: string;
   state: string | null;
   /** On the event clock; null for a row nothing timed. */
-  start: number | null;
-  end: number | null;
+  time: SpanWindow | null;
   running: boolean;
   fault: boolean;
   /** What the bar alone does not say: `cached`, `untimed`, `cut short`, `redirected to 007`. */
@@ -90,7 +89,7 @@ export const chainOf = (txs: readonly Tx[], tx: Tx): Tx[] => {
 };
 
 const byStart = (a: Bar, b: Bar): number =>
-  (a.start ?? Infinity) - (b.start ?? Infinity);
+  (a.time?.start ?? Infinity) - (b.time?.start ?? Infinity);
 
 const endOf = (tx: Tx, clock: number): number => tx.result?.t ?? clock;
 
@@ -123,8 +122,7 @@ const phaseBar = (
   tx: tx.id,
   name: start.state ? `${start.phase} ${start.state}` : start.phase,
   state: start.state,
-  start: start.t,
-  end,
+  time: { start: start.t, end },
   running: cut === 'running',
   fault: start.phase === 'error',
   note: cut === 'cut' ? 'cut short' : null,
@@ -166,8 +164,7 @@ const resolveBars = (tx: Tx): Bar[] =>
     tx: tx.id,
     name: `resolve ${resolve.token}`,
     state: resolve.state,
-    start: resolve.cached ? null : resolve.start,
-    end: resolve.cached ? null : resolve.end,
+    time: resolve.cached ? null : { start: resolve.start, end: resolve.end },
     running: false,
     fault: !resolve.ok,
     note: resolve.cached ? 'cached' : resolve.ok ? null : 'failed',
@@ -184,8 +181,7 @@ const untimedBars = (tx: Tx, states: readonly StateInfo[]): Bar[] =>
         tx: tx.id,
         name: `resolve ${token}`,
         state: name,
-        start: null,
-        end: null,
+        time: null,
         running: false,
         fault: false,
         note: 'untimed',
@@ -259,8 +255,6 @@ const spanBar = (
 ): Bar => {
   seen.add(span.spanId);
 
-  const { start, end } = spanWindow(span, placing.timeOrigin, placing.clock);
-
   const children = (index.children.get(span.spanId) ?? [])
     .filter((child) => !seen.has(child.spanId) && !isRouterSpan(child))
     .map((child) => spanBar(index, child, tx, placing, seen))
@@ -272,8 +266,7 @@ const spanBar = (
     tx,
     name: span.name,
     state: null,
-    start,
-    end,
+    time: spanWindow(span, placing.timeOrigin, placing.clock),
     running: span.endTime === undefined,
     fault: span.status === 'error',
     note: null,
@@ -354,7 +347,7 @@ const joinOf = (
   if (traced) return { tx: traced.tx, relation: 'trace' };
 
   const first = chain[0];
-  const last = chain.at(-1) ?? first;
+  const last = chain[chain.length - 1];
 
   return overlaps(window, first.t, endOf(last, placing.clock))
     ? { tx: startedBefore(chain, window.start), relation: 'during' }
@@ -403,8 +396,7 @@ const transitionBar = (
     tx: tx.id,
     name: tx.to || '(root)',
     state: tx.to,
-    start: tx.t,
-    end: endOf(tx, clock),
+    time: { start: tx.t, end: endOf(tx, clock) },
     running: !tx.result,
     fault: status === 'error' || status === 'invalid',
     note: txNote(tx),
@@ -418,15 +410,12 @@ const transitionBar = (
   };
 };
 
-const extent = (
-  bars: readonly Bar[],
-  pick: (bar: Bar) => number | null,
-): number[] =>
-  bars.flatMap((bar) => {
-    const at = pick(bar);
-
-    return [...(at === null ? [] : [at]), ...extent(bar.children, pick)];
-  });
+// Every timed bar's window, children included.
+const windows = (bars: readonly Bar[]): SpanWindow[] =>
+  bars.flatMap((bar) => [
+    ...(bar.time ? [bar.time] : []),
+    ...windows(bar.children),
+  ]);
 
 /** Lays out `tx` and its redirect chain on one axis, which starts at the earliest bar and ends at the latest. */
 export const waterfall = (input: WaterfallInput): Waterfall => {
@@ -440,8 +429,9 @@ export const waterfall = (input: WaterfallInput): Waterfall => {
     transitionBar(input, tx, spans.get(tx.id) ?? []),
   );
 
-  const zero = Math.min(...extent(roots, (bar) => bar.start));
-  const end = Math.max(...extent(roots, (bar) => bar.end));
+  const timed = windows(roots);
+  const zero = Math.min(...timed.map((time) => time.start));
+  const end = Math.max(...timed.map((time) => time.end));
 
   return { roots, zero, length: Math.max(end - zero, 0.1) };
 };

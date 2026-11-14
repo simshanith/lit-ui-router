@@ -1,4 +1,5 @@
 import {
+  adoptStyles,
   html,
   LitElement,
   nothing,
@@ -554,12 +555,13 @@ export class DevtoolsPanel extends LitElement {
     );
   }
 
-  // A chunk's own rules join the panel's sheet once it loads.
-  #adopt({ styleSheet }: CSSResult) {
-    const root = this.shadowRoot;
-
-    if (root && styleSheet && !root.adoptedStyleSheets.includes(styleSheet))
-      root.adoptedStyleSheets = [...root.adoptedStyleSheets, styleSheet];
+  // A chunk's own rules join the panel's once it loads; lit falls back to style elements where sheets cannot be adopted.
+  #adopt(styles: CSSResult) {
+    // SAFETY: a LitElement renders into its open shadow root unless createRenderRoot is overridden, and this one's is not
+    adoptStyles(this.renderRoot as ShadowRoot, [
+      ...DevtoolsPanel.elementStyles,
+      styles,
+    ]);
   }
 
   // A panned view follows its layout: a zoom holds the middle of the room still, and a re-pack the focused box.
