@@ -787,12 +787,12 @@ export const PAIRINGS: Pairing[] = [
     // it, and the DEFAULT pairing, so the specimen opens on what the set ships.
     id: 'atlas',
     label: '5 · THE ATLAS SET',
-    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet AND rail titles · data DIN 2014 / Barlow Semi Condensed, tnum · prose Source Serif Pro / Source Serif 4 · code Source Code Pro on both hosts · hand P22 FLLW Eaglefeather Informal, mixed case, on DRAWN BY alone',
+    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet titles and the rail band heads · data DIN 2014 / Barlow Semi Condensed, tnum, on the rail entries · prose Source Serif Pro / Source Serif 4 · code Source Code Pro on both hosts · hand P22 FLLW Eaglefeather Informal, mixed case, on DRAWN BY alone',
     display: face('p22-fllw-eaglefeather', 'Josefin Sans', 'sans-serif'),
     dataDefault: 'din',
     titleDefault: 'exhibition',
     proseDefault: 'source-serif',
-    railDefault: true,
+    railDefault: false,
     codeDefault: 'source-code',
     handDefault: 'eaglefeather-inf',
     code: systemMono,
@@ -1050,7 +1050,7 @@ export class AtlasSpecimen extends LitElement {
     const start = PAIRINGS[DEFAULT_PAIRING];
     this.pairing = DEFAULT_PAIRING;
     this.sheetTitle = indexIn(SHEET_TITLES, start?.titleDefault ?? 'same');
-    // The shipped set puts the TITLE face on the rail entries.
+    // The shipped set puts the DATA face on the rail entries.
     this.railMatch = start?.railDefault ?? false;
     this.hand = indexIn(HANDS, start?.handDefault ?? 'none');
     this.dataFace = dataFaceIndex(start?.dataDefault ?? 'din');

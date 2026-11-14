@@ -296,26 +296,38 @@
         min-width: 34px;
         font-variant-numeric: tabular-nums;
       }
-      /* Entry titles take the sheet-title face at its only other weight; the
-         active state is the bar and the tint, never a weight flip. */
+      /* Entry titles set in the data face; the active state is the bar and the tint, never a weight flip. */
       .rail-links .t {
-        font-family: var(--title);
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
+        font-family: var(--data);
+        font-size: 12.5px;
+        letter-spacing: 0.02em;
         color: var(--ink);
       }
-      .rail-sec {
-        font-family: var(--data);
-        font-size: 10px;
-        letter-spacing: 0.14em;
-        color: var(--ink-faint);
-        padding-block: 14px 5px;
-        /* the end padding keeps the line clear of the docked control */
-        padding-inline: 19px 46px;
+      /* a variant files under its sheet: stepped in, in the soft ink */
+      .rail-links a[data-variant] {
+        padding-inline-start: 28px;
+      }
+      .rail-links a[data-variant] .n {
+        font-weight: 400;
+        min-width: 40px;
+      }
+      .rail-links a[data-variant] .t {
+        color: var(--ink-soft);
+      }
+      .rail-links a[data-variant].is-active .t {
+        color: var(--ink);
+      }
+      /* the parent's part of a variant's title: read out, never drawn */
+      .rail-links .stem {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        overflow: clip;
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
       /* The dock is zero-height and sticky, so the control rests on the
-         section line and then rides the rail's scroll; the paper behind the
+         INDEX line and then rides the rail's scroll; the paper behind the
          glyph keeps the list from showing through. */
       .rail-dock {
         position: sticky;
@@ -336,7 +348,6 @@
         place-items: center;
         inline-size: 28px;
         block-size: 28px;
-        margin-block-start: 6px;
         font-size: 11px;
         cursor: pointer;
         color: var(--ink-soft);
@@ -379,8 +390,11 @@
       .rail-top {
         display: flex;
         gap: 0;
-        padding-block: 0;
-        padding-inline: 19px 16px;
+        align-items: center;
+        min-block-size: 28px;
+        padding-block: 0 6px;
+        /* the end padding keeps the line clear of the docked control */
+        padding-inline: 19px 46px;
       }
       .rail-top a {
         font-family: var(--data);
@@ -406,18 +420,13 @@
       .rail-top a.is-active {
         font-weight: 600;
       }
-      /* ---- the rail's groups: the set and the appendix, one native disclosure each ---- */
-      /* Group and band heads share the sheet-title face, size and weight; the
-         group sets in the ink, the band in the soft ink, and that is the whole
-         difference. They start on the entries' edge. */
-      .rail-group > summary,
-      .rail-band {
+      /* ---- the rail's groups: one native disclosure per altitude band, then the appendix ---- */
+      /* The band heads are the rail's one use of the sheet-title face. They start on the entries' edge. */
+      .rail-group > summary {
         font-family: var(--title);
         font-size: 12px;
         font-weight: 600;
         letter-spacing: 0.04em;
-      }
-      .rail-group > summary {
         display: flex;
         gap: 9px;
         align-items: baseline;
@@ -457,12 +466,6 @@
       }
       .rail-group[open] > summary::after {
         transform: translateY(-2px) rotate(45deg);
-      }
-      /* an altitude band inside a group: a flat head in the soft ink, its plates flush beneath */
-      .rail-band {
-        color: var(--ink-soft);
-        padding-block: 10px 3px;
-        padding-inline: 19px 16px;
       }
       .rail-group > .rail-links:last-child {
         margin-block-end: 6px;
@@ -568,12 +571,13 @@
         .client-eq .op,
         .client-term,
         .rail-top,
-        .rail-sec,
         .rail-links .t,
-        .rail-band,
         .rail-all,
         .rail-group > summary .t {
           opacity: 0;
+        }
+        .rail-links a[data-variant] {
+          padding-inline-start: 16px;
         }
         /* a titleless group head keeps its chevron, moved into the number column */
         .rail-group > summary::after {
@@ -596,9 +600,7 @@
         .rail:focus-within .client-eq .op,
         .rail:focus-within .client-term,
         .rail:focus-within .rail-top,
-        .rail:focus-within .rail-sec,
         .rail:focus-within .rail-links .t,
-        .rail:focus-within .rail-band,
         .rail:focus-within .rail-all,
         .rail:focus-within .rail-group > summary .t {
           opacity: 1;
@@ -614,9 +616,7 @@
           .rail:hover .client-eq .op,
           .rail:hover .client-term,
           .rail:hover .rail-top,
-          .rail:hover .rail-sec,
           .rail:hover .rail-links .t,
-          .rail:hover .rail-band,
           .rail:hover .rail-all,
           .rail:hover .rail-group > summary .t {
             opacity: 1;
@@ -633,9 +633,7 @@
           .client-eq .op,
           .client-term,
           .rail-top,
-          .rail-sec,
           .rail-links .t,
-          .rail-band,
           .rail-group > summary .t {
             transition: opacity 120ms ease;
           }

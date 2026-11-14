@@ -92,7 +92,7 @@ button, [role="button"] { user-select: none; -webkit-user-select: none; }
    --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
               and the wordmark (.project-mark) in every sheet-head PROJECT line
               and title block PROJECT value
-   --title    sheet titles, card and prose headings, rail entry titles
+   --title    sheet titles, card and prose headings, the rail's band heads
    --data     kickers, tracked caps, numbers, schedules, the title block
    --prose    running text, figcaptions, general notes, About. Source Serif
               is the one role whose two names are the SAME design under two

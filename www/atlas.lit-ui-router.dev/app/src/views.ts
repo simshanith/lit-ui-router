@@ -721,28 +721,38 @@ const closeRail = (): void => {
   if (box) box.checked = false;
 };
 
-const sheetEntry = (sheet: SheetRow): TemplateResult => html`
-  <a
-    href=${goHref('atlas.sheet', { num: sheet.num })}
-    target=${outTarget}
-    @click=${closeRail}
-    class=${goClass({
-      state: 'atlas.sheet',
-      params: { num: sheet.num },
-      activeClasses: ACTIVE_CLASSES,
-    })}
-    aria-current=${goCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
-  >
-    <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
-  </a>
-`;
-
 // 'SHEET 7B · 3D' → '7B·3D': a 3D plate's number is its sheet head's
 const railNum = (row: ExtraRow): string => row.shno.replace(/^SHEET /, '').replace(' · ', '·');
 
-const railEntry = (entry: AscentRow): TemplateResult =>
+const sentence = (text: string): string => text.charAt(0) + text.slice(1).toLowerCase();
+
+/** A plate whose number carries a suffix files under the plain-numbered sheet before it. */
+const isVariant = (entry: AscentRow): boolean => entry.kind === 'city' || !/^A?\d+$/.test(entry.row.num);
+
+// a variant named after its parent shows the rest; the parent's part stays in the link's name
+const railTitle = (title: string, parent: string | undefined): TemplateResult => {
+  const rest = parent && title.startsWith(parent) ? title.slice(parent.length).replace(/^[\s,—]+/, '') : '';
+  return parent && rest ? html`<span class="stem">${sentence(parent)}, </span>${sentence(rest)}` : html`${sentence(title)}`;
+};
+
+const railEntry = (entry: AscentRow, parent: string | undefined): TemplateResult =>
   entry.kind === 'sheet'
-    ? sheetEntry(entry.row)
+    ? html`
+        <a
+          href=${goHref('atlas.sheet', { num: entry.row.num })}
+          target=${outTarget}
+          @click=${closeRail}
+          class=${goClass({
+            state: 'atlas.sheet',
+            params: { num: entry.row.num },
+            activeClasses: ACTIVE_CLASSES,
+          })}
+          aria-current=${goCurrent({ state: 'atlas.sheet', params: { num: entry.row.num } })}
+          ?data-variant=${isVariant(entry)}
+        >
+          <span class="n">${entry.row.num}</span><span class="t">${railTitle(entryTitle(entry.row.title), parent)}</span>
+        </a>
+      `
     : html`
         <a
           href=${goHref(sceneState(entry.row))}
@@ -750,17 +760,28 @@ const railEntry = (entry: AscentRow): TemplateResult =>
           @click=${closeRail}
           class=${goClass({ state: sceneState(entry.row), activeClasses: ACTIVE_CLASSES })}
           aria-current=${goCurrent({ state: sceneState(entry.row) })}
+          data-variant
         >
-          <span class="n">${railNum(entry.row)}</span><span class="t">${entryTitle(entry.row.title)}</span>
+          <span class="n">${railNum(entry.row)}</span><span class="t">${railTitle(entryTitle(entry.row.title), parent)}</span>
         </a>
       `;
+
+/** A band's plates, each variant handed the title of the sheet it files under. */
+const railRows = (rows: AscentRow[]): TemplateResult[] => {
+  let parent: string | undefined;
+  return rows.map((entry) => {
+    if (isVariant(entry)) return railEntry(entry, parent);
+    parent = entryTitle(entry.row.title);
+    return railEntry(entry, undefined);
+  });
+};
 
 /** Whether a rail entry is the page on screen. */
 type Here = (entry: AscentRow) => boolean;
 
 const OPEN_BANDS = 'atlas-rail-open';
 
-/** The groups this viewer opened by hand, as space-separated keys. */
+/** The bands this viewer opened by hand, as space-separated keys. */
 function readOpenBands(): Set<string> {
   try {
     return new Set(localStorage.getItem(OPEN_BANDS)?.split(' ').filter(Boolean));
@@ -857,40 +878,21 @@ const labelAllRef = (element?: Element): void => {
   if (element instanceof HTMLButtonElement) labelAll(element);
 };
 
-/** One altitude band inside a group: a flat head, then its plates. */
-const railBand = (band: Band): TemplateResult => html`
-  <p class="rail-band">${band.label}</p>
-  <div class="rail-links">${band.rows.map(railEntry)}</div>
-`;
-
-/** A group of bands as one native disclosure: the set, then the appendix. */
-interface Group {
-  key: string;
-  label: string;
-  bands: Band[];
-}
-
-const groupsOf = (railBands: Band[]): Group[] => {
-  const set = railBands.filter((band) => band.key !== 'appendix');
-  const appendix = railBands.filter((band) => band.key === 'appendix');
-  const groups: Group[] = set.length > 0 ? [{ key: 'set', label: 'SHEETS', bands: set }] : [];
-  return appendix.length > 0 ? [...groups, { key: 'appendix', label: 'APPENDIX', bands: appendix }] : groups;
-};
-
 /**
- * The group holding the page on screen is opened by `live(true)`, so arriving
- * in a group the viewer shut reopens it; the other is left as the viewer set it.
+ * One altitude band as a native disclosure. The band holding the page on screen
+ * is opened by `live(true)`, so arriving in a band the viewer shut reopens it;
+ * the others are left as the viewer set them.
  */
-const railGroup = (group: Group, here: Here): TemplateResult => html`
+const railGroup = (band: Band, here: Here): TemplateResult => html`
   <details
     class="rail-group"
-    data-band=${group.key}
-    ?open=${group.bands.some((band) => band.rows.some(here)) ? live(true) : noChange}
+    data-band=${band.key}
+    ?open=${band.rows.some(here) ? live(true) : noChange}
     ${ref(restoreBand)}
     @toggle=${relabelAll}
   >
-    <summary @click=${rememberBand}><span class="t">${group.label}</span></summary>
-    ${group.bands.length === 1 ? html`<div class="rail-links">${group.bands[0]?.rows.map(railEntry)}</div>` : group.bands.map(railBand)}
+    <summary @click=${rememberBand}><span class="t">${band.label}</span></summary>
+    <div class="rail-links">${railRows(band.rows)}</div>
   </details>
 `;
 
@@ -923,6 +925,20 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
       <div class="rail-body">
+        <!-- a zero-height sticky dock: the control rides the scroll over the list -->
+        <div class="rail-dock">
+          <button
+            type="button"
+            class="rail-all"
+            data-all="shut"
+            aria-label="Expand all"
+            title="Expand all"
+            @click=${toggleAll}
+            ${ref(labelAllRef)}
+          >
+            ${allGlyph('expand', UNFOLD)}${allGlyph('collapse', FOLD)}
+          </button>
+        </div>
         <div class="rail-top">
           <a
             href=${srefHref('atlas.gallery')}
@@ -939,22 +955,7 @@ function rail(manifest: Manifest | undefined, here: Here): TemplateResult {
             >ABOUT</a
           >
         </div>
-        <!-- a zero-height sticky dock: the control rides the scroll over the list -->
-        <div class="rail-dock">
-          <button
-            type="button"
-            class="rail-all"
-            data-all="shut"
-            aria-label="Expand all"
-            title="Expand all"
-            @click=${toggleAll}
-            ${ref(labelAllRef)}
-          >
-            ${allGlyph('expand', UNFOLD)}${allGlyph('collapse', FOLD)}
-          </button>
-        </div>
-        <p class="rail-sec">ASCENT ORDER</p>
-        ${groupsOf(railBands).map((group) => railGroup(group, here))}
+        ${railBands.map((band) => railGroup(band, here))}
         <!-- The type specimen and the colour standards are benches, not plates: reachable at /specimen and /colour, off the rail. -->
       </div>
     </nav>
