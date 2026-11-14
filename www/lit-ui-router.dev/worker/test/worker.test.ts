@@ -4,6 +4,7 @@ import { beforeEach, describe, it } from 'node:test';
 import worker from '../index.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
+import { FIXTURE_NOTES } from './notes-stub.ts';
 
 // The docs worker's HTTP contract, exercised on the production code path: the
 // real module (real sample-app-routes mounts, real ui-router-server fetch
@@ -47,6 +48,10 @@ const ASSET_TABLE = {
   '/app-signals/404.html': {
     body: 'signals-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  },
+  '/releases/_notes/lit-ui-router.json': {
+    body: JSON.stringify(FIXTURE_NOTES['lit-ui-router']),
+    headers: { 'Content-Type': 'application/json' },
   },
 } satisfies Record<string, Asset>;
 
@@ -329,12 +334,26 @@ describe('/simulated-routing (the simulate-strategy exhibit)', () => {
 });
 
 describe('/releases (the release pages)', () => {
-  it('renders the pages from the ledger, never the assets binding', async () => {
+  it('renders the pages from the ledger, reading only the prebuilt notes from the assets binding', async () => {
     const res = await dispatch('/releases/lit-ui-router/');
     assert.equal(res.status, 200);
-    assert.deepEqual(assetCalls, []);
+    assert.deepEqual(assetCalls, ['/releases/_notes/lit-ui-router.json']);
+    assert.deepEqual(assetMethods, ['GET']);
+    assert.match(await res.text(), /<h2 id="v1\.10\.0">/);
     assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
     assert.equal(res.headers.get('X-Robots-Tag'), null);
+  });
+
+  it('reads no notes for a package outside the catalog', async () => {
+    const res = await dispatch('/releases/a-new-package/');
+    assert.equal(res.status, 404);
+    assert.deepEqual(assetCalls, []);
+  });
+
+  it('answers 503 when a cataloged package has no notes file', async () => {
+    const res = await dispatch('/releases/ui-router-server/');
+    assert.equal(res.status, 503);
+    assert.deepEqual(assetCalls, ['/releases/_notes/ui-router-server.json']);
   });
 });
 

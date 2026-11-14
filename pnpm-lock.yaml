@@ -3588,6 +3588,9 @@ importers:
       '@tools/build_and_test':
         specifier: catalog:workspace
         version: link:../../tools/build_and_test
+      '@tools/changelog':
+        specifier: catalog:workspace
+        version: link:../../tools/changelog
       '@tools/embed-heights':
         specifier: catalog:workspace
         version: link:../../tools/embed-heights

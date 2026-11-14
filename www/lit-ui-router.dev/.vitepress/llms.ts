@@ -9,6 +9,8 @@ import {
   githubTreeSrc,
   stackblitzOpenSrc,
 } from './theme/components/examples.ts';
+import { PACKAGES } from '../catalog/packages.ts';
+import { changelogMarkdownPath } from './changelog.ts';
 import { RELEASES_PATH } from './release-stubs.ts';
 import { pageGlobs, surfaceOf } from './surfaces.ts';
 
@@ -109,8 +111,14 @@ For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-
 
 const DOMAIN = 'https://lit-ui-router.dev';
 
-/** The worker renders the release pages, so no Markdown source or sidebar item can list them. */
-export const LLMS_RELEASES = `- [Releases](${DOMAIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${DOMAIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`;
+/** The worker renders the release pages, so no Markdown source or sidebar item can list them; each package's changelog is a static Markdown copy. */
+export const LLMS_RELEASES = [
+  `- [Releases](${DOMAIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${DOMAIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`,
+  ...PACKAGES.map(
+    ({ name }) =>
+      `- [${name} changelog](${DOMAIN}${changelogMarkdownPath(name)}): The release notes of every stable ${name} release, newest first, as Markdown.`,
+  ),
+].join('\n');
 
 // The plugin's default template plus the Releases section; `{toc}` ends with its own blank line.
 const LLMS_TEMPLATE = `# {title}

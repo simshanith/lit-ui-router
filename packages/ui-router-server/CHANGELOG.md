@@ -1,6 +1,6 @@
 # Changelog
 
-Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=ui-router-server%40&expanded=true).
+Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-server/).
 
 ## 0.11.0 (2026-11-12)
 

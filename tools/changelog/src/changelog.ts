@@ -19,16 +19,16 @@ export interface Changelog {
   readonly sections: readonly Section[];
 }
 
-const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
+const SITE_URL = 'https://lit-ui-router.dev';
 
 /** The preamble every writer emits, so backfill and later writers agree byte for byte. */
 export function preamble(packageName: string): string {
-  const query = `${encodeURIComponent(packageName)}%40`;
+  const releases = `${SITE_URL}/releases/${encodeURIComponent(packageName)}/`;
 
   return [
     '# Changelog',
     '',
-    `Prereleases and canaries are not listed here; see [all releases on GitHub](${REPOSITORY}/releases?q=${query}&expanded=true).`,
+    `Prereleases and canaries are not listed here; see [all releases](${releases}).`,
   ].join('\n');
 }
 

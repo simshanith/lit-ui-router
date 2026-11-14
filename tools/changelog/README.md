@@ -26,7 +26,7 @@ of each published package.
 ```markdown
 # Changelog
 
-Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=<pkg>%40&expanded=true).
+Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/<pkg>/).
 
 ## <version> (<YYYY-MM-DD>)
 
@@ -38,6 +38,9 @@ with no GitHub release, such as `lit-ui-router@0.0.1`, has none. The heading's f
 version; the date is the bump day in UTC, or the publish day for a backfilled
 section. Everything before the first `##` heading is the preamble: the backfill
 and a missing file write the fixed text, and `write-section` keeps what is there.
+`<pkg>` is the package name through `encodeURIComponent`, the docs site's
+[releases page](../../www/lit-ui-router.dev/worker/releases/routes.ts) for it,
+which lists every published version.
 oxfmt and rumdl skip these files (`.oxfmtrc.json`, `.config/rumdl.toml`), so a
 body stays byte for byte what was published.
 
@@ -59,7 +62,8 @@ pnpm --filter @tools/changelog backfill --ledger "$PWD/ledger.json" --dry-run
 
 It adds only the stable versions a file has no section for and never rewrites
 an existing one, so a re-run is a no-op until the ledger gains a release. Drop
-`--dry-run` to write. It reports each package's releases that have no stored
+`--dry-run` to write. The written files carry the fixed preamble, so a backfill
+from an empty ledger (`[]`) rewrites only the preambles after a change to it. It reports each package's releases that have no stored
 body, the leading-heading styles of the bodies it added, and how many sections
 each transformation touched; `--json` or `--json-out <path>` emits the same as
 JSON.

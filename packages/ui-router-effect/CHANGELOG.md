@@ -1,6 +1,6 @@
 # Changelog
 
-Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=ui-router-effect%40&expanded=true).
+Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-effect/).
 
 ## 0.3.0 (2026-11-01)
 
