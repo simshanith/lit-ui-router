@@ -67,13 +67,16 @@ const NOTES: Partial<Record<Status, string>> = {
 /** The redirect chain `tx` is part of, from the first transition to the last that ran. */
 export const chainOf = (txs: readonly Tx[], tx: Tx): Tx[] => {
   let first = tx;
+  const seen = new Set([tx]);
 
   for (
     let origin = originOf(txs, first);
-    origin && origin !== tx;
+    origin && !seen.has(origin);
     origin = originOf(txs, origin)
-  )
+  ) {
+    seen.add(origin);
     first = origin;
+  }
 
   const chain = [first];
 

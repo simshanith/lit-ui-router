@@ -95,14 +95,18 @@ It covers resolve functions only, each per-transition copy of the resolvable wra
 ```ts
 import { TracerProvider } from '@opentelemetry/sdk-trace';
 import type { UIRouter } from '@uirouter/core';
-import { DevtoolsSpanProcessor, OtelPlugin } from 'ui-router-otel';
+import {
+  DevtoolsSpanProcessor,
+  OtelPlugin,
+  type SpanSink,
+} from 'ui-router-otel';
 
 declare const router: UIRouter;
 
 const provider = new TracerProvider({
   spanProcessors: [
     new DevtoolsSpanProcessor(() =>
-      document.querySelector('ui-router-devtools'),
+      document.querySelector<HTMLElement & SpanSink>('ui-router-devtools'),
     ),
   ],
 });
