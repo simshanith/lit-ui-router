@@ -438,6 +438,38 @@ describe('session files', () => {
     ).toBeTruthy();
   });
 
+  it('says how many events and spans an import skipped, in the plural or singular each needs', async () => {
+    const { element } = await open();
+    const session = element.session({ params: 'all' })!;
+    const later = (seq: number) => ({ v: 1, seq, t: 1, type: 'teleport' });
+    const span = { traceId: 't', spanId: 's', name: 'GET', startTime: 1 };
+
+    importFile(
+      element,
+      JSON.stringify({
+        ...session,
+        events: [...session.events, later(98), later(99)],
+        spans: [span, { spanId: 'no trace' }],
+      }),
+    );
+    await waitFor(() =>
+      getByText(
+        shadow(element),
+        '2 events of a kind this version does not read and 1 span that did not read skipped',
+      ),
+    );
+
+    getByRole(shadow(element), 'button', { name: /^Live/ }).click();
+    await element.updateComplete;
+    importFile(
+      element,
+      JSON.stringify({ ...session, spans: [{ name: 'a' }, { name: 'b' }] }),
+    );
+    await waitFor(() =>
+      getByText(shadow(element), '2 spans that did not read skipped'),
+    );
+  });
+
   it("re-exports an imported session under the recording's id, generator and stricter redaction", async () => {
     const { element } = await open();
     const live = element.session({ params: 'all' })!;
