@@ -249,12 +249,12 @@ const compareForm = (
         <fieldset>
           <legend>Diff</legend>
           <label
-            ><input type="radio" name="via" value="diffshub" checked /> Git
-            source on DiffsHub</label
+            ><input type="radio" name="via" value="files" checked /> Published
+            files</label
           >
           <label
-            ><input type="radio" name="via" value="files" /> Published
-            files</label
+            ><input type="radio" name="via" value="diffshub" /> Git source on
+            DiffsHub</label
           >
         </fieldset>
         <button type="submit">
