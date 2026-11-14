@@ -264,7 +264,7 @@ This is powerful because:
 - No need to fetch the entire catalog again
 - The child resolve can filter or transform parent data
 
-Note the `:starId` parameter here is a string slug (`sirius`, `proxima-centauri`) rather than a number — no `parseInt` needed.
+Like Hello Solar System's `:planetId`, the `:starId` parameter is a string slug (`sirius`, `proxima-centauri`), so the resolve compares it to each star's `id` as is.
 
 ---
 

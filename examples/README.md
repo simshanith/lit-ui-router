@@ -56,7 +56,7 @@ The smallest possible lit-ui-router app.
 A tour of the Sun, all 8 planets, and a beloved dwarf-planet easter egg — real facts (distance, diameter, moons, orbital period) with CSS-gradient orbs log-scaled by diameter. No extra dependencies.
 
 - Route parameters: a `planets` list state and a `planet` detail state at `/planets/:planetId`, keyed by a readable id such as `earth`
-- A `redirectTo` function that sends the numbered URLs of an earlier version, such as `/planets/4`, to the named ones
+- A `redirectTo` function that sends numbered URLs such as `/planets/4` to the named ones
 - Fetching data before a state activates with `resolve` and a data service with simulated async latency
 - Reading route parameters inside a resolve via `deps: ['$transition$']`
 - Consuming resolved data in components through `UIViewInjectedProps`
@@ -108,7 +108,7 @@ It is the minimal layering, not a rewrite: the vanilla example's plumbing stays 
 - `redirectPages({ redirectsFile: true })` writes `_redirects` and a page per redirect, for hosts that don't read `_redirects`.
 - The route table stays at `/`. The script builds its router with `baseHref: site.base`, Vite's `base`, and the rules lines and redirect pages carry the base on their own, so the same script builds the site at any base.
 - `src/client.ts` hydrates the prerendered page and turns on the router's transition trace, so the console logs each navigation. After the first page, navigation stays on the client, with no further requests.
-- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page. `npm run dev:base` does the same under `--base=/solar/`: `/solar/` and `/solar/planets/venus` answer their pages, `/solar/planets/3` answers 308 to `/solar/planets/venus`, `/solar/legacy` answers 302 to `/solar/`, a path outside `/solar/` gets a 404, and `_redirects` reads `/solar/legacy /solar/ 302`.
+- `npm run dev` builds and runs `vite preview`, where the plugin answers `/legacy` with a 302 and an unknown path with the 404 page. `npm run dev:base` does the same under `--base=/solar/`: `/solar/` and `/solar/planets/venus` answer their pages, `/solar/planets/3` answers its redirect page, which sends the browser to `/solar/planets/venus`, `/solar/legacy` answers 302 to `/solar/`, and a path outside `/solar/` gets a 404. `_redirects` reads `/solar/planets/3 /solar/planets/venus 308` for each numbered url, then `/solar/legacy /solar/ 302`.
 
 ### hellogalaxy
 
