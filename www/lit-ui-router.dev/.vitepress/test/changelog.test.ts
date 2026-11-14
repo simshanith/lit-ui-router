@@ -6,8 +6,8 @@ import { getByRole, getByText, queryAllByRole } from '@testing-library/dom';
 import { parseChangelog } from '@tools/changelog';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 
-import { changelogPath, SIDEBAR } from '../../catalog/navigation.ts';
-import { PACKAGES } from '../../catalog/packages.ts';
+import { SIDEBAR } from '../../catalog/navigation.ts';
+import { changelogPath, PACKAGES } from '../../catalog/packages.ts';
 import {
   changelogContent,
   changelogFiles,
@@ -152,6 +152,39 @@ describe('changelog pages', () => {
     assert.ok(getByRole(parseHtml(page.preambleHtml).body, 'link'));
   });
 
+  it('links the preamble to the package’s releases page on the same site', () => {
+    for (const { name, page } of pages) {
+      const link = getByRole(parseHtml(page.preambleHtml).body, 'link', {
+        name: 'all releases',
+      });
+
+      assert.equal(
+        link.getAttribute('href'),
+        `/releases/${encodeURIComponent(name)}/`,
+      );
+      assert.equal(link.getAttribute('target'), '_self');
+    }
+  });
+
+  it('keeps a site link on the serving deployment, leaving the client router docs pages', () => {
+    const { body } = parseHtml(
+      renderBody(
+        '[a](https://lit-ui-router.dev/gh/x/) [b](https://lit-ui-router.dev/guides/x#y) [c](https://example.com/releases/)',
+      ),
+    );
+
+    const [worker, page, external] = queryAllByRole(body, 'link');
+
+    assert.equal(worker?.getAttribute('href'), '/gh/x/');
+    assert.equal(worker?.getAttribute('target'), '_self');
+    assert.equal(page?.getAttribute('href'), '/guides/x#y');
+    assert.equal(page?.getAttribute('target'), null);
+    assert.equal(
+      external?.getAttribute('href'),
+      'https://example.com/releases/',
+    );
+  });
+
   it('rejects a heading the parser contract does not allow', () => {
     assert.throws(
       () =>
@@ -201,7 +234,7 @@ describe('changelogRoutes', () => {
 });
 
 describe('changelog catalog', () => {
-  it('lists every changelog in the sidebar, in its own surface', () => {
+  it('keeps every changelog out of the sidebar, in its own surface', () => {
     const links = (entries: typeof SIDEBAR): string[] =>
       entries.flatMap(({ link, items }) => [
         ...(link ? [link] : []),
@@ -211,7 +244,7 @@ describe('changelog catalog', () => {
     const sidebar = links(SIDEBAR);
 
     for (const { name } of PACKAGES) {
-      assert.ok(sidebar.includes(changelogPath(name)), name);
+      assert.ok(!sidebar.includes(changelogPath(name)), name);
       assert.equal(surfaceOf(changelogPath(name)).id, 'changelogs');
     }
   });

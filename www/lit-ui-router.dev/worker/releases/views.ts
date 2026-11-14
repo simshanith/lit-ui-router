@@ -7,7 +7,7 @@ import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router/pure';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
-import { PACKAGES, ROLES } from '../../catalog/packages.ts';
+import { changelogPath, PACKAGES, ROLES } from '../../catalog/packages.ts';
 import { isStable, pickerPair, previousIn } from './ledger.ts';
 import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
 import { RELEASES_MOUNT } from './routes.ts';
@@ -263,6 +263,16 @@ const compareForm = (
       </form>`;
 };
 
+/** The docs site's changelog page for a catalog package; the ledger may hold others. */
+const changelogLink = (pkg: string): TemplateResult | typeof nothing => {
+  const entry = PACKAGES.find(({ name }) => name === pkg);
+
+  return entry
+    ? html` Its stable release notes are collected in its
+        <a href=${changelogPath(entry.name)}>Changelog</a>.`
+    : nothing;
+};
+
 const packagePage = (
   router: UIRouter,
   pkg: string,
@@ -273,7 +283,8 @@ const packagePage = (
   <p>
     Every version of <code>${pkg}</code> the release ledger records, newest
     first. Its npm page is
-    <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
+    <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a
+    >.${changelogLink(pkg)}
   </p>
   ${compareForm(router, pkg, versions)}
   <div class="table">

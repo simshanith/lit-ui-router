@@ -8,8 +8,12 @@ import MarkdownIt from 'markdown-it';
 import * as v from 'valibot';
 import type { PageData } from 'vitepress';
 
-import { changelogPath } from '../catalog/navigation.ts';
-import { PACKAGES, type PackageName } from '../catalog/packages.ts';
+import {
+  changelogPath,
+  PACKAGES,
+  type PackageName,
+} from '../catalog/packages.ts';
+import { mounts } from '../worker/releases/routes.ts';
 import { releasesPath } from './release-stubs.ts';
 
 /** Every package's changelog file, which the paths loader watches. */
@@ -45,6 +49,33 @@ export interface ChangelogPage {
 
 // GitHub release bodies: raw HTML passes through, bare URLs link.
 const md = new MarkdownIt({ html: true, linkify: true });
+
+const ORIGIN = 'https://lit-ui-router.dev';
+
+const WORKER_MOUNTS = Object.keys(mounts);
+
+/** A path the worker renders, which VitePress's client router must not take. */
+const isWorkerPath = (path: string): boolean =>
+  WORKER_MOUNTS.some((mount) => path === mount || path.startsWith(`${mount}/`));
+
+// A link to the site stays on the deployment serving the page.
+md.core.ruler.push('same-site-links', (state) => {
+  for (const token of state.tokens) {
+    for (const child of token.children ?? []) {
+      const href = child.type === 'link_open' ? child.attrGet('href') : null;
+
+      if (href === null || !href.startsWith(`${ORIGIN}/`)) continue;
+
+      const path = href.slice(ORIGIN.length);
+
+      child.attrSet('href', path);
+
+      if (isWorkerPath(new URL(path, ORIGIN).pathname)) {
+        child.attrSet('target', '_self');
+      }
+    }
+  }
+});
 
 /** A release body as HTML, never compiled as a Vue template. */
 export const renderBody = (body: string): string => md.render(body);

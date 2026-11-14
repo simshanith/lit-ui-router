@@ -926,6 +926,32 @@ describe('the /releases pages', () => {
     );
   });
 
+  it("links a catalog package's changelog page, and no changelog for another", async () => {
+    const doc = await page('/releases/lit-ui-router/');
+
+    assert.equal(
+      hrefOf(doc.body, 'Changelog'),
+      '/packages/lit-ui-router/changelog',
+    );
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: (name) =>
+        fixtureLedger.versions(
+          name === 'a-new-package' ? 'lit-ui-router' : name,
+        ),
+    };
+
+    const other = parseHtml(
+      (await (
+        await serve('/releases/a-new-package/', undefined, ledger)
+      )?.text()) ?? '',
+    );
+
+    getByRole(other.body, 'heading', { level: 1, name: 'a-new-package' });
+    assert.equal(queryByRole(other.body, 'link', { name: 'Changelog' }), null);
+  });
+
   it('picks a diff with a form that needs no script', async () => {
     const doc = await page('/releases/lit-ui-router/');
     const form = getByRole(doc.body, 'form', { name: 'Compare two versions' });

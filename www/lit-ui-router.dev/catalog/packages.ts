@@ -133,3 +133,7 @@ export const PACKAGES = [
 ] as const satisfies readonly PackageEntry[];
 
 export type PackageName = (typeof PACKAGES)[number]['name'];
+
+/** A package's changelog page, built from its CHANGELOG.md. */
+export const changelogPath = (name: PackageName): string =>
+  `/packages/${name}/changelog`;
