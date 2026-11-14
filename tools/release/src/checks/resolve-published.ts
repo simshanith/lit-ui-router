@@ -7,12 +7,12 @@
 // captured here; with this file in the check task's inputs, its cache key is
 // sound.
 
+import { Effect } from 'effect';
 import pacote from 'pacote';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
 import {
-  WAIT_FOR_LISTING,
   awaitedRelease,
   pendingTargets,
   retryMessage,
@@ -68,15 +68,10 @@ async function main() {
     first,
   );
 
-  const { versions, unlisted } = await waitForListings(
-    publishedTags,
-    pending,
-    first,
-    {
-      ...WAIT_FOR_LISTING,
-      onRetry: (cause, attempt) =>
-        console.log(retryMessage(cause, attempt, WAIT_FOR_LISTING.attempts)),
-    },
+  const { versions, unlisted } = await Effect.runPromise(
+    waitForListings(publishedTags, pending, first, (retry) =>
+      console.log(retryMessage(retry)),
+    ),
   );
 
   if (unlisted.length > 0) {
