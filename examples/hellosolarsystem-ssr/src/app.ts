@@ -14,7 +14,7 @@ import {
   type UIViewInjectedProps,
 } from 'lit-ui-router/pure';
 
-import { legacyPlanetId, solarBodies, type SolarBody } from './bodies.ts';
+import { numberedPlanetId, solarBodies, type SolarBody } from './bodies.ts';
 import { mount, routes } from './routes.ts';
 
 // Data Service
@@ -309,7 +309,7 @@ export const planetState: LitStateDeclaration<{
   // A numbered url redirects to the slug, the canonical url. The server follows
   // it in `settle`; in the browser it replaces the history entry.
   redirectTo: ($transition$: Transition) => {
-    const planetId = legacyPlanetId(
+    const planetId = numberedPlanetId(
       $transition$.params<{ planetId: string }>().planetId,
     );
 

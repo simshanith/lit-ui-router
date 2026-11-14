@@ -135,7 +135,7 @@ export const solarBodies: SolarBody[] = [
   },
 ];
 
-// The first urls numbered the bodies outward from the Sun, so /planets/4 was
-// Earth. Those urls still work: each number maps to its body's slug.
-export const legacyPlanetId = (planetId: string): string | undefined =>
+// Numbered urls also work: /planets/4 is the fourth body from the Sun, Earth.
+// Each number maps to its body's slug.
+export const numberedPlanetId = (planetId: string): string | undefined =>
   /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;

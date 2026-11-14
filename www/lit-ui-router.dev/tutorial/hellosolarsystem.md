@@ -18,7 +18,7 @@ Building on [Hello World](./helloworld), this tutorial introduces data fetching 
 - A `planet` state showing details of a selected body: kind, distance, diameter, moons, orbital period, and a fun fact
 - Data is fetched **before** each state is activated using resolves, from a service with simulated network latency
 - The URL includes a parameter for the selected body: `/planets/earth` is Earth
-- The numbered URLs an earlier version used, such as `/planets/4`, redirect to the named ones
+- Numbered URLs such as `/planets/4` redirect to the named ones
 
 ---
 
@@ -259,19 +259,19 @@ class PlanetDetailComponent extends LitElement {
 
 Note the graceful fallback: if the URL contains an unknown id (say `/planets/vulcan`), the resolve returns `undefined` and the component renders "Body not found" with a link back to the list.
 
-### Redirecting Old URLs
+### Redirecting Numbered URLs
 
-An earlier version of this example numbered the bodies outward from the Sun, so `/planets/4` was Earth. Those URLs keep working: a `redirectTo` function on the `planet` state maps each number to its body's id and redirects there.
+Numbered URLs also work: `/planets/4` is the fourth body from the Sun, and it redirects to `/planets/earth`. A `redirectTo` function on the `planet` state maps each number to its body's id.
 
 ```typescript
-const legacyPlanetId = (planetId: string): string | undefined =>
+const numberedPlanetId = (planetId: string): string | undefined =>
   /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;
 
 const planetState: LitStateDeclaration = {
   name: 'planet',
   url: '/planets/:planetId',
   redirectTo: ($transition$: Transition) => {
-    const planetId = legacyPlanetId($transition$.params().planetId);
+    const planetId = numberedPlanetId($transition$.params().planetId);
 
     return planetId === undefined
       ? undefined
@@ -282,6 +282,8 @@ const planetState: LitStateDeclaration = {
 ```
 
 Returning `undefined` lets the transition proceed. Returning a target state redirects, before any resolve runs. A redirect from a URL replaces the browser history entry, so the Back button skips the numbered URL.
+
+On a server or a prerendered site, the same function becomes an HTTP redirect. See [Page, response state or redirect](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ---
 

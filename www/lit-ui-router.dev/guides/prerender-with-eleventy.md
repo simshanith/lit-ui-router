@@ -75,6 +75,11 @@ const result = await prerender({
 });
 ```
 
+The numbered paths are old URLs. The `planet` state's
+[`redirectTo` function](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)
+sends each to its named URL, so they come out as `_redirects` lines, like
+`/legacy`, which redirects by data.
+
 Each page in `result.pages` names the file it belongs at, such as
 `planets/venus/index.html` or `404.html`, and `page.status` is the status it
 answers with. The other collected files are `_redirects` and the redirect

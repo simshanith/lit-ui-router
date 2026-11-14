@@ -167,9 +167,9 @@ const SolarSystemService = {
     delay(solarBodies.find((b) => b.id === id)),
 };
 
-// The first urls numbered the bodies outward from the Sun, so /planets/4 was
-// Earth. Those urls still work: each number maps to its body's slug.
-const legacyPlanetId = (planetId: string): string | undefined =>
+// Numbered urls also work: /planets/4 is the fourth body from the Sun, Earth.
+// Each number maps to its body's slug.
+const numberedPlanetId = (planetId: string): string | undefined =>
   /^\d+$/.test(planetId) ? solarBodies[Number(planetId) - 1]?.id : undefined;
 
 // Log scale keeps the Sun and Pluto on the same screen.
@@ -725,7 +725,7 @@ const planetState = {
   // A numbered url redirects to the slug, the canonical url. A redirect from
   // the address bar replaces its history entry.
   redirectTo: ($transition$: Transition) => {
-    const planetId = legacyPlanetId(
+    const planetId = numberedPlanetId(
       $transition$.params<{ planetId: string }>().planetId,
     );
 
