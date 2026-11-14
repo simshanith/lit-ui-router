@@ -214,9 +214,12 @@ html:has(.site-expand:modal) {
   display: block;
   inline-size: 100%;
   margin-block: 0;
-  aspect-ratio: 3 / 2;
+  /* the picture is a 3:4 card with the model in its top 55%: the window is its top 4:3, inset */
+  box-sizing: border-box;
+  padding: 3% 4%;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
-  object-position: center 8%;
+  object-position: top;
   border-radius: var(--site-radius-card);
   box-shadow: 0 0 0 0 currentColor;
   transition: box-shadow var(--site-duration-base) var(--ease-out);
