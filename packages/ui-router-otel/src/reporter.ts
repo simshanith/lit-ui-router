@@ -42,9 +42,11 @@ export interface TracerReporter {
   report(event: RouterEvent): void;
   /** Starts a resolve's span now, as a child of its transition's span; none when the transition is not known. */
   startResolve(id: number, token: string, state: string): Span | undefined;
-  /** Ends a span `startResolve` started, failed when the resolve threw or rejected with `error`. */
+  /** Ends a span `startResolve` started. */
+  endResolve(span: Span): void;
+  /** Ends a span `startResolve` started as failed: its resolve threw or rejected with `error`. */
   // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-  endResolve(span: Span, error?: unknown): void;
+  failResolve(span: Span, error: unknown): void;
   /** Ends every span still open and stops reporting. */
   dispose(): void;
 }
@@ -328,14 +330,12 @@ export const reportToTracer = (
           )
         : undefined;
     },
-    endResolve: (span, error) => {
+    endResolve: (span) => span.end(at(performance.now())),
+    failResolve: (span, error) => {
       const t = performance.now();
 
-      if (error !== undefined) {
-        span.setAttribute('error.type', errorNameOf(error) ?? OTHER);
-        fail(span, messageOf(error), t);
-      }
-
+      span.setAttribute('error.type', errorNameOf(error) ?? OTHER);
+      fail(span, messageOf(error), t);
       span.end(at(t));
     },
     report: (event) => {
