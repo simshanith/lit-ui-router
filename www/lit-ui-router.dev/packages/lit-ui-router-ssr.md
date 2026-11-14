@@ -205,7 +205,9 @@ if (redirect)
 `/releases/diff/2/1 /releases/diff/1/2 308`, in place of a page, and counts in
 `tally.redirect`.
 [`redirect-after-settle.spec.ts`](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/src/specs/redirect-after-settle.spec.ts)
-runs this example both ways.
+runs this example both ways. The
+[Hello Solar System SSR example](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellosolarsystem-ssr/src/app.ts)
+redirects its numbered URLs the same way.
 
 - A url rule that rewrites the url, `when('/old', '/new')`, starts a new
   transition rather than redirecting one, so `redirectedTo` reports nothing

@@ -238,8 +238,8 @@ arrival — where the router landed, and what that state resolved — because bo
 are facts about the same completed transition. `onSuccess` rather than an
 entering hook on purpose: `onEnter` fires while the transition is still in
 flight, and a later hook can still redirect or fail it, so history built on it
-can record arrivals that never happened. The id is parsed once, in the resolve,
-and no component ever reads a route param.
+can record arrivals that never happened. The resolve looks the id up, and no
+component ever reads a route param.
 
 Everything else derives. The visited set and its count are `computed` over that
 history, and the tab title comes from a plain `reaction` over `RouterStore`

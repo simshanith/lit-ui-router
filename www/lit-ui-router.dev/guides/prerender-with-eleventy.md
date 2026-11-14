@@ -58,7 +58,12 @@ and a page per redirect, whose body here is just its target:
 const result = await prerender({
   mounts,
   router,
-  paths: ['/', ...solarBodies.map(({ id }) => `/planets/${id}`), '/legacy'],
+  paths: [
+    '/',
+    ...solarBodies.map(({ id }) => `/planets/${id}`),
+    ...solarBodies.map((_, index) => `/planets/${index + 1}`),
+    '/legacy',
+  ],
   outDir: '',
   base,
   rules: redirectPages({ redirectsFile: true, page: ({ to }) => to }),
@@ -70,8 +75,13 @@ const result = await prerender({
 });
 ```
 
+The numbered paths are old URLs. The `planet` state's
+[`redirectTo` function](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)
+sends each to its named URL, so they come out as `_redirects` lines, like
+`/legacy`, which redirects by data.
+
 Each page in `result.pages` names the file it belongs at, such as
-`planets/3/index.html` or `404.html`, and `page.status` is the status it
+`planets/venus/index.html` or `404.html`, and `page.status` is the status it
 answers with. The other collected files are `_redirects` and the redirect
 pages. From there Eleventy does the writing:
 
