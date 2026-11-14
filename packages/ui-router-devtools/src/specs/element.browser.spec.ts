@@ -1623,7 +1623,13 @@ describe('the Timeline', () => {
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
-  const open = async () => {
+  const showTimeline = async (element: UIRouterDevtools) => {
+    getByRole(shadow(element), 'button', { name: /Router/ }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'timeline' }).click();
+  };
+
+  const open = async ({ timeResolves = true } = {}) => {
     await page.viewport(1280, 800);
 
     const router = makeRouter();
@@ -1633,13 +1639,11 @@ describe('the Timeline', () => {
       resolve: [{ token: 'users', resolveFn: () => sleep(20) }],
     });
 
-    const { element } = router.plugin(DevtoolsPlugin, { timeResolves: true });
+    const { element } = router.plugin(DevtoolsPlugin, { timeResolves });
 
     await router.stateService.go('users');
     await element.updateComplete;
-    getByRole(shadow(element), 'button', { name: /Router .*users/ }).click();
-    await element.updateComplete;
-    getByRole(shadow(element), 'button', { name: 'timeline' }).click();
+    await showTimeline(element);
 
     const tree = await waitFor(() =>
       getByRole(shadow(element), 'tree', { name: /Timeline/ }),
@@ -1652,6 +1656,23 @@ describe('the Timeline', () => {
     element.shadowRoot?.activeElement?.dispatchEvent(
       new KeyboardEvent('keydown', { key, bubbles: true, composed: true }),
     );
+
+  // Whether the Timeline took the key: it prevents the default of a key it handles.
+  const handles = (element: UIRouterDevtools, key: string): boolean => {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+
+    element.shadowRoot?.activeElement?.dispatchEvent(event);
+
+    return event.defaultPrevented;
+  };
+
+  const details = (element: UIRouterDevtools, name: string | RegExp) =>
+    queryByRole(shadow(element), 'region', { name });
 
   it('shows the latest transition as a tree of bars, each named with when it ran and how long it took', async () => {
     const { tree } = await open();
@@ -1800,5 +1821,258 @@ describe('the Timeline', () => {
       }),
     );
     expect(panel._timeline).toBeUndefined();
+    expect(getByRole(shadow(element), 'status').textContent).toContain(
+      'The Timeline did not load',
+    );
+
+    // Choosing the Timeline again retries the load and clears the failure.
+    panel._importTimeline = () => import('../element/timeline.ts');
+    getByRole(shadow(element), 'button', { name: 'outline' }).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'timeline' }).click();
+    await waitFor(() =>
+      getByRole(shadow(element), 'tree', { name: /Timeline/ }),
+    );
+    expect(getByRole(shadow(element), 'status').textContent).not.toContain(
+      'did not load',
+    );
+  });
+
+  it('selects a bar with a click and shows its details, and a second click hides them', async () => {
+    const { element, tree } = await open();
+    const resolve = getByRole(tree, 'treeitem', { name: /^resolve users, / });
+
+    resolve.click();
+    await waitFor(() =>
+      expect(resolve.getAttribute('aria-selected')).toBe('true'),
+    );
+
+    const facts = within(details(element, 'resolve users')!);
+
+    expect(facts.getByText('State').nextElementSibling?.textContent).toBe(
+      'users',
+    );
+    expect(facts.getByText('Took').nextElementSibling?.textContent).toMatch(
+      /^\d+ ms$/,
+    );
+    expect(facts.queryByText('Joined')).toBeNull();
+
+    // A transition's details name no state of their own: the bar is the transition to it.
+    const top = getAllByRole(tree, 'treeitem')[0];
+
+    top.click();
+    await waitFor(() => expect(details(element, 'users')).not.toBeNull());
+    expect(within(details(element, 'users')!).queryByText('State')).toBeNull();
+
+    top.click();
+    await waitFor(() => expect(details(element, 'users')).toBeNull());
+    expect(top.getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('closes and opens an item from its fold mark without selecting it', async () => {
+    const { tree } = await open();
+    const top = () => getAllByRole(tree, 'treeitem')[0];
+
+    // The fold mark is the pointer's way to do what the arrow keys do, so it has no role of its own.
+    top().querySelector<HTMLElement>('.tl-fold')?.click();
+    await waitFor(() => expect(getAllByRole(tree, 'treeitem')).toHaveLength(1));
+    expect(top().getAttribute('aria-expanded')).toBe('false');
+    expect(top().getAttribute('aria-selected')).toBe('false');
+
+    top().querySelector<HTMLElement>('.tl-fold')?.click();
+    await waitFor(() =>
+      expect(getAllByRole(tree, 'treeitem').length).toBeGreaterThan(1),
+    );
+  });
+
+  it('moves into an open item, up and home, and leaves keys it does not use alone', async () => {
+    const { element, tree } = await open();
+    const items = () => getAllByRole(tree, 'treeitem');
+    const focused = () => element.shadowRoot?.activeElement;
+
+    items()[0].focus();
+    expect(handles(element, 'ArrowRight')).toBe(true);
+    await waitFor(() => expect(focused()).toBe(items()[1]));
+
+    // A leaf has nothing to open: the key is taken and focus stays.
+    expect(handles(element, 'ArrowRight')).toBe(true);
+    await element.updateComplete;
+    expect(focused()).toBe(items()[1]);
+
+    press(element, 'ArrowDown');
+    await waitFor(() => expect(focused()).toBe(items()[2]));
+    press(element, 'ArrowUp');
+    await waitFor(() => expect(focused()).toBe(items()[1]));
+    press(element, 'Home');
+    await waitFor(() => expect(focused()).toBe(items()[0]));
+
+    expect(handles(element, 'Escape')).toBe(false);
+    expect(handles(element, 'a')).toBe(false);
+  });
+
+  it('mirrors left and right in a right-to-left page', async () => {
+    const { element, tree } = await open();
+    const top = () => getAllByRole(tree, 'treeitem')[0];
+
+    element.setAttribute('dir', 'rtl');
+    top().focus();
+    press(element, 'ArrowRight');
+    await waitFor(() =>
+      expect(top().getAttribute('aria-expanded')).toBe('false'),
+    );
+    press(element, 'ArrowLeft');
+    await waitFor(() =>
+      expect(top().getAttribute('aria-expanded')).toBe('true'),
+    );
+  });
+
+  it('shows a span’s status, ids, how it was joined and its attributes in its details', async () => {
+    const { element, tree } = await open();
+    const tx = panelOf(element)._model.txs[0];
+
+    element.addSpan({
+      traceId: 'c'.repeat(32),
+      spanId: 'd'.repeat(16),
+      name: 'GET /api/roles',
+      startTime: performance.timeOrigin + tx.t + 1,
+      attributes: { 'http.request.method': 'GET', tags: ['a', 'b'] },
+    });
+
+    const fetch = await waitFor(() =>
+      getByRole(tree, 'treeitem', { name: /^GET \/api\/roles, / }),
+    );
+
+    fetch.click();
+
+    const facts = within(
+      await waitFor(() =>
+        getByRole(shadow(element), 'region', { name: 'GET /api/roles' }),
+      ),
+    );
+
+    // A span sent at its start, before it has a status, reads as unset.
+    expect(facts.getByText('Status').nextElementSibling?.textContent).toBe(
+      'unset',
+    );
+    expect(facts.getByText('Joined').nextElementSibling?.textContent).toBe(
+      'during the transition, not traced to it',
+    );
+    expect(facts.getByText('Span').nextElementSibling?.textContent).toBe(
+      'd'.repeat(16),
+    );
+    expect(facts.getByText('tags').nextElementSibling?.textContent).toBe(
+      'a, b',
+    );
+  });
+
+  it('lists resolves the session did not time, with no bar and a note in their details', async () => {
+    const { element, tree } = await open({ timeResolves: false });
+
+    const resolve = getByRole(tree, 'treeitem', {
+      name: 'resolve users, untimed',
+    });
+
+    expect(resolve.textContent).toContain('—');
+
+    resolve.click();
+
+    const facts = within(
+      await waitFor(() =>
+        getByRole(shadow(element), 'region', { name: 'resolve users' }),
+      ),
+    );
+
+    expect(facts.getByText('Note').nextElementSibling?.textContent).toBe(
+      'untimed',
+    );
+    expect(facts.queryByText('Took')).toBeNull();
+  });
+
+  it('says when there is no transition to draw, and that an invalid target ran none', async () => {
+    await page.viewport(1280, 800);
+
+    const router = makeRouter();
+    router.stateService.defaultErrorHandler(() => {});
+
+    const { element } = router.plugin(DevtoolsPlugin);
+
+    await element.updateComplete;
+    await showTimeline(element);
+
+    // The log says the same in its own pane, so the Timeline's pane is read alone.
+    const pane = () =>
+      within(getByRole(shadow(element), 'tabpanel', { name: /Timeline/ }));
+
+    await waitFor(() =>
+      expect(
+        pane().getByText('No transitions yet.', { selector: 'p' }),
+      ).toBeTruthy(),
+    );
+    expect(panelOf(element)._timeline).toBeDefined();
+
+    await router.stateService.go('typo').catch(() => {});
+    await waitFor(() =>
+      expect(
+        pane().getByText(/^Invalid target/, { selector: 'p' }).textContent,
+      ).toMatch(/Invalid target\s+typo: no transition ran\./),
+    );
+  });
+
+  it('draws an imported session: a long transition in seconds, and one of only ignored transitions', async () => {
+    const { router, element } = await open();
+
+    await router.stateService.go('users');
+
+    const session = element.session()!;
+    const start = session.events.find((event) => event.type === 'transition')!;
+
+    // The first transition took a second and a half in this copy of the file.
+    element.importSession({
+      ...session,
+      events: session.events.map((event) =>
+        event.type === 'result' && event.id === 0
+          ? { ...event, t: start.t + 1500 }
+          : event,
+      ),
+    });
+
+    const tree = () => getByRole(shadow(element), 'tree', { name: /Timeline/ });
+
+    // The latest transition is ignored, so the latest one that ran is shown.
+    await waitFor(() =>
+      expect(
+        getAllByRole(tree(), 'treeitem')[0].getAttribute('aria-label'),
+      ).toMatch(/^000 succeeded: users, at 0 ms, took 1\.50 s/),
+    );
+
+    // A file whose ring buffer kept only the ignored transition still draws it.
+    element.importSession({
+      ...session,
+      events: session.events.filter(
+        (event) => !('id' in event) || event.id === 1,
+      ),
+    });
+    await waitFor(() =>
+      expect(
+        getAllByRole(tree(), 'treeitem')[0].getAttribute('aria-label'),
+      ).toMatch(/^001 ignored: users/),
+    );
+  });
+
+  it('leaves a span that overlaps no transition out of the session file', async () => {
+    const { element } = await open();
+    const tx = panelOf(element)._model.txs[0];
+    const after = performance.timeOrigin + (tx.result?.t ?? tx.t) + 5000;
+
+    element.addSpan({
+      traceId: 'e'.repeat(32),
+      spanId: 'f'.repeat(16),
+      name: 'GET /api/later',
+      startTime: after,
+      endTime: after + 10,
+    });
+
+    expect(element.spans).toHaveLength(1);
+    expect(element.session()).not.toHaveProperty('spans');
   });
 });
