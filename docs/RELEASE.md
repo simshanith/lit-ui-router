@@ -225,7 +225,8 @@ On the post-publish dispatch, Publish to NPM passes the new release as the
 first waits until a dist-tag points at that version and at the workspace
 version of every other package already on npm. It re-reads with the release
 ledger's policy, exponential and jittered with a capped delay: reads come at
-most 30 seconds apart, for about five minutes. Each post-publish run thus
+most 30 seconds apart, for about five minutes, unless npm rate-limits a read
+and names a longer wait. Each post-publish run thus
 covers the whole batch of releases, and a bump whose publish is still running
 or failed holds that run for the whole wait. Once the wait runs out, the run
 warns with each version npm still doesn't list and compares against what npm

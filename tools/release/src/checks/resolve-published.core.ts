@@ -11,7 +11,7 @@ type Tags = Record<string, string>;
 
 export type Target = { name: string; version: string };
 
-/** Delays 2, 4, 8, 16 s, then 25 s each, all jittered ×0.8–1.2 (≤ 30 s); the last read starts by 5½ min. */
+/** Delays 2, 4, 8, 16 s, then 25 s each, all jittered ×0.8–1.2 (≤ 30 s) unless a 429 names longer; the last read starts by 5½ min. */
 export const WAIT_FOR_LISTING = {
   baseMs: 2000,
   capMs: 25_000,
