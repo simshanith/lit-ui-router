@@ -164,6 +164,33 @@ describe('spanRecordOf', () => {
     ).toBe('1111111111111111');
   });
 
+  it('keeps as text what JSON cannot hold: a symbol, a circular object, and the like inside an array', () => {
+    interface Loop {
+      self?: Loop;
+    }
+
+    const circular: Loop = {};
+
+    circular.self = circular;
+
+    const record = spanRecordOf(
+      fake({
+        attributes: {
+          symbol: Symbol('token'),
+          circular,
+          items: [{ id: 7 }, 3],
+        },
+      }),
+      true,
+    );
+
+    expect(record.attributes).toEqual({
+      symbol: 'Symbol(token)',
+      circular: '[object Object]',
+      items: ['{"id":7}', 3],
+    });
+  });
+
   it('keeps scalars and arrays, drops what is unset, and keeps anything else as text', () => {
     const record = spanRecordOf(
       fake({
