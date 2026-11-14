@@ -815,10 +815,10 @@ const respelledVerdict = (
 };
 
 // Navigations only are respelled; a marked state answers a non-navigation at either spelling.
-const matcherVerdict = (
+const matchedRouteVerdict = (
   mount: Mount,
   subpath: string,
-  respelled = true,
+  respelled: boolean,
 ): Verdict => {
   const resolution = mount.compiled.resolve(subpath);
 
@@ -842,6 +842,21 @@ const matcherVerdict = (
     : notFoundVerdict(mount);
 };
 
+// Any URIError degrades to the shell, a caller's own included, as a core throw does on a simulate mount.
+const matcherVerdict = (
+  mount: Mount,
+  subpath: string,
+  respelled = true,
+): Verdict => {
+  try {
+    return matchedRouteVerdict(mount, subpath, respelled);
+  } catch (error) {
+    if (error instanceof URIError) return shellVerdict(mount);
+
+    throw error;
+  }
+};
+
 // The matcher projection stands in for both strategies: they consume the same declaration subset.
 const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   if (mount.base === '/') return null;
@@ -851,7 +866,7 @@ const bareBaseDiagnostic = (mount: Mount): MountDiagnostic | null => {
   try {
     verdict = matcherVerdict(mount, '');
   } catch {
-    // A user param callback threw: no finding, so diagnostics never break construction; requests surface the throw.
+    // A user param callback threw: no finding, so diagnostics never break construction; requests surface any throw but a URIError.
     return null;
   }
 
