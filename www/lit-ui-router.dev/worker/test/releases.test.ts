@@ -7,6 +7,7 @@ import {
   getAllByRole,
   getByRole,
   getByText,
+  queryAllByRole,
   queryByRole,
   queryByText,
   within,
@@ -1124,5 +1125,208 @@ describe('the /releases pages', () => {
       ),
       [['id=check-dark-mode']],
     );
+  });
+});
+
+describe('the version page navigation', () => {
+  const page = async (path: string, ledger = fixtureLedger) =>
+    parseHtml((await (await serve(path, undefined, ledger))?.text()) ?? '');
+
+  const pagerOf = (doc: Document) =>
+    queryByRole(doc.body, 'navigation', { name: 'Previous and next versions' });
+
+  const pagerLinks = (doc: Document) => {
+    const pager = pagerOf(doc);
+    assert.ok(pager);
+
+    return getAllByRole(pager, 'link').map((link) => [
+      link.textContent?.replace(/\s+/g, ' ').trim(),
+      link.getAttribute('href'),
+    ]);
+  };
+
+  // A link element in the head has no role.
+  const headLinks = (doc: Document) =>
+    [...doc.head.querySelectorAll('link[rel="prev"], link[rel="next"]')].map(
+      (link) => [link.getAttribute('rel'), link.getAttribute('href')],
+    );
+
+  const notes = (doc: Document) =>
+    queryAllByRole(doc.body, 'note').map((note) =>
+      note.textContent?.replace(/\s+/g, ' ').trim(),
+    );
+
+  // Rows of a package the catalog lacks, with no `latest` tag.
+  const uncataloged = (versions: readonly string[]): LedgerReader => {
+    const [base] = FIXTURE_ROWS;
+    assert.ok(base);
+
+    return {
+      ...fixtureLedger,
+      tagged: () => Promise.resolve(null),
+      versions: () =>
+        Promise.resolve(
+          versions.map((version) => ({
+            ...base,
+            name: 'a-new-package',
+            version,
+          })),
+        ),
+    };
+  };
+
+  it('links both neighbours of a stable version in the middle, and the latest', async () => {
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
+
+    assert.deepEqual(pagerLinks(doc), [
+      ['Previous 1.2.0', '/releases/lit-ui-router/1.2.0/'],
+      ['Next 1.10.0', '/releases/lit-ui-router/1.10.0/'],
+    ]);
+    assert.deepEqual(headLinks(doc), [
+      ['prev', '/releases/lit-ui-router/1.2.0/'],
+      ['next', '/releases/lit-ui-router/1.10.0/'],
+    ]);
+    assert.deepEqual(notes(doc), [
+      'A newer stable version exists. See the latest, 1.10.0.',
+    ]);
+    assert.equal(
+      getByRole(doc.body, 'link', {
+        name: 'See the latest, 1.10.0',
+      }).getAttribute('href'),
+      '/releases/lit-ui-router/latest',
+    );
+  });
+
+  it('marks no newer stable version on the latest one', async () => {
+    const doc = await page('/releases/lit-ui-router/1.10.0/');
+
+    assert.deepEqual(notes(doc), []);
+    assert.deepEqual(pagerLinks(doc), [
+      ['Previous 1.9.0', '/releases/lit-ui-router/1.9.0/'],
+      ['Next 1.11.0-rc.0', '/releases/lit-ui-router/1.11.0-rc.0/'],
+    ]);
+  });
+
+  it('links only the previous version from the newest, a prerelease it marks', async () => {
+    const doc = await page('/releases/lit-ui-router/1.11.0-rc.0/');
+
+    assert.deepEqual(pagerLinks(doc), [
+      ['Previous 1.10.0', '/releases/lit-ui-router/1.10.0/'],
+    ]);
+    assert.deepEqual(headLinks(doc), [
+      ['prev', '/releases/lit-ui-router/1.10.0/'],
+    ]);
+    assert.deepEqual(notes(doc), [
+      'prerelease A prerelease, published ahead of a stable release.',
+    ]);
+    getByRole(doc.body, 'heading', {
+      level: 1,
+      name: 'lit-ui-router@1.11.0-rc.0',
+    });
+  });
+
+  it('links only the next version from the oldest', async () => {
+    const doc = await page('/releases/lit-ui-router/1.2.0/');
+
+    assert.deepEqual(pagerLinks(doc), [
+      ['Next 1.9.0', '/releases/lit-ui-router/1.9.0/'],
+    ]);
+    assert.deepEqual(headLinks(doc), [
+      ['next', '/releases/lit-ui-router/1.9.0/'],
+    ]);
+  });
+
+  it('renders no pager for a package with one version', async () => {
+    const doc = await page('/releases/ui-router-server/0.3.0/');
+
+    assert.equal(pagerOf(doc), null);
+    assert.deepEqual(headLinks(doc), []);
+  });
+
+  it('marks a canary build, and an older prerelease as outdated', async () => {
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: async (name) => {
+        const rows = await fixtureLedger.versions(name);
+        const [base] = rows;
+        assert.ok(base);
+
+        return [...rows, { ...base, version: '1.9.1-canary.0' }];
+      },
+    };
+
+    const doc = await page('/releases/lit-ui-router/1.9.1-canary.0/', ledger);
+
+    assert.deepEqual(notes(doc), [
+      'canary A canary build, published for testing ahead of a release.',
+      'A newer stable version exists. See the latest, 1.10.0.',
+    ]);
+    assert.deepEqual(pagerLinks(doc), [
+      ['Previous 1.9.0', '/releases/lit-ui-router/1.9.0/'],
+      ['Next 1.10.0', '/releases/lit-ui-router/1.10.0/'],
+    ]);
+  });
+
+  it("links the package's docs page and API reference", async () => {
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
+
+    // A definition takes no accessible name from its content, so its term finds it.
+    const docs = getByText(doc.body, 'Docs', {
+      selector: 'dt',
+    }).nextElementSibling;
+
+    assert.ok(docs);
+    assert.deepEqual(
+      // SAFETY: a dt's sibling in a parsed page is an HTML element.
+      getAllByRole(docs as HTMLElement, 'link').map((link) => [
+        link.textContent,
+        link.getAttribute('href'),
+      ]),
+      [
+        ['Package page', '/packages/lit-ui-router'],
+        ['API reference', '/reference/lit-ui-router/'],
+      ],
+    );
+  });
+
+  it('links no docs for a package the catalog lacks', async () => {
+    const doc = await page(
+      '/releases/a-new-package/0.2.0/',
+      uncataloged(['0.2.0', '0.1.0']),
+    );
+
+    getByRole(doc.body, 'heading', { level: 1, name: 'a-new-package@0.2.0' });
+    assert.equal(queryByText(doc.body, 'Docs', { selector: 'dt' }), null);
+    assert.equal(queryByRole(doc.body, 'link', { name: 'Package page' }), null);
+    assert.deepEqual(notes(doc), []);
+    assert.deepEqual(pagerLinks(doc), [
+      ['Previous 0.1.0', '/releases/a-new-package/0.1.0/'],
+    ]);
+  });
+
+  it('gives each fact a stable id, unique on the page', async () => {
+    for (const version of ['1.9.0', '1.10.0', '1.11.0-rc.0']) {
+      const doc = await page(`/releases/lit-ui-router/${version}/`);
+      // An id is no role's property.
+      const ids = [...doc.querySelectorAll('[id]')].map(({ id }) => id);
+
+      assert.equal(new Set(ids).size, ids.length, version);
+    }
+
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
+
+    const termIds = [...doc.querySelectorAll('.facts dt[id]')].map(
+      ({ id }) => id,
+    );
+
+    assert.deepEqual(termIds, [
+      'status',
+      'npm',
+      'deprecated',
+      'tag',
+      'diff',
+      'files',
+      'docs',
+    ]);
   });
 });
