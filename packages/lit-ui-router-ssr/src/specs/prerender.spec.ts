@@ -708,6 +708,95 @@ describe('the template option', () => {
     expect(files).toEqual(hooked.files);
   });
 
+  it('settles the path within a mount other than the root', async () => {
+    const docsRouter = (): UIRouterLit => {
+      const router = new UIRouterLit();
+      installServerLocation(router, {
+        urlConfig: { strict: false },
+        baseHref: '/docs/',
+      });
+      router.stateRegistry.register({ name: 'home', url: '/' });
+      router.stateRegistry.register({ name: 'about', url: '/about' });
+
+      return router;
+    };
+
+    const docs = {
+      mounts: {
+        '/docs': {
+          routes: [
+            { name: 'home', url: '/' },
+            { name: 'about', url: '/about' },
+          ],
+          config: { strict: false },
+        },
+      } satisfies Record<string, MountConfig>,
+      paths: ['/docs/about', '/docs/'],
+      notFound: false,
+      renderShell: undefined,
+    } satisfies Parameters<typeof run>[0];
+
+    const page = (router: UIRouterLit): TemplateResult =>
+      html`<p>${router.globals.current.name}</p>`;
+
+    const { files } = await run({
+      ...docs,
+      router: docsRouter(),
+      template: page,
+    });
+
+    expect([...files.keys()]).toEqual([
+      'dist/about/index.html',
+      'dist/index.html',
+    ]);
+    expect(signatureIn(files.get('dist/about/index.html')!)).toMatchObject({
+      state: 'about',
+    });
+    expect(signatureIn(files.get('dist/index.html')!)).toMatchObject({
+      state: 'home',
+    });
+
+    const router = docsRouter();
+
+    const hooked = await run({
+      ...docs,
+      router,
+      renderShell: async (_verdict, { subpath }) => {
+        await settle(router, subpath || '/');
+
+        return page(router);
+      },
+    });
+
+    expect(files).toEqual(hooked.files);
+  });
+
+  it.each([
+    { mount: '/', baseHref: '/', path: '/about/' },
+    { mount: '/docs', baseHref: '/docs/', path: '/docs/about/' },
+  ])(
+    'settles $path with its trailing slash for a strict router',
+    async ({ mount, baseHref, path }) => {
+      const router = new UIRouterLit();
+      installServerLocation(router, { baseHref });
+      router.stateRegistry.register({ name: 'about', url: '/about/' });
+
+      const { files } = await run({
+        mounts: { [mount]: { routes: [{ name: 'about', url: '/about/' }] } },
+        paths: [path],
+        notFound: false,
+        renderShell: undefined,
+        router,
+        template: (r) => html`<p>${r.globals.current.name}</p>`,
+      });
+
+      expect([...files.keys()]).toEqual(['dist/about/index.html']);
+      expect(signatureIn(files.get('dist/about/index.html')!)).toMatchObject({
+        state: 'about',
+      });
+    },
+  );
+
   /** sheetRouter with the mount's notFound state registered. */
   const notFoundRouter = (): UIRouterLit => {
     const router = sheetRouter();
