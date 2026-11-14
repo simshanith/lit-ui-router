@@ -722,18 +722,18 @@ export async function prerender(
     return {};
   };
 
-  // The path's verdict, with the listed path named when its route cannot decode it.
+  // A request for such a path gets the shell; a build that lists one names it instead.
   const resolve = async (path: string, listed: string): Promise<Verdict> => {
     try {
-      return await resolver.resolve(path);
+      decodeURIComponent(path.replace(/[?#].*$/, ''));
     } catch (error) {
-      if (!(error instanceof URIError)) throw error;
-
       throw new Error(
         `prerender: '${listed}' holds a malformed percent-escape, which its route cannot decode`,
         { cause: error },
       );
     }
+
+    return resolver.resolve(path);
   };
 
   const visit = async (listed: string): Promise<void> => {
