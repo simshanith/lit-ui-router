@@ -113,7 +113,9 @@ describe('routesFromStates', () => {
     for (const state of states) router.stateRegistry.register({ ...state });
 
     const served = routesFromStates(states)
-      .filter((route) => 'url' in route && !('abstract' in route))
+      .filter(
+        (route) => 'url' in route && !('abstract' in route && route.abstract),
+      )
       .map((route) => route.name);
 
     // SAFETY: registering states adds only state rules.

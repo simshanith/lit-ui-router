@@ -115,8 +115,9 @@ export interface MountConfig<
   routeIndex?: RouteIndex;
   /**
    * Projection of the client's otherwise() rule. `state` references a
-   * declared, url-less state (url-less so the unmatched url stays in the
-   * address bar, like a server 404 — mirroring the real rule's semantics).
+   * declared, url-less state that is not abstract (url-less so the unmatched
+   * url stays in the address bar, like a server 404 — mirroring the real
+   * rule's semantics; core cannot enter an abstract state).
    * When declared, unknown paths under this mount verdict as shell with
    * status 404: the resource genuinely doesn't exist and the shell IS the
    * error page (never 200) — the client boots at the retained path and its
@@ -124,7 +125,7 @@ export interface MountConfig<
    * route matches take precedence; undeclared keeps the notFound verdict.
    */
   otherwise?: {
-    /** Name of the declared, url-less state unknown paths verdict as. */
+    /** Name of the declared, url-less, non-abstract state unknown paths verdict as. */
     state: string;
   };
   /**
