@@ -1147,6 +1147,22 @@ describe('the nested Map', () => {
       expect(element.router!.globals.current.name).toBe('app.contacts'),
     );
     expect(panelOf(element)._selectedState).toBe('app.contacts');
+
+    // Or on a fold button that the re-pack put under the pointer, which then stays as it was.
+    const fold = () =>
+      getByRole(map, 'button', { name: /(Collapse|Expand) contacts/ });
+
+    const label = fold().getAttribute('aria-label');
+
+    await fire(getByRole(map, 'treeitem', { name: 'login' }), 'click', 1);
+    await fire(fold(), 'click', 2);
+    await fire(fold(), 'dblclick', 2);
+
+    await waitFor(() =>
+      expect(element.router!.globals.current.name).toBe('app.login'),
+    );
+    expect(panelOf(element)._selectedState).toBe('app.login');
+    expect(fold().getAttribute('aria-label')).toBe(label);
   });
 
   it('goes to a node of the node-link tree on a double-click and leaves it selected', async () => {

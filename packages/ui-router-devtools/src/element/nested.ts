@@ -852,7 +852,10 @@ const renderFold = (
     tabindex="-1"
     aria-label="${open ? 'Collapse' : 'Expand'} ${segment(target)}"
     title=${open ? 'Collapse' : 'Expand'}
-    @click=${(event: Event) => {
+    @click=${(event: MouseEvent) => {
+      // A fold that a re-pack put under the second click of a double-click on a box is not what was pressed.
+      if (event.detail > 1 && view.host._pressed) return;
+
       event.stopPropagation();
       view.host._pressed = null;
       nestedKeys(view.host, view.layout).toggle(target, open);
