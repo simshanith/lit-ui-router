@@ -32,6 +32,7 @@ export class AppRoot extends LitElement {
     }
     nav a.active {
       background: light-dark(#fff, #161b22);
+      box-shadow: inset 0 2px 0 light-dark(#0969da, #4493f8);
     }
   `;
 

@@ -57,15 +57,11 @@ export class AppRoot extends LitElement {
     .href.none {
       color: var(--spectrum-red-900);
     }
-    .row > :first-child {
-      justify-self: start;
+    sp-link.active {
+      font-weight: 700;
     }
-    /* box-shadow pads the tint without moving the text */
-    sp-link.active,
     a.active {
-      border-radius: 2px;
-      background: var(--spectrum-gray-100);
-      box-shadow: 0 0 0 4px var(--spectrum-gray-100);
+      font-weight: 700;
     }
     ui-view {
       display: block;
