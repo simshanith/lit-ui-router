@@ -376,6 +376,26 @@ describe('a double-click in the Outline', () => {
     expect(panel._inspect).toBe('state');
   });
 
+  it('keeps the second press of a double-click from selecting text, and leaves a single press alone', async () => {
+    const { row } = await openOutline();
+
+    const press = (detail: number) => {
+      const event = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        detail,
+      });
+
+      row(/\bhome$/)().dispatchEvent(event);
+
+      return event.defaultPrevented;
+    };
+
+    expect(press(1)).toBe(false);
+    expect(press(2)).toBe(true);
+  });
+
   it('selects an abstract state or one with a required param without going', async () => {
     const { router, element, panel, row } = await openOutline();
     const txs = panel._model.txs.length;

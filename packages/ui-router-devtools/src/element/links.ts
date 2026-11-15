@@ -122,6 +122,7 @@ export const renderMap = (host: DevtoolsPanel): TemplateResult => {
         aria-pressed=${selected}
         aria-label="${state.name}, ${words(state, role, isPivot, marks)}"
         @click=${(e: MouseEvent) => host._selectState(state.name, e.detail > 1)}
+        @mousedown=${host._keepText}
         @dblclick=${() => host._goState(state.name)}
       >
         ${label(state, role, isPivot, marks, segment(state.name), false)}

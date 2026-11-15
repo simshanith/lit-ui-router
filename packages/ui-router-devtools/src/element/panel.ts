@@ -915,6 +915,11 @@ export class DevtoolsPanel extends LitElement {
       void this.router?.stateService.go(bareName(state.name)).catch(() => {});
   }
 
+  // The second press of a double-click would select the word under it; a drag still selects text.
+  _keepText(event: MouseEvent): void {
+    if (event.detail > 1) event.preventDefault();
+  }
+
   // A double-click selects the state and goes to it when it can be gone to.
   _goState(name: string): void {
     const state = this._model.states.find((s) => s.name === name);

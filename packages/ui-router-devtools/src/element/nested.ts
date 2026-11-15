@@ -1083,6 +1083,7 @@ export const renderNested = (
       style="inline-size:${placed.width}px;block-size:${placed.height}px;translate:${at.x - from}px ${at.y}px"
       @keydown=${onKey}
       @click=${select}
+      @mousedown=${host._keepText}
       @dblclick=${go}
       @focusin=${focusIn}
     >
