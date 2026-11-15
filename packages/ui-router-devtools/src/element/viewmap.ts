@@ -196,7 +196,7 @@ const renderFill = (view: ViewInfo, scene: Scene) => {
     >${inactive(fill, scene) ? html`<span class="tag">Inactive</span>` : nothing}`;
 };
 
-/* oxlint-disable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr -- the tree's keydown handler moves focus and selects for every treeitem; aria-description is a global attribute in ARIA 1.3 */
+/* oxlint-disable lit-a11y/click-events-have-key-events -- the tree's keydown handler moves focus and selects for every treeitem */
 const renderHead = (scene: Scene, node: ViewNode) => {
   const { host } = scene;
   const { view } = node;
@@ -223,7 +223,7 @@ const renderHead = (scene: Scene, node: ViewNode) => {
     <span class="name">${viewName(view, scene)}</span>${renderFill(view, scene)}
   </div>`;
 };
-/* oxlint-enable lit-a11y/click-events-have-key-events, lit-a11y/role-supports-aria-attr */
+/* oxlint-enable lit-a11y/click-events-have-key-events */
 
 const boxClasses = (scene: Scene, view: ViewInfo, compound: boolean) =>
   [
