@@ -94,7 +94,7 @@ jobs:
           # empty string the tool treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           # Set only by the post-publish dispatch; empty = no wait for npm.
-          JUST_PUBLISHED: ${{ inputs.release }}
+          RELEASED_PACKAGE_VERSION: ${{ inputs.release }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}

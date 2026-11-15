@@ -21,7 +21,7 @@ export const WAIT_FOR_LISTING = {
   budgetMs: 300_000,
 } as const;
 
-/** Parses `JUST_PUBLISHED`; undefined when it is blank, malformed, or names no publishable package. */
+/** Parses `RELEASED_PACKAGE_VERSION`; undefined when it is blank, malformed, or names no publishable package. */
 export function awaitedRelease(
   release: string,
   publishable: readonly string[],

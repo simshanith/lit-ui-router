@@ -42,16 +42,16 @@ async function publishedTags(name: string): Promise<Record<string, string>> {
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
-  const justPublished = process.env.JUST_PUBLISHED?.trim() ?? '';
+  const released = process.env.RELEASED_PACKAGE_VERSION?.trim() ?? '';
 
   const named = awaitedRelease(
-    justPublished,
+    released,
     publishable.map(({ name }) => name),
   );
 
-  if (justPublished !== '' && !named) {
+  if (released !== '' && !named) {
     logWarning(
-      `JUST_PUBLISHED ${justPublished} is not <name>@<version> of a publishable package; resolving without waiting`,
+      `RELEASED_PACKAGE_VERSION ${released} is not <name>@<version> of a publishable package; resolving without waiting`,
     );
   }
 
