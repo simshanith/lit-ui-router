@@ -11,14 +11,17 @@ type Tags = Record<string, string>;
 
 export type Target = { name: string; version: string };
 
-/** Delays 2, 4, 8, 16 s, then 25 s each, all jittered ×0.8–1.2 (≤ 30 s) unless a 429 names longer; the last read starts by 5½ min. */
+/**
+ * How long to keep re-reading npm. The wait between reads doubles from
+ * `baseMs` and stops growing at `capMs`. No new wait starts after `budgetMs`.
+ */
 export const WAIT_FOR_LISTING = {
   baseMs: 2000,
   capMs: 25_000,
   budgetMs: 300_000,
 } as const;
 
-/** The `<name>@<version>` a post-publish run names, or undefined when blank, unparseable, or not a publishable member. */
+/** Parses `JUST_PUBLISHED`; undefined when it is blank, malformed, or names no publishable package. */
 export function awaitedRelease(
   release: string,
   publishable: readonly string[],
@@ -34,9 +37,10 @@ export function isListed(tags: Tags | undefined, version: string): boolean {
 }
 
 /**
- * What a post-publish run waits for: the checked-out version of the named
- * package and of every package already on npm, where no dist-tag lists it
- * yet. No release named means no wait.
+ * The package versions npm must list before the wait ends; empty when
+ * nothing was just published. Covers the just-published package and every
+ * other package already on npm, each at its checked-out version, and skips
+ * those a dist-tag already points at.
  */
 export function pendingTargets(
   release: Target | undefined,
@@ -114,7 +118,10 @@ export function retryAfterMs(cause: unknown): number | undefined {
   return Number.isFinite(after) ? after * 1000 : undefined;
 }
 
-/** Exponential from `baseMs`, capped at `capMs`, jittered, ended once `budgetMs` has elapsed; a 429's Retry-After wins up to the budget. */
+/**
+ * {@link WAIT_FOR_LISTING} as a schedule, with each wait jittered ×0.8–1.2.
+ * A 429's longer Retry-After replaces the wait, up to the budget.
+ */
 export function listingSchedule(onRetry: (retry: Retry) => void) {
   const { baseMs, capMs, budgetMs } = WAIT_FOR_LISTING;
 
@@ -152,9 +159,9 @@ export function listingSchedule(onRetry: (retry: Retry) => void) {
 type Listings = { versions: PublishedVersions; unlisted: Target[] };
 
 /**
- * Re-reads only the pending packages, in parallel, until a dist-tag lists
- * each or the schedule ends; round 1 is `first`. `unlisted` names what npm
- * still lags on; a read failure that ends the wait fails the effect.
+ * Re-reads the pending packages until npm lists each one or the schedule
+ * ends; `first` is the read already made. `unlisted` holds whatever npm
+ * still lacks. Fails only when the last read itself failed.
  */
 export function waitForListings(
   read: (name: string) => Promise<Tags>,

@@ -42,7 +42,7 @@ on:
         default: ''
         type: string
       release:
-        description: "The <name>@<version> just published; the published diff waits for npm to list it and every other published package's version on main, and the release-ledger check compares its tarball digest with npm. Empty skips both."
+        description: 'The <name>@<version> that was just published; the publish workflow sets it. The published diff then waits for npm to list the new version, and the release-ledger check compares its tarball digest with npm. Empty skips both.'
         required: false
         default: ''
         type: string
@@ -93,8 +93,8 @@ jobs:
           # Empty on push, schedule, and post-publish runs = full set (the
           # empty string the tool treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
-          # Empty off the post-publish dispatch: no wait for npm.
-          RELEASE: ${{ inputs.release }}
+          # Set only by the post-publish dispatch; empty = no wait for npm.
+          JUST_PUBLISHED: ${{ inputs.release }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
