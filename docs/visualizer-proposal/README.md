@@ -175,7 +175,7 @@ if (new URLSearchParams(location.search).has('visualizer')) {
 | Events            | `devtools-toggle`; `devtools-select-state`, cancelable                                                                                                                                                                                                                       |
 | Custom properties | `--uird-surface`, `--uird-surface-raised`, `--uird-ink`, `--uird-muted`, `--uird-rule`, `--uird-rule-strong`, `--uird-red`, `--uird-active`, `--uird-exit`, `--uird-active-wash`, `--uird-depth-1` to `--uird-depth-4`, `--uird-ease-out`, `--uird-font`, `--uird-font-mono` |
 | Parts             | `pill`, `panel`, `tree`, `node`, `log`, `transition`, `inspector`                                                                                                                                                                                                            |
-| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`                                                                                                                                                                           |
+| Entry points      | `.` (adapter, recorder, schema), `./define`, `./plugin`, `./performance`, `./console`, `./testing`, `./lit-ui-router`                                                                                                                                                        |
 
 The name `ui-router-devtools` follows the repo's convention: `ui-router-*` for
 packages that work with any adapter, `lit-ui-router-*` for Lit-only ones. Lit is
@@ -202,6 +202,7 @@ words its reason from:
 | `invalid`    | from, to, params of a target that names no state                                                                       | `stateService.onInvalid`                                         |
 | `config`     | location kind, base href, hash prefix, strict mode, plugin names                                                       | `urlService.config`, `getPlugin()`                               |
 | `current`    | name, params                                                                                                           | `globals.current`, `globals.params`                              |
+| `views`      | each registered `ui-view`'s id, name, fqn, type, creating state and fill; configs no view took                         | `viewService._pluginapi._onSync`; see [the view map](views.md)   |
 
 ### What the adapter established about the data
 

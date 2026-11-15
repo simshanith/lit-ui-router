@@ -31,19 +31,45 @@ Given spans from a tracer, the Timeline nests the ones that ran during the trans
 
 The Timeline shows one transition and its redirect chain at a time. It has no search or filter across spans and does not compare transitions; a trace viewer does that from the same spans, as in [other trace viewers](../ui-router-otel/README.md#other-trace-viewers).
 
+## Views
+
+The Views tab draws the router's `ui-view`s as nested boxes, a view inside the view its content sits in, each named with the state that fills it. An empty view is a dashed box tagged `Empty`, and a view a state off the active path still fills, as a sticky state does, is dashed and tagged `Inactive`. View configs no `ui-view` took are listed under the boxes. Selecting a view shows its path, renderer type, creating state, filling state, declaration, target and component; a state there opens the Outline with it selected. Its code and styles load on first use of the view. The rules, the data and what other renderers would need are in [the view map](../../docs/visualizer-proposal/views.md).
+
+The view data comes from `@uirouter/core` alone and works for any renderer; finding a view on the page needs the renderer, through an optional `ViewLocator` the panel calls when one is set:
+
+| Member            | Effect                                                                        |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `highlight(view)` | Marks the view's place on the page while the Views point at it; `null` clears |
+| `describe(view)`  | Optional: where the page shows the view, in words, for the details            |
+
+`litViewLocator` from `ui-router-devtools/lit-ui-router` is the `lit-ui-router` one: it matches `<ui-view>` elements by router and path through open shadow roots and outlines the one in focus. It imports neither `lit-ui-router` nor `lit`.
+
+```ts
+import { UIRouter } from '@uirouter/core';
+import { DevtoolsPlugin } from 'ui-router-devtools/plugin';
+import { litViewLocator } from 'ui-router-devtools/lit-ui-router';
+
+declare const router: UIRouter;
+
+router.plugin(DevtoolsPlugin, { viewLocator: litViewLocator });
+```
+
+`viewTree(views)` nests a views snapshot by path, for exporters as well as the panel.
+
 ## Entry points
 
-| Subpath                 | Contents                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `SCHEMA_VERSION` and the event, session and span types |
-| `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                           |
-| `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                      |
-| `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                        |
-| `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                                     |
-| `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                                    |
-| `./session.schema.json` | The session file's JSON Schema                                                                                                        |
+| Subpath                 | Contents                                                                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `viewTree`, `SCHEMA_VERSION`, the event, session and span types, and `ViewLocator` |
+| `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                                                       |
+| `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                                                  |
+| `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                                                    |
+| `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                                                                 |
+| `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                                                                |
+| `./lit-ui-router`       | `litViewLocator(router)`: finds and outlines a `<ui-view>` for the Views                                                                                          |
+| `./session.schema.json` | The session file's JSON Schema                                                                                                                                    |
 
-`lit` and `valibot` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with two exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`), and the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
+`lit` and `valibot` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with three exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`); the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`); and the `views` option, which `record` turns on, reads the registered `ui-view`s through `viewService._pluginapi`, also typed `@internal`, after each sync (`views.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
 
 ```ts
 import { UIRouter } from '@uirouter/core';
@@ -58,9 +84,11 @@ if (element.recorder) reportToPerformance(element.recorder);
 
 ## Session files and redaction
 
-`recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states and current snapshots and the recorded events. The `id` names the recording, not the file: every export of one recorder carries the same `id`, and `(id, seq)` identifies an event across them. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
+`recorder.session()` and the panel's Export button write a session file: an envelope (`format: 'ui-router-session'`, `v`, a session `id`, the `generator`'s name and version, `routerId`, `timeOrigin`, the event clock `t` at export, the count of `dropped` events, `timeResolves` and the `redaction` applied) around the latest config, states, current and views snapshots and the recorded events. The `id` names the recording, not the file: every export of one recorder carries the same `id`, and `(id, seq)` identifies an event across them. The types are `Session` and `RouterEvent` in [`src/schema.ts`](src/schema.ts); [`./session.schema.json`](src/session-schema.ts) describes the file for other tools.
 
 A session file from a panel that was given spans also holds them, in an optional `spans` field: the spans that overlap any of its transitions, with epoch times. An export keeps a span's name, ids, times and status, and scrubs its attributes by the `params` field below: with `'all'` every value stays; otherwise the router's own `uirouter.*` attributes stay, a `uirouter.param.<key>` stays when `params` lists the key, and every other attribute keeps its key with `[redacted]` for its value, since span attributes carry URLs and query strings. A file without spans has no field.
+
+The views snapshot is a `views` event: per `ui-view` its id, name, path, renderer type, creating state and what fills it, and the active view configs no view took. It names states and views only, so a redaction leaves it as it is. A file recorded without views imports as before, and its Views say so.
 
 A recorder's ring buffer drops whole transitions, oldest first, and counts the events it dropped in `dropped`; the panel notes them at the end of the log and in the router card. The panel's Import reads a file through the same schema: it refuses a file that is not a session, and skips and counts events of a type it does not know and spans that do not read.
 
@@ -101,7 +129,7 @@ Open `http://localhost:5391/?demo=1` to play a fixed sequence: a success, a para
 
 The demo fakes what a real app would supply:
 
-- States have no components; the page renders a stub line on success.
+- States have no components; the page renders a stub line on success, and registers no `ui-view`, so the Views have nothing to draw. The sample apps show them.
 - Resolves are `setTimeout` stubs (40 to 200 ms), and with `?spans` their fetch spans are made up too. `galaxy.blackhole` (a rejecting resolve), `mission` (an abstract state) and `admin.**` (a lazy future state) exist only here.
 - `galaxy.stars` declares `dsr` and `sticky` to show their marks; neither plugin is loaded, so the properties do nothing.
 - Inspector subsections for hooks and views are not built.
@@ -118,3 +146,5 @@ Two scripts work against the running demo: `pnpm shots` writes the proposal scre
 - An edge's sides are chosen before it is routed, so one that has to go round a third box can take a bend more than it needs; [map.md](../../docs/visualizer-proposal/map.md#edge-routing) lists what still reads poorly.
 - Maximised, edges and arrowheads keep their dock weight beside the larger type.
 - The transition strip and the log name states in ink; identity colour is on the Map, the Outline, the tree and the inspector.
+- The Views show the latest views snapshot, not a history, and have no fit ladder, zoom or pan: a tree larger than the panel scrolls.
+- `litViewLocator` matches an element by path, since `<ui-view>`'s registration id is not public; of two views with one path it outlines the first.
