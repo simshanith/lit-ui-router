@@ -27,7 +27,9 @@ The source is
 on GitHub, and it runs in the browser on
 [StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src%2Fmain.ts).
 Its [`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html)
-holds the `<div id="root">` host element the app renders into.
+holds the `<div id="root">` host element the app renders into, and declares
+`:root { color-scheme: light dark; }` so the page and the component's
+`light-dark()` colours follow the system theme.
 
 To add the router to an existing Vite project, install it with its peers:
 
@@ -60,12 +62,17 @@ class AppRoot extends LitElement {
     nav a {
       padding: 8px 16px;
       text-decoration: none;
-      color: #333;
+      color: inherit;
+      border-radius: 4px;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      nav a:hover {
+        background: light-dark(#f0f0f0, #2c2c2c);
+      }
     }
     nav a.active {
       font-weight: bold;
-      background: #e0e0e0;
-      border-radius: 4px;
+      background: light-dark(#e0e0e0, #444);
     }
   `;
 
