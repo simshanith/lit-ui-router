@@ -46,6 +46,11 @@ configure({
 // Boxes are measured where they stand, so none is caught moving.
 beforeAll(() => commands.reduceMotion(true));
 
+// Both drawings are lazy chunks; loaded once here, a cold transform never counts against a wait in a spec.
+beforeAll(() =>
+  Promise.all([import('../element/map.ts'), import('../element/viewmap.ts')]),
+);
+
 afterAll(() => commands.reduceMotion(false));
 
 // What the viewer's next panel starts with.
@@ -146,15 +151,20 @@ const settled = async (element: UIRouterDevtools) => {
 };
 
 /** Both trees of the split, once it shows. */
-const split = async (element: UIRouterDevtools) => {
-  const views = await waitFor(() =>
-    getByRole(shadow(element), 'tree', { name: 'Views' }),
-  );
-
-  return {
+const split = (element: UIRouterDevtools) =>
+  waitFor(() => ({
     states: getByRole(shadow(element), 'tree', { name: 'State map' }),
-    views,
-  };
+    views: getByRole(shadow(element), 'tree', { name: 'Views' }),
+  }));
+
+// The Map's room is measured by a ResizeObserver, whose entry waits on the next rendering update after a resize.
+const resize = async (element: UIRouterDevtools, width: number) => {
+  const panel = panelOf(element);
+  const was = panel._mapSize.width;
+
+  await page.viewport(width, 800);
+  await waitFor(() => expect(panel._mapSize.width).not.toBe(was));
+  await element.updateComplete;
 };
 
 const noSplit = async (element: UIRouterDevtools) => {
@@ -234,20 +244,16 @@ describe('the view map beside the Map', () => {
 
     await noSplit(element);
 
-    await page.viewport(1600, 800);
+    await resize(element, 1600);
     await split(element);
 
-    await page.viewport(800, 800);
-    await waitFor(() =>
-      expect(
-        queryByRole(shadow(element), 'tree', { name: 'Views' }),
-      ).toBeNull(),
-    );
+    await resize(element, 800);
+    await noSplit(element);
     expect(
       queryByRole(shadow(element), 'button', { name: 'View map' }),
     ).toBeNull();
 
-    await page.viewport(1600, 800);
+    await resize(element, 1600);
     await split(element);
     getByRole(shadow(element), 'button', { name: 'Tree' }).click();
     await noSplit(element);
@@ -265,23 +271,23 @@ describe('the view map beside the Map', () => {
     const narrowest = panel._map!.narrowest(panel, whole, rooms!.states.height);
     const spare = 2 * (rooms!.states.width - narrowest) - 48;
 
-    const resize = async (width: number) => {
-      await page.viewport(width, 800);
-      await waitFor(() => expect(panel._mapSize.width).toBe(width - 50));
+    const dock = async (width: number) => {
+      await resize(element, width);
+      expect(panel._mapSize.width).toBe(width - 50);
     };
 
     expect(spare).toBeGreaterThan(160);
 
     // Just short of room for both the views go, and just past it they stay away until a tenth of the room is spare.
-    await resize(1600 - spare - 8);
+    await dock(1600 - spare - 8);
     await noSplit(element);
-    await resize(1600 - spare + 8);
+    await dock(1600 - spare + 8);
     await noSplit(element);
-    await resize(1600);
+    await dock(1600);
     await split(element);
 
     // Shown, they stay until there is no room at all.
-    await resize(1600 - spare + 8);
+    await dock(1600 - spare + 8);
     await split(element);
   });
 
