@@ -17,10 +17,11 @@ import {
   waitFor,
   within,
 } from '@testing-library/dom';
-import { memoryLocationPlugin } from '@uirouter/core';
+import { memoryLocationPlugin, type StateDeclaration } from '@uirouter/core';
 import { html, LitElement, render } from 'lit';
 import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
 
+import { stressStates } from '../../demo/stress.ts';
 import { DevtoolsPlugin } from '../plugin.ts';
 import { litViewLocator } from '../lit-ui-router.ts';
 import type { DevtoolsPanel } from '../element/panel.ts';
@@ -108,7 +109,11 @@ const WIDE_STATES: LitStateDeclaration[] = NUMBERS.map((n) => ({
 const SIDEBARS = NUMBERS.slice(0, 4).map((n) => `sidebar-navigation-${n}`);
 
 /** The panel open on the Map over a small mail app, or a wide one, at a viewport this wide. */
-const mailMap = async (width = 1280, wide = false) => {
+const mailMap = async (
+  width = 1280,
+  wide = false,
+  extra: readonly StateDeclaration[] = [],
+) => {
   await page.viewport(width, 800);
 
   const router = new UIRouterLit();
@@ -116,7 +121,7 @@ const mailMap = async (width = 1280, wide = false) => {
   router.plugin(memoryLocationPlugin);
   router.stateService.defaultErrorHandler(() => {});
 
-  for (const state of [...STATES, ...(wide ? WIDE_STATES : [])])
+  for (const state of [...STATES, ...(wide ? WIDE_STATES : []), ...extra])
     router.stateRegistry.register(state);
 
   const host = document.createElement('main');
@@ -576,5 +581,104 @@ describe('the view map beside the Map', () => {
     // Nor for one that holds nothing at all.
     panel.importSession({ ...session, events: [] });
     await noSplit(element);
+  });
+
+  it('disables its toggle with the reason while wanted views are not drawn, and claims nothing pressed', async () => {
+    const { element } = await mailMap(1200, true);
+
+    await noSplit(element);
+    expect(toggle(element).ariaPressed).toBe('false');
+    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).title).toBe(
+      'No room for the view map beside the states',
+    );
+
+    await resize(element, 1600);
+    await split(element);
+    expect(toggle(element).ariaPressed).toBe('true');
+    expect(toggle(element).hasAttribute('disabled')).toBe(false);
+
+    getByRole(shadow(element), 'button', { name: 'Zoom in' }).click();
+    await noSplit(element);
+    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).title).toMatch(/fitted size/);
+
+    getByRole(shadow(element), 'button', { name: /^Fit/ }).click();
+    await split(element);
+
+    // Turned off, it stays enabled, so the views can be asked for again.
+    toggle(element).click();
+    await noSplit(element);
+    expect(toggle(element).ariaPressed).toBe('false');
+    expect(toggle(element).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('says the states pan when that keeps the views away', async () => {
+    const { element } = await mailMap(900, false, stressStates());
+    const panel = panelOf(element);
+
+    // Every compound opened by hand, so no rung can close one to fit.
+    panel._mapOpen = new Map(stressStates().map(({ name }) => [name!, true]));
+    await noSplit(element);
+    expect(panel._nested()?.rung).toBe('pan');
+    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).title).toMatch(/states pan/);
+  });
+
+  const leaves = [
+    ['the toggle', (element: UIRouterDevtools) => toggle(element).click()],
+    [
+      'a zoom',
+      (element: UIRouterDevtools) =>
+        getByRole(shadow(element), 'button', { name: 'Zoom in' }).click(),
+    ],
+    [
+      'the node-link tree',
+      (element: UIRouterDevtools) =>
+        getByRole(shadow(element), 'button', { name: 'Tree' }).click(),
+    ],
+    [
+      'a resize below the threshold',
+      (element: UIRouterDevtools) => resize(element, 1200),
+    ],
+    [
+      'the Outline',
+      (element: UIRouterDevtools) =>
+        getByRole(shadow(element), 'button', { name: 'outline' }).click(),
+    ],
+  ] as const;
+
+  it.each(leaves)(
+    'drops a view selected beside the Map when %s takes the split away',
+    async (_, leave) => {
+      const { element } = await mailMap(1600, true);
+      const panel = panelOf(element);
+      const { views } = await split(element);
+
+      head(views, /^list view/).click();
+      await waitFor(() =>
+        expect(overlay()?.dataset.uiRouterDevtoolsView).toBe('$default.list'),
+      );
+
+      await leave(element);
+      await element.updateComplete;
+      await waitFor(() => expect(panel._inspect).toBe('none'));
+      expect(panel._viewSelected).toBeNull();
+      expect(overlay()).toBeNull();
+    },
+  );
+
+  it('keeps a view selected beside the Map for the Views tab’s own details', async () => {
+    const { element } = await mailMap();
+    const panel = panelOf(element);
+    const { views } = await split(element);
+
+    head(views, /^list view/).click();
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: 'views' }).click();
+    await element.updateComplete;
+
+    expect(panel._inspect).toBe('none');
+    expect(getByRole(shadow(element), 'region', { name: 'list' })).toBeTruthy();
   });
 });

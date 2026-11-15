@@ -78,19 +78,23 @@ heading and divided by a rule. The Views tab stays as it is.
 
 - **When.** Only where both drawings fit at their natural size: the states at
   the rung of the [fit ladder](map.md#when-it-does-not-fit) the whole room
-  gives them, and the views as packed above. In the dock the room must also
-  hold the inspector popover's 320px column and 48px between the two drawings.
-  Each side is measured at the narrowest it packs to on the 4px grid, at the
-  room's height less the headings, so the dock needs the sum of the two, the
-  column and the gap. A split that a resize took away comes back only with a
+  gives them, and the views as packed above. Each side is measured at the
+  narrowest it packs to on the 4px grid, at the room's height less the
+  headings, and the room must hold the sum of the two and 48px more that the
+  two sides share; in the dock it must also hold the inspector popover's
+  320px column. A split that a resize took away comes back only with a
   tenth of the room to spare, as a milder rung of the ladder does. It is not
   offered below 880px of viewport, in the node-link tree, while the Map is
   zoomed, when the states pan, or for a session that holds no views.
 - **Toggle.** `View map`, beside the Map's layout buttons, hides or shows the
   views. It is on unless the viewer turns it off, and the choice is kept in
-  `localStorage` as the layout choice is.
-- **Rooms.** What the two drawings leave over is split evenly, half to each
-  side, so each drawing stands in the middle of its own room: the states'
+  `localStorage` as the layout choice is. It is pressed only while the views
+  are drawn. Where they are wanted and not drawn it is disabled, as `Nested`
+  is below 560px, and its title says why: no room, a zoomed Map or states
+  that pan. Turned off, it stays enabled so the views can be asked for again.
+- **Rooms.** The 48px and whatever else the two drawings leave over are split
+  evenly, half to each side, and each drawing stands in the middle of its own
+  side, so the two can stand nearer each other than 48px: the states'
   placed by `fitView` with no reserve, the views' by the same rule as the
   Views tab with the popover's column as the reserve at the end. Nothing moves
   on a selection.
@@ -99,7 +103,10 @@ heading and divided by a rule. The Views tab stays as it is.
   maximised panel, with the details listed above; a state there selects that
   state on the Map. A view, a state and a transition are one selection: each
   takes the place of the others, and every way of clearing a selection,
-  Escape included, clears a view.
+  Escape included, clears a view. A view is inspected only while the split is
+  drawn: when the split goes, by the toggle, a zoom, the node-link tree, a
+  resize or another tab, the inspection and the page's outline go with it.
+  The Views tab keeps the view selected for its own details.
 - **Marks.** A selected state marks the views it fills, and a selected view
   marks the state that fills it and the state whose content created it, on
   the box that draws it or the collapsed compound that holds it. A mark is the

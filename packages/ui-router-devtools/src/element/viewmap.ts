@@ -543,7 +543,7 @@ export interface Split {
   views: Size & { reserve: number };
 }
 
-/** The least room between the two drawings, half of it either side of the rule between them. */
+/** Room the two sides share beyond their drawings, half to each; a drawing centred in its side may stand nearer the rule. */
 const GAP = 48;
 
 /** The share of the room a split that a resize took away needs to spare before it comes back, as the fit ladder does. */

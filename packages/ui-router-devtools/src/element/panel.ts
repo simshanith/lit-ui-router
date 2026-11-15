@@ -549,6 +549,7 @@ export class DevtoolsPanel extends LitElement {
     }
 
     this.#forgetGoneViews();
+    this.#dropStrandedView();
     this.#loadViews(changed);
     this.#followMap(changed);
     this.#syncTicker();
@@ -1289,6 +1290,17 @@ export class DevtoolsPanel extends LitElement {
     if (this.#viewOf(this.#pointedView) === null) this.#pointedView = null;
   }
 
+  // A view is inspected only beside the Map; once the split goes, so do the inspection and the page's outline.
+  #dropStrandedView() {
+    if (this._inspect !== 'view') return;
+
+    if (this._view === 'map' && this._mapLayout()?.split) return;
+
+    // The Views tab keeps its selection for its own details.
+    if (this._view !== 'views') this._viewSelected = null;
+    this._inspect = 'none';
+  }
+
   // The states tied to the view selected beside the Map, and how: the one whose content created it, and the one that fills it.
   _linkedStates(): ReadonlyMap<string, string> {
     const view = this._inspect === 'view' && this.#viewOf(this._viewSelected);
@@ -1985,22 +1997,36 @@ export class DevtoolsPanel extends LitElement {
                 </button>
               </div>
               ${layout ? this.#renderViewTools(layout) : nothing}
-              ${layout && this._model.views && matchMedia(WIDE).matches ? this.#renderViewsToggle() : nothing}`
+              ${layout && this._model.views && matchMedia(WIDE).matches ? this.#renderViewsToggle(layout) : nothing}`
           : nothing
       }`;
   }
 
-  // Draws the view map beside the nested Map where both fit; the viewer's choice is kept.
-  #renderViewsToggle() {
+  // Draws the view map beside the nested Map where both fit; the viewer's choice is kept, and pressed means drawn.
+  #renderViewsToggle(layout: NestedLayout) {
+    const drawn = Boolean(this._mapLayout()?.split);
+    const away = this._mapViews && !drawn ? this.#viewsAway(layout) : '';
+
     return html`<div class="switch" role="group" aria-label="Beside the Map">
       <button
-        aria-pressed=${this._mapViews}
-        title="The view map beside the states, where both fit"
+        aria-pressed=${drawn}
+        ?disabled=${Boolean(away)}
+        title=${away || 'The view map beside the states, where both fit'}
         @click=${() => this.#chooseViews(!this._mapViews)}
       >
         View map
       </button>
     </div>`;
+  }
+
+  // Why the views the viewer asked for are not drawn beside the Map.
+  #viewsAway(layout: NestedLayout): string {
+    if (this._mapZoom !== null)
+      return 'The view map is drawn at the fitted size; Fit brings it back';
+
+    return layout.rung === 'pan'
+      ? 'The view map is not drawn while the states pan'
+      : 'No room for the view map beside the states';
   }
 
   // The view of the Map: its type step, and the way back to the fitted view.
