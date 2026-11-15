@@ -290,6 +290,28 @@ it('draws the default-child arrow to a lazy child', async () => {
   );
 });
 
+it('goes to a lazy state from the inspector, loading it', async () => {
+  const router = makeRouter();
+  router.stateRegistry.register({
+    name: 'reports.**',
+    url: '/reports',
+    lazyLoad: () =>
+      Promise.resolve({ states: [{ name: 'reports', url: '/reports' }] }),
+  });
+  const element = router.plugin(DevtoolsPlugin).element;
+  await page.viewport(1280, 800);
+  await router.stateService.go('home');
+  await element.updateComplete;
+  getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+  await element.updateComplete;
+
+  getByRole(shadow(element), 'treeitem', { name: /reports/ }).click();
+  await element.updateComplete;
+  getByRole(shadow(element), 'button', { name: 'Go' }).click();
+
+  await waitFor(() => expect(router.globals.current.name).toBe('reports'));
+});
+
 describe('session files', () => {
   const open = async () => {
     await page.viewport(1280, 800);
