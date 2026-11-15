@@ -667,6 +667,9 @@ catalogs:
     ui-router-navigation-location-plugin:
       specifier: workspace:*
       version: workspace:*
+    ui-router-otel:
+      specifier: workspace:*
+      version: workspace:*
     ui-router-registry:
       specifier: workspace:*
       version: workspace:*
@@ -1091,6 +1094,12 @@ importers:
       '@lit/context':
         specifier: 'catalog:'
         version: 1.1.6
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.10.0
+      '@opentelemetry/sdk-trace':
+        specifier: 'catalog:'
+        version: 3.1.1(@opentelemetry/api@1.10.0)
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
@@ -1124,6 +1133,9 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: catalog:workspace
         version: link:../../packages/navigation-location-plugin
+      ui-router-otel:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-otel
     devDependencies:
       '@tools/lit-test-env':
         specifier: catalog:workspace

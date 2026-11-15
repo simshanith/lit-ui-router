@@ -1,5 +1,6 @@
 import { pushToArr, guid, setProp } from './util.js';
 import { AppConfig } from '../global/appModules.js';
+import { restSpan } from './restSpan.js';
 
 /**
  * This class simulates a RESTful resource, but the API calls fetch data from
@@ -68,14 +69,18 @@ export class SessionStorage {
     return Promise.resolve(data);
   };
 
-  /** Helper which simulates a delay, then provides the `thenFn` with the data */
-  all = (thenFn) => {
-    let promise = new Promise((resolve) => {
-      setTimeout(() => resolve(this._data), AppConfig.restDelay);
+  /** Simulates a request with `verb` in a span: a delay, then provides the `thenFn` with the data */
+  _request = (verb, thenFn) =>
+    restSpan(verb, this.sessionStorageKey, () => {
+      let promise = new Promise((resolve) => {
+        setTimeout(() => resolve(this._data), AppConfig.restDelay);
+      });
+
+      return promise.then(thenFn);
     });
 
-    return promise.then(thenFn);
-  };
+  /** Helper which simulates a delay, then provides the `thenFn` with the data */
+  all = (thenFn) => this._request('GET', thenFn);
 
   /** Given a sample item, returns a promise for all the data for items which have the same properties as the sample */
   search = (exampleItem) => {
@@ -107,14 +112,14 @@ export class SessionStorage {
   post = (item) => {
     item[this._idProp] = guid();
 
-    return this.all((items) => pushToArr(items, item)).then(
+    return this._request('POST', (items) => pushToArr(items, item)).then(
       this._commit.bind(this),
     );
   };
 
   /** Returns a promise to save (PUT) an existing item. */
   put = (item, eqFn = this._eqFn) => {
-    return this.all((items) => {
+    return this._request('PUT', (items) => {
       let idx = items.findIndex(eqFn.bind(null, item));
 
       if (idx === -1) throw Error(`${item} not found in ${this}`);
@@ -126,7 +131,7 @@ export class SessionStorage {
 
   /** Returns a promise to remove (DELETE) an item. */
   remove = (item, eqFn = this._eqFn) => {
-    return this.all((items) => {
+    return this._request('DELETE', (items) => {
       let idx = items.findIndex(eqFn.bind(null, item));
 
       if (idx === -1) throw Error(`${item} not found in ${this}`);
