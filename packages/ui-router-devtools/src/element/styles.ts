@@ -662,6 +662,26 @@ export const styles: CSSResult = css`
     grid-column: 1 / -1;
   }
 
+  .inspector-pane {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .inspector-pane > .scroll {
+    grid-column: 1 / -1;
+  }
+
+  .inspector-pane > .section:has(+ .dismiss) {
+    padding-inline-end: 0;
+  }
+
+  /* The close button sits on the heading's band, so the band's hairline runs under it. */
+  .icon.dismiss {
+    block-size: var(--uird-band);
+    margin-block-end: 4px;
+    margin-inline-end: calc(var(--uird-margin) - 8px);
+    border-block-end: 1px solid var(--uird-rule);
+  }
+
   .map-scroll {
     padding-block-start: 12px;
     padding-inline: var(--uird-margin);

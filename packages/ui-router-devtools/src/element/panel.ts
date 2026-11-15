@@ -103,6 +103,9 @@ const ASIDE = 320;
 
 const MARGIN = 12;
 
+/** How far a press travels before it is a drag; `mapview.ts` pans past as much. */
+const DRAG = 4;
+
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 
 const FLIP = 'uird-flip';
@@ -327,6 +330,8 @@ export class DevtoolsPanel extends LitElement {
   #ticker: ReturnType<typeof setInterval> | undefined;
   // The scrubber and newest tick last scrolled to, so a render that adds no transition leaves the strip be.
   #newestTick: { ticks: Element; id: number | undefined } | undefined;
+  // Where the last press on the Map began, so a click that ends a drag is told from one that does not.
+  #press: { x: number; y: number } | undefined;
 
   constructor() {
     super();
@@ -951,6 +956,80 @@ export class DevtoolsPanel extends LitElement {
     this._inspect = 'none';
   }
 
+  // Clears the selection; focus inside the inspector, which then hides, goes back to where the selection was made.
+  _dismiss(): void {
+    const from = this.#selectionSources();
+
+    const held = this.shadowRoot?.activeElement?.closest(
+      '.inspector-pane, .router-pane',
+    );
+
+    this._clearSelection();
+
+    if (!held) return;
+
+    void this.updateComplete.then(() =>
+      from
+        .find((element) => element?.isConnected && element.checkVisibility())
+        ?.focus(),
+    );
+  }
+
+  // Where the current selection was made, most specific first, then the Map or Outline's tab stop.
+  #selectionSources(): (HTMLElement | null)[] {
+    const find = (selector: string) =>
+      this.renderRoot.querySelector<HTMLElement>(selector);
+
+    const tx = this._inspect === 'tx';
+
+    return [
+      this._inspect === 'router' ? find('.brand') : null,
+      tx ? find('.ticks') : null,
+      tx ? find('.log .tx.selected > .line') : null,
+      this._inspect === 'state' ? find('.map-node.selected') : null,
+      find('[role="treeitem"][tabindex="0"]'),
+      find('.map-node'),
+      // The narrowest panel shows only its tabs.
+      find('.tabs [aria-selected="true"]'),
+    ];
+  }
+
+  // Escape anywhere in the panel clears a selection, once whatever had focus has passed it up.
+  #onKey(event: KeyboardEvent) {
+    // SAFETY: the listener is on the panel, whose event targets are its own elements
+    const target = event.target as Element;
+
+    if (
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      this._inspect === 'none' ||
+      target.closest('input, textarea, select, [contenteditable]')
+    )
+      return;
+
+    event.preventDefault();
+    this._dismiss();
+  }
+
+  // A click on the Map's empty room clears the selection; one on anything drawn, or that ends a drag, does not.
+  #onMapClick(event: MouseEvent) {
+    const press = this.#press;
+    // SAFETY: the listener is on the Map viewport, whose event targets are its own elements
+    const target = event.target as Element;
+
+    this.#press = undefined;
+
+    if (
+      this._inspect === 'none' ||
+      !target.matches('.map-scroll, .nested, .map') ||
+      (press &&
+        Math.hypot(event.clientX - press.x, event.clientY - press.y) >= DRAG)
+    )
+      return;
+
+    this._dismiss();
+  }
+
   // The state the inspector popover sits beside: the selected state, or a selected transition's target.
   get _anchorState(): string | null {
     if (this._inspect === 'state') return this._selectedState;
@@ -1320,6 +1399,7 @@ export class DevtoolsPanel extends LitElement {
         ?data-imported=${imported}
         @dragover=${(e: DragEvent) => e.preventDefault()}
         @drop=${this.#onDrop}
+        @keydown=${this.#onKey}
       >
         ${this.#renderTitle()}
         <div class="body">
@@ -1344,7 +1424,18 @@ export class DevtoolsPanel extends LitElement {
             <div class="scroll">${renderLog(this)}</div>
           </section>
           <section class="pane inspector-pane" aria-labelledby="h-insp">
-            ${this.#sectionHead('3', 'Inspector', 'h-insp', inspected ? seq(inspected.id) || 'Invalid target' : this.#inspectorAside())}
+            ${this.#sectionHead('3', 'Inspector', 'h-insp', inspected ? seq(inspected.id) || 'Invalid target' : this.#inspectorAside())}${
+              this._inspect === 'none'
+                ? nothing
+                : html`<button
+                    class="icon dismiss"
+                    aria-label="Close inspector"
+                    title="Close (Esc)"
+                    @click=${() => this._dismiss()}
+                  >
+                    ${closeGlyph}
+                  </button>`
+            }
             <div
               class="scroll"
               tabindex="0"
@@ -1399,14 +1490,20 @@ export class DevtoolsPanel extends LitElement {
     const nested = this._nested();
     const map = this._map;
 
+    /* oxlint-disable lit-a11y/click-events-have-key-events -- Escape anywhere in the panel clears the selection too */
     return html`<div
       class="scroll map-scroll"
       ?data-pan=${nested && this._pans(nested)}
-      @pointerdown=${(event: PointerEvent) => map?.startPan(this, event)}
+      @pointerdown=${(event: PointerEvent) => {
+        this.#press = { x: event.clientX, y: event.clientY };
+        map?.startPan(this, event);
+      }}
+      @click=${this.#onMapClick}
       @wheel=${this.#onWheel}
     >
       ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : this.#mapNotice()}
     </div>`;
+    /* oxlint-enable lit-a11y/click-events-have-key-events */
   }
 
   #mapNotice() {
