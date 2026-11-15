@@ -103,6 +103,8 @@ export class AppRoot extends LitElement {
     }
     nav a.active {
       background: light-dark(#dcdcdc, #444);
+      text-decoration: underline 2px;
+      text-underline-offset: 4px;
     }
     nav a.external {
       margin-inline-start: auto;

@@ -25,6 +25,8 @@ export class AppRoot extends LitElement {
     }
     nav a.active {
       background: light-dark(#e0e0e0, #444);
+      text-decoration: underline 2px;
+      text-underline-offset: 4px;
     }
   `;
 
