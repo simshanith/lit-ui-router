@@ -46,7 +46,7 @@ const panelOf = (element: UIRouterDevtools) => element as DevtoolsPanel;
 const overlay = () =>
   document.body.querySelector<HTMLElement>('[data-ui-router-devtools-view]');
 
-const mailApp = async ({ locate = true } = {}) => {
+const mailApp = async ({ locate = true, aside = false } = {}) => {
   await page.viewport(1280, 800);
 
   const router = new UIRouterLit();
@@ -75,7 +75,12 @@ const mailApp = async ({ locate = true } = {}) => {
 
   const host = document.createElement('main');
   document.body.append(host);
-  render(html`<ui-view .uiRouter=${router}></ui-view>`, host);
+  render(
+    html`<ui-view .uiRouter=${router}></ui-view>${
+        aside ? html`<ui-view name="aside" .uiRouter=${router}></ui-view>` : ''
+      }`,
+    host,
+  );
 
   const { element } = router.plugin(DevtoolsPlugin, {
     ...(locate && { viewLocator: litViewLocator }),
@@ -235,6 +240,35 @@ describe('the Views', () => {
 
     root.dispatchEvent(new PointerEvent('pointerenter'));
     getByRole(shadow(element), 'button', { name: 'Collapse devtools' }).click();
+    expect(overlay()).toBeNull();
+  });
+
+  it('draws each top-level view, and gives an empty view’s details', async () => {
+    const { element, tree } = await mailApp({ aside: true });
+
+    const aside = await waitFor(() =>
+      getByRole(tree, 'treeitem', { name: 'aside view, empty' }),
+    );
+
+    expect(aside.getAttribute('aria-level')).toBe('1');
+    expect(
+      getByRole(tree, 'treeitem', { name: /^\$default view/ }).getAttribute(
+        'aria-level',
+      ),
+    ).toBe('1');
+
+    aside.click();
+
+    const details = await waitFor(() =>
+      getByRole(shadow(element), 'region', { name: 'aside' }),
+    );
+
+    expect(within(details).getByText('nothing; empty')).toBeTruthy();
+    expect(within(details).queryByText('Declared')).toBeNull();
+    // An empty `<ui-view>` has no box, so the page has nothing to outline.
+    expect(
+      within(details).getByText('<ui-view name="aside">, not displayed'),
+    ).toBeTruthy();
     expect(overlay()).toBeNull();
   });
 

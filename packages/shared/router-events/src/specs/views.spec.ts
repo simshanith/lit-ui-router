@@ -257,21 +257,29 @@ describe('views', () => {
     router.dispose();
   });
 
-  it('leaves out a component with no name', async () => {
+  it('leaves out a component with no name, and one not declared', async () => {
     const router = makeRouter([
       {
         name: 'anon',
-        views: views({ $default: { component: [() => null][0] } }),
+        views: views({
+          $default: { component: [() => null][0] },
+          side: {},
+        }),
       },
     ]);
 
     const { last } = recording(router);
     mount(router, '$default');
+    mount(router, 'side');
 
     await router.stateService.go('anon');
     await tick();
 
-    expect(last()?.views[0]?.fill).not.toHaveProperty('component');
+    expect(last()?.views.map((view) => view.fill)).toEqual([
+      expect.not.objectContaining({ component: expect.anything() }),
+      expect.not.objectContaining({ component: expect.anything() }),
+    ]);
+    expect(last()?.views[1]?.fill).toMatchObject({ view: 'side' });
     router.dispose();
   });
 });
