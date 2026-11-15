@@ -312,6 +312,96 @@ it('goes to a lazy state from the inspector, loading it', async () => {
   await waitFor(() => expect(router.globals.current.name).toBe('reports'));
 });
 
+// A browser fires both clicks of a double-click, then the dblclick; the panel renders between them.
+const doubleClick = async (
+  element: UIRouterDevtools,
+  target: () => HTMLElement,
+  afterSecond: () => void = () => {},
+) => {
+  for (const [type, detail] of [
+    ['click', 1],
+    ['click', 2],
+    ['dblclick', 2],
+  ] as const) {
+    target().dispatchEvent(
+      new MouseEvent(type, { bubbles: true, composed: true, detail }),
+    );
+    await element.updateComplete;
+
+    if (type === 'click' && detail === 2) afterSecond();
+  }
+};
+
+describe('a double-click in the Outline', () => {
+  const openOutline = async () => {
+    await page.viewport(1280, 800);
+    const router = makeRouter();
+    router.stateRegistry.register({ name: 'shell', abstract: true });
+    router.stateRegistry.register({ name: 'item', url: '/item/:id' });
+    router.stateRegistry.register({ name: 'a', url: '/a' });
+    router.stateRegistry.register({ name: 'a.b', url: '/b' });
+    const { element } = router.plugin(DevtoolsPlugin);
+    await router.stateService.go('home');
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+    await element.updateComplete;
+
+    const row = (name: RegExp) => () =>
+      getByRole(shadow(element), 'treeitem', { name });
+
+    return { router, element, panel: panelOf(element), row };
+  };
+
+  it('goes to the state and leaves it selected, whether or not it was selected', async () => {
+    const { router, element, panel, row } = await openOutline();
+
+    await doubleClick(element, row(/\bb$/), () =>
+      expect(panel._selectedState).toBe('a.b'),
+    );
+    await waitFor(() => expect(router.globals.current.name).toBe('a.b'));
+    expect(row(/\bb$/)().getAttribute('aria-selected')).toBe('true');
+
+    await doubleClick(element, row(/\bhome$/), () =>
+      expect(panel._selectedState).toBe('home'),
+    );
+    await waitFor(() => expect(router.globals.current.name).toBe('home'));
+    expect(panel._selectedState).toBe('home');
+    expect(panel._inspect).toBe('state');
+  });
+
+  it('selects an abstract state or one with a required param without going', async () => {
+    const { router, element, panel, row } = await openOutline();
+    const txs = panel._model.txs.length;
+
+    for (const [name, label] of [
+      ['shell', /\bshell$/],
+      ['item', /\bitem$/],
+    ] as const) {
+      await doubleClick(element, row(label));
+      expect(panel._selectedState).toBe(name);
+    }
+
+    expect(queryByRole(shadow(element), 'button', { name: 'Go' })).toBeNull();
+    expect(router.globals.current.name).toBe('home');
+    // An attempt would log a failed target.
+    expect(panel._model.txs).toHaveLength(txs);
+  });
+
+  it("leaves a row's expanded state as it was", async () => {
+    const { router, element, panel, row } = await openOutline();
+
+    await doubleClick(element, row(/\ba$/));
+    await waitFor(() => expect(router.globals.current.name).toBe('a'));
+    expect(row(/\ba$/)().getAttribute('aria-expanded')).toBe('true');
+
+    panel._collapsed = new Set(['a']);
+    await element.updateComplete;
+    await doubleClick(element, row(/\ba$/));
+    expect(row(/\ba$/)().getAttribute('aria-expanded')).toBe('false');
+    expect(panel._selectedState).toBe('a');
+  });
+});
+
 describe('session files', () => {
   const open = async () => {
     await page.viewport(1280, 800);
@@ -1007,6 +1097,45 @@ describe('the nested Map', () => {
     await waitFor(() =>
       expect(getByRole(map, 'treeitem', { name: 'edit' })).toBeTruthy(),
     );
+  });
+
+  it('goes to a box on a double-click and leaves it selected, but not from its fold button', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const contacts = () => getByRole(map, 'treeitem', { name: 'contacts' });
+
+    await doubleClick(element, contacts, () =>
+      expect(contacts().getAttribute('aria-selected')).toBe('true'),
+    );
+    await waitFor(() =>
+      expect(element.router!.globals.current.name).toBe('app.contacts'),
+    );
+    expect(contacts().getAttribute('aria-selected')).toBe('true');
+
+    await doubleClick(element, () =>
+      getByRole(map, 'button', { name: /(Collapse|Expand) mymessages/ }),
+    );
+    expect(element.router!.globals.current.name).toBe('app.contacts');
+    expect(panelOf(element)._selectedState).toBe('app.contacts');
+  });
+
+  it('goes to a node of the node-link tree on a double-click and leaves it selected', async () => {
+    const element = await openMap(800, 800, '--uird-sheet-width: 480px');
+
+    const group = await waitFor(() =>
+      getByRole(shadow(element), 'group', { name: 'State map' }),
+    );
+
+    const contacts = () =>
+      getByRole(group, 'button', { name: /^app\.contacts,/ });
+
+    await doubleClick(element, contacts, () =>
+      expect(contacts().getAttribute('aria-pressed')).toBe('true'),
+    );
+    await waitFor(() =>
+      expect(element.router!.globals.current.name).toBe('app.contacts'),
+    );
+    expect(contacts().getAttribute('aria-pressed')).toBe('true');
   });
 
   it('colours a state by its depth on the Map and in the Outline, and by status while a transition is in focus', async () => {

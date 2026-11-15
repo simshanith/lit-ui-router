@@ -1037,10 +1037,18 @@ export const renderNested = (
     onTreeKey(host, event, rows, focus, nestedKeys(host, layout));
   };
 
-  const select = (event: Event) => {
+  const select = (event: MouseEvent) => {
     const name = boxName(event);
 
-    if (name) host._selectState(name);
+    if (name) host._selectState(name, event.detail > 1);
+  };
+
+  const go = (event: MouseEvent) => {
+    const name = boxName(event);
+
+    // SAFETY: the listener sits on the tree, whose event targets are its own elements
+    if (name && !(event.target as Element).closest('.fold'))
+      host._goState(name);
   };
 
   const focusIn = (event: Event) => {
@@ -1068,6 +1076,7 @@ export const renderNested = (
       style="inline-size:${placed.width}px;block-size:${placed.height}px;translate:${at.x - from}px ${at.y}px"
       @keydown=${onKey}
       @click=${select}
+      @dblclick=${go}
       @focusin=${focusIn}
     >
       ${top.length ? renderBox(view, top[0]) : renderBoxes(view, placed)}

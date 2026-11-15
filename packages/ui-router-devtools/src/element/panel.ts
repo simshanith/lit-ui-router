@@ -12,6 +12,7 @@ import { record, type Recorder } from '../recorder.ts';
 import {
   ancestorsOf,
   apply,
+  bareName,
   durationOf,
   emptyModel,
   fold,
@@ -889,10 +890,36 @@ export class DevtoolsPanel extends LitElement {
     this._inspect = id === null ? 'none' : 'tx';
   }
 
-  _selectState(name: string): void {
-    this._selectedState = this._selectedState === name ? null : name;
+  // A click toggles; the second click of a double-click keeps the state selected.
+  _selectState(name: string, keep = false): void {
+    this._selectedState = keep || this._selectedState !== name ? name : null;
     this._focusState = name;
     this._inspect = this._selectedState ? 'state' : 'none';
+  }
+
+  // The Go button and a double-click share this rule.
+  _canGo(state: StateInfo): boolean {
+    return (
+      !this._imported &&
+      !state.abstract &&
+      // A lazy placeholder's params are its own, not those of the state it loads.
+      (state.future || state.params.every((p) => p.optional)) &&
+      !!this.router
+    );
+  }
+
+  _go(state: StateInfo): void {
+    if (this._canGo(state))
+      void this.router?.stateService.go(bareName(state.name)).catch(() => {});
+  }
+
+  // A double-click selects the state and goes to it when it can be gone to.
+  _goState(name: string): void {
+    const state = this._model.states.find((s) => s.name === name);
+
+    this._selectState(name, true);
+
+    if (state) this._go(state);
   }
 
   // Selects a state named in the inspector and moves focus to its row or box.
