@@ -496,6 +496,33 @@ const SPARE = 0.9;
 
 const NATURAL = RUNGS.indexOf('expanded');
 
+/** The narrowest width on the 4px grid, up to about `max`, that `fitsAt` accepts; `Infinity` when `max` is refused. */
+export const narrowestWidth = (
+  fitsAt: (width: number) => boolean,
+  max: number,
+): number => {
+  let low = 0;
+  let high = Math.ceil(max / 4);
+
+  if (!fitsAt(high * 4)) return Infinity;
+
+  // `high` always fits and `low` never does.
+  while (high - low > 1) {
+    const mid = Math.floor((low + high) / 2);
+
+    if (fitsAt(mid * 4)) high = mid;
+    else low = mid;
+  }
+
+  return high * 4;
+};
+
+/** The room a rung is packed for and must fit: an enlarged rung keeps a tenth of each axis as margin. */
+export const rungRoom = (rung: Rung, viewport: Size): Size =>
+  RUNGS.indexOf(rung) < NATURAL
+    ? { width: viewport.width * SPARE, height: viewport.height * SPARE }
+    : viewport;
+
 /**
  * The first rung whose packed size fits the viewport, or `pan` when none does. A rung milder than the previous one
  * must fit with a tenth of the inline size to spare, so a resize does not flicker between layouts.
@@ -509,7 +536,6 @@ export const chooseRung = (
 ): Rung => {
   const held = previous ? RUNGS.indexOf(previous) : 0;
   const spare = { ...viewport, width: viewport.width * SPARE };
-  const framed = { ...spare, height: viewport.height * SPARE };
 
   for (const [index, rung] of RUNGS.entries()) {
     if (rung === 'pan') break;
@@ -517,7 +543,8 @@ export const chooseRung = (
     if (index < NATURAL && !enlarge) continue;
 
     // A milder rung is packed for the narrower room, since a packing follows the room it is given.
-    const room = index < NATURAL ? framed : index < held ? spare : viewport;
+    const room =
+      index < NATURAL || index >= held ? rungRoom(rung, viewport) : spare;
 
     if (fits(sizeAt(rung, room), room)) return rung;
   }

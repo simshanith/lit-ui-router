@@ -8,8 +8,10 @@ import {
   leastCover,
   METRICS,
   mostSlack,
+  narrowestWidth,
   pack,
   ROOMY_METRICS,
+  rungRoom,
   splitRows,
   type Box,
   type Placed,
@@ -264,6 +266,23 @@ describe('pack', () => {
     expect(placed.width).toBeLessThanOrEqual(DOCK.width);
     expect(placed.height).toBeLessThanOrEqual(DOCK.height);
     expect(placed.rows.flat().some((item) => item.box === null)).toBe(true);
+  });
+});
+
+describe('narrowestWidth', () => {
+  it('finds the narrowest grid step that fits, and says when the widest does not', () => {
+    expect(narrowestWidth((width) => width >= 301, 1000)).toBe(304);
+    expect(narrowestWidth((width) => width >= 4, 1000)).toBe(4);
+    expect(narrowestWidth(() => false, 1000)).toBe(Infinity);
+  });
+});
+
+describe('rungRoom', () => {
+  it('keeps a tenth of each axis as margin on an enlarged rung only', () => {
+    const room = { width: 1000, height: 300 };
+
+    expect(rungRoom('large', room)).toEqual({ width: 900, height: 270 });
+    expect(rungRoom('expanded', room)).toBe(room);
   });
 });
 

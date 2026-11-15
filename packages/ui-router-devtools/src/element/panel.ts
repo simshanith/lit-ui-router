@@ -54,7 +54,8 @@ import {
 import { styles } from './styles.ts';
 import { renderOutline } from './tree.ts';
 import type { NestedLayout } from './nested.ts';
-import type { Metrics, Rung, Size } from './pack.ts';
+import type { Metrics, Size } from './pack.ts';
+import type { Split } from './viewmap.ts';
 import type { Rect } from './route.ts';
 import { placeBeside } from './popover.ts';
 import type { Room, View } from './viewport.ts';
@@ -74,7 +75,7 @@ export interface Row {
   posinset: number;
 }
 
-type Inspect = 'none' | 'router' | 'state' | 'tx';
+type Inspect = 'none' | 'router' | 'state' | 'tx' | 'view';
 
 type MapLayout = 'nested' | 'tree';
 
@@ -160,6 +161,27 @@ const storeLayout = (layout: MapLayout): void => {
   }
 };
 
+const VIEWS_KEY = 'ui-router-devtools:map-views';
+
+const storedViews = (): boolean => {
+  try {
+    return localStorage.getItem(VIEWS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
+
+const storeViews = (shown: boolean): void => {
+  try {
+    localStorage.setItem(VIEWS_KEY, shown ? 'on' : 'off');
+  } catch {
+    // the choice still holds for this page
+  }
+};
+
+/** The dock's width, past which the Map owns the panel and its inspector is a popover. */
+const WIDE = '(width > 880px)';
+
 const rectOf = (element: Element, origin: DOMRect): Rect => {
   const rect = element.getBoundingClientRect();
 
@@ -171,8 +193,8 @@ const rectOf = (element: Element, origin: DOMRect): Rect => {
   };
 };
 
-// The Map's root and every element that stands for a state, parents first.
-const MOVERS = ':is(.nested, .map), [data-name]';
+// The Map's root and every element that stands for a state, parents first; the views beside it stay put.
+const MOVERS = ':is(.nested:not(.vm-boxes), .map), [data-name]';
 
 const moverKey = (element: HTMLElement): string => element.dataset.name ?? '';
 
@@ -276,6 +298,7 @@ export class DevtoolsPanel extends LitElement {
     _tab: { state: true },
     _view: { state: true },
     _layoutPref: { state: true },
+    _mapViews: { state: true },
     _max: { state: true },
     _mapSize: { state: true },
     _mapOpen: { state: true },
@@ -316,6 +339,8 @@ export class DevtoolsPanel extends LitElement {
   declare _tab: 'tree' | 'log';
   declare _view: StateView;
   declare _layoutPref: MapLayout;
+  // The viewer's choice to draw the view map beside the nested Map where both fit.
+  declare _mapViews: boolean;
   declare _max: boolean;
   declare _mapSize: Size;
   declare _mapOpen: ReadonlyMap<string, boolean>;
@@ -376,8 +401,6 @@ export class DevtoolsPanel extends LitElement {
   readonly #adopted = new Set<CSSResult>();
   // Spans from a tracer, by span id, oldest first.
   #spans = new Map<string, SpanRecord>();
-  // The fit ladder's last rung, for its hysteresis.
-  _rung: Rung | undefined;
   // The Map's layouts and edge router, loaded on first use of the Map tab.
   _map: MapModule | undefined;
   #mapLoading = false;
@@ -415,6 +438,7 @@ export class DevtoolsPanel extends LitElement {
     this._tab = 'tree';
     this._view = 'outline';
     this._layoutPref = storedLayout();
+    this._mapViews = storedViews();
     this._max = false;
     this._mapSize = { width: 0, height: 0 };
     this._mapFailed = false;
@@ -553,18 +577,25 @@ export class DevtoolsPanel extends LitElement {
     const retry = changed.has('_view');
 
     const due = (
-      view: StateView,
+      shown: boolean,
       loaded: boolean,
       loading: boolean,
       failed: boolean,
-    ) => this._view === view && !loaded && !loading && (!failed || retry);
+    ) => shown && !loaded && !loading && (!failed || retry);
 
-    if (due('map', Boolean(this._map), this.#mapLoading, this._mapFailed))
+    if (
+      due(
+        this._view === 'map',
+        Boolean(this._map),
+        this.#mapLoading,
+        this._mapFailed,
+      )
+    )
       this.#loadMap();
 
     if (
       due(
-        'timeline',
+        this._view === 'timeline',
         Boolean(this._timeline),
         this.#timelineLoading,
         this._timelineFailed,
@@ -572,13 +603,16 @@ export class DevtoolsPanel extends LitElement {
     )
       this.#loadTimeline();
 
+    // The nested Map may draw the views beside it, so it loads them too.
+    const views =
+      this._view === 'views' ||
+      (this._view === 'map' &&
+        this._mapViews &&
+        this._layoutPref === 'nested' &&
+        Boolean(this._model.views));
+
     if (
-      due(
-        'views',
-        Boolean(this._viewMap),
-        this.#viewsLoading,
-        this._viewsFailed,
-      )
+      due(views, Boolean(this._viewMap), this.#viewsLoading, this._viewsFailed)
     )
       this.#loadViewMap();
   }
@@ -860,9 +894,13 @@ export class DevtoolsPanel extends LitElement {
 
     if (!this._moveFocus) return;
     this._moveFocus = false;
-    this.renderRoot
-      .querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')
-      ?.focus();
+
+    // Beside the views the Map has two trees, and the arrow keys stay in the one that has focus.
+    const tree =
+      this.shadowRoot?.activeElement?.closest('[role="tree"]') ??
+      this.renderRoot;
+
+    tree.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')?.focus();
   }
 
   // The nested Map packs for the Map viewport, and the Views for the area beside their details, so that content box is observed.
@@ -888,6 +926,24 @@ export class DevtoolsPanel extends LitElement {
   #placePopover() {
     const panel = this.#panel;
     const popover = this.renderRoot.querySelector('.inspector-pane');
+
+    if (!panel || !popover || this._view !== 'map' || this._max) return;
+
+    const origin = panel.getBoundingClientRect();
+
+    // A view is selected only beside the Map, whose split keeps the popover's column free.
+    const place =
+      this._inspect === 'view'
+        ? this.#besidePlace(popover.getBoundingClientRect(), origin)
+        : this.#anchoredPlace(popover, origin);
+
+    if (!place) return;
+
+    panel.style.setProperty('--uird-pop-x', `${place.x}px`);
+    panel.style.setProperty('--uird-pop-y', `${place.y}px`);
+  }
+
+  #anchoredPlace(popover: Element, origin: DOMRect) {
     const root = this.renderRoot.querySelector<HTMLElement>('.nested');
     const nested = root && this._nested();
 
@@ -895,9 +951,6 @@ export class DevtoolsPanel extends LitElement {
       ...this.renderRoot.querySelectorAll('.map-node.anchor, .brand.anchor'),
     ].at(-1);
 
-    if (!panel || !popover || this._view !== 'map' || this._max) return;
-
-    const origin = panel.getBoundingClientRect();
     // The diagram's place in the panel as drawn, its viewport's translation included.
     const drawn = root?.getBoundingClientRect();
 
@@ -914,17 +967,21 @@ export class DevtoolsPanel extends LitElement {
     const box = nested && this._map?.anchorRect(this, nested);
     const anchor = box ? inPanel(box) : marked && rectOf(marked, origin);
 
-    if (!anchor) return;
+    if (!anchor) return undefined;
 
-    const place = this.#popoverPlace(
+    return this.#popoverPlace(
       anchor,
       popover.getBoundingClientRect(),
       origin,
       nested && box ? { nested, at } : undefined,
     );
+  }
 
-    panel.style.setProperty('--uird-pop-x', `${place.x}px`);
-    panel.style.setProperty('--uird-pop-y', `${place.y}px`);
+  // The popover's own column, at the end of the dock.
+  #besidePlace(size: Size, origin: Size) {
+    const rtl = getComputedStyle(this).direction === 'rtl';
+
+    return { x: rtl ? MARGIN : origin.width - MARGIN - size.width, y: 38 };
   }
 
   // Beside the diagram the popover has a column of its own; over it, it takes the place that covers least.
@@ -943,11 +1000,7 @@ export class DevtoolsPanel extends LitElement {
 
     if (!map) return placeBeside(anchor, size, bounds);
 
-    if (this._beside(map.nested)) {
-      const rtl = getComputedStyle(this).direction === 'rtl';
-
-      return { x: rtl ? MARGIN : origin.width - MARGIN - size.width, y: 38 };
-    }
+    if (this._beside(map.nested)) return this.#besidePlace(size, origin);
 
     const clear = this._map?.keepClear(this, map.nested) ?? [];
 
@@ -1103,13 +1156,20 @@ export class DevtoolsPanel extends LitElement {
     this.#pill?.focus();
   }
 
+  // The Map holds one selection at a time, so a state or transition takes the place of a view selected beside it.
+  #dropView() {
+    if (this._inspect === 'view') this._viewSelected = null;
+  }
+
   _selectTx(id: number | null): void {
+    this.#dropView();
     this._selectedTx = id;
     this._inspect = id === null ? 'none' : 'tx';
   }
 
   // A click toggles; the second click of a double-click keeps the state selected.
   _selectState(name: string, keep = false): void {
+    this.#dropView();
     this._selectedState = keep || this._selectedState !== name ? name : null;
     this._focusState = name;
     this._inspect = this._selectedState ? 'state' : 'none';
@@ -1149,6 +1209,7 @@ export class DevtoolsPanel extends LitElement {
   _revealState(name: string): void {
     const hidden = new Set(ancestorsOf(this._model.states, name));
 
+    this.#dropView();
     this._selectedState = name;
     this._focusState = name;
     this._inspect = 'state';
@@ -1162,9 +1223,21 @@ export class DevtoolsPanel extends LitElement {
   }
 
   _selectView(id: number | null): void {
-    this._viewSelected = id === this._viewSelected ? null : id;
+    const map = this._view === 'map';
+
+    const again =
+      id === this._viewSelected && (!map || this._inspect === 'view');
+
+    this._viewSelected = again ? null : id;
 
     if (id !== null) this._viewFocus = id;
+
+    if (!map) return;
+
+    // Beside the Map a view is shown in the panel's inspector, in place of a state or transition.
+    this._selectedState = null;
+    this._selectedTx = null;
+    this._inspect = this._viewSelected === null ? 'none' : 'view';
   }
 
   _pointView(id: number | null): void {
@@ -1172,20 +1245,24 @@ export class DevtoolsPanel extends LitElement {
     this.#markPointed();
   }
 
-  // Opens the Outline with the state selected, from the Views' details.
+  // Selects a state named in a view's details: on the Map beside the views, else in the Outline.
   _showState(name: string): void {
-    this._view = 'outline';
+    if (this._view !== 'map') this._view = 'outline';
     this._revealState(name);
   }
 
-  // The locator marks the view under the pointer, else the selected one, while the Views show the live router.
+  // The locator marks the view under the pointer, else the selected one, while views of the live router are drawn.
   #markPointed() {
+    const tab = this._view === 'views';
+    const beside = this._view === 'map' && Boolean(this._mapLayout()?.split);
+
     const shown =
-      this._view === 'views' &&
+      (tab || beside) &&
       !this._imported &&
       Boolean(this.#panel?.matches(':popover-open'));
 
-    const id = shown ? (this.#pointedView ?? this._viewSelected) : null;
+    const chosen = tab || this._inspect === 'view' ? this._viewSelected : null;
+    const id = shown ? (this.#pointedView ?? chosen) : null;
     const view = this.#viewOf(id);
 
     // A new snapshot is a new object, so the mark follows a view that changed or left.
@@ -1203,12 +1280,31 @@ export class DevtoolsPanel extends LitElement {
 
   // A view that left the snapshot is no longer selected or pointed at.
   #forgetGoneViews() {
-    if (this.#viewOf(this._viewSelected) === null) this._viewSelected = null;
+    if (this.#viewOf(this._viewSelected) === null) {
+      this._viewSelected = null;
+
+      if (this._inspect === 'view') this._inspect = 'none';
+    }
 
     if (this.#viewOf(this.#pointedView) === null) this.#pointedView = null;
   }
 
+  // The states tied to the view selected beside the Map, and how: the one whose content created it, and the one that fills it.
+  _linkedStates(): ReadonlyMap<string, string> {
+    const view = this._inspect === 'view' && this.#viewOf(this._viewSelected);
+
+    if (!view) return new Map();
+
+    const ties: [string, string][] = [
+      [view.context, 'created the selected view'],
+      [view.fill?.state ?? '', 'fills the selected view'],
+    ];
+
+    return new Map(ties.filter(([name]) => name));
+  }
+
   _clearSelection(): void {
+    this.#dropView();
     this._selectedState = null;
     this._selectedTx = null;
     this._inspect = 'none';
@@ -1304,7 +1400,8 @@ export class DevtoolsPanel extends LitElement {
 
   // The room kept at the diagram's end so the popover's column is empty before anything is selected, and nothing moves when it is.
   _reserve(nested: NestedLayout): number {
-    if (!this._beside(nested)) return 0;
+    // Beside the views, the column is kept at the end of theirs.
+    if (!this._beside(nested) || this._mapLayout()?.split) return 0;
 
     const spare = this._mapSize.width - nested.placed.width;
 
@@ -1312,10 +1409,10 @@ export class DevtoolsPanel extends LitElement {
     return Math.max(0, Math.min(ASIDE, ASIDE * 2 - spare));
   }
 
-  // The room the Map is shown in, for the view of a layout.
+  // The room the Map is shown in, for the view of a layout: the state side's, when the views are drawn beside it.
   _room(nested: NestedLayout): Room {
     return {
-      ...this._mapSize,
+      ...(this._mapLayout()?.split?.states ?? this._mapSize),
       reserve: this._reserve(nested),
       // A dock without the column has the popover over the diagram, which can then be pulled out from under it.
       slack: this._max || this._beside(nested) ? 0 : ASIDE,
@@ -1400,6 +1497,11 @@ export class DevtoolsPanel extends LitElement {
 
   // The nested layout, when it is loaded, chosen and offered at this width.
   _nested(): NestedLayout | null {
+    return this._mapLayout()?.nested ?? null;
+  }
+
+  // The nested layout and, where the view map fits beside it in the dock or the maximised panel, the split's rooms.
+  _mapLayout(): { nested: NestedLayout; split: Split | null } | null {
     if (
       !this._map ||
       this._view !== 'map' ||
@@ -1408,12 +1510,27 @@ export class DevtoolsPanel extends LitElement {
     )
       return null;
 
-    return this._map.layoutNested(this);
+    const whole = this._map.layoutNested(this);
+
+    const split =
+      this._mapViews && this._viewMap && matchMedia(WIDE).matches
+        ? this._viewMap.splitOf(this, whole, this._max ? 0 : ASIDE)
+        : null;
+
+    return {
+      nested: split ? this._map.layoutNested(this, split.states) : whole,
+      split,
+    };
   }
 
   #chooseLayout(layout: MapLayout) {
     this._layoutPref = layout;
     storeLayout(layout);
+  }
+
+  #chooseViews(shown: boolean) {
+    this._mapViews = shown;
+    storeViews(shown);
   }
 
   // Session export and import
@@ -1792,13 +1909,16 @@ export class DevtoolsPanel extends LitElement {
         }
       </div>`;
 
-    const nested = this._nested();
+    const layout = this._mapLayout();
+    const split = layout?.split;
     const map = this._map;
 
     /* oxlint-disable lit-a11y/click-events-have-key-events -- Escape anywhere in the panel clears the selection too */
     return html`<div
       class="scroll map-scroll"
-      ?data-pan=${nested && this._pans(nested)}
+      ?data-pan=${layout && this._pans(layout.nested)}
+      ?data-split=${Boolean(split)}
+      style=${split ? `--uird-split:${split.states.width}px` : nothing}
       @pointerdown=${(event: PointerEvent) => {
         this.#press = { x: event.clientX, y: event.clientY };
         map?.startPan(this, event);
@@ -1806,9 +1926,20 @@ export class DevtoolsPanel extends LitElement {
       @click=${this.#onMapClick}
       @wheel=${this.#onWheel}
     >
-      ${map ? (nested ? map.renderNested(this, nested) : map.renderMap(this)) : this.#mapNotice()}
+      ${map ? this.#renderMap(map, layout) : this.#mapNotice()}
     </div>`;
     /* oxlint-enable lit-a11y/click-events-have-key-events */
+  }
+
+  #renderMap(map: MapModule, layout: ReturnType<typeof this._mapLayout>) {
+    if (!layout) return map.renderMap(this);
+
+    const states = map.renderNested(this, layout.nested);
+
+    // SAFETY: a split is only weighed once the views' module has loaded
+    return layout.split
+      ? this._viewMap!.renderSplit(this, layout.split, states)
+      : states;
   }
 
   #mapNotice() {
@@ -1853,9 +1984,23 @@ export class DevtoolsPanel extends LitElement {
                   Tree
                 </button>
               </div>
-              ${layout ? this.#renderViewTools(layout) : nothing}`
+              ${layout ? this.#renderViewTools(layout) : nothing}
+              ${layout && this._model.views && matchMedia(WIDE).matches ? this.#renderViewsToggle() : nothing}`
           : nothing
       }`;
+  }
+
+  // Draws the view map beside the nested Map where both fit; the viewer's choice is kept.
+  #renderViewsToggle() {
+    return html`<div class="switch" role="group" aria-label="Beside the Map">
+      <button
+        aria-pressed=${this._mapViews}
+        title="The view map beside the states, where both fit"
+        @click=${() => this.#chooseViews(!this._mapViews)}
+      >
+        View map
+      </button>
+    </div>`;
   }
 
   // The view of the Map: its type step, and the way back to the fitted view.
@@ -1899,6 +2044,8 @@ export class DevtoolsPanel extends LitElement {
   #inspectorAside(): string | undefined {
     if (this._inspect === 'state') return undefined;
 
+    if (this._inspect === 'view') return 'View';
+
     return this._inspect === 'none' || this._inspect === 'router'
       ? 'Router'
       : undefined;
@@ -1908,6 +2055,10 @@ export class DevtoolsPanel extends LitElement {
     if (inspected) return renderTxInspector(this, inspected);
 
     if (this._inspect === 'state') return renderStateInspector(this);
+
+    // SAFETY: a view is selected beside the Map only, which the views' module draws
+    if (this._inspect === 'view')
+      return this._viewMap!.renderViewInspector(this);
 
     return renderRouterCard(this);
   }
@@ -1964,6 +2115,7 @@ export class DevtoolsPanel extends LitElement {
   }
 
   #toggleRouter() {
+    this.#dropView();
     this._inspect = this._inspect === 'router' ? 'none' : 'router';
     this._selectedTx = null;
     this._selectedState = null;

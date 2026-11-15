@@ -103,8 +103,57 @@ export const viewMapStyles: CSSResult = css`
     padding-inline-start: 0;
   }
 
-  .vm-detail .facts dd {
+  :is(.vm-detail, .vm-inspector) .facts dd {
     overflow-wrap: anywhere;
+  }
+
+  /* Beside the nested Map: two rooms, the state Map's at the inline start; each drawing places itself in its own. */
+  .map-scroll[data-split] {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--uird-split) minmax(0, 1fr);
+    overflow: clip;
+    user-select: none;
+  }
+
+  .split-side {
+    min-inline-size: 0;
+  }
+
+  .split-side > .section {
+    padding-inline: var(--uird-margin);
+  }
+
+  /* The rule between the rooms takes no width from the views' room. */
+  .vm-side {
+    position: relative;
+  }
+
+  .vm-side::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-inline-start: 1px solid var(--uird-rule);
+  }
+
+  /* A box tied to the selection on the other side: the selection's ring, dashed. */
+  .box.linked {
+    outline: 1px dashed var(--uird-select);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    .box.linked {
+      outline: 2px dashed Highlight;
+    }
+  }
+
+  @media (width > 880px) {
+    .panel[data-view='map']:not([data-max])[data-inspect='view']
+      .inspector-pane {
+      display: grid;
+    }
   }
 
   /* With room, a view's details stand beside the boxes rather than under them. */

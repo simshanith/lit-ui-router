@@ -19,8 +19,10 @@ import {
   fits,
   LARGE_METRICS,
   METRICS,
+  narrowestWidth,
   pack,
   ROOMY_METRICS,
+  rungRoom,
   SMALL_METRICS,
   type Box,
   type Drawn,
@@ -232,10 +234,22 @@ const openOf = (boxes: readonly Box[]): string[] =>
     box.children.length ? [box.name, ...openOf(box.children)] : [],
   );
 
-const cache = new WeakMap<
-  DevtoolsPanel,
-  { content: string; key: string; layout: NestedLayout; room: Size }
->();
+interface Cached {
+  content: string;
+  key: string;
+  layout: NestedLayout;
+  room: Size;
+}
+
+// The whole room's layout and the split's state side are cached apart, so the split can weigh one against the other.
+const cache = new WeakMap<DevtoolsPanel, Map<boolean, Cached>>();
+
+const boxesOf = (host: DevtoolsPanel, options: Options, family: string) => {
+  const children = host._children();
+  const build = { host, children, keep: keepOpen(host), options, family };
+
+  return (children.get(null) ?? []).map((state) => buildBox(build, state));
+};
 
 const sameAspect = (a: Size, b: Size): boolean => {
   const ratio = (a.width * b.height) / Math.max(1, a.height * b.width);
@@ -284,21 +298,41 @@ const allRects = (
   return rects;
 };
 
+const slotOf = (host: DevtoolsPanel, split: boolean) => {
+  const slots = cache.get(host) ?? new Map<boolean, Cached>();
+
+  cache.set(host, slots);
+
+  return {
+    cached: slots.get(split),
+    keep: (entry: Cached) => slots.set(split, entry),
+  };
+};
+
+// The split's side holds no rung of its own, so it never draws below the rung the whole room has.
+const heldRung = (same: Cached | undefined, split: boolean) =>
+  split ? undefined : same?.layout.rung;
+
 /**
- * Packs the state tree for the Map viewport, stepping down the fit ladder until it fits.
- * A resize that leaves the rung and the room's shape as they were keeps the layout, and only the view of it moves.
+ * Packs the state tree for the Map viewport, or for `room` when the view map shares it, stepping down the fit ladder
+ * until it fits. A resize that leaves the rung and the room's shape as they were keeps the layout, and only the view
+ * of it moves.
  */
-export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
+export const layoutNested = (host: DevtoolsPanel, room?: Size): NestedLayout =>
+  // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
+  packNested(host, room ?? host._mapSize, room !== undefined);
+
+const packNested = (
+  host: DevtoolsPanel,
+  viewport: Size,
+  split: boolean,
+): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
   const style = getComputedStyle(host);
   // State names are set in the monospace face, so that is the face measured.
   const family = style.getPropertyValue('--uird-font-mono');
   const rtl = style.direction === 'rtl';
-
-  // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
-  const viewport = host._mapSize;
-
   const children = host._children();
 
   // Only a compound without a hand-set fold can change the packing, so a selection that opens nothing keeps the layout.
@@ -319,32 +353,27 @@ export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
 
   const key = content + JSON.stringify(viewport);
 
-  const cached = cache.get(host);
+  const slot = slotOf(host, split);
+  const { cached } = slot;
 
   if (cached?.key === key) return cached.layout;
 
-  const boxesWith = (options: Options) => {
-    const build = { host, children, keep, options, family };
+  const boxesWith = (options: Options) => boxesOf(host, options, family);
 
-    return (children.get(null) ?? []).map((state) => buildBox(build, state));
-  };
-
-  const sizeAt = (rung: Rung, room: Size): Size =>
-    pack(boxesWith(OPTIONS[rung]), room, OPTIONS[rung].metrics);
+  const sizeAt = (rung: Rung, at: Size): Size =>
+    pack(boxesWith(OPTIONS[rung]), at, OPTIONS[rung].metrics);
 
   // The ladder holds its rung across a resize only; a changed tree or selection starts from the top.
   const same = cached?.content === content ? cached : undefined;
-  const rung = chooseRung(sizeAt, viewport, same && host._rung, host._max);
+  const rung = chooseRung(sizeAt, viewport, heldRung(same, split), host._max);
   const zoom = host._mapZoom === null ? undefined : ZOOMS[host._mapZoom];
-
-  host._rung = rung;
 
   if (
     same?.layout.rung === rung &&
     sameAspect(same.room, viewport) &&
     (zoom || rung === 'pan' || fits(same.layout.placed, viewport))
   ) {
-    cache.set(host, { ...same, key });
+    slot.keep({ ...same, key });
 
     return same.layout;
   }
@@ -375,9 +404,36 @@ export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
     step: ZOOMS.indexOf(options.metrics),
   };
 
-  cache.set(host, { content, key, layout, room: viewport });
+  slot.keep({ content, key, layout, room: viewport });
 
   return layout;
+};
+
+const narrowed = new WeakMap<NestedLayout, Map<number, number>>();
+
+/** The narrowest room, on the 4px grid and at this height, that the layout's rung still fits; `Infinity` when none does. */
+export const narrowest = (
+  host: DevtoolsPanel,
+  layout: NestedLayout,
+  height: number,
+): number => {
+  const known = narrowed.get(layout) ?? new Map<number, number>();
+  const hit = known.get(height);
+
+  if (hit !== undefined) return hit;
+
+  const boxes = boxesOf(host, layout.options, layout.family);
+
+  const width = narrowestWidth((at) => {
+    const room = rungRoom(layout.rung, { width: at, height });
+
+    return fits(pack(boxes, room, layout.metrics), room);
+  }, host._mapSize.width);
+
+  known.set(height, width);
+  narrowed.set(layout, known);
+
+  return width;
 };
 
 // Edges
@@ -801,6 +857,8 @@ interface View {
   depths: ReadonlyMap<string, number>;
   focus: string | undefined;
   pivot: string | undefined;
+  /** Drawn boxes tied to the view selected beside the Map, with how. */
+  linked: ReadonlyMap<string, string>;
 }
 
 const initialMark = svg`<svg class="initial" viewBox="0 0 20 12" width="20" height="12" aria-hidden="true">
@@ -876,8 +934,13 @@ const renderHead = (
   const labelled = kind === 'collapsed' ? `${full} ${hidden}` : full;
   const unlabelled = kind === 'leaf' && name === full;
 
-  const description =
-    kind === 'collapsed' ? `${described}, ${hidden} states inside` : described;
+  const tie = view.linked.get(box.name);
+
+  const description = [
+    described,
+    ...(kind === 'collapsed' ? [`${hidden} states inside`] : []),
+    ...(tie ? [tie] : []),
+  ].join(', ');
 
   /* oxlint-disable lit-a11y/role-supports-aria-attr -- aria-description is a global attribute in ARIA 1.3 */
   return html`<div
@@ -912,6 +975,7 @@ const boxClasses = (view: View, item: Drawn, kind: Kind): string => {
     facts(state, view.host._model.current.name),
     kind,
     view.host._selectedState === box.name && 'selected',
+    view.linked.has(box.name) && 'linked',
     box.merge && 'merging',
     placed.indent > 0 && 'merged',
     box.lead && 'led',
@@ -973,6 +1037,24 @@ const nestedKeys = (host: DevtoolsPanel, layout: NestedLayout) => ({
   },
 });
 
+// A tied state hidden in a collapsed compound is marked on the box that holds it.
+const linkedBoxes = (
+  host: DevtoolsPanel,
+  layout: NestedLayout,
+): Map<string, string> => {
+  const linked = new Map<string, string>();
+
+  for (const [name, tie] of host._linkedStates()) {
+    const drawn = [name, ...ancestorsOf(host._model.states, name)].filter(
+      (each) => layout.rects.has(each),
+    );
+
+    for (const each of drawn.slice(0, 1)) linked.set(each, tie);
+  }
+
+  return linked;
+};
+
 /** The Map as statechart containment: a box per state, child states inside their parent. */
 export const renderNested = (
   host: DevtoolsPanel,
@@ -1009,6 +1091,7 @@ export const renderNested = (
     depths: new Map(rows.map((row) => [row.state.name, row.depth])),
     focus,
     pivot: host._focusTx?.retained.at(-1),
+    linked: linkedBoxes(host, layout),
   };
 
   const onKey = (event: KeyboardEvent) => {

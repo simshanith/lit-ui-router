@@ -9,13 +9,17 @@ import { targetText, viewTree, type ViewNode } from '../views.ts';
 import { textWidth } from './measure.ts';
 import {
   drawnIn,
+  fits,
   METRICS,
+  narrowestWidth,
   pack,
   type Box,
   type Drawn,
   type Metrics,
   type Placed,
+  type Size,
 } from './pack.ts';
+import type { NestedLayout } from './nested.ts';
 import { fitView, type View } from './viewport.ts';
 
 export { viewMapStyles } from './viewmap-styles.ts';
@@ -55,6 +59,10 @@ interface Scene {
   active: ReadonlySet<string>;
   focus: number | undefined;
   rows: ReadonlyMap<number, ViewRow>;
+  /** The view drawn as selected. */
+  selected: number | null;
+  /** Views tied to the state selected beside them, on the Map. */
+  linked: ReadonlySet<number>;
 }
 
 const viewName = (view: ViewInfo, scene: Pick<Scene, 'repeated'>): string =>
@@ -215,7 +223,7 @@ const renderHead = (scene: Scene, node: ViewNode) => {
     aria-posinset=${row?.posinset ?? 1}
     aria-owns=${compound ? `vm-kids-${view.id}` : nothing}
     aria-expanded=${compound ? 'true' : nothing}
-    aria-selected=${host._viewSelected === view.id}
+    aria-selected=${scene.selected === view.id}
     @click=${() => host._selectView(view.id)}
     @focus=${() => (host._viewFocus = view.id)}
     @pointerenter=${() => host._pointView(view.id)}
@@ -232,7 +240,8 @@ const boxClasses = (scene: Scene, view: ViewInfo, compound: boolean) =>
     compound ? 'open' : 'leaf',
     view.fill ? scene.host._depthClass(view.fill.state) : 'vacant',
     inactive(view.fill, scene) && 'inactive',
-    scene.host._viewSelected === view.id && 'selected',
+    scene.selected === view.id && 'selected',
+    scene.linked.has(view.id) && 'linked',
   ]
     .filter(Boolean)
     .join(' ');
@@ -272,7 +281,7 @@ const renderBox = (
   </div>`;
 };
 
-// A state named in the details; it opens the Outline with that state selected.
+// A state named in the details; it selects that state on the Map beside the views, and in the Outline from the Views.
 const stateLink = (host: DevtoolsPanel, name: string) =>
   name
     ? html`<button
@@ -286,7 +295,7 @@ const stateLink = (host: DevtoolsPanel, name: string) =>
 
 type Fact = readonly [term: string, value: unknown];
 
-const facts = (host: DevtoolsPanel, view: ViewInfo): Fact[] => {
+export const facts = (host: DevtoolsPanel, view: ViewInfo): Fact[] => {
   const { fill } = view;
   // An imported session's page is not the recorded one, so it has no place to report.
   const place = host._imported ? undefined : host.viewLocator?.describe?.(view);
@@ -382,6 +391,65 @@ interface Layout {
   view: View;
 }
 
+interface Drawing {
+  roots: ViewNode[];
+  rows: ViewRow[];
+  scene: Scene;
+  nodes: ReadonlyMap<string, ViewNode>;
+}
+
+const drawingOf = (
+  host: DevtoolsPanel,
+  views: readonly ViewInfo[],
+  selected: number | null,
+  linked: ReadonlySet<number> = new Set(),
+): Drawing => {
+  const roots = viewTree(views);
+  const rows = viewRows(roots);
+
+  const scene: Scene = {
+    host,
+    repeated: repeatedNames(views),
+    active: activeStates(host),
+    focus:
+      rows.find((row) => row.node.view.id === host._viewFocus)?.node.view.id ??
+      rows[0]?.node.view.id,
+    rows: new Map(rows.map((row) => [row.node.view.id, row])),
+    selected,
+    linked,
+  };
+
+  const nodes = new Map(
+    rows.map((row) => [String(row.node.view.id), row.node]),
+  );
+
+  return { roots, rows, scene, nodes };
+};
+
+const fontsOf = (host: DevtoolsPanel): Fonts => {
+  const style = getComputedStyle(host);
+
+  return {
+    mono: style.getPropertyValue('--uird-font-mono'),
+    sans: style.getPropertyValue('--uird-font'),
+  };
+};
+
+const packViews = (
+  { roots, scene }: Drawing,
+  fonts: Fonts,
+  room: Size,
+): Placed =>
+  pack(
+    roots.map((root) => boxOf(root, scene, fonts)),
+    room,
+    VIEW_METRICS,
+  );
+
+// Margins are logical, so the view is taken as left to right and mirrors with the page.
+const centred = (placed: Placed, room: Size & { reserve: number }): View =>
+  fitView(placed, { ...room, slack: 0, foot: 0, rtl: false });
+
 /**
  * Packs the views for the room they are drawn in and places them as the Map's fitted view does: in the middle on an
  * axis they fit, at the start of one they overflow. Before a view is selected the details' column is kept free where
@@ -389,40 +457,55 @@ interface Layout {
  */
 const layoutOf = (
   host: DevtoolsPanel,
-  roots: readonly ViewNode[],
-  scene: Pick<Scene, 'repeated' | 'active'>,
+  drawing: Drawing,
   selected: boolean,
 ): Layout => {
-  const style = getComputedStyle(host);
+  const margin = parseFloat(
+    getComputedStyle(host).getPropertyValue('--uird-margin'),
+  );
 
-  const fonts = {
-    mono: style.getPropertyValue('--uird-font-mono'),
-    sans: style.getPropertyValue('--uird-font'),
-  };
-
-  const margin = parseFloat(style.getPropertyValue('--uird-margin')) || 0;
   const { width } = host._mapSize;
   const reserve = !selected && width + margin * 2 >= BESIDE ? DETAIL : 0;
   const height = Math.max(0, host._mapSize.height - footOf(host));
 
-  const placed = pack(
-    roots.map((root) => boxOf(root, scene, fonts)),
-    { width: width - reserve, height },
-    VIEW_METRICS,
-  );
-
-  // Margins are logical, so the view is taken as left to right and mirrors with the page.
-  const view = fitView(placed, {
-    width,
+  const placed = packViews(drawing, fontsOf(host), {
+    width: width - reserve,
     height,
-    reserve,
-    slack: 0,
-    foot: 0,
-    rtl: false,
   });
 
-  return { placed, view };
+  return { placed, view: centred(placed, { width, height, reserve }) };
 };
+
+const renderTree = (
+  host: DevtoolsPanel,
+  { rows, scene, nodes }: Drawing,
+  { placed, view }: Layout,
+  label: string,
+) =>
+  html`<div
+    class="nested vm-boxes"
+    role="tree"
+    aria-labelledby=${label}
+    style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-start:${view.x}px;margin-block-start:${view.y}px"
+    @keydown=${(event: KeyboardEvent) => onKey(host, event, rows, scene.focus)}
+  >
+    ${
+      placed.box
+        ? renderBox(
+            scene,
+            {
+              box: placed.box,
+              placed,
+              x: 0,
+              y: 0,
+              width: placed.width,
+              height: placed.height,
+            },
+            nodes,
+          )
+        : renderBoxes(scene, placed, nodes)
+    }
+  </div>`;
 
 /** The router's `ui-view`s as nested boxes, each named with what fills it, and the selected view's details. */
 export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
@@ -430,65 +513,189 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
 
   if (!snapshot) return html`<p class="empty">This session holds no views.</p>`;
 
-  const roots = viewTree(snapshot.views);
-  const rows = viewRows(roots);
-
-  const scene: Scene = {
-    host,
-    repeated: repeatedNames(snapshot.views),
-    active: activeStates(host),
-    focus:
-      rows.find((row) => row.node.view.id === host._viewFocus)?.node.view.id ??
-      rows[0]?.node.view.id,
-    rows: new Map(rows.map((row) => [row.node.view.id, row])),
-  };
+  const drawing = drawingOf(host, snapshot.views, host._viewSelected);
 
   const selected = snapshot.views.find(
     (view) => view.id === host._viewSelected,
   );
 
-  const nodes = new Map(
-    rows.map((row) => [String(row.node.view.id), row.node]),
-  );
-
-  const layout = rows.length
-    ? layoutOf(host, roots, scene, Boolean(selected))
-    : undefined;
-
-  const placed = layout?.placed;
-
   return html`<div class="viewmap" ?data-detail=${Boolean(selected)}>
     <div class="vm-main">
       ${
-        placed && layout
-          ? html`<div
-              class="nested vm-boxes"
-              role="tree"
-              aria-labelledby="h-states"
-              style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-start:${layout.view.x}px;margin-block-start:${layout.view.y}px"
-              @keydown=${(event: KeyboardEvent) => onKey(host, event, rows, scene.focus)}
-            >
-              ${
-                placed.box
-                  ? renderBox(
-                      scene,
-                      {
-                        box: placed.box,
-                        placed,
-                        x: 0,
-                        y: 0,
-                        width: placed.width,
-                        height: placed.height,
-                      },
-                      nodes,
-                    )
-                  : renderBoxes(scene, placed, nodes)
-              }
-            </div>`
+        drawing.rows.length
+          ? renderTree(
+              host,
+              drawing,
+              layoutOf(host, drawing, Boolean(selected)),
+              'h-states',
+            )
           : html`<p class="empty">No ui-view is registered with the router.</p>`
       }
       ${renderUnmatched(host, snapshot.unmatched)}
     </div>
     ${renderDetail(host, selected)}
+  </div>`;
+};
+
+/** The split's two rooms: the state Map's at the inline start, and the views' after it, ending in the popover's column. */
+export interface Split {
+  states: Size;
+  views: Size & { reserve: number };
+}
+
+/** The least room between the two drawings, half of it either side of the rule between them. */
+const GAP = 48;
+
+/** The share of the room a split that a resize took away needs to spare before it comes back, as the fit ladder does. */
+const RESTORE = 0.1;
+
+interface Weighed extends Size {
+  states: number;
+  views: number;
+  shown: boolean;
+}
+
+const weighed = new WeakMap<DevtoolsPanel, Weighed>();
+
+const narrowViews = new WeakMap<object, { key: string; width: number }>();
+
+// A snapshot is replaced, never changed, so its list keys the cache.
+const viewsWidth = (
+  host: DevtoolsPanel,
+  views: readonly ViewInfo[],
+  height: number,
+  max: number,
+): number => {
+  const fonts = fontsOf(host);
+  const drawing = drawingOf(host, views, null);
+  const key = JSON.stringify([height, max, fonts, [...drawing.scene.active]]);
+  const known = narrowViews.get(views);
+
+  if (known?.key === key) return known.width;
+
+  const width = narrowestWidth((at) => {
+    const room = { width: at, height };
+
+    return fits(packViews(drawing, fonts, room), room);
+  }, max);
+
+  narrowViews.set(views, { key, width });
+
+  return width;
+};
+
+// Read again with nothing changed it keeps its answer; after a resize a hidden split needs room to spare.
+const shows = (
+  host: DevtoolsPanel,
+  now: Omit<Weighed, 'shown'>,
+  spare: number,
+): boolean => {
+  const last = weighed.get(host);
+  const sized = last?.width === now.width && last.height === now.height;
+
+  const shown =
+    sized && last.states === now.states && last.views === now.views
+      ? last.shown
+      : spare >= (last && !sized && !last.shown ? now.width * RESTORE : 0);
+
+  weighed.set(host, { ...now, shown });
+
+  return shown;
+};
+
+/**
+ * The rooms of the split when the views fit beside the state Map, each at its natural size and the states at the rung
+ * the whole room gives them, else `null`. `aside` is kept free at the end for the inspector popover's column.
+ */
+export const splitOf = (
+  host: DevtoolsPanel,
+  whole: NestedLayout,
+  aside: number,
+): Split | null => {
+  const views = host._model.views?.views ?? [];
+
+  if (!views.length || whole.rung === 'pan' || host._mapZoom !== null)
+    return null;
+
+  const { width, height } = host._mapSize;
+
+  const head = parseFloat(
+    getComputedStyle(host).getPropertyValue('--uird-row'),
+  );
+
+  const room = height - head;
+  const free = width - aside - GAP;
+  // SAFETY: the panel weighs a split only for a layout the Map's module packed
+  const states = host._map!.narrowest(host, whole, room);
+  const drawn = viewsWidth(host, views, room, free);
+  const spare = free - states - drawn;
+
+  if (!shows(host, { width, height, states, views: drawn }, spare)) return null;
+
+  const side = states + Math.floor((spare + GAP) / 2);
+
+  return {
+    states: { width: side, height: room },
+    views: { width: width - side, height: room, reserve: aside },
+  };
+};
+
+/** The view map beside the state Map: each side in its own labelled region, centred in its own room. */
+export const renderSplit = (
+  host: DevtoolsPanel,
+  split: Split,
+  states: TemplateResult,
+): TemplateResult => {
+  // SAFETY: a split is weighed only for a snapshot that holds views
+  const { views } = host._model.views!;
+  const selected = host._inspect === 'view' ? host._viewSelected : null;
+  const state = host._inspect === 'state' ? host._selectedState : null;
+
+  const linked = new Set(
+    views.flatMap((view) => (view.fill?.state === state ? [view.id] : [])),
+  );
+
+  const drawing = drawingOf(host, views, selected, linked);
+
+  const placed = packViews(drawing, fontsOf(host), {
+    width: split.views.width - split.views.reserve,
+    height: split.views.height,
+  });
+
+  const layout = { placed, view: centred(placed, split.views) };
+
+  return html`<section class="split-side" aria-labelledby="h-split-states">
+      <h3 class="section sub" id="h-split-states">
+        <span class="title">States</span>
+      </h3>
+      ${states}
+    </section>
+    <section class="split-side vm-side" aria-labelledby="h-split-views">
+      <h3 class="section sub" id="h-split-views">
+        <span class="title">Views</span>
+      </h3>
+      ${renderTree(host, drawing, layout, 'h-split-views')}
+    </section>`;
+};
+
+/** The view selected beside the Map, in the panel's own inspector. */
+export const renderViewInspector = (host: DevtoolsPanel): TemplateResult => {
+  // SAFETY: the panel drops a view selection when its view leaves the snapshot
+  const { views } = host._model.views!;
+  const view = views.find((each) => each.id === host._viewSelected)!;
+
+  return html`<div class="inspector vm-inspector">
+    <p class="insp-title">
+      <span class="name"
+        >${viewName(view, { repeated: repeatedNames(views) })}</span
+      >
+    </p>
+    <dl class="facts">
+      ${facts(host, view).map(
+        ([term, value]) =>
+          html`<dt>${term}</dt>
+            <dd>${value}</dd>`,
+      )}
+    </dl>
   </div>`;
 };
