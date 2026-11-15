@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import type { DevtoolsPanel } from './panel.ts';
-import type { Tx } from '../fold.ts';
+import { bareName, type Tx } from '../fold.ts';
 import { SCHEMA_VERSION, type LocationInfo } from '../schema.ts';
 import { edgesOf } from '../edges.ts';
 import { paramText, segment, seq } from '../notation.ts';
