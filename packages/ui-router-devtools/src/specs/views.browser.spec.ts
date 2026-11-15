@@ -46,6 +46,25 @@ const panelOf = (element: UIRouterDevtools) => element as DevtoolsPanel;
 const overlay = () =>
   document.body.querySelector<HTMLElement>('[data-ui-router-devtools-view]');
 
+/**
+ * The Views' tree once it holds every named item: its chunk has loaded, the room has been measured and the snapshot
+ * after the last sync has been drawn.
+ */
+const drawn = (
+  element: UIRouterDevtools,
+  names: readonly (string | RegExp)[],
+) =>
+  waitFor(() => {
+    const tree = getByRole(shadow(element), 'tree', { name: /Views/ });
+
+    for (const name of names) getByRole(tree, 'treeitem', { name });
+
+    return tree;
+  });
+
+const item = (tree: HTMLElement, name: string | RegExp) =>
+  waitFor(() => getByRole(tree, 'treeitem', { name }));
+
 interface MailApp {
   locate?: boolean;
   /** Names of empty views drawn beside the root view. */
@@ -104,9 +123,12 @@ const mailApp = async ({
   await element.updateComplete;
   getByRole(shadow(element), 'button', { name: 'views' }).click();
 
-  const tree = await waitFor(() =>
-    getByRole(shadow(element), 'tree', { name: /Views/ }),
-  );
+  const tree = await drawn(element, [
+    /^\$default view, filled by mail$/,
+    /^list view, filled by mail\.list$/,
+    /^content view, empty$/,
+    ...asides.map((name) => `${name} view, empty`),
+  ]);
 
   return { router, element, tree };
 };
@@ -232,9 +254,7 @@ describe('the Views', () => {
   it('drops the outline and the details of a selected view that goes away', async () => {
     const { router, element, tree } = await mailApp();
 
-    const list = await waitFor(() =>
-      getByRole(tree, 'treeitem', { name: /^list view/ }),
-    );
+    const list = await item(tree, /^list view/);
 
     list.click();
     await waitFor(() =>
@@ -257,9 +277,7 @@ describe('the Views', () => {
   it('outlines the view under the pointer, and stops when the panel closes', async () => {
     const { element, tree } = await mailApp();
 
-    const root = await waitFor(() =>
-      getByRole(tree, 'treeitem', { name: /^\$default view/ }),
-    );
+    const root = await item(tree, /^\$default view/);
 
     root.dispatchEvent(new PointerEvent('pointerenter'));
     expect(overlay()?.dataset.uiRouterDevtoolsView).toBe('$default');
@@ -283,15 +301,11 @@ describe('the Views', () => {
   it('draws each top-level view, and gives an empty view’s details', async () => {
     const { element, tree } = await mailApp({ asides: ['aside'] });
 
-    const aside = await waitFor(() =>
-      getByRole(tree, 'treeitem', { name: 'aside view, empty' }),
-    );
+    const aside = await item(tree, 'aside view, empty');
 
     expect(aside.getAttribute('aria-level')).toBe('1');
     expect(
-      getByRole(tree, 'treeitem', { name: /^\$default view/ }).getAttribute(
-        'aria-level',
-      ),
+      (await item(tree, /^\$default view/)).getAttribute('aria-level'),
     ).toBe('1');
 
     aside.click();
@@ -322,7 +336,7 @@ describe('the Views', () => {
     async (where, width, asides) => {
       const { element, tree } = await mailApp({ asides, width });
 
-      getByRole(tree, 'treeitem', { name: /^\$default view/ }).click();
+      (await item(tree, /^\$default view/)).click();
 
       const details = await waitFor(() =>
         getByRole(shadow(element), 'region', { name: '$default' }),
@@ -385,7 +399,7 @@ describe('the Views', () => {
   };
 
   const select = async (element: UIRouterDevtools, tree: HTMLElement) => {
-    getByRole(tree, 'treeitem', { name: /^\$default view/ }).click();
+    (await item(tree, /^\$default view/)).click();
     await waitFor(() =>
       getByRole(shadow(element), 'region', { name: '$default' }),
     );
@@ -457,9 +471,7 @@ describe('the Views', () => {
   it('draws without a locator, and leaves the page alone', async () => {
     const { element, tree } = await mailApp({ locate: false });
 
-    const root = await waitFor(() =>
-      getByRole(tree, 'treeitem', { name: /^\$default view/ }),
-    );
+    const root = await item(tree, /^\$default view/);
 
     root.click();
 
@@ -472,15 +484,13 @@ describe('the Views', () => {
   });
 
   it('shows an imported session’s views, and says when a session has none', async () => {
-    const { element, tree } = await mailApp();
-    await waitFor(() => expect(getAllByRole(tree, 'treeitem')).toHaveLength(3));
+    const { element } = await mailApp();
     const session = element.session({ params: 'all' })!;
 
     element.importSession(session);
-    await element.updateComplete;
 
-    const imported = getByRole(shadow(element), 'tree', { name: /Views/ });
-    const root = getByRole(imported, 'treeitem', { name: /^\$default view/ });
+    const imported = await drawn(element, [/^\$default view/]);
+    const root = await item(imported, /^\$default view/);
 
     // The page is not the recorded one, so nothing on it is outlined.
     root.dispatchEvent(new PointerEvent('pointerenter'));
