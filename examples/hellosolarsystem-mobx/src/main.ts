@@ -473,7 +473,6 @@ export class AppRoot extends LitElement {
     /* uiSrefActive covers the list; the controller covers its detail view */
     nav a.active,
     nav a[data-detail] {
-      font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
     .path {

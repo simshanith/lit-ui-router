@@ -554,7 +554,6 @@ export class AppRoot extends LitElement {
       text-decoration: none;
     }
     nav a.active {
-      font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
     .units {
@@ -576,7 +575,6 @@ export class AppRoot extends LitElement {
     .units button[aria-pressed='true'] {
       background: #8ab4f8;
       color: #0b1020;
-      font-weight: 600;
     }
     .hint {
       flex-basis: 100%;

@@ -16,7 +16,6 @@ class AppRoot extends LitElement {
       }
     }
     nav a.active {
-      font-weight: bold;
       background: light-dark(#e0e0e0, #444);
     }
   `;
