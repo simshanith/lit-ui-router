@@ -305,16 +305,20 @@ Reserving the column at every width was weighed and left out: the stress tree
 needs the dock's whole width. So was a start-aligned diagram, which leaves
 the same column free and reads as a document, not a drawing.
 
-The popover shows while something is selected, and hides when the selection
-is cleared, which leaves every box where it is. A selection is cleared by:
+The popover shows a selected state or transition, or the Router card that the
+`Router` button opens, and hides when that is dismissed, which leaves every
+box where it is. It is dismissed by:
 
 - the inspector's `Close inspector` button, which shows wherever the
-  inspector shows a selection;
+  inspector pane shows a selection or the Router card. A panel of 880px or
+  less shows the Router card in a pane of its own, which has no such button
+  and is left by the `Router` button or the tabs;
 - a click on the Map's empty room, outside any box, the minimap and the
-  controls; a press that travels past 4px is a pan and clears nothing;
-- a click on the selected box, tick or log row again;
+  controls; a press that travels past 4px is a pan and dismisses nothing;
+- a click on the selected box, tick or log row again, or on the `Router`
+  button while its card shows;
 - `Escape` anywhere in the panel, once the element with focus has passed it
-  on. With nothing selected, `Escape` does nothing.
+  on. With nothing selected and no Router card, `Escape` does nothing.
 
 Focus that was in the popover goes back to where the selection was made: the
 selected tick's strip or log row, the selected state's item, or the `Router`
@@ -552,8 +556,8 @@ the visible text differ.
 The scrubber is a `listbox` of transitions. Left and right arrows move the
 selection, and the selected transition's notation sits beside it.
 
-`Escape` clears the selection from anywhere in the panel; the inspector's
-close button is named `Close inspector`.
+`Escape` dismisses a selection or the Router card from anywhere in the panel;
+the inspector's close button is named `Close inspector`.
 
 The edge overlay, count chips included, is hidden from assistive technology. The WAI-ARIA Graphics
 Module defines no connector role, and `aria-flowto` support is partial. The
