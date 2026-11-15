@@ -46,8 +46,19 @@ const panelOf = (element: UIRouterDevtools) => element as DevtoolsPanel;
 const overlay = () =>
   document.body.querySelector<HTMLElement>('[data-ui-router-devtools-view]');
 
-const mailApp = async ({ locate = true, aside = false } = {}) => {
-  await page.viewport(1280, 800);
+interface MailApp {
+  locate?: boolean;
+  /** Names of empty views drawn beside the root view. */
+  asides?: readonly string[];
+  width?: number;
+}
+
+const mailApp = async ({
+  locate = true,
+  asides = [],
+  width = 1280,
+}: MailApp = {}) => {
+  await page.viewport(width, 800);
 
   const router = new UIRouterLit();
   routers.push(router);
@@ -77,9 +88,9 @@ const mailApp = async ({ locate = true, aside = false } = {}) => {
   const host = document.createElement('main');
   document.body.append(host);
   render(
-    html`<ui-view .uiRouter=${router}></ui-view>${
-        aside ? html`<ui-view name="aside" .uiRouter=${router}></ui-view>` : ''
-      }`,
+    html`<ui-view .uiRouter=${router}></ui-view>${asides.map(
+        (name) => html`<ui-view name=${name} .uiRouter=${router}></ui-view>`,
+      )}`,
     host,
   );
 
@@ -270,7 +281,7 @@ describe('the Views', () => {
   });
 
   it('draws each top-level view, and gives an empty view’s details', async () => {
-    const { element, tree } = await mailApp({ aside: true });
+    const { element, tree } = await mailApp({ asides: ['aside'] });
 
     const aside = await waitFor(() =>
       getByRole(tree, 'treeitem', { name: 'aside view, empty' }),
@@ -297,6 +308,62 @@ describe('the Views', () => {
     ).toBeTruthy();
     expect(overlay()).toBeNull();
   });
+
+  const SIDEBARS = ['one', 'two', 'three', 'four', 'five', 'six'].map(
+    (n) => `sidebar-navigation-${n}`,
+  );
+
+  // The dock puts the details beside the boxes; the side sheet, 360px wide, puts them below.
+  it.each([
+    ['beside', 1280, SIDEBARS],
+    ['below', 700, []],
+  ] as const)(
+    'packs the boxes into the room left with the details %s them',
+    async (where, width, asides) => {
+      const { element, tree } = await mailApp({ asides, width });
+
+      getByRole(tree, 'treeitem', { name: /^\$default view/ }).click();
+
+      const details = await waitFor(() =>
+        getByRole(shadow(element), 'region', { name: '$default' }),
+      );
+
+      // SAFETY: the tree is drawn inside the Views' main area
+      const main = tree.closest('.vm-main') as HTMLElement;
+      const style = getComputedStyle(main);
+
+      const room = () => ({
+        width:
+          main.clientWidth -
+          parseFloat(style.paddingInlineStart) -
+          parseFloat(style.paddingInlineEnd),
+        height:
+          main.clientHeight -
+          parseFloat(style.paddingBlockStart) -
+          parseFloat(style.paddingBlockEnd),
+      });
+
+      // The packing is made for that room, and the drawing stays inside it.
+      await waitFor(() => {
+        const packed = panelOf(element)._mapSize;
+
+        expect(Math.abs(packed.width - room().width)).toBeLessThanOrEqual(1);
+        expect(Math.abs(packed.height - room().height)).toBeLessThanOrEqual(1);
+      });
+
+      const drawn = tree.getBoundingClientRect();
+
+      expect(drawn.width).toBeLessThanOrEqual(room().width);
+      expect(drawn.height).toBeLessThanOrEqual(room().height);
+
+      const box = details.getBoundingClientRect();
+      const area = main.getBoundingClientRect();
+
+      expect(where === 'beside' ? box.left : box.top).toBeGreaterThanOrEqual(
+        where === 'beside' ? area.right : area.bottom,
+      );
+    },
+  );
 
   it('draws without a locator, and leaves the page alone', async () => {
     const { element, tree } = await mailApp({ locate: false });

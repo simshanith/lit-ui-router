@@ -863,11 +863,9 @@ export class DevtoolsPanel extends LitElement {
       ?.focus();
   }
 
-  // The nested Map packs for the Map viewport, so the viewport's content box is observed.
+  // The nested Map packs for the Map viewport, and the Views for the area beside their details, so that content box is observed.
   #observeMap() {
-    const scroller = this.renderRoot.querySelector(
-      '.map-scroll, .views-scroll',
-    );
+    const scroller = this.renderRoot.querySelector('.map-scroll, .vm-main');
 
     if (scroller === this.#observed) return;
 
