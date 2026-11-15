@@ -10,6 +10,7 @@ const ROUTE_KEYS = [
   'name',
   'parent',
   'url',
+  'abstract',
   'params',
   'redirectTo',
   'redirectStatusCode',
@@ -46,11 +47,6 @@ const toRoute = (state: RouteDeclaration): RouteDeclaration => {
       `State '${state.name}': only a state name or { state, params } redirectTo can be served; a function or TargetState needs the client`,
     );
 
-  if (state.url !== undefined && 'abstract' in state && state.abstract)
-    throw new Error(
-      `State '${state.name}': an abstract state with a url can't be served; core never matches its url`,
-    );
-
   const route: RouteDeclaration = { name: state.name };
 
   for (const key of ROUTE_KEYS)
@@ -61,14 +57,14 @@ const toRoute = (state: RouteDeclaration): RouteDeclaration => {
 
 /**
  * A mount's routes from the app's data-only state declarations: each state's
- * {@link RouteDeclaration} fields (`name`, `parent`, `url`, `params`,
+ * {@link RouteDeclaration} fields (`name`, `parent`, `url`, `abstract`, `params`,
  * `redirectTo`, `redirectStatusCode`, `delegate`, `response`), with every
  * other field (`data`, `component`, `resolve`, ...) dropped. Literal names
  * and markers carry through, so an `as const` module still types the router.
  *
  * Throws for a state whose routing a mount would get wrong: a nameless
- * state, a function or `TargetState` `redirectTo`, or an abstract state with
- * a url. `otherwise` and url config stay on the mount; hand the same
+ * state, or a function or `TargetState` `redirectTo`. `otherwise` and url
+ * config stay on the mount; hand the same
  * {@link url-config!RouterUrlConfig | url config} to `applyUrlConfig` on the
  * client.
  *

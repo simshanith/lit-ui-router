@@ -28,6 +28,8 @@ const states = [
   { name: 'badge', url: '/badge.svg', response: true },
   { name: 'admin', abstract: true },
   { name: 'admin.users', url: '/admin/users' },
+  { name: 'mission', url: '/mission', abstract: true },
+  { name: 'mission.log', url: '/log' },
   { name: 'notFound' },
 ] as const satisfies readonly StateDeclaration[];
 
@@ -50,8 +52,10 @@ describe('routesFromStates', () => {
       { name: 'item', url: '/items/:id', params: { id: { type: 'int' } } },
       { name: 'legacy', url: '/old', redirectTo: 'home' },
       { name: 'badge', url: '/badge.svg', response: true },
-      { name: 'admin' },
+      { name: 'admin', abstract: true },
       { name: 'admin.users', url: '/admin/users' },
+      { name: 'mission', url: '/mission', abstract: true },
+      { name: 'mission.log', url: '/log' },
       { name: 'notFound' },
     ]);
   });
@@ -61,6 +65,7 @@ describe('routesFromStates', () => {
       name: 'moved',
       parent: 'root',
       url: '/moved/{id}',
+      abstract: false,
       params: { id: 1 },
       redirectTo: { state: 'home', params: { tab: 'a' } },
       redirectStatusCode: 308,
@@ -86,6 +91,15 @@ describe('routesFromStates', () => {
         status: 302,
       });
       assert.equal((await router.resolve('/badge.svg')).kind, 'response');
+      assert.deepEqual(await router.resolve('/mission/log'), {
+        kind: 'shell',
+        mount: '/',
+      });
+      assert.deepEqual(await router.resolve('/mission'), {
+        kind: 'shell',
+        mount: '/',
+        status: 404,
+      });
       assert.deepEqual(await router.resolve('/nope'), {
         kind: 'shell',
         mount: '/',
@@ -99,7 +113,7 @@ describe('routesFromStates', () => {
     for (const state of states) router.stateRegistry.register({ ...state });
 
     const served = routesFromStates(states)
-      .filter((route) => 'url' in route)
+      .filter((route) => 'url' in route && !('abstract' in route))
       .map((route) => route.name);
 
     // SAFETY: registering states adds only state rules.
@@ -123,15 +137,6 @@ describe('routesFromStates', () => {
       );
   });
 
-  it('rejects an abstract state with a url, which core never matches', () => {
-    const state = { name: 'shell', url: '/app', abstract: true } as const;
-
-    assert.throws(
-      () => routesFromStates([state]),
-      /State 'shell': an abstract state with a url can't be served/,
-    );
-  });
-
   it('rejects a nameless state', () => {
     // SAFETY: a JS caller or a widened type reaches the runtime check.
     assert.throws(
@@ -148,7 +153,15 @@ export const responseStates: Equal<ResponseState<Decls>, 'badge'> = true;
 
 export const names: Equal<
   Decls['name'],
-  'home' | 'item' | 'legacy' | 'badge' | 'admin' | 'admin.users' | 'notFound'
+  | 'home'
+  | 'item'
+  | 'legacy'
+  | 'badge'
+  | 'admin'
+  | 'admin.users'
+  | 'mission'
+  | 'mission.log'
+  | 'notFound'
 > = true;
 
 export const dropsData: Equal<

@@ -466,6 +466,11 @@ const validateOtherwise = (base: string, config: MountConfig): void => {
     throw new Error(
       `Mount '${base}': otherwise state '${config.otherwise.state}' must be url-less (the unmatched url stays in the address bar)`,
     );
+
+  if (state.abstract)
+    throw new Error(
+      `Mount '${base}': otherwise state '${config.otherwise.state}' must not be abstract`,
+    );
 };
 
 // The index's own message names the route and reason; the mount is added here.
@@ -569,6 +574,11 @@ const compileDelegates = (
         `Mount '${base}': delegating state '${route.name}' must declare a url`,
       );
 
+    if (route.abstract)
+      throw new Error(
+        `Mount '${base}': delegating state '${route.name}' cannot be abstract`,
+      );
+
     if (route.redirectTo !== undefined)
       throw new Error(
         `Mount '${base}': delegating state '${route.name}' cannot also declare redirectTo`,
@@ -596,6 +606,11 @@ const compileResponses = (base: string, config: MountConfig): Set<string> => {
     if (route.url === undefined)
       throw new Error(
         `Mount '${base}': response state '${route.name}' must declare a url`,
+      );
+
+    if (route.abstract)
+      throw new Error(
+        `Mount '${base}': response state '${route.name}' cannot be abstract`,
       );
 
     if (route.redirectTo !== undefined)

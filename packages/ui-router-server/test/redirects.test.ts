@@ -49,6 +49,29 @@ describe('compileRoutes', () => {
     assert.equal(compiled[0].pattern, '/home');
   });
 
+  it('skips an abstract state but prefixes its descendants with its url and params', () => {
+    const compiled = compileRoutes([
+      {
+        name: 'mission',
+        url: '/mission/{id:int}',
+        abstract: true,
+        params: { id: 7 },
+      },
+      { name: 'mission.log', url: '/log' },
+    ]);
+
+    assert.deepEqual(
+      compiled.map((route) => [route.name, route.pattern]),
+      [['mission.log', '/mission/{id:int}/log']],
+    );
+    assert.equal(matchRoute(compiled, '/mission/3'), null);
+    assert.deepEqual(matchRoute(compiled, '/mission/3/log'), {
+      state: 'mission.log',
+      params: { id: 3 },
+    });
+    assert.equal(format(compiled[0].matcher, {}), '/mission/7/log');
+  });
+
   it('nests under an ancestor with search params, splicing paths before the search part', () => {
     const compiled = compileRoutes([
       {

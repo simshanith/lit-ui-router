@@ -300,12 +300,18 @@ router.urlService.rules.otherwise({ state: 'notFound' });
 ```
 
 Each route keeps only the fields a mount reads (`name`, `parent`, `url`,
-`params`, `redirectTo`, `redirectStatusCode`, `delegate`, `response`), and
-literal names still type the router. `otherwise` and the url config stay on
-the mount, since they belong to the router, not a state. A state a mount
-would get wrong throws at the call: a function or `TargetState` `redirectTo`,
-which only the client can run, and an abstract state with a url, whose url
-core never matches.
+`abstract`, `params`, `redirectTo`, `redirectStatusCode`, `delegate`,
+`response`), and literal names still type the router. `otherwise` and the url
+config stay on the mount, since they belong to the router, not a state. A
+state a mount would get wrong throws at the call: a function or `TargetState`
+`redirectTo`, which only the client can run.
+
+An abstract state with a url prefixes its children's urls and is never
+matched itself, as in core: `/mission/log` gets the shell from
+`{ name: 'mission', url: '/mission', abstract: true }` and
+`{ name: 'mission.log', url: '/log' }`, and `/mission` is unmatched. A
+redirect or `otherwise` that targets an abstract state throws at
+construction.
 
 ## The verdict
 

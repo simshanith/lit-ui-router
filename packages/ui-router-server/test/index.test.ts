@@ -589,6 +589,123 @@ for (const strategy of TIERS) {
   });
 }
 
+for (const strategy of TIERS) {
+  describe(`abstract states (${strategy} strategy)`, () => {
+    const routes: MountConfig['routes'] = [
+      { name: 'home', url: '' },
+      { name: 'mission', url: '/mission', abstract: true },
+      { name: 'mission.log', url: '/log' },
+      { name: 'crew', url: '/crew/:id', abstract: true, params: { id: '1' } },
+      { name: 'crew.bio', url: '/bio' },
+      { name: 'notFound' },
+    ];
+
+    const router = createServerRouter({
+      mounts: {
+        '/app': { ...tierConfig(strategy), routes },
+        '/with404': {
+          ...tierConfig(strategy),
+          routes,
+          otherwise: { state: 'notFound' },
+        },
+        '/bare': {
+          ...tierConfig(strategy),
+          routes: [
+            { name: 'root', url: '', abstract: true },
+            { name: 'root.page', url: '/page' },
+          ],
+        },
+      },
+    });
+
+    it('serves the shell for the children of an abstract state', async () => {
+      for (const path of ['/app/mission/log', '/app/crew/3/bio'])
+        assert.deepEqual(await router.resolve(path), {
+          kind: 'shell',
+          mount: '/app',
+        });
+    });
+
+    it("leaves the abstract state's own url unmatched", async () => {
+      for (const path of ['/app/mission', '/app/crew/3'])
+        assert.deepEqual(await router.resolve(path), {
+          kind: 'notFound',
+          mount: '/app',
+        });
+      assert.deepEqual(await router.resolve('/with404/mission'), {
+        kind: 'shell',
+        mount: '/with404',
+        status: 404,
+      });
+    });
+
+    it('reports an abstract bare base as a 404', () => {
+      assert.deepEqual(
+        diagnoseMounts(router).map(({ kind, mount }) => [kind, mount]),
+        [['bareBaseNotFound', '/bare']],
+      );
+    });
+  });
+}
+
+describe('abstract state configuration', () => {
+  const routes: MountConfig['routes'] = [
+    { name: 'mission', url: '/mission', abstract: true },
+    { name: 'mission.log', url: '/log' },
+    { name: 'frame', abstract: true },
+  ];
+
+  const mountOf = (config: Partial<MountConfig>) => () =>
+    createServerRouter({
+      mounts: { '/app': { ...config, routes: config.routes ?? routes } },
+    });
+
+  for (const strategy of ['matcher', 'simulate'] as const)
+    it(`rejects a redirect onto an abstract state at construction (${strategy} strategy)`, () => {
+      assert.throws(
+        mountOf({
+          strategy,
+          routes: [
+            ...routes,
+            { name: 'old', url: '/old', redirectTo: 'mission' },
+          ],
+        }),
+        /State 'old' redirects to abstract state 'mission'/,
+      );
+      assert.throws(
+        mountOf({
+          strategy,
+          redirects: [{ pattern: '/go', to: { state: 'frame' } }],
+        }),
+        /Rule '\/go' redirects to abstract state 'frame'/,
+      );
+    });
+
+  it('rejects an abstract otherwise state at construction', () => {
+    assert.throws(
+      mountOf({ otherwise: { state: 'frame' } }),
+      /otherwise state 'frame' must not be abstract/,
+    );
+  });
+
+  it('rejects an abstract delegating or response state at construction', () => {
+    assert.throws(
+      mountOf({
+        routes: [{ name: 'cmd', url: '/cmd', abstract: true, delegate: 'x' }],
+      }),
+      /delegating state 'cmd' cannot be abstract/,
+    );
+    assert.throws(
+      mountOf({
+        routes: [
+          { name: 'feed', url: '/feed', abstract: true, response: true },
+        ],
+      }),
+      /response state 'feed' cannot be abstract/,
+    );
+  });
+});
+
 describe('delegate configuration', () => {
   const mountOf = (routes: MountConfig['routes']) => ({
     mounts: { '/app': { routes } },
