@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import MiniSearch from 'minisearch';
+import { tokenizeSearchText } from 'vitepress/dist/client/shared.js';
 import { loadLocalSearchIndex } from 'vitepress/dist/client/theme-default/support/local-search.js';
 
-import { tokenizeWithAliases } from '../search-aliases.ts';
+import { aliasesIn, withSearchAliases } from '../search-aliases.ts';
 
 interface Section {
   id: string;
@@ -13,52 +14,61 @@ interface Section {
   text: string;
 }
 
-// Section text as the plugin indexes it: tags stripped, entities kept.
-const SECTIONS: Section[] = [
-  {
-    id: '/guides/prerender-with-eleventy#prerender-with-eleventy',
-    title: 'Prerender with Eleventy',
-    titles: [],
-    text: 'Eleventy writes each page through a template.',
-  },
-  {
-    id: '/guides/named-views#named-views',
-    title: 'Named views',
-    titles: [],
-    text: 'Give each &lt;ui-view&gt; a name.',
-  },
-  {
-    id: '/reference/lit-ui-router/components/UiView#class-uiview',
-    title: 'Class: UiView',
-    titles: [],
-    text: 'Renders the routed component.',
-  },
-  {
-    id: '/guides/transitions#transitions',
-    title: 'Transitions',
-    titles: [],
-    text: 'A transition moves from one state to another.',
-  },
-];
+// Rendered pages as `_render` returns them, one anchored heading each.
+const PAGES = {
+  '/guides/prerender-with-eleventy': [
+    'prerender-with-eleventy',
+    'Prerender with Eleventy',
+    '<p>Let the static site generator write each page.</p>',
+  ],
+  '/guides/named-views': [
+    'named-views',
+    'Named views',
+    '<p>Give each <code>&lt;ui-view&gt;</code> a name.</p>',
+  ],
+  '/reference/lit-ui-router/components/UiView': [
+    'class-uiview',
+    'Class: UiView',
+    '<p>Renders the routed component.</p>',
+  ],
+  '/guides/transitions': [
+    'transitions',
+    'Transitions',
+    '<p>A transition moves from one state to another.</p>',
+  ],
+} as const;
 
-// Built with the plugin's options, then loaded the way the client loads it.
+// One section per page, text tag-stripped as the plugin's splitter leaves it.
+function sections(): Section[] {
+  return Object.entries(PAGES).map(([path, [anchor, title, body]]) => {
+    const html = withSearchAliases(
+      `<h1 id="${anchor}" tabindex="-1">${title} <a class="header-anchor" href="#${anchor}">​</a></h1>\n${body}`,
+    );
+
+    const text = html.slice(html.indexOf('</h1>') + 5).replace(/<[^>]*>/g, '');
+
+    return { id: `${path}#${anchor}`, title, titles: [], text };
+  });
+}
+
+// The plugin's build options, loaded as the client loads them: theme config carries no miniSearch options.
 function clientIndex() {
   const index = new MiniSearch<Section>({
     fields: ['title', 'titles', 'text'],
     storeFields: ['title', 'titles'],
-    tokenize: tokenizeWithAliases,
+    tokenize: tokenizeSearchText,
   });
 
-  index.addAll(SECTIONS);
+  index.addAll(sections());
 
   return loadLocalSearchIndex(JSON.stringify(index));
 }
 
 function ids(query: string) {
-  const hits = clientIndex().search(query);
-
   // SAFETY: every section id is a string
-  return hits.map((hit) => hit.id as string);
+  return clientIndex()
+    .search(query)
+    .map((hit) => hit.id as string);
 }
 
 describe('search aliases', () => {
@@ -84,11 +94,18 @@ describe('search aliases', () => {
     assert.deepEqual(new Set(ids('UiView')), expected);
   });
 
-  it('keeps the tokens of text without aliases', () => {
-    assert.deepEqual(tokenizeWithAliases('Lit UI Router'), [
-      'Lit',
-      'UI',
-      'Router',
-    ]);
+  it('adds nothing to text without aliases', () => {
+    assert.deepEqual(aliasesIn('Lit UI Router'), []);
+    assert.equal(
+      withSearchAliases('<h2>Lit</h2><p>Router</p>'),
+      '<h2>Lit</h2><p>Router</p>',
+    );
+  });
+
+  it('leaves headings untouched', () => {
+    assert.equal(
+      withSearchAliases('<h2>Eleventy</h2><p>Write pages.</p>'),
+      '<h2>Eleventy</h2><p>Write pages.</p>\n11ty\n',
+    );
   });
 });
