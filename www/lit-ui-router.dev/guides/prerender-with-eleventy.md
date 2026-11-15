@@ -7,8 +7,9 @@ topic: server
 
 # Prerender with Eleventy
 
-[Eleventy](https://www.11ty.dev) can write a lit-ui-router app as a static
-site. Eleventy owns the files, the layout around each page and the host rules.
+[Eleventy](https://www.11ty.dev), a static site generator (SSG), can write a
+lit-ui-router app as a static site. Eleventy owns the files, the layout around
+each page and the host rules.
 [`prerender()`](/packages/lit-ui-router-ssr#quick-start) from `lit-ui-router-ssr` owns
 everything routing decides: which paths are pages, which redirect, what the
 404 page holds, and the server render of each page. The client then adopts the
@@ -43,7 +44,7 @@ The example is the Hello Solar System tutorial app, built this way. Its files:
   starts Eleventy with `--base=` as its
   [path prefix](https://www.11ty.dev/docs/config/#deploy-to-a-subdirectory-with-a-path-prefix).
 
-## Who writes what
+## Who writes what: the SSG and the router
 
 `prerender()` runs before each Eleventy build, and its result becomes
 [global data](https://www.11ty.dev/docs/data-global-custom/). Its `write`
