@@ -1,17 +1,15 @@
 import { tokenizeSearchText } from 'vitepress/dist/client/shared.js';
 
-/** Groups of names local search treats as one: where a member appears, the index also holds every other member. */
-export const SEARCH_ALIASES = [
-  ['11ty', 'eleventy'],
-  ['ui-view', 'uiview'],
-  ['prerender', 'ssg'],
-] as const;
+import { SEARCH_ALIASES } from '../catalog/search-aliases.ts';
+
+/** Names local search treats as one: where a member appears, the index also holds every other member. */
+export type SearchAliasGroup = readonly [string, string, ...string[]];
 
 type Phrase = readonly string[];
 
-const GROUPS: readonly (readonly Phrase[])[] = SEARCH_ALIASES.map((group) =>
-  group.map((member) => tokenizeSearchText(member)),
-);
+const GROUPS: readonly (readonly Phrase[])[] = (
+  SEARCH_ALIASES satisfies readonly SearchAliasGroup[]
+).map((group) => group.map((member) => tokenizeSearchText(member)));
 
 function startsAt(terms: readonly string[], at: number, phrase: Phrase) {
   for (let i = 0; i < phrase.length; i++)
