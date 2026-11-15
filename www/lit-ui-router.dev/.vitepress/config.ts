@@ -15,6 +15,7 @@ import {
 import type { PackageName } from '../catalog/packages.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { writeRedirects } from './redirects.ts';
+import { tokenizeWithAliases } from './search-aliases.ts';
 import { renderForSearch } from './search-render.ts';
 import { writeSitemapIndex } from './sitemap.ts';
 import { deadLinkIgnores, surfaceOf } from './surfaces.ts';
@@ -216,6 +217,7 @@ const config = {
         // readable, so show it rather than the heading alone.
         detailedView: true,
         _render: renderForSearch,
+        miniSearch: { options: { tokenize: tokenizeWithAliases } },
       },
     },
     // A link's accessible name must contain its visible text (WCAG 2.5.3).
