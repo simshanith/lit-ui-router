@@ -7,11 +7,20 @@
 // captured here; with this file in the check task's inputs, its cache key is
 // sound.
 
+import { Effect } from 'effect';
 import pacote from 'pacote';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
+import {
+  awaitedRelease,
+  pendingTargets,
+  retryMessage,
+  specsOf,
+  waitForListings,
+} from './resolve-published.core.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { logWarning } from '@tools/shared/gha.ts';
 import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 import { failMain } from '../lib/fail-main.ts';
 
@@ -33,21 +42,51 @@ async function publishedTags(name: string): Promise<Record<string, string>> {
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
-  const versions: PublishedVersions = {};
-  const summary: string[] = [];
+  const released = process.env.RELEASED_PACKAGE_VERSION?.trim() ?? '';
 
-  for (const { name } of publishable) {
-    const tags = await publishedTags(name);
-    versions[name] = tags;
+  const named = awaitedRelease(
+    released,
+    publishable.map(({ name }) => name),
+  );
 
+  if (released !== '' && !named) {
+    logWarning(
+      `RELEASED_PACKAGE_VERSION ${released} is not <name>@<version> of a publishable package; resolving without waiting`,
+    );
+  }
+
+  const first: PublishedVersions = {};
+
+  for (const { name } of publishable) first[name] = await publishedTags(name);
+
+  const pending = pendingTargets(
+    named,
+    publishable.map(({ name, manifest }) => ({
+      name,
+      version: manifest.version,
+    })),
+    first,
+  );
+
+  const { versions, unlisted } = await Effect.runPromise(
+    waitForListings(publishedTags, pending, first, (retry) =>
+      console.log(retryMessage(retry)),
+    ),
+  );
+
+  if (unlisted.length > 0) {
+    logWarning(
+      `npm's dist-tags still don't list ${specsOf(unlisted)} after the wait; published-diff compares against what npm lists`,
+    );
+  }
+
+  const summary = Object.entries(versions).map(([name, tags]) => {
     const specs = Object.entries(tags)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([tag, version]) => `${tag}@${version}`);
 
-    summary.push(
-      `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
-    );
-  }
+    return `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`;
+  });
 
   await writePublishedVersions(versions);
   console.log(

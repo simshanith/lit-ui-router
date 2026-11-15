@@ -220,6 +220,19 @@ These run in the `release signals (npm)` job. A separate `release signals (cloud
 job posts the `workers-builds (triggers)` and `pages-deploy (altitude-atlas)` check runs
 ([`www/DEPLOY.md`](../www/DEPLOY.md)), so a failure in one job never skips the other.
 
+On the post-publish dispatch, Publish to NPM passes the new release as the
+`release` input. npm's dist-tags lag a publish by minutes, so `published-diff`
+first waits until a dist-tag points at that version and at the workspace
+version of every other package already on npm. It re-reads with the release
+ledger's policy, exponential and jittered with a capped delay: reads come at
+most 30 seconds apart, for about five minutes, unless npm rate-limits a read
+and names a longer wait. Each post-publish run thus
+covers the whole batch of releases, and a bump whose publish is still running
+or failed holds that run for the whole wait. Once the wait runs out, the run
+warns with each version npm still doesn't list and compares against what npm
+lists. A push to `main` cancels a waiting run, and the push's own run does not
+wait, so its verdict can be stale until the next run.
+
 The cloudflare job also posts the `release-ledger` check run. It reads the
 release ledger's `GET /ledger` with its OIDC id-token
 ([`www/release-ledger.lit-ui-router.dev`](../www/release-ledger.lit-ui-router.dev/README.md))
