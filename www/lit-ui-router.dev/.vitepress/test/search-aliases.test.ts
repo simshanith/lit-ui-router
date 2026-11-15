@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import { getByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import MiniSearch from 'minisearch';
 import { tokenizeSearchText } from 'vitepress/dist/client/shared.js';
 import { loadLocalSearchIndex } from 'vitepress/dist/client/theme-default/support/local-search.js';
@@ -38,74 +40,92 @@ const PAGES = {
   ],
 } as const;
 
-// One section per page, text tag-stripped as the plugin's splitter leaves it.
-function sections(): Section[] {
-  return Object.entries(PAGES).map(([path, [anchor, title, body]]) => {
-    const html = withSearchAliases(
-      `<h1 id="${anchor}" tabindex="-1">${title} <a class="header-anchor" href="#${anchor}">​</a></h1>\n${body}`,
-    );
+// One section per page: the text after its heading, as the plugin's splitter indexes it.
+async function sections(): Promise<Section[]> {
+  return Promise.all(
+    Object.entries(PAGES).map(async ([path, [anchor, title, body]]) => {
+      const { body: page } = parseHtml(
+        await withSearchAliases(
+          `<h1 id="${anchor}" tabindex="-1">${title} <a class="header-anchor" href="#${anchor}">​</a></h1>\n${body}`,
+        ),
+      );
 
-    const text = html.slice(html.indexOf('</h1>') + 5).replace(/<[^>]*>/g, '');
+      getByRole(page, 'heading', { level: 1 }).remove();
 
-    return { id: `${path}#${anchor}`, title, titles: [], text };
-  });
+      return {
+        id: `${path}#${anchor}`,
+        title,
+        titles: [],
+        text: page.textContent,
+      };
+    }),
+  );
 }
 
 // The plugin's build options, loaded as the client loads them: theme config carries no miniSearch options.
-function clientIndex() {
+async function clientIndex() {
   const index = new MiniSearch<Section>({
     fields: ['title', 'titles', 'text'],
     storeFields: ['title', 'titles'],
     tokenize: tokenizeSearchText,
   });
 
-  index.addAll(sections());
+  index.addAll(await sections());
 
   return loadLocalSearchIndex(JSON.stringify(index));
 }
 
-function ids(query: string) {
+async function ids(query: string) {
   // SAFETY: every section id is a string
-  return clientIndex()
-    .search(query)
-    .map((hit) => hit.id as string);
+  return (await clientIndex()).search(query).map((hit) => hit.id as string);
 }
 
 describe('search aliases', () => {
-  it('finds the Eleventy guide for 11ty', () => {
-    assert.deepEqual(ids('11ty'), [
+  it('finds the Eleventy guide for 11ty', async () => {
+    assert.deepEqual(await ids('11ty'), [
       '/guides/prerender-with-eleventy#prerender-with-eleventy',
     ]);
   });
 
-  it('finds the prerender guide for ssg', () => {
-    assert.deepEqual(ids('ssg'), [
+  it('finds the prerender guide for ssg', async () => {
+    assert.deepEqual(await ids('ssg'), [
       '/guides/prerender-with-eleventy#prerender-with-eleventy',
     ]);
   });
 
-  it('finds the same sections for ui-view and UiView', () => {
+  it('finds the same sections for ui-view and UiView', async () => {
     const expected = new Set([
       '/guides/named-views#named-views',
       '/reference/lit-ui-router/components/UiView#class-uiview',
     ]);
 
-    assert.deepEqual(new Set(ids('ui-view')), expected);
-    assert.deepEqual(new Set(ids('UiView')), expected);
+    assert.deepEqual(new Set(await ids('ui-view')), expected);
+    assert.deepEqual(new Set(await ids('UiView')), expected);
   });
 
-  it('adds nothing to text without aliases', () => {
+  it('returns a page without aliases unchanged', async () => {
+    const html = '<h2>Lit</h2><p>Router</p>';
+
     assert.deepEqual(aliasesIn('Lit UI Router'), []);
-    assert.equal(
-      withSearchAliases('<h2>Lit</h2><p>Router</p>'),
-      '<h2>Lit</h2><p>Router</p>',
-    );
+    assert.equal(await withSearchAliases(html), html);
   });
 
-  it('leaves headings untouched', () => {
-    assert.equal(
-      withSearchAliases('<h2>Eleventy</h2><p>Write pages.</p>'),
-      '<h2>Eleventy</h2><p>Write pages.</p>\n11ty\n',
+  it('appends aliases to the section body, not its heading', async () => {
+    const { body } = parseHtml(
+      await withSearchAliases(
+        '<h2>Eleventy</h2>\n<p>Write pages.</p>\n<h2>Vite</h2>\n<p>Bundle.</p>\n',
+      ),
     );
+
+    getByRole(body, 'heading', { name: 'Eleventy' });
+    getByRole(body, 'heading', { name: 'Vite' });
+    assert.deepEqual(body.textContent.split(/\s+/).filter(Boolean), [
+      'Eleventy',
+      'Write',
+      'pages.',
+      '11ty',
+      'Vite',
+      'Bundle.',
+    ]);
   });
 });

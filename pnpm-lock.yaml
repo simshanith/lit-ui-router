@@ -3412,6 +3412,9 @@ importers:
       fast-xml-validator:
         specifier: 'catalog:'
         version: 1.4.2
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
