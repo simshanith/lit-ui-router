@@ -339,7 +339,7 @@ describe('/releases (the release pages)', () => {
     assert.equal(res.status, 200);
     assert.deepEqual(assetCalls, ['/releases/_notes/lit-ui-router.json']);
     assert.deepEqual(assetMethods, ['GET']);
-    assert.match(await res.text(), /<h2 id="v1\.10\.0">/);
+    assert.match(await res.text(), /<h3 id="v1\.10\.0">/);
     assert.match(res.headers.get('Content-Type') ?? '', /text\/html/);
     assert.equal(res.headers.get('X-Robots-Tag'), null);
   });

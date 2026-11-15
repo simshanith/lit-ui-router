@@ -2,6 +2,7 @@
 import type { MountConfig, RouteDeclaration } from 'ui-router-server';
 import type { RouterUrlConfig } from 'ui-router-server/url-config';
 
+import { DEFAULT_PRERELEASES, PRERELEASES_PARAM } from './lines.ts';
 import { DEFAULT_FILTER, FILTER_PARAM } from './npm-diff/file-filter.ts';
 
 export const RELEASES_MOUNT = '/releases';
@@ -17,7 +18,13 @@ export const urlConfig = {
 export const releaseRoutes = [
   { name: 'releases', url: '' },
   { name: 'releases.sitemap', url: '/sitemap.xml', response: true },
-  { name: 'releases.package', url: '/{pkg}' },
+  {
+    name: 'releases.package',
+    url: `/{pkg}?${PRERELEASES_PARAM}`,
+    params: {
+      [PRERELEASES_PARAM]: { value: DEFAULT_PRERELEASES, squash: true },
+    },
+  },
   { name: 'releases.package.latest', url: '/latest', response: true },
   {
     name: 'releases.package.diff',
