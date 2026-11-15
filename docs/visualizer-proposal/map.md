@@ -305,6 +305,21 @@ Reserving the column at every width was weighed and left out: the stress tree
 needs the dock's whole width. So was a start-aligned diagram, which leaves
 the same column free and reads as a document, not a drawing.
 
+The popover shows while something is selected, and hides when the selection
+is cleared, which leaves every box where it is. A selection is cleared by:
+
+- the inspector's `Close inspector` button, which shows wherever the
+  inspector shows a selection;
+- a click on the Map's empty room, outside any box, the minimap and the
+  controls; a press that travels past 4px is a pan and clears nothing;
+- a click on the selected box, tick or log row again;
+- `Escape` anywhere in the panel, once the element with focus has passed it
+  on. With nothing selected, `Escape` does nothing.
+
+Focus that was in the popover goes back to where the selection was made: the
+selected tick's strip or log row, the selected state's item, or the `Router`
+button.
+
 ## Motion
 
 A box changes place and size between modes, and the eye follows a state
@@ -536,6 +551,9 @@ the visible text differ.
 
 The scrubber is a `listbox` of transitions. Left and right arrows move the
 selection, and the selected transition's notation sits beside it.
+
+`Escape` clears the selection from anywhere in the panel; the inspector's
+close button is named `Close inspector`.
 
 The edge overlay, count chips included, is hidden from assistive technology. The WAI-ARIA Graphics
 Module defines no connector role, and `aria-flowto` support is partial. The

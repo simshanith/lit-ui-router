@@ -1423,6 +1423,163 @@ describe('the nested Map', () => {
     });
   });
 
+  const popoverShown = (element: UIRouterDevtools) =>
+    element.renderRoot.querySelector('.inspector-pane')!.getClientRects()
+      .length > 0;
+
+  const selectTick = async (element: UIRouterDevtools, index: number) => {
+    const listbox = getByRole(shadow(element), 'listbox', {
+      name: /Transitions/,
+    });
+
+    getAllByRole(listbox, 'option')[index].click();
+    await waitFor(() => expect(popoverShown(element)).toBe(true));
+
+    return listbox;
+  };
+
+  it('closes the inspector from its close button and returns focus to the scrubber', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    const listbox = await selectTick(element, 3);
+
+    const diagram = element.renderRoot
+      .querySelector('.nested')!
+      .getBoundingClientRect();
+
+    const close = getByRole(shadow(element), 'button', {
+      name: 'Close inspector',
+    });
+
+    close.focus();
+    close.click();
+
+    await waitFor(() => expect(popoverShown(element)).toBe(false));
+    expect(panelOf(element)._inspect).toBe('none');
+    expect(queryAllByRole(listbox, 'option', { selected: true })).toHaveLength(
+      0,
+    );
+    expect(element.shadowRoot?.activeElement).toBe(listbox);
+    expect(
+      queryByRole(shadow(element), 'button', { name: 'Close inspector' }),
+    ).toBeNull();
+    expect(
+      element.renderRoot.querySelector('.nested')!.getBoundingClientRect(),
+    ).toEqual(diagram);
+  });
+
+  it('clears a selected transition when it is clicked again, in the scrubber and in the log', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    const listbox = await selectTick(element, 3);
+    const tick = getAllByRole(listbox, 'option')[3];
+
+    tick.click();
+    await waitFor(() => expect(popoverShown(element)).toBe(false));
+    expect(tick.getAttribute('aria-selected')).toBe('false');
+    expect(listbox.hasAttribute('aria-activedescendant')).toBe(false);
+
+    getByRole(shadow(element), 'button', { name: 'outline' }).click();
+    await element.updateComplete;
+
+    const log = getByRole(shadow(element), 'tabpanel', { name: /Transitions/ });
+    const line = getAllByRole(log, 'button', { expanded: false })[0];
+
+    line.click();
+    await element.updateComplete;
+    expect(line.getAttribute('aria-expanded')).toBe('true');
+    expect(panelOf(element)._inspect).toBe('tx');
+
+    line.click();
+    await element.updateComplete;
+    expect(line.getAttribute('aria-expanded')).toBe('false');
+    expect(panelOf(element)._inspect).toBe('none');
+  });
+
+  it('clears the selection on a click on the empty Map, but not on one that ends a drag', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    await selectTick(element, 3);
+
+    const scroller =
+      element.renderRoot.querySelector<HTMLElement>('.map-scroll')!;
+
+    const { x, y } = scroller.getBoundingClientRect();
+
+    const press = (type: string, dx: number) =>
+      scroller.dispatchEvent(
+        new MouseEvent(type, {
+          clientX: x + 4 + dx,
+          clientY: y + 4,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+
+    // A press that travels past the drag threshold and lets go on the empty room.
+    scroller.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        clientX: x + 4,
+        clientY: y + 4,
+        button: 0,
+        bubbles: true,
+      }),
+    );
+    press('click', 20);
+    await element.updateComplete;
+    expect(popoverShown(element)).toBe(true);
+
+    scroller.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        clientX: x + 4,
+        clientY: y + 4,
+        button: 0,
+        bubbles: true,
+      }),
+    );
+    press('click', 0);
+    await waitFor(() => expect(popoverShown(element)).toBe(false));
+    expect(panelOf(element)._inspect).toBe('none');
+  });
+
+  it('clears the selection on Escape anywhere in the panel, and leaves an Escape already handled', async () => {
+    const element = await openMap(1280);
+    await tree(element);
+    await selectTick(element, 3);
+
+    const nested = getByRole(shadow(element), 'button', { name: 'Nested' });
+    const handled = (event: Event) => event.preventDefault();
+
+    const escape = () =>
+      nested.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        }),
+      );
+
+    // A control that takes Escape for itself keeps it.
+    nested.addEventListener('keydown', handled);
+    escape();
+    await element.updateComplete;
+    expect(popoverShown(element)).toBe(true);
+    nested.removeEventListener('keydown', handled);
+
+    expect(escape()).toBe(false);
+    await waitFor(() => expect(popoverShown(element)).toBe(false));
+    expect(panelOf(element)._inspect).toBe('none');
+
+    // With nothing selected Escape is left alone, and the panel stays open.
+    expect(escape()).toBe(true);
+    expect(
+      getByRole(shadow(element), 'region', {
+        name: 'Router devtools',
+      }).matches(':popover-open'),
+    ).toBe(true);
+  });
+
   const nestedRoot = (element: UIRouterDevtools) =>
     element.renderRoot.querySelector<HTMLElement>('.nested')!;
 
