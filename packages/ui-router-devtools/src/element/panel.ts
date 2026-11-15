@@ -285,6 +285,8 @@ export class DevtoolsPanel extends LitElement {
   declare _selectedState: string | null;
   declare _inspect: Inspect;
   declare _focusState: string | null;
+  /** The nested Map box the last first click landed on, for the double-click that click may start. */
+  _pressed: string | null = null;
   declare _collapsed: ReadonlySet<string>;
   declare _announcement: string;
   declare _now: number;

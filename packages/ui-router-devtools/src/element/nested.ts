@@ -854,6 +854,7 @@ const renderFold = (
     title=${open ? 'Collapse' : 'Expand'}
     @click=${(event: Event) => {
       event.stopPropagation();
+      view.host._pressed = null;
       nestedKeys(view.host, view.layout).toggle(target, open);
     }}
   >
@@ -1037,18 +1038,21 @@ export const renderNested = (
     onTreeKey(host, event, rows, focus, nestedKeys(host, layout));
   };
 
+  // The first click can re-pack the diagram, so a double-click keeps the box its first click was on.
   const select = (event: MouseEvent) => {
-    const name = boxName(event);
+    if (event.detail > 1) {
+      if (host._pressed) host._selectState(host._pressed, true);
 
-    if (name) host._selectState(name, event.detail > 1);
+      return;
+    }
+
+    host._pressed = boxName(event) ?? null;
+
+    if (host._pressed) host._selectState(host._pressed);
   };
 
-  const go = (event: MouseEvent) => {
-    const name = boxName(event);
-
-    // SAFETY: the listener sits on the tree, whose event targets are its own elements
-    if (name && !(event.target as Element).closest('.fold'))
-      host._goState(name);
+  const go = () => {
+    if (host._pressed) host._goState(host._pressed);
   };
 
   const focusIn = (event: Event) => {

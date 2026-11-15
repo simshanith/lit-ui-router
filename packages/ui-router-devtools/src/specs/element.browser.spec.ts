@@ -367,6 +367,13 @@ describe('a double-click in the Outline', () => {
     await waitFor(() => expect(router.globals.current.name).toBe('home'));
     expect(panel._selectedState).toBe('home');
     expect(panel._inspect).toBe('state');
+
+    // A double-click on the row that is already selected goes too, and ends selected.
+    await router.stateService.go('a.b');
+    await doubleClick(element, row(/\bhome$/));
+    await waitFor(() => expect(router.globals.current.name).toBe('home'));
+    expect(panel._selectedState).toBe('home');
+    expect(panel._inspect).toBe('state');
   });
 
   it('selects an abstract state or one with a required param without going', async () => {
@@ -1116,6 +1123,29 @@ describe('the nested Map', () => {
       getByRole(map, 'button', { name: /(Collapse|Expand) mymessages/ }),
     );
     expect(element.router!.globals.current.name).toBe('app.contacts');
+    expect(panelOf(element)._selectedState).toBe('app.contacts');
+  });
+
+  it('goes to the box a double-click began on when its first click moves the boxes', async () => {
+    const element = await openMap(1280);
+    const map = await tree(element);
+    const root = element.renderRoot.querySelector<HTMLElement>('.nested')!;
+
+    const fire = async (target: HTMLElement, type: string, detail: number) => {
+      target.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, composed: true, detail }),
+      );
+      await element.updateComplete;
+    };
+
+    // The second click and the double-click land on the diagram, as they do once the box has left the pointer.
+    await fire(getByRole(map, 'treeitem', { name: 'contacts' }), 'click', 1);
+    await fire(root, 'click', 2);
+    await fire(root, 'dblclick', 2);
+
+    await waitFor(() =>
+      expect(element.router!.globals.current.name).toBe('app.contacts'),
+    );
     expect(panelOf(element)._selectedState).toBe('app.contacts');
   });
 
