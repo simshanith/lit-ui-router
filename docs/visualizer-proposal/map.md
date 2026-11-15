@@ -112,9 +112,9 @@ The packer places every box, and CSS only draws them:
 5. If the root still does not fit, step down the ladder below. In the
    maximised panel, first step up it.
 6. The [viewport](#the-viewport) places the diagram: in the middle of the
-   room at that size, or as near the middle as leaves
-   [the popover's column](#the-inspector-popover) free. The room left over
-   frames it; no box takes it.
+   room left beside [the popover's column](#the-inspector-popover), or of the
+   whole room when the dock has no column to spare. The room left over frames
+   it; no box takes it.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
@@ -287,11 +287,9 @@ The popover is 296px wide, and its column, with a 12px margin either side, is
 320px. Whether the dock has that column to spare is decided by the diagram's
 size, before anything is selected:
 
-- **Room for a column either side:** the diagram is centred, and the popover
-  takes the column at the end.
-- **Room for one column:** the diagram sits as near the middle as leaves the
-  column free at the end, so the room at its start shrinks first. The popover
-  takes that column. The viewport's fit reserves it.
+- **Room for the column:** the popover takes the column at the end, and the
+  diagram is centred in the room beside it. The viewport's fit reserves the
+  column.
 - **No room:** the diagram is centred and the popover goes over it. It tries
   beside the selected box, level with its top or its bottom, then the corners
   of the panel, then every 12px along the panel's top and bottom, and takes

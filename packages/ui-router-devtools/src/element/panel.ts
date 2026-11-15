@@ -933,12 +933,7 @@ export class DevtoolsPanel extends LitElement {
 
   // The room kept at the diagram's end so the popover's column is empty before anything is selected, and nothing moves when it is.
   _reserve(nested: NestedLayout): number {
-    if (!this._beside(nested)) return 0;
-
-    const spare = this._mapSize.width - nested.placed.width;
-
-    // Centred while a column is free either side; past that the diagram gives up its end margin first.
-    return Math.max(0, Math.min(ASIDE, ASIDE * 2 - spare));
+    return this._beside(nested) ? ASIDE : 0;
   }
 
   // The room the Map is shown in, for the view of a layout.

@@ -884,11 +884,10 @@ describe('the nested Map', () => {
     await finish(element);
     const dock = margins(element);
 
-    // The diagram is centred when a column is free either side, and otherwise as near the middle as leaves one free at the end.
+    // The diagram is centred in the room beside the popover's column.
     expect(Math.abs(dock.top - dock.bottom)).toBeLessThanOrEqual(1);
     expect(dock.left).toBeGreaterThanOrEqual(0);
-    expect(dock.left).toBeLessThanOrEqual(dock.right + 1);
-    expect(dock.right).toBeGreaterThanOrEqual(320);
+    expect(Math.abs(dock.left - (dock.right - 320))).toBeLessThanOrEqual(1);
     pills(24, 208);
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
@@ -1386,6 +1385,17 @@ describe('the nested Map', () => {
     maximise.click();
     await waitFor(() => expect(end()).toBeGreaterThan(0));
     await waitFor(() => expect(listbox.scrollLeft).toBeCloseTo(end(), 0));
+  });
+
+  it("centres the diagram beside the popover's column in a dock with room to spare", async () => {
+    const element = await openMap(1680);
+    await tree(element);
+    await finish(element);
+
+    const dock = margins(element);
+
+    expect(dock.left).toBeGreaterThan(0);
+    expect(Math.abs(dock.left - (dock.right - 320))).toBeLessThanOrEqual(1);
   });
 
   it('places the inspector popover clear of the selection, its edges and the boxes they end at', async () => {
