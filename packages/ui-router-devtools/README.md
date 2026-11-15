@@ -8,6 +8,8 @@ The Map tab draws the state tree two ways, chosen in the panel header and rememb
 
 A click on a state in the Outline, on the Map or in the tree selects it, and a second click clears the selection. A double-click goes to the state, as the inspector's Go button does, and leaves it selected; a lazy state loads first. A state the Go button does not offer, one that is abstract, has a required param or belongs to an imported session, is only selected.
 
+The inspector shows a state's full name, which a box on the Map shortens to its last segment. A copy button beside the name copies it as a target for `go()`, so a lazy `reports.**` copies `reports`, and one beside the URL copies the URL pattern. Each says what it copied through the panel's live region and shows a check for a moment. Where the Clipboard API is missing or refuses, it selects the text in the inspector to copy by hand and says so. Copying works in an imported session too.
+
 A state has one colour wherever it appears: its box on the Map, its glyph and rail in the Outline, its node in the tree and its name in the inspector. The colour follows the state's depth in the tree, from a cycle of four, `--uird-depth-1` to `--uird-depth-4`. While a transition is selected, previewed or running, those colours recede and `--uird-active` and `--uird-exit` mark what it enters, retains and exits. Set the four depth tokens to one value for a monochrome panel.
 
 `observedEdges(session)` folds a recorded session into one edge per ordered pair of states, with its count and outcomes, for exporters as well as the Map.

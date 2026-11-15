@@ -11,6 +11,8 @@ import {
   renderTiming,
 } from './log.ts';
 import {
+  copiedGlyph,
+  copyGlyph,
   markGlyph,
   roleGlyph,
   roleLabel,
@@ -33,6 +35,58 @@ const stateLink = (host: DevtoolsPanel, name: string) =>
   >
     ${segment(name)}
   </button>`;
+
+const COPIED_MS = 1500;
+
+// Without the Clipboard API, the copied text is selected in place for the viewer to copy by hand.
+const copy = async (
+  host: DevtoolsPanel,
+  key: string,
+  what: string,
+  text: string,
+  source: Element,
+) => {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const node = document.createTreeWalker(source, NodeFilter.SHOW_TEXT);
+    const shown = node.nextNode()!;
+    getSelection()!.setBaseAndExtent(shown, 0, shown, text.length);
+    host._announcement = `Could not copy; the ${what} is selected`;
+
+    return;
+  }
+
+  host._announcement = `Copied ${text}`;
+  host._copied = key;
+  clearTimeout(host._copiedTimer);
+  host._copiedTimer = setTimeout(() => (host._copied = null), COPIED_MS);
+};
+
+// Copies `text`, which the element before the button shows.
+const copyButton = (
+  host: DevtoolsPanel,
+  key: string,
+  what: string,
+  text: string,
+) => {
+  const label = `Copy ${what}`;
+  const copied = host._copied === key;
+
+  return html`<button
+    class="icon copy"
+    aria-label=${label}
+    title=${label}
+    ?data-copied=${copied}
+    @click=${(e: Event) => {
+      // SAFETY: the listener is on this <button>, which always follows the text it copies
+      const source = (e.currentTarget as Element).previousElementSibling!;
+      void copy(host, key, what, text, source);
+    }}
+  >
+    ${copied ? copiedGlyph : copyGlyph}
+  </button>`;
+};
 
 const commas = (items: readonly unknown[]) =>
   items.map((item, index) => html`${index ? ', ' : nothing}${item}`);
@@ -135,7 +189,8 @@ export const renderStateInspector = (host: DevtoolsPanel): TemplateResult => {
 
   return html`<div class="inspector">
     <p class="insp-title ${host._depthClass(state.name)}">
-      ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span>
+      ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span
+      >${copyButton(host, `name ${state.name}`, 'state name', bareName(state.name))}
       ${
         host._canGo(state)
           ? html`<button class="go" @click=${() => host._go(state)}>Go</button>`
@@ -146,7 +201,14 @@ export const renderStateInspector = (host: DevtoolsPanel): TemplateResult => {
       <dt>Status</dt>
       <dd>${roleLabel[role]}</dd>
       <dt>URL</dt>
-      <dd class="literal">${state.url ?? '—'}</dd>
+      ${
+        state.url
+          ? html`<dd class="literal copyable">
+              <span>${state.url}</span
+              >${copyButton(host, `url ${state.name}`, 'URL', state.url)}
+            </dd>`
+          : html`<dd class="literal">—</dd>`
+      }
       ${
         state.abstract
           ? html`<dt>Abstract</dt>

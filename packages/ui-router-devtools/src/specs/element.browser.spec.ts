@@ -429,6 +429,153 @@ describe('a double-click in the Outline', () => {
   });
 });
 
+describe('copying from the inspector', () => {
+  const inspect = async (name: string) => {
+    await page.viewport(1280, 800);
+    const router = makeRouter();
+    router.stateRegistry.register({ name: 'mymessages', url: '/messages' });
+    router.stateRegistry.register({ name: 'mymessages.messagelist' });
+    router.stateRegistry.register({
+      name: 'reports.**',
+      url: '/reports',
+      lazyLoad: () => new Promise(() => {}),
+    });
+    const { element } = router.plugin(DevtoolsPlugin);
+    const panel = panelOf(element);
+    await router.stateService.go('home');
+    await element.updateComplete;
+    getByRole(shadow(element), 'button', { name: /Router .*home/ }).click();
+    panel._selectState(name);
+    await element.updateComplete;
+
+    const button = (label: string) =>
+      getByRole(shadow(element), 'button', { name: label });
+
+    const announced = () => getByRole(shadow(element), 'status').textContent;
+
+    return { panel, element, button, announced };
+  };
+
+  const writeText = () =>
+    vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    getSelection()?.removeAllRanges();
+  });
+
+  it("copies a state's full name and says so, and its check clears after a moment", async () => {
+    const write = writeText();
+
+    const { element, button, announced } = await inspect(
+      'mymessages.messagelist',
+    );
+
+    expect(button('Copy state name').getAttribute('title')).toBe(
+      'Copy state name',
+    );
+    expect(queryByRole(shadow(element), 'button', { name: 'Copy URL' })).toBe(
+      null,
+    );
+
+    button('Copy state name').click();
+
+    await waitFor(() =>
+      expect(announced()).toContain('Copied mymessages.messagelist'),
+    );
+    expect(write).toHaveBeenCalledWith('mymessages.messagelist');
+    await element.updateComplete;
+    expect(button('Copy state name').hasAttribute('data-copied')).toBe(true);
+    expect(button('Copy state name').querySelector('.glyph.copied')).not.toBe(
+      null,
+    );
+
+    await waitFor(
+      () =>
+        expect(button('Copy state name').hasAttribute('data-copied')).toBe(
+          false,
+        ),
+      { timeout: 3000 },
+    );
+    expect(button('Copy state name').querySelector('.glyph.copy')).not.toBe(
+      null,
+    );
+  });
+
+  it('copies a lazy state by the name a target uses', async () => {
+    const write = writeText();
+    const { button } = await inspect('reports.**');
+
+    button('Copy state name').click();
+
+    await waitFor(() => expect(write).toHaveBeenCalledWith('reports'));
+  });
+
+  it("copies a state's URL", async () => {
+    const write = writeText();
+    const { element, button, announced } = await inspect('mymessages');
+
+    button('Copy URL').click();
+
+    await waitFor(() => expect(announced()).toContain('Copied /messages'));
+    expect(write).toHaveBeenCalledWith('/messages');
+    await element.updateComplete;
+    expect(button('Copy URL').hasAttribute('data-copied')).toBe(true);
+    expect(button('Copy state name').hasAttribute('data-copied')).toBe(false);
+  });
+
+  it('selects the name and says so when the clipboard refuses', async () => {
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(
+      new DOMException('Write permission denied.', 'NotAllowedError'),
+    );
+    const { button, announced } = await inspect('reports.**');
+
+    button('Copy state name').click();
+
+    await waitFor(() =>
+      expect(announced()).toContain(
+        'Could not copy; the state name is selected',
+      ),
+    );
+    expect(getSelection()?.toString()).toBe('reports');
+    expect(button('Copy state name').hasAttribute('data-copied')).toBe(false);
+  });
+
+  it('selects the URL and says so without the Clipboard API', async () => {
+    // An insecure context has no `navigator.clipboard`.
+    vi.stubGlobal(
+      'navigator',
+      Object.create(navigator, { clipboard: { value: undefined } }),
+    );
+    const { button, announced } = await inspect('mymessages');
+
+    button('Copy URL').click();
+
+    await waitFor(() =>
+      expect(announced()).toContain('Could not copy; the URL is selected'),
+    );
+    expect(getSelection()?.toString()).toBe('/messages');
+  });
+
+  it('copies in an imported session', async () => {
+    const write = writeText();
+    const { panel, element, button, announced } = await inspect('mymessages');
+    panel.importSession(panel.session({ params: 'all' })!);
+    panel._selectState('mymessages.messagelist');
+    await element.updateComplete;
+
+    expect(panel._imported).not.toBe(null);
+    expect(queryByRole(shadow(element), 'button', { name: 'Go' })).toBe(null);
+    button('Copy state name').click();
+
+    await waitFor(() =>
+      expect(announced()).toContain('Copied mymessages.messagelist'),
+    );
+    expect(write).toHaveBeenCalledWith('mymessages.messagelist');
+  });
+});
+
 describe('session files', () => {
   const open = async () => {
     await page.viewport(1280, 800);
