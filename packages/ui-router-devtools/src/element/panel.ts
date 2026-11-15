@@ -35,6 +35,7 @@ import {
   type Session,
   type SpanRecord,
   type StateInfo,
+  type ViewInfo,
 } from '../schema.ts';
 import { spansDuring, upsertSpan } from '../spans.ts';
 import type { ViewLocator } from '../views.ts';
@@ -371,7 +372,7 @@ export class DevtoolsPanel extends LitElement {
   #viewsLoading = false;
   // The view under the pointer, and the one the locator last marked on the page.
   #pointedView: number | null = null;
-  #markedView: number | null = null;
+  #markedView: ViewInfo | null = null;
   readonly #adopted = new Set<CSSResult>();
   // Spans from a tracer, by span id, oldest first.
   #spans = new Map<string, SpanRecord>();
@@ -523,6 +524,7 @@ export class DevtoolsPanel extends LitElement {
       if (this.router && this.isConnected) this.#attach(this.router);
     }
 
+    this.#forgetGoneViews();
     this.#loadViews(changed);
     this.#followMap(changed);
     this.#syncTicker();
@@ -1184,15 +1186,26 @@ export class DevtoolsPanel extends LitElement {
       Boolean(this.#panel?.matches(':popover-open'));
 
     const id = shown ? (this.#pointedView ?? this._viewSelected) : null;
+    const view = this.#viewOf(id);
 
-    if (id !== this.#markedView) this.#mark(id);
+    // A new snapshot is a new object, so the mark follows a view that changed or left.
+    if (view !== this.#markedView) this.#mark(view);
   }
 
-  #mark(id: number | null) {
-    this.#markedView = id;
-    this.viewLocator?.highlight(
-      this._model.views?.views.find((view) => view.id === id) ?? null,
-    );
+  #viewOf(id: number | null): ViewInfo | null {
+    return this._model.views?.views.find((view) => view.id === id) ?? null;
+  }
+
+  #mark(view: ViewInfo | null) {
+    this.#markedView = view;
+    this.viewLocator?.highlight(view);
+  }
+
+  // A view that left the snapshot is no longer selected or pointed at.
+  #forgetGoneViews() {
+    if (this.#viewOf(this._viewSelected) === null) this._viewSelected = null;
+
+    if (this.#viewOf(this.#pointedView) === null) this.#pointedView = null;
   }
 
   _clearSelection(): void {

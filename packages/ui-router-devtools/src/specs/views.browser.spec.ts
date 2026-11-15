@@ -69,6 +69,7 @@ const mailApp = async ({ locate = true, aside = false } = {}) => {
       url: '/list',
       views: { list: () => html`<p>messages</p>` },
     },
+    { name: 'home', url: '/home', component: () => html`<p>home</p>` },
   ];
 
   for (const state of states) router.stateRegistry.register(state);
@@ -215,6 +216,31 @@ describe('the Views', () => {
     expect(panelOf(element)._view).toBe('outline');
     expect(element.shadowRoot?.activeElement).toBe(row);
     expect(overlay()).toBeNull();
+  });
+
+  it('drops the outline and the details of a selected view that goes away', async () => {
+    const { router, element, tree } = await mailApp();
+
+    const list = await waitFor(() =>
+      getByRole(tree, 'treeitem', { name: /^list view/ }),
+    );
+
+    list.click();
+    await waitFor(() =>
+      expect(overlay()?.dataset.uiRouterDevtoolsView).toBe('$default.list'),
+    );
+
+    // Home replaces the mail element, and the views inside it with it.
+    await router.stateService.go('home');
+    await waitFor(() =>
+      getByRole(shadow(element), 'treeitem', {
+        name: '$default view, filled by home',
+      }),
+    );
+
+    expect(overlay()).toBeNull();
+    expect(panelOf(element)._viewSelected).toBeNull();
+    expect(queryByRole(shadow(element), 'region', { name: 'list' })).toBeNull();
   });
 
   it('outlines the view under the pointer, and stops when the panel closes', async () => {
