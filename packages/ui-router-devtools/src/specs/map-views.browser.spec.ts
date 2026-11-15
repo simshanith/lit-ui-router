@@ -750,6 +750,20 @@ describe('the view map beside the Map', () => {
     );
   });
 
+  it('says the views did not load when their module fails', async () => {
+    const { element } = await mailMap(1280, false, [], 800, (panel) => {
+      panel._importViews = () => Promise.reject(new Error('chunk failed'));
+    });
+
+    await waitFor(() =>
+      expect(toggle(element).title).toBe(
+        'The Views did not load. Switch views to retry.',
+      ),
+    );
+    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).ariaPressed).toBe('false');
+  });
+
   it('keeps a view selected beside the Map for the Views tab’s own details', async () => {
     const { element } = await mailMap();
     const panel = panelOf(element);

@@ -2026,7 +2026,7 @@ export class DevtoolsPanel extends LitElement {
 
   // Why the views the viewer asked for are not drawn beside the Map; nothing while their module is still loading.
   #viewsAway(layout: NestedLayout): string | undefined {
-    if (!this._viewMap) return undefined;
+    if (!this._viewMap) return this._viewsFailed ? VIEWS_FAILED : undefined;
 
     if (this._mapZoom !== null)
       return 'The view map is drawn at the fitted size; Fit brings it back';
