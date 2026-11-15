@@ -409,7 +409,7 @@ const packNested = (
   return layout;
 };
 
-const narrowed = new WeakMap<NestedLayout, Map<number, number>>();
+const narrowed = new WeakMap<NestedLayout, Map<string, number>>();
 
 /** The narrowest room, on the 4px grid and at this height, that the layout's rung still fits; `Infinity` when none does. */
 export const narrowest = (
@@ -417,8 +417,11 @@ export const narrowest = (
   layout: NestedLayout,
   height: number,
 ): number => {
-  const known = narrowed.get(layout) ?? new Map<number, number>();
-  const hit = known.get(height);
+  const max = host._mapSize.width;
+  // The search is bounded by the room's width, so an answer holds for that width only.
+  const key = `${height}:${max}`;
+  const known = narrowed.get(layout) ?? new Map<string, number>();
+  const hit = known.get(key);
 
   if (hit !== undefined) return hit;
 
@@ -428,9 +431,9 @@ export const narrowest = (
     const room = rungRoom(layout.rung, { width: at, height });
 
     return fits(pack(boxes, room, layout.metrics), room);
-  }, host._mapSize.width);
+  }, max);
 
-  known.set(height, width);
+  known.set(key, width);
   narrowed.set(layout, known);
 
   return width;
