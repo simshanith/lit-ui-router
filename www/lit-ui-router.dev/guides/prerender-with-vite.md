@@ -7,8 +7,9 @@ topic: server
 
 # Prerender with Vite
 
-One plugin option and one script turn `vite build` into a static site: one
-HTML page per route, a `404.html`, and a `_redirects` file for the host. The
+One plugin option and one script turn `vite build` into a static site
+generator (SSG) that writes one HTML page per route, a `404.html`, and a
+`_redirects` file for the host. The
 same route table the app runs decides which path gets which, so a static host
 answers a deep link, a redirect and a typo the way the
 [server](/guides/server-route-matching) would.
@@ -128,7 +129,7 @@ is why the plugin preloads it rather than the script importing it:
 script that imports the shim itself has to follow. A page whose `<ui-view>`
 leaves out `uiViewSlot()` renders that view empty, with no error.
 
-## What `vite build` writes
+## What `vite build` writes as an SSG
 
 Next to Vite's own `assets/`, `dist/` gains:
 
