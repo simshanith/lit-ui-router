@@ -1,12 +1,11 @@
-import { context, trace, type Span } from '@opentelemetry/api';
+import type { Span } from '@opentelemetry/api';
 import type { PathNode, Resolvable, UIRouter } from '@uirouter/core';
 
+import { runActive, type SpanEnds } from './active-span.ts';
+
 /** Starts and ends the span a resolve runs in; the reporter's, so the span is a child of its transition's. */
-export interface ResolveSpans {
+export interface ResolveSpans extends SpanEnds {
   startResolve(id: number, token: string, state: string): Span | undefined;
-  endResolve(span: Span): void;
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-  failResolve(span: Span, error: unknown): void;
 }
 
 // Before core's own resolve hooks, which run at priority 1000.
@@ -34,26 +33,9 @@ const wrap = (
   resolvable.resolveFn = (...deps: unknown[]) => {
     const span = spans.startResolve(id, token, node.state.name);
 
-    if (!span) return original(...deps);
-
-    // A resolve may throw or reject with nothing; its span still fails, as the adapter's resolve timing does.
-    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-    const failed = (error: unknown) =>
-      spans.failResolve(span, error ?? 'rejected');
-
-    try {
-      const value: unknown = context.with(
-        trace.setSpan(context.active(), span),
-        () => original(...deps),
-      );
-
-      Promise.resolve(value).then(() => spans.endResolve(span), failed);
-
-      return value;
-    } catch (error) {
-      failed(error);
-      throw error;
-    }
+    return span
+      ? runActive(span, spans, () => original(...deps))
+      : original(...deps);
   };
 };
 

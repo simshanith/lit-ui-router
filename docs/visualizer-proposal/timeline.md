@@ -146,12 +146,15 @@ the fetch is `in trace`. Without one, the fetch is its own trace and only
 
 With the plugin's `activateResolveSpans` option, each resolve's function runs
 with that resolve's span active, and a span the app starts there is the
-resolve span's child, which the Timeline joins as `child`. Under a context
-manager that tracks only synchronous code that holds until the resolve's
-first `await`; under one that follows async work, such as
-`@opentelemetry/context-zone`, it holds for the whole resolve. App hooks and
-lazy loads do not run with a router span active, so spans started there are
-joined by trace or by time.
+resolve span's child, which the Timeline joins as `child`. Its
+`activateHookSpans` option does the same for the app's transition hooks, a
+state's own `onEnter`, `onExit` and `onRetain` included, each with the span of
+the phase it runs in, and `activateLazyLoadSpans` for a state's `lazyLoad`,
+with a `lazyLoad <state>` span under the transition's. Under a context manager
+that tracks only synchronous code the span holds until the function's first
+`await`; under one that follows async work, such as
+`@opentelemetry/context-zone`, it holds for the whole function. With an option
+off, spans started in that kind of code are joined by trace or by time.
 
 A `during` span is drawn under the transition of the chain that was the latest
 to start before it, and a span that overlaps two separate transitions, such as
@@ -210,9 +213,10 @@ Timeline does not load it. The join and the layout are
 
 ## Not covered
 
-- Only resolve functions run with a router span active, and only with
-  `activateResolveSpans`; a span started in an app hook or a lazy load is
-  `child` only when the app parents it to a router span by hand.
+- Resolves, app hooks and lazy loads run with a router span active only with
+  `ui-router-otel`'s matching option. A state's `redirectTo` function never
+  does, so a span started there is `child` only when the app parents it to a
+  router span by hand.
 - A transition's spans are not shown on the Map or in the log.
 - A server's spans for the same request are not fetched; only what reaches the
   page's tracer provider is drawn.
