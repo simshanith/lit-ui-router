@@ -64,8 +64,8 @@ export class AppRoot extends LitElement {
     sp-link.active,
     a.active {
       border-radius: 2px;
-      background: var(--spectrum-gray-200);
-      box-shadow: 0 0 0 4px var(--spectrum-gray-200);
+      background: var(--spectrum-gray-100);
+      box-shadow: 0 0 0 4px var(--spectrum-gray-100);
     }
     ui-view {
       display: block;
