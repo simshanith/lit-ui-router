@@ -18,6 +18,11 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
   beside the diagram. The maximised panel gives the diagram three fifths of
   its height and shows the full log and inspector below it. On the sheets the
   Map takes the Outline's place above the log.
+- **The views share the room where both fit.** The nested layout draws the
+  [view map](views.md#beside-the-map) beside the states when both fit at
+  their natural size, the states at the rung the whole room gives them. A
+  view, a state and a transition are one selection, shown in the one
+  inspector, and each marks what it is tied to on the other side.
 - **Boxes keep their natural size.** A leaf is its label and padding. A
   compound shrink-wraps its children. Nothing stretches to fill the viewport;
   the diagram sits in the room [left for it](#the-inspector-popover).
@@ -119,7 +124,11 @@ The packer places every box, and CSS only draws them:
 6. The [viewport](#the-viewport) places the diagram: in the middle of the
    room at that size, or as near the middle as leaves
    [the popover's column](#the-inspector-popover) free. The room left over
-   frames it; no box takes it.
+   frames it; no box takes it. With the views beside it, the room is the
+   states' side of the split: the diagram is packed again for that side,
+   below a section heading, at no lower rung than the whole room gives it,
+   and centred in it, while the popover's column is kept at the end of the
+   views' side.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
@@ -306,6 +315,8 @@ size, before anything is selected:
 
 In the first two the popover is always in the same place, at the end of the
 dock, and neither a first selection nor a change of selection moves a box.
+With the views beside the diagram the split keeps the column at the end of
+the views' side, so the popover takes it for a state, a transition or a view.
 Reserving the column at every width was weighed and left out: the stress tree
 needs the dock's whole width. So was a start-aligned diagram, which leaves
 the same column free and reads as a document, not a drawing.
@@ -530,7 +541,9 @@ pay.
 The nested layout, the packer, the edge router, the chips, the viewport and the node-link tree, with
 `d3-hierarchy`, are one module, `src/element/map.ts`, that the panel imports
 on first use of the Map tab. A panel that only ever shows the Outline does not
-load it. The package's build emits a module per source file, so the import is
+load it. The views drawn beside the nested layout are the
+[view map's](views.md#loading) module, loaded with it once a views snapshot is
+recorded. The package's build emits a module per source file, so the import is
 a relative `import('./element/map.js')` in `dist`, which a bundler turns into
 a chunk of its own.
 
@@ -550,6 +563,11 @@ Shift with an arrow key pans, `+` and `-` change the type step and `0` fits,
 while focus is in the tree. `Zoom out`, `Zoom in` and `Fit` are buttons in
 the panel header. The minimap is a pointer's shortcut to what those keys do
 and is hidden from assistive technology.
+
+With the views beside it, the state tree is in a region named _States_ and
+the views' tree in one named _Views_. Each tree is one tab stop, so Tab moves
+between them, and the arrow keys stay in the tree that has focus. A state
+marked for the selected view says how in its description.
 
 The button that closes or opens a compound is named for what it does,
 `Collapse contacts` or `Expand contacts`. It is for the pointer and is not a

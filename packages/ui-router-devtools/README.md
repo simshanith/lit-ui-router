@@ -33,13 +33,15 @@ The Timeline shows one transition and its redirect chain at a time. It has no se
 
 ## Views
 
-The Views tab draws the router's `ui-view`s as nested boxes, a view inside the view its content sits in, each named with the state that fills it. An empty view is a dashed box tagged `Empty`, and a view a state off the active path still fills, as a sticky state does, is dashed and tagged `Inactive`. View configs no `ui-view` took are listed under the boxes. Selecting a view shows its path, renderer type, creating state, filling state, declaration, target and component; a state there opens the Outline with it selected. Its code and styles load on first use of the view. The rules, the data and what other renderers would need are in [the view map](../../docs/visualizer-proposal/views.md).
+The Views tab draws the router's `ui-view`s as nested boxes, a view inside the view its content sits in, each named with the state that fills it. An empty view is a dashed box tagged `Empty`, and a view a state off the active path still fills, as a sticky state does, is dashed and tagged `Inactive`. View configs no `ui-view` took are listed under the boxes. Selecting a view shows its path, renderer type, creating state, filling state, declaration, target and component; a state there opens the Outline with it selected. Its code and styles load on first use of the view, or of the nested Map once a views snapshot is recorded.
+
+The nested Map draws the same boxes beside the states wherever both fit at their natural size, the states at the rung the whole room would give them: in the maximised panel and in a dock wide enough for both and the inspector popover's column. `View map` in the panel header hides or shows them, and the choice is remembered per viewer. There the panel's own inspector shows a selected view, one selection at a time: a selected state marks the views it fills, and a selected view marks the state that fills it and the one whose content created it. The rules, the data and what other renderers would need are in [the view map](../../docs/visualizer-proposal/views.md).
 
 The view data comes from `@uirouter/core` alone and works for any renderer; finding a view on the page needs the renderer, through an optional `ViewLocator` the panel calls when one is set:
 
 | Member            | Effect                                                                        |
 | ----------------- | ----------------------------------------------------------------------------- |
-| `highlight(view)` | Marks the view's place on the page while the Views point at it; `null` clears |
+| `highlight(view)` | Marks the view's place on the page while the views point at it; `null` clears |
 | `describe(view)`  | Optional: where the page shows the view, in words, for the details            |
 
 `litViewLocator` from `ui-router-devtools/lit-ui-router` is the `lit-ui-router` one: it matches `<ui-view>` elements by router and path through open shadow roots and outlines the one in focus. It imports neither `lit-ui-router` nor `lit`.
@@ -147,4 +149,5 @@ Two scripts work against the running demo: `pnpm shots` writes the proposal scre
 - Maximised, edges and arrowheads keep their dock weight beside the larger type.
 - The transition strip and the log name states in ink; identity colour is on the Map, the Outline, the tree and the inspector.
 - The Views show the latest views snapshot, not a history, and have no fit ladder, zoom or pan: a tree larger than the panel scrolls.
+- Beside the Map the views do not take a transition's status colours, since the snapshot holds the latest views only; the configs no view took are listed in the Views tab alone. A zoomed Map gives the states the whole room.
 - `litViewLocator` matches an element by path, since `<ui-view>`'s registration id is not public; of two views with one path it outlines the first.
