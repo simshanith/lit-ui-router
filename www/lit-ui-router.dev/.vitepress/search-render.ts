@@ -2,6 +2,7 @@ import type { DefaultTheme, MarkdownEnv } from 'vitepress';
 
 import { expandIndexes } from './index-pages.ts';
 import { stripLlmOnly } from './index-markdown.ts';
+import { withSearchAliases } from './search-aliases.ts';
 import { pageUrl, surfaceOf } from './surfaces.ts';
 
 type SearchRender = NonNullable<DefaultTheme.LocalSearchOptions['_render']>;
@@ -274,8 +275,8 @@ export function trimApiTokens(tokens: Token[]): Token[] {
   return out;
 }
 
-/** Local search `_render`: typedoc pages are indexed without their generated repetition. */
-export const renderForSearch: SearchRender = async (
+/** Typedoc pages are indexed without their generated repetition. */
+const renderPage: SearchRender = async (
   src: string,
   env: MarkdownEnv,
   md: Markdown,
@@ -302,3 +303,7 @@ export const renderForSearch: SearchRender = async (
     env,
   );
 };
+
+/** Local search `_render`: each page, with the aliases of the names it uses. */
+export const renderForSearch: SearchRender = async (src, env, md) =>
+  withSearchAliases(await renderPage(src, env, md));

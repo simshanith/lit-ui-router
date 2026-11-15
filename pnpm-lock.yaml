@@ -277,6 +277,9 @@ catalogs:
     markdown-it:
       specifier: ^14.3.3
       version: 14.3.3
+    minisearch:
+      specifier: ^7.2.0
+      version: 7.2.0
     mobx:
       specifier: ^7.1.5
       version: 7.1.5
@@ -3624,12 +3627,18 @@ importers:
       fast-xml-validator:
         specifier: 'catalog:'
         version: 1.4.2
+      happy-dom:
+        specifier: 'catalog:'
+        version: 21.0.4
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
       markdown-it:
         specifier: 'catalog:'
         version: 14.3.3
+      minisearch:
+        specifier: 'catalog:'
+        version: 7.2.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.78.0

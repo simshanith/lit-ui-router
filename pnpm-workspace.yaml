@@ -100,6 +100,7 @@ catalog:
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
   markdown-it: ^14.3.3
+  minisearch: ^7.2.0
   mobx: ^7.1.5
   oxc-minify: 0.158.0
   oxc-parser: 0.158.0
