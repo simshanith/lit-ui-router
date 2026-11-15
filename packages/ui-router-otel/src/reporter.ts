@@ -362,7 +362,7 @@ export const reportToTracer = (
       const tx = txs.get(id);
 
       return tx && !tx.settled
-        ? childOf(tx, `lazyLoad ${state}`, performance.now(), {
+        ? childOf(tx, `lazy load ${state}`, performance.now(), {
             'uirouter.state': state,
           })
         : undefined;

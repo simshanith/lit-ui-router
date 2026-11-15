@@ -131,7 +131,7 @@ describe('activateLazyLoadSpans', () => {
     const landed = await router.stateService.go('users');
 
     const all = await spans();
-    const load = named(all, 'lazyLoad users.**');
+    const load = named(all, 'lazy load users.**');
 
     expect(landed.name).toBe('users');
     expect(load.attributes).toEqual({ 'uirouter.state': 'users.**' });
@@ -160,7 +160,7 @@ describe('activateLazyLoadSpans', () => {
     const all = await spans();
 
     expect(parentOf(named(all, 'GET before await'))).toBe(
-      idOf(named(all, 'lazyLoad users.**')),
+      idOf(named(all, 'lazy load users.**')),
     );
     expect(parentOf(named(all, 'GET after await'))).toBeUndefined();
   });
@@ -175,7 +175,7 @@ describe('activateLazyLoadSpans', () => {
 
     const all = await spans();
 
-    expect(named(all, 'lazyLoad users.**')).toBeTruthy();
+    expect(named(all, 'lazy load users.**')).toBeTruthy();
     expect(parentOf(named(all, 'GET before await'))).toBeUndefined();
   });
 
@@ -216,7 +216,7 @@ describe('activateLazyLoadSpans', () => {
     const second = await router.stateService.go('users');
 
     const loads = (await spans()).filter(
-      (span) => span.name === 'lazyLoad users.**',
+      (span) => span.name === 'lazy load users.**',
     );
 
     expect(second.name).toBe('users');
@@ -255,7 +255,7 @@ describe('activateLazyLoadSpans', () => {
     expect(landed.name).toBe('users');
     expect(calls).toBe(1);
     expect(
-      all.filter((span) => span.name === 'lazyLoad users.**'),
+      all.filter((span) => span.name === 'lazy load users.**'),
     ).toHaveLength(1);
   });
 
@@ -340,7 +340,7 @@ describe('activateLazyLoadSpans', () => {
       const all = await spans();
 
       expect(parentOf(named(all, 'GET before await'))).toBe(
-        idOf(named(all, 'lazyLoad users.**')),
+        idOf(named(all, 'lazy load users.**')),
       );
       expect(
         events.flatMap((event) =>
@@ -379,7 +379,7 @@ describe('activateLazyLoadSpans', () => {
     const ended = records.filter((record) => record.endTime !== undefined);
     const find = (name: string) => ended.find((record) => record.name === name);
     const transition = find('users.**');
-    const load = find('lazyLoad users.**');
+    const load = find('lazy load users.**');
 
     // The shape the Timeline joins as `child`: a router transition span, a router span under it, an app span under that.
     expect(transition?.attributes?.['uirouter.transition_id']).toBe(0);

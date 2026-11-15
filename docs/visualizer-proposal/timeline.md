@@ -150,7 +150,7 @@ resolve span's child, which the Timeline joins as `child`. Its
 `activateHookSpans` option does the same for the app's transition hooks, a
 state's own `onEnter`, `onExit` and `onRetain` included, each with the span of
 the phase it runs in, and `activateLazyLoadSpans` for a state's `lazyLoad`,
-with a `lazyLoad <state>` span under the transition's. Under a context manager
+with a `lazy load <state>` span under the transition's. Under a context manager
 that tracks only synchronous code the span holds until the function's first
 `await`; under one that follows async work, such as
 `@opentelemetry/context-zone`, it holds for the whole function. With an option

@@ -14,7 +14,7 @@ type LazyLoad = StateObject['lazyLoad'];
 const FIRST = Number.MAX_SAFE_INTEGER;
 
 /**
- * Runs each state's `lazyLoad` with a `lazyLoad <state>` span active, so a span the app starts there is its child.
+ * Runs each state's `lazyLoad` with a `lazy load <state>` span active, so a span the app starts there is its child.
  * Core caches the load's promise on the function, so a transition that awaits a load already running gets no span.
  * Returns the disposer.
  */

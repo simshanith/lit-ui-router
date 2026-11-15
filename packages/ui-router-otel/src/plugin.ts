@@ -26,7 +26,7 @@ export interface OtelPluginOptions extends ReportOptions {
    */
   activateHookSpans?: boolean;
   /**
-   * Run each state's `lazyLoad` with a `lazyLoad <state>` span active, a child of the transition's span, so a span the
+   * Run each state's `lazyLoad` with a `lazy load <state>` span active, a child of the transition's span, so a span the
    * app starts in it is that span's child. Off by default: it patches core's state objects.
    */
   activateLazyLoadSpans?: boolean;
