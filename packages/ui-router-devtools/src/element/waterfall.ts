@@ -314,7 +314,7 @@ const spanBar = (
   };
 };
 
-// A router span and its phase and resolve children.
+// A router span and its phase, resolve and lazy load children.
 const familyOf = (index: SpanIndex, span: SpanRecord): SpanRecord[] => [
   span,
   ...(index.children.get(span.spanId) ?? []).filter(isRouterSpan),

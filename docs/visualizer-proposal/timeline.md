@@ -119,7 +119,7 @@ own `onBefore` hook in the same synchronous pass, so the two starts differ by
 microseconds; another router's transition with the same id between the same
 states inside those 2ms is the one case this cannot tell apart. Then neither
 span is the transition's, its resolves are not timed from either, and a span
-under either one, or under one of their phase and resolve spans, is joined by
+under either one, or under one of their phase, resolve or lazy load spans, is joined by
 time, as `during`. A span under the router span of another transition in the
 chain stays that transition's.
 
