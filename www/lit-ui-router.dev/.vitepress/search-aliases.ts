@@ -1,4 +1,4 @@
-import { Window, type Document } from 'happy-dom';
+import { Element, Text, Window, type Document, type Node } from 'happy-dom';
 
 import { SEARCH_ALIASES } from '../catalog/search-aliases.ts';
 
@@ -56,6 +56,30 @@ export async function withSearchAliases(html: string): Promise<string> {
   }
 }
 
+const HEADING = /^H[1-6]$/;
+
+interface Section {
+  heading: Element;
+  text: string[];
+}
+
+/** One pass in document order: each text node joins the section of the heading before it. */
+function collect(node: Node, sections: Section[]) {
+  for (const child of node.childNodes) {
+    if (child instanceof Text) {
+      sections.at(-1)?.text.push(child.data);
+      continue;
+    }
+
+    if (!(child instanceof Element)) continue;
+
+    if (HEADING.test(child.tagName))
+      sections.push({ heading: child, text: [] });
+
+    collect(child, sections);
+  }
+}
+
 function annotate(document: Document, html: string) {
   const root = document.createElement('div');
 
@@ -63,25 +87,20 @@ function annotate(document: Document, html: string) {
 
   if (!aliasesIn(root.textContent).length) return html;
 
-  const headings = [...root.querySelectorAll('h1, h2, h3, h4, h5, h6')];
-  const range = document.createRange();
+  const sections: Section[] = [];
 
-  headings.forEach((heading, i) => {
-    const next = headings[i + 1];
+  collect(root, sections);
 
-    range.setStartBefore(heading);
-
-    if (next) range.setEndBefore(next);
-    else range.setEndAfter(root.lastChild ?? heading);
-
-    const aliases = aliasesIn(range.toString());
+  sections.forEach(({ text }, i) => {
+    const aliases = aliasesIn(text.join(''));
 
     if (!aliases.length) return;
 
-    const text = document.createTextNode(`\n${aliases.join(' ')}\n`);
+    const node = document.createTextNode(`\n${aliases.join(' ')}\n`);
+    const next = sections[i + 1]?.heading;
 
-    if (next) next.before(text);
-    else root.append(text);
+    if (next) next.before(node);
+    else root.append(node);
   });
 
   return root.innerHTML;
