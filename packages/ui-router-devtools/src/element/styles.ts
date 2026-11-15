@@ -864,8 +864,8 @@ export const styles: CSSResult = css`
       border-block-end: 1px solid var(--uird-rule);
     }
 
-    /* A previewed transition redraws the Timeline; a fixed height keeps the log from moving under the pointer. */
-    .panel[data-view='timeline'] .tree-pane {
+    /* A previewed transition redraws the Timeline, and a sync the Views; a fixed height keeps the log from moving under the pointer. */
+    .panel:is([data-view='timeline'], [data-view='views']) .tree-pane {
       block-size: 40svh;
     }
 
@@ -940,24 +940,37 @@ export const styles: CSSResult = css`
       padding-inline: var(--uird-margin);
     }
 
-    /* On the Map and the Timeline the drawing owns the panel: the log is a strip, and the Map's inspector a popover. */
-    .panel:is([data-view='map'], [data-view='timeline']) .body {
+    /* On the Map, the Timeline and the Views the drawing owns the panel: the log is a strip, and the Map's inspector a popover. */
+    .panel:is([data-view='map'], [data-view='timeline'], [data-view='views'])
+      .body {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr) auto;
     }
 
-    .panel:is([data-view='map'], [data-view='timeline']) .tree-pane {
+    .panel:is([data-view='map'], [data-view='timeline'], [data-view='views'])
+      .tree-pane {
       grid-template-rows: minmax(0, 1fr);
     }
 
-    .panel:is([data-view='map'], [data-view='timeline']) .tree-pane > .section,
-    .panel:is([data-view='map'], [data-view='timeline']):not([data-max])
+    .panel:is([data-view='map'], [data-view='timeline'], [data-view='views'])
+      .tree-pane
+      > .section,
+    .panel:is(
+        [data-view='map'],
+        [data-view='timeline'],
+        [data-view='views']
+      ):not([data-max])
       .log-pane,
-    .panel[data-view='timeline']:not([data-max]) .inspector-pane {
+    .panel:is([data-view='timeline'], [data-view='views']):not([data-max])
+      .inspector-pane {
       display: none;
     }
 
-    .panel:is([data-view='map'], [data-view='timeline']):not([data-max])
+    .panel:is(
+        [data-view='map'],
+        [data-view='timeline'],
+        [data-view='views']
+      ):not([data-max])
       .scrubber {
       display: flex;
     }
@@ -1001,17 +1014,32 @@ export const styles: CSSResult = css`
     }
 
     /* Maximised: the drawing above the full log and inspector. */
-    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .body {
+    .panel:is(
+        [data-view='map'],
+        [data-view='timeline'],
+        [data-view='views']
+      )[data-max]
+      .body {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
       grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
     }
 
-    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .tree-pane {
+    .panel:is(
+        [data-view='map'],
+        [data-view='timeline'],
+        [data-view='views']
+      )[data-max]
+      .tree-pane {
       grid-column: 1 / -1;
       border-block-end: 1px solid var(--uird-rule);
     }
 
-    .panel:is([data-view='map'], [data-view='timeline'])[data-max] .log-pane {
+    .panel:is(
+        [data-view='map'],
+        [data-view='timeline'],
+        [data-view='views']
+      )[data-max]
+      .log-pane {
       border-inline-start: 0;
     }
   }

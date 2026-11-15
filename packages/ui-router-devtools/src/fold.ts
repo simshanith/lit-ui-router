@@ -8,6 +8,7 @@ import type {
   RouterEvent,
   StateInfo,
   TransitionEvent,
+  ViewsEvent,
 } from './schema.ts';
 
 export type TxResult = Omit<ResultEvent, 'v' | 'seq' | 'type' | 'id'>;
@@ -25,6 +26,8 @@ export interface Model {
   states: StateInfo[];
   current: { name: string; params: Params };
   txs: Tx[];
+  /** The latest views snapshot; null for a session recorded without views. */
+  views: Pick<ViewsEvent, 'views' | 'unmatched'> | null;
 }
 
 export const emptyModel = (): Model => ({
@@ -32,6 +35,7 @@ export const emptyModel = (): Model => ({
   states: [],
   current: { name: '', params: {} },
   txs: [],
+  views: null,
 });
 
 const patch = (model: Model, id: number, change: (tx: Tx) => Partial<Tx>) => ({
@@ -74,6 +78,11 @@ export const apply = (model: Model, event: RouterEvent): Model => {
       return { ...model, states: event.states };
     case 'current':
       return { ...model, current: { name: event.name, params: event.params } };
+    case 'views':
+      return {
+        ...model,
+        views: { views: event.views, unmatched: event.unmatched },
+      };
     case 'transition': {
       const { v: _v, seq: _seq, type: _type, ...start } = event;
 

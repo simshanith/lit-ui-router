@@ -26,4 +26,7 @@ export {
   type StatesEvent,
   type TransitionEvent,
   type TransitionOptionsInfo,
+  type ViewFill,
+  type ViewInfo,
+  type ViewsEvent,
 } from '@repo/router-events/schema';

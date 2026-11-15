@@ -4,6 +4,7 @@ import type { UIRouter } from '@uirouter/core';
 import { DevtoolsPanel } from './element/panel.ts';
 import type { Recorder } from './recorder.ts';
 import type { Redaction, Session, SpanRecord } from './schema.ts';
+import type { ViewLocator } from './views.ts';
 
 /** `<ui-router-devtools>`: a pill that opens a panel of the router's states, transitions and config. */
 export interface UIRouterDevtools extends LitElement {
@@ -25,6 +26,8 @@ export interface UIRouterDevtools extends LitElement {
   spans: readonly SpanRecord[];
   /** Adds a span, or replaces the one with its `spanId`: a span can be sent when it starts, without `endTime`, and again when it ends. */
   addSpan(span: SpanRecord): void;
+  /** Finds a view's element on the page for the Views, such as `litViewLocator` from `ui-router-devtools/lit-ui-router`; without one the Views draw the router's data only. */
+  viewLocator: ViewLocator | undefined;
 }
 
 /** The `<ui-router-devtools>` class; `ui-router-devtools/define` registers it. */

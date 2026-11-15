@@ -10,6 +10,7 @@ const entries = [
   'performance',
   'console',
   'testing',
+  'lit-ui-router',
 ];
 
 const external = (id: string) =>

@@ -30,6 +30,7 @@ import {
   type Size,
 } from './pack.ts';
 import { renderMinimap, viewKey } from './mapview.ts';
+import { textWidth } from './measure.ts';
 import {
   route,
   visibleEnd,
@@ -49,8 +50,6 @@ const SETTLE = 200;
 
 /** How long a withdrawn edge stays drawn. */
 const WITHDRAW = 160;
-
-const CHAR = 7.2;
 
 interface Options {
   collapse: boolean;
@@ -113,18 +112,6 @@ export interface NestedLayout {
   /** The layout's place in `ZOOMS`. */
   step: number;
 }
-
-let context: CanvasRenderingContext2D | null | undefined;
-
-// Label widths come from a canvas, so packing needs no render; without one, from a per-character estimate.
-const textWidth = (text: string, font: string): number => {
-  context ??= globalThis.document?.createElement('canvas').getContext('2d');
-
-  if (!context) return text.length * CHAR;
-  context.font = font;
-
-  return context.measureText(text).width;
-};
 
 interface Build {
   host: DevtoolsPanel;

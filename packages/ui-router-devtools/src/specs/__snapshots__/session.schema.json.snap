@@ -97,6 +97,9 @@
             "$ref": "#/$defs/CurrentEvent"
           },
           {
+            "$ref": "#/$defs/ViewsEvent"
+          },
+          {
             "$ref": "#/$defs/LaterEvent"
           }
         ]
@@ -913,6 +916,140 @@
         "params"
       ]
     },
+    "ViewsEvent": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "seq": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        },
+        "type": {
+          "const": "views"
+        },
+        "views": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              },
+              "fqn": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "fill": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "state": {
+                        "type": "string"
+                      },
+                      "view": {
+                        "type": "string"
+                      },
+                      "target": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "anchor": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "anchor"
+                        ]
+                      },
+                      "component": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "state",
+                      "view",
+                      "target"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "fqn",
+              "type",
+              "context",
+              "fill"
+            ]
+          }
+        },
+        "unmatched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": "string"
+              },
+              "view": {
+                "type": "string"
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "anchor": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "anchor"
+                ]
+              },
+              "component": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "state",
+              "view",
+              "target"
+            ]
+          }
+        }
+      },
+      "required": [
+        "v",
+        "seq",
+        "t",
+        "type",
+        "views",
+        "unmatched"
+      ]
+    },
     "LaterEvent": {
       "type": "object",
       "properties": {
@@ -936,7 +1073,8 @@
               "resolve",
               "result",
               "invalid",
-              "current"
+              "current",
+              "views"
             ]
           }
         }

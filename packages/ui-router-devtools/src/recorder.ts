@@ -13,11 +13,14 @@ import {
   type RouterEvent,
   type Session,
   type StatesEvent,
+  type ViewsEvent,
 } from './schema.ts';
 
 export interface RecordOptions extends ObserveOptions {
   /** Ring-buffer size for transition-scoped events; snapshots are kept outside it, and a full buffer drops its oldest transitions whole. */
   limit?: number;
+  /** Record a `views` snapshot of the router's `ui-view`s whenever core syncs them; on unless set to false. */
+  views?: boolean;
 }
 
 export interface Recorder {
@@ -37,6 +40,7 @@ interface Snapshots {
   config?: ConfigEvent;
   states?: StatesEvent;
   current?: CurrentEvent;
+  views?: ViewsEvent;
 }
 
 const GENERATOR: Session['generator'] = {
@@ -81,7 +85,10 @@ const uuid = (): string => {
   ].join('-');
 };
 
-type Buffered = Exclude<RouterEvent, ConfigEvent | StatesEvent | CurrentEvent>;
+type Buffered = Exclude<
+  RouterEvent,
+  ConfigEvent | StatesEvent | CurrentEvent | ViewsEvent
+>;
 
 // A transition's events share its id; an invalid target is one event of its own.
 const keyOf = (event: Buffered): number =>
@@ -89,7 +96,7 @@ const keyOf = (event: Buffered): number =>
 
 export const record = (
   router: UIRouter,
-  { limit = 2000, ...options }: RecordOptions = {},
+  { limit = 2000, views = true, ...options }: RecordOptions = {},
 ): Recorder => {
   const id = uuid();
   let ring: Buffered[] = [];
@@ -156,15 +163,21 @@ export const record = (
       if (event.type === 'config') snapshots.config = event;
       else if (event.type === 'states') snapshots.states = event;
       else if (event.type === 'current') snapshots.current = event;
+      else if (event.type === 'views') snapshots.views = event;
       else keep(event);
 
       for (const listener of listeners) listener(event);
     },
-    options,
+    { ...options, views },
   );
 
   const snapshotEvents = () =>
-    [snapshots.config, snapshots.states, snapshots.current].filter(
+    [
+      snapshots.config,
+      snapshots.states,
+      snapshots.current,
+      snapshots.views,
+    ].filter(
       (event): event is NonNullable<typeof event> => event !== undefined,
     );
 

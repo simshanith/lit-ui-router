@@ -9,8 +9,13 @@ export async function installDevtools(
   router: UIRouter,
   loadTelemetry: LoadTelemetry = () => import('./telemetry.js'),
 ): Promise<void> {
-  const { DevtoolsPlugin } = await import('ui-router-devtools/plugin');
-  const devtools = router.plugin(DevtoolsPlugin);
+  const [{ DevtoolsPlugin }, { litViewLocator }] = await Promise.all([
+    import('ui-router-devtools/plugin'),
+    import('ui-router-devtools/lit-ui-router'),
+  ]);
+  const devtools = router.plugin(DevtoolsPlugin, {
+    viewLocator: litViewLocator,
+  });
 
   if (!featureFlags.get('enable-otel')) return;
 

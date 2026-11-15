@@ -4,6 +4,8 @@ export { record, type Recorder, type RecordOptions } from './recorder.ts';
 
 export { observedEdges, type EdgeOutcome, type ObservedEdge } from './edges.ts';
 
+export { viewTree, type ViewLocator, type ViewNode } from './views.ts';
+
 export {
   SCHEMA_VERSION,
   type ConfigEvent,
@@ -32,4 +34,7 @@ export {
   type StatesEvent,
   type TransitionEvent,
   type TransitionOptionsInfo,
+  type ViewFill,
+  type ViewInfo,
+  type ViewsEvent,
 } from './schema.ts';
