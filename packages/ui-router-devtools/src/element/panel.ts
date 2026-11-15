@@ -925,7 +925,10 @@ export class DevtoolsPanel extends LitElement {
   // Clears the selection; focus inside the inspector, which then hides, goes back to where the selection was made.
   _dismiss(): void {
     const from = this.#selectionSources();
-    const held = this.shadowRoot?.activeElement?.closest('.inspector-pane');
+
+    const held = this.shadowRoot?.activeElement?.closest(
+      '.inspector-pane, .router-pane',
+    );
 
     this._clearSelection();
 
@@ -952,6 +955,8 @@ export class DevtoolsPanel extends LitElement {
       this._inspect === 'state' ? find('.map-node.selected') : null,
       find('[role="treeitem"][tabindex="0"]'),
       find('.map-node'),
+      // The narrowest panel shows only its tabs.
+      find('.tabs [aria-selected="true"]'),
     ];
   }
 

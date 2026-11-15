@@ -1464,8 +1464,11 @@ describe('the nested Map', () => {
       queryByRole(shadow(element), 'button', { name: 'Close inspector' }),
     ).toBeNull();
     expect(
-      element.renderRoot.querySelector('.nested')!.getBoundingClientRect(),
-    ).toEqual(diagram);
+      element.renderRoot
+        .querySelector('.nested')!
+        .getBoundingClientRect()
+        .toJSON(),
+    ).toEqual(diagram.toJSON());
   });
 
   it('clears a selected transition when it is clicked again, in the scrubber and in the log', async () => {
@@ -1541,6 +1544,39 @@ describe('the nested Map', () => {
     await waitFor(() => expect(popoverShown(element)).toBe(false));
     expect(panelOf(element)._inspect).toBe('none');
   });
+
+  it.each([600, 400])(
+    'returns focus to a shown control when Escape leaves the Router card in a %ipx panel',
+    async (width) => {
+      const element = await openMap(width);
+      // The side sheet opens the Router card from its brand button, the narrowest panel from its tab.
+      (
+        queryByRole(shadow(element), 'tab', { name: /Router/ }) ??
+        element.renderRoot.querySelector<HTMLElement>('.brand')!
+      ).click();
+      await element.updateComplete;
+      expect(panelOf(element)._inspect).toBe('router');
+
+      const card = element.renderRoot.querySelector<HTMLElement>(
+        '.router-pane [tabindex="0"]',
+      )!;
+
+      card.focus();
+      card.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        }),
+      );
+
+      await waitFor(() => expect(panelOf(element)._inspect).toBe('none'));
+      await waitFor(() =>
+        expect(element.shadowRoot?.activeElement?.checkVisibility()).toBe(true),
+      );
+    },
+  );
 
   it('clears the selection on Escape anywhere in the panel, and leaves an Escape already handled', async () => {
     const element = await openMap(1280);
