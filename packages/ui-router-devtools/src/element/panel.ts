@@ -849,6 +849,8 @@ export class DevtoolsPanel extends LitElement {
   protected updated(): void {
     this.#observeMap();
     this.#markPointed();
+
+    if (this._view === 'views') this._viewMap?.measureViewMap(this);
     this.#measureMap();
     this.#placePopover();
     this.#showTick();

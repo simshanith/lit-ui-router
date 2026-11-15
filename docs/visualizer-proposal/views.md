@@ -45,7 +45,7 @@ session ends with. They are not a history; the Timeline and the log hold that.
 The boxes are packed by the nested Map's packer, `pack.ts`, at the Map's dock
 step, with a leaf up to 320px wide so a view's name and its state fit one
 header. They keep that size: the Views have no fit ladder, zoom or pan, and a
-tree larger than the panel scrolls. The header, border, selection ring and
+tree larger than its room scrolls. The header, border, selection ring and
 focus ring are the Map's. Names and states are set in the mono face; the
 `Empty` and `Inactive` tags in the panel's caption type.
 
@@ -54,6 +54,20 @@ strip of outcome glyphs below them and the inspector is not shown. A selected
 view's details stand in a 296px column beside the boxes once the Views are
 720px wide, and below them otherwise. Maximised, the Views sit above the full
 log and inspector.
+
+The boxes are packed for the room they are drawn in: the Views' area less its
+padding, the details' column or row, and the list of configs no view took,
+which keeps to the room's foot. The drawing is placed as the Map's fitted view
+is, by the same `fitView`: in the middle of the room on an axis it fits, and at
+the start of an axis it overflows, so scrolling reaches all of it. The offset
+is in whole pixels, set as logical margins so it mirrors in a right-to-left
+panel, and nothing is scaled or animated, under reduced motion or not.
+
+Where the details will stand beside the boxes, their column is kept free
+before any view is selected, as the Map keeps its inspector's column, so
+selecting a view moves nothing. Where they open below, there is no row to
+keep: selecting a view shortens the room, and the drawing moves up to the
+middle of what is left, at once.
 
 ## The data
 
@@ -207,7 +221,7 @@ the inline start, so they mirror in a right-to-left panel.
 
 The view map, its layout and its styles are one module,
 `src/element/viewmap.ts`, that the panel imports on first use of the Views and
-whose styles it adopts then. It shares the packer with the Map in a chunk of
+whose styles it adopts then. It shares the packer and `fitView` with the Map in a chunk of
 its own. A panel that never shows the Views does not load it.
 
 ## Not covered

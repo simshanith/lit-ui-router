@@ -365,6 +365,95 @@ describe('the Views', () => {
     },
   );
 
+  // The drawing's distance from each edge of the room it is drawn in, above the list of configs no view took.
+  const margins = (tree: HTMLElement) => {
+    // SAFETY: the tree is drawn inside the Views' main area
+    const main = tree.closest('.vm-main') as HTMLElement;
+    const style = getComputedStyle(main);
+    const room = main.getBoundingClientRect();
+    const drawn = tree.getBoundingClientRect();
+    const list = within(main).getByRole('region', { name: 'No view took' });
+    const left = room.left + parseFloat(style.paddingLeft);
+    const right = room.left + main.clientWidth - parseFloat(style.paddingRight);
+
+    return {
+      start: drawn.left - left,
+      end: right - drawn.right,
+      top: drawn.top - room.top - parseFloat(style.paddingTop),
+      bottom: list.getBoundingClientRect().top - drawn.bottom,
+    };
+  };
+
+  const select = async (element: UIRouterDevtools, tree: HTMLElement) => {
+    getByRole(tree, 'treeitem', { name: /^\$default view/ }).click();
+    await waitFor(() =>
+      getByRole(shadow(element), 'region', { name: '$default' }),
+    );
+  };
+
+  it('centres the drawing, keeping the dock’s details column free so a selection moves nothing', async () => {
+    const { element, tree } = await mailApp();
+
+    // Closed, the drawing centres in the room left of the column the details will take.
+    await waitFor(() => {
+      const closed = margins(tree);
+
+      expect(Math.abs(closed.end - 296 - closed.start)).toBeLessThanOrEqual(1);
+      expect(Math.abs(closed.bottom - closed.top)).toBeLessThanOrEqual(1);
+    });
+
+    const before = tree.getBoundingClientRect();
+
+    await select(element, tree);
+    await waitFor(() => {
+      const open = margins(tree);
+
+      expect(Math.abs(open.end - open.start)).toBeLessThanOrEqual(1);
+      expect(Math.abs(open.bottom - open.top)).toBeLessThanOrEqual(1);
+    });
+    expect(tree.getBoundingClientRect().toJSON()).toEqual(before.toJSON());
+  });
+
+  it('keeps the details column free at the inline end in a right-to-left panel', async () => {
+    const { element, tree } = await mailApp();
+
+    element.dir = 'rtl';
+
+    // The margins helper measures from the left, which is the inline end here.
+    await waitFor(() => {
+      const { start: end, end: start } = margins(tree);
+
+      expect(Math.abs(end - 296 - start)).toBeLessThanOrEqual(1);
+    });
+  });
+
+  it('centres the drawing in a side sheet, above the details once they open', async () => {
+    const { element, tree } = await mailApp({ width: 700 });
+
+    for (const open of [false, true]) {
+      if (open) await select(element, tree);
+
+      await waitFor(() => {
+        const { start, end, top, bottom } = margins(tree);
+
+        expect(start).toBeGreaterThan(0);
+        expect(Math.abs(end - start)).toBeLessThanOrEqual(1);
+        expect(Math.abs(bottom - top)).toBeLessThanOrEqual(1);
+      });
+    }
+  });
+
+  it('starts a drawing that overflows its room at the start edge', async () => {
+    const { tree } = await mailApp({ asides: SIDEBARS, width: 700 });
+
+    await waitFor(() => {
+      const { start, top } = margins(tree);
+
+      expect(start).toBe(0);
+      expect(top).toBe(0);
+    });
+  });
+
   it('draws without a locator, and leaves the page alone', async () => {
     const { element, tree } = await mailApp({ locate: false });
 

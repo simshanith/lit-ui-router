@@ -22,7 +22,10 @@ export const viewMapStyles: CSSResult = css`
     grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
   }
 
+  /* The drawing is placed by its margins in whole pixels; the list of configs no view took keeps to the room's foot. */
   .vm-main {
+    display: flex;
+    flex-direction: column;
     min-inline-size: 0;
     min-block-size: 0;
     padding-block: 12px;
@@ -70,8 +73,10 @@ export const viewMapStyles: CSSResult = css`
   }
 
   .vm-unmatched {
+    flex: none;
     max-inline-size: 480px;
-    margin-block-start: 16px;
+    margin-block-start: auto;
+    padding-block-start: 16px;
   }
 
   .vm-unmatched .plain {

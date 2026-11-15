@@ -16,6 +16,7 @@ import {
   type Metrics,
   type Placed,
 } from './pack.ts';
+import { fitView, type View } from './viewport.ts';
 
 export { viewMapStyles } from './viewmap-styles.ts';
 
@@ -354,11 +355,43 @@ const activeStates = (host: DevtoolsPanel): Set<string> => {
   return new Set(['', current.name, ...ancestorsOf(states, current.name)]);
 };
 
+/** The details column, which stands beside the boxes once the Views are this wide; `viewmap-styles.ts` sets both. */
+const DETAIL = 296;
+
+const BESIDE = 720;
+
+// Below the drawing in the same room: the configs no view took.
+const footOf = (host: DevtoolsPanel): number => feet.get(host) ?? 0;
+
+const feet = new WeakMap<DevtoolsPanel, number>();
+
+/** Measures what sits under the drawing, and draws again once when it changed, so the drawing centres in the room above it. */
+export const measureViewMap = (host: DevtoolsPanel): void => {
+  const list = host.renderRoot.querySelector<HTMLElement>('.vm-unmatched');
+
+  const foot = list ? Math.ceil(list.getBoundingClientRect().height) : 0;
+
+  if (foot === footOf(host)) return;
+  feet.set(host, foot);
+  host.requestUpdate();
+};
+
+interface Layout {
+  placed: Placed;
+  view: View;
+}
+
+/**
+ * Packs the views for the room they are drawn in and places them as the Map's fitted view does: in the middle on an
+ * axis they fit, at the start of one they overflow. Before a view is selected the details' column is kept free where
+ * the dock has room for it, so selecting one moves nothing.
+ */
 const layoutOf = (
   host: DevtoolsPanel,
   roots: readonly ViewNode[],
   scene: Pick<Scene, 'repeated' | 'active'>,
-): Placed => {
+  selected: boolean,
+): Layout => {
   const style = getComputedStyle(host);
 
   const fonts = {
@@ -366,11 +399,28 @@ const layoutOf = (
     sans: style.getPropertyValue('--uird-font'),
   };
 
-  return pack(
+  const margin = parseFloat(style.getPropertyValue('--uird-margin')) || 0;
+  const { width } = host._mapSize;
+  const reserve = !selected && width + margin * 2 >= BESIDE ? DETAIL : 0;
+  const height = Math.max(0, host._mapSize.height - footOf(host));
+
+  const placed = pack(
     roots.map((root) => boxOf(root, scene, fonts)),
-    host._mapSize,
+    { width: width - reserve, height },
     VIEW_METRICS,
   );
+
+  // Margins are logical, so the view is taken as left to right and mirrors with the page.
+  const view = fitView(placed, {
+    width,
+    height,
+    reserve,
+    slack: 0,
+    foot: 0,
+    rtl: false,
+  });
+
+  return { placed, view };
 };
 
 /** The router's `ui-view`s as nested boxes, each named with what fills it, and the selected view's details. */
@@ -400,17 +450,21 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
     rows.map((row) => [String(row.node.view.id), row.node]),
   );
 
-  const placed = rows.length ? layoutOf(host, roots, scene) : undefined;
+  const layout = rows.length
+    ? layoutOf(host, roots, scene, Boolean(selected))
+    : undefined;
+
+  const placed = layout?.placed;
 
   return html`<div class="viewmap" ?data-detail=${Boolean(selected)}>
     <div class="vm-main">
       ${
-        placed
+        placed && layout
           ? html`<div
               class="nested vm-boxes"
               role="tree"
               aria-labelledby="h-states"
-              style="inline-size:${placed.width}px;block-size:${placed.height}px"
+              style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-start:${layout.view.x}px;margin-block-start:${layout.view.y}px"
               @keydown=${(event: KeyboardEvent) => onKey(host, event, rows, scene.focus)}
             >
               ${
