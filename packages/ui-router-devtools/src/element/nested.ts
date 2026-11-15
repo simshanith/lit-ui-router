@@ -852,8 +852,12 @@ const renderFold = (
     tabindex="-1"
     aria-label="${open ? 'Collapse' : 'Expand'} ${segment(target)}"
     title=${open ? 'Collapse' : 'Expand'}
-    @click=${(event: Event) => {
+    @click=${(event: MouseEvent) => {
+      // A fold that a re-pack put under the second click of a double-click on a box is not what was pressed.
+      if (event.detail > 1 && view.host._pressed) return;
+
       event.stopPropagation();
+      view.host._pressed = null;
       nestedKeys(view.host, view.layout).toggle(target, open);
     }}
   >
@@ -1037,10 +1041,21 @@ export const renderNested = (
     onTreeKey(host, event, rows, focus, nestedKeys(host, layout));
   };
 
-  const select = (event: Event) => {
-    const name = boxName(event);
+  // The first click can re-pack the diagram, so a double-click keeps the box its first click was on.
+  const select = (event: MouseEvent) => {
+    if (event.detail > 1) {
+      if (host._pressed) host._selectState(host._pressed, true);
 
-    if (name) host._selectState(name);
+      return;
+    }
+
+    host._pressed = boxName(event) ?? null;
+
+    if (host._pressed) host._selectState(host._pressed);
+  };
+
+  const go = () => {
+    if (host._pressed) host._goState(host._pressed);
   };
 
   const focusIn = (event: Event) => {
@@ -1068,6 +1083,7 @@ export const renderNested = (
       style="inline-size:${placed.width}px;block-size:${placed.height}px;translate:${at.x - from}px ${at.y}px"
       @keydown=${onKey}
       @click=${select}
+      @dblclick=${go}
       @focusin=${focusIn}
     >
       ${top.length ? renderBox(view, top[0]) : renderBoxes(view, placed)}

@@ -258,7 +258,9 @@ export const renderOutline = (
         aria-selected=${selected}
         aria-description=${words(state, role, isPivot, marks)}
         style="--depth:${row.depth}"
-        @click=${() => host._selectState(state.name)}
+        @click=${(e: MouseEvent) => host._selectState(state.name, e.detail > 1)}
+        @mousedown=${host._keepText}
+        @dblclick=${() => host._goState(state.name)}
         @focus=${() => (host._focusState = state.name)}
       >
         ${label(state, role, isPivot, marks)}

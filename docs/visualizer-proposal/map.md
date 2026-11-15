@@ -33,6 +33,11 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
 - **Selection is a layer of its own.** A selected box gets a ring outside
   its border, in `--uird-select`. The border goes on saying what it said:
   identity at rest, status while a transition is in focus.
+- **A double-click goes.** A double-click on a box, a node of the tree or a
+  row of the Outline goes to its state, as the inspector's Go button does,
+  and leaves the state selected. A state Go cannot reach (abstract, with a
+  required param, in an imported session) is only selected. A fold button
+  only closes and opens its compound.
 - **Red means fault.** A failed transition's edge and the state that failed
   are red, and no identity colour is near it.
 - **Type is 12px in the dock.** The fitted layout may shrink to the caption

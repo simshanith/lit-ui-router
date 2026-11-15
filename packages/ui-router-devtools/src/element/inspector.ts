@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import type { DevtoolsPanel } from './panel.ts';
-import { bareName, type Tx } from '../fold.ts';
+import type { Tx } from '../fold.ts';
 import { SCHEMA_VERSION, type LocationInfo } from '../schema.ts';
 import { edgesOf } from '../edges.ts';
 import { paramText, segment, seq } from '../notation.ts';
@@ -131,26 +131,14 @@ export const renderStateInspector = (host: DevtoolsPanel): TemplateResult => {
   if (!state) return html`<p class="empty">Select a state or transition.</p>`;
   const role = host._role(state);
 
-  const canGo =
-    !host._imported &&
-    !state.abstract &&
-    // A lazy placeholder's params are its own, not those of the state it loads.
-    (state.future || state.params.every((p) => p.optional)) &&
-    host.router;
-
   const values = state.name === current.name ? current.params : {};
 
   return html`<div class="inspector">
     <p class="insp-title ${host._depthClass(state.name)}">
       ${roleGlyph(role, state.abstract)}<span class="name">${state.name}</span>
       ${
-        canGo
-          ? html`<button
-              class="go"
-              @click=${() => void host.router?.stateService.go(bareName(state.name)).catch(() => {})}
-            >
-              Go
-            </button>`
+        host._canGo(state)
+          ? html`<button class="go" @click=${() => host._go(state)}>Go</button>`
           : nothing
       }
     </p>
