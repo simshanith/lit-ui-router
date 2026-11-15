@@ -120,6 +120,7 @@ const mailMap = async (
   wide = false,
   extra: readonly StateDeclaration[] = [],
   height = 800,
+  prepare: (panel: DevtoolsPanel) => void = () => {},
 ) => {
   await page.viewport(width, height);
 
@@ -143,6 +144,8 @@ const mailMap = async (
   const { element } = router.plugin(DevtoolsPlugin, {
     viewLocator: litViewLocator,
   });
+
+  prepare(panelOf(element));
 
   await router.stateService.go('mail.list');
   await element.updateComplete;
@@ -679,6 +682,7 @@ describe('the view map beside the Map', () => {
     // At this viewport the dock's Map pane and the maximised one measure the same; only the popover's column differs.
     const { element } = await mailMap(1800, true, WIDER_STATES, 521);
     const panel = panelOf(element);
+
     const maximise = () =>
       getByRole(shadow(element), 'button', {
         name: 'Maximise devtools',
@@ -700,6 +704,50 @@ describe('the view map beside the Map', () => {
     await noSplit(element);
     expect(panel._mapSize).toEqual(dock);
     expect(panel._nested()?.rung).toBe(rung);
+  });
+
+  it('offers no view map for a session whose views snapshot holds no view', async () => {
+    const { element } = await mailMap();
+    const panel = panelOf(element);
+    const session = panel.session()!;
+
+    await split(element);
+    panel.importSession({
+      ...session,
+      events: session.events.map((event) =>
+        event.type === 'views' ? { ...event, views: [], unmatched: [] } : event,
+      ),
+    });
+
+    await noSplit(element);
+    expect(panel._model.views?.views).toEqual([]);
+    expect(
+      queryByRole(shadow(element), 'button', { name: 'View map' }),
+    ).toBeNull();
+  });
+
+  it('names no cause while the views’ module is still loading', async () => {
+    let release = () => {};
+
+    const { element } = await mailMap(1280, false, [], 800, (panel) => {
+      const load = panel._importViews;
+
+      panel._importViews = () =>
+        new Promise((resolve) => {
+          release = () => resolve(load());
+        });
+    });
+
+    await element.updateComplete;
+    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).ariaPressed).toBe('false');
+    expect(toggle(element).hasAttribute('title')).toBe(false);
+
+    release();
+    await split(element);
+    expect(toggle(element).title).toBe(
+      'The view map beside the states, where both fit',
+    );
   });
 
   it('keeps a view selected beside the Map for the Views tab’s own details', async () => {

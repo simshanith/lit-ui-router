@@ -610,7 +610,7 @@ export class DevtoolsPanel extends LitElement {
       (this._view === 'map' &&
         this._mapViews &&
         this._layoutPref === 'nested' &&
-        Boolean(this._model.views));
+        this.#holdsViews());
 
     if (
       due(views, Boolean(this._viewMap), this.#viewsLoading, this._viewsFailed)
@@ -1997,7 +1997,7 @@ export class DevtoolsPanel extends LitElement {
                 </button>
               </div>
               ${layout ? this.#renderViewTools(layout) : nothing}
-              ${layout && this._model.views && matchMedia(WIDE).matches ? this.#renderViewsToggle(layout) : nothing}`
+              ${layout && this.#holdsViews() && matchMedia(WIDE).matches ? this.#renderViewsToggle(layout) : nothing}`
           : nothing
       }`;
   }
@@ -2005,13 +2005,13 @@ export class DevtoolsPanel extends LitElement {
   // Draws the view map beside the nested Map where both fit; the viewer's choice is kept, and pressed means drawn.
   #renderViewsToggle(layout: NestedLayout) {
     const drawn = Boolean(this._mapLayout()?.split);
-    const away = this._mapViews && !drawn ? this.#viewsAway(layout) : '';
+    const away = this._mapViews && !drawn;
 
     return html`<div class="switch" role="group" aria-label="Beside the Map">
       <button
         aria-pressed=${drawn}
-        ?disabled=${Boolean(away)}
-        title=${away || 'The view map beside the states, where both fit'}
+        ?disabled=${away}
+        title=${away ? (this.#viewsAway(layout) ?? nothing) : 'The view map beside the states, where both fit'}
         @click=${() => this.#chooseViews(!this._mapViews)}
       >
         View map
@@ -2019,8 +2019,15 @@ export class DevtoolsPanel extends LitElement {
     </div>`;
   }
 
-  // Why the views the viewer asked for are not drawn beside the Map.
-  #viewsAway(layout: NestedLayout): string {
+  // Whether the session's views snapshot holds any view; an empty one is no snapshot to the split.
+  #holdsViews(): boolean {
+    return Boolean(this._model.views?.views.length);
+  }
+
+  // Why the views the viewer asked for are not drawn beside the Map; nothing while their module is still loading.
+  #viewsAway(layout: NestedLayout): string | undefined {
+    if (!this._viewMap) return undefined;
+
     if (this._mapZoom !== null)
       return 'The view map is drawn at the fitted size; Fit brings it back';
 

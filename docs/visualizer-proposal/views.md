@@ -85,13 +85,16 @@ heading and divided by a rule. The Views tab stays as it is.
   320px column. A split that a resize took away comes back only with a
   tenth of the room to spare, as a milder rung of the ladder does. It is not
   offered below 880px of viewport, in the node-link tree, while the Map is
-  zoomed, when the states pan, or for a session that holds no views.
+  zoomed, when the states pan, or for a session that holds no views, which
+  includes a views snapshot with no view in it; there the toggle is not shown.
 - **Toggle.** `View map`, beside the Map's layout buttons, hides or shows the
   views. It is on unless the viewer turns it off, and the choice is kept in
   `localStorage` as the layout choice is. It is pressed only while the views
   are drawn. Where they are wanted and not drawn it is disabled, as `Nested`
   is below 560px, and its title says why: no room, a zoomed Map or states
-  that pan. Turned off, it stays enabled so the views can be asked for again.
+  that pan. While the view map's module is still loading it is disabled and
+  names no cause. Turned off, it stays enabled so the views can be asked for
+  again.
 - **Rooms.** The 48px and whatever else the two drawings leave over are split
   evenly, half to each side, and each drawing stands in the middle of its own
   side, so the two can stand nearer each other than 48px: the states'
