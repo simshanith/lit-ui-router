@@ -111,6 +111,7 @@ can be compared file-by-file to see exactly what the Signals idiom changes.
 ## Further reading
 
 - [API reference](/reference/lit-ui-router-signals/)
+- [Releases](/releases/lit-ui-router-signals/){target="_self"} — every version, newest first, with its release notes
 - [ui-router-signals](/packages/ui-router-signals)
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

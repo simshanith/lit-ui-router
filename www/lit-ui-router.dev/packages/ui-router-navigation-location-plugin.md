@@ -388,6 +388,7 @@ See the full [API reference](/reference/ui-router-navigation-location-plugin/).
 
 ## Further reading
 
+- [Releases](/releases/ui-router-navigation-location-plugin/){target="_self"} — every version, newest first, with its release notes
 - [MDN — Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
 - [Chrome for Developers — Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [Can I Use — Navigation API](https://caniuse.com/mdn-api_navigation)

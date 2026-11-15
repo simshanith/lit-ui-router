@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
@@ -16,6 +22,9 @@ import * as v from 'valibot';
 import { createTestHarness } from 'wrangler';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
+import { notesAsset } from '../releases/notes.ts';
+import { FIXTURE_NOTES } from './notes-stub.ts';
+
 // The docs worker's bundle in workerd, its LEDGER and RELEASE_DIFFS bindings served by stub workers over RPC.
 const SITE = join(import.meta.dirname, '../..');
 
@@ -27,6 +36,7 @@ const WranglerConfig = v.object({
   compatibility_date: v.string(),
   compatibility_flags: v.optional(v.array(v.string()), []),
   alias: v.record(v.string(), v.string()),
+  assets: v.object({ run_worker_first: v.array(v.string()) }),
   services: v.tuple([
     v.object({
       binding: v.string(),
@@ -57,6 +67,16 @@ const readSite = () => {
 
 const site = readSite();
 
+// The built notes the worker reads through its assets binding.
+const ASSETS = join(SCRATCH, 'assets');
+
+for (const [name, notes] of Object.entries(FIXTURE_NOTES)) {
+  const file = join(ASSETS, notesAsset(name));
+
+  mkdirSync(join(file, '..'), { recursive: true });
+  writeFileSync(file, JSON.stringify(notes));
+}
+
 const [ledger, diffs] = site.services;
 
 const server = createTestHarness({
@@ -76,6 +96,11 @@ const server = createTestHarness({
           ]),
         ),
         services: [ledger, diffs],
+        assets: {
+          directory: ASSETS,
+          binding: 'ASSETS',
+          run_worker_first: site.assets.run_worker_first,
+        },
       },
     },
     {
@@ -143,9 +168,19 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
 
     assert.equal(response.status, 200, body);
     assert.equal(parseHtml(body).title, 'lit-ui-router@1.10.0 | Lit UI Router');
+    getByRole(parseHtml(body).body, 'heading', {
+      level: 2,
+      name: 'Release notes',
+    });
     assert.ok(
       hasAttribute(element(parseMarkup(body), 'ui-view'), 'defer-hydration'),
     );
+  });
+
+  it('answers 404 for the notes file itself, which only the binding reads', async () => {
+    const response = await server.fetch(notesAsset('lit-ui-router'));
+
+    assert.equal(response.status, 404);
   });
 
   it('answers 404 for a version the ledger lacks', async () => {

@@ -54,6 +54,7 @@
     "@testing-library/dom": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
     "@tools/build_and_test": "catalog:workspace",
+    "@tools/changelog": "catalog:workspace",
     "@tools/embed-heights": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
     "@tools/release-config": "catalog:workspace",

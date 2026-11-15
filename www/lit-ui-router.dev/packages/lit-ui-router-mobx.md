@@ -272,6 +272,7 @@ can be compared file-by-file to see exactly what the MobX idiom changes.
 ## Further reading
 
 - [API reference](/reference/lit-ui-router-mobx/)
+- [Releases](/releases/lit-ui-router-mobx/){target="_self"} — every version, newest first, with its release notes
 - [ui-router-mobx](/packages/ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)

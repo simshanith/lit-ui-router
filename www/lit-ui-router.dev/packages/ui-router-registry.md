@@ -214,4 +214,5 @@ declare its return type too:
 ## Further reading
 
 - [API reference](/reference/ui-router-registry/)
+- [Releases](/releases/ui-router-registry/){target="_self"} — every version, newest first, with its release notes
 - [UI-Router — state declarations](https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html)

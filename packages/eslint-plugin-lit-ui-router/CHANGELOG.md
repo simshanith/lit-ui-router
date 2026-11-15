@@ -1,6 +1,6 @@
 # Changelog
 
-Prereleases and canaries are not listed here; see [all releases on GitHub](https://github.com/simshanith/lit-ui-router/releases?q=eslint-plugin-lit-ui-router%40&expanded=true).
+Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/).
 
 ## 1.3.1 (2026-11-13)
 
