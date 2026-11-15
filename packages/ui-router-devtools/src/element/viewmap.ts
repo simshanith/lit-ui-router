@@ -549,9 +549,10 @@ const GAP = 48;
 /** The share of the room a split that a resize took away needs to spare before it comes back, as the fit ladder does. */
 const RESTORE = 0.1;
 
+// Everything the answer is weighed from: the room, the column kept for the popover, and what the two drawings leave.
 interface Weighed extends Size {
-  states: number;
-  views: number;
+  aside: number;
+  spare: number;
   shown: boolean;
 }
 
@@ -584,19 +585,17 @@ const viewsWidth = (
   return width;
 };
 
-// Read again with nothing changed it keeps its answer; after a resize a hidden split needs room to spare.
-const shows = (
-  host: DevtoolsPanel,
-  now: Omit<Weighed, 'shown'>,
-  spare: number,
-): boolean => {
+// Read again with nothing changed it keeps its answer; a resize of the same panel brings a hidden split back only with
+// room to spare, and the dock and the maximised panel, which reserve different columns, each weigh it afresh.
+const shows = (host: DevtoolsPanel, now: Omit<Weighed, 'shown'>): boolean => {
   const last = weighed.get(host);
-  const sized = last?.width === now.width && last.height === now.height;
+  const panel = last?.aside === now.aside;
+  const sized = panel && last.width === now.width && last.height === now.height;
 
   const shown =
-    sized && last.states === now.states && last.views === now.views
+    sized && last.spare === now.spare
       ? last.shown
-      : spare >= (last && !sized && !last.shown ? now.width * RESTORE : 0);
+      : now.spare >= (panel && !sized && !last.shown ? now.width * RESTORE : 0);
 
   weighed.set(host, { ...now, shown });
 
@@ -630,7 +629,7 @@ export const splitOf = (
   const drawn = viewsWidth(host, views, room, free);
   const spare = free - states - drawn;
 
-  if (!shows(host, { width, height, states, views: drawn }, spare)) return null;
+  if (!shows(host, { width, height, aside, spare })) return null;
 
   const side = states + Math.floor((spare + GAP) / 2);
 

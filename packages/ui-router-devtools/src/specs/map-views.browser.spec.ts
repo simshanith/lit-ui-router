@@ -108,13 +108,20 @@ const WIDE_STATES: LitStateDeclaration[] = NUMBERS.map((n) => ({
 
 const SIDEBARS = NUMBERS.slice(0, 4).map((n) => `sidebar-navigation-${n}`);
 
+// More long-named states, so the maximised panel cannot enlarge the states past the dock's rung.
+const WIDER_STATES: StateDeclaration[] = NUMBERS.map((n) => ({
+  name: `archive-and-retention-policies-${n}`,
+  url: `/archive-${n}`,
+}));
+
 /** The panel open on the Map over a small mail app, or a wide one, at a viewport this wide. */
 const mailMap = async (
   width = 1280,
   wide = false,
   extra: readonly StateDeclaration[] = [],
+  height = 800,
 ) => {
-  await page.viewport(width, 800);
+  await page.viewport(width, height);
 
   const router = new UIRouterLit();
   routers.push(router);
@@ -667,6 +674,33 @@ describe('the view map beside the Map', () => {
       expect(overlay()).toBeNull();
     },
   );
+
+  it('weighs the split afresh for the dock and the maximised panel, though their Map panes are one size', async () => {
+    // At this viewport the dock's Map pane and the maximised one measure the same; only the popover's column differs.
+    const { element } = await mailMap(1800, true, WIDER_STATES, 521);
+    const panel = panelOf(element);
+    const maximise = () =>
+      getByRole(shadow(element), 'button', {
+        name: 'Maximise devtools',
+      }).click();
+
+    await noSplit(element);
+
+    const dock = { ...panel._mapSize };
+    const rung = panel._nested()?.rung;
+
+    maximise();
+
+    await split(element);
+    expect(panel._mapSize).toEqual(dock);
+    expect(panel._mapLayout()?.nested.rung).toBe(rung);
+
+    maximise();
+    await element.updateComplete;
+    await noSplit(element);
+    expect(panel._mapSize).toEqual(dock);
+    expect(panel._nested()?.rung).toBe(rung);
+  });
 
   it('keeps a view selected beside the Map for the Views tab’s own details', async () => {
     const { element } = await mailMap();
