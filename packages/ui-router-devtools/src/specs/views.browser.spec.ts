@@ -145,10 +145,34 @@ describe('the Views', () => {
     await waitFor(() =>
       expect(element.shadowRoot?.activeElement).toBe(items()[2]),
     );
+    press(element, 'ArrowUp');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items()[1]),
+    );
     press(element, 'ArrowLeft');
     await waitFor(() =>
       expect(element.shadowRoot?.activeElement).toBe(items()[0]),
     );
+    press(element, 'End');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items()[2]),
+    );
+    press(element, 'Home');
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(items()[0]),
+    );
+
+    // A key the tree does not use is left to the page.
+    const typed = new KeyboardEvent('keydown', {
+      key: 'a',
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+
+    items()[0]?.dispatchEvent(typed);
+    expect(typed.defaultPrevented).toBe(false);
+
     press(element, 'ArrowDown');
     await waitFor(() =>
       expect(element.shadowRoot?.activeElement).toBe(items()[1]),
@@ -198,6 +222,13 @@ describe('the Views', () => {
     root.dispatchEvent(new PointerEvent('pointerenter'));
     expect(overlay()?.dataset.uiRouterDevtoolsView).toBe('$default');
     expect(overlay()?.getBoundingClientRect().height).toBeGreaterThan(0);
+
+    // The outline follows its view when the page moves under it.
+    const top = overlay()?.getBoundingClientRect().top ?? 0;
+
+    document.querySelector('main')?.style.setProperty('margin-top', '40px');
+    window.dispatchEvent(new Event('resize'));
+    expect(overlay()?.getBoundingClientRect().top).toBeGreaterThan(top);
 
     root.dispatchEvent(new PointerEvent('pointerleave'));
     expect(overlay()).toBeNull();
