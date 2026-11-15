@@ -92,11 +92,11 @@ ends, and each one it starts, so a running fetch grows on the Timeline.
 A span is joined to a transition in one of three ways, and the Timeline says
 which:
 
-| Relation | When                                                                                  | Drawn                           |
-| -------- | ------------------------------------------------------------------------------------- | ------------------------------- |
-| child    | it descends from the router's own span for the transition, or a phase or resolve span | nested, filled, no tag          |
-| trace    | it shares a trace with the router's span for the transition and overlaps it in time   | nested, filled, tagged in trace |
-| during   | it only overlaps the transition, or its redirect chain, in time                       | nested, dashed, tagged during   |
+| Relation | When                                                                                             | Drawn                           |
+| -------- | ------------------------------------------------------------------------------------------------ | ------------------------------- |
+| child    | it descends from the router's own span for the transition, or a phase, resolve or lazy load span | nested, filled, no tag          |
+| trace    | it shares a trace with the router's span for the transition and overlaps it in time              | nested, filled, tagged in trace |
+| during   | it only overlaps the transition, or its redirect chain, in time                                  | nested, dashed, tagged during   |
 
 The router's own spans are found among the spans the panel is given, so they
 reach it only when the `DevtoolsSpanProcessor` sits on the provider that the
