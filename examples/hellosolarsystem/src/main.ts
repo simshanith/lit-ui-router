@@ -391,7 +391,6 @@ export class AppRoot extends LitElement {
       text-decoration: none;
     }
     nav a.active {
-      font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
     /* ≥44px tap targets on touch-sized screens */

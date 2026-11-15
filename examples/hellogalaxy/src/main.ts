@@ -164,7 +164,6 @@ class GalaxyShellComponent extends LitElement {
       color: #0b1020;
       background: #7aa2ff;
       border-color: #7aa2ff;
-      font-weight: 600;
     }
     .panel {
       background: rgba(9, 12, 20, 0.72);

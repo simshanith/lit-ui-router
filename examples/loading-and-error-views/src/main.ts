@@ -246,8 +246,9 @@ export class AppShell extends LitElement {
       background: light-dark(#f0f0f0, #2c2c2c);
     }
     nav a.active {
-      font-weight: 700;
       background: light-dark(#dcdcdc, #444);
+      text-decoration: underline 2px;
+      text-underline-offset: 4px;
     }
     nav.tabs {
       margin-block: 0 12px;

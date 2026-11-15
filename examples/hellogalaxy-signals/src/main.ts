@@ -227,7 +227,6 @@ class GalaxyShellComponent extends SignalWatcher(LitElement) {
       color: #0b1020;
       background: #7aa2ff;
       border-color: #7aa2ff;
-      font-weight: 600;
     }
     .charted {
       align-self: center;
@@ -255,7 +254,6 @@ class GalaxyShellComponent extends SignalWatcher(LitElement) {
     }
     .crumbs [aria-current] {
       color: #f2f6fc;
-      font-weight: 600;
     }
     .panel {
       background: rgba(9, 12, 20, 0.72);
@@ -540,7 +538,6 @@ class StarDetailComponent extends LitElement {
       border-color: #7aa2ff;
       background: #7aa2ff;
       color: #0b1020;
-      font-weight: 600;
     }
     @media (max-width: 640px) {
       button {
