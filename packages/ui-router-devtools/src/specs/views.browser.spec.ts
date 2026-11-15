@@ -496,6 +496,17 @@ describe('the Views', () => {
     root.dispatchEvent(new PointerEvent('pointerenter'));
     expect(overlay()).toBeNull();
 
+    // Nor do its details name a place on it.
+    root.click();
+    await element.updateComplete;
+
+    const details = await waitFor(() =>
+      getByRole(shadow(element), 'region', { name: /\$default/ }),
+    );
+
+    expect(within(details).getByText('Filled by')).toBeTruthy();
+    expect(within(details).queryByText('On page')).toBeNull();
+
     element.importSession({
       ...session,
       events: session.events.filter((event) => event.type !== 'views'),

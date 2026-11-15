@@ -288,7 +288,8 @@ type Fact = readonly [term: string, value: unknown];
 
 const facts = (host: DevtoolsPanel, view: ViewInfo): Fact[] => {
   const { fill } = view;
-  const place = host._imported ? null : host.viewLocator?.describe?.(view);
+  // An imported session's page is not the recorded one, so it has no place to report.
+  const place = host._imported ? undefined : host.viewLocator?.describe?.(view);
 
   return [
     ['Path', view.fqn],
