@@ -14,8 +14,9 @@
 //   check                 the gate the deploy runs first: branch www/atlas, tree clean, HEAD on
 //                         origin, dist/city/index.html carries typekit and no Google font link
 //   deploy                check, then the Pages upload; prints the deployment URL
-//   verify [--page p --marker m]   two live fetches must agree on the marker and on typekit;
-//                         seven status codes must match
+//   deploy-worker         check, then the same dist to the Worker in worker/wrangler.jsonc; prints its URL
+//   verify [--page p --marker m --site url]   two live fetches must agree on the marker and on
+//                         typekit; seven status codes must match; --site names another origin
 //   artifact              the single-file build for the claude.ai Artifact
 //
 // Run from anywhere: every path is resolved from this file. The hook in
@@ -34,6 +35,7 @@ const STATE = join(ATLAS, 'tmp', 'ship');
 const BRANCH = 'www/atlas';
 const SITE = 'https://atlas.lit-ui-router.dev';
 const PROJECT = 'altitude-atlas';
+const WORKER_CONFIG = join(ATLAS, 'worker', 'wrangler.jsonc');
 
 const [STEP, ...ARGV] = process.argv.slice(2);
 const flag = (name) => { const i = ARGV.indexOf(name); return i !== -1 ? ARGV[i + 1] : undefined; };
@@ -133,10 +135,20 @@ const STEPS = {
     say(`deployed ${head.slice(0, 8)} → ${url}`);
   },
 
+  'deploy-worker'() {
+    const head = STEPS.check();
+    const out = read('pnpm', ['exec', 'wrangler', 'deploy', '--config', WORKER_CONFIG, '--message', head.slice(0, 8)], ATLAS);
+    const url = /https:\/\/altitude-atlas\.[a-z0-9-]+\.workers\.dev/.exec(out)?.[0];
+    if (!url) stop('no workers.dev URL in the wrangler output');
+    remember({ workerDeployed: head, worker: url, workerAt: new Date().toISOString() });
+    say(`deployed ${head.slice(0, 8)} → ${url}`);
+  },
+
   async verify() {
+    const site = (flag('--site') ?? SITE).replace(/\/$/, '');
     const page = flag('--page') ?? '/';
     const marker = flag('--marker');
-    const fetchText = async (path) => (await fetch(`${SITE}${path}`, { redirect: 'follow', cache: 'no-store' })).text();
+    const fetchText = async (path) => (await fetch(`${site}${path}`, { redirect: 'follow', cache: 'no-store' })).text();
     const count = (text, needle) => text.split(needle).length - 1;
     const a = await fetchText(page), b = await fetchText(page);
     const kit = [count(a, 'typekit'), count(b, 'typekit')];
@@ -148,10 +160,10 @@ const STEPS = {
     }
     const EXPECT = { '/': 200, '/sheet/7/': 200, '/sheet/2a': 200, '/plate/7/': 200, '/set/sheet-7-the-measured-city': 200, '/set/gallery.html': 200, '/sheet/99': 404 };
     for (const [path, status] of Object.entries(EXPECT)) {
-      const r = await fetch(`${SITE}${path}`, { redirect: 'follow', cache: 'no-store' });
+      const r = await fetch(`${site}${path}`, { redirect: 'follow', cache: 'no-store' });
       if (r.status !== status) stop(`${path}: ${r.status}, expected ${status}`);
     }
-    say(`${page}: typekit ${kit.join('/')} · ${Object.keys(EXPECT).length} status codes as expected`);
+    say(`${site}${page}: typekit ${kit.join('/')} · ${Object.keys(EXPECT).length} status codes as expected`);
   },
 
   artifact() {

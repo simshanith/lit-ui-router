@@ -92,6 +92,15 @@ are done by hand between the steps.
    The artifact build keeps the Google font links by design ([app/README.md](../app/README.md),
    "Artifact build"); it never passes through the stager.
 
+## The Worker
+
+`deploy-worker` uploads the same staged `dist/` to the Worker `altitude-atlas`, described by
+[worker/wrangler.jsonc](../worker/wrangler.jsonc). It runs `check` first, as `deploy` does, and
+prints the Worker's `workers.dev` URL; `verify --site <url>` runs the live checks against that
+origin. The Worker's entry passes every request to the assets, so a request has a trace, and the
+config names the account's trace destination. `atlas.lit-ui-router.dev` is the Pages project's
+domain, and `deploy` is the step that changes the live site.
+
 ## Records
 
 - **HISTORY.md.** One `## Sheet N — TITLE` section per plate, opening with the

@@ -1,0 +1,21 @@
+// https://developers.cloudflare.com/workers/static-assets/configuration/
+{
+  "name": "altitude-atlas",
+  "compatibility_date": "2026-11-16",
+  "main": "./index.ts",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    // Names a destination set up on the account, which holds the endpoint and key.
+    "traces": { "enabled": true, "destinations": ["honeycomb-traces"] },
+  },
+  "assets": {
+    // The staged site, with its _headers and _redirects.
+    "directory": "../dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    // A request is traced only when the Worker runs; the hashed assets are served without it.
+    "run_worker_first": ["/*", "!/assets/*"],
+  },
+}
