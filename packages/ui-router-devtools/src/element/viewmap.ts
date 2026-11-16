@@ -554,7 +554,7 @@ interface Weighed extends Size {
   aside: number;
   spare: number;
   shown: boolean;
-  // Weighed for a new column in a room still measured for the old one, so the next size is weighed afresh too.
+  // Weighed for a changed column in a room still measured for the old one, so the next size is weighed afresh too.
   fresh: boolean;
 }
 
@@ -587,6 +587,23 @@ const viewsWidth = (
   return width;
 };
 
+// The ResizeObserver measures the new column's room in the frame after its first weigh; past that frame, a weigh at
+// another size is a resize.
+const settle = (host: DevtoolsPanel, first: Weighed) =>
+  requestAnimationFrame(() =>
+    setTimeout(() => {
+      const now = weighed.get(host);
+
+      if (
+        now?.fresh &&
+        now.aside === first.aside &&
+        now.width === first.width &&
+        now.height === first.height
+      )
+        weighed.set(host, { ...now, fresh: false });
+    }),
+  );
+
 // Read again with nothing changed it keeps its answer; a resize of the same panel brings a hidden split back only with
 // room to spare, and the dock and the maximised panel, which reserve different columns, each weigh it afresh, up to
 // the first size measured for them.
@@ -597,7 +614,8 @@ const shows = (
   const last = weighed.get(host);
   const panel = last?.aside === now.aside;
   const sized = panel && last.width === now.width && last.height === now.height;
-  const fresh = !panel || (sized && last.fresh);
+  const moved = last !== undefined && !panel;
+  const fresh = moved || (sized && last.fresh);
   const held = panel && !sized && !last.shown && !last.fresh;
 
   const shown =
@@ -605,7 +623,11 @@ const shows = (
       ? last.shown
       : now.spare >= (held ? now.width * RESTORE : 0);
 
-  weighed.set(host, { ...now, shown, fresh });
+  const entry = { ...now, shown, fresh };
+
+  weighed.set(host, entry);
+
+  if (moved) settle(host, entry);
 
   return shown;
 };

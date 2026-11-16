@@ -173,14 +173,35 @@ const split = (element: UIRouterDevtools) =>
   }));
 
 // The Map's room is measured by a ResizeObserver, whose entry waits on the next rendering update after a resize.
-const resize = async (element: UIRouterDevtools, width: number) => {
+const resize = async (
+  element: UIRouterDevtools,
+  width: number,
+  height = 800,
+) => {
   const panel = panelOf(element);
   const was = panel._mapSize.width;
 
-  await page.viewport(width, 800);
+  await page.viewport(width, height);
   await waitFor(() => expect(panel._mapSize.width).not.toBe(was));
   await element.updateComplete;
 };
+
+// What the shown split leaves past both drawings' narrowest: twice the states' room past theirs, less the shared 48px.
+const spareOf = (panel: DevtoolsPanel) => {
+  const { split: rooms } = panel._mapLayout()!;
+  const whole = panel._map!.layoutNested(panel);
+  const narrowest = panel._map!.narrowest(panel, whole, rooms!.states.height);
+
+  return 2 * (rooms!.states.width - narrowest) - 48;
+};
+
+// Two frames: the ResizeObserver's, and the one after it.
+const frames = () =>
+  new Promise((resolve) =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => setTimeout(resolve)),
+    ),
+  );
 
 const noSplit = async (element: UIRouterDevtools) => {
   await settled(element);
@@ -272,6 +293,27 @@ describe('the view map beside the Map', () => {
     await split(element);
     getByRole(shadow(element), 'button', { name: 'Tree' }).click();
     await noSplit(element);
+  });
+
+  it('holds a split first weighed without room to the same margin when the dock widens', async () => {
+    const probe = await mailMap(1600, true);
+
+    await split(probe.element);
+
+    const spare = spareOf(panelOf(probe.element));
+
+    routers.splice(routers.indexOf(probe.router), 1);
+    probe.router.dispose();
+    document.body.replaceChildren();
+
+    // A new panel whose first weigh leaves no room, widened to less than a tenth of the room spare.
+    const { element } = await mailMap(1600 - spare - 8, true);
+
+    await noSplit(element);
+    await resize(element, 1600 - spare + 8);
+    await noSplit(element);
+    await resize(element, 1600);
+    await split(element);
   });
 
   it('comes back after a resize only with room to spare', async () => {
@@ -708,6 +750,38 @@ describe('the view map beside the Map', () => {
       expect(overlay()).toBeNull();
     },
   );
+
+  it('holds a resize after a mode change that keeps the Map pane’s size to the same margin', async () => {
+    // At this viewport the dock's Map pane and the maximised one measure the same, so no ResizeObserver entry follows.
+    const { element } = await mailMap(1800, true, WIDER_STATES, 521);
+    const panel = panelOf(element);
+
+    const switchMode = async () => {
+      getByRole(shadow(element), 'button', {
+        name: /^(Maximise devtools|Restore the dock)$/,
+      }).click();
+      await element.updateComplete;
+      await frames();
+    };
+
+    await switchMode();
+    await split(element);
+
+    const spare = spareOf(panel);
+
+    await switchMode();
+    await resize(element, 1800 - spare - 8, 521);
+
+    const size = { ...panel._mapSize };
+
+    await switchMode();
+    await noSplit(element);
+    expect(panel._mapSize).toEqual(size);
+
+    // Widened to less than a tenth of the room spare, as any resize of a hidden split.
+    await resize(element, 1800 - spare + 8, 521);
+    await noSplit(element);
+  });
 
   it('weighs the split afresh for the dock and the maximised panel, though their Map panes are one size', async () => {
     // At this viewport the dock's Map pane and the maximised one measure the same; only the popover's column differs.
