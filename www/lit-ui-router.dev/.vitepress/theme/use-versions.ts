@@ -31,7 +31,8 @@ export function useVersions() {
 /** Each version is its own VitePress app: load the same page there when it exists, else that version's home. */
 export async function goToVersionPage(href: string, home: string) {
   const response = await fetch(href, { method: 'HEAD' }).catch(() => null);
-  location.assign(response?.ok ? href : home);
+  // Only a 404 proves the page is missing; a failed or blocked HEAD still goes there.
+  location.assign(response?.status === 404 ? home : href);
 }
 
 /** True for a plain primary click the page may take over. */
