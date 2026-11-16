@@ -11,7 +11,11 @@ export default defineConfig(({ isPreview }) => ({
     // Reached only through the docs worker's service binding, so neither production nor a Preview gets a URL.
     workersDev: false,
     previewUrls: false,
-    observability: { enabled: true },
+    observability: {
+      enabled: true,
+      // Names a destination set up on the account, which holds the endpoint and key.
+      traces: { enabled: true, destinations: ['honeycomb-traces'] },
+    },
     env: {
       // A Preview writes its own bucket, so production's entries only ever come from production code.
       DIFFS: bindings.r2({
