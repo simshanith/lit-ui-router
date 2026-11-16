@@ -12,7 +12,11 @@
   "routes": [
     { "pattern": "release-ledger.lit-ui-router.dev", "custom_domain": true },
   ],
-  "observability": { "enabled": true, "traces": { "enabled": true } },
+  "observability": {
+    "enabled": true,
+    // Names a destination set up on the account, which holds the endpoint and key.
+    "traces": { "enabled": true, "destinations": ["honeycomb-traces"] },
+  },
   // A Preview binds only what this block names, so branches reach no production data.
   "previews": {},
   // Placeholder schedule for the tag sweep.
