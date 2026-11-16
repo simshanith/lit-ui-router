@@ -188,7 +188,7 @@ export function workerFirstProblems(
 }
 
 /** The files a path could be served from, as Cloudflare's html_handling resolves it. */
-const servedFiles = (outDir: string, path: string): string[] => {
+export const servedFiles = (outDir: string, path: string): string[] => {
   const file = join(outDir, decodeURIComponent(path));
 
   return path.endsWith('/')

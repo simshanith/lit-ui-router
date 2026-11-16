@@ -356,6 +356,12 @@ these check runs.
    - Verify on [npmjs.com/package/lit-ui-router](https://www.npmjs.com/package/lit-ui-router)
    - Check GitHub Releases page
 
+5. **Refresh the frozen 1.x docs, once per release round:**
+   - When the last package of the round has published, rebuild and redeploy
+     the `/v1/` snapshot from that release's tag
+     ([DEPLOY: Frozen 1.x docs](../www/DEPLOY.md#frozen-1x-docs-at-v1)).
+     Nothing automates or checks this step
+
 ### Prerelease / Custom Version
 
 To advance an existing prerelease line (`1.2.3-beta.0` → `1.2.3-beta.1`),
