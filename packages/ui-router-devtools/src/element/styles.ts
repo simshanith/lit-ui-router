@@ -360,16 +360,11 @@ export const styles: CSSResult = css`
     display: none;
   }
 
-  /* Only the name gives way in a narrow viewport, so the status and duration are never clipped. */
+  /* Clipping its own overflow lets the name shrink below its text, so in a narrow viewport it gives way and the duration stays whole. */
   .pill-name {
-    min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .pill > :not(.pill-name) {
-    flex: none;
   }
 
   @media (hover: hover) and (pointer: fine) {

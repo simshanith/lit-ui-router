@@ -123,6 +123,7 @@ it('keeps the duration inside the pill beside a long state name', async () => {
 
   const unit = within(pill).getByText('ms');
   const name = within(pill).getByText('administration.messagelists');
+
   const whole = () =>
     expect(unit.getBoundingClientRect().right).toBeLessThanOrEqual(
       pill.getBoundingClientRect().right - pill.clientLeft,
