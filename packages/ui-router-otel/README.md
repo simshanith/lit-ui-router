@@ -147,7 +147,7 @@ A receiver that takes spans from a page has to allow the page's origin. The view
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | The devtools Timeline                                                  | One transition, with its redirect chain, phases, resolves and the spans joined to it                          |
 | A trace viewer behind an OTLP receiver                                 | Every trace: search, attribute filters, comparison, and a server's spans when the server sends them there too |
-| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions, phases and resolves in a `UI-Router` track group, beside network, rendering and long tasks           |
+| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions, phases and resolves in a `UI-Router` track group, beside network, rendering and long tasks       |
 
 The Performance track is written from the devtools' recorded events and holds no spans.
 

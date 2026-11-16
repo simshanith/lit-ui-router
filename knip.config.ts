@@ -113,6 +113,10 @@ const workspaces = {
       'src/specs/vite-build/prerender*.ts',
     ],
   },
+  'packages/ui-router-otel': {
+    // imported only by a checked README fence (//#lint:md-examples)
+    ignoreDependencies: ['@opentelemetry/exporter-trace-otlp-http'],
+  },
   'packages/ui-router-registry': {
     entry: ['src/specs/*.test-d.ts', 'test-d/**/*.test-d.ts'],
   },
