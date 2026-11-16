@@ -15,6 +15,7 @@ import {
   type ReleaseNotes,
 } from '../worker/releases/notes.ts';
 import { mounts } from '../worker/releases/routes.ts';
+import { SITE_ORIGIN } from './versions.ts';
 
 /** `<version> (<YYYY-MM-DD>)`, the heading `@tools/changelog` writes. */
 const Heading = v.pipe(
@@ -28,8 +29,6 @@ const Heading = v.pipe(
 // GitHub release bodies: raw HTML passes through, bare URLs link.
 const md = new MarkdownIt({ html: true, linkify: true });
 
-const ORIGIN = 'https://lit-ui-router.dev';
-
 const WORKER_MOUNTS = Object.keys(mounts);
 
 /** A path the worker renders, which VitePress's client router must not take. */
@@ -42,13 +41,13 @@ md.core.ruler.push('same-site-links', (state) => {
     for (const child of token.children ?? []) {
       const href = child.type === 'link_open' ? child.attrGet('href') : null;
 
-      if (href === null || !href.startsWith(`${ORIGIN}/`)) continue;
+      if (href === null || !href.startsWith(`${SITE_ORIGIN}/`)) continue;
 
-      const path = href.slice(ORIGIN.length);
+      const path = href.slice(SITE_ORIGIN.length);
 
       child.attrSet('href', path);
 
-      if (isWorkerPath(new URL(path, ORIGIN).pathname)) {
+      if (isWorkerPath(new URL(path, SITE_ORIGIN).pathname)) {
         child.attrSet('target', '_self');
       }
     }

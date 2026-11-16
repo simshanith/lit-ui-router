@@ -1,4 +1,5 @@
 import { type Surface, SURFACES } from '../catalog/surfaces.ts';
+import { pagePath } from './versions.ts';
 
 type Row = (typeof SURFACES)[number];
 
@@ -58,7 +59,7 @@ export const surfaceOf = (path: string): Row => surfaceIn(SURFACES, path);
 
 /** The URL a page source is served at under cleanUrls: `site/index.md` is `/site/`. */
 export const pageUrl = (relativePath: string): string =>
-  `/${relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '')}`;
+  `/${pagePath(relativePath)}`;
 
 /** A path glob as a page-source glob: `/site/` is `site/index.md`, and a trailing `*` reaches any depth. */
 export const sourceGlob = (glob: string): string =>

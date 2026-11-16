@@ -13,9 +13,10 @@ import { REDIRECTS } from '../catalog/redirects.ts';
 import { mounts as releaseMounts } from '../worker/releases/routes.ts';
 import { matchRedirect, redirectLines } from './redirects.ts';
 import { surfaceOf } from './surfaces.ts';
+import { SITE_ORIGIN } from './versions.ts';
 
 /** The origin package READMEs, manifests and doc comments link. */
-export const ORIGIN = 'https://lit-ui-router.dev';
+export const ORIGIN = SITE_ORIGIN;
 
 const SITE = join(import.meta.dirname, '..');
 
