@@ -658,6 +658,28 @@ of them disagree. Read the release notes for changes to the executable before
 picking a version: 12.2.0 broke the upgrade path this repo takes out of 12.1 on
 POSIX.
 
+### Warming CI caches on a bump PR
+
+The mise, Playwright and examples npm caches save only from `main`, so a PR
+that changes their key (a mise tool, Playwright, or an examples
+`package-lock.json`) installs cold in every job until it merges. To keep a bump
+PR's later runs warm, let one run save under the PR's own scope:
+
+1. Commit a temporary flip of every cache-save condition:
+
+   ```sh
+   perl -pi -e "s/github\.ref == 'refs\/heads\/main'/true/ if /cache_save|cache-hit/" .github/workflows/*.yml
+   ```
+
+2. Push, and let one run get past each job's install steps. The saves run
+   right after the installs, so a later failure doesn't lose them.
+3. `git revert` the commit and push. Later runs of the PR restore the entries
+   saved under `refs/pull/<number>/merge`, and the squash merge carries no
+   trace of the flip.
+
+GitHub evicts an entry that goes unused for 7 days, so there is nothing to clean
+up; `gh cache list --ref refs/pull/<number>/merge` shows what the run saved.
+
 ### Patched dependencies
 
 `patchedDependencies` in [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) maps
