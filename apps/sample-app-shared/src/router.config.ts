@@ -19,6 +19,7 @@ import { shellMounts } from 'sample-app-routes/shell-mounts';
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
 import routeFocusHook from './app/global/routeFocus.hook.js';
+import { installDevtools } from './app/global/devtools.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
   featureFlags,
@@ -121,9 +122,7 @@ export function configureRouter(router = new UIRouterLit()) {
   console.info(message);
 
   if (featureFlags.get('enable-devtools')) {
-    void import('ui-router-devtools/plugin').then(({ DevtoolsPlugin }) =>
-      router.plugin(DevtoolsPlugin),
-    );
+    void installDevtools(router);
   }
 
   if (featureFlags.get('enable-visualizer')) {

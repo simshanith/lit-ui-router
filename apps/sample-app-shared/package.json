@@ -19,6 +19,8 @@
   "dependencies": {
     "@api-viewer/docs": "catalog:",
     "@lit/context": "catalog:",
+    "@opentelemetry/api": "catalog:",
+    "@opentelemetry/sdk-trace": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/dsr": "catalog:",
     "@uirouter/sticky-states": "catalog:",
@@ -29,7 +31,8 @@
     "lodash-es": "catalog:",
     "sample-app-routes": "catalog:workspace",
     "ui-router-devtools": "catalog:workspace",
-    "ui-router-navigation-location-plugin": "catalog:workspace"
+    "ui-router-navigation-location-plugin": "catalog:workspace",
+    "ui-router-otel": "catalog:workspace"
   },
   "devDependencies": {
     "@tools/lit-test-env": "catalog:workspace",

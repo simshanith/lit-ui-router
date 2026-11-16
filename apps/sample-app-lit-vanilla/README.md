@@ -30,6 +30,12 @@ Two feature flags choose the tooling: `enable-devtools` (on by default) loads th
 (off by default) loads the [State and Transition Visualizer](http://github.com/ui-router/visualizer) it replaces.
 Set either on the Preferences page or in the URL, as `?feature-enable-visualizer=true`.
 
+With the panel loaded, `enable-otel` (on by default) adds [`ui-router-otel`](../../packages/ui-router-otel/README.md)
+and records OpenTelemetry spans for the panel's Timeline: the router's transitions, phases and resolves, and a span for
+each simulated REST call, such as `GET contacts`. The tracer provider's only processor is the panel, so no span leaves
+the page. Select a transition into Contacts or a message folder and open the Timeline: each REST call is a filled bar
+beside the resolve that made it, and its details say it is joined as a child of the router's span.
+
 Note how states are _entered_ when they were previously not active, _exited_ and re-_entered_ when parameters change,
 and how parent states whose parameters did not change are _retained_. Each of these (_exited, entered, retained_)
 correspond to a Transition Hook.
