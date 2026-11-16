@@ -407,6 +407,8 @@ export class DevtoolsPanel extends LitElement {
   // What the Map last drew, and where its states were before a change to it.
   #geometry: readonly unknown[] = [];
   #before: Map<string, DOMRect> | null = null;
+  // The tree that had focus before an update, which may remove the focused item.
+  #focusTree: Element | null = null;
   // The layout last drawn, and whether the view was last moved by hand, which is not animated.
   #layout: NestedLayout | null = null;
   #direct = false;
@@ -727,8 +729,11 @@ export class DevtoolsPanel extends LitElement {
 
   // A re-pack can move the focused box to another row, which rebuilds it; focus then returns to the same state.
   protected update(changed: PropertyValues<this>): void {
-    if (this.shadowRoot?.activeElement?.matches('.box > .head'))
-      this._moveFocus = true;
+    const focused = this.shadowRoot?.activeElement;
+
+    if (focused?.matches('.box > .head')) this._moveFocus = true;
+
+    this.#focusTree = focused?.closest('[role="tree"]') ?? null;
 
     this.#before = this.#mapMoved() ? this.#measureMovers() : null;
     super.update(changed);
@@ -896,10 +901,10 @@ export class DevtoolsPanel extends LitElement {
     if (!this._moveFocus) return;
     this._moveFocus = false;
 
-    // Beside the views the Map has two trees, and the arrow keys stay in the one that has focus.
-    const tree =
-      this.shadowRoot?.activeElement?.closest('[role="tree"]') ??
-      this.renderRoot;
+    // Beside the views the Map has two trees, and the arrow keys stay in the one that had focus.
+    const tree = this.#focusTree?.isConnected
+      ? this.#focusTree
+      : this.renderRoot;
 
     tree.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')?.focus();
   }

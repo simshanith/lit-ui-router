@@ -526,6 +526,20 @@ describe('the view map beside the Map', () => {
     expect(overlay()).toBeNull();
   });
 
+  it('keeps focus in the Views tree when a transition removes the focused view', async () => {
+    const { element, router } = await mailMap();
+    const { views } = await split(element);
+
+    head(views, /^list view/).focus();
+    await router.stateService.go('home');
+
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(
+        head(views, /^\$default view, filled by home/),
+      ),
+    );
+  });
+
   it('places the popover in its own column for a selected view', async () => {
     const { element } = await mailMap();
     const { views } = await split(element);
