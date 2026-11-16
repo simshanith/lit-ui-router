@@ -47,6 +47,13 @@ jobs:
         env:
           # Adds the agent-only tools in .config/mise/config.agent.toml
           MISE_ENV: agent
+      - name: Restore examples npm cache
+        # Restore only: the agent job never writes a cache other jobs restore.
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.npm
+          key: npm-examples-${{ runner.os }}-${{ hashFiles('examples/*/package-lock.json') }}
+          restore-keys: npm-examples-${{ runner.os }}-
       - name: Install dependencies
         # Before the agent starts, so its first commands never meet a half-written node_modules
         run: mise run setup

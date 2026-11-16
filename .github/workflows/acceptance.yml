@@ -42,8 +42,23 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+      - name: Restore examples npm cache
+        # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
+        id: npm-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.npm
+          key: npm-examples-${{ runner.os }}-${{ hashFiles('examples/*/package-lock.json') }}
+          restore-keys: npm-examples-${{ runner.os }}-
       - name: Install dependencies
         run: mise run setup
+      - name: Save examples npm cache
+        # Main only: PR-scoped entries would crowd the repo's cache quota.
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.npm
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Bench
         # The builds it needs come from the remote cache. Same continue-on-error
         # hand-off to the summary step as build-test-run.yml.
@@ -122,8 +137,23 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+      - name: Restore examples npm cache
+        # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
+        id: npm-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.npm
+          key: npm-examples-${{ runner.os }}-${{ hashFiles('examples/*/package-lock.json') }}
+          restore-keys: npm-examples-${{ runner.os }}-
       - name: Install dependencies
         run: mise run setup
+      - name: Save examples npm cache
+        # Main only: PR-scoped entries would crowd the repo's cache quota.
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.npm
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Parity
         # Same continue-on-error hand-off to the summary step as build-test-run.yml.
         id: parity
@@ -197,8 +227,23 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+      - name: Restore examples npm cache
+        # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
+        id: npm-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.npm
+          key: npm-examples-${{ runner.os }}-${{ hashFiles('examples/*/package-lock.json') }}
+          restore-keys: npm-examples-${{ runner.os }}-
       - name: Install dependencies
         run: mise run setup
+      - name: Save examples npm cache
+        # Main only: PR-scoped entries would crowd the repo's cache quota.
+        if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.npm
+          key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Resolve Playwright version
         id: playwright-version
         run: mise run //tools/build_and_test:playwright_version
