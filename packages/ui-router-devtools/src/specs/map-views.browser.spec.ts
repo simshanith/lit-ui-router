@@ -737,6 +737,37 @@ describe('the view map beside the Map', () => {
     expect(panel._nested()?.rung).toBe(rung);
   });
 
+  it('weighs a maximised split by the maximised room once it is measured, not by the dock’s', async () => {
+    const { element } = await mailMap(2400, true);
+    const panel = panelOf(element);
+
+    // The Map's room is measured for the new mode only after its first render in it.
+    const switchMode = async () => {
+      const was = { ...panel._mapSize };
+
+      getByRole(shadow(element), 'button', {
+        name: /^(Maximise devtools|Restore the dock)$/,
+      }).click();
+      await waitFor(() => expect(panel._mapSize).not.toEqual(was));
+      await element.updateComplete;
+    };
+
+    await switchMode();
+    await split(element);
+
+    const { split: rooms } = panel._mapLayout()!;
+    const whole = panel._map!.layoutNested(panel);
+    const narrowest = panel._map!.narrowest(panel, whole, rooms!.states.height);
+    const spare = 2 * (rooms!.states.width - narrowest) - 48;
+
+    // Narrowed so the maximised split fits with far less than a tenth of the room spare, and the dock's shorter room
+    // would leave it none.
+    await switchMode();
+    await resize(element, 2400 - spare + 8);
+    await switchMode();
+    await split(element);
+  });
+
   it('offers no view map for a session whose views snapshot holds no view', async () => {
     const { element } = await mailMap();
     const panel = panelOf(element);

@@ -554,6 +554,8 @@ interface Weighed extends Size {
   aside: number;
   spare: number;
   shown: boolean;
+  // Weighed for a new column in a room still measured for the old one, so the next size is weighed afresh too.
+  fresh: boolean;
 }
 
 const weighed = new WeakMap<DevtoolsPanel, Weighed>();
@@ -586,18 +588,24 @@ const viewsWidth = (
 };
 
 // Read again with nothing changed it keeps its answer; a resize of the same panel brings a hidden split back only with
-// room to spare, and the dock and the maximised panel, which reserve different columns, each weigh it afresh.
-const shows = (host: DevtoolsPanel, now: Omit<Weighed, 'shown'>): boolean => {
+// room to spare, and the dock and the maximised panel, which reserve different columns, each weigh it afresh, up to
+// the first size measured for them.
+const shows = (
+  host: DevtoolsPanel,
+  now: Omit<Weighed, 'shown' | 'fresh'>,
+): boolean => {
   const last = weighed.get(host);
   const panel = last?.aside === now.aside;
   const sized = panel && last.width === now.width && last.height === now.height;
+  const fresh = !panel || (sized && last.fresh);
+  const held = panel && !sized && !last.shown && !last.fresh;
 
   const shown =
     sized && last.spare === now.spare
       ? last.shown
-      : now.spare >= (panel && !sized && !last.shown ? now.width * RESTORE : 0);
+      : now.spare >= (held ? now.width * RESTORE : 0);
 
-  weighed.set(host, { ...now, shown });
+  weighed.set(host, { ...now, shown, fresh });
 
   return shown;
 };
