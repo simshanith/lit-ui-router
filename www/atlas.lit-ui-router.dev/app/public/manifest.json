@@ -17,6 +17,22 @@
   },
   "issueLog": [
     {
+      "date": "2026-11-15",
+      "num": "2C",
+      "head": "SHEET 2C",
+      "title": "THE ALTERNATE BUILDS",
+      "rev": "F",
+      "desc": "core drawn as sheet 2 draws it, its places measured from brick 1, the server on the headless plate on a lower shelf in builds III and XI, and every runtime on a fixed side"
+    },
+    {
+      "date": "2026-11-15",
+      "num": "2E",
+      "head": "SHEET 2E",
+      "title": "THE CONSUMER BUILDS",
+      "rev": "F",
+      "desc": "sheet 2C's two ground levels under builds III and XI, and a consumer's drop falls in view"
+    },
+    {
       "date": "2026-11-14",
       "num": "3",
       "head": "SHEET 3",
@@ -1877,8 +1893,8 @@
       "id": "2c",
       "num": "2C",
       "title": "THE ALTERNATE BUILDS",
-      "sub": "ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of twelve family bricks at sheet 2’s mould and ten runtimes as stacks of baseplates sized from one shipped build at the same scale, and the ten alternate models the repository’s own consumers build from it, and an eleventh the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ aa7f8bfb",
-      "caption": "One box, eleven models. The sample apps, the docs site and the examples pin ten distinct sets of family parts, and the atlas’s own app pins an eleventh on its own branch; each set is drawn as the small assembly it makes on the runtime plates its parts peer, under a callout of its parts: effect, mobx and signal-polyfill share no model, no bricks stay in the box at the cabinet’s tree and no bricks with the atlas app, and no plates carry nothing at the cabinet’s tree and no with the atlas app.",
+      "sub": "ALTITUDE 2 — SIBLING PLATE, THE ECOSYSTEM: one box of twelve family bricks at sheet 2’s mould and ten runtimes as stacks of baseplates sized from one shipped build at the same scale, core as sheet 2 draws it, and the ten alternate models the repository’s own consumers build from it, and an eleventh the atlas’s own app builds on its own branch — each model the parts one consumer pins, on the plates they peer · rows read census-builds.json, both readings, and census-peers.json @ aa7f8bfb",
+      "caption": "One box, eleven models. The sample apps, the docs site and the examples pin ten distinct sets of family parts, and the atlas’s own app pins an eleventh on its own branch; each set is drawn as the small assembly it makes on the runtime plates its parts peer, core as sheet 2 draws it, under a callout of its parts: effect, mobx and signal-polyfill share no model, every brick is in a build, and every plate stands under one.",
       "scale": "ONE BOX, ELEVEN BUILDS",
       "verdict": "alternate builds from one box: ten builds pinned by 22 consumers, vanilla the most built by six, and an eleventh, the atlas, by the atlas’s own app on its own branch, none mixing two of effect, mobx and signal-polyfill; every part is in a build at the cabinet’s tree",
       "form": "BUILD INSTRUCTIONS",
@@ -1887,7 +1903,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/2c.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -1920,7 +1936,7 @@
         "projection": "isometric",
         "mode": "static"
       },
-      "rev": "E",
+      "rev": "F",
       "file": "sheets/2e.html",
       "interactive": false,
       "needsCytoscape": false,
@@ -2827,7 +2843,7 @@
     {
       "id": "builds",
       "title": "THE BUILDS, IN THE ROUND",
-      "sub": "sheet 2C's eleven builds in the round — vanilla, typed signals, ssr server, typed effect, typed mobx, eslinted vanilla, nav, typed nav, typed vanilla, server and the atlas · twelve of the box's twelve bricks and ten of its ten plates built · one glTF binary per build · each build's explosion half again as high as its one clip, assemble ⇄ explode · the camera turns to three corners",
+      "sub": "sheet 2C's eleven builds in the round — vanilla, typed signals, ssr server, typed effect, typed mobx, eslinted vanilla, nav, typed nav, typed vanilla, server and the atlas · twelve of the box's twelve bricks and eleven of its eleven plates built · one glTF binary per build · each build's explosion half again as high as its one clip, assemble ⇄ explode · the camera turns to three corners",
       "rev": "A",
       "shno": "SHEET 2C · 3D",
       "file": "sheets/builds.html",

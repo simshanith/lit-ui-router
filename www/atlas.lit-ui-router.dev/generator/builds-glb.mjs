@@ -29,7 +29,7 @@ const tight = (flat) => {
 };
 
 /** The budget each build's binary stays inside, asserted at build. */
-export const BUILD_GLB_BUDGET = 120 * 1024;
+export const BUILD_GLB_BUDGET = 136 * 1024;
 
 /** A build's plan centre in plan units: its ground slab's. */
 export const centreOf = (model) => [model.ground.x + model.ground.w / 2, model.ground.y + model.ground.d / 2];
@@ -45,6 +45,47 @@ export const explodeOf = (model) => ({
   parts: model.bricks.map((b) => ({ id: b.n, on: b.on ?? b.seat ?? b.drops[0].on })),
   explode: new Map(model.bricks.map((b) => [b.n, b.lift])),
 });
+
+// the raised ground as one mesh: every piece's top in one grade across them all, and walls and ink edges only where no piece meets another
+function raisedMesh(pieces, at, mesh, lines) {
+  const top = soup(), side = soup(), edge = lines(), H = PITCH / 2, z0 = pieces[0].z0, z1 = pieces[0].z0 + pieces[0].h;
+  const X0 = Math.min(...pieces.map((p) => p.x)), Y0 = Math.min(...pieces.map((p) => p.y));
+  const W = Math.max(...pieces.map((p) => p.x + p.w)) - X0, D = Math.max(...pieces.map((p) => p.y + p.d)) - Y0;
+  const cap = (x, y) => 1 - 0.18 * (((x - X0) / W + (y - Y0) / D) / 2);
+  const inPiece = (x, y) => pieces.some((q) => x > q.x && x < q.x + q.w && y > q.y && y < q.y + q.d);
+  for (const p of pieces) {
+    quad(top, at(p.x, p.y, z1), at(p.x, p.y + p.d, z1), at(p.x + p.w, p.y + p.d, z1), at(p.x + p.w, p.y, z1), [cap(p.x, p.y), cap(p.x, p.y + p.d), cap(p.x + p.w, p.y + p.d), cap(p.x + p.w, p.y)]);
+    // each side's runs of half-stud steps that face open ground, outward normal [nx, ny] in plan, one wall and its edges a run
+    for (const [nx, ny] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = Math.round((ny ? p.w : p.d) / H), runs = [];
+      for (let k = 0; k < n; k++) {
+        const mx = ny ? p.x + (k + 0.5) * H : nx > 0 ? p.x + p.w : p.x, my = ny ? (ny > 0 ? p.y + p.d : p.y) : p.y + (k + 0.5) * H;
+        if (inPiece(mx + (nx * H) / 2, my + (ny * H) / 2)) continue;
+        if (runs.length && runs.at(-1)[1] === k) runs.at(-1)[1] = k + 1;
+        else runs.push([k, k + 1]);
+      }
+      for (const [k0, k1] of runs) {
+        const pointAt = (k) => (ny ? [p.x + k * H, ny > 0 ? p.y + p.d : p.y] : [nx > 0 ? p.x + p.w : p.x, p.y + k * H]);
+        const a = pointAt(k0), b = pointAt(k1);
+        const A = at(...a, z0), B = at(...b, z0), C = at(...b, z1), E = at(...a, z1);
+        const u = B.map((v, i) => v - A[i]), w = E.map((v, i) => v - A[i]);
+        const outX = u[1] * w[2] - u[2] * w[1], outZ = u[0] * w[1] - u[1] * w[0];
+        if (outX * nx + outZ * ny >= 0) quad(side, A, B, C, E, [0.7, 0.7, 1, 1]);
+        else quad(side, A, E, C, B, [0.7, 1, 1, 0.7]);
+        segment(edge, E, C);
+        segment(edge, A, B);
+        // a run's end takes an upright edge unless the wall carries on along a neighbouring piece
+        const goesOn = (q, dir) => {
+          const tx = q[0] + (ny ? (dir * H) / 2 : 0), ty = q[1] + (ny ? 0 : (dir * H) / 2);
+          return !inPiece(tx + (nx * H) / 2, ty + (ny * H) / 2) && inPiece(tx - (nx * H) / 2, ty - (ny * H) / 2) && !(tx > p.x && tx < p.x + p.w && ty > p.y && ty < p.y + p.d);
+        };
+        if (!goesOn(a, -1)) segment(edge, A, E);
+        if (!goesOn(b, 1)) segment(edge, B, C);
+      }
+    }
+  }
+  return mesh('ground-raised', [[top, 'cap'], [side, 'flank'], [edge, 'edge']]);
+}
 
 const DASH = 1 / 2;
 /** A build as a GLB, with its triangle count. */
@@ -104,6 +145,7 @@ export function buildGlb(model) {
 
   const g = model.ground;
   node({ name: 'ground', mesh: cuboid('ground', g.w / PITCH, g.h / PITCH, g.d / PITCH, ['cap', 'flank', 'edge']), translation: at(g.x, g.y, 0) });
+  if (model.raised.length) node({ name: 'ground-raised', mesh: raisedMesh(model.raised, at, mesh, lines) });
   for (const p of model.plates) {
     const mats = p.optional ? ['ghost-cap', 'ghost-flank', 'ghost-edge'] : ['cap', 'flank', 'edge'];
     const one = p.h / p.plates;

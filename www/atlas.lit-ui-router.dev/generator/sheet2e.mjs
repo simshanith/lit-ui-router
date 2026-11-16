@@ -220,6 +220,17 @@ function seatBare(st, c) {
   if (r.x + r.w > g.x + g.w || r.y + r.d > g.y + g.d) throw new Error(`sheet 2E: ${c.name} is wider than its ground`);
   st.placed.push({ ...r, z0: top(g), h: c.courses * CRS, consumer: c, drops: [], bare: true });
 }
+// a ray toward the sheet's corner, +x, +y and +z in equal measure, from a point: does it pass through a box
+const rayHits = (q, o) => {
+  let t0 = 1e-6, t1 = Infinity;
+  for (const [v, lo, hi] of [[q[0], o.x, o.x + o.w], [q[1], o.y, o.y + o.d], [q[2], o.z0, o.z0 + o.h]]) {
+    t0 = Math.max(t0, lo - v);
+    t1 = Math.min(t1, hi - v);
+  }
+  return t0 < t1 - 1e-6;
+};
+// a drop from a consumer's underside at `from` to a stud's cap at `to`, sampled along its fall: any part of it behind a family brick
+const dropHidden = (st, s, from, to) => Array.from({ length: 9 }, (_, k) => to + ((k + 0.5) / 9) * (from - to)).some((z) => st.family.some((o) => !o.ground && rayHits([s.x, s.y, z], o)));
 // the spots a consumer may take: a straddle over a free stud of two coplanar pins, else over a free stud of its heaviest pin,
 // or, `wide`, of any part it pins
 function candidatesOf(st, c, wide = false) {
@@ -229,6 +240,8 @@ function candidatesOf(st, c, wide = false) {
   const coplanar = c.pins.flatMap((a, i) => c.pins.slice(i + 1).map((b) => [a, b])).filter(([a, b]) => many(a) && many(b) && Math.abs(top(st.pinBox(c, a)) - top(st.pinBox(c, b))) < 0.01);
   let out = coplanar.flatMap(([a, b]) => free(a).flatMap((sa) => free(b).flatMap((sb) => placements([sa, sb], c.shape[0], c.shape[1]).map((r) => ({ r, seats: [[a, sa], [b, sb]], straddle: true })))));
   if (!out.length || wide) out = (wide ? c.pins : [c.anchor]).flatMap((b) => free(b).flatMap((s) => placements([s], c.shape[0], c.shape[1]).map((r) => ({ r, seats: [[b, s]], straddle: false }))));
+  // a drop falls in view: no brick stands between it and the sheet's corner
+  out = out.filter((cand) => cand.seats.every(([b, s]) => !dropHidden(st, s, heightAt(st, c, cand), top(st.pinBox(c, b)))));
   if (!out.length) throw new Error(`sheet 2E: ${c.name} finds no free stud on brick ${c.anchor.n} that no consumer covers`);
   // a corded consumer may hover higher, a course at a time, where that lets its cords and the others' run clear
   return cordsOf(c) ? [...out, ...out.flatMap((cand) => [1, 2, 3, 4].map((k) => ({ ...cand, up: k * CRS })))] : out;
@@ -450,6 +463,34 @@ function closeGaps(family, parts, ax, len) {
   for (const o of family) o[ax] -= delta.get(rootOf(parts.find((b) => b.n === o.id)).n);
 }
 
+// the raised ground under the floor bricks off the headless plate: each half a stud wider all round, less half a stud round
+// every brick on the headless plate, never less than the brick itself, laid as disjoint rectangles on the half-stud grid
+function raisedUnder(model, family, parts) {
+  const floor = family.filter((o) => !o.ground && parts.find((b) => b.n === o.id).on === null);
+  const up = floor.filter((o) => o.z0 > GROUND_H + 0.01), down = floor.filter((o) => o.z0 <= GROUND_H + 0.01), H = STUD / 2;
+  if (!up.length) return [];
+  const grow = (o) => ({ x: o.x - H, y: o.y - H, w: o.w + 2 * H, d: o.d + 2 * H });
+  const x0 = Math.min(...up.map((o) => o.x)) - H, y0 = Math.min(...up.map((o) => o.y)) - H;
+  const cols = Math.round((Math.max(...up.map((o) => o.x + o.w)) + H - x0) / H), rows = Math.round((Math.max(...up.map((o) => o.y + o.d)) + H - y0) / H);
+  const on = Array.from({ length: rows }, (_, j) => Array.from({ length: cols }, (_, i) => {
+    const c = { x: x0 + i * H, y: y0 + j * H, w: H, d: H };
+    return up.some((o) => overlap(c, o)) || (up.some((o) => overlap(c, grow(o))) && !down.some((o) => overlap(c, grow(o))));
+  }));
+  const pieces = [], used = on.map((r) => r.map(() => false));
+  for (let j = 0; j < rows; j++)
+    for (let i = 0; i < cols; i++) {
+      if (!on[j][i] || used[j][i]) continue;
+      let i1 = i;
+      while (i1 + 1 < cols && on[j][i1 + 1] && !used[j][i1 + 1]) i1++;
+      let j1 = j;
+      while (j1 + 1 < rows && on[j1 + 1].slice(i, i1 + 1).every(Boolean) && used[j1 + 1].slice(i, i1 + 1).every((u) => !u)) j1++;
+      for (let jj = j; jj <= j1; jj++) for (let ii = i; ii <= i1; ii++) used[jj][ii] = true;
+      pieces.push({ x: x0 + i * H, y: y0 + j * H, w: (i1 - i + 1) * H, d: (j1 - j + 1) * H, z0: GROUND_H, h: up[0].z0 - GROUND_H, ground: true, edge: model.atlas ? 'ska' : 'sk' });
+    }
+  if (down.some((o) => pieces.some((p) => overlap(p, o)))) throw new Error(`sheet 2E: build ${model.numeral}'s raised ground stands under a lower brick`);
+  return pieces;
+}
+
 // ---- the booklet: one panel per sheet 2C build, its family parts on a ground slab and its consumers on them ----
 // a panel seats its consumers in the first order whose cords all run clear
 function panelOf(model) {
@@ -465,7 +506,9 @@ function panelOf(model) {
 }
 function panelAt(model, turn) {
   const parts = model ? model.bricks : [];
-  const zOf = (b) => (b.on === null ? GROUND_H : zOf(parts.find((x) => x.n === b.on)) + parts.find((x) => x.n === b.on).h);
+  // sheet 2C's two levels: a brick seated on the headless plate stands on the slab, every other floor brick on 2C's raised ground
+  const headless = new Set((model?.plates ?? []).filter((p) => p.headless).map((p) => p.letter)), rise = model?.raised.length ? model.raised[0].h : 0;
+  const zOf = (b) => (b.on === null ? GROUND_H + (headless.has(b.seat) ? 0 : rise) : zOf(parts.find((x) => x.n === b.on)) + parts.find((x) => x.n === b.on).h);
   const family = parts.map((b) => ({ x: b.x, y: b.y, w: b.ws * STUD, d: b.ds * STUD, ws: b.ws, ds: b.ds, z0: zOf(b), h: b.courses * CRS, part: FB(b.n), id: b.n }));
   closeGaps(family, parts, 'x', 'w');
   closeGaps(family, parts, 'y', 'd');
@@ -473,6 +516,7 @@ function panelAt(model, turn) {
     const x0 = Math.min(...family.map((o) => o.x)), y0 = Math.min(...family.map((o) => o.y));
     const x1 = Math.max(...family.map((o) => o.x + o.w)), y1 = Math.max(...family.map((o) => o.y + o.d));
     family.unshift({ x: x0 - STUD, y: y0 - STUD, w: x1 - x0 + 2 * STUD, d: y1 - y0 + 2 * STUD, z0: 0, h: GROUND_H, ground: true, edge: model.atlas ? 'ska' : 'sk' });
+    family.splice(1, 0, ...raisedUnder(model, family, parts));
   } else family.push({ x: 0, y: 0, w: (Math.max(...BARE.map((c) => c.shape[0])) + 2) * STUD, d: (Math.max(...BARE.map((c) => c.shape[1])) + 2) * STUD, z0: 0, h: GROUND_H, ground: true });
   const consumers = CONSUMERS.filter((c) => c.model === model);
   for (const c of consumers) delete c.seatedOn;
@@ -598,7 +642,7 @@ ${ART}
 </svg>`;
 
 export const sheet2e = {
-  num: '2E', id: 'companions-consumers', rev: 'E',
+  num: '2E', id: 'companions-consumers', rev: 'F',
   title: 'THE CONSUMER BUILDS',
   sub: `ALTITUDE 2 — SIBLING PLATE, THE CONSUMERS: the ${WORD[CAB.consumers]} consumers in the cabinet’s tree and the atlas’s own app as bricks at sheet 2’s mould, each seated on the family parts it pins · rows read census-consumers.json, both readings, @ ${CONS.sha}`,
   scale: SHEET2E_SCALE,

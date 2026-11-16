@@ -590,7 +590,7 @@ No `sub` clause at this rev (the bench's `REV` is G too); its record is the 2026
 
 ## Sheet 2C — THE ALTERNATE BUILDS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet2c.mjs` · **id** `companions-runtimes` · **current rev** E
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet2c.mjs` · **id** `companions-runtimes` · **current rev** F
 - **basis** (source): `data/census-builds.json` in two readings (the cabinet's tree, and with the atlas app at www/atlas @ 7a3cf7c0), `data/census-peers.json`, `data/census-bricks.json` and `data/census-couplings.json` at origin/main @ 108456af
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -624,8 +624,16 @@ No `sub` clause; the sheet enters the set at rev A.
 
 > REV E 2026-11-09: the packed bricks seat tallest first, and a brick standing on another keeps the plan under it from any taller brick
 
+### REV F — 2026-11-15
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV F 2026-11-15: core drawn as sheet 2 draws it, its places measured from brick 1, the server on the headless plate on a lower shelf in builds III and XI, and every runtime on a fixed side
+
 **Record notes**
 
+- 2026-11-15, later, no rev clause: two sentences that read wrongly once every part was in a build are derived whole. The caption read "no plates carry nothing at the cabinet’s tree and no with the atlas app" and the aria-label "it holds , in no build"; with nothing left in the box they read "every brick is in a build, and every plate stands under one" and "every part of it is in a build at the cabinet's tree".
+- 2026-11-15, REV F, at origin/main @ aa7f8bfb: the builds are re-massed on sheet 2's model. The user: "can we reorganize atlas brick model to look anything more like https://atlas.lit-ui-router.dev/bricks/ ? it's just building upon with the same pieces", then "let's iterate some here; make a scoring rubric for judging layout, set a high bar 9/10, come up with some variants, judge them, propose which is best", then "yes" to variant 34. The rubric (family reads first 25%, sheet 2's seats 20%, family fills the frame 15%, cords stay legible 15%, same piece same place 15%, compact ground 10%; bar 9 overall, no criterion under 7, every build laid out) scored rev E 6.85 and scores rev F 9.44 (9.6 · 9.3 · 10 · 9.2 · 9.2 · 9.1). Core is one plate of sheet 2's client footprint, 8×6 = 48 studs for the 32 its 4,776 sloc measure (was 6×6 at its own size); its guard holds core to one plate of that footprint holding at least its studs, every other runtime to the stacking rule. The places sheet 2 gives on its client plate are measured from brick 1 (were from core's right edge), and brick 1 stands a stud right of its sheet 2 place to straddle lit; a brick sheet 2 seats off its client plate takes the spot on core that leaves the least-seen brick most seen, sampled five by five a face (was nearest the viewer first). Where `ui-router-server` stands with brick 1 (builds III and XI) it stands on the headless plate, sheet 2's second plate, 4×4, dashed, lettered C′ (`@uirouter/core, the headless plate` in the schedules, the box, the parts panel and the pins), at sheet 2's offset from brick 1, on a server shelf two courses lower than the ground under every other plate, which is raised to meet it, so `lit-ui-router-ssr` rests on both caps and drops onto brick 4's stud H as well; without brick 1 the server seats on core (build X). hono and vite, which only the server peers, stand against the headless plate. Every other runtime takes a fixed side of core: a stack its left, nearest first, then its back; a flat plate its right, then its front, then its left, farthest first (were whichever of left or right was nearer its brick). A brick resting over a brick's cap counts as that brick's own for its cords, a brick's top offers no stud another brick rests over, and a build whose cord finds no clear pair of studs takes its next spot on core before it stops. The guards now say: the headless plate stands at sheet 2's offset from brick 1, a shelf runtime meets the headless plate along a side and every other plate meets core along a side (was: every plate abuts core); seated, no two bricks share space, and brick 1's cap and brick 4's stand level (was: floor bricks on one hover level never overlap in plan). `BUILD_MODELS` carries `raised` (the raised ground as disjoint rectangles) and each plate `headless`; a drop names the brick it lands on. THE BOX lists eleven plates, the PLATE SCHEDULE a C′ row, and the TOTAL counts runtimes stood on. The generator build took 137.7 s before and 78.4 s after, the time in 2E. In the round, `builds-glb.mjs` draws the raised ground as one mesh with walls and edges only where no piece meets another; the binaries measure 27,204 (vanilla), 55,216 (typed signals), 92,156 (ssr server), 64,832 (typed effect), 58,924 (typed mobx), 41,316 (eslinted vanilla), 32,544 (nav), 37,444 (typed nav), 32,108 (typed vanilla), 22,968 (server) and 134,252 bytes (the atlas), past 120 KiB, so `BUILD_GLB_BUDGET` is 136 KiB (139,264 B). `check-scenes.mjs` holds its 114 checks; audit 0 / 0 / 0 on the sheet.
 - 2026-11-14, no rev clause: the subtitle of the builds in the round (`/builds`) reads in sentence case, the builds named as sheet 2C letters them in prose. The user: "https://atlas.lit-ui-router.dev/builds/ https://atlas.lit-ui-router.dev/bricks/ also still has all caps subtitle, SHOUTING CASE."
 - 2026-10-30, no rev clause: the builds in the round (`/builds`) stand isometric: the `<model-viewer>` takes `fovAttrs` from `mv-kit.mjs`, a 3° field of view (was 14°) with the wheel’s limits at 1° and 4.5° (were 5° and 18°), the 88% radius framed from the field. The user: "the 3d models have lost their isometric perspective for a while now. even on the even 45 degree snaps, buildings bow outwards somewhat fisheye lens".
 - 2026-11-14, the thirtieth cabinet, no rev clause (rev stays E), at origin/main @ aa7f8bfb: the builds were re-read at the patch versions: 23 consumers in 12 builds, the atlas app's among them, as at the twenty-ninth. No guard threw.
@@ -655,7 +663,7 @@ No `sub` clause; the sheet enters the set at rev A.
 
 ## Sheet 2E — THE CONSUMER BUILDS
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheet2e.mjs` · **id** `companions-consumers` · **current rev** E
+- **file** `www/atlas.lit-ui-router.dev/generator/sheet2e.mjs` · **id** `companions-consumers` · **current rev** F
 - **basis** (source): `data/census-consumers.json` in two readings (the cabinet's tree, and with the atlas app at www/atlas @ 7ba404cb), `data/census-builds.json` and `data/census-bricks.json` at origin/main @ 108456af, and sheet 2C's `BUILD_MODELS`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -689,8 +697,15 @@ No `sub` clause; the sheet enters the set at rev A.
 
 > REV E 2026-11-09: twenty-two consumers: the Eleventy example joins the docs site on the ssr-server build, both over brick 4
 
+### REV F — 2026-11-15
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV F 2026-11-15: sheet 2C's two ground levels under builds III and XI, and a consumer's drop falls in view
+
 **Record notes**
 
+- 2026-11-15, REV F: the panels follow sheet 2C's rev F. `sheet 2E: build III: brick 4 and brick 6 overlap in plan on one level` threw: 2C's `lit-ui-router-ssr` rests on brick 1's cap over brick 4's, two courses taller. A brick 2C seats on the headless plate stands on the slab and every other floor brick on ground raised by 2C's difference, drawn as rectangles half a stud wider than the bricks on it and clear of the shelf brick. In build XI the atlas app then seated over brick 4 with its drop behind brick 6 and a cord to brick 12 looping wide; a seat whose drop any brick stands between and the sheet's corner is no candidate, and the atlas app seats over brick 4 with its drop on brick 4's open flank. The frame is 1574 × 1411 in the photographs (was 1574 × 1206); audit 0 / 0 / 0 on the sheet.
 - 2026-11-14, the thirtieth cabinet, no rev clause (rev stays E), at origin/main @ aa7f8bfb: 22 consumers in 10 builds, 164 files / 16,471 sloc (was 163 / 15,991); with the atlas app, 23 in 11, 184 files / 21,594 sloc. No guard threw.
 - 2026-11-12, the twenty-ninth cabinet, no rev clause (rev stays E), at origin/main @ ef074136: 22 consumers in 10 builds, 163 files / 15,991 sloc (was 21 consumers, 150 / 14,914): the `hellosolarsystem-ssr` example joined, and the docs site is 41 files / 4,350 sloc; the frame is 76 px taller. With the atlas app, 23 in 11, 183 files / 21,115 sloc. No guard threw.
 - 2026-11-11, the twenty-eighth cabinet, no rev clause (rev stays E), at origin/main @ 33cd7ce1: 21 consumers in 10 builds, 150 files / 14,914 sloc (was 146 / 14,738); the docs site is 34 files / 3,771 sloc and its brick a course taller, so the frame is 13 px taller. With the atlas app, 22 in 11, 170 files / 20,035 sloc. No guard threw.
