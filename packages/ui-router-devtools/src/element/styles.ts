@@ -1889,6 +1889,42 @@ export const styles: CSSResult = css`
     text-transform: uppercase;
   }
 
+  /* A row-high target that sits in a line of text without making the line taller. */
+  .copy {
+    flex: none;
+    inline-size: var(--uird-row);
+    margin-block: -4px;
+    color: var(--uird-muted);
+  }
+
+  .copy[data-copied] {
+    color: var(--uird-ink);
+  }
+
+  .copy:dir(rtl) .glyph.copy {
+    scale: -1 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .copy:hover {
+      color: var(--uird-ink);
+    }
+  }
+
+  .insp-title .copy {
+    margin-inline-start: -8px;
+  }
+
+  .facts .copyable {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .facts .copyable > span {
+    overflow-wrap: anywhere;
+  }
+
   .facts {
     display: grid;
     grid-template-columns: 108px minmax(0, 1fr);

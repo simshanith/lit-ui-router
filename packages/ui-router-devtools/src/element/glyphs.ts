@@ -109,6 +109,16 @@ export const minGlyph: SVGTemplateResult = frame(
   'min',
 );
 
+export const copyGlyph: SVGTemplateResult = frame(
+  svg`<path d="M1.25 8.25v-7h7" /><rect x="3.75" y="3.75" width="7" height="7" />`,
+  'copy',
+);
+
+export const copiedGlyph: SVGTemplateResult = frame(
+  statusBodies.success,
+  'copied',
+);
+
 // Closes or opens a compound on the Map.
 export const foldGlyph = (open: boolean): SVGTemplateResult =>
   frame(

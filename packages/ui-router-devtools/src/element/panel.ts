@@ -259,6 +259,7 @@ export class DevtoolsPanel extends LitElement {
     _focusState: { state: true },
     _collapsed: { state: true },
     _announcement: { state: true },
+    _copied: { state: true },
     _now: { state: true },
     _keepValues: { state: true },
     _keepMessages: { state: true },
@@ -292,6 +293,8 @@ export class DevtoolsPanel extends LitElement {
   _pressed: string | null = null;
   declare _collapsed: ReadonlySet<string>;
   declare _announcement: string;
+  // Which inspector copy button shows its check; it clears after a moment.
+  declare _copied: string | null;
   declare _now: number;
   // Export's toggles, reset from `redaction` whenever it is set.
   declare _keepValues: boolean;
@@ -300,6 +303,7 @@ export class DevtoolsPanel extends LitElement {
 
   _mapWidths: Map<string, number> = new Map();
   _moveFocus = false;
+  _copiedTimer: ReturnType<typeof setTimeout> | undefined;
   // The validator loads on first import, so a panel that never imports does not pay for it; a spec swaps it to fail the load.
   _importReader = (): Promise<SessionReader> => import('../session-schema.ts');
   // Loads the Map's chunk; a spec swaps it to fail the load.
@@ -353,6 +357,7 @@ export class DevtoolsPanel extends LitElement {
     this.#resetSelection();
     this._collapsed = new Set();
     this._announcement = '';
+    this._copied = null;
     this._now = performance.now();
     this._notice = null;
   }

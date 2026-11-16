@@ -558,6 +558,14 @@ tab stop: the left and right arrow keys do the same on the item.
 A truncated name carries its full name as the label, so there the label and
 the visible text differ.
 
+A box shows the last segment of its name, and the diagram's text cannot be
+selected, since a drag pans it. The inspector holds the full name, with
+`Copy state name` and `Copy URL` buttons beside the name and the URL. A copy
+is announced in the panel's live region, `Copied mymessages.messagelist`, and
+the button's glyph turns to a check for 1.5s without moving anything. Where
+the clipboard is unavailable, the text is selected in the inspector instead,
+and the announcement says so.
+
 The scrubber is a `listbox` of transitions. Left and right arrows move the
 selection, and the selected transition's notation sits beside it.
 
