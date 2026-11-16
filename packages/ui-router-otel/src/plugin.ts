@@ -21,7 +21,7 @@ export interface OtelPluginOptions extends ReportOptions {
   /**
    * Run each app transition hook, a state's own `onEnter`, `onExit` and `onRetain` included, with its phase's span
    * active, so a span the app starts in it is that phase span's child. Core's own hooks are left as they are. Off by
-   * default: it wraps core's registered hooks, and a transition whose `onBefore` hook ran is reported even when core
+   * default: it wraps the callbacks in core's hook registry, and a transition whose `onBefore` hook ran is reported even when core
    * then ignores it.
    */
   activateHookSpans?: boolean;
