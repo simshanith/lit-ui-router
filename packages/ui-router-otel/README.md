@@ -61,15 +61,15 @@ A span name never holds params or a URL. A phase cut short by a redirect, a supe
 
 ### Outcomes
 
-| `uirouter.outcome` | Status                                  | `error.type`                                                  |
-| ------------------ | --------------------------------------- | ------------------------------------------------------------- |
-| `success`          | `UNSET`                                 | none                                                          |
-| `redirected`       | `UNSET`; the successor links to it      | none                                                          |
-| `superseded`       | `UNSET`; it links to its superseder     | none                                                          |
-| `aborted`          | `UNSET`                                 | none                                                          |
-| `ignored`          | `UNSET`, and only with `includeIgnored` | none                                                          |
-| `error`            | `ERROR` with the message                | The thrown Error's `name`, such as `TypeError`, else `_OTHER` |
-| `invalid`          | `ERROR` with the message                | `invalid`                                                     |
+| `uirouter.outcome` | Status                                                                                                   | `error.type`                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `success`          | `UNSET`                                                                                                  | none                                                          |
+| `redirected`       | `UNSET`; the successor links to it                                                                       | none                                                          |
+| `superseded`       | `UNSET`; it links to its superseder                                                                      | none                                                          |
+| `aborted`          | `UNSET`                                                                                                  | none                                                          |
+| `ignored`          | `UNSET`; reported with `includeIgnored`, or once an app `onBefore` hook has run with `activateHookSpans` | none                                                          |
+| `error`            | `ERROR` with the message                                                                                 | The thrown Error's `name`, such as `TypeError`, else `_OTHER` |
+| `invalid`          | `ERROR` with the message                                                                                 | `invalid`                                                     |
 
 A redirect, a supersede and an abort are the router doing its job, so they leave the status unset. An error and an invalid transition or target set `ERROR`, with the message as the status description and an `exception` event; a failed resolve does the same on its own span, with `error.type` from its Error. A transition is `invalid` when its param values do not validate, with the failing params in `uirouter.invalid_params`, or when it is redirected to an abstract state.
 
