@@ -120,7 +120,7 @@ The panel sees spans as they are; only its session export scrubs them, by the [d
 
 ## Other trace viewers
 
-The plugin's spans are ordinary OpenTelemetry spans, so the provider that feeds the panel can send the same spans to any OTLP receiver, such as a local Jaeger or Grafana. Add an exporter beside the `DevtoolsSpanProcessor`:
+The plugin's spans are ordinary OpenTelemetry spans, so the provider that feeds the panel can send the same spans to any OTLP receiver, such as a local Jaeger or Grafana Tempo. Add an exporter beside the `DevtoolsSpanProcessor`:
 
 ```ts
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -141,13 +141,13 @@ const provider = new TracerProvider({
 });
 ```
 
-A receiver that takes spans from a page has to allow the page's origin. The two views differ in what they are for:
+A receiver that takes spans from a page has to allow the page's origin. The views differ in what they are for:
 
-| View                                                                   | Shows                                                                                               |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| The devtools Timeline                                                  | One transition, with its redirect chain, phases, resolves and the spans joined to it                |
-| A trace viewer behind an OTLP receiver                                 | Every trace: search, attribute filters, comparison, and a server's spans beside the page's          |
-| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions and their phases in a `UI-Router` track group, beside network, rendering and long tasks |
+| View                                                                   | Shows                                                                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| The devtools Timeline                                                  | One transition, with its redirect chain, phases, resolves and the spans joined to it                          |
+| A trace viewer behind an OTLP receiver                                 | Every trace: search, attribute filters, comparison, and a server's spans when the server sends them there too |
+| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions and their phases in a `UI-Router` track group, beside network, rendering and long tasks           |
 
 The Performance track is written from the devtools' recorded events and holds no spans.
 
