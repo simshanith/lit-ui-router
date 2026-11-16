@@ -7,7 +7,7 @@
   "main": "./worker/index.ts",
   // Resolved from this directory, where every wrangler script runs.
   "alias": { "lit-html/is-server.js": "./worker/is-server.ts" },
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "traces": { "enabled": true } },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
