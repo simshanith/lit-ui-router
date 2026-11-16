@@ -13,6 +13,7 @@ export async function installDevtools(
     import('ui-router-devtools/plugin'),
     import('ui-router-devtools/lit-ui-router'),
   ]);
+
   const devtools = router.plugin(DevtoolsPlugin, {
     viewLocator: litViewLocator,
   });
