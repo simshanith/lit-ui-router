@@ -33,6 +33,14 @@
       "desc": "sheet 2C's two ground levels under builds III and XI, and a consumer's drop falls in view"
     },
     {
+      "date": "2026-11-15",
+      "num": "A3",
+      "head": "APPENDIX A3",
+      "title": "THE ATLAS, MEASURED",
+      "rev": "E",
+      "desc": "three drawings on one scale in a grid, the lettering set in the page"
+    },
+    {
       "date": "2026-11-14",
       "num": "3",
       "head": "SHEET 3",
@@ -2650,7 +2658,7 @@
       "num": "A3",
       "title": "THE ATLAS, MEASURED",
       "sub": "APPENDIX · META — the atlas as a census city on sheet 7's ruler, standing beside the codebase it draws · four members, 28,851 sloc · measured at www/atlas @ a1793bc1, outside the cabinet, which is main's (origin/main @ aa7f8bfb)",
-      "caption": "The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's four districts stand in two rows at the top as one block each; the atlas stands below them as a fifth district of four members — 1.3× the product it draws: 28,851 sloc against 22,628 in packages/.",
+      "caption": "The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's four districts stand in two drawings as one block each; the atlas stands in its own as a fifth district of four members — 1.3× the product it draws: 28,851 sloc against 22,628 in packages/.",
       "scale": "THE ATLAS ITSELF",
       "verdict": "meta — the atlas measured on sheet 7's ruler: 28,851 sloc of generator and app against 22,628 in the packages district, 1.3× the product it draws, with a 2-file annex",
       "form": "ISOMETRIC CITY",
@@ -2660,7 +2668,7 @@
         "mode": "static",
         "basis": "measured"
       },
-      "rev": "D",
+      "rev": "E",
       "file": "sheets/a3.html",
       "interactive": false,
       "needsCytoscape": false,

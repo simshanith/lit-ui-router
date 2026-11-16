@@ -289,6 +289,56 @@ html.has-filled { overflow: hidden; }
 .plate:fullscreen .figure-wrap svg, .plate.is-filled .figure-wrap svg {
   max-width: min(100%, calc((100vh - 32px) * var(--plate-ar, 1.4))); min-width: 0; }
 .plate:fullscreen::after, .plate.is-filled::after { display: none; }
+/* a reflowing plate (sheet.plate) is several drawings in a grid: nothing scrolls, the lettering is the page's */
+.plate[data-reflow]::after { display: none; }
+.plate[data-reflow] .figure-wrap { overflow: visible; }
+.plate[data-reflow]:fullscreen, .plate[data-reflow].is-filled { place-items: start center; padding-block-start: 56px; }
+.a3 { --gap: 24px; --dcw: calc((100% - var(--gap)) * var(--wc) / (var(--wa) + var(--wb))); font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; line-height: 1.45; letter-spacing: 0.04em; color: var(--ink-soft); }
+:where(.a3) :is(p, ol, ul) { margin: 0; padding: 0; }
+.a3 b { font-weight: 600; color: var(--ink); }
+.a3-scale { text-align: end; text-wrap: balance; margin-block-end: 18px; }
+.a3-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px var(--gap); }
+.a3-ground { align-self: end; font-size: 10px; letter-spacing: 0.1em; border-block-end: 1px dotted var(--ink-soft); padding-block-end: 5px; }
+.a3-gc { margin-block-start: 22px; }
+/* one scale: a drawing's width is its viewBox's share of the widest, or of its row */
+.a3-draw { position: relative; justify-self: center; align-self: start; width: calc(100% * var(--w) / var(--wmax)); }
+.plate .figure-wrap .a3-draw svg { display: block; width: 100%; min-width: 0; max-width: none; height: auto; margin: 0; }
+.a3-draw svg :is(polygon, path, line) { vector-effect: non-scaling-stroke; }
+.a3-badge { position: absolute; translate: -50% -50%; display: grid; place-items: center; inline-size: 18px; block-size: 18px; box-sizing: border-box;
+  border: 1.3px solid var(--ink); border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 10.5px; font-weight: 600; line-height: 1; letter-spacing: 0; }
+.a3-badge.up { translate: -50% -135%; }
+.a3-badge.at { border-color: var(--accent); color: var(--accent); }
+.a3-labels { display: grid; text-align: center; text-wrap: balance; }
+.a3-labels b { display: block; font-size: 11.5px; letter-spacing: 0.07em; }
+.a3-labels span { display: block; }
+.a3-labels .role { font-size: 9.5px; letter-spacing: 0.1em; }
+.a3-notes { display: grid; gap: 3px; max-width: 62ch; font-size: 11px; }
+.a3-notes .a3-name { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; color: var(--accent); }
+.a3-notes ol, .a3-notes ul { list-style: none; display: grid; gap: 3px; }
+.a3-notes ol li { display: grid; grid-template-columns: 2ch minmax(0, 1fr); gap: 0 1ch; }
+.a3-notes ol li::before { content: attr(value); color: var(--accent); font-weight: 600; text-align: end; }
+.a3-notes .a3-claim { margin-block-start: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+/* the codebase's pair over the atlas and its notes */
+@container (560px <= width < 960px) {
+  .a3-grid { grid-template-columns: var(--cols2); }
+  .a3-ga, .a3-gc, .a3-dc, .a3-lc { grid-column: 1 / -1; }
+  .a3-ga { grid-row: 1; }
+  .a3-gc { grid-row: 4; }
+  .a3-da, .a3-db { grid-row: 2; align-self: end; width: 100%; }
+  .a3-la, .a3-lb { grid-row: 3; }
+  .a3-dc, .a3-lc { grid-row: 5; }
+  .a3-dc { justify-self: start; align-self: center; width: var(--dcw); }
+  .a3-lc { align-self: center; margin-inline-start: calc(var(--dcw) + 28px); }
+}
+/* three across, every ground on one line */
+@container (width >= 960px) {
+  .a3-grid { grid-template-columns: var(--cols3); }
+  .a3-ga { grid-area: 1 / 1 / 2 / 3; }
+  .a3-gc { grid-area: 1 / 3; margin-block-start: 0; }
+  .a3-draw { grid-row: 2; align-self: end; width: 100%; }
+  .a3-letters { grid-row: 3; }
+}
+@media print { .a3-draw svg :is(polygon, path, line) { vector-effect: none; } }
 /* a plate's lettering reaches its corners, so its button hangs in the margin above; the filled plate takes it back into the corner */
 .plate > .fill { inset-block-start: auto; inset-block-end: calc(100% + 4px); inset-inline-end: 0; }
 .plate:fullscreen > .fill, .plate.is-filled > .fill { inset-block-start: 8px; inset-block-end: auto; inset-inline-end: 8px; }
@@ -711,7 +761,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
   <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h1 class="sheet-title">${articleTitle(sheet.title)}</h1>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
-    <div class="plate fillable"${ar ? ` style="--plate-ar:${ar}"` : ''}${ar && Number(ar) < TALL_RATIO ? ' data-tall' : ''}>${fillButton()}<div class="figure-wrap" tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways">${sheet.svg}</div></div>
+    <div class="plate fillable"${sheet.plate ? ' data-reflow' : ''}${ar ? ` style="--plate-ar:${ar}"` : ''}${ar && Number(ar) < TALL_RATIO ? ' data-tall' : ''}>${fillButton()}<div class="figure-wrap" ${sheet.plate ? `role="group" aria-label="Fig. ${sheet.num}, the drawings"` : `tabindex="0" role="group" aria-label="Fig. ${sheet.num}, the drawing; scrolls sideways"`}>${sheet.plate ?? sheet.svg}</div></div>
     ${schedules.map((sc) => `${scheduleTable(sc)}\n    `).join('')}<figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">

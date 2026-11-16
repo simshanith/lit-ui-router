@@ -2780,7 +2780,7 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 ## Sheet A3 — THE ATLAS, MEASURED
 
-- **file** `www/atlas.lit-ui-router.dev/generator/sheetA3.mjs` · **id** `self` · **current rev** D
+- **file** `www/atlas.lit-ui-router.dev/generator/sheetA3.mjs` · **id** `self` · **current rev** E
 - **basis** (source): `data/census-city.json` for the codebase and `data/survey-self.json` for the atlas, two grounds named on the plate
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2810,8 +2810,15 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 > REV D 2026-11-14: the codebase stands in two rows, packages and shopfront over apps and yard, at full scale
 
+### REV E — 2026-11-15
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV E 2026-11-15: three drawings on one scale in a grid, the lettering set in the page
+
 **Record notes**
 
+- 2026-11-15, the grid, REV E: The user: "a3 is too tall; wondering if we should split into three images, grid layout", and to three across under the 0.7× floor, "yep go". The one 1560 × 3045 drawing is three (packages and shopfront, apps and yard, the atlas), each at full scale in its own viewBox, 1,252, 948 and 686 units wide, laid three across from 960 px of plate, the codebase pair over the atlas from 560, one column below; column widths follow the viewBox widths so one scale holds at every width (0.36× at a 1,107 px plate, where the plate is 963 px tall, was 1,952). The lettering, the badges, the scale note and the atlas's register are HTML over and under the drawings. `ZOOM_MIN` 0.7 and the zoom search went with the single row they fitted to 1,520 px; `SHEETA3_ONE_ROW` went with them. chrome.mjs takes `sheet.plate`, a reflowing plate (`data-reflow`): no sideways scroll, no viewBox ratio, ENLARGE fills the window. The key drops the seam.
 - 2026-11-14, the thirtieth cabinet, REV D at origin/main @ aa7f8bfb: `appendix A3: the main row needs 1572 px even at 0.7× sheet 7's ruler` threw: the codebase is 632 files / 66,790 sloc in four districts, and one row fits only at 0.67×. The floor stays 0.7: the codebase wraps into two rows where that draws larger, the split the one with fewest rows and then the narrowest widest row. Packages and shopfront over apps and yard fit at full scale, 1,288 and 947 px (one row needs 2,203 at full scale). The frame is 1560 × 3045 (was 1462). The atlas: 128 files / 28,851 sloc at www/atlas @ a1793bc1.
 - 2026-11-12, the twenty-ninth cabinet, no rev clause (rev stays C), at origin/main @ ef074136: the codebase is 576 files / 55,145 sloc in four districts and the sheet draws at 0.71× sheet 7's ruler (was 0.73×). The atlas: 339 tracked at www/atlas @ 909f478c.
 - 2026-11-11, the twenty-eighth cabinet, no rev clause (rev stays C), at origin/main @ 33cd7ce1: the codebase is 555 files / 52,686 sloc in four districts and the sheet draws at 0.73× sheet 7's ruler (was 0.74×). The atlas: 339 tracked at www/atlas @ a61ce45e.

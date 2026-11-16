@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, schedTxt, isoBlock, isoPt, keyRow, schedule } from './helpers.mjs';
+import { esc, isoBlock, isoPt, keyRow, schedule } from './helpers.mjs';
 import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 import { AG, CITY, H, S } from './sheet7.mjs';
 
@@ -135,65 +135,42 @@ const place = (g, sx, gy) => {
   g.ox = (u + v) / 2; g.oy = (v - u) / 2;
   g.left = sx; g.right = (u + x2 - y1) * C; g.ground = gy;
 };
-const HEAD = 104;          // the header band's foot
-const LABEL_H = 92;        // lettering under each codebase row
 const CODEBASE = GROUPS.filter((g) => !g.atlas);
 const ATLAS = GROUPS.find((g) => g.atlas);
-const GAP_MIN = 8;         // screen px between two districts' slots
-const ZOOM_MIN = 0.7;      // the smallest fraction of sheet 7's ruler this sheet draws at
-// the districts west to east; the codebase stands in one row, or wraps into two where that draws larger
-const ORDER = ['pkg', 'site', 'app', 'tool'].map((k) => CODEBASE.find((g) => g.key === k));
-const LAYOUTS = [[ORDER], ...ORDER.slice(1).map((_, i) => [ORDER.slice(0, i + 1), ORDER.slice(i + 1)])];
-// a district's slot: its frame, or its widest label line at 6.3 px a character where that is wider
-const slot = (g) => Math.max(g.w, 6.3 * Math.max(...[g.dir, g.role, sloc(g.masses[0]), annexLine(g.masses[0])].map((l) => l.length)));
-const rowNeed = (row) => 40 + row.reduce((a, g) => a + slot(g), 0) + GAP_MIN * (row.length - 1);
-const layoutNeed = (rows) => Math.max(...rows.map(rowNeed));
-// the narrowest layout at this zoom: fewest rows first, then the narrowest widest row
-const best = () => LAYOUTS.filter((l) => layoutNeed(l) <= 1520).sort((a, b) => a.length - b.length || layoutNeed(a) - layoutNeed(b))[0]
-  ?? LAYOUTS.slice().sort((a, b) => layoutNeed(a) - layoutNeed(b))[0];
-const need = () => layoutNeed(best());
-// the largest hundredth of sheet 7's ruler at which a layout fits 1520 with its minimum gaps and slot floors
-let ZOOM = 1;
-for (;;) {
-  massAll(ZOOM);
-  for (const g of ORDER) { place(g, 0, 0); g.w = g.right; }
-  if (need() <= 1520) break;
-  ZOOM = Math.round(ZOOM * 100 - 1) / 100;
-  if (ZOOM < ZOOM_MIN) throw new Error(`appendix A3: the main row needs ${need().toFixed(0)} px even at ${ZOOM_MIN}× sheet 7's ruler, past the sheet's 1520 — the lettering slots and ${GAP_MIN} px gaps leave no fit`);
+const GAP = 32;            // ruler px between two districts in one drawing
+const MARGIN = 14;         // ruler px of air around each drawing
+const SMALL_ROOF = 60;     // a roof narrower than this, in ruler px, carries its badge above it
+const district = (k) => CODEBASE.find((g) => g.key === k);
+// three drawings on one scale: the districts in pairs, then the atlas
+const PANELS = [
+  { id: 'a', groups: ['pkg', 'site'].map(district) },
+  { id: 'b', groups: ['app', 'tool'].map(district) },
+  { id: 'c', groups: [ATLAS] },
+];
+massAll(1);
+for (const p of PANELS) {
+  let sx = 0;
+  for (const g of p.groups) {
+    place(g, sx, 0);
+    for (const b of g.masses) [b.block, b.annex] = rects(b, g.ox, g.oy);
+    sx = g.right + GAP;
+  }
+  p.masses = p.groups.flatMap((g) => g.masses);
+  assertPlots(`appendix A3, drawing ${p.id}`, p.masses.flatMap((b) => [b.block, ...(b.annex ? [b.annex] : [])]));
+  const rise = Math.max(...p.groups.map((g) => g.rise));
+  p.x = -MARGIN; p.y = -rise - MARGIN;
+  p.w = p.groups.at(-1).right + 2 * MARGIN; p.h = rise + 2 * MARGIN;
 }
-const ROWS = best();
-// what one row would need at this zoom, for the record and the lettering
-export const SHEETA3_ONE_ROW = rowNeed(ORDER);
-const ROWS_FIT = ROWS.length === 1 ? 'the main row fits' : `the codebase's ${WORD[ROWS.length]} rows fit`;
-const ZOOM_LINE = ZOOM === 1
-  ? `drawn at full scale: ${ROWS_FIT} 1,520 px with ${GAP_MIN} px gaps`
-  : `drawn at ${ZOOM}× that ruler, the largest hundredth at which ${ROWS_FIT} 1,520 px with ${GAP_MIN} px gaps`;
-// each row stands under the one before it: its ground clears that row's lettering by the tallest roof it carries
-let ground = HEAD;
-for (const [r, row] of ROWS.entries()) {
-  ground += (r ? LABEL_H : 0) + 22 + Math.max(...row.map((g) => g.rise));
-  // screen px between districts: 40, closed up as far as the row needs to fit in 1520
-  const GAP = row.length > 1 ? Math.min(40, (1520 - 40 - row.reduce((a, g) => a + slot(g), 0)) / (row.length - 1)) : 0;
-  if (row.length > 1 && GAP < GAP_MIN) throw new Error(`appendix A3: a codebase row needs ${rowNeed(row).toFixed(0)} px at ${ZOOM}× sheet 7's ruler, past the sheet's 1520`);
-  let sx = 40;
-  for (const g of row) { place(g, sx + (slot(g) - g.w) / 2, ground); g.slotL = sx; g.slotR = sx + slot(g); sx = g.slotR + GAP; }
-  if (row.at(-1).slotR - 1520 > 1e-6) throw new Error(`appendix A3: a codebase row runs to ${row.at(-1).slotR.toFixed(0)}, past the sheet's 1520`);
-}
-const GY1 = ground;
-const GY2 = GY1 + LABEL_H + 40 + ATLAS.rise;
-place(ATLAS, 40, GY2);
-
-for (const g of GROUPS) for (const b of g.masses) [b.block, b.annex] = rects(b, g.ox, g.oy);
-const ALL = GROUPS.flatMap((g) => g.masses);
-assertPlots('appendix A3', ALL.flatMap((b) => [b.block, ...(b.annex ? [b.annex] : [])]));
+const ALL = PANELS.flatMap((p) => p.masses);
 
 const pt = (x, y, z = 0) => isoPt(0, 0, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
+const pct = (v) => `${(v * 100).toFixed(2)}%`;
 
 // ---- masses ------------------------------------------------------------------------
 const LOOK = {
-  codebase: { edge: 'sk', cap: 'fp', side: `url(#${P}-hx)`, badge: 'sk fp', num: 'lbl' },
-  atlas: { edge: 'ska', cap: 'fp', side: `url(#${P}-ha)`, badge: 'ska fp', num: 'lbla' },
+  codebase: { edge: 'sk', cap: 'fp', side: `url(#${P}-hx)` },
+  atlas: { edge: 'ska', cap: 'fp', side: `url(#${P}-ha)` },
 };
 const lookOf = (b) => (ATLAS.masses.includes(b) ? LOOK.atlas : LOOK.codebase);
 const blockMass = (b) => {
@@ -204,50 +181,40 @@ const annexMass = (b) => {
   const r = b.annex;
   return { ...r, svg: solidFaces(isoBlock(P, 0, 0, r.x, r.y, r.w, r.d, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })) };
 };
-const masses = depthSort(ALL.flatMap((b) => (b.annex ? [blockMass(b), annexMass(b)] : [blockMass(b)])))
+const massesOf = (p) => depthSort(p.masses.flatMap((b) => (b.annex ? [blockMass(b), annexMass(b)] : [blockMass(b)])))
   .map((m) => m.svg).join('\n');
 
-// badges ride above the back edge of the roof, or centred on it where a taller neighbour stands behind
+// badges are lettering, set over the drawing: above the roof's back edge, centred on the roof
+// where a taller neighbour stands behind, above the roof where the roof is smaller than the badge
 const BADGE_ON_ROOF = new Set(['survey', 'build']);
-const badge = (b) => {
-  const t = lookOf(b), r = b.block;
+const badge = (p, b) => {
+  const r = b.block;
   const onRoof = BADGE_ON_ROOF.has(b.id);
+  const small = (r.w + r.d) * C < SMALL_ROOF;
   const [bx, by] = pt(r.x + r.w / 2, r.y + (onRoof ? r.d / 2 : 0), b.h);
-  const lift = onRoof ? 0 : 16;
-  return `<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${t.badge}"/>
-${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(b.n), t.num, 'middle')}`;
+  const cls = ['a3-badge', ATLAS.masses.includes(b) ? 'at' : '', onRoof && !small ? '' : 'up'].filter(Boolean).join(' ');
+  return `<span class="${cls}" style="inset-inline-start:${pct((bx - p.x) / p.w)};inset-block-start:${pct((by - p.y) / p.h)}" aria-hidden="true">${b.n}</span>`;
 };
 
 const frame = (g) => {
   const [x1, y1, x2, y2] = g.box;
   const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(([x, y]) => p2(g.ox + x, g.oy + y)).join(' ');
-  return `<polygon points="${pts}" class="${g.atlas ? 'ska' : 'skf'} fnone" stroke-dasharray="5 4"${g.atlas ? ' opacity="0.7"' : ''}/>`;
+  return `<polygon points="${pts}" class="ska fnone" stroke-dasharray="5 4" opacity="0.7"/>`;
 };
 
-// ---- lettering -----------------------------------------------------------------------
-const codebaseLabels = CODEBASE.map((g) => {
+// ---- lettering, set in the page beside the drawings -----------------------------------
+const districtLetters = (p) => `<div class="a3-labels" style="grid-template-columns:${p.groups.map((g) => `minmax(0,${(g.right - g.left).toFixed(0)}fr)`).join(' ')};column-gap:${pct(GAP / p.w)};padding-inline:${pct(MARGIN / p.w)}">${p.groups.map((g) => {
   const m = g.masses[0];
-  const x = ((g.slotL + g.slotR) / 2).toFixed(0);
-  const y = g.ground + 22;
-  return [txt(x, y, g.dir, 'lblb', 'middle'), txt(x, y + 13, g.role, 'lbls', 'middle'),
-    txt(x, y + 27, sloc(m), 'lblf', 'middle'), txt(x, y + 40, annexLine(m), 'lblf', 'middle')].join('\n');
-}).join('\n');
-
-// the seam between the two grounds
-const SEAM = GY1 + LABEL_H;
-const seam = `<line x1="40" y1="${SEAM}" x2="1520" y2="${SEAM}" class="skf" stroke-dasharray="2 5"/>
-${txt(1520, SEAM - 7, `ABOVE — THE CODEBASE, FROM data/census-city.json · ${CITY_BASIS} · sheet 7's districts, each summed into one block`, 'lblf', 'end')}
-${txt(1520, SEAM + 15, `BELOW — THE ATLAS, FROM data/survey-self.json · ${SELF_LINE}`, 'lblf', 'end')}`;
-
-const AX = Math.max(ATLAS.right + 50, 560);
-const AY = SEAM + 52;
-const atlasPanel = `${txt(AX, AY, `${ATLAS.dir} — THE ATLAS`, 'lbla')}
-${txt(AX, AY + 15, `${WORD[AT.k]} members · ${AT.f} files · ${fmt(AT.sl)} sloc · ${AT.pf ? annexLine(AT) : 'no annex'}`, 'lbls')}
-${ATLAS.masses.map((b, i) => schedTxt(AX, AY + 38 + i * 15, [b.n, `${b.name} — ${sloc(b)} · ${b.ground}`], 'lblf')).join('\n')}
-${[CLAIM_PKG, CLAIM_DRAWING, CLAIM_DISTRICTS, `${SHARE}% of the codebase's own authored source, ${fmt(REST.sl)} sloc across its ${WORD[DISTRICTS.length]} districts`, CLAIM_TESTS, CLAIM_ANNEX]
-  .map((s, i) => txt(AX, AY + 118 + i * 16, s, i ? 'lbls' : 'lblb')).join('\n')}`;
-// the drawing ends at the atlas's near corner or the panel's last line, with 20 px of air
-const VB_H = Math.ceil(Math.max(GY2, AY + 118 + 5 * 16 + 4)) + 20;
+  return `<p><b>${esc(g.dir)}</b><span class="role">${esc(g.role)}</span><span>${esc(sloc(m))}</span><span>${esc(annexLine(m))}</span></p>`;
+}).join('')}</div>`;
+const CLAIMS = [CLAIM_PKG, CLAIM_DRAWING, CLAIM_DISTRICTS, `${SHARE}% of the codebase's own authored source, ${fmt(REST.sl)} sloc across its ${WORD[DISTRICTS.length]} districts`, CLAIM_TESTS, CLAIM_ANNEX];
+const atlasLetters = `<div class="a3-notes">
+<p class="a3-name">${esc(ATLAS.dir)} — THE ATLAS</p>
+<p>${esc(`${WORD[AT.k]} members · ${AT.f} files · ${fmt(AT.sl)} sloc · ${AT.pf ? annexLine(AT) : 'no annex'}`)}</p>
+<ol>${ATLAS.masses.map((b) => `<li value="${b.n}"><span><b>${esc(b.name)}</b> — ${esc(`${sloc(b)} · ${b.ground}`)}</span></li>`).join('')}</ol>
+<p class="a3-claim">${esc(CLAIMS[0])}</p>
+<ul>${CLAIMS.slice(1).map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+</div>`;
 
 // ---- schedule ------------------------------------------------------------------------
 const offRuler = SELF.offRuler.filter((o) => o.code > 0);
@@ -273,28 +240,31 @@ const SCHEDULES = [
   ),
 ];
 
-const ARIA = `An isometric census of the atlas itself, standing beside the codebase it draws, on sheet 7's ruler: footprint side ${KS} times the square root of source lines, height ${KH} pixels per authored file. `
-  + `${ROWS.length === 1 ? 'Along the top' : `In ${WORD[ROWS.length]} rows at the top`}, on main's ground at ${CITY_BASIS}, sheet 7's ${WORD[DISTRICTS.length]} districts each stand as one summed block with its spec annex beside it: `
-  + CODEBASE.map((g) => `${g.dir}, ${sloc(g.masses[0])}, ${annexLine(g.masses[0])}`).join('; ') + '. '
-  + `Below a dotted seam, on the atlas's own branch at ${SELF_BASIS}, the atlas stands as a fifth district of ${WORD[AT.k]} accent-edged members: `
-  + ATLAS.masses.map((b) => `${b.name}, ${sloc(b)}`).join('; ') + `. `
-  + `${CLAIM_PKG}; ${CLAIM_DRAWING}; ${CLAIM_TESTS}; ${CLAIM_ANNEX}. A schedule below the drawing lists every block, and a second every path the survey excludes.`;
-
-const svg = `<svg viewBox="0 0 1560 ${VB_H}" role="img" aria-label="${ARIA}">
-${defs(P)}
-
-${txt(1520, 34, `SCALE — footprint side = ${KS} · √sloc (plan area ∝ sloc) · height = ${KH} px per authored file — sheet 7's functions, not a copy`, 'lbls', 'end')}
-${txt(1520, 48, `${ZOOM_LINE} · footprint floored at ${FLOOR} plan units`, 'lblf', 'end')}
-${txt(1520, 62, `the atlas counts what it writes by hand and serves to a browser — never what it draws: plates, generated pages, pictures and prose stand outside`, 'lblf', 'end')}
-${txt(1520, 76, `every number on this sheet is read from data/census-city.json and data/survey-self.json at build time`, 'lblf', 'end')}
-
-${frame(ATLAS)}
-${masses}
-${ALL.map(badge).join('\n')}
-${codebaseLabels}
-${seam}
-${atlasPanel}
-</svg>`;
+const ARIAS = {
+  a: `An isometric drawing on sheet 7's ruler, footprint side ${KS} times the square root of source lines and height ${KH} pixels per authored file, on main's ground at ${CITY_BASIS}. Two of sheet 7's ${WORD[DISTRICTS.length]} districts each stand as one summed block with its spec annex beside it: ${PANELS[0].groups.map((g) => `${g.dir}, ${sloc(g.masses[0])}, ${annexLine(g.masses[0])}`).join('; ')}.`,
+  b: `The same ruler and ground, the other two districts: ${PANELS[1].groups.map((g) => `${g.dir}, ${sloc(g.masses[0])}, ${annexLine(g.masses[0])}`).join('; ')}.`,
+  c: `The same ruler, on the atlas's own branch at ${SELF_BASIS}: the atlas stands as a fifth district of ${WORD[AT.k]} accent-edged members inside a dashed frame: ${ATLAS.masses.map((b) => `${b.name}, ${sloc(b)}`).join('; ')}. ${CLAIM_PKG}; ${CLAIM_DRAWING}; ${CLAIM_TESTS}; ${CLAIM_ANNEX}.`,
+};
+const drawing = (p) => `<div class="a3-draw a3-d${p.id}" style="--w:${p.w.toFixed(1)}"><svg viewBox="${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.w.toFixed(1)} ${p.h.toFixed(1)}" role="img" aria-label="${ARIAS[p.id]}">
+${p.id === 'a' ? defs(P) : ''}
+${p.groups.filter((g) => g.atlas).map(frame).join('\n')}
+${massesOf(p)}
+</svg>${p.masses.map((b) => badge(p, b)).join('')}</div>`;
+const [PA, PB, PC] = PANELS;
+const cols = (ps) => ps.map((p) => `minmax(0,${p.w.toFixed(0)}fr)`).join(' ');
+const plate = `<div class="a3" style="--wa:${PA.w.toFixed(1)};--wb:${PB.w.toFixed(1)};--wc:${PC.w.toFixed(1)};--wmax:${Math.max(...PANELS.map((p) => p.w)).toFixed(1)};--cols2:${cols([PA, PB])};--cols3:${cols(PANELS)}">
+<p class="a3-scale"><b>SCALE — footprint side = ${KS} · √sloc (plan area ∝ sloc) · height = ${KH} px per authored file — sheet 7's functions, not a copy</b><br>${WORD[PANELS.length]} drawings on one scale, their widths in proportion at every width of the page · footprint floored at ${FLOOR} plan units<br>the atlas counts what it writes by hand and serves to a browser — never what it draws: plates, generated pages, pictures and prose stand outside<br>every number on this sheet is read from data/census-city.json and data/survey-self.json at build time</p>
+<div class="a3-grid">
+<p class="a3-ground a3-ga"><b>THE CODEBASE</b> — data/census-city.json · ${esc(CITY_BASIS)} · sheet 7's districts, each summed into one block</p>
+${drawing(PA)}
+<div class="a3-letters a3-la">${districtLetters(PA)}</div>
+${drawing(PB)}
+<div class="a3-letters a3-lb">${districtLetters(PB)}</div>
+<p class="a3-ground a3-gc"><b>THE ATLAS</b> — data/survey-self.json · ${esc(SELF_LINE)}</p>
+${drawing(PC)}
+<div class="a3-letters a3-lc">${atlasLetters}</div>
+</div>
+</div>`;
 
 // the homes the notes name: git's archive reference and the scc release the cabinet pins
 const HOME = {
@@ -303,18 +273,18 @@ const HOME = {
 };
 
 export const sheetA3 = {
-  num: 'A3', id: 'self', rev: 'D',
+  num: 'A3', id: 'self', rev: 'E',
   head: 'APPENDIX A3 · META',
   appendix: true,
   title: 'THE ATLAS, MEASURED',
   sub: `APPENDIX · META — the atlas as a census city on sheet 7's ruler, standing beside the codebase it draws · ${WORD[AT.k]} members, ${fmt(AT.sl)} sloc · ${SELF_LINE}`,
   scale: 'THE ATLAS ITSELF',
   form: 'ISOMETRIC CITY',
-  svg,
+  plate,
   schedules: SCHEDULES,
-  caption: `The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's ${WORD[DISTRICTS.length]} districts stand ${ROWS.length === 1 ? 'along the top' : `in ${WORD[ROWS.length]} rows at the top`} as one block each; the atlas stands below them as a fifth district of ${WORD[AT.k]} members — ${CLAIM_PKG}.`,
+  caption: `The atlas turned on itself with the census city's own instrument: footprint ∝ √sloc, height ∝ files, from sheet 7's functions. Sheet 7's ${WORD[DISTRICTS.length]} districts stand in ${WORD[PANELS.length - 1]} drawings as one block each; the atlas stands in its own as a fifth district of ${WORD[AT.k]} members — ${CLAIM_PKG}.`,
   notes: `
-<p><strong>Method — one ruler, two grounds.</strong> Every block on this plate is massed by <code>S()</code> and <code>H()</code> imported from <code>sheet7.mjs</code> — footprint side ${KS} · √sloc, height ${KH} px per authored file, floor ${FLOOR} — and every file is admitted by the same predicate the city census uses, <code>onCityRuler</code> in <code>census-query.mjs</code>: authored <code>.ts/.tsx/.js/.jsx/.mjs</code>, no <code>*.d.ts</code>, spec files split into an annex. The two halves stand on different grounds and say so. The codebase is <code>data/census-city.json</code>, ${CITY_BASIS}, the cabinet every numbered sheet reads. The atlas is not on main, so it cannot be in that cabinet: it is <code>data/survey-self.json</code>, written by <code>generator/survey-self.mjs</code> from a <a href="${HOME.archive}"><code>git archive</code></a> of its own branch — ${SELF_BASIS}, committed ${SELF.commitDate.slice(0, 10)} — through the same <a href="${HOME.scc}">scc 4.0.0</a> the cabinet uses. The probe is named <code>survey-</code>, not <code>census-</code>, so appendix A2's one-ref check stays a claim about main alone. The plate is ${ZOOM_LINE.replace('that ruler', 'sheet 7\'s ruler')}, so the codebase and the atlas shrink together and still read against each other.</p>
+<p><strong>Method — one ruler, two grounds.</strong> Every block on this plate is massed by <code>S()</code> and <code>H()</code> imported from <code>sheet7.mjs</code> — footprint side ${KS} · √sloc, height ${KH} px per authored file, floor ${FLOOR} — and every file is admitted by the same predicate the city census uses, <code>onCityRuler</code> in <code>census-query.mjs</code>: authored <code>.ts/.tsx/.js/.jsx/.mjs</code>, no <code>*.d.ts</code>, spec files split into an annex. The two halves stand on different grounds and say so. The codebase is <code>data/census-city.json</code>, ${CITY_BASIS}, the cabinet every numbered sheet reads. The atlas is not on main, so it cannot be in that cabinet: it is <code>data/survey-self.json</code>, written by <code>generator/survey-self.mjs</code> from a <a href="${HOME.archive}"><code>git archive</code></a> of its own branch — ${SELF_BASIS}, committed ${SELF.commitDate.slice(0, 10)} — through the same <a href="${HOME.scc}">scc 4.0.0</a> the cabinet uses. The probe is named <code>survey-</code>, not <code>census-</code>, so appendix A2's one-ref check stays a claim about main alone. The plate is ${WORD[PANELS.length]} drawings on one scale: their widths stay in proportion at every width of the page, so the codebase and the atlas shrink together and still read against each other, and the lettering stands outside the drawings at its own size.</p>
 <p><strong>The fixed-point rule.</strong> The atlas counts only what it writes by hand and what it serves to a browser, never what it draws — a drawing of the atlas that counted its own drawings would grow every time it was drawn. Admitted: the <em>drawing office</em> (every <code>generator/</code> module that is not a census instrument — the sheets, the chrome, the 3D scenes, the emitter, the build), the <em>survey office</em> (<code>census*.mjs</code>, <code>basis.mjs</code> and <code>survey-*.mjs</code>), the <em>routed site</em> (<code>app/src/</code>) and the <em>site build</em> (<code>app/*</code>: prerender, vite, artifact and lint config). Excluded, and tallied on the schedule: the filed plates in <code>data/</code> (${fmt(SELF.excluded[0].sloc)} lines scc counts), <code>app/src/generated/</code>, everything under <code>app/public/</code>, every Markdown file, and the skills under <code>.agents/</code>, <code>.claude/</code> and <code>.claude-plugin/</code>. On a member's ground the ruler itself excludes more: <code>app/index.html</code> is ${fmt(SELF.offRuler.find((o) => o.path === 'app/index.html')?.code ?? 0)} lines of HTML by scc's count, mostly the site's stylesheet, and stays off for the reason sheet 7's docs member keeps its <code>.vue</code> and <code>.css</code> off — a ruler that admits markup on one side and not the other compares nothing. Build output is untracked, so the archive never holds it.</p>
 <p><strong>What the drawing says.</strong> ${CLAIM_PKG}. ${CLAIM_DRAWING.charAt(0).toUpperCase() + CLAIM_DRAWING.slice(1)}. It is ${CLAIM_DISTRICTS}, and ${SHARE}% of the ${fmt(REST.sl)} authored lines the codebase holds across all ${WORD[DISTRICTS.length]}. Where the comparison turns is the annex: ${CLAIM_TESTS}, ${CLAIM_ANNEX}. Every claim in this paragraph is computed from the two plates and changes its wording when the plates change it.</p>
 <p><strong>Why aggregates, and why the atlas is not.</strong> The codebase stands as ${WORD[DISTRICTS.length]} summed blocks, one per sheet 7 district, because the question is how much atlas there is, and sheet 7 already draws the codebase member by member. Summing is honest on this ruler for plan area — area ∝ sloc, so one block of a district's sum covers the same ground its members do — and approximate for height, which reads a district's total files as one tower. The atlas keeps its ${WORD[AT.k]} members because it has no other drawing that shows its parts. The aggregates do not dwarf the atlas — ${CLAIM_DRAWING} — so the district scale carries the comparison on its own, and the product member by member is sheet 7's drawing to make. Sheet 7's district membership is read from its exported geometry, and a census row sheet 7 does not place is a build error here, so the two plates cannot disagree.</p>`,
@@ -322,7 +292,6 @@ export const sheetA3 = {
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a district of the codebase, summed — footprint ∝ √sloc, height ∝ files'),
     keyRow('<rect x="8" y="3" width="18" height="12" class="sks fp2"/><rect x="8" y="3" width="18" height="12" fill="url(#sA3-hd)"/>', 'its spec annex — the test mass, same rule'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#sA3-ha)"/><rect x="6" y="3" width="36" height="12" class="ska fnone"/>', 'a member of the atlas — the same rule, on its own branch'),
-    keyRow('<rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/>', 'district frame'),
-    keyRow('<line x1="2" y1="9" x2="44" y2="9" class="skf" stroke-dasharray="2 5"/>', 'the seam between main\'s ground and the atlas\'s'),
+    keyRow('<rect x="4" y="2" width="26" height="13" class="ska fnone" stroke-dasharray="4 3" opacity="0.7"/>', 'the atlas\'s frame, its own ground'),
   ].join('\n'),
 };
