@@ -116,14 +116,16 @@ async function buildAtTag(
   const out = join(checkout, 'snapshot-out');
   const site = join(checkout, SITE);
 
+  // Outside the try: a failed add registers no worktree for the cleanup to remove.
+  run(workspaceRoot, 'git', [
+    'worktree',
+    'add',
+    '--detach',
+    checkout,
+    `${tag}^{commit}`,
+  ]);
+
   try {
-    run(workspaceRoot, 'git', [
-      'worktree',
-      'add',
-      '--detach',
-      checkout,
-      `${tag}^{commit}`,
-    ]);
     overlayVersions(site);
     run(checkout, 'mise', ['trust', '--quiet']);
     run(checkout, 'mise', ['install']);

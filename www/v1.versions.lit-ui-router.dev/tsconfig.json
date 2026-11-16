@@ -1,0 +1,13 @@
+{
+  // cf and wrangler load these config files directly; nothing is emitted.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "lib": ["ES2022"]
+  },
+  "include": ["*.config.ts"]
+}
