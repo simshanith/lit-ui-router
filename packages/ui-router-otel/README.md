@@ -122,7 +122,7 @@ The panel sees spans as they are; only its session export scrubs them, by the [d
 
 The plugin's spans are ordinary OpenTelemetry spans, so the provider that feeds the panel can send the same spans to any OTLP receiver, such as a local Jaeger or Grafana Tempo. Add an exporter beside the `DevtoolsSpanProcessor`:
 
-```ts
+```ts check
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor, TracerProvider } from '@opentelemetry/sdk-trace';
 import { DevtoolsSpanProcessor, type SpanSink } from 'ui-router-otel';
@@ -147,7 +147,7 @@ A receiver that takes spans from a page has to allow the page's origin. The view
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | The devtools Timeline                                                  | One transition, with its redirect chain, phases, resolves and the spans joined to it                          |
 | A trace viewer behind an OTLP receiver                                 | Every trace: search, attribute filters, comparison, and a server's spans when the server sends them there too |
-| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions and their phases in a `UI-Router` track group, beside network, rendering and long tasks           |
+| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions, phases and resolves in a `UI-Router` track group, beside network, rendering and long tasks           |
 
 The Performance track is written from the devtools' recorded events and holds no spans.
 
