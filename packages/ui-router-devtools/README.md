@@ -29,6 +29,8 @@ Given spans from a tracer, the Timeline nests the ones that ran during the trans
 
 [`ui-router-otel`](../ui-router-otel/README.md#the-devtools-timeline)'s `DevtoolsSpanProcessor` feeds it from an OpenTelemetry tracer provider. A panel that is given no span shows nothing about spans.
 
+The Timeline shows one transition and its redirect chain at a time. It has no search or filter across spans and does not compare transitions; a trace viewer does that from the same spans, as in [other trace viewers](../ui-router-otel/README.md#other-trace-viewers).
+
 ## Entry points
 
 | Subpath                 | Contents                                                                                                                              |

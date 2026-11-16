@@ -118,6 +118,39 @@ The argument is asked for the panel on each span, so the panel may be created af
 
 The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](../ui-router-devtools/README.md#session-files-and-redaction). How a span is joined, and why a fetch in a resolve is joined as `during` unless `activateResolveSpans` is on, is in [the Timeline](../../docs/visualizer-proposal/timeline.md#joining-a-span).
 
+## Other trace viewers
+
+The plugin's spans are ordinary OpenTelemetry spans, so the provider that feeds the panel can send the same spans to any OTLP receiver, such as a local Jaeger or Grafana Tempo. Add an exporter beside the `DevtoolsSpanProcessor`:
+
+```ts check
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { BatchSpanProcessor, TracerProvider } from '@opentelemetry/sdk-trace';
+import { DevtoolsSpanProcessor, type SpanSink } from 'ui-router-otel';
+
+const provider = new TracerProvider({
+  spanProcessors: [
+    new DevtoolsSpanProcessor(() =>
+      document.querySelector<HTMLElement & SpanSink>('ui-router-devtools'),
+    ),
+    new BatchSpanProcessor({
+      exporter: new OTLPTraceExporter({
+        url: 'http://localhost:4318/v1/traces',
+      }),
+    }),
+  ],
+});
+```
+
+A receiver that takes spans from a page has to allow the page's origin. The views differ in what they are for:
+
+| View                                                                   | Shows                                                                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| The devtools Timeline                                                  | One transition, with its redirect chain, phases, resolves and the spans joined to it                          |
+| A trace viewer behind an OTLP receiver                                 | Every trace: search, attribute filters, comparison, and a server's spans when the server sends them there too |
+| The browser's Performance panel, from `ui-router-devtools/performance` | Transitions, phases and resolves in a `UI-Router` track group, beside network, rendering and long tasks       |
+
+The Performance track is written from the devtools' recorded events and holds no spans.
+
 ## Not covered
 
 - Hooks and lazy loads as active spans. Only resolve functions run with a router span active, and only with `activateResolveSpans`.

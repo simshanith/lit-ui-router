@@ -46,6 +46,7 @@
   "devDependencies": {
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/context-async-hooks": "catalog:",
+    "@opentelemetry/exporter-trace-otlp-http": "catalog:",
     "@opentelemetry/sdk-trace": "catalog:",
     "@repo/router-events": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
