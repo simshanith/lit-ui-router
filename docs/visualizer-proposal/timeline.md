@@ -216,3 +216,7 @@ Timeline does not load it. The join and the layout are
 - A transition's spans are not shown on the Map or in the log.
 - A server's spans for the same request are not fetched; only what reaches the
   page's tracer provider is drawn.
+- Search, attribute filters and comparison across transitions or traces. The
+  Timeline draws one transition; a trace viewer fed by the same provider does
+  the rest, as in
+  [other trace viewers](../../packages/ui-router-otel/README.md#other-trace-viewers).
