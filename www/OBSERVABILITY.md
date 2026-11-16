@@ -25,7 +25,9 @@ Sampling is the platform default; `head_sampling_rate` (`headSamplingRate` in
 Logs stay in Cloudflare. Traces go to two places:
 
 - **Workers Observability**, in the Cloudflare dashboard, since `traces.persist` keeps its
-  default.
+  default. From December 1, 2026 stored traces count toward the account's
+  [Observability usage](https://developers.cloudflare.com/observability/pricing/);
+  `persist: false` exports without storing them.
 - **[Honeycomb](https://www.honeycomb.io/)**, through the destination each config names in
   `traces.destinations`.
 
@@ -51,15 +53,16 @@ Worker's environment.
 
 Account changes go through the [`cf` CLI](./DEPLOY.md#cf-setup), with `--dry-run` first.
 
-- **Check delivery.** `cf o11y destinations list` prints each destination's `jobStatus`: the time
-  of the last push that completed, and the last error if there was one.
+- **Check delivery.** `cf o11y destinations list` prints each destination's `jobStatus`:
+  `last_complete` and `last_error` are the times of the last successful and last failed push,
+  and `error_message` says why it failed.
 - **Rotate the key.** Make a new ingest key in Honeycomb, then run
   `cf o11y destinations update honeycomb-traces --enabled --configuration-type logpush --configuration-url <endpoint> --configuration-headers @<file>`,
   where the file is a JSON object of the header. `cf` wants the type and the endpoint repeated
   whenever a header changes. Delete the old key in Honeycomb once `jobStatus` shows a push
   after the change. Keep the file out of the checkout and remove it afterwards.
-- **Add a Worker.** Set `traces.enabled` and name the destination in `traces.destinations` in
-  its config. A Worker configured by `cloudflare.config.ts` has no `wrangler.jsonc` to search,
+- **Add a Worker.** Set `observability.enabled` for its logs, then `traces.enabled`, and name the
+  destination in `traces.destinations`, all in its config. A Worker configured by `cloudflare.config.ts` has no `wrangler.jsonc` to search,
   so check both kinds when looking for one that was missed.
 - **Stop exporting.** Remove the name from each config before deleting the destination.
 
