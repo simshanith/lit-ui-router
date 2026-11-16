@@ -84,9 +84,10 @@ heading and divided by a rule. The Views tab stays as it is.
   two sides share; in the dock it must also hold the inspector popover's
   320px column. A split that a resize took away comes back only with a
   tenth of the room to spare, as a milder rung of the ladder does. It is not
-  offered below 880px of viewport, in the node-link tree, while the Map is
-  zoomed, when the states pan, or for a session that holds no views, which
-  includes a views snapshot with no view in it; there the toggle is not shown.
+  drawn while the Map is zoomed or when the states pan; there the toggle is
+  disabled. It is not offered below 880px of viewport, in the node-link tree,
+  or for a session that holds no views, which includes a views snapshot with
+  no view in it; there the toggle is not shown.
 - **Toggle.** `View map`, beside the Map's layout buttons, hides or shows the
   views. It is on unless the viewer turns it off, and the choice is kept in
   `localStorage` as the layout choice is. It is pressed only while the views
