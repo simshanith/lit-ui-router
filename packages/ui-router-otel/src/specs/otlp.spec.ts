@@ -173,20 +173,24 @@ describe('OTLP export', () => {
     const spans = await sent();
     const user = spans.find(({ name }) => name === 'user');
     const inTrace = spans.filter((span) => span !== user);
-    const ids = new Set(spans.map(({ spanId }) => spanId));
+    const names = new Map(spans.map(({ spanId, name }) => [spanId, name]));
 
-    expect(inTrace.map(({ name }) => name).sort()).toEqual([
-      'before',
-      'enter user',
-      'finish',
-      'resolve profile',
-      'start',
-      'success',
-    ]);
+    const parents = Object.fromEntries(
+      inTrace.map(({ name, parentSpanId }) => [
+        name,
+        names.get(parentSpanId ?? ''),
+      ]),
+    );
+
     expect(new Set(spans.map(({ traceId }) => traceId)).size).toBe(1);
-    expect(
-      inTrace.every(({ parentSpanId }) => ids.has(parentSpanId ?? '')),
-    ).toBe(true);
+    expect(parents).toEqual({
+      before: 'user',
+      start: 'user',
+      'enter user': 'user',
+      'resolve profile': 'user',
+      finish: 'user',
+      success: 'user',
+    });
     expect(
       attributesOf(inTrace.find(({ name }) => name === 'resolve profile')),
     ).toEqual({
