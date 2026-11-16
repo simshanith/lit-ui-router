@@ -9,7 +9,6 @@ import { analyticsHead } from './analytics.ts';
 import { NAV, SIDEBAR, type SidebarEntry } from '../catalog/navigation.ts';
 import type { PackageName } from '../catalog/packages.ts';
 import { API_REFERENCES } from '../catalog/references.ts';
-import { checkHashedAssets } from './hashed-assets.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { writeRedirects } from './redirects.ts';
 import { renderForSearch } from './search-render.ts';
@@ -188,7 +187,6 @@ const config = {
   buildEnd: async ({ outDir }: SiteConfig) => {
     await writeSitemapIndex(outDir, baseUrl);
     await writeRedirects(outDir);
-    checkHashedAssets(outDir);
   },
   sitemap: {
     hostname: baseUrl,
