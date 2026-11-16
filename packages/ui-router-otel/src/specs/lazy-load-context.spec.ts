@@ -190,7 +190,7 @@ describe('activateLazyLoadSpans', () => {
 
     const all = await spans();
 
-    expect(all.some((span) => span.name.startsWith('lazyLoad'))).toBe(false);
+    expect(all.some((span) => span.name.startsWith('lazy load'))).toBe(false);
     expect(parentOf(named(all, 'GET before await'))).toBeUndefined();
   });
 
