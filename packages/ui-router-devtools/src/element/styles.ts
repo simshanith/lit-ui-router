@@ -347,7 +347,7 @@ export const styles: CSSResult = css`
     gap: var(--uird-gap);
     block-size: var(--uird-row);
     inline-size: max-content;
-    max-inline-size: calc(100vw - 2 * var(--uird-margin));
+    max-inline-size: calc(100% - 2 * var(--uird-margin));
     padding: 0 12px;
     border: 1px solid var(--uird-rule-strong);
     border-radius: 2px;
