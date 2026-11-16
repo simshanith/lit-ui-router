@@ -131,6 +131,15 @@ describe("the adapters' base", () => {
     assert.equal(hono.headers.get('Location'), '/app/about');
   });
 
+  it('reads a url that is a bare origin as the root, outside the base', async () => {
+    const handler = createFetchHandler(keyed(), { serveShell: noShell });
+
+    // SAFETY: a WHATWG Request always spells the root path; only a structural request reaches the bare origin
+    const bare = { url: 'https://example.test' } as Request;
+
+    assert.equal(await handler(bare), null);
+  });
+
   it("throws for a base that differs from the router's", () => {
     const differs = /base '\/other\/' differs from the router's base '\/app\/'/;
 
