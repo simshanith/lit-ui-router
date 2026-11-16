@@ -347,7 +347,7 @@ export const styles: CSSResult = css`
     gap: var(--uird-gap);
     block-size: var(--uird-row);
     inline-size: max-content;
-    max-inline-size: 240px;
+    max-inline-size: calc(100vw - 2 * var(--uird-margin));
     padding: 0 12px;
     border: 1px solid var(--uird-rule-strong);
     border-radius: 2px;
@@ -360,8 +360,16 @@ export const styles: CSSResult = css`
     display: none;
   }
 
+  /* Only the name gives way in a narrow viewport, so the status and duration are never clipped. */
   .pill-name {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .pill > :not(.pill-name) {
+    flex: none;
   }
 
   @media (hover: hover) and (pointer: fine) {
