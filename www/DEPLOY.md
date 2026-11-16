@@ -242,8 +242,11 @@ To produce, deploy or replace the snapshot (mise and git required; `cf` logged i
    ([`scripts/docs-snapshot-publish.ts`](lit-ui-router.dev/scripts/docs-snapshot-publish.ts)). It
    runs `cf deploy` in the Worker's package and writes the manifest; commit it.
 
-A 1.x fix reaches the snapshot through the branch cut from the last tag: tag the release, update
-`SNAPSHOT_TAGS`, and run the three steps again.
+The snapshot is refreshed by hand, once per release round and not per release: when the last
+package of a round has published, set `SNAPSHOT_TAGS` to that release's tag and run the three steps
+again. A round that changes no 1.x page owes no refresh. The last 1.x tag before 2.0 lands on `main`
+always gets one; after that, a 1.x fix reaches the snapshot the same way, from the branch cut from
+the last tag.
 
 ### Adding a site
 
