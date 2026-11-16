@@ -13,6 +13,7 @@ import { redactionOf } from '@repo/router-events/redaction';
 import { errorNameOf, messageOf } from '@repo/router-events/thrown';
 import type {
   InvalidEvent,
+  KnownPhase,
   Outcome,
   Params,
   PhaseEvent,
@@ -42,11 +43,19 @@ export interface TracerReporter {
   report(event: RouterEvent): void;
   /** Starts a resolve's span now, as a child of its transition's span; none when the transition is not known. */
   startResolve(id: number, token: string, state: string): Span | undefined;
-  /** Ends a span `startResolve` started. */
-  endResolve(span: Span): void;
-  /** Ends a span `startResolve` started as failed: its resolve threw or rejected with `error`. */
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a resolve's rejection reason, which the app types
-  failResolve(span: Span, error: unknown): void;
+  /** Starts a lazy load's span now, as a child of its transition's span; none when the transition is not known. */
+  startLazyLoad(id: number, state: string): Span | undefined;
+  /** The span of a phase that is open now, started on first need; none when the phase or transition is not. */
+  phaseSpan(
+    id: number,
+    phase: KnownPhase,
+    state?: string | null,
+  ): Span | undefined;
+  /** Ends a span `startResolve` or `startLazyLoad` started. */
+  endSpan(span: Span): void;
+  /** Ends a span `startResolve` or `startLazyLoad` started as failed: its function threw or rejected with `error`. */
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a rejection reason, which the app types
+  failSpan(span: Span, error: unknown): void;
   /** Ends every span still open and stops reporting. */
   dispose(): void;
 }
@@ -57,6 +66,8 @@ interface Tx {
   parent: Context;
   span?: Span;
   open: Map<string, PhaseEvent>;
+  // Spans of open phases started while the phase ran, so an app hook could run with one active.
+  live: Map<string, Span>;
   // Phases that ended before the transition passed onBefore, where core may still ignore it.
   held: [start: PhaseEvent, end: number][] | null;
   settled: boolean;
@@ -138,8 +149,13 @@ const resolveAttributes = (token: string, state: string): Attributes => ({
   'uirouter.state': state,
 });
 
-const phaseKey = ({ phase, state }: PhaseEvent): string =>
-  state ? `${phase} ${state}` : phase;
+const phaseKey = ({
+  phase,
+  state,
+}: {
+  phase: PhaseEvent['phase'];
+  state?: string | null;
+}): string => (state ? `${phase} ${state}` : phase);
 
 /** Turns the adapter's event stream into spans on `tracer`; feed it with `report`. */
 export const reportToTracer = (
@@ -208,9 +224,12 @@ export const reportToTracer = (
 
   // A phase cut short by a redirect, a supersede or dispose() ends with it.
   const endOpen = (tx: Tx, t?: number) => {
-    for (const start of tx.open.values())
-      phaseSpan(tx, start).end(t === undefined ? undefined : at(t));
+    for (const [key, start] of tx.open)
+      (tx.live.get(key) ?? phaseSpan(tx, start)).end(
+        t === undefined ? undefined : at(t),
+      );
     tx.open.clear();
+    tx.live.clear();
   };
 
   const onPhase = (tx: Tx, event: PhaseEvent) => {
@@ -226,6 +245,15 @@ export const reportToTracer = (
 
     if (!start) return;
     tx.open.delete(key);
+
+    const live = tx.live.get(key);
+
+    if (live) {
+      tx.live.delete(key);
+      live.end(at(event.t));
+
+      return;
+    }
 
     // The before phase ends after core's ignore check, so only then is the transition sure to run.
     if (tx.held && event.phase !== 'before') tx.held.push([start, event.t]);
@@ -330,8 +358,30 @@ export const reportToTracer = (
           )
         : undefined;
     },
-    endResolve: (span) => span.end(at(performance.now())),
-    failResolve: (span, error) => {
+    startLazyLoad: (id, state) => {
+      const tx = txs.get(id);
+
+      return tx && !tx.settled
+        ? childOf(tx, `lazy load ${state}`, performance.now(), {
+            'uirouter.state': state,
+          })
+        : undefined;
+    },
+    phaseSpan: (id, phase, state) => {
+      const tx = txs.get(id);
+      const key = phaseKey({ phase, state });
+      const start = tx?.open.get(key);
+
+      if (!tx || !start) return undefined;
+
+      const span = tx.live.get(key) ?? phaseSpan(tx, start);
+
+      tx.live.set(key, span);
+
+      return span;
+    },
+    endSpan: (span) => span.end(at(performance.now())),
+    failSpan: (span, error) => {
       const t = performance.now();
 
       span.setAttribute('error.type', errorNameOf(error) ?? OTHER);
@@ -344,6 +394,7 @@ export const reportToTracer = (
           start: event,
           parent: context.active(),
           open: new Map(),
+          live: new Map(),
           held: [],
           settled: false,
         });

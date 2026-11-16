@@ -408,6 +408,25 @@ describe('joining spans', () => {
     ).toEqual([['fetch', 'child']]);
   });
 
+  // What ui-router-otel sends with activateLazyLoadSpans: the app's import under the router's lazy load span.
+  it("joins an app span under the router's lazy load span as a child", () => {
+    const spans = [
+      routerSpan(users, 'r1'),
+      span('ll', 101, 250, {
+        traceId: 'trace-r1',
+        parentSpanId: 'r1',
+        attributes: { 'uirouter.state': 'users.**' },
+      }),
+      span('import', 102, 240, { traceId: 'trace-r1', parentSpanId: 'll' }),
+    ];
+
+    expect(
+      joinSpans([users], spans, placing)
+        .bars.get(1)
+        ?.map((bar) => [bar.name, bar.relation]),
+    ).toEqual([['import', 'child']]);
+  });
+
   it('joins a child of an ambiguous router span by time, as during', () => {
     const own = routerSpan(users, 'r1');
     const twin = { ...own, spanId: 'r3' };

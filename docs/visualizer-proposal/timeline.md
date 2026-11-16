@@ -92,11 +92,11 @@ ends, and each one it starts, so a running fetch grows on the Timeline.
 A span is joined to a transition in one of three ways, and the Timeline says
 which:
 
-| Relation | When                                                                                  | Drawn                           |
-| -------- | ------------------------------------------------------------------------------------- | ------------------------------- |
-| child    | it descends from the router's own span for the transition, or a phase or resolve span | nested, filled, no tag          |
-| trace    | it shares a trace with the router's span for the transition and overlaps it in time   | nested, filled, tagged in trace |
-| during   | it only overlaps the transition, or its redirect chain, in time                       | nested, dashed, tagged during   |
+| Relation | When                                                                                             | Drawn                           |
+| -------- | ------------------------------------------------------------------------------------------------ | ------------------------------- |
+| child    | it descends from the router's own span for the transition, or a phase, resolve or lazy load span | nested, filled, no tag          |
+| trace    | it shares a trace with the router's span for the transition and overlaps it in time              | nested, filled, tagged in trace |
+| during   | it only overlaps the transition, or its redirect chain, in time                                  | nested, dashed, tagged during   |
 
 The router's own spans are found among the spans the panel is given, so they
 reach it only when the `DevtoolsSpanProcessor` sits on the provider that the
@@ -119,7 +119,7 @@ own `onBefore` hook in the same synchronous pass, so the two starts differ by
 microseconds; another router's transition with the same id between the same
 states inside those 2ms is the one case this cannot tell apart. Then neither
 span is the transition's, its resolves are not timed from either, and a span
-under either one, or under one of their phase and resolve spans, is joined by
+under either one, or under one of their phase, resolve or lazy load spans, is joined by
 time, as `during`. A span under the router span of another transition in the
 chain stays that transition's.
 
@@ -146,12 +146,15 @@ the fetch is `in trace`. Without one, the fetch is its own trace and only
 
 With the plugin's `activateResolveSpans` option, each resolve's function runs
 with that resolve's span active, and a span the app starts there is the
-resolve span's child, which the Timeline joins as `child`. Under a context
-manager that tracks only synchronous code that holds until the resolve's
-first `await`; under one that follows async work, such as
-`@opentelemetry/context-zone`, it holds for the whole resolve. App hooks and
-lazy loads do not run with a router span active, so spans started there are
-joined by trace or by time.
+resolve span's child, which the Timeline joins as `child`. Its
+`activateHookSpans` option does the same for the app's transition hooks, a
+state's own `onEnter`, `onExit` and `onRetain` included, each with the span of
+the phase it runs in, and `activateLazyLoadSpans` for a state's `lazyLoad`,
+with a `lazy load <state>` span under the transition's. Under a context manager
+that tracks only synchronous code the span holds until the function's first
+`await`; under one that follows async work, such as
+`@opentelemetry/context-zone`, it holds for the whole function. With an option
+off, spans started in that kind of code are joined by trace or by time.
 
 A `during` span is drawn under the transition of the chain that was the latest
 to start before it, and a span that overlaps two separate transitions, such as
@@ -210,9 +213,10 @@ Timeline does not load it. The join and the layout are
 
 ## Not covered
 
-- Only resolve functions run with a router span active, and only with
-  `activateResolveSpans`; a span started in an app hook or a lazy load is
-  `child` only when the app parents it to a router span by hand.
+- Resolves, app hooks and lazy loads run with a router span active only with
+  `ui-router-otel`'s matching option. A state's `redirectTo` function never
+  does, so a span started there is `child` only when the app parents it to a
+  router span by hand.
 - A transition's spans are not shown on the Map or in the log.
 - A server's spans for the same request are not fetched; only what reaches the
   page's tracer provider is drawn.
