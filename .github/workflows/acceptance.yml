@@ -42,6 +42,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Restore examples npm cache
         # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
         id: npm-cache
@@ -137,6 +139,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Restore examples npm cache
         # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
         id: npm-cache
@@ -227,6 +231,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Restore examples npm cache
         # setup's examples postinstall runs `npm ci` per example; a cold ~/.npm refetches every published package.
         id: npm-cache
@@ -247,16 +253,23 @@ jobs:
       - name: Resolve Playwright version
         id: playwright-version
         run: mise run //tools/build_and_test:playwright_version
-      - name: Cache Playwright browsers
+      - name: Restore Playwright browsers
         # Same key as build-test-run.yml, so the two share one cache entry.
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
+      - name: Save Playwright browsers
+        # Main only: a PR-scoped copy of the browsers is ~500 MB.
+        if: github.ref == 'refs/heads/main' && steps.playwright-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
       - name: Mark summary session
         # Bounds the report below to this job's runs: the docs build and the suite.
         run: mise run //tools/turbo-summary:mark_session
@@ -360,6 +373,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Restore lychee cache
         # Results from the last day skip the request; a fresh key saves each run's.
         uses: actions/cache/restore@v6

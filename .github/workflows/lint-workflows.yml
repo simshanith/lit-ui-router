@@ -27,6 +27,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Lint workflows
         # actionlint + zizmor in parallel via the mise task graph
         run: mise run lint_workflows

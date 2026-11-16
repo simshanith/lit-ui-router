@@ -44,6 +44,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
         env:
           # Adds the agent-only tools in .config/mise/config.agent.toml
           MISE_ENV: agent

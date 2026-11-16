@@ -82,6 +82,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: mise run setup --release
       - name: Mark summary session
@@ -177,6 +179,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       # The check scripts import @tools/shared and @tools/workers-builds, both in the release closure.
       - name: Install dependencies
         run: mise run setup --release

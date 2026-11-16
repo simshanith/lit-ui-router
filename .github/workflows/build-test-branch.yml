@@ -54,6 +54,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
+          # Branch and PR saves are scoped to their ref and duplicate main's entry.
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
       - name: Decide whether this push needs its own run
         id: gate
         run: mise run //tools/build_and_test:branch_ci_gate
