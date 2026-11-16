@@ -1353,6 +1353,7 @@ export class DevtoolsPanel extends LitElement {
       tx ? find('.ticks') : null,
       tx ? find('.log .tx.selected > .line') : null,
       this._inspect === 'state' ? find('.map-node.selected') : null,
+      this._inspect === 'view' ? find('.vm-side .box.selected > .head') : null,
       find('[role="treeitem"][tabindex="0"]'),
       find('.map-node'),
       // The narrowest panel shows only its tabs.

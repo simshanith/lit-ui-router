@@ -483,6 +483,23 @@ describe('the view map beside the Map', () => {
     await waitFor(() => expect(panel._inspect).toBe('none'));
   });
 
+  it('returns focus from the inspector to the selected view when Escape clears it', async () => {
+    const { element } = await mailMap();
+    const { views } = await split(element);
+
+    head(views, /^list view/).click();
+    await element.updateComplete;
+    within(inspector(element))
+      .getByRole('button', { name: 'mail.list' })
+      .focus();
+    press(element, 'Escape');
+
+    await waitFor(() =>
+      expect(element.shadowRoot?.activeElement).toBe(head(views, /^list view/)),
+    );
+    expect(panelOf(element)._inspect).toBe('none');
+  });
+
   it('keeps the arrow keys in one tree, and outlines the view under the pointer', async () => {
     const { element } = await mailMap();
     const { states, views } = await split(element);
