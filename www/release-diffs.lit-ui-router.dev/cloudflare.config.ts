@@ -14,7 +14,12 @@ export default defineConfig(({ isPreview }) => ({
     observability: {
       enabled: true,
       // Names a destination set up on the account, which holds the endpoint and key.
-      traces: { enabled: true, destinations: ['honeycomb-traces'] },
+      traces: {
+        enabled: true,
+        // Stored traces count toward the account's Observability usage; Honeycomb holds them.
+        persist: false,
+        destinations: ['honeycomb-traces'],
+      },
     },
     env: {
       // A Preview writes its own bucket, so production's entries only ever come from production code.

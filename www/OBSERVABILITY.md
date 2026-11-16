@@ -18,20 +18,17 @@ and `GET <source>`, through the tracer its `worker/index.ts` provides; the other
 | Release diffs  | `observability` in [`release-diffs.lit-ui-router.dev/cloudflare.config.ts`](./release-diffs.lit-ui-router.dev/cloudflare.config.ts) |
 
 Sampling is the platform default; `head_sampling_rate` (`headSamplingRate` in
-`cloudflare.config.ts`) under `traces` lowers it for one Worker.
+`cloudflare.config.ts`) under `traces` lowers it. The three blocks are held equal by a test, so
+a change goes in each config and in the test's expected block.
 
 ## Where it goes
 
-Logs stay in Cloudflare. Traces go to two places:
+Logs stay in Cloudflare, in Workers Observability. Traces go to [Honeycomb](https://www.honeycomb.io/)
+only, through the destination each config names in `traces.destinations`. `traces.persist` is
+off, so Cloudflare stores none of them: from December 1, 2026 stored traces count toward the
+account's [Observability usage](https://developers.cloudflare.com/observability/pricing/).
 
-- **Workers Observability**, in the Cloudflare dashboard, since `traces.persist` keeps its
-  default. From December 1, 2026 stored traces count toward the account's
-  [Observability usage](https://developers.cloudflare.com/observability/pricing/);
-  `persist: false` exports without storing them.
-- **[Honeycomb](https://www.honeycomb.io/)**, through the destination each config names in
-  `traces.destinations`.
-
-A Workers Preview deploys the same config, so a branch's traces go to both as well.
+A Workers Preview deploys the same config, so a branch's traces go there as well.
 
 ### The Honeycomb destination
 
@@ -61,9 +58,10 @@ Account changes go through the [`cf` CLI](./DEPLOY.md#cf-setup), with `--dry-run
   where the file is a JSON object of the header. `cf` wants the type and the endpoint repeated
   whenever a header changes. Delete the old key in Honeycomb once `jobStatus` shows a push
   after the change. Keep the file out of the checkout and remove it afterwards.
-- **Add a Worker.** Set `observability.enabled` for its logs, then `traces.enabled`, and name the
-  destination in `traces.destinations`, all in its config. A Worker configured by `cloudflare.config.ts` has no `wrangler.jsonc` to search,
-  so check both kinds when looking for one that was missed.
+- **Add a Worker.** Give its config the `observability` block the others have.
+  `worker-observability.test.ts` in `tools/workers-builds` fails until every config listed in
+  [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
+  carries the same block, whichever kind of file it is.
 - **Stop exporting.** Remove the name from each config before deleting the destination.
 
 ## Not covered
