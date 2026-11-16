@@ -66,6 +66,9 @@ Account changes go through the [`cf` CLI](./DEPLOY.md#cf-setup), with `--dry-run
 
 ## Not covered
 
+The [Altitude Atlas](./DEPLOY.md#cloudflare-pages-the-altitude-atlas) is on Cloudflare Pages
+and reports nothing here.
+
 The router's own spans, from the server's transitions or from a page, are not sent anywhere
 yet, and neither are build timings from CI. Both are tracked in
 [issue 2220](https://github.com/simshanith/lit-ui-router/issues/2220).
