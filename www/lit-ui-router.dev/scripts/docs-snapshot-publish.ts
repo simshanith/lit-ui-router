@@ -1,19 +1,17 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import {
-  canonicalOf,
   hasSnapshotTag,
-  htmlPath,
   manifestPath,
+  snapshotCanonicals,
   snapshotDigest,
   snapshotPackage,
-  snapshotPages,
   SNAPSHOT_TAGS,
   type SnapshotManifest,
 } from '../.vitepress/snapshot.ts';
@@ -51,16 +49,7 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  const pages: Record<string, string> = {};
-  const missing: string[] = [];
-
-  for (const file of await snapshotPages(dir)) {
-    if (file === '404.html') continue;
-    const canonical = canonicalOf(readFileSync(join(dir, file), 'utf8'));
-
-    if (canonical === undefined) missing.push(file);
-    else pages[`/${id}${htmlPath(file)}`] = canonical;
-  }
+  const { pages, missing } = await snapshotCanonicals(dir, `/${id}/`);
 
   if (missing.length > 0) {
     console.error(

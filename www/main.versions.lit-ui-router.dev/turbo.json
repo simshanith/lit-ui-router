@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // The script is the docs site's docs:snapshot: it rebuilds that site under /main/ and
+      // resolves canonical links against its dist. This package imports nothing from it, so
+      // `^` cannot reach the edge, whose hash keys the site's sources.
+      "dependsOn": ["@www/lit-ui-router.dev#build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+    },
+    "test": {
+      // The docs site's test:preview, which reads this package's dist.
+      "dependsOn": ["build"]
+    },
+    "lint:oxlint": {
+      // The root task's explicit globs would hash the gitignored .cloudflare/types and dist.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
+    },
+    "format:check:oxfmt": {
+      // As above.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxfmtrc.json"]
+    }
+  }
+}

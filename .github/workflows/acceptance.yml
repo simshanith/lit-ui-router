@@ -103,6 +103,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/main.versions.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
             www/v1.versions.lit-ui-router.dev/.turbo/turbo-*.log
@@ -194,6 +195,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/main.versions.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
             www/v1.versions.lit-ui-router.dev/.turbo/turbo-*.log
@@ -304,6 +306,7 @@ jobs:
             packages/shared/*/.turbo/turbo-*.log
             tools/*/.turbo/turbo-*.log
             www/lit-ui-router.dev/.turbo/turbo-*.log
+            www/main.versions.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-diffs.lit-ui-router.dev/.turbo/turbo-*.log
             www/release-ledger.lit-ui-router.dev/.turbo/turbo-*.log
             www/v1.versions.lit-ui-router.dev/.turbo/turbo-*.log

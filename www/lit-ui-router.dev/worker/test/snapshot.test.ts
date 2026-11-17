@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import worker from '../index.ts';
-import { isSnapshotPath, serveSnapshot } from '../snapshot.ts';
+import { serveSnapshot, snapshotOf } from '../snapshot.ts';
 
 const ORIGIN = 'http://docs.test';
 
@@ -24,14 +24,26 @@ function fakeBinding(answer: (request: Request) => Promise<Response>) {
   };
 }
 
-describe('isSnapshotPath', () => {
-  it('claims the bare prefix and its subpaths only', () => {
-    assert.ok(isSnapshotPath('/v1'));
-    assert.ok(isSnapshotPath('/v1/'));
-    assert.ok(isSnapshotPath('/v1/guides/route-guards'));
-    assert.ok(!isSnapshotPath('/v10/'));
-    assert.ok(!isSnapshotPath('/v1-notes'));
-    assert.ok(!isSnapshotPath('/guides/v1/'));
+describe('snapshotOf', () => {
+  it('claims each bare prefix and its subpaths only', () => {
+    assert.equal(snapshotOf('/v1'), 'v1');
+    assert.equal(snapshotOf('/v1/'), 'v1');
+    assert.equal(snapshotOf('/v1/guides/route-guards'), 'v1');
+    assert.equal(snapshotOf('/main'), 'main');
+    assert.equal(snapshotOf('/main/'), 'main');
+    assert.equal(snapshotOf('/main/guides/route-guards'), 'main');
+
+    for (const path of [
+      '/',
+      '/v10/',
+      '/v1-notes',
+      '/guides/v1/',
+      '/maintenance',
+      '/main-branch/',
+      '/guides/main/',
+      '/toString/',
+    ])
+      assert.equal(snapshotOf(path), undefined, path);
   });
 });
 
@@ -48,7 +60,7 @@ describe('serveSnapshot', () => {
       headers: { 'If-None-Match': '"a"', Accept: 'text/javascript' },
     });
 
-    const response = await serveSnapshot(request, binding);
+    const response = await serveSnapshot(request, 'v1', binding);
 
     assert.equal(response.status, 304);
     assert.equal(response.headers.get('ETag'), '"a"');
@@ -70,6 +82,7 @@ describe('serveSnapshot', () => {
 
       const response = await serveSnapshot(
         new Request(`${ORIGIN}/v1/x`),
+        'v1',
         binding,
       );
 
@@ -90,13 +103,31 @@ describe('serveSnapshot', () => {
     for (const binding of failing) {
       const response = await serveSnapshot(
         new Request(`${ORIGIN}/v1/guides/`),
+        'v1',
         binding,
       );
 
       assert.equal(response.status, 503);
       assert.match(response.headers.get('Content-Type') ?? '', /^text\/plain/);
-      assert.match(await response.text(), /1\.x docs are unavailable/);
+      assert.equal(
+        await response.text(),
+        'The 1.x docs are unavailable right now.\n',
+      );
     }
+  });
+
+  it('names the snapshot its 503 stands in for', async () => {
+    const response = await serveSnapshot(
+      new Request(`${ORIGIN}/main/`),
+      'main',
+      undefined,
+    );
+
+    assert.equal(response.status, 503);
+    assert.equal(
+      await response.text(),
+      'The unreleased docs are unavailable right now.\n',
+    );
   });
 });
 
@@ -125,5 +156,40 @@ describe('the docs worker', () => {
     }
 
     assert.equal(seen.length, 3);
+  });
+
+  it('hands /main and every /main/ path to its own binding, and answers 503 while it has none', async () => {
+    const v1 = fakeBinding(() => Promise.resolve(new Response('v1')));
+
+    const main = fakeBinding((request) =>
+      Promise.resolve(new Response(new URL(request.url).pathname)),
+    );
+
+    // SAFETY: a /main request never touches the context.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with ExecutionContext
+    const ctx = {} as unknown as ExecutionContext;
+
+    // SAFETY: a /main request reads only the snapshot bindings.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a two-binding object shares too few members with Env for one assertion
+    const bound = {
+      DOCS_V1: v1.binding,
+      DOCS_MAIN: main.binding,
+    } as unknown as Env;
+
+    // SAFETY: as above, without the binding wrangler.jsonc does not declare yet.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a one-binding object shares too few members with Env for one assertion
+    const unbound = { DOCS_V1: v1.binding } as unknown as Env;
+
+    for (const path of ['/main', '/main/', '/main/releases/']) {
+      const url = `${ORIGIN}${path}`;
+      const handed = await worker.fetch(new Request(url), bound, ctx);
+      const missing = await worker.fetch(new Request(url), unbound, ctx);
+
+      assert.equal(await handed.text(), path);
+      assert.equal(missing.status, 503, path);
+    }
+
+    assert.equal(main.seen.length, 3);
+    assert.equal(v1.seen.length, 0);
   });
 });

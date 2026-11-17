@@ -8,7 +8,12 @@ import type { ReleaseDiffs } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
 import { assetNotes } from './releases/notes.ts';
 import { serveReleases } from './releases/serve.ts';
-import { isSnapshotPath, serveSnapshot } from './snapshot.ts';
+import {
+  serveSnapshot,
+  type SnapshotBinding,
+  type SnapshotId,
+  snapshotOf,
+} from './snapshot.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
 // turns a verdict into an HTTP Response. Module scope: the mount tables
@@ -59,8 +64,17 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (isSnapshotPath(url.pathname))
-      return serveSnapshot(request, env.DOCS_V1);
+    const snapshot = snapshotOf(url.pathname);
+
+    if (snapshot) {
+      const bindings: Record<SnapshotId, SnapshotBinding | undefined> = {
+        v1: env.DOCS_V1,
+        // SAFETY: wrangler.jsonc declares DOCS_MAIN once its Worker exists (www/DEPLOY.md); until then it is undefined.
+        main: (env as Env & { DOCS_MAIN?: SnapshotBinding }).DOCS_MAIN,
+      };
+
+      return serveSnapshot(request, snapshot, bindings[snapshot]);
+    }
 
     // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them

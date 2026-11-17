@@ -6,12 +6,15 @@ import type { Plugin } from 'vite';
 
 import { REDIRECTS } from '../catalog/redirects.ts';
 import { globPattern } from './surfaces.ts';
+import { BUNDLED_MANIFEST } from './versions.ts';
 
 // https://developers.cloudflare.com/workers/static-assets/redirects/
 export const LIMITS = { static: 2000, dynamic: 100, lineLength: 1000 } as const;
 
-/** The frozen 1.x snapshot's prefix: no redirect may claim a path under it. */
-export const SNAPSHOT_PREFIX = '/v1/';
+/** Each other version's prefix, served by that version's Worker: no redirect may claim a path under one. */
+export const SNAPSHOT_PREFIXES: readonly string[] = BUNDLED_MANIFEST.others.map(
+  ({ path }) => path,
+);
 
 /** Kept free for a future HTTP API at `/api/v<N>/`: no built file may sit under it. */
 export const RESERVED_PREFIX = '/api/';
@@ -119,6 +122,10 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
   const ruleChecks = rules.flatMap((rule, index) => {
     const line = redirectsLine(rule);
 
+    const snapshotPrefix = SNAPSHOT_PREFIXES.find((prefix) =>
+      rule.from.startsWith(prefix),
+    );
+
     const checks: [boolean, string][] = [
       [
         firstDynamic !== -1 && index > firstDynamic && !isDynamic(rule),
@@ -129,10 +136,7 @@ export function tableProblems(rules: readonly RedirectLine[]): string[] {
         !rule.from.startsWith('/') || !rule.to.startsWith('/'),
         'not root-anchored',
       ],
-      [
-        rule.from.startsWith(SNAPSHOT_PREFIX),
-        `source under ${SNAPSHOT_PREFIX}`,
-      ],
+      [snapshotPrefix !== undefined, `source under ${snapshotPrefix}`],
       [
         matchRedirect(rules, rule.to.split(/[?#]/)[0]) !== null,
         'target is redirected again',

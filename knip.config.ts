@@ -166,6 +166,9 @@ const workspaces = {
     entry: ['cloudflare.config.ts'],
   },
   // cf reads both configs from its working directory
+  'www/main.versions.lit-ui-router.dev': {
+    entry: ['cloudflare.config.ts', 'wrangler.config.ts'],
+  },
   'www/v1.versions.lit-ui-router.dev': {
     entry: ['cloudflare.config.ts', 'wrangler.config.ts'],
   },

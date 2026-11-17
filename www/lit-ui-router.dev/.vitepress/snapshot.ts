@@ -12,7 +12,11 @@ import {
   redirectsFileBody,
   servedFiles,
 } from './redirects.ts';
-import { SITE_ORIGIN, type VersionManifest } from './versions.ts';
+import {
+  type BannerKind,
+  SITE_ORIGIN,
+  type VersionManifest,
+} from './versions.ts';
 
 /** The tag each frozen snapshot is built from, keyed by version id. */
 export const SNAPSHOT_TAGS = {
@@ -23,11 +27,18 @@ export const SNAPSHOT_TAGS = {
 export const hasSnapshotTag = (id: string): id is keyof typeof SNAPSHOT_TAGS =>
   Object.hasOwn(SNAPSHOT_TAGS, id);
 
+/** Versions built from this checkout on every `main` push: no tag, and no committed manifest. */
+export const LIVE_SNAPSHOTS: readonly string[] = ['main'];
+
+/** A version id rebuilt from the checkout, not frozen at a tag. */
+export const isLiveSnapshot = (id: string): boolean =>
+  LIVE_SNAPSHOTS.includes(id);
+
 /** The `www/` package that holds a snapshot's Worker config and, gitignored, its built assets. */
 export const snapshotPackage = (id: string): string =>
   `www/${id}.versions.lit-ui-router.dev`;
 
-/** A snapshot surface's row: a frozen version's whole prefix, handed to that version's Worker. */
+/** A snapshot surface's row: a version's whole prefix, handed to that version's Worker. */
 const isSnapshotRow = (id: string): boolean => id.startsWith('snapshot-');
 
 /** The worker's mounts: a snapshot serves none of them, so its links into them go to the main site's. */
@@ -96,20 +107,24 @@ export const builtExamples = (dir: string): string[] =>
     .map((file) => file.split('/')[1] ?? '')
     .sort();
 
-/** A snapshot's llms.txt: its page URLs moved under the base, the worker's left at the root, and a note naming the latest. */
+/** The line a snapshot's llms.txt opens with: what these docs are and where the released ones live. */
+export const snapshotNote = (label: string, kind: BannerKind): string =>
+  kind === 'unreleased'
+    ? `> These are the unreleased docs, built from ${label}. The released docs are at ${SITE_ORIGIN}/llms.txt.\n`
+    : `> These are the ${label} docs, kept as they were at their last release. The latest docs are at ${SITE_ORIGIN}/llms.txt.\n`;
+
+/** A snapshot's llms.txt: its page URLs moved under the base unless the build already put them there, the worker's left at the root, and its note. */
 export function snapshotLlmsTxt(
   text: string,
   base: string,
-  label: string,
+  note: string,
 ): string {
   const pattern = new RegExp(
-    `${escapeRegExp(SITE_ORIGIN)}/(?!(?:${mountAlternation})(?:[/)?#\\s]|$))`,
+    `${escapeRegExp(SITE_ORIGIN)}/(?!${escapeRegExp(base.slice(1))})(?!(?:${mountAlternation})(?:[/)?#\\s]|$))`,
     'g',
   );
 
   const moved = text.replace(pattern, `${SITE_ORIGIN}${base}`);
-
-  const note = `> These are the ${label} docs, kept as they were at their last release. The latest docs are at ${SITE_ORIGIN}/llms.txt.\n`;
 
   return moved.replace(/\n\n/, `\n\n${note}\n`);
 }
@@ -137,7 +152,7 @@ export const htmlPath = (file: string): string =>
 export async function finishSnapshot(
   dir: string,
   base: string,
-  label: string,
+  note: string,
   sampleAppAssets: readonly string[],
 ): Promise<void> {
   for (const path of [
@@ -167,7 +182,7 @@ export async function finishSnapshot(
     if (existsSync(path))
       await writeFile(
         path,
-        snapshotLlmsTxt(await readFile(path, 'utf8'), base, label),
+        snapshotLlmsTxt(await readFile(path, 'utf8'), base, note),
       );
   }
 }
@@ -225,6 +240,25 @@ export async function bakeCanonicals(
       withCanonical(await readFile(path, 'utf8'), `${SITE_ORIGIN}${latest}`),
     );
   }
+}
+
+/** A baked snapshot's pages, each mapped to the main-site path its canonical link names, and the page files with none. */
+export async function snapshotCanonicals(
+  dir: string,
+  base: string,
+): Promise<{ pages: Record<string, string>; missing: string[] }> {
+  const pages: Record<string, string> = {};
+  const missing: string[] = [];
+
+  for (const file of await snapshotPages(dir)) {
+    if (file === '404.html') continue;
+    const canonical = canonicalOf(await readFile(join(dir, file), 'utf8'));
+
+    if (canonical === undefined) missing.push(file);
+    else pages[`${base.slice(0, -1)}${htmlPath(file)}`] = canonical;
+  }
+
+  return { pages, missing };
 }
 
 /** The snapshot's paths under the worker's mounts, sent to the mounts: its client renders some nav links with its base. */
@@ -313,11 +347,11 @@ export function snapshotDigest(
 
 /** Canonical targets the main build in `outDir` neither serves nor redirects: a moved page owes a redirect. */
 export function canonicalProblems(
-  manifest: SnapshotManifest,
+  pages: SnapshotManifest['pages'],
   outDir: string,
   redirects: readonly RedirectLine[],
 ): string[] {
-  return Object.entries(manifest.pages).flatMap(([page, target]) =>
+  return Object.entries(pages).flatMap(([page, target]) =>
     isServed(outDir, target) || matchRedirect(redirects, target)
       ? []
       : [`${page}: its canonical ${target} is neither served nor redirected`],

@@ -21,6 +21,7 @@
     "lint:oxlint": "oxlint .",
     "render:identity": "node ./scripts/render-identity.ts",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"worker/test/*.test.ts\" \".vitepress/test/*.test.ts\" \"scripts/test/*.test.ts\"",
+    "test:preview": "node --test --test-reporter=@tools/shared/test-reporter.ts \".vitepress/test/built/*.test.ts\"",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check www/lit-ui-router.dev/tsconfig.vue.json",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",

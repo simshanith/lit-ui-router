@@ -194,23 +194,27 @@ const config = {
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
   // After the sitemap and the llms copies, so the check sees every emitted file.
-  buildEnd: async ({ outDir }: SiteConfig) => {
+  buildEnd: async ({ outDir, site }: SiteConfig) => {
     await writeSitemapIndex(outDir, baseUrl);
 
-    const problems = [
-      ...(await indexProblems(BUNDLED_MANIFEST, outDir)),
-      // Each frozen snapshot's canonical links name main-site paths: a later move owes a redirect.
-      ...BUNDLED_MANIFEST.others.flatMap(({ id }) =>
-        // A version not yet published has no manifest; the snapshot test requires one for each listed version.
-        !existsSync(manifestPath(id))
-          ? []
-          : canonicalProblems(
-              readSnapshotManifest(id),
-              outDir,
-              redirectLines(REDIRECTS),
+    // A build under another version's base is that version's snapshot: docs-snapshot.ts drops or rewrites its indexes.
+    const problems =
+      site.base === '/'
+        ? [
+            ...(await indexProblems(BUNDLED_MANIFEST, outDir)),
+            // Each frozen snapshot's canonical links name main-site paths: a later move owes a redirect.
+            ...BUNDLED_MANIFEST.others.flatMap(({ id }) =>
+              // A version built from the checkout has no manifest; the snapshot test requires one for each tagged version.
+              !existsSync(manifestPath(id))
+                ? []
+                : canonicalProblems(
+                    readSnapshotManifest(id).pages,
+                    outDir,
+                    redirectLines(REDIRECTS),
+                  ),
             ),
-      ),
-    ];
+          ]
+        : [];
 
     if (problems.length > 0) throw new Error(problems.join('\n'));
     await writeRedirects(outDir);

@@ -21,7 +21,7 @@ repo config, and whether the site it deploys is up. See
 ## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
 The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
-It deploys every Worker app under `www/` the same way, except the [frozen 1.x docs](#frozen-1x-docs-at-v1), which are deployed by hand: each is a package in `www/<domain>`, named
+It deploys every Worker app under `www/` the same way, except the [frozen 1.x docs](#frozen-1x-docs-at-v1), which are deployed by hand, and the [unreleased docs](#unreleased-docs-at-main), which have no trigger yet: each is a package in `www/<domain>`, named
 `@www/<domain>`, with its own worker config and its own Workers Builds triggers, and the domain is
 the site key that the build and deploy commands below take as their last argument. This section
 describes the docs site, the default when that argument is omitted; [Adding a site](#adding-a-site)
@@ -247,6 +247,41 @@ package of a round has published, set `SNAPSHOT_TAGS` to that release's tag and 
 again. A round that changes no 1.x page owes no refresh. The last 1.x tag before 2.0 lands on `main`
 always gets one; after that, a 1.x fix reaches the snapshot the same way, from the branch cut from
 the last tag.
+
+### Unreleased docs at `/main/`
+
+The docs built from `main` are their own Worker, `lit-ui-router-docs-main`, configured in
+[`www/main.versions.lit-ui-router.dev`](main.versions.lit-ui-router.dev/README.md): the same shape as
+the [frozen 1.x docs](#frozen-1x-docs-at-v1), with the site under `main/` in its assets and
+`_redirects` and `_headers` at the root. `public/versions.json` lists it as a hidden version, so
+its pages show the unreleased banner and the version menu leaves it out; the docs build fails if
+`sitemap-pages.xml`, `llms.txt` or `llms-full.txt` lists a `/main/` URL.
+
+Its `build` script runs the docs site's `docs:snapshot` for `main`, after that site's own build
+(`turbo.json` holds the edge). A version in `LIVE_SNAPSHOTS` (`.vitepress/snapshot.ts`) has no
+tag: the script rebuilds this checkout's site with `vitepress build --base /main/` and finishes it
+as it does a tagged one, with a canonical link on every page to the same path in the site's
+`dist`, else where `catalog/redirects.ts` sends it, else the home page. It keeps no manifest. The
+build fails instead when a page has no canonical link or names a target that `dist` neither
+serves nor redirects, and the package's `test` reads the built pages.
+
+The docs worker lists `/main` and `/main/*` in `run_worker_first` and hands them to the
+`DOCS_MAIN` service binding (`worker/snapshot.ts`), answering a plain 503 without it.
+`wrangler.jsonc` does not declare that binding yet, and the Worker has no Workers Builds trigger,
+so `/main/*` answers the 503. To serve it:
+
+1. Deploy the Worker once by hand: build it
+   (`mise exec -- turbo run build --filter=@www/main.versions.lit-ui-router.dev`), then
+   `pnpm run deploy -- --dry-run` in its package, then without `--dry-run`.
+2. Add `{ "binding": "DOCS_MAIN", "service": "lit-ui-router-docs-main" }` to `services` in the
+   docs site's `wrangler.jsonc`, and drop the cast that reads the binding in `worker/index.ts`. A
+   binding to a Worker the account lacks fails the docs site's deploy, so this follows step 1.
+3. Give the Worker a production trigger on `main` as in [Adding a site](#adding-a-site), with
+   `cloudflare-build.ts main.versions.lit-ui-router.dev` and
+   `cloudflare-deploy.ts main main.versions.lit-ui-router.dev` as its commands, and no preview
+   trigger: a branch has nothing to deploy to it.
+   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
+   requires a preview trigger of every entry, so the Worker has no entry there until that changes.
 
 ### Adding a site
 

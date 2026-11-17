@@ -8,7 +8,7 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 
@@ -18,19 +18,25 @@ import { REDIRECTS } from '../catalog/redirects.ts';
 import { redirectLines } from '../.vitepress/redirects.ts';
 import {
   bakeCanonicals,
+  canonicalProblems,
   finishSnapshot,
   hasSnapshotTag,
+  isLiveSnapshot,
+  snapshotCanonicals,
   snapshotDigest,
+  snapshotNote,
   snapshotPackage,
   snapshotPages,
   SNAPSHOT_TAGS,
   writeSnapshotRules,
 } from '../.vitepress/snapshot.ts';
-import { BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
+import { bannerKind, BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
 
-// Builds a frozen docs snapshot: the whole site at a release tag, under its version's base, into
-// the assets directory of that version's Worker package (www/<id>.versions.lit-ui-router.dev/dist/).
-// Usage: docs-snapshot.ts [version-id] [--bake-only], default v1. --bake-only skips the tag build
+// Builds a docs snapshot: the whole site under its version's base, into the assets directory of
+// that version's Worker package (www/<id>.versions.lit-ui-router.dev/dist/). A version with a
+// snapshot tag is built at that tag in a throwaway worktree; a live one (LIVE_SNAPSHOTS) is built
+// from this checkout.
+// Usage: docs-snapshot.ts [version-id] [--bake-only], default v1. --bake-only skips the site build
 // and redoes the last step on the snapshot already there: its canonical links, _redirects and
 // _headers. That step reads this checkout's built site, so build it first.
 
@@ -105,11 +111,54 @@ const sampleAppAssets = (site: string): string[] =>
     (file) => basename(file),
   );
 
+/** Finishes the build in `out` and moves it to `target`, replacing what was there. */
+async function place(
+  out: string,
+  site: string,
+  path: string,
+  note: string,
+  target: string,
+): Promise<void> {
+  await finishSnapshot(out, path, note, sampleAppAssets(site));
+
+  if (!(await snapshotPages(out)).includes('index.html'))
+    throw new Error(`${out}: no index.html`);
+
+  await rm(target, { recursive: true, force: true });
+  await mkdir(join(target, '..'), { recursive: true });
+  await cp(out, target, { recursive: true });
+}
+
+/** Builds this checkout's site under the version's base into `target`, finished but without canonical links. */
+async function buildHere(
+  path: string,
+  note: string,
+  target: string,
+): Promise<void> {
+  const out = await mkdtemp(join(tmpdir(), 'docs-snapshot-'));
+
+  try {
+    run(PACKAGE, 'pnpm', [
+      'exec',
+      'vitepress',
+      'build',
+      '.',
+      '--base',
+      path,
+      '--outDir',
+      out,
+    ]);
+    await place(out, PACKAGE, path, note, target);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}
+
 /** Builds the tag's site under the version's base into `target`, finished but without canonical links. */
 async function buildAtTag(
   tag: string,
   path: string,
-  label: string,
+  note: string,
   target: string,
 ): Promise<void> {
   const checkout = mkdtempSync(join(tmpdir(), 'docs-snapshot-'));
@@ -152,14 +201,7 @@ async function buildAtTag(
       '--outDir',
       out,
     ]);
-    await finishSnapshot(out, path, label, sampleAppAssets(site));
-
-    if (!(await snapshotPages(out)).includes('index.html'))
-      throw new Error(`${out}: no index.html`);
-
-    await rm(target, { recursive: true, force: true });
-    await mkdir(join(target, '..'), { recursive: true });
-    await cp(out, target, { recursive: true });
+    await place(out, site, path, note, target);
   } finally {
     run(workspaceRoot, 'git', ['worktree', 'remove', '--force', checkout]);
   }
@@ -172,9 +214,9 @@ const main = async (): Promise<void> => {
   const tag = hasSnapshotTag(id) ? SNAPSHOT_TAGS[id] : undefined;
   const version = BUNDLED_MANIFEST.others.find((other) => other.id === id);
 
-  if (!tag || !version) {
+  if (!version || (!tag && !isLiveSnapshot(id))) {
     console.error(
-      `docs-snapshot.ts: no snapshot tag or versions.json entry for ${id}`,
+      `docs-snapshot.ts: no versions.json entry, or neither a snapshot tag nor a live snapshot, for ${id}`,
     );
     process.exitCode = 2;
 
@@ -195,7 +237,16 @@ const main = async (): Promise<void> => {
   const root = join(workspaceRoot, snapshotPackage(id), 'dist');
   const target = join(root, id);
 
-  if (!bakeOnly) await buildAtTag(tag, version.path, version.label, target);
+  const note = snapshotNote(
+    version.label,
+    bannerKind(BUNDLED_MANIFEST, version),
+  );
+
+  if (!bakeOnly) {
+    await (tag
+      ? buildAtTag(tag, version.path, note, target)
+      : buildHere(version.path, note, target));
+  }
 
   if (!existsSync(join(target, 'index.html'))) {
     console.error(
@@ -206,18 +257,32 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  await bakeCanonicals(target, mainBuild, redirectLines(REDIRECTS));
+  const redirects = redirectLines(REDIRECTS);
+
+  await bakeCanonicals(target, mainBuild, redirects);
   await writeSnapshotRules(
     root,
     version.path,
     readFileSync(join(PACKAGE, 'public', '_headers'), 'utf8'),
   );
 
+  // A live snapshot has no committed manifest for the docs build to check, so its targets are checked here, against the build they were resolved from.
+  if (!tag) {
+    const { pages, missing } = await snapshotCanonicals(target, version.path);
+
+    const problems = [
+      ...missing.map((file) => `${file}: no canonical link`),
+      ...canonicalProblems(pages, mainBuild, redirects),
+    ];
+
+    if (problems.length > 0) throw new Error(problems.join('\n'));
+  }
+
   const pages = await snapshotPages(target);
   const { files, bytes } = snapshotDigest(root);
 
   console.log(
-    `${relative(workspaceRoot, root)}: ${tag}, ${pages.length} pages, ${files} files, ${(bytes / 1e6).toFixed(1)} MB`,
+    `${relative(workspaceRoot, root)}: ${tag ?? 'this checkout'}, ${pages.length} pages, ${files} files, ${(bytes / 1e6).toFixed(1)} MB`,
   );
 };
 

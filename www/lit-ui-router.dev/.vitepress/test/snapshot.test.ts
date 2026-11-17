@@ -17,7 +17,11 @@ import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 
 import { REDIRECTS } from '../../catalog/redirects.ts';
 import { GENERATED_PAGES } from '../page-meta.ts';
-import { matchRedirect, redirectLines, SNAPSHOT_PREFIX } from '../redirects.ts';
+import {
+  matchRedirect,
+  redirectLines,
+  SNAPSHOT_PREFIXES,
+} from '../redirects.ts';
 import {
   canonicalOf,
   canonicalPath,
@@ -25,10 +29,13 @@ import {
   hasSnapshotTag,
   htmlPath,
   indexProblems,
+  isLiveSnapshot,
   readSnapshotManifest,
+  snapshotCanonicals,
   snapshotDigest,
   snapshotHeaders,
   snapshotLlmsTxt,
+  snapshotNote,
   snapshotPackage,
   snapshotPages,
   snapshotRedirects,
@@ -40,26 +47,13 @@ import {
   writeSnapshotRules,
 } from '../snapshot.ts';
 import { pageUrl, surfaceOf } from '../surfaces.ts';
+import { withPage } from './with-page.ts';
 import { BUNDLED_MANIFEST, SITE_ORIGIN } from '../versions.ts';
 
 const site = join(import.meta.dirname, '../..');
 
-/** Parses a built page for `check`, then closes its happy-dom window: 400 open windows exhaust the heap. */
-async function withPage(file: string, check: (doc: Document) => void) {
-  const doc = parseHtml(readFileSync(file, 'utf8'));
-
-  try {
-    check(doc);
-  } finally {
-    // SAFETY: parseHtml's document belongs to a happy-dom window, whose happyDOM handle lib.dom doesn't declare.
-    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- happy-dom declares its DOM apart from lib.dom
-    const window = doc.defaultView as unknown as {
-      happyDOM: { close: () => Promise<void> };
-    };
-
-    await window.happyDOM.close();
-  }
-}
+/** The frozen 1.x snapshot's prefix. */
+const SNAPSHOT_PREFIX = '/v1/';
 
 /** A temporary build output holding these files. */
 function outDir(files: Record<string, string> | string[]): string {
@@ -78,11 +72,22 @@ function outDir(files: Record<string, string> | string[]): string {
 }
 
 describe('the version manifest', () => {
-  it('gives every other version a snapshot tag and a path from its id', () => {
+  it('builds every other version from a snapshot tag or from the checkout, at a path from its id', () => {
     for (const { id, path } of BUNDLED_MANIFEST.others) {
-      assert.ok(hasSnapshotTag(id), id);
+      assert.notEqual(hasSnapshotTag(id), isLiveSnapshot(id), id);
       assert.equal(path, `/${id}/`);
     }
+  });
+
+  it('hides the versions built from the checkout, and no frozen one', () => {
+    assert.deepEqual(
+      BUNDLED_MANIFEST.hidden,
+      BUNDLED_MANIFEST.others.map(({ id }) => id).filter(isLiveSnapshot),
+    );
+  });
+
+  it('keeps redirects out of every version prefix', () => {
+    assert.deepEqual(SNAPSHOT_PREFIXES, ['/main/', '/v1/']);
   });
 
   it('serves 1.x at the snapshot prefix', () => {
@@ -137,6 +142,7 @@ describe('unversionWorkerLinks', () => {
     assert.ok(WORKER_MOUNTS.includes('/releases'));
     assert.ok(WORKER_MOUNTS.includes('/app'));
     assert.ok(!WORKER_MOUNTS.includes('/v1'));
+    assert.ok(!WORKER_MOUNTS.includes('/main'));
     assert.ok(WORKER_MOUNTS.every((mount) => !mount.includes('*')));
   });
 });
@@ -159,8 +165,19 @@ describe('snapshotLlmsTxt', () => {
     const text = `# Lit UI Router\n\n> Routing\n\n- [Guide](${SITE_ORIGIN}/guides/a.md): a\n- [Releases](${SITE_ORIGIN}/releases/): r\n`;
 
     assert.equal(
-      snapshotLlmsTxt(text, '/v1/', '1.x'),
+      snapshotLlmsTxt(text, '/v1/', snapshotNote('1.x', 'older')),
       `# Lit UI Router\n\n> These are the 1.x docs, kept as they were at their last release. The latest docs are at ${SITE_ORIGIN}/llms.txt.\n\n> Routing\n\n- [Guide](${SITE_ORIGIN}/v1/guides/a.md): a\n- [Releases](${SITE_ORIGIN}/releases/): r\n`,
+    );
+  });
+});
+
+describe('snapshotLlmsTxt for the unreleased docs', () => {
+  it('names the released docs, and leaves a URL the build already put under the base', () => {
+    const text = `# Lit UI Router\n\n> Routing\n\nurl: ${SITE_ORIGIN}/main/guides/a.md\n- [Guide](${SITE_ORIGIN}/guides/a.md): a\n- [Maintenance](${SITE_ORIGIN}/maintenance.md): m\n`;
+
+    assert.equal(
+      snapshotLlmsTxt(text, '/main/', snapshotNote('main', 'unreleased')),
+      `# Lit UI Router\n\n> These are the unreleased docs, built from main. The released docs are at ${SITE_ORIGIN}/llms.txt.\n\n> Routing\n\nurl: ${SITE_ORIGIN}/main/guides/a.md\n- [Guide](${SITE_ORIGIN}/main/guides/a.md): a\n- [Maintenance](${SITE_ORIGIN}/main/maintenance.md): m\n`,
     );
   });
 });
@@ -208,6 +225,26 @@ describe('withCanonical', () => {
   });
 });
 
+describe('snapshotCanonicals', () => {
+  const page = (href?: string): string =>
+    `<html><head><meta name="generator" content="VitePress 2">${href ? `<link rel="canonical" href="${SITE_ORIGIN}${href}">` : ''}</head></html>`;
+
+  it('maps each page under the base to its canonical target, and lists the pages with none', async () => {
+    const dir = outDir({
+      'index.html': page('/'),
+      'guides/a.html': page('/guides/b'),
+      'guides/bare.html': page(),
+      '404.html': page(),
+      'examples/x/index.html': '<html></html>',
+    });
+
+    assert.deepEqual(await snapshotCanonicals(dir, '/main/'), {
+      pages: { '/main/': '/', '/main/guides/a': '/guides/b' },
+      missing: ['guides/bare.html'],
+    });
+  });
+});
+
 describe("the snapshot Worker's rules", () => {
   it('send each worker mount under the prefix to the mount, statics first', async () => {
     const rules = snapshotRedirects('/v1/');
@@ -228,6 +265,7 @@ describe("the snapshot Worker's rules", () => {
       .trimEnd()
       .split('\n');
 
+    assert.ok(!lines.some((line) => line.startsWith('/v1/main')));
     assert.ok(lines.includes('/v1/releases /releases 301'));
     assert.ok(lines.includes('/v1/releases/* /releases/:splat 301'));
 
@@ -265,20 +303,14 @@ describe('canonicalProblems', () => {
   it('flags a target the main build neither serves nor redirects', () => {
     const dir = outDir(['guides/a.html']);
 
-    const manifest = {
-      tag: 't',
-      files: 0,
-      bytes: 0,
-      sha256: '0'.repeat(64),
-      pages: {
-        '/v1/guides/a': '/guides/a',
-        '/v1/guides/old': '/guides/old',
-        '/v1/guides/gone': '/guides/gone',
-      },
+    const pages = {
+      '/v1/guides/a': '/guides/a',
+      '/v1/guides/old': '/guides/old',
+      '/v1/guides/gone': '/guides/gone',
     };
 
     assert.deepEqual(
-      canonicalProblems(manifest, dir, [
+      canonicalProblems(pages, dir, [
         { from: '/guides/old', to: '/guides/a', status: 301 },
       ]),
       [
@@ -405,15 +437,17 @@ describe(
 );
 
 describe('indexProblems', () => {
-  it('flags a main index that lists a snapshot URL', async () => {
+  it('flags a main index that lists a URL of another version, frozen or unreleased', async () => {
     const dir = outDir({
       'sitemap-pages.xml': `<loc>${SITE_ORIGIN}/v1/guides/a</loc>`,
-      'llms.txt': `- [A](${SITE_ORIGIN}/guides/a.md)`,
-      'llms-full.txt': '',
+      'llms.txt': `- [A](${SITE_ORIGIN}/guides/a.md)\n- [B](${SITE_ORIGIN}/main/guides/b.md)`,
+      'llms-full.txt': `url: ${SITE_ORIGIN}/main/guides/b.md\nurl: ${SITE_ORIGIN}/maintenance.md`,
     });
 
     assert.deepEqual(await indexProblems(BUNDLED_MANIFEST, dir), [
       `sitemap-pages.xml: lists ${SITE_ORIGIN}/v1/`,
+      `llms.txt: lists ${SITE_ORIGIN}/main/`,
+      `llms-full.txt: lists ${SITE_ORIGIN}/main/`,
     ]);
   });
 });

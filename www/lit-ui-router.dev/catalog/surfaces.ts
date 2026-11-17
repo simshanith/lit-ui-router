@@ -83,6 +83,16 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
+    // The unreleased docs, built from main: handed whole to their own Worker, as the frozen 1.x docs are.
+    id: 'snapshot-main',
+    paths: ['/main', '/main/*'],
+    renderer: 'worker',
+    sitemap: false,
+    llms: false,
+    search: false,
+    deadLinks: 'ignore',
+  },
+  {
     id: 'sample-apps',
     paths: [
       '/app',

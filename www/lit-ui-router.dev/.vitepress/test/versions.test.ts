@@ -32,10 +32,25 @@ describe('the bundled manifest', () => {
     assert.equal(BUNDLED_MANIFEST.current.path, '/');
   });
 
-  it('lists 1.x, the one frozen snapshot', () => {
+  it('lists the unreleased docs and 1.x, the one frozen snapshot', () => {
     assert.deepEqual(
       BUNDLED_MANIFEST.others.map(({ id }) => id),
-      ['v1'],
+      ['main', 'v1'],
+    );
+  });
+
+  it('keeps the unreleased docs out of the menu and gives them the unreleased banner', () => {
+    assert.deepEqual(
+      menuVersions(BUNDLED_MANIFEST).map(({ id }) => id),
+      ['latest', 'v1'],
+    );
+    assert.equal(
+      bannerKind(BUNDLED_MANIFEST, versionOf(BUNDLED_MANIFEST, '/main/')),
+      'unreleased',
+    );
+    assert.equal(
+      bannerKind(BUNDLED_MANIFEST, versionOf(BUNDLED_MANIFEST, '/v1/')),
+      'older',
     );
   });
 });

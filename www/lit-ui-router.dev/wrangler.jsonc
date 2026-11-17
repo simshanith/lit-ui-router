@@ -51,6 +51,9 @@
       // The frozen 1.x docs, handed whole to their own Worker.
       "/v1",
       "/v1/*",
+      // The unreleased docs, handed whole to their own Worker.
+      "/main",
+      "/main/*",
     ],
   },
   // Read-only RPC into the release ledger worker; the docs worker holds no D1 binding.

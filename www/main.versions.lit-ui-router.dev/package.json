@@ -1,0 +1,24 @@
+{
+  "name": "@www/main.versions.lit-ui-router.dev",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The unreleased docs: an assets-only Worker the docs worker hands /main/* to, built from main",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @www/lit-ui-router.dev run docs:snapshot main",
+    "deploy": "cf deploy",
+    "format:check:oxfmt": "oxfmt --check \"*.{ts,json,jsonc,md}\"",
+    "format:oxfmt": "oxfmt \"*.{ts,json,jsonc,md}\"",
+    "lint:oxlint": "oxlint .",
+    "test": "pnpm --filter @www/lit-ui-router.dev run test:preview",
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "cf": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
