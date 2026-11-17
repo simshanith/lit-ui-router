@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-11-16",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "K",
+      "desc": "the height ruler steps in round KB per px, so the tallest district stands within 420 px"
+    },
+    {
       "date": "2026-11-15",
       "num": "2C",
       "head": "SHEET 2C",
@@ -2331,7 +2339,7 @@
         "mode": "static",
         "basis": "shipped"
       },
-      "rev": "J",
+      "rev": "K",
       "file": "sheets/9.html",
       "interactive": false,
       "needsCytoscape": false,

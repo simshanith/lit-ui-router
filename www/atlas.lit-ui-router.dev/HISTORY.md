@@ -1922,7 +1922,7 @@ resolved →
 
 ## Sheet 9 — THE SHIPPED CITY
 
-- **file** `diagrams/generator/sheet9.mjs` · **id** `shipped` · **current rev** J
+- **file** `diagrams/generator/sheet9.mjs` · **id** `shipped` · **current rev** K
 - **basis** (source): `const BASIS = `measured at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.commitDate.slice(0, 10)}) · ${PLATE.wasGeneratedBy}`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -2008,8 +2008,15 @@ resolved →
 
 > REV J 2026-11-09: sixteen districts: the release diff client stands in the site's back row, and the apps in front of the chunks
 
+### REV K — 2026-11-16
+
+**REV clause** (the record’s own; the `sub` carries no REV clause):
+
+> REV K 2026-11-16: the height ruler steps in round KB per px, so the tallest district stands within 420 px
+
 **Record notes**
 
+- 2026-11-16, the height ruler, REV K: The user, of district 2: "2 html pages way too tall and dominating now lol". `HT()` divided by a fixed 4,300 bytes, which stood the 4,804 KB html tower about 1,140 px tall in a 1160 × 1710 frame. The ruler takes the smallest step of 4, 5, 6, 8, 10, 12, 15, 20 … KB per px at which the tallest district stands within 420 px: 12 KB per px today, the tower 400 px, the frame 1160 × 967. The SCALE line is lettered from the step (it read "≈ 4.2 KB" by hand). The floor stays 8 px; three of the five apps stand on it.
 - 2026-11-14, the thirtieth cabinet, no rev clause (rev stays J), at origin/main @ aa7f8bfb: the docs deploy is 2,273 files / 11,458,646 gz in 16 districts (was 2,257 / 11,477,628), 0 orphans. No guard threw.
 - 2026-11-12, the twenty-ninth cabinet, no rev clause (rev stays J), at origin/main @ ef074136: `sheet9: the cap of html pages stands outside the 1160 × 1655 frame at 718.9,-30.7` threw: the html tower is 453 files / 4,917,735 gz (was 445 / 4,746,629). The origin derives from the highest cap corner, 24 px inside the frame's top (OY 950 → 1005), and the frame is 48 px taller. The deploy carried `sitemap-pages.xml` (3,222 gz), which the walk filed as an orphan; `sheet 9: the notes say the deploy carries no unreachable file` would have thrown. The probe seeds it with `sitemap.xml` as a platform file and files it with the vp framework (12 files / 305,280 gz). 2,257 files / 11,477,628 gz in 16 districts, 0 orphans.
 - 2026-11-11, the twenty-eighth cabinet, no rev clause (rev stays J), at origin/main @ 33cd7ce1: the deploy carried a root `_redirects` (543 gz), the docs site's redirect table, which the walk filed as an orphan; `sheet 9: the notes say the deploy carries no unreachable file` would have thrown. The probe seeds it with `_headers` as a platform directive and files it with the vp framework (11 files / 296,297 gz). 2,201 files / 11,150,915 gz in 16 districts, 0 orphans; html pages 445 files / 4,746,629 gz.
@@ -2883,6 +2890,7 @@ _No REV clauses in the copy: the sub carries the graph size only. REV B (2026-10
 
 **Record notes**
 
+- 2026-11-16, sheet 9's ruler, no rev clause (rev stays F): sheet 9's `HT()` reads 12 KB per px (was 4.2), and this sheet reads it back: heights stand at the plan's scale, 0.75×, and the frame is 1560 × 2186. No guard threw.
 - 2026-11-14, the thirtieth cabinet, no rev clause (rev stays F), at origin/main @ aa7f8bfb: the docs deploy is 2,273 files at origin/main @ aa7f8bfb; the frame is 3 px shorter. No guard threw.
 - 2026-11-12, the twenty-ninth cabinet, no rev clause (rev stays E), at origin/main @ ef074136: the docs deploy is 2,257 files / 11,477,628 gz in sixteen districts and the sheet draws at 0.76× (was 0.77×), 26 px taller. The atlas deploy: 308 files / 9,554,384 gz at www/atlas @ 909f478c.
 - 2026-11-11, the twenty-eighth cabinet, no rev clause (rev stays E), at origin/main @ 33cd7ce1: the docs deploy is 2,201 files / 11,150,915 gz in sixteen districts and the sheet draws at 0.77× (was 0.78×), 27 px taller. The atlas deploy: 308 files / 9,531,357 gz at www/atlas @ a61ce45e.

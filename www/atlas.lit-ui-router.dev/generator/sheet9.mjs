@@ -45,7 +45,13 @@ const row = (district) => {
 };
 
 export const SIDE = (f) => Math.max(18, 10 * Math.sqrt(f));
-export const HT = (gz) => Math.max(8, gz / 4300);
+// height: the smallest round step of KB per px at which the tallest district stands within TOWER_MAX
+const TOWER_MAX = 420;
+const KB_STEPS = [4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 60, 80, 100];
+const TALLEST_GZ = Math.max(...PLATE.rows.map((r) => r.gz));
+const KB_PER_PX = KB_STEPS.find((k) => TALLEST_GZ / (k * 1024) <= TOWER_MAX);
+if (!KB_PER_PX) throw new Error(`sheet 9: no height step in ${KB_STEPS.join(', ')} KB per px stands ${TALLEST_GZ} gzipped bytes within ${TOWER_MAX} px — extend the list`);
+export const HT = (gz) => Math.max(8, gz / (KB_PER_PX * 1024));
 
 // Manual plan, grouped by role, tall districts in back. [name → x, y]
 const PLAN = {
@@ -229,11 +235,11 @@ ${lines(APPS_S[0] + 22, APPS_S[1] + 20, [`all ${APP_N} apps: ${KB(APPS)} —`, `
 ${leader(APPS_S[0] + 40, APPS_S[1] + 8, ...NEAR_FACE)}
 
 <!-- one short line at the frame's top-right corner, east of the html-pages cap -->
-${txt(1120, 26, 'SCALE — 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
+${txt(1120, 26, `SCALE — 1 px of height = ${KB_PER_PX} KB gzipped`, 'lbls', 'end')}
 </svg>`;
 
 export const sheet9 = {
-  num: 9, id: 'shipped', rev: 'J',
+  num: 9, id: 'shipped', rev: 'K',
   title: 'THE SHIPPED CITY',
   sub: `ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · ${fmt(PLATE.totals.files)} files in ${all.length} districts, ${MB(PLATE.totals.gzBytes)} on the wire, footprint from file count and height from gzipped bytes — ${BASIS}`,
   scale: 'ONE DEPLOY',
