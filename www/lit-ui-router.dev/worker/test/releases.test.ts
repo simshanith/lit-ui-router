@@ -31,6 +31,7 @@ import {
   versionsOf,
 } from '../releases/ledger.ts';
 import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
+import { releaseNotes } from '../../.vitepress/changelog.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { diffUrl } from '../releases/views.ts';
 import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
@@ -1317,6 +1318,136 @@ describe('the /releases pages', () => {
     );
   });
 
+  // A 0.x minor whose changelog section carries the breaking-change heading, built as the docs build builds it.
+  const BREAKING_NOTES = releaseNotes(
+    'ui-router-server',
+    [
+      '# Changelog',
+      '',
+      '## 0.3.0 (2026-01-02)',
+      '',
+      '### ⚠ BREAKING CHANGES',
+      '',
+      '* drop the old option',
+      '',
+      '### Features',
+      '',
+      '* add the new one',
+    ].join('\n'),
+  );
+
+  const breakingPage = async (path: string, ledger = fixtureLedger) => {
+    const response = await serveReleases(
+      new Request(`${ORIGIN}${path}`),
+      ledger,
+      NO_DIFFS,
+      (name) =>
+        Promise.resolve(name === 'ui-router-server' ? BREAKING_NOTES : {}),
+    );
+
+    return parseHtml((await response?.text()) ?? '');
+  };
+
+  it('marks a 0.x minor with a breaking change beside its version on the package page, linking the heading', async () => {
+    const doc = await breakingPage('/releases/ui-router-server/');
+
+    const release = getByRole(doc.body, 'article', {
+      name: '0.3.0 Breaking changes',
+    });
+
+    const mark = within(release).getByRole('link', {
+      name: 'Breaking changes',
+    });
+
+    const target = doc.getElementById(
+      (mark.getAttribute('href') ?? '').slice(1),
+    );
+
+    assert.ok(target && release.contains(target));
+    assert.equal(target.textContent, '⚠ BREAKING CHANGES');
+    assert.equal(
+      within(release).getByRole('heading', {
+        level: 4,
+        name: target.textContent,
+      }),
+      target,
+    );
+  });
+
+  it('marks it under the heading of its version page, linking the heading', async () => {
+    const doc = await breakingPage('/releases/ui-router-server/0.3.0/');
+    const main = getByRole(doc.body, 'main');
+
+    const notice = getAllByRole(main, 'note').find((note) =>
+      /^\s*Breaking\b/.test(note.textContent),
+    );
+
+    assert.ok(notice);
+    assert.equal(
+      getByRole(main, 'heading', { level: 3, name: '⚠ BREAKING CHANGES' }).id,
+      hrefOf(notice, 'breaking changes')?.slice(1),
+    );
+  });
+
+  it('leaves a version without a breaking change, or without a section, unmarked', async () => {
+    for (const path of [
+      '/releases/lit-ui-router/',
+      '/releases/lit-ui-router/?prereleases=show',
+      '/releases/lit-ui-router/1.10.0/',
+      '/releases/lit-ui-router/1.9.0/',
+    ]) {
+      const main = getByRole((await page(path)).body, 'main');
+
+      assert.equal(queryByText(main, /breaking/i), null, path);
+    }
+
+    // The same package and version, its changelog without the section.
+    const bare = getByRole(
+      (await page('/releases/ui-router-server/0.3.0/')).body,
+      'main',
+    );
+
+    assert.equal(queryByText(bare, /breaking/i), null);
+    assert.equal(queryByRole(bare, 'note'), null);
+  });
+
+  it('shows the install command pinned to the exact version, a prerelease included', async () => {
+    for (const version of ['1.10.0', '1.11.0-rc.0']) {
+      const doc = await page(`/releases/lit-ui-router/${version}/`);
+
+      assert.equal(
+        getByText(doc.body, 'Install', { selector: 'dt' }).nextElementSibling
+          ?.textContent,
+        `npm install lit-ui-router@${version}`,
+      );
+    }
+  });
+
+  it("shows a deprecated version's install command under its deprecation", async () => {
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
+    const install = getByText(doc.body, 'Install', { selector: 'dt' });
+
+    assert.equal(
+      install.previousElementSibling?.previousElementSibling?.textContent,
+      'Deprecated',
+    );
+  });
+
+  it('shows no install command for a version npm lacks', async () => {
+    const [base] = FIXTURE_ROWS;
+    assert.ok(base);
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      versions: () => Promise.resolve([{ ...base, npm_integrity: null }]),
+    };
+
+    const doc = await page(`/releases/lit-ui-router/${base.version}/`, ledger);
+
+    getByText(doc.body, 'Not published', { selector: 'dd' });
+    assert.equal(queryByText(doc.body, 'Install', { selector: 'dt' }), null);
+  });
+
   it('shows no notes for a prerelease', async () => {
     const doc = await page('/releases/lit-ui-router/1.11.0-rc.0/');
 
@@ -1664,6 +1795,7 @@ describe('the version page navigation', () => {
       'status',
       'npm',
       'deprecated',
+      'install',
       'tag',
       'diff',
       'files',

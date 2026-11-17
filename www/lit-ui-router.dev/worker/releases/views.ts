@@ -341,6 +341,14 @@ const releaseLinks = (
     }`;
 };
 
+/** The label beside a version whose notes carry a breaking-change heading, linking that heading. */
+const breakingMark = (note: ReleaseNote): TemplateResult | typeof nothing =>
+  note.breaking
+    ? html` <a class="tag breaking" href=${`#${note.breaking}`}
+        >Breaking <span class="visually-hidden">changes</span></a
+      >`
+    : nothing;
+
 /** A version with notes: its heading, date, links and notes. */
 const releaseEntry = (
   router: UIRouter,
@@ -349,7 +357,7 @@ const releaseEntry = (
   note: ReleaseNote,
 ): TemplateResult =>
   html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
-    <h3 id=${anchorOf(row.version)}>${row.version}</h3>
+    <h3 id=${anchorOf(row.version)}>${row.version}${breakingMark(note)}</h3>
     <p class="release-meta">
       ${date(row.npm_published_at ?? note.date)}${releaseLinks(
         router,
@@ -520,6 +528,24 @@ const npmFacts = (row: LedgerVersion): TemplateResult => {
     }`;
 };
 
+/** The install line for a version npm has, pinned exactly; a deprecated version's warning is the fact above it. */
+const installFacts = (row: LedgerVersion): TemplateResult | typeof nothing =>
+  row.npm_integrity === null
+    ? nothing
+    : html`<dt id="install">Install</dt>
+        <dd><code>npm install ${row.name}@${row.version}</code></dd>`;
+
+/** The breaking-change marker of a version whose notes carry the heading, linking that heading. */
+const breakingNotice = (
+  note: ReleaseNote | undefined,
+): TemplateResult | typeof nothing =>
+  note?.breaking
+    ? html`<p class="notice" role="note">
+        <span class="tag breaking">Breaking</span> This version has
+        <a href=${`#${note.breaking}`}>breaking changes</a>.
+      </p>`
+    : nothing;
+
 const tagFacts = (row: LedgerVersion): TemplateResult => {
   const tag = tagOf(row);
 
@@ -670,7 +696,7 @@ export const VersionView: RoutedLitTemplate<{
       { label: row.version },
     ])}
     <h1>${row.name}@${row.version}</h1>
-    ${versionNotices(router, versions, row, latest)}
+    ${versionNotices(router, versions, row, latest)} ${breakingNotice(note)}
     ${
       note
         ? html`<h2 id="notes">Release notes</h2>
@@ -681,7 +707,7 @@ export const VersionView: RoutedLitTemplate<{
     <dl class="facts">
       <dt id="status">Status</dt>
       <dd>${row.status}</dd>
-      ${npmFacts(row)} ${tagFacts(row)}
+      ${npmFacts(row)} ${installFacts(row)} ${tagFacts(row)}
       ${ghFacts(row, note ? 'GitHub release' : 'Release notes')}
       ${diffFacts(versions, row)} ${docsFacts(row.name)}
     </dl>

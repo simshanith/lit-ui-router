@@ -3,7 +3,12 @@ import { join } from 'node:path';
 
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { parseChangelog, preamble } from '@tools/changelog';
+import {
+  BREAKING_HEADING,
+  hasBreakingChanges,
+  parseChangelog,
+  preamble,
+} from '@tools/changelog';
 import MarkdownIt from 'markdown-it';
 import * as v from 'valibot';
 import type { Plugin } from 'vite';
@@ -54,8 +59,33 @@ md.core.ruler.push('same-site-links', (state) => {
   }
 });
 
-/** A release body as HTML, as GitHub renders it. */
-export const renderBody = (body: string): string => md.render(body);
+interface RenderEnv {
+  breakingId?: string;
+}
+
+// The breaking-change heading takes the id the release pages link.
+md.core.ruler.push('breaking-heading-id', (state) => {
+  // SAFETY: renderBody passes every env this instance renders with.
+  const { breakingId } = state.env as RenderEnv;
+
+  if (breakingId === undefined) return;
+
+  state.tokens
+    .find(
+      (token, at) =>
+        token.type === 'heading_open' &&
+        state.tokens[at + 1]?.content === BREAKING_HEADING,
+    )
+    ?.attrSet('id', breakingId);
+});
+
+/** A release body as HTML, as GitHub renders it; `breakingId` becomes the id of its breaking-change heading. */
+export const renderBody = (body: string, breakingId?: string): string =>
+  md.render(body, { breakingId } satisfies RenderEnv);
+
+/** The id a version's breaking-change heading takes, unique on a page that lists every version. */
+export const breakingAnchor = (version: string): string =>
+  `breaking-${version}`;
 
 /** Each package's CHANGELOG.md, keyed by package name; a package without one has none yet. */
 export function changelogFiles(): Map<string, string> {
@@ -98,7 +128,23 @@ export function releaseNotes(name: string, text: string): ReleaseNotes {
       throw new Error(`${name} CHANGELOG.md: two ${version} sections`);
     }
 
-    notes[version] = { date: heading.slice(-11, -1), html: renderBody(body) };
+    const breaking = hasBreakingChanges(body)
+      ? breakingAnchor(version)
+      : undefined;
+
+    const html = renderBody(body, breaking);
+
+    if (breaking !== undefined && !html.includes(` id="${breaking}"`)) {
+      throw new Error(
+        `${name} CHANGELOG.md: ${version}'s breaking-change heading did not render as a heading`,
+      );
+    }
+
+    notes[version] = {
+      date: heading.slice(-11, -1),
+      html,
+      ...(breaking !== undefined && { breaking }),
+    };
   }
 
   return notes;

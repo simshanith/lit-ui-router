@@ -4,8 +4,9 @@ Reads and writes `packages/<pkg>/CHANGELOG.md`, the accumulating release text
 of each published package.
 
 - [`src/changelog.ts`](./src/changelog.ts) (`.`): parse a file into its
-  preamble and `##` sections, extract one version's body, merge sections
-  newest first by semver, and render the file with its fixed preamble.
+  preamble and `##` sections, extract one version's body, tell whether a body
+  carries the breaking-change heading, merge sections newest first by semver,
+  and render the file with its fixed preamble.
 - [`src/write-section.ts`](./src/write-section.ts): adds one version's
   section, every other byte kept; the bump runs it from release-it's
   `after:bump` hook ([Release notes](../../docs/RELEASE.md#release-notes)).

@@ -113,6 +113,24 @@ export function extractSection(
   )?.body;
 }
 
+/** The heading the release tooling writes above a version's breaking changes. */
+export const BREAKING_HEADING = '⚠ BREAKING CHANGES';
+
+const BREAKING_LINE = new RegExp(
+  `^ {0,3}#{1,6}[ \\t]+${BREAKING_HEADING}[ \\t]*$`,
+);
+
+/** Whether a section body carries the breaking-change heading; one inside a code fence is body text. */
+export function hasBreakingChanges(body: string): boolean {
+  let found = false;
+
+  eachLine(body.replace(/\r\n/g, '\n'), (line, fenced) => {
+    found ||= !fenced && BREAKING_LINE.test(line);
+  });
+
+  return found;
+}
+
 /** Newest first by semver; a heading whose first token is not a version sorts last. */
 function compareSections(a: Section, b: Section): number {
   const va = semver.valid(a.version);
