@@ -60,22 +60,30 @@ value type, and the resolves each state's views receive.
 
 ## Exporting spans
 
-`src/app/global/telemetry.ts` gives the devtools Timeline the router's spans. When the build sets
-`VITE_OTLP_TRACES_ENDPOINT`, a full OTLP/HTTP traces URL, it also sends them to that receiver through a
-`BatchSpanProcessor` and the OTLP/HTTP exporter, which load as their own chunk (`otlpExport.ts`).
-`VITE_OTLP_TRACES_HEADERS` adds request headers, as `name=value` pairs joined by commas, the shape of
+`src/app/global/telemetry.ts` gives the devtools Timeline the router's spans, and can send them to an OTLP/HTTP
+receiver too, through a `BatchSpanProcessor` and the OTLP/HTTP exporter, which load as their own chunk
+(`otlpExport.ts`). It takes the receiver from the first of:
+
+1. `globalThis.__OTLP_TRACES__`, set before the app boots: `{ endpoint, headers? }`.
+2. The build variables `VITE_OTLP_TRACES_ENDPOINT` and `VITE_OTLP_TRACES_HEADERS`, for a local or one-off build.
+   Each app's `turbo.json` lists them in its build task's `env`.
+
+The endpoint is a full traces URL. Headers are `name=value` pairs joined by commas, the shape of
 `OTEL_EXPORTER_OTLP_HEADERS`. Each app's `.env` sets `VITE_OTLP_SERVICE_NAME`, the `service.name` of its spans.
-Without an endpoint the exporter chunk is never loaded and nothing is sent; the deployed docs site sets none.
+With neither, the exporter chunk is never loaded and nothing is sent; the deployed docs site sets neither.
 
 The processor sends a batch every few seconds and when the page is hidden, which includes unloading it; the
 exporter sends with `keepalive`, so the request outlives the page. The receiver must allow the page's origin
 through CORS.
 
-Both variables are build inputs: each app's `turbo.json` lists them in its build task's `env`, so a build with
-export never replays one without. The e2e jobs of `.github/workflows/build-test-run.yml` set them from the
-`OTLP_TRACES_ENDPOINT` repository variable and the `OTLP_TRACES_HEADERS_CI` secret, and only when both are set.
-The headers are inlined into the built bundle, which a Playwright trace records with the page's requests, so a
-failed job's `playwright-traces-<group>` artifact carries them: use a send-only key.
+CI builds the apps without either variable, so its builds match the `run` job's and share its cache. The e2e jobs
+of `.github/workflows/build-test-run.yml` set `OTLP_TRACES_ENDPOINT` and `OTLP_TRACES_HEADERS` from the
+`OTLP_TRACES_ENDPOINT` repository variable and the `OTLP_TRACES_HEADERS_CI` secret. When both are set, the app
+suites' `page` fixture (`apps/sample-app-lit-e2e/src/playwright/app/fixtures.ts`) sets `__OTLP_TRACES__` from them in
+an init script. The suite tasks list both in `passThroughEnv`, outside every cache key, so a suite replayed from the
+cache exports nothing. The key is in no built bundle and no cache entry, but a Playwright trace records the init
+script and the requests' headers, so a failed suite's `playwright-traces-<group>` artifact carries it: use an
+ingest-only key.
 
 ## Adding to the shared surface
 

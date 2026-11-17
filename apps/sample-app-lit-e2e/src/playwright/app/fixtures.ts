@@ -30,6 +30,17 @@ export const test = base.extend<{
 
   // hash routing never rewrites location.search, so a query param would pin the flag as URL-overridden
   page: async ({ page, locationPlugin }, use) => {
+    const { OTLP_TRACES_ENDPOINT: endpoint, OTLP_TRACES_HEADERS: headers } =
+      process.env;
+
+    // The app's telemetry reads __OTLP_TRACES__ before its build variables; see sample-app-shared's README.
+    if (endpoint && headers) {
+      await page.addInitScript(
+        (otlp) => Object.assign(globalThis, { __OTLP_TRACES__: otlp }),
+        { endpoint, headers },
+      );
+    }
+
     if (locationPlugin) {
       await page.addInitScript((plugin) => {
         // SAFETY: the app's featureFlags.save writes this key as JSON of the flags
