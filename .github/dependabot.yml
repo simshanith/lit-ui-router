@@ -44,6 +44,9 @@ updates:
       # typedoc and vitepress-plugin-llms pin markdown-it 14; md-content-mapper moves with them
       - dependency-name: 'markdown-it'
         update-types: ['version-update:semver-major']
+      # rc.19 and rc.20 stopped decoding the workers_builds trigger lists (typed `unknown`, snake_case at runtime)
+      - dependency-name: '@distilled.cloud/*'
+        versions: ['1.0.0-rc.19', '1.0.0-rc.20']
     commit-message:
       prefix: 'chore'
       include: 'scope'
