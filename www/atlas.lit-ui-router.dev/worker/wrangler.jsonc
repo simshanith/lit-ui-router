@@ -4,6 +4,7 @@
   "compatibility_date": "2026-11-16",
   "main": "./index.ts",
   "workers_dev": true,
+  "routes": [{ "pattern": "atlas.lit-ui-router.dev", "custom_domain": true }],
   "observability": {
     "enabled": true,
     // Names a destination set up on the account, which holds the endpoint and key.
