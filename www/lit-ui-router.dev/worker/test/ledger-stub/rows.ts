@@ -2,7 +2,11 @@
 import type { VersionRow } from '@tools/release-ledger';
 import { ROWS } from '@tools/release-ledger/fixtures';
 
-import type { LedgerReader, LedgerVersion } from '../../releases/ledger.ts';
+import type {
+  DistTagRow,
+  LedgerReader,
+  LedgerVersion,
+} from '../../releases/ledger.ts';
 
 const releaseUrl = (name: string, version: string) =>
   `https://github.com/simshanith/lit-ui-router/releases/tag/${encodeURIComponent(`${name}@${version}`)}`;
@@ -55,6 +59,34 @@ const latestRow = (name: string): LedgerVersion | null =>
       candidate.name === name && candidate.version === FIXTURE_LATEST.get(name),
   ) ?? null;
 
+const tagRow = (name: string, tag: string, version: string): DistTagRow => ({
+  name,
+  tag,
+  version,
+  updated_at: '2026-01-01T00:00:00.000Z',
+});
+
+/** npm's dist-tags, each package's `latest` among them. */
+export const FIXTURE_TAGS: readonly DistTagRow[] = [
+  ...[...FIXTURE_LATEST].map(([name, version]) =>
+    tagRow(name, 'latest', version),
+  ),
+  tagRow('lit-ui-router', 'next', '1.11.0-rc.0'),
+];
+
+const taggedRow = (name: string, tag: string): LedgerVersion | null => {
+  const tagged = FIXTURE_TAGS.find(
+    (candidate) => candidate.name === name && candidate.tag === tag,
+  );
+
+  return (
+    FIXTURE_ROWS.find(
+      (candidate) =>
+        candidate.name === name && candidate.version === tagged?.version,
+    ) ?? null
+  );
+};
+
 /** A LedgerReader over the fixture rows. */
 export const fixtureLedger: LedgerReader = {
   packages: () =>
@@ -63,8 +95,11 @@ export const fixtureLedger: LedgerReader = {
         .sort()
         .map((name) => ({ name, latest: latestRow(name) })),
     ),
-  tagged: (name, tag) =>
-    Promise.resolve(tag === 'latest' ? latestRow(name) : null),
+  distTags: (name) =>
+    Promise.resolve(
+      FIXTURE_TAGS.filter((candidate) => candidate.name === name),
+    ),
+  tagged: (name, tag) => Promise.resolve(taggedRow(name, tag)),
   versions: (name) =>
     Promise.resolve(
       FIXTURE_ROWS.filter((candidate) => candidate.name === name),

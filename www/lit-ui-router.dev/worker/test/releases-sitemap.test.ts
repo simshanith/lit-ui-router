@@ -194,7 +194,7 @@ describe('the /releases sitemap', () => {
 
     const response = await serveReleases(
       new Request(`${ORIGIN}${SITEMAP}`),
-      { packages: down, tagged: down, versions: down },
+      { packages: down, distTags: down, tagged: down, versions: down },
       NO_DIFFS,
       unreadNotes,
       memory.edge,
@@ -226,6 +226,7 @@ describe('the /releases sitemap', () => {
 
     const response = await via({
       packages: unreachable,
+      distTags: unreachable,
       tagged: unreachable,
       versions: unreachable,
     });

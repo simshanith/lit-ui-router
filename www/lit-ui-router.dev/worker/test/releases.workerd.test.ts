@@ -205,6 +205,18 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
     );
   });
 
+  it('redirects another dist-tag to the version it points at', async () => {
+    const response = await server.fetch('/releases/lit-ui-router/next', {
+      redirect: 'manual',
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get('Location'),
+      '/releases/lit-ui-router/1.11.0-rc.0/',
+    );
+  });
+
   it("redirects /gh latest to that version's GitHub release", async () => {
     const response = await server.fetch(
       '/gh/releases/ui-router-server/latest?ref=badge',
