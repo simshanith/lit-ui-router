@@ -40,7 +40,7 @@ catalog:
   '@opentelemetry/sdk-trace': ^3.1.1
   '@oxlint/plugins': 1.93.0
   '@pierre/diffs': 1.6.4
-  '@pierre/trees': ^1.0.0-beta.6
+  '@pierre/trees': ^1.0.0
   '@playwright/cli': 0.1.23
   '@playwright/test': ^1.65.0
   '@pnpm/logger': 1100.0.0

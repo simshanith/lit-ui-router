@@ -95,8 +95,8 @@ catalogs:
       specifier: 1.6.4
       version: 1.6.4
     '@pierre/trees':
-      specifier: ^1.0.0-beta.6
-      version: 1.0.0-beta.6
+      specifier: ^1.0.0
+      version: 1.0.0
     '@playwright/cli':
       specifier: 0.1.23
       version: 0.1.23
@@ -3553,7 +3553,7 @@ importers:
         version: 1.6.4(@shikijs/themes@4.5.0)
       '@pierre/trees':
         specifier: 'catalog:'
-        version: 1.0.0-beta.6(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
+        version: 1.0.0(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
@@ -5834,8 +5834,8 @@ packages:
       shiki:
         optional: true
 
-  '@pierre/trees@1.0.0-beta.6':
-    resolution: {integrity: sha512-zxeuSFM9TveM7b5XofweJALCtm/tGYV9HZzdbf7Uf+kBxIlUyz24/EHaGRjB0dsmmfDQl2ETz7AWwJ15lhSnpw==}
+  '@pierre/trees@1.0.0':
+    resolution: {integrity: sha512-skHNPs4LK1nScFrSvMwN4LnZyHfFf1M7I9ivWePecFqWSYYJYdgKUFCaxPBL0MPY/Z8c3q0yhl8bkkzdDfotug==}
     peerDependencies:
       react: ^18.3.1 || ^19.0.0
       react-dom: ^18.3.1 || ^19.0.0
@@ -12041,7 +12041,7 @@ snapshots:
       '@shikijs/themes': 4.5.0
       shiki: 4.5.0
 
-  '@pierre/trees@1.0.0-beta.6(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)':
+  '@pierre/trees@1.0.0(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)':
     dependencies:
       '@pierre/theming': 1.0.2(@pierre/theme@2.0.0)(@shikijs/themes@4.5.0)(shiki@4.5.0)
       preact: 11.0.0-beta.0
