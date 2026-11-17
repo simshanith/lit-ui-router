@@ -375,9 +375,12 @@
         // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
         // the sample apps stage READMEs into dist, typedoc writes www api/,
         // docs:release-stubs writes www package-releases/, cf build copies
-        // assets into .cloudflare/
+        // assets into .cloudflare/, pnpm links @playwright/cli's skill into
+        // .agents/skills/ and .claude/skills/
         "!**/dist/**",
         "!**/.cloudflare/**",
+        "!.agents/skills/playwright-cli/**",
+        "!.claude/skills/playwright-cli/**",
         "!www/lit-ui-router.dev/reference/*/**",
         "!www/lit-ui-router.dev/package-releases/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
