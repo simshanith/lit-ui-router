@@ -91,7 +91,8 @@ const headOf = (router: UIRouterLit): PageHead => {
   if (current.name === 'releases')
     return {
       title: 'Releases',
-      description: 'The latest stable release of every lit-ui-router package.',
+      description:
+        'The newest stable releases across the lit-ui-router packages, and the latest stable release of each.',
     };
 
   return {

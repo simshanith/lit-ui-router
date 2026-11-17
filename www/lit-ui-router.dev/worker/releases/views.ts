@@ -248,7 +248,7 @@ const indexPage = (
   )}
 `;
 
-/** `releases`: every package with its latest stable release. */
+/** `releases`: the newest stable releases across packages, then every package with its latest stable release. */
 export const ReleasesView: RoutedLitTemplate<{
   packages: readonly LedgerPackage[];
   recent: readonly LedgerVersion[] | null;
