@@ -19,6 +19,7 @@ This file is an index. The details live in [docs/CONTRIBUTING.md](docs/CONTRIBUT
 - Tooling that can't ask a package manager takes the repo root from `tools/bootstrap/src/root.ts`, never `../..` arithmetic.
 - A new docs example is one entry in `examples/embeds.ts`.
 - `www/lit-ui-router.dev` is the production docs site, deployed by Cloudflare Workers Builds ([www/DEPLOY.md](www/DEPLOY.md)).
+- The Workers under `www/` send traces to Cloudflare and Honeycomb; a new one opts in through its config ([www/OBSERVABILITY.md](www/OBSERVABILITY.md)).
 - Cloudflare account changes go through the `cf` CLI: find the command with `cf cli search "<task>"` (no names or IDs in the query) and run it with `--dry-run` first.
 - CLI scripts under `tools/` use a flat `main` with early exits and a one-line `import.meta.main` guard; see `tools/workers-builds/cloudflare-build.ts`. JSON output takes `--json`/`--json-out` through `tools/cli/src/json-output.ts` ([CONTRIBUTING: JSON output from tools scripts](docs/CONTRIBUTING.md#json-output-from-tools-scripts)).
 - A module goes in `@tools/shared` only when two or more packages import it; with one consumer it lives in that package.
