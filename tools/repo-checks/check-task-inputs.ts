@@ -8,6 +8,8 @@
 // so an unstaged new source file never fails the lane, and only a tracked
 // .gitignore counts as an ignore rule, so no machine's global excludes can
 // reach a verdict CI would not.
+import { lstat } from 'node:fs/promises';
+import { join } from 'node:path';
 import { defaultExec, readExecFailure } from '@tools/shared/exec.ts';
 import {
   auditTaskInputs,
@@ -74,10 +76,21 @@ async function ignoredFiles(
   files: readonly string[],
   tracked: ReadonlySet<string>,
 ): Promise<Set<string>> {
-  const ignored = new Set<string>();
+  const viaLink = new Map<string, string>();
+  const asked = new Set<string>();
 
-  for (let at = 0; at < files.length; at += 500) {
-    const batch = files.slice(at, at + 500);
+  for (const file of files) {
+    const link = await symlinkAncestor(file);
+
+    viaLink.set(file, link);
+    asked.add(link);
+  }
+
+  const queries = [...asked];
+  const answered = new Set<string>();
+
+  for (let at = 0; at < queries.length; at += 500) {
+    const batch = queries.slice(at, at + 500);
 
     const read = await defaultExec(
       'git',
@@ -94,11 +107,47 @@ async function ignoredFiles(
     });
 
     for (const file of repoIgnored(read.stdout, tracked)) {
-      ignored.add(file);
+      answered.add(file);
     }
   }
 
-  return ignored;
+  return new Set(
+    files.filter((file) => answered.has(viaLink.get(file) ?? file)),
+  );
+}
+
+const linkCache = new Map<string, boolean>();
+
+async function isSymlink(path: string): Promise<boolean> {
+  const cached = linkCache.get(path);
+
+  if (cached !== undefined) return cached;
+
+  const link = await lstat(join(workspaceRoot, path)).then(
+    (stats) => stats.isSymbolicLink(),
+    () => false,
+  );
+
+  linkCache.set(path, link);
+
+  return link;
+}
+
+/**
+ * The outermost symlinked directory on `file`'s path, or `file` itself. turbo
+ * hashes files behind an in-repo symlink under the link's path, which git
+ * refuses to judge ("beyond a symbolic link"), so the link answers for them.
+ */
+async function symlinkAncestor(file: string): Promise<string> {
+  const parts = file.split('/');
+
+  for (let depth = 1; depth < parts.length; depth++) {
+    const prefix = parts.slice(0, depth).join('/');
+
+    if (await isSymlink(prefix)) return prefix;
+  }
+
+  return file;
 }
 
 const main = async (): Promise<void> => {
