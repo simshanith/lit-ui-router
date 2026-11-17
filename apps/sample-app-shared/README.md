@@ -80,7 +80,8 @@ CI builds the apps without either variable, so its builds match the `run` job's 
 of `.github/workflows/build-test-run.yml` set `OTLP_TRACES_ENDPOINT` and `OTLP_TRACES_HEADERS` from the
 `OTLP_TRACES_ENDPOINT` repository variable and the `OTLP_TRACES_HEADERS_CI` secret. When both are set, the app
 suites' `page` fixture (`apps/sample-app-lit-e2e/src/playwright/app/fixtures.ts`) sets `__OTLP_TRACES__` from them in
-an init script. The suite tasks list both in `passThroughEnv`, outside every cache key, so a suite replayed from the
+an init script. Playwright closes a test's context without hiding its page, so the fixture's teardown calls
+`__OTLP_TRACES__.flush`, which the app sets once it exports, to send the spans still batched. The suite tasks list both in `passThroughEnv`, outside every cache key, so a suite replayed from the
 cache exports nothing. After the key is added or changed, a run of `build-test.yml` with its `force` input reruns
 the suites and shows whether spans arrive. The key is in no built bundle and no cache entry, but a Playwright trace records the init
 script and the requests' headers, so a failed suite's `playwright-traces-<group>` artifact carries it: use an
