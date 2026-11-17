@@ -56,6 +56,8 @@ interface ResolvesOf {
   'releases.package.diff': { compare: string };
   'releases.package.compare': {
     pair: PublishedPair;
+    versions: LedgerVersion[];
+    notes: ReleaseNotes;
   };
   'releases.package.compare.index': { index: DiffIndex };
   'releases.package.compare.files': { files: ReadableStream<Uint8Array> };
@@ -214,8 +216,12 @@ const presetOf = (trans: Transition): FileFilter => {
 const patchFilename = ({ from, to }: PublishedPair): string =>
   `${to.name.replace('/', '-')}-${from.version}...${to.version}.patch`;
 
-/** The pages that show notes; the diff routes below the package never read them. */
-const SHOWS_NOTES = new Set(['releases.package', 'releases.package.version']);
+/** The pages that show notes; the redirects and data routes below the package never read them. */
+const SHOWS_NOTES = new Set([
+  'releases.package',
+  'releases.package.version',
+  'releases.package.compare',
+]);
 
 const notesResolve = (notes: NotesReader) => ({
   token: 'notes',
@@ -370,7 +376,7 @@ export const releaseResponses = {
     ),
 } satisfies ResponseHandlers<Route, ResolvesOf>;
 
-/** The states of the tree at `mount` for one request, reading `ledger`, the package and version pages' `notes` and, for the diff page's data, `diffs`. */
+/** The states of the tree at `mount` for one request, reading `ledger`, the package, version and compare pages' `notes` and, for the diff page's data, `diffs`. */
 export const releaseStates = (
   mount: string,
   ledger: LedgerReader,
