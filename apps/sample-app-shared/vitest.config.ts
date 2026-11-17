@@ -10,13 +10,19 @@ interface CollectedRequest {
   body: string;
 }
 
-const collected: CollectedRequest[] = [];
+interface Collector {
+  server: Server;
+  requests: CollectedRequest[];
+}
 
-let collector: Server | undefined;
+// One per project, since the browser instances of a run share this module.
+const collectors = new Map<string, Collector>();
 
 // An OTLP/HTTP receiver on the test host; the page is another origin, so it answers CORS preflights.
-const startOtlpCollector: BrowserCommand = async () => {
-  collector ??= createServer((request, response) => {
+const startOtlpCollector: BrowserCommand = async ({ project }) => {
+  const requests: CollectedRequest[] = [];
+
+  const server = createServer((request, response) => {
     const chunks: Buffer[] = [];
 
     response.setHeader('access-control-allow-origin', '*');
@@ -25,7 +31,7 @@ const startOtlpCollector: BrowserCommand = async () => {
     request.on('data', (chunk: Buffer) => chunks.push(chunk));
     request.on('end', () => {
       if (request.method === 'POST') {
-        collected.push({
+        requests.push({
           headers: request.headers,
           body: Buffer.concat(chunks).toString('utf8'),
         });
@@ -36,24 +42,24 @@ const startOtlpCollector: BrowserCommand = async () => {
     });
   });
 
-  if (!collector.listening) {
-    await new Promise<void>((resolve) =>
-      collector?.listen(0, '127.0.0.1', resolve),
-    );
-  }
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  collectors.set(project.name, { server, requests });
 
   // SAFETY: a server listening on a TCP port reports an AddressInfo
-  const { port } = collector.address() as AddressInfo;
+  const { port } = server.address() as AddressInfo;
 
   return `http://127.0.0.1:${port}/v1/traces`;
 };
 
-const takeOtlpRequests: BrowserCommand = () => collected.splice(0);
+const takeOtlpRequests: BrowserCommand = ({ project }) =>
+  collectors.get(project.name)?.requests.splice(0) ?? [];
 
-const stopOtlpCollector: BrowserCommand = async () => {
-  collected.length = 0;
+const stopOtlpCollector: BrowserCommand = async ({ project }) => {
+  const collector = collectors.get(project.name);
+
+  collectors.delete(project.name);
   await new Promise<void>((resolve) =>
-    collector?.listening ? collector.close(() => resolve()) : resolve(),
+    collector ? collector.server.close(() => resolve()) : resolve(),
   );
 };
 

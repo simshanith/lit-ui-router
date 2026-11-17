@@ -9,6 +9,7 @@
     "build:vanilla": {
       "env": [
         "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
+        "VITE_OTLP_SERVICE_NAME",
         "VITE_OTLP_TRACES_ENDPOINT",
         "VITE_OTLP_TRACES_HEADERS",
         "VITE_SAMPLE_APP_BASE_URL",
@@ -20,6 +21,7 @@
     "build:hash": {
       "env": [
         "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
+        "VITE_OTLP_SERVICE_NAME",
         "VITE_OTLP_TRACES_ENDPOINT",
         "VITE_OTLP_TRACES_HEADERS",
         "VITE_SAMPLE_APP_BASE_URL",
