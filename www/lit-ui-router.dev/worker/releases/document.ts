@@ -53,7 +53,7 @@ ${head.script ? html`<script type="module" src=${head.script}></script>` : ''}
 
 // oxfmt-ignore
 const closing = html`</div></main>
-<footer class="content-grid"><p>Read from the <a href="/site/#the-release-ledger">release ledger</a>. Release notes live on <a href="https://github.com/simshanith/lit-ui-router/releases">GitHub</a>.</p></footer>
+<footer class="content-grid"><p>Read from the <a href="/site/#the-release-ledger">release ledger</a>, with release notes from each package's changelog. Every release is also on <a href="https://github.com/simshanith/lit-ui-router/releases">GitHub</a>.</p></footer>
 </body>
 </html>
 `;
