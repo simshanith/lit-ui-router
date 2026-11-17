@@ -1141,11 +1141,9 @@ sitting); order is dependency order.
 
 **The site, the app and the artifact**
 
-- The atlas is LIVE at <https://atlas.lit-ui-router.dev/> — a Cloudflare Pages project
-  (`altitude-atlas`, production branch `www/atlas`, direct upload). Refresh
-  cycle from `www/atlas.lit-ui-router.dev/`: `node generator/build.mjs .` → `npm --prefix app run build` →
-  `node generator/stage-site.mjs` → `wrangler pages deploy dist --project-name
-  altitude-atlas`. The atlas is promoted into `www/` as an example that became a site, and it
+- The atlas is LIVE at <https://atlas.lit-ui-router.dev/> — a Cloudflare Worker
+  (`altitude-atlas`, static assets, deployed from `www/atlas`). The refresh cycle is
+  `generator/ship.mjs`, in the order [docs/SHIPPING.md](docs/SHIPPING.md) gives. The atlas is promoted into `www/` as an example that became a site, and it
   merges to main as one squash PR. After that it is ordinary PR work like every other tree here.
 - The routed app owns `/`; the flat set is staged under `/set/`. ONE base constant,
   `app/src/routes.ts` (MOUNT/BASE/SET + the `href` table), is imported by vite's `base`,

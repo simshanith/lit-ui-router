@@ -57,7 +57,7 @@ mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs build     # the
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs app       # typecheck, then the vite build and prerender
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs audit     # the frame audit, then light and dark photographs under tmp/shots/
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs stage     # dist/: the app at /, its _redirects merged
-mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs deploy    # the branch, tree and kit checks, then the Pages upload
+mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs deploy    # the branch, tree and kit checks, then the Worker upload
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs verify    # two live fetches agree; seven status codes match
 mise exec -- node www/atlas.lit-ui-router.dev/generator/ship.mjs artifact  # the single-file build published as a claude.ai Artifact
 ```

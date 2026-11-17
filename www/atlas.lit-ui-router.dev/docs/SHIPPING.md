@@ -10,8 +10,8 @@ them, and the traps of the shell they run in. Paths are relative to this directo
 - The atlas lives on `www/atlas`, a long-lived branch off `main`. `main` merges in; nothing merges
   back. [www/DEPLOY.md](../../DEPLOY.md) names the branch and the site on `main`.
 - There are no PRs on this branch. Commits land straight on `www/atlas` from the owning worktree,
-  and a push deploys nothing: the Pages project `altitude-atlas` takes direct uploads, with
-  `www/atlas` as its production branch.
+  and a push deploys nothing: the Worker `altitude-atlas` is deployed by hand from the owning
+  worktree.
 - Two rulesets guard `refs/heads/www/atlas`: deletion, non-fast-forward and creation with no
   bypass; update with an admin bypass. Only the owner pushes.
 - `app/` is a plain npm project outside the pnpm workspace. It pins the published packages
@@ -75,8 +75,8 @@ are done by hand between the steps.
    and no GA tag. The stager also writes the 301 rules that land every retired `/set/…` and
    root `sheet-*.html` URL on its bare plate `/plate/<num>`, and `/set/` on `/`; its log
    names the kit and the redirect rule count.
-7. **`deploy`** runs `check` first, then the Pages upload to `altitude-atlas` on branch
-   `www/atlas`, and prints the deployment URL. `check` stops unless the branch is `www/atlas`,
+7. **`deploy`** runs `check` first, then uploads `dist/` to the Worker `altitude-atlas`, and
+   prints its `workers.dev` URL and the version id. `check` stops unless the branch is `www/atlas`,
    the atlas tree is clean, HEAD is on origin, and `dist/city/index.html` carries `typekit` and
    no `fonts.googleapis`; it also runs alone as `check`. "Deployment complete" names the
    upload, not the tree, which is why the check gates it. The deploy stands alone in its Bash
@@ -84,8 +84,8 @@ are done by hand between the steps.
 8. **`verify [--page <path> --marker <text>]`** fetches the page twice; both fetches carry
    `typekit` and agree on the change's marker, and `/`, `/sheet/7/`, `/sheet/2a`, a retired
    `/set/` URL and `/sheet/99` answer with the codes the step lists. The first fetch after a
-   deploy can read the previous deploy; a stop on disagreement is rerun once, and the
-   deployment's own `*.altitude-atlas.pages.dev` URL answers at once.
+   deploy can read the previous deploy; a stop on disagreement is rerun once. `--site <url>`
+   runs the same checks against another origin, such as the Worker's `workers.dev` URL.
 9. **`artifact`** builds `app/dist-artifact/index.html`, the condensed atlas: the gallery and the
    colophon, every plate a link out to the live site; then publish it with the Artifact tool
    by `url` (`https://claude.ai/artifact/JpLqLDXLwY8nwKByiLx5V4`), a short `label`, no icon.
@@ -94,12 +94,10 @@ are done by hand between the steps.
 
 ## The Worker
 
-`deploy-worker` uploads the same staged `dist/` to the Worker `altitude-atlas`, described by
-[worker/wrangler.jsonc](../worker/wrangler.jsonc). It runs `check` first, as `deploy` does, and
-prints the Worker's `workers.dev` URL; `verify --site <url>` runs the live checks against that
-origin. The Worker's entry passes every request to the assets, so a request has a trace, and the
-config names the account's trace destination. `atlas.lit-ui-router.dev` is the Pages project's
-domain, and `deploy` is the step that changes the live site.
+The Worker `altitude-atlas`, described by [worker/wrangler.jsonc](../worker/wrangler.jsonc),
+serves the staged `dist/` as static assets, with its `_headers` and `_redirects`, at
+`atlas.lit-ui-router.dev`, the config's custom domain. The Worker's entry passes every request
+to the assets, so a request has a trace, and the config names the account's trace destination.
 
 ## Records
 
@@ -168,7 +166,7 @@ A shipment is done when all of these hold:
   or its viewer moved.
 - Every photograph in `tmp/shots/<tag>/` has been read, light and dark; a layout or type
   change also has a before tag to set beside it, at the layout's seam widths.
-- `ship.mjs deploy` exits 0, its check passed, and prints a `*.altitude-atlas.pages.dev` URL.
+- `ship.mjs deploy` exits 0, its check passed, and prints the Worker's URL and a version id.
 - `ship.mjs verify --page <path> --marker <text>` exits 0 for the change's own marker.
 - The Artifact publish result names a new version at the same URL.
 - HISTORY.md carries the dated line (and the REV subhead when the letter moved); the hub line

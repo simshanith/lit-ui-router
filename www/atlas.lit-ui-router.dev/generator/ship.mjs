@@ -13,8 +13,7 @@
 //   stage                 stage-site.mjs; stops unless the Adobe Fonts kit is on every page
 //   check                 the gate the deploy runs first: branch www/atlas, tree clean, HEAD on
 //                         origin, dist/city/index.html carries typekit and no Google font link
-//   deploy                check, then the Pages upload; prints the deployment URL
-//   deploy-worker         check, then the same dist to the Worker in worker/wrangler.jsonc; prints its URL
+//   deploy                check, then dist to the Worker in worker/wrangler.jsonc; prints its URL
 //   verify [--page p --marker m --site url]   two live fetches must agree on the marker and on
 //                         typekit; seven status codes must match; --site names another origin
 //   artifact              the single-file build for the claude.ai Artifact
@@ -34,7 +33,6 @@ const DIST = join(ATLAS, 'dist');
 const STATE = join(ATLAS, 'tmp', 'ship');
 const BRANCH = 'www/atlas';
 const SITE = 'https://atlas.lit-ui-router.dev';
-const PROJECT = 'altitude-atlas';
 const WORKER_CONFIG = join(ATLAS, 'worker', 'wrangler.jsonc');
 
 const [STEP, ...ARGV] = process.argv.slice(2);
@@ -128,20 +126,13 @@ const STEPS = {
 
   deploy() {
     const head = STEPS.check();
-    const out = read('pnpm', ['exec', 'wrangler', 'pages', 'deploy', 'dist', '--project-name', PROJECT, '--branch', BRANCH, '--commit-dirty=true'], ATLAS);
-    const url = /https:\/\/[a-z0-9]+\.altitude-atlas\.pages\.dev/.exec(out)?.[0];
-    if (!url) stop('no deployment URL in the wrangler output');
-    remember({ deployed: head, deployment: url, at: new Date().toISOString() });
-    say(`deployed ${head.slice(0, 8)} → ${url}`);
-  },
-
-  'deploy-worker'() {
-    const head = STEPS.check();
     const out = read('pnpm', ['exec', 'wrangler', 'deploy', '--config', WORKER_CONFIG, '--message', head.slice(0, 8)], ATLAS);
     const url = /https:\/\/altitude-atlas\.[a-z0-9-]+\.workers\.dev/.exec(out)?.[0];
     if (!url) stop('no workers.dev URL in the wrangler output');
-    remember({ workerDeployed: head, worker: url, workerAt: new Date().toISOString() });
-    say(`deployed ${head.slice(0, 8)} → ${url}`);
+    const version = /Current Version ID: ([0-9a-f-]+)/.exec(out)?.[1];
+    if (!version) stop('no version id in the wrangler output');
+    remember({ deployed: head, deployment: url, version, at: new Date().toISOString() });
+    say(`deployed ${head.slice(0, 8)} → ${url} · version ${version}`);
   },
 
   async verify() {

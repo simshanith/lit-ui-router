@@ -1,6 +1,6 @@
 // SHIP-GUARD — a Claude Code PreToolUse hook on Bash. It reads the tool call on
 // stdin and denies two commands that have one sanctioned road:
-//   a wrangler Pages deploy that is not `generator/ship.mjs deploy`, whose check
+//   a wrangler deploy that is not `generator/ship.mjs deploy`, whose check
 //   step is the only thing standing between a raw app/dist and the live site;
 //   a force-push to www/atlas, which the branch ruleset forbids for everyone.
 // Everything else passes without a word. Wired in .claude/settings.json.

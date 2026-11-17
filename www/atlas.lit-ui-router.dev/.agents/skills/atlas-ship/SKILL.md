@@ -1,6 +1,6 @@
 ---
 name: atlas-ship
-description: Ship a change to the Altitude Atlas (www/atlas.lit-ui-router.dev on branch www/atlas) — a sheet, the app, the generator or HISTORY.md — through build, audit, commit, push, stage, Pages deploy, live verify and the Artifact republish. Use whenever atlas work is ready to go up, and as the unattended checklist for a run with nobody watching.
+description: Ship a change to the Altitude Atlas (www/atlas.lit-ui-router.dev on branch www/atlas) — a sheet, the app, the generator or HISTORY.md — through build, audit, commit, push, stage, Worker deploy, live verify and the Artifact republish. Use whenever atlas work is ready to go up, and as the unattended checklist for a run with nobody watching.
 ---
 
 # Ship the atlas
@@ -36,5 +36,5 @@ is a stop: report its `STOP —` line and the log path.
 A ship-guard or classifier denial is reported to the user, never routed around. Subagents stop
 after step 3 and report; the main session runs 4 to 10.
 
-Report: the commit sha, the deployment URL, the Artifact version, the audit TOTAL line, the
+Report: the commit sha, the Worker version id, the Artifact version, the audit TOTAL line, the
 `ship app` counts, and any stop with the log path that shows it.
