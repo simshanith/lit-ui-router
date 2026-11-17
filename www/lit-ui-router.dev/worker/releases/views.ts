@@ -189,15 +189,44 @@ const packageRow = (
     <td>${date(row?.npm_published_at ?? null)}</td>
   </tr>`;
 
+const recentRow = (router: UIRouter, row: LedgerVersion): TemplateResult =>
+  html`<li>
+    <a href=${versionHref(router, row)}
+      ><span class="recent-package">${row.name}</span>
+      <span class="recent-version">${row.version}</span></a
+    >
+    ${date(row.npm_published_at)}
+  </li>`;
+
+/**
+ * The `releases` state's recent list: the newest stable releases across packages, newest first, as
+ * many as the state's `recent` param asked for. Each row links its version page. Renders nothing
+ * while the ledger cannot list them. It reads only its own resolve, so it renders on its own too.
+ */
+export const RecentReleasesView: RoutedLitTemplate<{
+  recent: readonly LedgerVersion[] | null;
+}> = ({ router, resolves: { recent } }) =>
+  recent === null || recent.length === 0
+    ? html``
+    : html`<section class="recent" aria-labelledby="recent">
+        <h2 id="recent">Recent releases</h2>
+        <ol>
+          ${recent.map((row) => recentRow(router, row))}
+        </ol>
+      </section>`;
+
 const indexPage = (
   router: UIRouter,
   packages: readonly LedgerPackage[],
+  recent: TemplateResult,
 ): TemplateResult => html`
   <h1>Releases</h1>
   <p>
-    The latest stable release of each package, as the release ledger records it,
-    grouped by role. Each package lists every version it has released.
+    The newest stable releases across packages, then the latest stable release
+    of each package, as the release ledger records it, grouped by role. Each
+    package lists every version it has released.
   </p>
+  ${recent}
   ${byRole(packages).map(
     ({ id, label, packages: group }) => html`
       <h2 id=${id}>${label}</h2>
@@ -222,8 +251,15 @@ const indexPage = (
 /** `releases`: every package with its latest stable release. */
 export const ReleasesView: RoutedLitTemplate<{
   packages: readonly LedgerPackage[];
-}> = ({ router, resolves }) =>
-  isLeaf(router, 'releases') ? indexPage(router, resolves.packages) : uiView();
+  recent: readonly LedgerVersion[] | null;
+}> = (props) =>
+  isLeaf(props.router, 'releases')
+    ? indexPage(
+        props.router,
+        props.resolves.packages,
+        RecentReleasesView(props),
+      )
+    : uiView();
 
 const versionOptions = (
   versions: readonly LedgerVersion[],

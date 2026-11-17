@@ -17,6 +17,7 @@ import {
   findLedger,
   findPackages,
   findPublishRun,
+  findRecent,
   findTagged,
   findVersions,
   type LedgerPackage,
@@ -88,6 +89,17 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
     return run(
       'ledger.reader.packages',
       findPackages.pipe(Effect.provide(database(this.env))),
+    );
+  }
+
+  /**
+   * The newest stable versions npm has published, across packages, newest first by npm publish time; at most `limit`.
+   * Stable only: prereleases and canaries are left out.
+   */
+  recent(limit: number): Promise<readonly LedgerVersion[]> {
+    return run(
+      'ledger.reader.recent',
+      findRecent({ limit }).pipe(Effect.provide(database(this.env))),
     );
   }
 }

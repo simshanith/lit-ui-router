@@ -220,6 +220,7 @@ describe('the diff page data routes at the edge', () => {
         distTags: () => Promise.reject(new Error('ledger read')),
         tagged: () => Promise.reject(new Error('ledger read')),
         versions: () => Promise.reject(new Error('ledger read')),
+        recent: () => Promise.reject(new Error('ledger read')),
       },
       second.diffs,
       unreadNotes,

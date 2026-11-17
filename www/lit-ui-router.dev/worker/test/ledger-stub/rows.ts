@@ -123,4 +123,20 @@ export const fixtureLedger: LedgerReader = {
         ? FIXTURE_RUN.run
         : null,
     ),
+  recent: (limit) =>
+    Promise.resolve(
+      FIXTURE_ROWS.filter(
+        ({ version, npm_published_at }) =>
+          !version.includes('-') && npm_published_at !== null,
+      )
+        .sort(
+          (a, b) =>
+            (b.npm_published_at ?? '').localeCompare(
+              a.npm_published_at ?? '',
+            ) ||
+            a.name.localeCompare(b.name) ||
+            a.version.localeCompare(b.version),
+        )
+        .slice(0, limit),
+    ),
 };

@@ -31,6 +31,11 @@ export interface LedgerReader {
   versions(name: string): Promise<readonly LedgerVersion[]>;
   /** The run that published a version, or null for one no run claimed; a ledger deployed before the method has none. */
   publishRun?(name: string, version: string): Promise<PublishRun | null>;
+  /**
+   * The newest stable versions npm has published, across packages, newest first by npm publish time; at most `limit`.
+   * Stable only: prereleases and canaries are left out, as on the rest of `/releases/`.
+   */
+  recent(limit: number): Promise<readonly LedgerVersion[]>;
 }
 
 /** A package's npm dist-tags, by the version each points at. */
@@ -234,6 +239,23 @@ export const publishRunOf =
       // A service binding's stub has every method, so a ledger without this one rejects the call.
       console.warn(`no publish run for ${pkg}@${version}`, error);
 
+      return null;
+    }
+  };
+
+/**
+ * The newest stable releases across packages, newest first by npm publish time, at most `limit` of them.
+ * Stable only, whatever the ledger answers. Null when the ledger cannot answer, a deployed ledger
+ * without the query among the reasons, so the page that lists them renders without the list.
+ */
+export const recentOf =
+  (ledger: LedgerReader) =>
+  async ({ limit }: { limit: number }): Promise<LedgerVersion[] | null> => {
+    try {
+      const rows = await ledger.recent(limit);
+
+      return rows.filter(({ version }) => isStable(version)).slice(0, limit);
+    } catch {
       return null;
     }
   };

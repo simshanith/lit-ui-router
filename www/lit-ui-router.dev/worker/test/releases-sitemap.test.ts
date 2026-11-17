@@ -194,7 +194,13 @@ describe('the /releases sitemap', () => {
 
     const response = await serveReleases(
       new Request(`${ORIGIN}${SITEMAP}`),
-      { packages: down, distTags: down, tagged: down, versions: down },
+      {
+        packages: down,
+        distTags: down,
+        tagged: down,
+        versions: down,
+        recent: down,
+      },
       NO_DIFFS,
       unreadNotes,
       memory.edge,
@@ -229,6 +235,7 @@ describe('the /releases sitemap', () => {
       distTags: unreachable,
       tagged: unreachable,
       versions: unreachable,
+      recent: unreachable,
     });
 
     assert.equal(response?.status, 200);

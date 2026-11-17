@@ -15,8 +15,17 @@ export const urlConfig = {
   trailingSlash: { pages: 'always' },
 } as const satisfies RouterUrlConfig;
 
+/** The param that sets how many releases the `releases` state's recent list holds; no url carries it. */
+export const RECENT_PARAM = 'recent';
+
+export const DEFAULT_RECENT = 10;
+
 export const releaseRoutes = [
-  { name: 'releases', url: '' },
+  {
+    name: 'releases',
+    url: '',
+    params: { [RECENT_PARAM]: { value: DEFAULT_RECENT } },
+  },
   { name: 'releases.sitemap', url: '/sitemap.xml', response: true },
   {
     name: 'releases.package',

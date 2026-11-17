@@ -133,6 +133,30 @@ export const findPackages = Effect.gen(function* () {
   }));
 });
 
+/** The most `recent` reads at once; a larger or malformed limit reads this many, or one. */
+export const RECENT_MAX = 100;
+
+const Limit = Schema.Struct({ limit: Schema.Number });
+
+/**
+ * The newest stable versions npm has published, across packages, newest first by npm publish time.
+ * Stable only: a version with a prerelease identifier, a canary among them, is left out.
+ */
+export const findRecent = (request: typeof Limit.Type) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+
+    return yield* SqlSchema.findAll({
+      Request: Limit,
+      Result: LedgerVersionSchema,
+      execute: ({ limit }) =>
+        sql`${sql.literal(LEDGER_VERSIONS)}
+            WHERE npm_published_at IS NOT NULL AND version NOT LIKE '%-%'
+            ORDER BY npm_published_at DESC, name, version
+            LIMIT ${Math.min(Math.max(Math.trunc(limit) || 1, 1), RECENT_MAX)}`,
+    })(request);
+  });
+
 /** Every version with its derived states and every dist-tag, as the reconcile check reads them. */
 export const findLedger = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
