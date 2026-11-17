@@ -41,6 +41,9 @@ on:
         required: false
       CODECOV_TOKEN:
         required: false
+      # Headers for the e2e builds' OTLP span export; with no secret (forks, Dependabot) export stays off.
+      OTLP_TRACES_HEADERS_CI:
+        required: false
 
 # Standard husky CI setup: skip the prepare-script git-hook install on CI
 # installs. Caller-level `env` does not reach a called workflow, so this is set
@@ -378,9 +381,16 @@ jobs:
         continue-on-error: true
         run: |
           read -ra suites <<< "$SUITES"
+          # Unset, not empty, so a build without export hashes as the run job's does.
+          if [[ -z "$VITE_OTLP_TRACES_ENDPOINT" || -z "$VITE_OTLP_TRACES_HEADERS" ]]; then
+            unset VITE_OTLP_TRACES_ENDPOINT VITE_OTLP_TRACES_HEADERS
+          fi
           mise run test_e2e "${suites[@]}"
         env:
           SUITES: ${{ join(matrix.group, ' ') }}
+          # The sample apps export their spans over OTLP when the build sees both.
+          VITE_OTLP_TRACES_ENDPOINT: ${{ vars.OTLP_TRACES_ENDPOINT }}
+          VITE_OTLP_TRACES_HEADERS: ${{ secrets.OTLP_TRACES_HEADERS_CI }}
           TURBO_OUTPUT_LOGS: errors-only
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
