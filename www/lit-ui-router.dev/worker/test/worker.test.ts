@@ -108,6 +108,9 @@ const env: Env = {
   // SAFETY: these mounts never reach the snapshot; a call would throw on the missing method.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
   DOCS_V1: {} as unknown as Env['DOCS_V1'],
+  // SAFETY: as DOCS_V1.
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
+  DOCS_MAIN: {} as unknown as Env['DOCS_MAIN'],
   ASSETS: {
     connect: () => {
       throw new Error('the assets binding has no sockets');

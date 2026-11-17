@@ -158,7 +158,7 @@ describe('the docs worker', () => {
     assert.equal(seen.length, 3);
   });
 
-  it('hands /main and every /main/ path to its own binding, and answers 503 while it has none', async () => {
+  it('hands /main and every /main/ path to its own binding, and answers 503 without one', async () => {
     const v1 = fakeBinding(() => Promise.resolve(new Response('v1')));
 
     const main = fakeBinding((request) =>
@@ -176,7 +176,7 @@ describe('the docs worker', () => {
       DOCS_MAIN: main.binding,
     } as unknown as Env;
 
-    // SAFETY: as above, without the binding wrangler.jsonc does not declare yet.
+    // SAFETY: as above, without the binding, as a deploy that lacks it would run.
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a one-binding object shares too few members with Env for one assertion
     const unbound = { DOCS_V1: v1.binding } as unknown as Env;
 

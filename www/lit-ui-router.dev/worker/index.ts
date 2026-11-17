@@ -69,8 +69,7 @@ export default {
     if (snapshot) {
       const bindings: Record<SnapshotId, SnapshotBinding | undefined> = {
         v1: env.DOCS_V1,
-        // SAFETY: wrangler.jsonc declares DOCS_MAIN once its Worker exists (www/DEPLOY.md); until then it is undefined.
-        main: (env as Env & { DOCS_MAIN?: SnapshotBinding }).DOCS_MAIN,
+        main: env.DOCS_MAIN,
       };
 
       return serveSnapshot(request, snapshot, bindings[snapshot]);

@@ -67,5 +67,7 @@
     { "binding": "RELEASE_DIFFS", "service": "release-diffs" },
     // The frozen 1.x docs: an assets-only Worker (www/v1.versions.lit-ui-router.dev), deployed by hand.
     { "binding": "DOCS_V1", "service": "lit-ui-router-docs-v1" },
+    // The unreleased docs: an assets-only Worker (www/main.versions.lit-ui-router.dev).
+    { "binding": "DOCS_MAIN", "service": "lit-ui-router-docs-main" },
   ],
 }

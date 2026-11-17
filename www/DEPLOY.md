@@ -266,22 +266,18 @@ build fails instead when a page has no canonical link or names a target that `di
 serves nor redirects, and the package's `test` reads the built pages.
 
 The docs worker lists `/main` and `/main/*` in `run_worker_first` and hands them to the
-`DOCS_MAIN` service binding (`worker/snapshot.ts`), answering a plain 503 without it.
-`wrangler.jsonc` does not declare that binding yet, and the Worker has no Workers Builds trigger,
-so `/main/*` answers the 503. To serve it:
+`DOCS_MAIN` service binding (`worker/snapshot.ts`), answering a plain 503 without it or when the
+preview Worker fails.
 
-1. Deploy the Worker once by hand: build it
-   (`mise exec -- turbo run build --filter=@www/main.versions.lit-ui-router.dev`), then
-   `pnpm run deploy -- --dry-run` in its package, then without `--dry-run`.
-2. Add `{ "binding": "DOCS_MAIN", "service": "lit-ui-router-docs-main" }` to `services` in the
-   docs site's `wrangler.jsonc`, and drop the cast that reads the binding in `worker/index.ts`. A
-   binding to a Worker the account lacks fails the docs site's deploy, so this follows step 1.
-3. Give the Worker a production trigger on `main` as in [Adding a site](#adding-a-site), with
-   `cloudflare-build.ts main.versions.lit-ui-router.dev` and
-   `cloudflare-deploy.ts main main.versions.lit-ui-router.dev` as its commands, and no preview
-   trigger: a branch has nothing to deploy to it.
-   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
-   requires a preview trigger of every entry, so the Worker has no entry there until that changes.
+The Worker has no Workers Builds trigger, so it is deployed by hand and serves the build of its
+last deploy: build it (`mise exec -- turbo run build --filter=@www/main.versions.lit-ui-router.dev`),
+then `pnpm run deploy -- --dry-run` in its package, then without `--dry-run`. To rebuild it on
+every push, give it a production trigger on `main` as in [Adding a site](#adding-a-site), with
+`cloudflare-build.ts main.versions.lit-ui-router.dev` and
+`cloudflare-deploy.ts main main.versions.lit-ui-router.dev` as its commands, and no preview
+trigger: a branch has nothing to deploy to it.
+[`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
+requires a preview trigger of every entry, so the Worker has no entry there until that changes.
 
 ### Adding a site
 
