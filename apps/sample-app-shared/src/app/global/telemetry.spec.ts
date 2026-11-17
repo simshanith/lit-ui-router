@@ -140,6 +140,24 @@ describe('installTelemetry with an OTLP endpoint', () => {
     fetch.mockRestore();
   });
 
+  it("keeps the Timeline's spans when the exporter chunk fails to load", async () => {
+    const records = new Map<string, SpanRecord>();
+
+    await installTelemetry(
+      router,
+      () => ({ addSpan: (span) => records.set(span.spanId, span) }),
+      { VITE_OTLP_TRACES_ENDPOINT: 'http://127.0.0.1:9/v1/traces' },
+      () => Promise.reject(new Error('chunk load failed')),
+    );
+    await router.stateService.go('contacts');
+
+    await vi.waitFor(() =>
+      expect(
+        [...records.values()].some((span) => span.name === 'contacts'),
+      ).toBe(true),
+    );
+  });
+
   it('sends batched spans, named by the service, with the headers when the page hides', async () => {
     const url = await commands.startOtlpCollector();
 

@@ -13,21 +13,22 @@ export interface OtlpExportEnv {
   readonly VITE_OTLP_SERVICE_NAME?: string;
 }
 
-/** Parses a `name=value,name=value` list, each side percent-decoded, skipping entries with no name. */
+const decoded = (name: string, value: string): [string, string][] => {
+  try {
+    return [[decodeURIComponent(name), decodeURIComponent(value)]];
+  } catch {
+    return [];
+  }
+};
+
+/** Parses a `name=value,name=value` list, each side percent-decoded, skipping entries with no name or a stray `%`. */
 export function parseOtlpHeaders(list = ''): Record<string, string> {
   return Object.fromEntries(
     list.split(',').flatMap((entry) => {
       const at = entry.indexOf('=');
       const name = entry.slice(0, at).trim();
 
-      return at > 0 && name
-        ? [
-            [
-              decodeURIComponent(name),
-              decodeURIComponent(entry.slice(at + 1).trim()),
-            ],
-          ]
-        : [];
+      return at > 0 && name ? decoded(name, entry.slice(at + 1).trim()) : [];
     }),
   );
 }

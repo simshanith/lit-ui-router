@@ -16,6 +16,10 @@ describe('parseOtlpHeaders', () => {
     expect(parseOtlpHeaders('=value,,bare,x-ok=1')).toEqual({ 'x-ok': '1' });
   });
 
+  it('skips an entry that is not percent-encoded', () => {
+    expect(parseOtlpHeaders('x-bad=100%,x-ok=1')).toEqual({ 'x-ok': '1' });
+  });
+
   it('reads nothing from an unset list', () => {
     expect(parseOtlpHeaders()).toEqual({});
     expect(parseOtlpHeaders('')).toEqual({});
