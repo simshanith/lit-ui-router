@@ -47,3 +47,6 @@ live triggers
 The current deployment guide for the shared pipeline and
 [`lit-ui-router.dev`](./lit-ui-router.dev) is [`DEPLOY.md`](./DEPLOY.md). Future
 sites can add their own guide when their deployment details differ.
+
+What the Workers report about each request, and where it goes, is
+[`OBSERVABILITY.md`](./OBSERVABILITY.md).

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 
+import { SECURITY_HEADERS } from '../../catalog/security-headers.ts';
 import worker from '../index.ts';
 import { fixtureLedger } from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
@@ -390,5 +391,103 @@ describe('outside the mounts', () => {
     assert.deepEqual(assetCalls, ['/guides/']);
     assert.equal(res.status, 404);
     assert.equal(res.headers.get('X-Robots-Tag'), null);
+  });
+});
+
+describe('the security headers', () => {
+  const carried = (res: Response) =>
+    Object.fromEntries(
+      Object.keys(SECURITY_HEADERS).map((name) => [
+        name,
+        res.headers.get(name),
+      ]),
+    );
+
+  it('ride every worker-built response: a release page, redirects, 404s, the sitemap', async () => {
+    const statuses = {
+      '/releases/lit-ui-router/': 200,
+      '/releases/sitemap.xml': 200,
+      '/releases/lit-ui-router/latest': 302,
+      '/gh/releases/lit-ui-router/latest': 302,
+      '/app': 302,
+      '/releases/no-such-package/': 404,
+      '/app/definitely-not-a-route': 404,
+      '/not-found-naive/anything': 200,
+      '/releases/ui-router-server/': 503,
+    };
+
+    for (const [path, status] of Object.entries(statuses)) {
+      const res = await dispatch(path);
+
+      assert.equal(res.status, status, path);
+      assert.deepEqual(carried(res), SECURITY_HEADERS, path);
+    }
+  });
+
+  it('ride an edge-cached answer without being stored in it', async () => {
+    const path = '/gh/releases/lit-ui-router/latest';
+
+    await dispatch(path);
+    await memory.settled();
+
+    const hit = await memory.edge.cache.match(new Request(`${ORIGIN}${path}`));
+
+    assert.ok(hit);
+    assert.deepEqual(
+      carried(hit),
+      Object.fromEntries(
+        Object.keys(SECURITY_HEADERS).map((name) => [name, null]),
+      ),
+    );
+    assert.deepEqual(carried(await dispatch(path)), SECURITY_HEADERS);
+  });
+
+  // The snapshot Worker and the assets binding answer with their own _headers output.
+  it('fill in only what a passed-through response lacks, never a second value', async () => {
+    const own = {
+      'Referrer-Policy': 'no-referrer',
+      'Content-Security-Policy': "frame-ancestors 'none'",
+    };
+
+    const answers = {
+      '/v1/': new Response('snapshot', { headers: own }),
+      '/v1/assets/app.js': new Response(null, {
+        status: 304,
+        headers: { ...SECURITY_HEADERS, ETag: '"a"' },
+      }),
+    };
+
+    const snapshot = {
+      ...env,
+      // SAFETY: the worker calls only fetch on the snapshot binding.
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a one-method object shares too few members with the binding
+      DOCS_V1: {
+        fetch: (request: Request) =>
+          Promise.resolve(
+            new URL(request.url).pathname === '/v1/'
+              ? answers['/v1/']
+              : answers['/v1/assets/app.js'],
+          ),
+      } as unknown as Env['DOCS_V1'],
+    };
+
+    const page = await worker.fetch(
+      new Request(`${ORIGIN}/v1/`),
+      snapshot,
+      ctx,
+    );
+
+    assert.deepEqual(carried(page), { ...SECURITY_HEADERS, ...own });
+    assert.equal(await page.text(), 'snapshot');
+
+    const unchanged = await worker.fetch(
+      new Request(`${ORIGIN}/v1/assets/app.js`),
+      snapshot,
+      ctx,
+    );
+
+    assert.equal(unchanged, answers['/v1/assets/app.js']);
+    assert.equal(unchanged.status, 304);
+    assert.equal(unchanged.headers.get('ETag'), '"a"');
   });
 });
