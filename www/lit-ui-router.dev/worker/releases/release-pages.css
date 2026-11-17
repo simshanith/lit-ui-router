@@ -328,6 +328,34 @@ time {
 .npm-diff {
   margin-block-start: 1.5rem;
 }
+/* The diff page is wider than prose reads well. */
+.range-notes {
+  max-inline-size: 56rem;
+  margin-block: 1.5rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--site-border-width) solid var(--site-color-line);
+  border-radius: var(--site-radius-control);
+}
+.range-notes > summary {
+  cursor: pointer;
+}
+.range-notes > summary h2 {
+  display: inline;
+  margin: 0;
+  font-size: 1rem;
+}
+.range-count {
+  margin-inline-start: 0.5rem;
+  color: var(--site-color-text-muted);
+  font-size: 0.875rem;
+}
+.range-notes > summary + .release {
+  border-block-start: 0;
+  margin-block-start: 0.5rem;
+}
+.range-notes > :last-child {
+  margin-block-end: 0.5rem;
+}
 .diff-status {
   color: var(--site-color-text-muted);
 }

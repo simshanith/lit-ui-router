@@ -441,6 +441,21 @@ const prereleaseToggle = (
   </p>`;
 };
 
+/** Versions in order, as notes or one-line rows. */
+const entryList = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  rows: readonly LedgerVersion[],
+  notes: ReleaseNotes,
+): TemplateResult[] =>
+  entriesOf(rows, notes).map((entry) =>
+    entry.kind === 'notes'
+      ? releaseEntry(router, versions, entry.row, entry.note)
+      : html`<ul class="version-lines">
+          ${entry.rows.map((row) => versionLine(router, row))}
+        </ul>`,
+  );
+
 /** One minor line: its heading, then its versions as notes or one-line rows. */
 const lineSection = (
   router: UIRouter,
@@ -450,13 +465,7 @@ const lineSection = (
 ): TemplateResult =>
   html`<section class="line" aria-labelledby=${lineAnchor(name)}>
     <h2 id=${lineAnchor(name)}>${name}</h2>
-    ${entriesOf(rows, notes).map((entry) =>
-      entry.kind === 'notes'
-        ? releaseEntry(router, versions, entry.row, entry.note)
-        : html`<ul class="version-lines">
-            ${entry.rows.map((row) => versionLine(router, row))}
-          </ul>`,
-    )}
+    ${entryList(router, versions, rows, notes)}
   </section>`;
 
 const packagePage = (
@@ -699,9 +708,47 @@ const noscriptDownload = staticHtml`<noscript
   </p></noscript
 >`;
 
+/** The versions a compare covers, newest first: every one after `from`, up to and including `to`. */
+const rangeOf = (
+  versions: readonly LedgerVersion[],
+  { from, to }: PublishedPair,
+): LedgerVersion[] => {
+  const at = (row: LedgerVersion) =>
+    versions.findIndex(({ version }) => version === row.version);
+
+  return versions.slice(at(to), at(from));
+};
+
+/** The range's notes, folded unless a single version has any; a range where none has notes shows nothing. */
+const rangeNotes = (
+  router: UIRouter,
+  versions: readonly LedgerVersion[],
+  notes: ReleaseNotes,
+  pair: PublishedPair,
+): TemplateResult | typeof nothing => {
+  const rows = rangeOf(versions, pair);
+  const noted = rows.filter(({ version }) => notes[version]).length;
+
+  return noted === 0
+    ? nothing
+    : html`<details
+        class="range-notes"
+        aria-labelledby="notes"
+        ?open=${noted === 1}
+      >
+        <summary>
+          <h2 id="notes">Release notes</h2>
+          <span class="range-count">${plural(noted, 'version')}</span>
+        </summary>
+        ${entryList(router, versions, rows, notes)}
+      </details>`;
+};
+
 export const CompareView: RoutedLitTemplate<{
   pair: PublishedPair;
-}> = ({ router, resolves: { pair } }) => {
+  versions: LedgerVersion[];
+  notes: ReleaseNotes;
+}> = ({ router, resolves: { pair, versions, notes } }) => {
   const { name: pkg } = pair.to;
   const range = `${pair.from.version}...${pair.to.version}`;
   const source = diffUrl(pair.from, pair.to);
@@ -729,6 +776,7 @@ export const CompareView: RoutedLitTemplate<{
           : nothing
       }
     </p>
+    ${rangeNotes(router, versions, notes, pair)}
     <section
       class="npm-diff"
       data-npm-diff

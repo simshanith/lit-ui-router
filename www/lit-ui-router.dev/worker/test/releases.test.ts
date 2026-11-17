@@ -17,6 +17,7 @@ import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
+import type { NotesReader } from '../releases/notes.ts';
 import {
   DIFF_SCRIPT,
   releaseDocument,
@@ -435,6 +436,118 @@ describe('the /releases/<pkg>/diff/<from>...<to> pages', () => {
         .getAttribute('href'),
       '/releases/lit-ui-router/',
     );
+  });
+
+  // 1.9.0 gains a section, so a range can hold two versions with notes.
+  const twoNoted: NotesReader = async (name) => ({
+    ...(await fixtureNotes(name)),
+    '1.9.0': { date: '2026-02-01', html: '<p>Deprecated since.</p>\n' },
+  });
+
+  const comparePage = async (path: string, notes = fixtureNotes) => {
+    const response = await serveReleases(
+      new Request(`${ORIGIN}${path}`),
+      fixtureLedger,
+      NO_DIFFS,
+      notes,
+    );
+
+    return {
+      location: response?.headers.get('Location'),
+      doc: parseHtml((await response?.text()) ?? ''),
+    };
+  };
+
+  const noted = (doc: Document) =>
+    getAllByRole(doc.body, 'article').map((article) =>
+      article.getAttribute('aria-labelledby'),
+    );
+
+  it("shows each version's notes once, newest first, folded above the diff", async () => {
+    const { doc } = await comparePage(
+      `${FILES}/1.2.0...1.11.0-rc.0/`,
+      twoNoted,
+    );
+
+    const main = getByRole(doc.body, 'main');
+    const notes = getByRole(main, 'group', { name: 'Release notes' });
+
+    assert.equal(notes.tagName, 'DETAILS');
+    assert.equal(notes.hasAttribute('open'), false);
+    within(notes).getByRole('heading', { level: 2, name: 'Release notes' });
+    within(notes).getByText('2 versions');
+    assert.deepEqual(noted(doc), ['v1.10.0', 'v1.9.0']);
+
+    // The older end of the range is the baseline, so its notes stay out.
+    assert.deepEqual(
+      within(notes)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent),
+      ['1.10.0', '1.9.0'],
+    );
+    assert.equal(within(notes).queryByText('first fix'), null);
+    within(notes).getByRole('heading', { level: 4, name: 'Features' });
+    within(notes).getByText('Deprecated since.');
+    assert.equal(
+      within(notes)
+        .getByRole('link', { name: 'Release page for 1.10.0' })
+        .getAttribute('href'),
+      '/releases/lit-ui-router/1.10.0/',
+    );
+
+    // A version with no section is one line, as on the package page.
+    assert.equal(
+      within(notes)
+        .getByRole('link', { name: 'lit-ui-router@1.11.0-rc.0' })
+        .getAttribute('href'),
+      '/releases/lit-ui-router/1.11.0-rc.0/',
+    );
+
+    assert.ok(
+      notes.compareDocumentPosition(
+        getByRole(main, 'region', { name: 'Changed files' }),
+      ) & notes.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('opens the notes of a range with one noted version', async () => {
+    const { doc } = await comparePage(`${FILES}/1.2.0...1.10.0/`);
+    const notes = getByRole(doc.body, 'group', { name: 'Release notes' });
+
+    assert.equal(notes.tagName, 'DETAILS');
+    assert.equal(notes.hasAttribute('open'), true);
+    within(notes).getByText('1 version');
+    assert.deepEqual(noted(doc), ['v1.10.0']);
+    assert.equal(
+      within(notes)
+        .getByRole('link', { name: 'lit-ui-router@1.9.0' })
+        .getAttribute('href'),
+      '/releases/lit-ui-router/1.9.0/',
+    );
+  });
+
+  it('shows a reversed range the same versions, at the ordered url', async () => {
+    const reversed = await comparePage(
+      `${FILES}/1.11.0-rc.0...1.2.0/`,
+      twoNoted,
+    );
+
+    assert.equal(reversed.location, `${FILES}/1.2.0...1.11.0-rc.0/`);
+
+    const { doc } = await comparePage(reversed.location ?? '', twoNoted);
+
+    assert.deepEqual(noted(doc), ['v1.10.0', 'v1.9.0']);
+  });
+
+  it('renders no notes section for a range with no noted version', async () => {
+    const { doc } = await comparePage(`${FILES}/1.10.0...1.11.0-rc.0/`);
+    const main = getByRole(doc.body, 'main');
+
+    assert.equal(queryByRole(main, 'group', { name: 'Release notes' }), null);
+    assert.equal(queryByRole(main, 'heading', { name: 'Release notes' }), null);
+    assert.equal(queryByRole(main, 'article'), null);
+    assert.equal(queryByRole(main, 'link', { name: /^lit-ui-router@/ }), null);
+    getByRole(main, 'region', { name: 'Changed files' });
   });
 
   it('links no DiffsHub compare without both tags', async () => {
@@ -1332,7 +1445,7 @@ describe('the /releases pages', () => {
     );
   });
 
-  it('reads notes only for the package and version pages', async () => {
+  it('reads notes only for the package, version and compare pages', async () => {
     const reads: string[] = [];
 
     const counting = (name: string) => {
@@ -1346,6 +1459,8 @@ describe('the /releases pages', () => {
       '/releases/lit-ui-router/',
       '/releases/lit-ui-router/1.10.0/',
       `${FILES}/1.9.0...1.10.0/`,
+      '/releases/lit-ui-router/diff?from=1.9.0&to=1.10.0',
+      `${FILES}/1.9.0...1.10.0/${LAYOUT}/index.json`,
     ])
       await serveReleases(
         new Request(`${ORIGIN}${path}`),
@@ -1354,7 +1469,7 @@ describe('the /releases pages', () => {
         counting,
       );
 
-    assert.deepEqual(reads, ['lit-ui-router', 'lit-ui-router']);
+    assert.deepEqual(reads, Array(3).fill('lit-ui-router'));
   });
 
   it('reads the versions once for a version page and its diff', async () => {
