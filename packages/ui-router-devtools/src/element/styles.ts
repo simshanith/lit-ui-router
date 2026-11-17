@@ -347,7 +347,7 @@ export const styles: CSSResult = css`
     gap: var(--uird-gap);
     block-size: var(--uird-row);
     inline-size: max-content;
-    max-inline-size: 240px;
+    max-inline-size: calc(100% - 2 * var(--uird-margin));
     padding: 0 12px;
     border: 1px solid var(--uird-rule-strong);
     border-radius: 2px;
@@ -360,7 +360,11 @@ export const styles: CSSResult = css`
     display: none;
   }
 
+  /* A zero minimum lets the name shrink below its text, so in a narrow viewport it gives way and the duration stays whole; clip keeps it unscrollable. */
   .pill-name {
+    min-inline-size: 0;
+    overflow: clip;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 

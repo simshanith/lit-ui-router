@@ -106,6 +106,45 @@ it('shows the pill with the current state and opens the panel', async () => {
   );
 });
 
+it('keeps the duration inside the pill beside a long state name', async () => {
+  const router = bareRouter();
+  router.stateRegistry.register({ name: 'administration', url: '/a' });
+  router.stateRegistry.register({
+    name: 'administration.messagelists',
+    url: '/m',
+  });
+  const element = router.plugin(DevtoolsPlugin).element;
+  await router.stateService.go('administration.messagelists');
+  await element.updateComplete;
+
+  const pill = await waitFor(() =>
+    getByRole(shadow(element), 'button', { name: /Router .*messagelists/ }),
+  );
+
+  const unit = within(pill).getByText('ms');
+  const name = within(pill).getByText('administration.messagelists');
+
+  const whole = () =>
+    expect(unit.getBoundingClientRect().right).toBeLessThanOrEqual(
+      pill.getBoundingClientRect().right - pill.clientLeft,
+    );
+
+  whole();
+  expect(name.scrollWidth).toBe(name.clientWidth);
+
+  // Too narrow for the pill's content, so the name gives way and nothing else does.
+  await page.viewport(240, 800);
+
+  try {
+    await waitFor(() =>
+      expect(name.scrollWidth).toBeGreaterThan(name.clientWidth),
+    );
+    whole();
+  } finally {
+    await page.viewport(1280, 720);
+  }
+});
+
 it('collapses to the pill, and switches views from the tabs and the Router button', async () => {
   await page.viewport(400, 800);
   const router = makeRouter();
