@@ -54,6 +54,23 @@ export const test = base.extend<{
     }
 
     await use(page);
+
+    // Closing a context hides no page, so the spans still batched go out here, capped so a dead receiver ends the test.
+    if (endpoint && headers && !page.isClosed()) {
+      await page
+        .evaluate(() =>
+          Promise.race([
+            // SAFETY: the app sets flush on the object the init script above assigned
+            (
+              globalThis as {
+                __OTLP_TRACES__?: { flush?: () => Promise<void> };
+              }
+            ).__OTLP_TRACES__?.flush?.(),
+            new Promise((resolve) => setTimeout(resolve, 3000)),
+          ]),
+        )
+        .catch(() => undefined);
+    }
   },
 
   // Hash-mode visits target the bare mount, which serves the shell with no redirect, so consecutive visits differ only by hash.

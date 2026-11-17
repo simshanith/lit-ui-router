@@ -4,7 +4,11 @@ import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 import type { SpanRecord } from 'ui-router-otel';
 
 import { restSpan } from '../util/restSpan.js';
-import { installTelemetry, resolveOtlpExportEnv } from './telemetry.js';
+import {
+  installTelemetry,
+  type OtlpTracesOverride,
+  resolveOtlpExportEnv,
+} from './telemetry.js';
 
 interface CollectedRequest {
   headers: Record<string, string | string[] | undefined>;
@@ -228,6 +232,22 @@ describe('installTelemetry with an OTLP endpoint', () => {
     const requests = await exported();
 
     expect(requests[0]?.headers).toMatchObject({ 'x-otlp-test': 'ok' });
+  });
+
+  it('gives __OTLP_TRACES__ a flush that sends the batch without the page hiding', async () => {
+    const url = await commands.startOtlpCollector();
+    const override: OtlpTracesOverride = { endpoint: url };
+
+    globalThis.__OTLP_TRACES__ = override;
+    await installTelemetry(router, () => null);
+    await router.stateService.go('contacts');
+    await override.flush?.();
+
+    expect(await commands.takeOtlpRequests()).toHaveLength(1);
+
+    router.dispose();
+
+    expect(override.flush).toBeUndefined();
   });
 });
 

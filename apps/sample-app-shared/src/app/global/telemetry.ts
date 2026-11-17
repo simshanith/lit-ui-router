@@ -17,6 +17,8 @@ export interface OtlpTracesOverride {
   endpoint: string;
   /** `name=value` pairs joined by commas, as in `OTEL_EXPORTER_OTLP_HEADERS`. */
   headers?: string;
+  /** Set by the app once it exports: sends the spans still batched, for a harness that closes the page without hiding it. */
+  flush?: () => Promise<void>;
 }
 
 declare global {
@@ -93,8 +95,14 @@ export async function installTelemetry(
     activateResolveSpans: true,
   });
 
+  const override = globalThis.__OTLP_TRACES__;
+
+  if (otlp && override) override.flush = () => provider.forceFlush();
+
   router.disposable({
     dispose() {
+      if (override) delete override.flush;
+
       trace.disable();
       context.disable();
       void provider.shutdown();
