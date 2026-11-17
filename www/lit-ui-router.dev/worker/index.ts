@@ -8,6 +8,7 @@ import type { ReleaseDiffs } from './releases/diff-data.ts';
 import type { LedgerReader } from './releases/ledger.ts';
 import { assetNotes } from './releases/notes.ts';
 import { serveReleases } from './releases/serve.ts';
+import { withSecurityHeaders } from './security-headers.ts';
 import { isSnapshotPath, serveSnapshot } from './snapshot.ts';
 
 // All routing intelligence lives in ui-router-server; the ./fetch adapter
@@ -55,7 +56,7 @@ const withNoindex = (response: Response): Response => {
 // bypasses the router entirely rather than riding a verdict.
 const NAIVE_MOUNT = '/not-found-naive';
 
-export default {
+const site = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
@@ -148,4 +149,10 @@ export default {
     // output (the redirect Response it builds has no host hook of its own).
     return isExhibit(url.pathname) ? withNoindex(response) : response;
   },
+} satisfies ExportedHandler<Env>;
+
+export default {
+  // Added on the way out, after the edge cache: a stored entry never pins an old header set.
+  fetch: async (request, env, ctx) =>
+    withSecurityHeaders(await site.fetch(request, env, ctx)),
 } satisfies ExportedHandler<Env>;
