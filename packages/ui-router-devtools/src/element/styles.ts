@@ -360,9 +360,10 @@ export const styles: CSSResult = css`
     display: none;
   }
 
-  /* Clipping its own overflow lets the name shrink below its text, so in a narrow viewport it gives way and the duration stays whole. */
+  /* A zero minimum lets the name shrink below its text, so in a narrow viewport it gives way and the duration stays whole; clip keeps it unscrollable. */
   .pill-name {
-    overflow: hidden;
+    min-inline-size: 0;
+    overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
