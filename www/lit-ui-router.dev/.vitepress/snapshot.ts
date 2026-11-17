@@ -96,14 +96,14 @@ export const builtExamples = (dir: string): string[] =>
     .map((file) => file.split('/')[1] ?? '')
     .sort();
 
-/** A snapshot's llms.txt: its page URLs moved under the base, the worker's left at the root, and a note naming the latest. */
+/** A snapshot's llms.txt: its page URLs moved under the base unless the build already put them there, the worker's left at the root, and a note naming the latest. */
 export function snapshotLlmsTxt(
   text: string,
   base: string,
   label: string,
 ): string {
   const pattern = new RegExp(
-    `${escapeRegExp(SITE_ORIGIN)}/(?!(?:${mountAlternation})(?:[/)?#\\s]|$))`,
+    `${escapeRegExp(SITE_ORIGIN)}/(?!${escapeRegExp(base.slice(1))})(?!(?:${mountAlternation})(?:[/)?#\\s]|$))`,
     'g',
   );
 
