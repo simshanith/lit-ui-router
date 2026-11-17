@@ -777,7 +777,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
 export const unavailableView = (): TemplateResult => html`
   <h1>Releases are unavailable</h1>
   <p>
-    The release ledger could not be read. Every release is also on
+    The release ledger could not be read. Most releases are also on
     <a href=${`${REPOSITORY}/releases`}>GitHub</a>.
   </p>
 `;
