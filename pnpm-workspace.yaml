@@ -148,7 +148,7 @@ catalog:
   vue: ^3.5.45
   vue-tsc: ^3.3.14
   webidl2: ^24.5.0
-  wrangler: ^4.163.0
+  wrangler: ~4.162.0
   yaml: ^2.9.0
 
 catalogMode: prefer
