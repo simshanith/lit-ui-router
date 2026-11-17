@@ -1,8 +1,8 @@
 {
-  "tag": "lit-ui-router@1.20.0",
-  "files": 2045,
-  "bytes": 105940358,
-  "sha256": "04860eb5d528faf74df2635a601d70fe32f7c3ad010976c6312d5b7fd5d1091f",
+  "tag": "lit-ui-router-ssr@0.11.1",
+  "files": 2069,
+  "bytes": 106717506,
+  "sha256": "63f48e02b587e7c9e3e2a1a002cf1d02a8091094beadcedb663f5c18a9f68392",
   "pages": {
     "/v1/examples/": "/examples/",
     "/v1/examples/live": "/examples/live",
@@ -126,6 +126,7 @@
     "/v1/reference/lit-ui-router-ssr/index/classes/LightElementRenderer": "/reference/lit-ui-router-ssr/index/classes/LightElementRenderer",
     "/v1/reference/lit-ui-router-ssr/index/classes/UiViewRenderer": "/reference/lit-ui-router-ssr/index/classes/UiViewRenderer",
     "/v1/reference/lit-ui-router-ssr/index/functions/prerender": "/reference/lit-ui-router-ssr/index/functions/prerender",
+    "/v1/reference/lit-ui-router-ssr/index/functions/registerTraceCategory": "/reference/lit-ui-router-ssr/index/functions/registerTraceCategory",
     "/v1/reference/lit-ui-router-ssr/index/functions/renderToString": "/reference/lit-ui-router-ssr/index/functions/renderToString",
     "/v1/reference/lit-ui-router-ssr/index/functions/responder": "/reference/lit-ui-router-ssr/index/functions/responder",
     "/v1/reference/lit-ui-router-ssr/index/": "/reference/lit-ui-router-ssr/index/",
@@ -151,6 +152,7 @@
     "/v1/reference/lit-ui-router-ssr/index/type-aliases/ResponseHandlers": "/reference/lit-ui-router-ssr/index/type-aliases/ResponseHandlers",
     "/v1/reference/lit-ui-router-ssr/index/variables/redirectedTo": "/reference/lit-ui-router-ssr/index/variables/redirectedTo",
     "/v1/reference/lit-ui-router-ssr/index/variables/settle": "/reference/lit-ui-router-ssr/index/variables/settle",
+    "/v1/reference/lit-ui-router-ssr/index/variables/shadowElementRenderers": "/reference/lit-ui-router-ssr/index/variables/shadowElementRenderers",
     "/v1/reference/lit-ui-router-ssr/testing/functions/countRetained": "/reference/lit-ui-router-ssr/testing/functions/countRetained",
     "/v1/reference/lit-ui-router-ssr/testing/functions/stampServed": "/reference/lit-ui-router-ssr/testing/functions/stampServed",
     "/v1/reference/lit-ui-router-ssr/testing/": "/reference/lit-ui-router-ssr/testing/",

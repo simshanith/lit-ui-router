@@ -16,7 +16,7 @@ import { SITE_ORIGIN, type VersionManifest } from './versions.ts';
 
 /** The tag each frozen snapshot is built from, keyed by version id. */
 export const SNAPSHOT_TAGS = {
-  v1: 'lit-ui-router@1.20.0',
+  v1: 'lit-ui-router-ssr@0.11.1',
 } as const satisfies Readonly<Record<string, string>>;
 
 /** A version id with a snapshot tag. */
