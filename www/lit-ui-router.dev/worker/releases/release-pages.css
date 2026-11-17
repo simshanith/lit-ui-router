@@ -213,6 +213,18 @@ time {
   border-radius: 1em;
   padding-inline: 0.5em;
 }
+.breaking {
+  color: var(--site-color-text);
+  font-weight: 600;
+}
+a.breaking {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.5rem;
+  vertical-align: middle;
+  color: var(--site-color-interaction);
+  text-decoration: none;
+}
 .facts {
   display: grid;
   grid-template-columns: minmax(8rem, max-content) 1fr;
@@ -722,7 +734,8 @@ ui-view {
     color: var(--site-color-text);
     background: var(--site-color-surface-soft);
   }
-  .outline a:hover {
+  .outline a:hover,
+  a.breaking:hover {
     border-color: var(--site-color-interaction);
   }
   .notes summary:hover {

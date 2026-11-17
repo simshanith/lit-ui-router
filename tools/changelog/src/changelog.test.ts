@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   extractSection,
+  hasBreakingChanges,
   insertSection,
   mergeSections,
   parseChangelog,
@@ -98,6 +99,49 @@ describe('extractSection', () => {
 
   it('returns an empty body for a heading with nothing under it', () => {
     assert.equal(extractSection(FILE, '1.2.0'), '');
+  });
+});
+
+describe('hasBreakingChanges', () => {
+  it('finds the heading the release tooling writes, a 0.x minor included', () => {
+    const text = [
+      '# Changelog',
+      '',
+      '## 0.3.0 (2026-01-02)',
+      '',
+      '### ⚠ BREAKING CHANGES',
+      '',
+      '* drop the old option',
+      '',
+      '### Features',
+      '',
+      '* add the new one',
+      '',
+      '## 0.2.0 (2026-01-01)',
+      '',
+      '### Features',
+      '',
+      '* BREAKING CHANGES are described in prose here',
+    ].join('\n');
+
+    assert.deepEqual(
+      parseChangelog(text).sections.map(({ version, body }) => [
+        version,
+        hasBreakingChanges(body),
+      ]),
+      [
+        ['0.3.0', true],
+        ['0.2.0', false],
+      ],
+    );
+  });
+
+  it('reads a heading inside a code fence as body text', () => {
+    assert.equal(
+      hasBreakingChanges('```md\n### ⚠ BREAKING CHANGES\n```\n'),
+      false,
+    );
+    assert.equal(hasBreakingChanges(''), false);
   });
 });
 

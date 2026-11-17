@@ -6,6 +6,8 @@ import { RELEASES_MOUNT } from './routes.ts';
 export interface ReleaseNote {
   date: string;
   html: string;
+  /** The id of the breaking-change heading in `html`; a section without one has no key. */
+  breaking?: string;
 }
 
 /** A package's sections by version; a version with no section has no key. */

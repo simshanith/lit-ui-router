@@ -35,6 +35,7 @@ const Notes = v.record(
   v.strictObject({
     date: v.pipe(v.string(), v.isoDate()),
     html: v.string(),
+    breaking: v.optional(v.string()),
   }),
 );
 
@@ -86,6 +87,55 @@ describe('release notes', () => {
     assert.ok(getByText(details, 'Also touched this package (2)'));
     assert.ok(
       getByText(details, /move the API reference to \/reference\/<npm-name>\//),
+    );
+  });
+
+  it('marks a section with a breaking-change heading, a 0.x minor included, and gives the heading the id', () => {
+    const notes = changelogs.find(
+      ({ name }) => name === 'lit-ui-router-ssr',
+    )?.notes;
+
+    const note = notes?.['0.11.0'];
+
+    assert.equal(note?.breaking, 'breaking-0.11.0');
+
+    const heading = getByRole(parseHtml(note.html).body, 'heading', {
+      name: '⚠ BREAKING CHANGES',
+    });
+
+    assert.equal(heading.id, 'breaking-0.11.0');
+    assert.ok(notes?.['0.11.1']);
+    assert.equal(Object.hasOwn(notes['0.11.1'], 'breaking'), false);
+  });
+
+  it('marks exactly the sections whose heading renders, each id unique in its changelog', () => {
+    for (const { name, notes } of changelogs) {
+      const ids = Object.values(notes).flatMap((note) =>
+        queryAllByRole(parseHtml(note?.html ?? '').body, 'heading', {
+          name: '⚠ BREAKING CHANGES',
+        }).map(({ id }) => id),
+      );
+
+      assert.deepEqual(
+        ids,
+        Object.values(notes).flatMap((note) => note?.breaking ?? []),
+        name,
+      );
+      assert.equal(new Set(ids).size, ids.length, name);
+    }
+  });
+
+  it('leaves a breaking-change heading inside a code fence unmarked', () => {
+    const notes = releaseNotes(
+      'lit-ui-router',
+      '# Changelog\n\n## 9.0.0 (2030-01-01)\n\n```md\n### ⚠ BREAKING CHANGES\n```\n',
+    );
+
+    assert.equal(Object.hasOwn(notes['9.0.0'] ?? {}, 'breaking'), false);
+    assert.equal(
+      queryAllByRole(parseHtml(notes['9.0.0']?.html ?? '').body, 'heading')
+        .length,
+      0,
     );
   });
 
