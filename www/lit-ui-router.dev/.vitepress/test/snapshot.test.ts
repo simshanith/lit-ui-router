@@ -163,6 +163,16 @@ describe('snapshotLlmsTxt', () => {
       `# Lit UI Router\n\n> These are the 1.x docs, kept as they were at their last release. The latest docs are at ${SITE_ORIGIN}/llms.txt.\n\n> Routing\n\n- [Guide](${SITE_ORIGIN}/v1/guides/a.md): a\n- [Releases](${SITE_ORIGIN}/releases/): r\n`,
     );
   });
+
+  it('leaves a URL the build already wrote under the base where it is', () => {
+    const text = `# Lit UI Router\n\n> Routing\n\n- [Guide](${SITE_ORIGIN}/v1/guides/a.md): a\nurl: ${SITE_ORIGIN}/guides/b.md\n`;
+
+    const moved = snapshotLlmsTxt(text, '/v1/', '1.x');
+
+    assert.ok(moved.includes(`${SITE_ORIGIN}/v1/guides/a.md`));
+    assert.ok(moved.includes(`${SITE_ORIGIN}/v1/guides/b.md`));
+    assert.ok(!moved.includes('/v1/v1/'));
+  });
 });
 
 describe('canonicalPath', () => {
