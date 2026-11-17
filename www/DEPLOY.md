@@ -263,8 +263,8 @@ the last tag.
    Worker name matching the one its config names and the build and deploy commands from the
    entry. Give its builds an API token of its own, scoped to what that site's deploy touches.
 4. Run `pnpm check:workers-builds -- --site <domain>`, and `--apply` for anything it reports.
-5. Turn on its traces and name the destination, as [OBSERVABILITY.md](./OBSERVABILITY.md#operating-it)
-   describes.
+5. Give its config the `observability` block the other sites have, as
+   [OBSERVABILITY.md](./OBSERVABILITY.md#operating-it) describes; a test fails until it matches.
 
 ### Dashboard as Code
 
