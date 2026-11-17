@@ -344,8 +344,8 @@ catalogs:
       specifier: ^7.8.6
       version: 7.8.6
     signal-polyfill:
-      specifier: ^0.2.2
-      version: 0.2.2
+      specifier: ^0.2.3
+      version: 0.2.3
     sitemap:
       specifier: ^10.0.0
       version: 10.0.0
@@ -982,7 +982,7 @@ importers:
         version: link:../sample-app-shared
       signal-polyfill:
         specifier: 'catalog:'
-        version: 0.2.2
+        version: 0.2.3
     devDependencies:
       '@tools/build_and_test':
         specifier: catalog:workspace
@@ -1642,7 +1642,7 @@ importers:
         version: 6.1.4
       signal-polyfill:
         specifier: 'catalog:'
-        version: 0.2.2
+        version: 0.2.3
       typedoc:
         specifier: 'catalog:'
         version: 0.28.20(@typescript/typescript6@6.0.2)
@@ -2519,7 +2519,7 @@ importers:
         version: 6.1.4
       signal-polyfill:
         specifier: 'catalog:'
-        version: 0.2.2
+        version: 0.2.3
       signal-polyfill-floor:
         specifier: catalog:peerFloor
         version: signal-polyfill@0.2.0
@@ -2882,7 +2882,7 @@ importers:
         version: 1.93.0(oxlint-tsgolint@7.0.2007)
       signal-polyfill:
         specifier: 'catalog:'
-        version: 0.2.2
+        version: 0.2.3
       typescript-5.0:
         specifier: 'catalog:'
         version: typescript@5.0.4
@@ -9609,8 +9609,8 @@ packages:
   signal-polyfill@0.2.0:
     resolution: {integrity: sha512-EbZ5L6pm0LPVZECfzfDLQ+2tWd2xQ+iG+HfuvqWjF+pl0yvdT1rsL/YgfeBakubLbnwAd1zRvap1rYqPBG8prA==}
 
-  signal-polyfill@0.2.2:
-    resolution: {integrity: sha512-p63Y4Er5/eMQ9RHg0M0Y64NlsQKpiu6MDdhBXpyywRuWiPywhJTpKJ1iB5K2hJEbFZ0BnDS7ZkJ+0AfTuL37Rg==}
+  signal-polyfill@0.2.3:
+    resolution: {integrity: sha512-9lnybFqkhtuH5xJ0IoRMs+k0HhiNEHAqcedRL2gKGI9bLyPWqlhrNSXTi8PRTwx5XiMktQh954gR5q3dBimwXA==}
 
   sigstore@5.0.0:
     resolution: {integrity: sha512-hJqJfoG/e4qFQaauQL00c6J6FrHLBGKtkFvW3JbTSIEFOhLrSjdSM/gWd/yUOfYo/gsERehTXGC1VZWX+9X4Dg==}
@@ -11346,7 +11346,7 @@ snapshots:
   '@lit-labs/signals@0.3.0':
     dependencies:
       lit: 3.3.3
-      signal-polyfill: 0.2.2
+      signal-polyfill: 0.2.3
 
   '@lit-labs/ssr-client@1.1.7':
     dependencies:
@@ -16098,7 +16098,7 @@ snapshots:
 
   signal-polyfill@0.2.0: {}
 
-  signal-polyfill@0.2.2: {}
+  signal-polyfill@0.2.3: {}
 
   sigstore@5.0.0(supports-color@10.2.2):
     dependencies:
