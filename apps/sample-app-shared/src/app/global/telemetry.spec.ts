@@ -158,6 +158,26 @@ describe('installTelemetry with an OTLP endpoint', () => {
     );
   });
 
+  it("keeps the Timeline's spans when the exporter rejects the endpoint", async () => {
+    const records = new Map<string, SpanRecord>();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    await installTelemetry(
+      router,
+      () => ({ addSpan: (span) => records.set(span.spanId, span) }),
+      { VITE_OTLP_TRACES_ENDPOINT: 'http://[not a url' },
+    );
+    await router.stateService.go('contacts');
+
+    await vi.waitFor(() =>
+      expect(
+        [...records.values()].some((span) => span.name === 'contacts'),
+      ).toBe(true),
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
   it('sends batched spans, named by the service, with the headers when the page hides', async () => {
     const url = await commands.startOtlpCollector();
 

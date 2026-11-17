@@ -66,12 +66,16 @@ export async function installTelemetry(
 ): Promise<void> {
   const url = env.VITE_OTLP_TRACES_ENDPOINT;
 
-  // A chunk that fails to load costs the export, never the Timeline's spans.
-  const loaded = url
-    ? await loadOtlpExport().catch(() => undefined)
-    : undefined;
+  let otlp:
+    | ReturnType<Awaited<ReturnType<LoadOtlpExport>>['otlpExport']>
+    | undefined;
 
-  const otlp = url ? loaded?.otlpExport(url, env) : undefined;
+  // A chunk that fails to load, or an endpoint the exporter rejects, costs the export and never the Timeline's spans.
+  try {
+    if (url) otlp = (await loadOtlpExport()).otlpExport(url, env);
+  } catch (error) {
+    console.warn('OTLP span export is off:', error);
+  }
 
   const provider = new TracerProvider({
     ...(otlp && { resource: otlp.resource }),
