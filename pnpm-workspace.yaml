@@ -38,7 +38,7 @@ catalog:
   '@opentelemetry/context-async-hooks': ^3.1.1
   '@opentelemetry/exporter-trace-otlp-http': ^0.301.2
   '@opentelemetry/sdk-trace': ^3.1.1
-  '@oxlint/plugins': 1.93.0
+  '@oxlint/plugins': 1.94.0
   '@pierre/diffs': 1.6.4
   '@pierre/trees': ^1.0.0
   '@playwright/cli': 0.1.23
@@ -86,7 +86,7 @@ catalog:
   eslint-plugin-eslint-plugin: ^7.6.2
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.3
-  eslint-plugin-oxlint: 1.93.0
+  eslint-plugin-oxlint: 1.94.0
   eslint-plugin-package-json: ^1.14.0
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.11
@@ -109,7 +109,7 @@ catalog:
   oxc-parser: 0.158.0
   oxc-transform: 0.158.0
   oxfmt: 0.78.0
-  oxlint: 1.93.0
+  oxlint: 1.94.0
   oxlint-tsgolint: 7.0.2007
   pacote: ^22.0.1
   parse5: ^8.1.1
