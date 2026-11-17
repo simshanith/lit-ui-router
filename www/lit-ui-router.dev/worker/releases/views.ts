@@ -19,7 +19,12 @@ import {
   prereleaseKind,
   previousIn,
 } from './ledger.ts';
-import type { LedgerPackage, LedgerVersion, PublishedPair } from './ledger.ts';
+import type {
+  LedgerPackage,
+  LedgerVersion,
+  PublishedPair,
+  PublishRun,
+} from './ledger.ts';
 import {
   type Line,
   lineAnchor,
@@ -546,20 +551,52 @@ export const PackageView: RoutedLitTemplate<{
   );
 };
 
-const npmFacts = (row: LedgerVersion): TemplateResult => {
+/** A run's page on GitHub at the attempt that published, or null for a run outside this repository or an id that is not one. */
+export const publishRunUrl = (run: PublishRun): string | null =>
+  `https://github.com/${run.repository}` === REPOSITORY &&
+  /^\d+$/.test(run.run_id) &&
+  Number.isInteger(run.run_attempt) &&
+  run.run_attempt > 0
+    ? `${REPOSITORY}/actions/runs/${run.run_id}/attempts/${run.run_attempt}`
+    : null;
+
+/** The workflow file a `job_workflow_ref` names. */
+const workflowOf = (ref: string): string =>
+  ref.split('@', 1)[0]?.split('/').at(-1) ?? '';
+
+/** The run that published the version; a version no run claimed has no row. */
+const runFacts = (run: PublishRun | null): TemplateResult | typeof nothing => {
+  const url = run && publishRunUrl(run);
+
+  if (!run || !url) return nothing;
+
+  return html`<dt id="run">Published by</dt>
+    <dd>
+      <a href=${url}
+        ><code>${workflowOf(run.job_workflow_ref)}</code> run ${run.run_id}</a
+      >${run.run_attempt > 1 ? html`, attempt ${run.run_attempt}` : nothing}
+    </dd>`;
+};
+
+const npmFacts = (
+  row: LedgerVersion,
+  run: PublishRun | null,
+): TemplateResult => {
   if (row.npm_integrity === null)
     return html`<dt id="npm">npm</dt>
       <dd>Not published</dd>`;
 
   return html`<dt id="npm">Published to npm</dt>
     <dd>${date(row.npm_published_at)}</dd>
+    ${runFacts(run)}
     ${
       row.npm_deprecated === null
-        ? html`<dt id="integrity">Integrity</dt>
-            <dd><code class="hash">${row.npm_integrity}</code></dd>`
+        ? nothing
         : html`<dt id="deprecated">Deprecated</dt>
             <dd>${row.npm_deprecated}</dd>`
-    }`;
+    }
+    <dt id="integrity">Integrity</dt>
+    <dd><code class="hash">${row.npm_integrity}</code></dd>`;
 };
 
 /** The install line for a version npm has, pinned exactly; a deprecated version's warning is the fact above it. */
@@ -718,7 +755,11 @@ export const VersionView: RoutedLitTemplate<{
   versions: LedgerVersion[];
   latest: LedgerVersion | null;
   notes: ReleaseNotes;
-}> = ({ router, resolves: { release: row, versions, latest, notes } }) => {
+  publishRun: PublishRun | null;
+}> = ({
+  router,
+  resolves: { release: row, versions, latest, notes, publishRun },
+}) => {
   const note = notes[row.version];
 
   return html`
@@ -741,7 +782,7 @@ export const VersionView: RoutedLitTemplate<{
     <dl class="facts">
       <dt id="status">Status</dt>
       <dd>${row.status}</dd>
-      ${npmFacts(row)} ${installFacts(row)} ${tagFacts(row)}
+      ${npmFacts(row, publishRun)} ${installFacts(row)} ${tagFacts(row)}
       ${ghFacts(row, note ? 'GitHub release' : 'Release notes')}
       ${diffFacts(versions, row)} ${docsFacts(row.name)}
     </dl>

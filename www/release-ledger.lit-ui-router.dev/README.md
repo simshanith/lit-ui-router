@@ -58,7 +58,8 @@ draws the worker, its queue and its readers.
 - **`LedgerReader`** ([`worker/index.ts`](./worker/index.ts)) is a `WorkerEntrypoint`
   for other workers to read through a service binding: packages, a package's
   versions and dist-tags, and the version a dist-tag points at. Its version rows
-  carry the derived states from `version_states`. A D1 binding would give them
+  carry the derived states from `version_states`, and `publishRun` answers the
+  Actions run of a version's earliest `run` claim. A D1 binding would give them
   write access too.
 
 The consumer reads GitHub with the `GITHUB_TOKEN` secret, a read-only token.

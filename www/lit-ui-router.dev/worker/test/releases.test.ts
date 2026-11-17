@@ -35,7 +35,11 @@ import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { releaseNotes } from '../../.vitepress/changelog.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { diffUrl } from '../releases/views.ts';
-import { FIXTURE_ROWS, fixtureLedger } from './ledger-stub/rows.ts';
+import {
+  FIXTURE_ROWS,
+  FIXTURE_RUN,
+  fixtureLedger,
+} from './ledger-stub/rows.ts';
 import { memoryEdge } from './memory-cache.ts';
 import { fixtureNotes } from './notes-stub.ts';
 
@@ -1421,6 +1425,99 @@ describe('the /releases pages', () => {
     );
   });
 
+  // A term takes no accessible name from its content, so its text finds it and its definition.
+  const factOf = (doc: Document, term: string) =>
+    getByText(doc.body, term, { selector: 'dt' }).nextElementSibling;
+
+  it('keeps the integrity hash beside a deprecation message', async () => {
+    const doc = await page('/releases/lit-ui-router/1.9.0/');
+    const row = FIXTURE_ROWS.find(({ version }) => version === '1.9.0');
+
+    assert.equal(factOf(doc, 'Deprecated')?.textContent, 'use 2.0');
+    assert.equal(factOf(doc, 'Integrity')?.textContent, row?.npm_integrity);
+  });
+
+  it('links the run that published a version, at its attempt', async () => {
+    const doc = await page('/releases/lit-ui-router/1.10.0/');
+    const { run } = FIXTURE_RUN;
+
+    assert.equal(
+      hrefOf(doc.body, `publish-npm.yml run ${run.run_id}`),
+      `https://github.com/simshanith/lit-ui-router/actions/runs/${run.run_id}/attempts/1`,
+    );
+    assert.equal(
+      factOf(doc, 'Published by')?.textContent?.trim(),
+      `publish-npm.yml run ${run.run_id}`,
+    );
+  });
+
+  it('names a later attempt beside the run link', async () => {
+    const doc = await page('/releases/lit-ui-router/1.10.0/', {
+      ...fixtureLedger,
+      publishRun: () => Promise.resolve({ ...FIXTURE_RUN.run, run_attempt: 3 }),
+    });
+
+    const fact = factOf(doc, 'Published by');
+
+    assert.match(fact?.textContent ?? '', /, attempt 3\s*$/);
+    assert.equal(
+      // SAFETY: a dt's sibling in a parsed page is an HTML element.
+      hrefOf(
+        fact as HTMLElement,
+        `publish-npm.yml run ${FIXTURE_RUN.run.run_id}`,
+      ),
+      `https://github.com/simshanith/lit-ui-router/actions/runs/${FIXTURE_RUN.run.run_id}/attempts/3`,
+    );
+  });
+
+  const noRunFact = (doc: Document) => {
+    assert.equal(
+      queryByText(doc.body, 'Published by', { selector: 'dt' }),
+      null,
+    );
+    assert.equal(queryByRole(doc.body, 'link', { name: /\brun\b/ }), null);
+    // The rest of the page is the page as it was.
+    assert.ok(factOf(doc, 'Integrity')?.textContent);
+  };
+
+  it('shows no run link or placeholder for a version no run claimed', async () => {
+    noRunFact(await page('/releases/lit-ui-router/1.2.0/'));
+  });
+
+  const withRun = (publishRun: LedgerReader['publishRun']): LedgerReader => ({
+    ...fixtureLedger,
+    publishRun,
+  });
+
+  it('renders the page without a run link when the ledger lacks the method or fails the read', async (t) => {
+    t.mock.method(console, 'warn', () => {});
+
+    const { publishRun: _absent, ...older } = fixtureLedger;
+
+    noRunFact(await page('/releases/lit-ui-router/1.10.0/', older));
+    noRunFact(
+      await page(
+        '/releases/lit-ui-router/1.10.0/',
+        withRun(() => Promise.reject(new Error('no such method'))),
+      ),
+    );
+  });
+
+  it('links no run outside this repository or with an id that is not one', async () => {
+    for (const forged of [
+      { repository: 'someone/else' },
+      { run_id: '1/../../x' },
+      { run_attempt: 0 },
+    ]) {
+      noRunFact(
+        await page(
+          '/releases/lit-ui-router/1.10.0/',
+          withRun(() => Promise.resolve({ ...FIXTURE_RUN.run, ...forged })),
+        ),
+      );
+    }
+  });
+
   it("shows a version's notes above its facts when its changelog has a section", async () => {
     const doc = await page('/releases/lit-ui-router/1.10.0/');
     const main = getByRole(doc.body, 'main');
@@ -2039,6 +2136,7 @@ describe('the version page navigation', () => {
       'status',
       'npm',
       'deprecated',
+      'integrity',
       'install',
       'tag',
       'diff',

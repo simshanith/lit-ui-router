@@ -20,6 +20,8 @@ import {
   ordered,
   packagesOf,
   type PublishedPair,
+  type PublishRun,
+  publishRunOf,
   taggedOf,
   versionIn,
   versionsOf,
@@ -78,6 +80,7 @@ interface ResolvesOf {
     versions: LedgerVersion[];
     latest: LedgerVersion | null;
     notes: ReleaseNotes;
+    publishRun: PublishRun | null;
   };
   githubRelease: { latest: LedgerVersion };
   notFound: object;
@@ -366,6 +369,11 @@ const attach = (
         deps: ['$transition$'],
         resolveFn: (trans: Transition) =>
           ledger.tagged(paramsOf(trans).pkg, 'latest'),
+      },
+      {
+        token: 'publishRun',
+        deps: ['$transition$'],
+        resolveFn: (trans: Transition) => publishRunOf(ledger)(paramsOf(trans)),
       },
     ],
   },

@@ -87,6 +87,19 @@ const taggedRow = (name: string, tag: string): LedgerVersion | null => {
   );
 };
 
+/** The one fixture version a publish run claimed; the rest predate claims. */
+export const FIXTURE_RUN = {
+  name: 'lit-ui-router',
+  version: '1.10.0',
+  run: {
+    repository: 'simshanith/lit-ui-router',
+    job_workflow_ref:
+      'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/tags/lit-ui-router@1.10.0',
+    run_id: '18273645',
+    run_attempt: 1,
+  },
+} as const;
+
 /** A LedgerReader over the fixture rows. */
 export const fixtureLedger: LedgerReader = {
   packages: () =>
@@ -103,5 +116,11 @@ export const fixtureLedger: LedgerReader = {
   versions: (name) =>
     Promise.resolve(
       FIXTURE_ROWS.filter((candidate) => candidate.name === name),
+    ),
+  publishRun: (name, version) =>
+    Promise.resolve(
+      name === FIXTURE_RUN.name && version === FIXTURE_RUN.version
+        ? FIXTURE_RUN.run
+        : null,
     ),
 };
