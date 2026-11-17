@@ -234,6 +234,24 @@ describe('installTelemetry with an OTLP endpoint', () => {
     expect(requests[0]?.headers).toMatchObject({ 'x-otlp-test': 'ok' });
   });
 
+  it('leaves error messages off the spans it exports', async () => {
+    const url = await commands.startOtlpCollector();
+    const override: OtlpTracesOverride = { endpoint: url };
+
+    globalThis.__OTLP_TRACES__ = override;
+    await installTelemetry(router, () => null);
+    router.transitionService.onStart({}, () => {
+      throw new Error('secret detail');
+    });
+    await router.stateService.go('contacts').catch(() => undefined);
+    await override.flush?.();
+
+    const [request] = await commands.takeOtlpRequests();
+
+    expect(request?.body).toContain('error.type');
+    expect(request?.body).not.toContain('secret detail');
+  });
+
   it('gives __OTLP_TRACES__ a flush that sends the batch without the page hiding', async () => {
     const url = await commands.startOtlpCollector();
     const override: OtlpTracesOverride = { endpoint: url };

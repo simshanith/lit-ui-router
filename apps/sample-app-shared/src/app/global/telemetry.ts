@@ -93,6 +93,8 @@ export async function installTelemetry(
   router.plugin(OtelPlugin, {
     tracer: provider.getTracer('sample-app-shared'),
     activateResolveSpans: true,
+    // Error messages are free text, so spans that leave the page go without them.
+    ...(otlp && { redaction: { messages: false } }),
   });
 
   const override = globalThis.__OTLP_TRACES__;

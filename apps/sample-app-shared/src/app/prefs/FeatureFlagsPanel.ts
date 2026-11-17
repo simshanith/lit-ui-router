@@ -111,7 +111,7 @@ const FLAG_CONFIGS: FlagConfig[] = [
     key: 'enable-otel',
     label: 'Enable OpenTelemetry',
     description:
-      'Show OpenTelemetry spans in the devtools Timeline; they stay in the page (needs Devtools; requires page reload)',
+      'Show OpenTelemetry spans in the devtools Timeline; they stay in the page unless an OTLP endpoint is set (needs Devtools; requires page reload)',
     type: 'boolean',
   },
   {

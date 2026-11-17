@@ -70,7 +70,9 @@ receiver too, through a `BatchSpanProcessor` and the OTLP/HTTP exporter, which l
 
 The endpoint is a full traces URL. Headers are `name=value` pairs joined by commas, the shape of
 `OTEL_EXPORTER_OTLP_HEADERS`. Each app's `.env` sets `VITE_OTLP_SERVICE_NAME`, the `service.name` of its spans.
-With neither, the exporter chunk is never loaded and nothing is sent; the deployed docs site sets neither.
+With neither, the exporter chunk is never loaded and nothing is sent; the deployed docs site sets neither. With
+an endpoint the plugin is installed with `redaction: { messages: false }`, so no error message leaves the page, and
+the Timeline shows none either, since redaction applies to a span and not to where it is sent.
 
 The processor sends a batch every few seconds and when the page is hidden, which includes unloading it; the
 exporter sends with `keepalive`, so the request outlives the page. The receiver must allow the page's origin
