@@ -210,8 +210,8 @@ time {
   font-size: 0.75rem;
   color: var(--site-color-text-muted);
   border: var(--site-border-width) solid var(--site-color-line);
-  border-radius: 1em;
-  padding-inline: 0.5em;
+  border-radius: var(--site-radius-pill);
+  padding: var(--site-space-0-5) var(--site-space-2);
 }
 .breaking {
   color: var(--site-color-text);
