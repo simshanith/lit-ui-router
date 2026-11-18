@@ -633,6 +633,15 @@ body:has(.npm-diff) > .content-grid {
   font-size: 0.875rem;
   color: var(--site-color-text-muted);
 }
+.version-lines li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--site-space-3);
+}
+.release-meta .tag {
+  margin-inline-end: var(--site-space-1);
+}
 .version-lines a:first-child {
   font-variant-numeric: tabular-nums;
 }
