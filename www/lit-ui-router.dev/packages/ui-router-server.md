@@ -918,7 +918,9 @@ string urls loads no URLPattern code.
 - **Nesting:** a child `urlPattern()` url joins its parent's pathname. A chain can't mix it with
   string urls, in either direction; a table can hold both kinds side by side.
 - **Formatting:** `href()` and a redirect's target are built from the declared groups, then
-  checked against the engine, and come back `null` for values the pattern rejects.
+  checked against the engine, and come back `null` for values the pattern rejects. Apply the
+  plugin before `applyUrlConfig`, so a [trailing-slash policy](#trailing-slashes) formats these
+  urls too.
 - **Compiled routes:** [`execRoute(route, path)`](/reference/ui-router-server/redirects/functions/execRoute)
   and [`formatRoute(route, params)`](/reference/ui-router-server/redirects/functions/formatRoute)
   match and format a compiled route of either kind.

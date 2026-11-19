@@ -280,7 +280,8 @@ for a wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, and 
 component. A group takes a regexp or a declared param `type`, not both, and no default or array
 mode. Query params are declared by name and keep core's types, defaults and squash. A child
 `urlPattern()` url joins its parent's pathname; a chain can't mix it with string urls, in either
-direction. `href()` and redirect targets return `null` for values the pattern rejects.
+direction. `href()` and redirect targets return `null` for values the pattern rejects. Apply the
+plugin before `applyUrlConfig`, so a trailing-slash policy formats these urls too.
 
 A mount that declares a `urlPattern()` url without `urlPattern: urlPatternCompiler` throws at
 construction, and a table of string urls loads no URLPattern code. `execRoute(route, path)` and

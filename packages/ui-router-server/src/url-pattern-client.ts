@@ -371,7 +371,9 @@ const builtByCore = (state: StateObject, parent?: BuilderFunction): unknown =>
 /**
  * Teaches a router's state builder {@link url-pattern!urlPattern | urlPattern} urls: a `url` built by
  * `urlPattern()` becomes a duck-typed `UrlMatcher`, every other `url`
- * goes to core's builder. Apply it before registering states. A URLPattern
+ * goes to core's builder. Apply it before registering states, and before
+ * {@link url-config!applyUrlConfig | applyUrlConfig} so a trailing-slash
+ * policy formats these urls too. A URLPattern
  * url extends a URLPattern parent's url or the root; a string url can't
  * extend a URLPattern one, nor the reverse.
  *

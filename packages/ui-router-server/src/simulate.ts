@@ -35,9 +35,10 @@ export function createHeadlessRouter(
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(serverLocationPlugin);
-  applyUrlConfig(router, config);
 
+  // Before applyUrlConfig, whose url decorator then wraps the plugin's matchers too.
   if (options.urlPattern) router.plugin(options.urlPattern.plugin);
+  applyUrlConfig(router, config);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   // Core stamps $$state on the object it registers; a shared declaration would point at the last router's StateObject.

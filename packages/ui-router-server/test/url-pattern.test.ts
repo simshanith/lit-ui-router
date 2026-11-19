@@ -517,6 +517,7 @@ describe('server tiers over urlPattern routes', () => {
             { name: 'bad', url: '/bad/:code', redirectTo: 'codes' },
             { name: 'empty', url: '/empty/{slug:[a-z]*}', redirectTo: 'slug' },
           ],
+          ignoreDiagnostics: ['bareBaseNotFound'],
           urlPattern: urlPatternCompiler,
         },
       },
@@ -639,6 +640,51 @@ describe('server tiers over urlPattern routes', () => {
     assert.equal(formatRoute(detail), null);
     assert.deepEqual(execRoute(legacy, '/legacy/3'), { id: 3 });
     assert.equal(formatRoute(legacy, { id: 3 }), '/legacy/3');
+  });
+
+  for (const strategy of ['matcher', 'simulate'] as const)
+    it(`follows the trailing-slash policy with the ${strategy} strategy`, async () => {
+      const server = createServerRouter({
+        mounts: {
+          '/app': {
+            routes: [
+              ...table(),
+              { name: 'old', url: url('/old/:id'), redirectTo: 'users.detail' },
+            ],
+            strategy,
+            config: { strict: false, trailingSlash: { pages: 'always' } },
+            urlPattern: urlPatternCompiler,
+            ignoreDiagnostics: ['bareBaseNotFound'],
+          },
+        },
+      });
+
+      assert.deepEqual(await server.resolve('/app/users/42'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/users/42/',
+        status: 308,
+      });
+      assert.equal((await server.resolve('/app/users/42/')).kind, 'shell');
+      assert.deepEqual(await server.resolve('/app/old/7'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/users/7/',
+        status: 302,
+      });
+    });
+
+  it('formats hrefs in the policy spelling when the plugin goes on first', () => {
+    const router = createHeadlessRouter(
+      table(),
+      { strict: false, trailingSlash: { pages: 'always' } },
+      { urlPattern: urlPatternCompiler },
+    );
+
+    assert.equal(
+      router.stateService.href('users.detail', { id: 7, sort: 'name' }),
+      '/users/7/?sort=name',
+    );
   });
 
   it('applies the plugin to a headless router handed the compiler', async () => {
