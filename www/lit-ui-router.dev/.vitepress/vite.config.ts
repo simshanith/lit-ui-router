@@ -16,6 +16,7 @@ import { changelogAssetsPlugin } from './changelog.ts';
 import { llmsPlugins } from './llms.ts';
 import { redirectsPlugin } from './redirects.ts';
 import { indexPagesPlugin } from './index-pages.ts';
+import { referenceLandingPlugin } from './reference-landing.ts';
 
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
@@ -273,6 +274,7 @@ export default defineConfig({
   plugins: [
     // Ahead of the llms plugin, which reads each page's source.
     indexPagesPlugin(),
+    referenceLandingPlugin(),
     ...llmsPlugins(),
     chunkSizePlugin(),
     releasePagesStylesheetPlugin(),

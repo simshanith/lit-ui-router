@@ -83,11 +83,24 @@ test.describe('docs site', () => {
     // generation would render the shell without them.
     await page.goto('/reference/lit-ui-router/');
     // Scoped to main: the sidebar also links UIRouterLit, but collapsed.
+    const main = page.getByRole('main');
+
     await expect(
-      page
-        .getByRole('main')
-        .getByRole('link', { name: 'UIRouterLit', exact: true }),
+      main.getByRole('link', { name: 'lit-ui-router package', exact: true }),
+    ).toHaveAttribute('href', '/packages/lit-ui-router');
+    await expect(
+      main.getByRole('heading', { level: 2, name: 'Start here' }),
     ).toBeVisible();
+
+    // Once under Start here, once under its category.
+    const exports = main.getByRole('link', {
+      name: 'UIRouterLit',
+      exact: true,
+    });
+
+    await expect(exports).toHaveCount(2);
+
+    for (const link of await exports.all()) await expect(link).toBeVisible();
   });
 
   test('mounts the ExampleEmbed theme component', async ({ page }) => {
