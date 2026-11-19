@@ -100,20 +100,20 @@ reverse: a view that requires a resolve does not fit the default, and TypeScript
 reports the error at `component:` rather than at the generic.
 
 ```ts
-const GalleryView: RoutedLitTemplate<{ manifest: Manifest }> = (props) =>
-  html`<p>${props.resolves.manifest.sheets.length}</p>`;
+const UserListView: RoutedLitTemplate<{ users: User[] }> = (props) =>
+  html`<p>${props.resolves.users.length} users</p>`;
 
 const states: LitStateDeclaration[] = [
-  { name: 'gallery', url: '/', component: GalleryView }, // TS2322 at component:
+  { name: 'users', url: '/users', component: UserListView }, // TS2322 at component:
 ];
 ```
 
 Two shapes type-check:
 
-- **Thread the generic** onto the declaration: `LitStateDeclaration<{ manifest: Manifest }>[]`.
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ users: User[] }>[]`.
   A bare `RoutedLitTemplate` view still fits beside the typed one.
 - **A table mixing resolve shapes** threads one type alias that covers every view,
-  such as `GalleryResolves & SheetResolves`. Each view keeps its own required
+  such as `UserResolves & ContactResolves`. Each view keeps its own required
   members. An alias with every member optional also fits, at the cost of `?.` at
   each use inside the views.
 
@@ -171,9 +171,24 @@ const contactsFutureState = {
 };
 ```
 
+The lazy-loaded module exports a `states` array:
+
+```ts
+// contacts/states.ts
+import type { LitStateDeclaration } from 'lit-ui-router';
+import { ContactsView } from './ContactsView.js';
+
+export const states: LitStateDeclaration[] = [
+  { name: 'contacts', url: '/contacts', component: ContactsView },
+];
+```
+
 The state modules import their components statically, so the elements arrive
 in the same chunk. The sample app splits contacts, prefs and messages this way
 ([main/states.ts](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/states.ts)).
+If you also register an `otherwise` rule for 404s, note that a typo under a
+`.**` prefix triggers the lazy load before falling through — see
+[Unmatched URLs (404)](./unmatched-urls#caveat-lazy-loaded-future-states).
 
 ## The routed element
 
