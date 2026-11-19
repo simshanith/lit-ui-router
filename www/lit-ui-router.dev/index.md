@@ -48,6 +48,8 @@ features:
 
 ## A first example
 
+Two states, two links, and one viewport:
+
 ```ts check
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
@@ -61,7 +63,7 @@ import {
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 
-// Simple routes using template functions - no LitElement classes needed!
+// A state can render a template function; no LitElement class is required.
 const states: LitStateDeclaration[] = [
   { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
   { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
@@ -86,3 +88,5 @@ render(
   document.getElementById('root')!,
 );
 ```
+
+Build the same app step by step in the [Hello World tutorial](/tutorial/helloworld).
