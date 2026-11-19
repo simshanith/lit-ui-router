@@ -291,14 +291,6 @@ class GalaxyShellComponent extends SignalWatcher(LitElement) {
     }
   `;
 
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
-
   // The shell's own props never change while its children do, so it follows
   // the route through a controller, re-rendering only when the crumbs change.
   private readonly crumbs = new RouterSignalController(this, routeCrumbs, {
@@ -439,18 +431,13 @@ class StarsContainerComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
-
-  constructor(props: UIViewInjectedProps<{ stars: Star[] }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ stars: Star[] }>;
 
   // The list stays mounted while galaxy.stars.star changes beneath it.
   private readonly charted = new SignalController(this, () => charted.get());
 
   get stars(): Star[] {
-    return this.uiViewProps.resolves.stars;
+    return this.uiViewProps?.resolves.stars ?? [];
   }
 
   render() {
@@ -557,17 +544,12 @@ class StarDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
-
-  constructor(props: UIViewInjectedProps<{ star: Star | undefined }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ star: Star | undefined }>;
 
   private readonly charted = new SignalController(this, () => charted.get());
 
   get star(): Star | undefined {
-    return this.uiViewProps.resolves.star;
+    return this.uiViewProps?.resolves.star;
   }
 
   firstUpdated() {
@@ -650,14 +632,6 @@ class AstronautDetailComponent extends LitElement {
       }
     }
   `;
-
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
 
   render() {
     return html`

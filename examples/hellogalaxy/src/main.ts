@@ -201,14 +201,6 @@ class GalaxyShellComponent extends LitElement {
     }
   `;
 
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
-
   render() {
     return html`
       <nav aria-label="Hello Galaxy">
@@ -323,15 +315,10 @@ class StarsContainerComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
-
-  constructor(props: UIViewInjectedProps<{ stars: Star[] }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ stars: Star[] }>;
 
   get stars(): Star[] {
-    return this.uiViewProps.resolves.stars;
+    return this.uiViewProps?.resolves.stars ?? [];
   }
 
   render() {
@@ -414,15 +401,10 @@ class StarDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
-
-  constructor(props: UIViewInjectedProps<{ star: Star | undefined }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ star: Star | undefined }>;
 
   get star(): Star | undefined {
-    return this.uiViewProps.resolves.star;
+    return this.uiViewProps?.resolves.star;
   }
 
   firstUpdated() {
@@ -496,14 +478,6 @@ class AstronautDetailComponent extends LitElement {
       }
     }
   `;
-
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
 
   render() {
     return html`
