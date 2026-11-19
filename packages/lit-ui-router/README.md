@@ -59,7 +59,7 @@ into registration explicitly.
 
 Every entry point above publishes twice: `dist/development/*.js` alongside `dist/*.js`, picked by the `development` export condition, which bundlers resolve automatically. Nothing to configure.
 
-The development build carries three console warnings — `uiSref` writing an inert `href`, `uiSrefActive` taking over an `aria-current` it did not set, and any binding finding no `<ui-router>` ancestor. Each is gated on lit's own development build as well, and none of them, message text included, is present in a production bundle. See the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for what each warning means and how the split is verified.
+The development build carries five console warnings — `uiSref` writing an inert `href`, `uiSrefActive` taking over an `aria-current` it did not set, any binding finding no `<ui-router>` ancestor, swapping `uiRouter` on a `<ui-router>` after its first update, and a view component class extending a different copy of `LitElement`. Each is gated on lit's own development build as well, and none of them, message text included, is present in a production bundle. See the [Development and Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for what each warning means and how the split is verified.
 
 ## Component Styles
 
