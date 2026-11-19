@@ -19,20 +19,54 @@ npm install lit-ui-router lit @uirouter/core
 ## Quick Start
 
 ```ts check
-import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  type LitStateDeclaration,
+} from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
-import { html } from 'lit';
+import { LitElement, html, render } from 'lit';
 
+class UserListElement extends LitElement {
+  override render() {
+    return html`<h1>Users</h1>`;
+  }
+}
+customElements.define('user-list', UserListElement);
+
+// 1. Create router and add location plugin
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 
+// 2. Define states
 const states: LitStateDeclaration[] = [
-  { name: 'home', url: '/', component: () => html`<h1>Home</h1>` },
-  { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
+  { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
+  { name: 'users', url: '/users', component: UserListElement },
 ];
-states.forEach((state) => router.stateRegistry.register(state));
 
+// 3. Register states and start
+states.forEach((state) => router.stateRegistry.register(state));
+router.urlService.rules.initial({ state: 'home' });
 router.start();
+
+// 4. Render your app
+render(
+  html`
+    <ui-router .uiRouter=${router}>
+      <nav aria-label="Main">
+        <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Home</a
+        >
+        <a ${uiSref('users')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Users</a
+        >
+      </nav>
+      <ui-view></ui-view>
+    </ui-router>
+  `,
+  document.getElementById('root')!,
+);
 ```
 
 ## Entry Points
