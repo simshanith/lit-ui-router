@@ -13,11 +13,12 @@ import {
   compileRedirects,
   compileRoutes,
   evaluateRedirects,
+  execRoute,
+  formatRoute,
   matchRoute,
 } from '../src/redirects.ts';
 import type { RedirectTable, RouteDeclaration } from '../src/redirects.ts';
 import { createHeadlessRouter, onceSettled } from '../src/simulate.ts';
-import { exec, format } from '../src/url-matcher.ts';
 
 describe('compileRoutes', () => {
   it('appends nested urls along dotted names and merges params rootward', () => {
@@ -31,7 +32,7 @@ describe('compileRoutes', () => {
       compiled.map((route) => route.pattern),
       ['/contacts', '/contacts/:contactId', '/contacts/:contactId/edit'],
     );
-    assert.deepEqual(exec(compiled[1].matcher, '/contacts/3'), {
+    assert.deepEqual(execRoute(compiled[1], '/contacts/3'), {
       contactId: '3',
     });
   });
@@ -152,7 +153,7 @@ describe('compileRoutes: parent', () => {
       { name: 'app.docs', url: '/docs', params: { lang: 'fr' } },
     ]);
 
-    assert.equal(format(child.matcher, {}), '/fr/docs');
+    assert.equal(formatRoute(child, {}), '/fr/docs');
     assert.deepEqual(appParams, { lang: 'en' });
   });
 
@@ -171,12 +172,12 @@ describe('compileRoutes: parent', () => {
       },
     ]);
 
-    assert.deepEqual(exec(help.matcher, '/contacts/vip/help/search'), {
+    assert.deepEqual(execRoute(help, '/contacts/vip/help/search'), {
       section: 'vip',
       topic: 'search',
     });
     assert.equal(
-      format(help.matcher, { section: 'all', topic: 'intro' }),
+      formatRoute(help, { section: 'all', topic: 'intro' }),
       '/contacts/all/help/intro',
     );
   });
@@ -288,9 +289,9 @@ describe('differential: core href vs matcher, along parent', () => {
 
       assert.equal(rule.state.name, route.name, href);
       // SAFETY: the loop skipped url-less fixtures, so compileRoutes emitted this name.
-      const { matcher } = compiled.find(({ name }) => name === route.name)!;
+      const own = compiled.find(({ name }) => name === route.name)!;
 
-      assert.equal(format(matcher, params), href);
+      assert.equal(formatRoute(own, params), href);
     });
   }
 });

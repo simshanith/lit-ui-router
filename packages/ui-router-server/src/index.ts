@@ -28,6 +28,7 @@ import type {
   RouteIndex,
   RouteMatch,
   RouteTableConfig,
+  UrlPatternCompiler,
 } from './redirects.ts';
 import { onOrigin, registerMountPolicies, respell } from './trailing-slash.ts';
 
@@ -38,6 +39,7 @@ export type {
   RouteDeclaration,
   RouteIndex,
   RouteTableConfig,
+  UrlPatternCompiler,
 } from './redirects.ts';
 
 export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
@@ -113,6 +115,26 @@ export interface MountConfig<
    * ```
    */
   routeIndex?: RouteIndex;
+  /**
+   * The compiler for the mount's
+   * {@link url-pattern!urlPattern | urlPattern} urls, for either strategy:
+   * {@link url-pattern/server!urlPatternCompiler | `urlPatternCompiler`}. A
+   * mount declaring a urlPattern() url without it throws at construction.
+   * Only a mount that names it bundles URLPattern code. Experimental.
+   *
+   * @example
+   * ```ts
+   * import type { MountConfig } from 'ui-router-server';
+   * import { urlPattern } from 'ui-router-server/url-pattern';
+   * import { urlPatternCompiler } from 'ui-router-server/url-pattern/server';
+   *
+   * const app: MountConfig = {
+   *   routes: [{ name: 'user', url: urlPattern('/users/:id') }],
+   *   urlPattern: urlPatternCompiler,
+   * };
+   * ```
+   */
+  urlPattern?: UrlPatternCompiler;
   /**
    * Projection of the client's otherwise() rule. `state` references a
    * declared, url-less state (url-less so the unmatched url stays in the
@@ -630,6 +652,7 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       {
         routes: config.routes,
         rules: config.redirects,
+        urlPattern: config.urlPattern,
         // Core always decodes, so a simulate mount's projection does too.
         config:
           strategy === 'simulate'
@@ -672,6 +695,7 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   const router = simulate.createHeadlessRouter(
     mount.config.routes,
     mount.config.config,
+    { urlPattern: mount.config.urlPattern },
   );
 
   // The real rule, replayed: otherwise() only fires when no other rule
