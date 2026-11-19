@@ -40,5 +40,5 @@ features:
       alt: ✨
       width: 40
       height: 40
-    details: Fetch data before states activate. Components always have the data they need, with automatic loading states.
+    details: Fetch data before states activate. Components render with their data already loaded, and a failed fetch cancels the navigation instead of showing a half-loaded page.
 ---
