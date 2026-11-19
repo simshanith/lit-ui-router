@@ -287,7 +287,11 @@ const planetState: LitStateDeclaration = {
 };
 ```
 
-Returning `undefined` lets the transition proceed. Returning a target state redirects, before any resolve runs. A redirect from a URL replaces the browser history entry, so the Back button skips the numbered URL.
+Returning `undefined` lets the transition proceed. Returning a target state
+redirects, before any resolve runs. With a path location plugin, a redirect from
+a URL replaces the browser history entry, so the Back button skips the numbered
+URL; the hash plugin this tutorial uses always adds an entry (see
+[`replace` under the hash plugin](/guides/unmatched-urls#replace-under-the-hash-plugin)).
 
 On a server or a prerendered site, the same function becomes an HTTP redirect. See [Page, response state or redirect](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
