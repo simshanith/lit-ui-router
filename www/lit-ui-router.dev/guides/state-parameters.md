@@ -8,16 +8,16 @@ topic: urls
 # State Parameters
 
 State parameters carry values into a state from the URL path, the query string,
-or in-memory navigation calls. `@uirouter/core` parses, validates, and
-serializes parameters; `lit-ui-router` passes them through `uiSref`, resolves,
-and component lifecycle hooks.
+or in-memory navigation calls. `@uirouter/core` owns parameter parsing,
+validation, and serialization; this guide covers how parameters are declared
+and read in Lit components, and links to `@uirouter/core` for the full option
+reference.
 
-For the full parameter declaration schema, see
-[`@uirouter/core` — `ParamDeclaration`](https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.paramdeclaration.html).
+## Path and query parameters
 
-## Path parameters
-
-Name path segments in a state's `url` with `:param` or `{param}`:
+Name path segments in a state's `url` with `:param` or `{param}`. Brace syntax
+also accepts a built-in type such as `{itemId:int}` or an inline regular
+expression:
 
 ```ts check
 import { html } from 'lit';
@@ -29,20 +29,6 @@ const userState = {
   component: (props) =>
     html`<h1>User ${props.transition?.params().userId}</h1>`,
 } satisfies LitStateDeclaration;
-```
-
-Child states inherit their parent's URL and parameters automatically. A child
-`user.post` with `url: '/posts/:postId'` matches `/users/42/posts/7` and
-receives both `userId` and `postId`.
-
-### Built-in parameter types
-
-Brace syntax accepts a built-in type (`int`, `bool`, `date`, `json`, `string`,
-`path`, `query`, `hash`, `any`) or an inline regular expression:
-
-```ts check
-import { html } from 'lit';
-import type { LitStateDeclaration } from 'lit-ui-router';
 
 const itemState = {
   name: 'item',
@@ -54,14 +40,14 @@ const itemState = {
 } satisfies LitStateDeclaration;
 ```
 
-A URL whose segment does not match the type (such as `/items/abc` for
-`{itemId:int}`) does not match the state and falls through to
-[Unmatched URLs (404)](./unmatched-urls).
+Child states inherit their parent's URL and parameters automatically — a child
+`user.post` with `url: '/posts/:postId'` matches `/users/42/posts/7` and
+receives both `userId` and `postId`. A URL whose segment does not match a typed
+parameter (such as `/items/abc` for `{itemId:int}`) does not match the state;
+the router treats it as an [unmatched URL](./unmatched-urls).
 
-## Query parameters
-
-List query parameter names after `?` separated by `&`, and give them types or
-defaults in `params`:
+List query parameter names after `?` separated by `&`, and configure defaults
+in `params`:
 
 ```ts check
 import { html } from 'lit';
@@ -81,131 +67,52 @@ const searchState = {
 } satisfies LitStateDeclaration;
 ```
 
-## Defaults, optional parameters, and `squash`
+A query parameter is always optional and is `undefined` when absent. Setting
+`value` in `params` gives a parameter a default, and makes a path parameter
+optional. As with typed path segments, an invalid typed query value (such as
+`/search?page=abc`) does not match the state; the router treats it as an
+[unmatched URL](./unmatched-urls).
 
-Setting `value` in `params` makes a parameter optional and gives it a fallback
-when omitted from the URL. `squash` controls how the default value is
-serialized back into the URL:
+## Parameter options
 
-| `squash` value    | Behavior when param equals its default `value`                        |
-| ----------------- | --------------------------------------------------------------------- |
-| `false` (default) | Writes the default value into the URL (for example `/search?page=1`)  |
-| `true`            | Omits the default value from the URL (`/search`)                      |
-| `'-'` (string)    | Replaces the default value with that placeholder token in path params |
+The parameter declaration model comes from `@uirouter/core`:
 
-## Non-URL parameters
-
-Declare a parameter in `params` without mentioning it in `url` to pass
-in-memory values across transitions without exposing them in the address bar:
-
-```ts check
-import { html } from 'lit';
-import type { LitStateDeclaration } from 'lit-ui-router';
-
-const loginState = {
-  name: 'login',
-  url: '/login',
-  params: {
-    returnTo: null as string | null,
-  },
-  component: () => html`<app-login></app-login>`,
-} satisfies LitStateDeclaration;
-```
-
-Non-URL parameters are not persisted across a full page reload, so give them a
-safe default such as `null`.
+- **Built-in types**: `int`, `bool`, `date`, `json`, `string`, `path`, `query`,
+  `hash`, `any`, and inline regexes — see
+  [`ParamTypes`](https://ui-router.github.io/core/docs/latest/classes/_params_paramtypes_.paramtypes.html).
+- **Defaults and `squash`**: set
+  [`value`](https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.paramdeclaration.html#value)
+  and
+  [`squash`](https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.paramdeclaration.html#squash)
+  on `params`. `squash: true` omits a default value from the URL; on a query
+  parameter the key is dropped.
+- **Non-URL parameters**: declare a key in
+  [`params`](https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html#params)
+  without naming it in `url` to pass in-memory values (such as a `draft`
+  object) across transitions without exposing them in the address bar; they do
+  not persist across a full page reload.
+- **Custom types**: register a custom type with
+  [`router.urlService.config.type()`](https://ui-router.github.io/core/docs/latest/classes/_url_urlconfig_.urlconfig.html#type)
+  before registering any state that names it (URLs compile synchronously at
+  registration, so an unregistered type name in `{slug:slug}` is treated as a
+  regex).
 
 ## Dynamic parameters
 
-By default, changing any parameter exits and re-enters the state, re-running
-its resolves and rebuilding its routed component. Set `dynamic: true` on a
-parameter (such as a filter, sort column, or pagination cursor) to update the
-URL **without** exiting the state or recreating the Lit component:
-
-```ts check
-import { LitElement, html } from 'lit';
-import { property, state } from 'lit/decorators.js';
-import type { Transition } from '@uirouter/core';
-import type {
-  LitStateDeclaration,
-  UIViewInjectedProps,
-  UiOnParamsChanged,
-} from 'lit-ui-router';
-
-export class ContactList extends LitElement implements UiOnParamsChanged {
-  @property({ attribute: false })
-  uiViewProps?: UIViewInjectedProps;
-
-  @state()
-  private filter = '';
-
-  protected override willUpdate() {
-    if (!this.hasUpdated) {
-      this.filter = String(this.uiViewProps?.transition?.params().filter ?? '');
-    }
-  }
-
-  uiOnParamsChanged(newParams: Record<string, unknown>, _trans: Transition) {
-    if ('filter' in newParams) {
-      this.filter = String(newParams.filter ?? '');
-    }
-  }
-
-  override render() {
-    return html`<p>Filter: ${this.filter || 'all'}</p>`;
-  }
-}
-
-export const contactsState = {
-  name: 'contacts',
-  url: '/contacts?filter',
-  params: {
-    filter: { value: '', dynamic: true, squash: true },
-  },
-  component: ContactList,
-} satisfies LitStateDeclaration;
-```
-
-Because resolves do **not** re-run on a dynamic parameter change, react to the
-updated values in
-[`uiOnParamsChanged`](./component-lifecycle#uionparamschanged-react-to-dynamic-parameters).
-
-## Custom parameter types
-
-Register a custom type on `router.urlService.config.type()` **before
-registering any state whose `url` names that type** (since
-`stateRegistry.register()` compiles the state's URL synchronously):
-
-```ts check
-import { html } from 'lit';
-import type { LitStateDeclaration, UIRouterLit } from 'lit-ui-router';
-
-declare const router: UIRouterLit;
-
-router.urlService.config.type('slug', {
-  encode: (val: string) => val,
-  decode: (val: string) => val,
-  is: (val: unknown): val is string =>
-    typeof val === 'string' && /^[a-z0-9-]+$/.test(val),
-  equals: (a: string, b: string) => a === b,
-  pattern: /[a-z0-9-]+/,
-});
-
-const postState: LitStateDeclaration = {
-  name: 'post',
-  url: '/posts/{slug:slug}',
-  component: (props) => html`<h1>Post ${props.transition?.params().slug}</h1>`,
-};
-router.stateRegistry.register(postState);
-```
-
-See
-[`@uirouter/core` — `ParamTypeDefinition`](https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.paramtypedefinition.html)
-for every hook a custom type can define.
+By default, changing one of a state's own parameters exits and re-enters that
+state and its children, re-running their resolves and rebuilding their routed
+components. Mark a parameter `dynamic: true` in `params` to keep the component
+mounted and react to changed values in
+[`uiOnParamsChanged`](./component-lifecycle#uionparamschanged-react-to-dynamic-parameters);
+resolves do not re-run on dynamic updates (see
+[Reading params](./routed-components#reading-params)).
 
 ## Passing and reading parameters in Lit
 
-Pass parameter objects to `uiSref`, `srefHref`, or `router.stateService.go()`:
+Pass parameter objects to [`uiSref`](/reference/lit-ui-router/directives/uiSref),
+[`srefHref`](/reference/lit-ui-router/directives/srefHref) (see
+[Navigation Links](/packages/lit-ui-router#navigation-links)), or
+`router.stateService.go()`:
 
 ```ts check
 import { html } from 'lit';
@@ -219,10 +126,16 @@ const link = html`<a ${uiSref('search', { q: 'lit', page: 2 })}>Page 2</a>`;
 await router.stateService.go('search', { q: 'router' }, { inherit: false });
 ```
 
-Inside a routed `LitElement`, read parameters through a **resolve** rather than
-`router.globals.params` so the component receives a typed input bound to the
-transition that rendered it — see
-[Reading params](./routed-components#reading-params).
+How a Lit component reads parameters depends on where it sits:
+
+- **Template functions** can read `props.transition?.params()` directly for
+  lightweight views, as shown above.
+- **Routed `LitElement` classes** should declare a resolve reading
+  `$transition$.params()` and receive the typed value on `uiViewProps.resolves`
+  rather than reading `router.globals.params` — see
+  [Reading params](./routed-components#reading-params).
+- **Components outside `<ui-view>`** can read current params reactively through
+  [`TransitionController`](./reactive-components).
 
 ## Further reading
 
@@ -230,6 +143,8 @@ transition that rendered it — see
   params through resolves
 - [Component Lifecycle Hooks](./component-lifecycle#uionparamschanged-react-to-dynamic-parameters) —
   reacting to `dynamic: true` parameter updates
+- [Reactive Components](./reactive-components) — reading params outside
+  `<ui-view>` with `TransitionController`
 - [Unmatched URLs (404)](./unmatched-urls#a-landing-state-that-reads-the-query) —
   preserving query parameters on an initial redirect
 - [`@uirouter/core` — `ParamDeclaration`](https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.paramdeclaration.html) —
