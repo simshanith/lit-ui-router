@@ -106,8 +106,8 @@ heading and divided by a rule. The Views tab stays as it is.
   views, it goes on to fit the Map and maximise the panel as each is needed.
   It is disabled only where nothing it could do would draw them: in the
   maximised panel with no room or with states that pan, where its title says
-  so, and while the view map's module is still loading, where it names no
-  cause.
+  so; while the view map's module is loading, where it names no cause; or
+  after that module failed to load, where its title says so too.
 - **Rooms.** The 48px and whatever else the two drawings leave over are split
   evenly, half to each side, and each drawing stands in the middle of its own
   side, across and down, so the two can stand nearer each other than 48px.
