@@ -172,6 +172,13 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
       level: 2,
       name: 'Release notes',
     });
+    // The header reads the navigation catalog, bundled into the worker.
+    assert.equal(
+      getByRole(parseHtml(body).body, 'link', { name: 'Guides' }).getAttribute(
+        'href',
+      ),
+      '/guides/',
+    );
     assert.ok(
       hasAttribute(element(parseMarkup(body), 'ui-view'), 'defer-hydration'),
     );

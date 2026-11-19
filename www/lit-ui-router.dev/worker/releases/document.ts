@@ -2,16 +2,42 @@
 import { html, render } from '@lit-labs/ssr';
 import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
 
+import { NAV, type NavLink } from '../../catalog/navigation.ts';
+import { RELEASES_MOUNT } from './routes.ts';
+import { REPOSITORY } from './views.ts';
+
 /** The stylesheet the docs build emits from `release-pages.css` beside this module. */
 export const STYLESHEET = '/release-pages.css';
 
 /** The script the docs build emits from `release-diff.ts` beside this module. */
 export const DIFF_SCRIPT = '/release-diff.js';
 
+// The logo links it, in place of the docs nav's home entry.
+const HOME = '/';
+
+const RELEASES = `${RELEASES_MOUNT}/`;
+
+/**
+ * The header's links: the docs nav as one row. The menu that lists the releases is spread into its
+ * pages, any other menu is one link to its first page, and GitHub is the docs header's social link.
+ */
+export const SITE_LINKS: readonly NavLink[] = [
+  ...NAV.flatMap((entry) => {
+    if (!('items' in entry)) return entry.link === HOME ? [] : [entry];
+
+    return entry.items.some(({ link }) => link === RELEASES)
+      ? entry.items
+      : entry.items.slice(0, 1).map(({ link }) => ({ text: entry.text, link }));
+  }),
+  { text: 'GitHub', link: REPOSITORY },
+];
+
 /** What the document's head says about the page. */
 export interface PageHead {
   title: string;
   description: string;
+  /** The page is the releases index, the header's Releases link itself. */
+  index?: boolean;
   /** A module script the page loads. */
   script?: string;
   /** Keeps the page out of search indexes. */
@@ -20,6 +46,15 @@ export interface PageHead {
   prev?: string;
   next?: string;
 }
+
+// Every page sits under Releases; only the index is the link's own page.
+const siteLink = ({ text, link }: NavLink, head: PageHead) => {
+  const current = head.index ? 'page' : 'true';
+
+  return link === RELEASES
+    ? html`<a href=${link} aria-current=${current}>${text}</a>`
+    : html`<a href=${link}>${text}</a>`;
+};
 
 // @lit-labs/ssr's server-only `html`: it renders a doctype and binds inside `<title>`, where hydratable templates can't.
 // The head repeats VitePress's check-dark-mode script, so the docs site's appearance toggle carries over.
@@ -46,14 +81,14 @@ ${head.script ? html`<script type="module" src=${head.script}></script>` : ''}
 </head>
 <body>
 <header class="site content-grid"><div>
-<a class="home" href="/"><img src="/images/lit-ui-router.svg" alt="" width="32" height="32">Lit UI Router</a>
-<nav aria-label="Site"><a href="/introduction">Docs</a><a href="/packages/">Packages</a><a href="/releases/">Releases</a><a href="https://github.com/simshanith/lit-ui-router">GitHub</a></nav>
+<a class="home" href=${HOME}><img src="/images/lit-ui-router.svg" alt="" width="32" height="32">Lit UI Router</a>
+<nav aria-label="Site">${SITE_LINKS.map((link) => siteLink(link, head))}</nav>
 </div></header>
 <main class="content-grid"><div>`;
 
 // oxfmt-ignore
 const closing = html`</div></main>
-<footer class="content-grid"><p>Read from the <a href="/site/#the-release-ledger">release ledger</a>, with release notes from each package's changelog. Most releases are also on <a href="https://github.com/simshanith/lit-ui-router/releases">GitHub</a>.</p></footer>
+<footer class="content-grid"><p>Read from the <a href="/site/#the-release-ledger">release ledger</a>, with release notes from each package's changelog. Most releases are also on <a href=${`${REPOSITORY}/releases`}>GitHub</a>.</p></footer>
 </body>
 </html>
 `;
