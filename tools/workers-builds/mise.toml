@@ -1,0 +1,33 @@
+# Workers Builds tasks, addressed as //tools/workers-builds:<step>. Inputs are
+# env-backed usage flags, as in tools/build_and_test/mise.toml; secrets stay in
+# workflow step env. Tasks assume node_modules exists; run `mise run setup`
+# first when invoking one standalone.
+
+[tasks.preview_deployment]
+# env: GH_TOKEN, GITHUB_REPOSITORY.
+description = "Post a Workers Builds check run's preview URL as a GitHub Deployment on its commit"
+usage = '''
+flag "--name <name>" help="The check run's name, Workers Builds: <worker>" required=#true env="CHECK_RUN_NAME"
+flag "--sha <sha>" help="The check run's head sha" required=#true env="HEAD_SHA"
+flag "--branch <branch>" help="The check suite's head branch" required=#true env="HEAD_BRANCH"
+flag "--summary <summary>" help="The check run's output.summary, which names the preview URL" required=#true env="CHECK_RUN_SUMMARY"
+flag "--details-url <details_url>" help="The check run's details_url, the build log" required=#true env="DETAILS_URL"
+flag "--dry-run" help="Print what would be posted and retired, post nothing" env="DRY_RUN"
+'''
+# DRY_RUN=false exports usage_dry_run as "false", so only "true" adds the flag.
+run = '''
+if [ "${usage_dry_run:-}" = true ]; then set -- --dry-run; fi
+exec ./preview-deployment.ts post --name "${usage_name?}" --sha "${usage_sha?}" --branch "${usage_branch?}" --summary "${usage_summary?}" --details-url "${usage_details_url?}" "$@"
+'''
+
+[tasks.retire_preview_deployments]
+# env: GH_TOKEN, GITHUB_REPOSITORY.
+description = "Mark a closed branch's preview deployments inactive in every preview/<worker> environment"
+usage = '''
+flag "--branch <branch>" help="The closed pull request's head branch" required=#true env="HEAD_BRANCH"
+flag "--dry-run" help="Print the deployments that would be retired, retire nothing" env="DRY_RUN"
+'''
+run = '''
+if [ "${usage_dry_run:-}" = true ]; then set -- --dry-run; fi
+exec ./preview-deployment.ts retire --branch "${usage_branch?}" "$@"
+'''

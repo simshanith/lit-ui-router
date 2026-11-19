@@ -3522,6 +3522,9 @@ importers:
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
+      '@tools/cli':
+        specifier: catalog:workspace
+        version: link:../cli
       '@tools/cloudflare-api':
         specifier: catalog:workspace
         version: link:../cloudflare-api

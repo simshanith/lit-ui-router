@@ -109,9 +109,10 @@ description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["turbo_pin_worktree"]
 usage = '''
 flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
+flag "--filter <selector>" help="Install only the members one pnpm --filter selector picks"
 '''
 # unquoted on purpose: the closure is several pnpm --filter argv words
-run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE}'
+run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE} ${usage_filter:+--filter "$usage_filter"}'
 
 [tasks.setup.env]
 RELEASE_CLOSURE = "{{vars.release_closure}}"

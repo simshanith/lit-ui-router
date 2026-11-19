@@ -2,7 +2,7 @@
   "name": "@tools/workers-builds",
   "version": "0.0.1",
   "private": true,
-  "description": "Diffs the Cloudflare Workers Builds triggers against the repo-owned desired state, and applies it; checks the atlas Pages deploy against its branch head",
+  "description": "Diffs the Cloudflare Workers Builds triggers against the repo-owned desired state, and applies it; checks the atlas Pages deploy against its branch head; posts Workers Builds preview URLs as GitHub Deployments",
   "type": "module",
   "scripts": {
     "check": "node workers-builds-triggers.ts",
@@ -16,6 +16,7 @@
     "@cloudflare/config": "catalog:",
     "@distilled.cloud/cloudflare": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/cli": "catalog:workspace",
     "@tools/cloudflare-api": "catalog:workspace",
     "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",

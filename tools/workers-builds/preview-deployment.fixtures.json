@@ -1,0 +1,79 @@
+{
+  "$comment": "Fixtures for preview-deployment.test.ts: Cloudflare Workers Builds check runs as the check_run event carries them (fields post reads, plus check_suite.head_branch from GET /check-suites/{id}), copied from live runs on 2026-11-19 with the account id replaced. `versionsUpload` is this PR's lit-ui-router branch build, `pr2270` #2270's, `production` main's head, and `previews` a release-ledger Workers Previews build, whose summary names no version or URL.",
+  "versionsUpload": {
+    "id": 135801821684,
+    "name": "Workers Builds: lit-ui-router",
+    "head_sha": "83df1d5f6a0ace997569bf7fc88723f59d3913d9",
+    "status": "completed",
+    "conclusion": "success",
+    "details_url": "https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/98821413-4e8c-4315-925c-8a8d11ff9d3f",
+    "app": {
+      "slug": "cloudflare-workers-and-pages"
+    },
+    "check_suite": {
+      "id": 120707406528,
+      "head_branch": "t3/async-pr-metadata-bubbling"
+    },
+    "output": {
+      "title": "Workers Builds: lit-ui-router",
+      "summary": "\nBuild ID: [98821413-4e8c-4315-925c-8a8d11ff9d3f](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/98821413-4e8c-4315-925c-8a8d11ff9d3f)\nScript: [lit-ui-router](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production)\nVersion ID: a53e0046-6821-411a-a7a4-e43a5834f636\nPreview URL: https://a53e0046-lit-ui-router.shane-cf1.workers.dev\nPreview Alias URL: https://t3-async-pr-metadata-bubbling-lit-ui-router.shane-cf1.workers.dev\n"
+    }
+  },
+  "pr2270": {
+    "id": 135313012294,
+    "name": "Workers Builds: lit-ui-router",
+    "head_sha": "99c2ed6fc79c23dff476d5671774dfd5dc5ddd74",
+    "status": "completed",
+    "conclusion": "success",
+    "details_url": "https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/963e54c1-a8ee-4145-8873-d1277a7adacc",
+    "app": {
+      "slug": "cloudflare-workers-and-pages"
+    },
+    "check_suite": {
+      "id": 120324007304,
+      "head_branch": "docs/v1-snapshot-llms-full"
+    },
+    "output": {
+      "title": "Workers Builds: lit-ui-router",
+      "summary": "\nBuild ID: [963e54c1-a8ee-4145-8873-d1277a7adacc](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/963e54c1-a8ee-4145-8873-d1277a7adacc)\nScript: [lit-ui-router](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production)\nVersion ID: 2bb6eca1-9373-4c50-9d20-e7e0fa742fb2\nPreview URL: https://2bb6eca1-lit-ui-router.shane-cf1.workers.dev\nPreview Alias URL: https://docs-v1-snapshot-llms-full-lit-ui-router.shane-cf1.workers.dev\n"
+    }
+  },
+  "production": {
+    "id": 135311631377,
+    "name": "Workers Builds: lit-ui-router",
+    "head_sha": "1fb0b87a456dae34a6c3fae8acec974810419343",
+    "status": "completed",
+    "conclusion": "success",
+    "details_url": "https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/286f5b82-3c3a-4d50-9385-62008f49991d",
+    "app": {
+      "slug": "cloudflare-workers-and-pages"
+    },
+    "check_suite": {
+      "id": 120322914619,
+      "head_branch": "main"
+    },
+    "output": {
+      "title": "Workers Builds: lit-ui-router",
+      "summary": "\nBuild ID: [286f5b82-3c3a-4d50-9385-62008f49991d](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production/builds/286f5b82-3c3a-4d50-9385-62008f49991d)\nScript: [lit-ui-router](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/lit-ui-router/production)\nVersion ID: 36884872-67a5-40a4-b67b-5b9472bbb4b2\n"
+    }
+  },
+  "previews": {
+    "id": 135791408633,
+    "name": "Workers Builds: release-ledger",
+    "head_sha": "0421616a2067090dad2c5599f4a671cd22627724",
+    "status": "completed",
+    "conclusion": "success",
+    "details_url": "https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/release-ledger/production/previews/t3-async-pr-metadata-bubbling/builds/0c5590c5-9f27-4b44-b633-b28127ec6ff5",
+    "app": {
+      "slug": "cloudflare-workers-and-pages"
+    },
+    "check_suite": {
+      "id": 120699359342,
+      "head_branch": "t3/async-pr-metadata-bubbling"
+    },
+    "output": {
+      "title": "Workers Builds: release-ledger",
+      "summary": "\nBuild ID: [0c5590c5-9f27-4b44-b633-b28127ec6ff5](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/release-ledger/production/previews/t3-async-pr-metadata-bubbling/builds/0c5590c5-9f27-4b44-b633-b28127ec6ff5)\nScript: [release-ledger](https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/workers/services/view/release-ledger/production)\n"
+    }
+  }
+}
