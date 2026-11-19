@@ -3,8 +3,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import matter from '@11ty/gray-matter';
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import * as v from 'valibot';
 import type { DefaultTheme } from 'vitepress';
 
 import { packageGroups } from '../../catalog/navigation.ts';
@@ -21,11 +23,13 @@ const published = readdirSync(packagesDir)
 
 const cataloged = PACKAGES.map(({ name }) => name);
 
+const entries = (
+  items: readonly DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem[] =>
+  items.flatMap((item) => [item, ...entries(item.items ?? [])]);
+
 const links = (items: readonly DefaultTheme.SidebarItem[]): string[] =>
-  items.flatMap(({ link, items: children = [] }) => [
-    ...(link ? [link] : []),
-    ...links(children),
-  ]);
+  entries(items).flatMap(({ link }) => (link ? [link] : []));
 
 // A package page leads with its own npm badge; a family page has none.
 const packageOf = (link: string): string[] => {
@@ -66,6 +70,30 @@ describe('the package catalog', () => {
           .map(({ name }) => name)
           .sort(),
         role,
+      );
+    }
+  });
+
+  it('gives each package page one name: its npm name as sidebar label, title and heading', () => {
+    const pages = packageGroups
+      .flatMap(({ items }) => entries(items))
+      .flatMap(({ text, link }) =>
+        link ? packageOf(link).map((name) => ({ text, link, name })) : [],
+      );
+
+    assert.equal(pages.length, PACKAGES.length);
+
+    for (const { text, link, name } of pages) {
+      const { data, content } = matter(
+        readFileSync(join(site, `${link}.md`), 'utf8'),
+      );
+
+      const { title } = v.parse(v.looseObject({ title: v.string() }), data);
+
+      assert.deepEqual(
+        { text, title, heading: /^# (.+)$/m.exec(content)?.[1] },
+        { text: name, title: name, heading: name },
+        link,
       );
     }
   });

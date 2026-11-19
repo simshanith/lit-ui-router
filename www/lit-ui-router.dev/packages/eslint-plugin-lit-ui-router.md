@@ -1,5 +1,5 @@
 ---
-title: ESLint Plugin
+title: eslint-plugin-lit-ui-router
 description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives
 type: package
 ---

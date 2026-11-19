@@ -12,6 +12,7 @@ import { NAV, SIDEBAR, type SidebarEntry } from '../catalog/navigation.ts';
 import type { PackageName } from '../catalog/packages.ts';
 import { API_REFERENCES } from '../catalog/references.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
+import { withPackageLabels } from './package-label.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
 import { redirectLines, writeRedirects } from './redirects.ts';
 import { renderForSearch } from './search-render.ts';
@@ -244,7 +245,7 @@ const config = {
     // A link's accessible name must contain its visible text (WCAG 2.5.3).
     notFound: { linkLabel: 'Take me home' },
     nav: [...NAV, { component: 'VersionMenu' }],
-    sidebar: withReferences(SIDEBAR),
+    sidebar: withPackageLabels(withReferences(SIDEBAR)),
     socialLinks: [
       { icon: 'github', link: 'https://github.com/simshanith/lit-ui-router' },
     ],

@@ -1,5 +1,5 @@
 ---
-title: Navigation API Plugin
+title: ui-router-navigation-location-plugin
 description: Manage URLs with the modern browser Navigation API using ui-router-navigation-location-plugin
 type: package
 ---
