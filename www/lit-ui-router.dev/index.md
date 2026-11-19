@@ -40,5 +40,5 @@ features:
       alt: ✨
       width: 40
       height: 40
-    details: Fetch data before states activate. Components render with their data already loaded, and a failed fetch cancels the navigation instead of showing a half-loaded page.
+    details: By default, transitions wait for data before activating a state. Components render with data ready, and a failed fetch stops navigation.
 ---
