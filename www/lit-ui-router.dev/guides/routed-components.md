@@ -100,20 +100,20 @@ reverse: a view that requires a resolve does not fit the default, and TypeScript
 reports the error at `component:` rather than at the generic.
 
 ```ts
-const UserListView: RoutedLitTemplate<{ users: User[] }> = (props) =>
-  html`<p>${props.resolves.users.length} users</p>`;
+const TeamView: RoutedLitTemplate<{ members: Member[] }> = (props) =>
+  html`<p>${props.resolves.members.length} members</p>`;
 
 const states: LitStateDeclaration[] = [
-  { name: 'users', url: '/users', component: UserListView }, // TS2322 at component:
+  { name: 'team', url: '/team', component: TeamView }, // TS2322 at component:
 ];
 ```
 
 Two shapes type-check:
 
-- **Thread the generic** onto the declaration: `LitStateDeclaration<{ users: User[] }>[]`.
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ members: Member[] }>[]`.
   A bare `RoutedLitTemplate` view still fits beside the typed one.
 - **A table mixing resolve shapes** threads one type alias that covers every view,
-  such as `UserListResolves & ContactResolves`. Each view keeps its own required
+  such as `TeamResolves & ContactResolves`. Each view keeps its own required
   members. An alias with every member optional also fits, at the cost of `?.` at
   each use inside the views.
 
