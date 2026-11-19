@@ -129,6 +129,4 @@ const stop = watchSelection(
 - [Releases](/releases/ui-router-signals/){target="_self"} — every version, newest first, with its release notes
 - [TC39 Signals proposal](https://github.com/tc39/proposal-signals)
 - [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill)
-- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-signals) — this package as
-  a brick in sheet 2's model in the round, sized by its authored files and
-  seated on what it peers
+- [Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-signals) — package size and dependency map
