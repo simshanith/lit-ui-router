@@ -4,7 +4,7 @@ import type { UIRouterDevtools } from 'ui-router-devtools/plugin';
 
 import { featureFlags } from '../util/featureDetection.js';
 import { restSpan } from '../util/restSpan.js';
-import { installDevtools } from './devtools.js';
+import { installDevtools, startAfterDevtools } from './devtools.js';
 
 const panel = () =>
   document.querySelector<UIRouterDevtools>('ui-router-devtools');
@@ -43,5 +43,46 @@ describe('installDevtools', () => {
 
     expect(load).toHaveBeenCalledOnce();
     expect(panel()?.spans.map(({ name }) => name)).toContain('GET contacts');
+  });
+});
+
+describe('startAfterDevtools', () => {
+  const router = new UIRouter();
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('starts the router only once the install has finished', async () => {
+    const order: string[] = [];
+
+    const install = vi.fn(async () => {
+      await Promise.resolve();
+      order.push('installed');
+    });
+
+    const started = startAfterDevtools(
+      router,
+      () => order.push('started'),
+      install,
+    );
+
+    expect(order).toEqual([]);
+
+    await started;
+
+    expect(install).toHaveBeenCalledWith(router);
+    expect(order).toEqual(['installed', 'started']);
+  });
+
+  it('starts the router when the install fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const start = vi.fn();
+    const failure = new Error('chunk failed to load');
+
+    await startAfterDevtools(router, start, () => Promise.reject(failure));
+
+    expect(start).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith('The devtools are off:', failure);
   });
 });

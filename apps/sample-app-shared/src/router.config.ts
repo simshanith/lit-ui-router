@@ -19,7 +19,7 @@ import { shellMounts } from 'sample-app-routes/shell-mounts';
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
 import routeFocusHook from './app/global/routeFocus.hook.js';
-import { installDevtools } from './app/global/devtools.js';
+import { startAfterDevtools } from './app/global/devtools.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
   featureFlags,
@@ -121,10 +121,6 @@ export function configureRouter(router = new UIRouterLit()) {
   router.plugin(locationPlugin, options);
   console.info(message);
 
-  if (featureFlags.get('enable-devtools')) {
-    void installDevtools(router);
-  }
-
   if (featureFlags.get('enable-visualizer')) {
     void import('@uirouter/visualizer').then(({ Visualizer }) =>
       router.plugin(Visualizer),
@@ -195,7 +191,11 @@ export function configureRouter(router = new UIRouterLit()) {
   routeFocusHook(router.transitionService);
   googleAnalyticsHook(router.transitionService);
 
-  router.start();
+  if (featureFlags.get('enable-devtools')) {
+    void startAfterDevtools(router, () => router.start());
+  } else {
+    router.start();
+  }
 
   return router;
 }

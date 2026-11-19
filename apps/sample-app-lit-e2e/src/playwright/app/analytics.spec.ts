@@ -1,4 +1,10 @@
-import { expect, syncUrl, test, type LocationPlugin } from './fixtures.ts';
+import {
+  expect,
+  firstTransition,
+  syncUrl,
+  test,
+  type LocationPlugin,
+} from './fixtures.ts';
 
 /**
  * The manual page_view budget per location plugin. gtag's enhanced measurement
@@ -58,6 +64,7 @@ test.describe("gtag page_view under the project's location plugin", () => {
     });
     await visit('/welcome');
     await expect(page.locator('ui-router')).toBeAttached();
+    await firstTransition(page);
   });
 
   test('counts the cold load and a forward navigation', async ({
