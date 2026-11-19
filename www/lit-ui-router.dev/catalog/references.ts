@@ -17,3 +17,22 @@ export const API_REFERENCES = {
   'ui-router-registry': '/reference/ui-router-registry/',
   'eslint-plugin-lit-ui-router': null,
 } as const satisfies Record<PackageName, string | null>;
+
+/** An export a package's reference index leads with; `element` is the custom element tag its class defines. */
+export interface FeaturedExport {
+  name: string;
+  element?: string;
+}
+
+/** The exports a new reader needs first, by package; `.vitepress/test/reference-landing.test.ts` holds each to the generated reference. */
+export const FEATURED_EXPORTS = {
+  'lit-ui-router': [
+    { name: 'UIRouterLit' },
+    { name: 'UIRouterLitElement', element: 'ui-router' },
+    { name: 'UiView', element: 'ui-view' },
+    { name: 'uiSref' },
+    { name: 'uiSrefActive' },
+    { name: 'TransitionController' },
+    { name: 'LitStateDeclaration' },
+  ],
+} as const satisfies Partial<Record<PackageName, readonly FeaturedExport[]>>;
