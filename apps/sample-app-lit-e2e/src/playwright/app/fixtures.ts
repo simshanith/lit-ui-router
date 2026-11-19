@@ -18,6 +18,7 @@ export type Visit = (
 interface UIRouterElement extends HTMLElement {
   uiRouter?: {
     urlService: { url: (newUrl: string, replace?: boolean) => void };
+    globals: { current: { name?: string } };
   };
 }
 
@@ -145,15 +146,22 @@ export const authenticate = (): void => {
   });
 };
 
+/** Resolves once the app's first transition has landed; the router starts after the devtools chunks load. */
+export const firstTransition = async (page: Page): Promise<void> => {
+  await page.waitForFunction(
+    () =>
+      !!document.querySelector<UIRouterElement>('ui-router')?.uiRouter?.globals
+        .current.name,
+  );
+};
+
 /**
  * Drives a client-side URL change through the running app's router, like an
  * in-app link. Direct loads of unmatched URLs get the static server 404, so
  * the in-router 404 is only reachable this way.
  */
 export const syncUrl = async (page: Page, path: string): Promise<void> => {
-  await page.waitForFunction(
-    () => !!document.querySelector<UIRouterElement>('ui-router')?.uiRouter,
-  );
+  await firstTransition(page);
   await page.evaluate((url) => {
     // a push, not url()'s default replace: the hash service's replaceState fires no hashchange
     document
