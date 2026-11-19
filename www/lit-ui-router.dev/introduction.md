@@ -16,7 +16,12 @@ built directly on the framework-agnostic
 ```ts check
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit, type LitStateDeclaration } from 'lit-ui-router';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  type LitStateDeclaration,
+} from 'lit-ui-router';
 
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
@@ -27,11 +32,20 @@ const states: LitStateDeclaration[] = [
   { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
 ];
 states.forEach((state) => router.stateRegistry.register(state));
+router.urlService.rules.initial({ state: 'home' });
 
 router.start();
 
 render(
   html`<ui-router .uiRouter=${router}>
+    <nav>
+      <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+        >Home</a
+      >
+      <a ${uiSref('about')} ${uiSrefActive({ activeClasses: ['active'] })}
+        >About</a
+      >
+    </nav>
     <ui-view></ui-view>
   </ui-router>`,
   document.getElementById('root')!,
@@ -64,8 +78,10 @@ npm install lit-ui-router lit @uirouter/core
 
 The app renders into a host element, `<div id="root">` in the starter's
 [`index.html`](https://github.com/simshanith/lit-ui-router/blob/main/examples/helloworld/index.html).
-Vite's `lit-ts` template (`npm create vite@latest my-app -- --template lit-ts`)
-already sets the decorator options the tutorial uses.
+The tutorial uses TypeScript decorators (`@customElement`, `@property`), so set
+`"experimentalDecorators": true` and `"useDefineForClassFields": false` in
+`tsconfig.json`; Vite's `lit-ts` template
+(`npm create vite@latest my-app -- --template lit-ts`) already sets both.
 
 Then start with the [Hello World tutorial](./tutorial/helloworld).
 

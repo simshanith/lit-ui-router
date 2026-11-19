@@ -610,17 +610,21 @@ them through the `development` export condition — see
 [Development and Production Builds](/guides/development-builds) for the
 mechanism.
 
-Three warnings come from `prerender()`. The first two come from the
+Four warnings can fire during `prerender()`. Two come from the
 `ui-router-server/prerender` loop, prefixed `ui-router-server: prerender:`, and
-follow that package's build. A path that verdicts `notFound` with
-no `otherwise` projection to fall back on logs a console warning naming that
-path, because nothing was emitted for it; `result.warnings` carries the same
-list in both builds. A mount that refuses the first page's trailing-slash
-spelling logs one warning naming that page — see
-[Static hosts add a trailing slash](#static-hosts-add-a-trailing-slash). A
-registry that holds no `<ui-view>` when the call starts logs one warning,
-because every view on those pages would render empty. Plain `node` resolves
-the production build; `node --conditions=development` resolves this one.
+follow that package's build: a path that verdicts `notFound` with no
+`otherwise` projection logs a console warning naming that path (`result.warnings`
+carries the same list in both builds), and a mount that refuses the first page's
+trailing-slash spelling logs one warning naming that page — see
+[Static hosts add a trailing slash](#static-hosts-add-a-trailing-slash). Two
+more come from `lit-ui-router-ssr`: a registry that holds no `<ui-view>` when
+the call starts logs one warning (every view on those pages would render empty),
+and a shadow-DOM `LitElement` that reaches no renderer logs once per tag. Ten
+further warnings live in `lit-ui-router-ssr/client` for hydration and adoption
+mismatches (twelve `lit-ui-router-ssr` development warnings in total). Plain
+`node` resolves the development build through the `node` export condition and
+warns unless `NODE_ENV=production`; pass `node -C production` or set
+`NODE_ENV=production` to silence them.
 
 ## Registering the elements
 

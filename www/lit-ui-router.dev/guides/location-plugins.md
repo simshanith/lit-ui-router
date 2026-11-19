@@ -75,12 +75,12 @@ correctly:
 
 ## Navigation API
 
-[`ui-router-navigation-location-plugin`](/packages/) is a
+[`ui-router-navigation-location-plugin`](/packages/ui-router-navigation-location-plugin) is a
 [companion package](/packages/) that produces the same clean URLs as
 `pushState`, but drives them with the modern
 [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
 and exposes the router inside `navigate` events for interception — see the
-[Navigation API Plugin guide](/packages/ui-router-navigation-location-plugin) for the full walkthrough.
+[Navigation API Plugin package page](/packages/ui-router-navigation-location-plugin) for the full walkthrough.
 Since the API is only recently cross-engine, pair it with a fallback:
 
 ```ts
@@ -107,9 +107,11 @@ link:
 router.urlService.rules.initial({ state: 'home' });
 ```
 
-`initial` only matches the empty initial URL. For URLs that match no state at
-all, add an `otherwise` rule — see
-[Unmatched URLs (404)](./unmatched-urls).
+`initial` only matches before the first transition has run. If you also
+register an `otherwise` rule for 404s, returning to the app root later (for
+example via Back) falls through to `otherwise`; match the empty path with
+`urlService.rules.when(/^\/?$/, ...)` and `location: 'replace'` instead — see
+[Unmatched URLs (404)](./unmatched-urls#caveat-the-app-root).
 
 The object form lands on the state with no params; a landing state that reads
 the query needs the function form — see

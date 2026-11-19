@@ -253,16 +253,18 @@ The Edit in StackBlitz tab boots the workspace from the published
 `lit-ui-router-mobx` package, so it doubles as an install check.
 
 Read it as the minimal case: the vanilla tutorial with the store layered in,
-not a rewrite. The sample apps below are where the two idioms are compared
-directly, at the scale of a whole application.
+not a rewrite. The sample apps below compare the reactivity idioms directly, at
+the scale of a whole application.
 
 ## See it in a real app
 
 The <a href="/app-mobx" target="_self">MobX sample app</a> is a complete
 application built on these controllers. It is behaviorally identical to the
 <a href="/app" target="_self">vanilla sample app</a> (which uses
-`TransitionController`), so the
-[two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+`TransitionController`), the
+<a href="/app-effect" target="_self">Effect sample app</a>, and the
+<a href="/app-signals" target="_self">Signals sample app</a>, so the
+[four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the MobX idiom changes.
 
 ## Releases
