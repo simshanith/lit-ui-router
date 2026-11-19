@@ -45,9 +45,8 @@ jobs:
         uses: jdx/mise-action@v5
         with:
           auto_update: true
-      # @tools/workers-builds is in the release closure through @tools/release.
       - name: Install dependencies
-        run: mise run setup --release
+        run: mise run setup --filter '@tools/workers-builds...'
       - name: Post preview deployment
         run: mise run //tools/workers-builds:preview_deployment
         env:
@@ -80,7 +79,7 @@ jobs:
         with:
           auto_update: true
       - name: Install dependencies
-        run: mise run setup --release
+        run: mise run setup --filter '@tools/workers-builds...'
       - name: Retire preview deployments
         run: mise run //tools/workers-builds:retire_preview_deployments
         env:
