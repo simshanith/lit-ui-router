@@ -8,6 +8,7 @@ import {
   exportsSpans,
   installDevtools,
   startAfterDevtools,
+  tryInstallDevtools,
 } from './devtools.js';
 
 const panel = () =>
@@ -91,12 +92,26 @@ describe('startAfterDevtools', () => {
   });
 });
 
+describe('tryInstallDevtools', () => {
+  it('warns and settles when the install fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const failure = new Error('chunk failed to load');
+
+    await tryInstallDevtools(new UIRouter(), () => Promise.reject(failure));
+
+    expect(warn).toHaveBeenCalledWith('The devtools are off:', failure);
+    warn.mockRestore();
+  });
+});
+
 describe('exportsSpans', () => {
   beforeEach(() => {
     featureFlags.resetAll();
+    vi.stubEnv('VITE_OTLP_TRACES_ENDPOINT', '');
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     delete globalThis.__OTLP_TRACES__;
     featureFlags.resetAll();
   });
@@ -109,6 +124,12 @@ describe('exportsSpans', () => {
     globalThis.__OTLP_TRACES__ = {
       endpoint: 'http://127.0.0.1:4318/v1/traces',
     };
+
+    expect(exportsSpans()).toBe(true);
+  });
+
+  it("is on with the build's endpoint", () => {
+    vi.stubEnv('VITE_OTLP_TRACES_ENDPOINT', 'http://127.0.0.1:4318/v1/traces');
 
     expect(exportsSpans()).toBe(true);
   });

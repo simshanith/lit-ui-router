@@ -21,8 +21,8 @@ import reqAuthHook from './app/global/requiresAuth.hook.js';
 import routeFocusHook from './app/global/routeFocus.hook.js';
 import {
   exportsSpans,
-  installDevtools,
   startAfterDevtools,
+  tryInstallDevtools,
 } from './app/global/devtools.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
@@ -201,7 +201,7 @@ export function configureRouter(router = new UIRouterLit()) {
   } else if (exportsSpans()) {
     void startAfterDevtools(router, () => router.start());
   } else {
-    void installDevtools(router);
+    void tryInstallDevtools(router);
     router.start();
   }
 
