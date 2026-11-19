@@ -20,7 +20,7 @@ many states, or a raw URL path:
 ## Static `redirectTo` on a state
 
 When a parent shell state should never stay active on its own, set `redirectTo`
-to a target state name (or a `{ state, params, options }` object):
+to a target state name (or a `{ state, params }` object):
 
 ```ts check
 import { html } from 'lit';
@@ -48,19 +48,22 @@ Pass a function `(transition: Transition) => ...` when the redirect depends on
 the incoming params or async data. Return:
 
 - `undefined` (or a falsy value) to let the transition continue normally;
-- a state name string or `{ state, params, options }`;
-- a `TargetState` (for example `$transition$.targetState().withParams(...)`); or
+- a state name string or `{ state, params }`;
+- a `TargetState` (from `transition.targetState().withParams(...)` or
+  `transition.router.stateService.target(state, params, options)` when you also
+  need custom `TransitionOptions`); or
 - a `Promise` resolving to any of the above.
 
 The [Hello Solar System tutorial](/tutorial/hellosolarsystem) canonicalizes
-numbered planet URLs (`/planets/3` → `/planets/earth`) this way:
+numbered body URLs (`/planets/4` → `/planets/earth`, since `solarBodies[0]` is
+the Sun) this way:
 
 ```ts check
 import { html } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { LitStateDeclaration } from 'lit-ui-router';
 
-const SLUGS = ['mercury', 'venus', 'earth', 'mars'] as const;
+const SLUGS = ['sun', 'mercury', 'venus', 'earth', 'mars'] as const;
 
 const planetState = {
   name: 'planet',
@@ -153,8 +156,9 @@ When you need real HTTP `301`, `302`, or `308` responses — or static host
 - [Route Guards](./route-guards) — transition-hook redirects for protected
   subtrees
 - [Unmatched URLs (404)](./unmatched-urls) — `otherwise`, the app-root caveat,
-  and preserving query parameters on initial redirects
-- [Location Plugins](./location-plugins) — `initial` and `replace` behavior
-  across hash, pushState, and Navigation API plugins
+  `replace` under the hash plugin, and preserving query parameters on initial
+  redirects
+- [Location Plugins](./location-plugins) — `initial` and choosing hash,
+  pushState, or Navigation API URLs
 - [`@uirouter/core` — `StateDeclaration.redirectTo`](https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html#redirectto)
   and [`UrlRules`](https://ui-router.github.io/core/docs/latest/classes/_url_urlrules_.urlrules.html)
