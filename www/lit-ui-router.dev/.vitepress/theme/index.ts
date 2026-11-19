@@ -11,6 +11,7 @@ import LiveExample from './components/LiveExample.vue';
 import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
+import HomePositioning from './components/HomePositioning.vue';
 import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
 import VersionBanner from './components/VersionBanner.vue';
 import VersionMenu from './components/VersionMenu.vue';
@@ -23,6 +24,7 @@ export default {
       'layout-top': () => h(VersionBanner),
       'not-found': () => h('main', h(NotFound)),
       'home-hero-actions-before-actions': () => h(HeroInstall),
+      'home-features-before': () => h(HomePositioning),
     }),
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);
