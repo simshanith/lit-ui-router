@@ -40,8 +40,9 @@ const nav = html`
 
 On an `<a>` element, `uiSref` computes the matching `href` (for example
 `#/users/42` under hash routing or `/users/42` under pushState or Navigation
-API) and lets modifier clicks (<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>-click,
-middle-click, right-click → open in new tab) keep native browser behavior.
+API) and lets modified clicks
+(<kbd>Cmd</kbd>/<kbd>Ctrl</kbd>/<kbd>Shift</kbd>/<kbd>Alt</kbd>-click) and
+non-primary clicks (middle-click, context menu) keep native browser behavior.
 
 ### Non-anchor and custom elements
 
@@ -142,7 +143,9 @@ against the view's owning state (the same syntax `@uirouter/core` uses in
 | `'^.^.other'` | Two levels up, then `other`                          |
 
 Outside any `<ui-view>`, such as an app shell's nav, there is no base state for
-a relative name, so use full state names there.
+a relative name — calling `uiSref('.edit')` there throws
+`Error: No reference point given for path '.edit'` — so use full state names
+there.
 
 ```ts check
 import { html } from 'lit';
