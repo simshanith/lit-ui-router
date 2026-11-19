@@ -139,9 +139,10 @@ export class ContactList extends LitElement implements UiOnParamsChanged {
   @state()
   private filter = '';
 
-  override connectedCallback() {
-    super.connectedCallback();
-    this.filter = String(this.uiViewProps?.transition?.params().filter ?? '');
+  protected override willUpdate() {
+    if (!this.hasUpdated) {
+      this.filter = String(this.uiViewProps?.transition?.params().filter ?? '');
+    }
   }
 
   uiOnParamsChanged(newParams: Record<string, unknown>, _trans: Transition) {
@@ -171,12 +172,13 @@ updated values in
 
 ## Custom parameter types
 
-Register a custom type on `router.urlService.config.type()` before calling
-`router.start()` when you want domain objects or custom formats encoded and
-decoded once at the router boundary:
+Register a custom type on `router.urlService.config.type()` **before
+registering any state whose `url` names that type** (since
+`stateRegistry.register()` compiles the state's URL synchronously):
 
 ```ts check
-import type { UIRouterLit } from 'lit-ui-router';
+import { html } from 'lit';
+import type { LitStateDeclaration, UIRouterLit } from 'lit-ui-router';
 
 declare const router: UIRouterLit;
 
@@ -188,6 +190,13 @@ router.urlService.config.type('slug', {
   equals: (a: string, b: string) => a === b,
   pattern: /[a-z0-9-]+/,
 });
+
+const postState: LitStateDeclaration = {
+  name: 'post',
+  url: '/posts/{slug:slug}',
+  component: (props) => html`<h1>Post ${props.transition?.params().slug}</h1>`,
+};
+router.stateRegistry.register(postState);
 ```
 
 See
