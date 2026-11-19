@@ -281,7 +281,7 @@ The Navigation API is supported in all modern engines:
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
-The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Playwright end-to-end suite runs in Chrome only.
+Tested in Chromium, Firefox, and WebKit.
 
 For older browsers, consider using:
 
