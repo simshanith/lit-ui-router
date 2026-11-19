@@ -39,13 +39,13 @@ also load [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) (add
 The same routing table is deployed in four client-state variants (all behind the
 same route-aware edge worker) plus a hash-location build:
 
-| Mount                                                    | Client state & routing                                                                                                                                                                 |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <a href="/app" target="_self">`/app`</a>                 | **Vanilla** (`TransitionController`) — flagship route-aware server (shell for real routes, computed 302s, real 404s).                                                                  |
-| <a href="/app-mobx" target="_self">`/app-mobx`</a>       | **[MobX](./packages/lit-ui-router-mobx)** — identical routes and server verdicts, with client state in MobX stores.                                                                    |
-| <a href="/app-effect" target="_self">`/app-effect`</a>   | **[Effect](./packages/lit-ui-router-effect)** — identical routes and server verdicts, with client state in `SubscriptionRef`s.                                                         |
-| <a href="/app-signals" target="_self">`/app-signals`</a> | **[Signals](./packages/signals)** — identical routes and server verdicts, with client state in TC39 Signals via `@lit-labs/signals`.                                                   |
-| <a href="/app-hash" target="_self">`/app-hash`</a>       | **[Hash location](./guides/location-plugins#hash-urls)** — the route lives in the fragment, so the server serves the shell at **200** at the mount root and needs no routing verdicts. |
+| Mount                                                    | Spectrum level | Client state & routing                                                                                                                                                                 |
+| -------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="/app" target="_self">`/app`</a>                 | 3+4            | **Vanilla** (`TransitionController`) — flagship route-aware server (shell for real routes, computed 302s, real 404s).                                                                  |
+| <a href="/app-mobx" target="_self">`/app-mobx`</a>       | 3+4            | **[MobX](./packages/lit-ui-router-mobx)** — identical routes and server verdicts, with client state in MobX stores.                                                                    |
+| <a href="/app-effect" target="_self">`/app-effect`</a>   | 3+4            | **[Effect](./packages/lit-ui-router-effect)** — identical routes and server verdicts, with client state in `SubscriptionRef`s.                                                         |
+| <a href="/app-signals" target="_self">`/app-signals`</a> | 3+4            | **[Signals](./packages/signals)** — identical routes and server verdicts, with client state in TC39 Signals via `@lit-labs/signals`.                                                   |
+| <a href="/app-hash" target="_self">`/app-hash`</a>       | 1              | **[Hash location](./guides/location-plugins#hash-urls)** — the route lives in the fragment, so the server serves the shell at **200** at the mount root and needs no routing verdicts. |
 
 ### Server-semantics exhibits
 
