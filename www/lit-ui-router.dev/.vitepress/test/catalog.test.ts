@@ -7,7 +7,11 @@ import { readManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { DefaultTheme } from 'vitepress';
 
-import { packageGroups } from '../../catalog/navigation.ts';
+import {
+  packageGroups,
+  SIDEBAR,
+  type SidebarEntry,
+} from '../../catalog/navigation.ts';
 import { PACKAGES } from '../../catalog/packages.ts';
 
 const site = join(import.meta.dirname, '../..');
@@ -68,5 +72,25 @@ describe('the package catalog', () => {
         role,
       );
     }
+  });
+});
+
+const entriesOf = (items: readonly SidebarEntry[]): SidebarEntry[] =>
+  items.flatMap((entry) => [entry, ...entriesOf(entry.items ?? [])]);
+
+describe('the sidebar', () => {
+  // The pager prints an entry's sidebar text, and "Overview" names no section.
+  it('labels every Overview entry with its section in the pager', () => {
+    const overviews = SIDEBAR.flatMap(({ text: section, items = [] }) =>
+      entriesOf(items)
+        .filter(({ text }) => text === 'Overview')
+        .map(({ link, docFooterText }) => ({ link, section, docFooterText })),
+    );
+
+    assert.notDeepEqual(overviews, []);
+    assert.deepEqual(
+      overviews,
+      overviews.map((entry) => ({ ...entry, docFooterText: entry.section })),
+    );
   });
 });
