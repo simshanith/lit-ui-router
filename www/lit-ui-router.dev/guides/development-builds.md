@@ -216,5 +216,5 @@ development run may never reach.
 
 Every published package with two builds is verified at build time in both
 directions: every declared development warning appears in `dist/development/`,
-none appears in `dist/`, and browser or Worker outputs never reference
-`process`.
+none appears in the production `dist/*.js`, and browser or Worker outputs never
+reference `process`.
