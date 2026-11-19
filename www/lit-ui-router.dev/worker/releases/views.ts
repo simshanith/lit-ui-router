@@ -589,14 +589,14 @@ const npmFacts = (
   return html`<dt id="npm">Published to npm</dt>
     <dd>${date(row.npm_published_at)}</dd>
     ${runFacts(run)}
+    <dt id="integrity">Integrity</dt>
+    <dd><code class="hash">${row.npm_integrity}</code></dd>
     ${
       row.npm_deprecated === null
         ? nothing
         : html`<dt id="deprecated">Deprecated</dt>
             <dd>${row.npm_deprecated}</dd>`
-    }
-    <dt id="integrity">Integrity</dt>
-    <dd><code class="hash">${row.npm_integrity}</code></dd>`;
+    }`;
 };
 
 /** The install line for a version npm has, pinned exactly; a deprecated version's warning is the fact above it. */

@@ -2135,8 +2135,8 @@ describe('the version page navigation', () => {
     assert.deepEqual(termIds, [
       'status',
       'npm',
-      'deprecated',
       'integrity',
+      'deprecated',
       'install',
       'tag',
       'diff',
