@@ -186,8 +186,8 @@ const resize = async (
   await element.updateComplete;
 };
 
-// What the shown split leaves past both drawings at its rung: the popover's column it keeps, and twice the states' room
-// past their narrowest, less the shared 48px.
+// What the shown split leaves past both drawings at its rung: twice the states' room past their narrowest, less the
+// shared 48px.
 const extraOf = (panel: DevtoolsPanel) => {
   const { split: rooms } = panel._mapLayout()!;
   const whole = panel._map!.layoutNested(panel);
@@ -199,7 +199,7 @@ const extraOf = (panel: DevtoolsPanel) => {
     rooms!.rung,
   );
 
-  return rooms!.views.reserve + 2 * (rooms!.states.width - narrowest) - 48;
+  return 2 * (rooms!.states.width - narrowest) - 48;
 };
 
 // The rung the states are drawn at beside the views, once the split shows.
@@ -245,11 +245,31 @@ const toggle = (element: UIRouterDevtools) =>
 const inspector = (element: UIRouterDevtools) =>
   getByRole(shadow(element), 'region', { name: /Inspector/ });
 
-// The drawing's distance from the start and the end of the room it is centred in.
-const margins = (drawn: Element, room: DOMRect, reserve = 0) => {
+// The drawing's distance from the start and the end of the room it is centred in, then from its top and bottom.
+const margins = (drawn: Element, room: DOMRect) => {
   const rect = drawn.getBoundingClientRect();
 
-  return [rect.left - room.left, room.right - reserve - rect.right];
+  return [
+    rect.left - room.left,
+    room.right - rect.right,
+    rect.top - room.top,
+    room.bottom - rect.bottom,
+  ];
+};
+
+// A side's room below its heading.
+const roomOf = (element: UIRouterDevtools, name: string) => {
+  const region = getByRole(shadow(element), 'region', { name });
+  const rect = region.getBoundingClientRect();
+  // SAFETY: each side opens with its heading
+  const heading = region.querySelector('h3')!.getBoundingClientRect();
+
+  return new DOMRect(
+    rect.x,
+    heading.bottom,
+    rect.width,
+    rect.bottom - heading.bottom,
+  );
 };
 
 describe('the view map beside the Map', () => {
@@ -271,15 +291,9 @@ describe('the view map beside the Map', () => {
       'content view, empty',
     ]);
 
-    // The views sit after the states, clear of the popover's column at the dock's end.
-    // SAFETY: the trees are drawn inside the Map's room
-    const room = states.closest<HTMLElement>('.map-scroll')!;
-
+    // The views sit after the states.
     expect(views.getBoundingClientRect().left).toBeGreaterThan(
       states.getBoundingClientRect().right,
-    );
-    expect(views.getBoundingClientRect().right).toBeLessThanOrEqual(
-      room.getBoundingClientRect().right - 320,
     );
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
@@ -375,18 +389,21 @@ describe('the view map beside the Map', () => {
     );
   });
 
-  it('gives up the popover’s column before a rung, and moves nothing for a view selected under it', async () => {
+  it('keeps no popover column before a rung, and moves nothing for a view selected where its column is drawn on', async () => {
     const { element } = await mailMap(1600, true, WIDER_STATES);
-    const panel = panelOf(element);
 
     expect(await rungOf(element)).toBe('expanded');
 
-    const reserve = panel._mapLayout()!.split!.views.reserve;
-
-    expect(reserve).toBeGreaterThan(0);
-    expect(reserve).toBeLessThan(320);
-
     const { views } = await split(element);
+
+    // The views reach into the end of the dock, where the popover's column would be.
+    // SAFETY: the trees are drawn inside the Map's room
+    const room = views.closest<HTMLElement>('.map-scroll')!;
+
+    expect(views.getBoundingClientRect().right).toBeGreaterThan(
+      room.getBoundingClientRect().right - 320,
+    );
+
     const before = places(element);
     const chosen = head(views, /^sidebar-navigation-four view/);
 
@@ -452,26 +469,53 @@ describe('the view map beside the Map', () => {
 
     const { states, views } = await split(element);
 
-    const [start, end] = margins(
-      states,
-      getByRole(shadow(element), 'region', {
-        name: 'States',
-      }).getBoundingClientRect(),
-    );
+    const [start, end] = margins(states, roomOf(element, 'States'));
 
     expect(Math.abs(start - end)).toBeLessThanOrEqual(1);
 
-    // The views are centred in theirs, less the popover's column.
-    const [left, right] = margins(
-      views,
-      getByRole(shadow(element), 'region', {
-        name: 'Views',
-      }).getBoundingClientRect(),
-      320,
-    );
+    // The views are centred in all of theirs: nothing is kept for the popover.
+    const [left, right] = margins(views, roomOf(element, 'Views'));
 
     expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
   });
+
+  it.each([
+    ['in a wide dock', 1920, false],
+    ['in a dock the views nearly fill', 1600, false],
+    ['maximised', 1600, true],
+  ] as const)(
+    'centres both drawings across and down in their own rooms %s',
+    async (_, width, max) => {
+      const { element } = await mailMap(width, true);
+
+      if (max)
+        getByRole(shadow(element), 'button', {
+          name: 'Maximise devtools',
+        }).click();
+
+      await waitFor(() => {
+        const { states, views } = {
+          states: getByRole(shadow(element), 'tree', { name: 'State map' }),
+          views: getByRole(shadow(element), 'tree', { name: 'Views' }),
+        };
+
+        for (const [drawn, name] of [
+          [states, 'States'],
+          [views, 'Views'],
+        ] as const) {
+          const [left, right, top, bottom] = margins(
+            drawn,
+            roomOf(element, name),
+          );
+
+          expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
+          expect(Math.abs(top - bottom)).toBeLessThanOrEqual(2);
+        }
+
+        expect(panelOf(element)._max).toBe(max);
+      });
+    },
+  );
 
   it('marks the views a selected state fills, and moves nothing', async () => {
     const { element } = await mailMap();
@@ -648,8 +692,8 @@ describe('the view map beside the Map', () => {
     );
   });
 
-  it('places the popover in its own column for a selected view', async () => {
-    const { element } = await mailMap();
+  it('places the popover in its own column for a selected view where the drawing leaves it free', async () => {
+    const { element } = await mailMap(1920);
     const { views } = await split(element);
 
     head(views, /^list view/).click();
@@ -886,8 +930,8 @@ describe('the view map beside the Map', () => {
     expect(await rungOf(element)).toBe('small');
   });
 
-  it('weighs the popover’s column afresh for the dock and the maximised panel, though their Map panes are one size', async () => {
-    // At this viewport the dock's Map pane and the maximised one measure the same; only the popover's column differs.
+  it('draws the split alike in the dock and the maximised panel when their Map panes are one size', async () => {
+    // At this viewport the dock's Map pane and the maximised one measure the same.
     const { element } = await mailMap(1800, true, WIDER_STATES, 521);
     const panel = panelOf(element);
 
@@ -898,25 +942,16 @@ describe('the view map beside the Map', () => {
 
     const rung = await rungOf(element);
     const dock = { ...panel._mapSize };
-    const reserve = panel._mapLayout()!.split!.views.reserve;
+    const rooms = panel._mapLayout()!.split!;
 
-    expect(reserve).toBeGreaterThan(0);
-    expect(reserve).toBeLessThan(320);
-
-    maximise();
-
-    await waitFor(() =>
-      expect(panel._mapLayout()?.split?.views.reserve).toBe(0),
-    );
-    expect(panel._mapSize).toEqual(dock);
-    expect(await rungOf(element)).toBe(rung);
-
-    maximise();
-    await waitFor(() =>
-      expect(panel._mapLayout()?.split?.views.reserve).toBe(reserve),
-    );
-    expect(panel._mapSize).toEqual(dock);
-    expect(await rungOf(element)).toBe(rung);
+    for (const max of [true, false]) {
+      maximise();
+      await waitFor(() => expect(panel._max).toBe(max));
+      await element.updateComplete;
+      expect(panel._mapSize).toEqual(dock);
+      expect(await rungOf(element)).toBe(rung);
+      expect(panel._mapLayout()!.split).toEqual(rooms);
+    }
   });
 
   it('weighs a maximised split by the maximised room once it is measured, not by the dock’s', async () => {

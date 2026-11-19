@@ -127,8 +127,7 @@ The packer places every box, and CSS only draws them:
    frames it; no box takes it. With the views beside it, the room is the
    states' side of the split: the diagram is packed again for that side,
    below a section heading, at the rung the split chose for it, and centred
-   in it, while what is left of the popover's column is kept at the end of
-   the views' side.
+   in it. No popover column is kept beside the views.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
@@ -315,10 +314,10 @@ size, before anything is selected:
 
 In the first two the popover is always in the same place, at the end of the
 dock, and neither a first selection nor a change of selection moves a box.
-With the views beside the diagram the split keeps the column at the end of
-the views' side where the room allows, so the popover takes it for a state,
-a transition or a view; where it does not, the popover goes over the
-drawings as above, and for a view it is placed beside that view.
+With the views beside the diagram no column is kept: each drawing is centred
+in its own side. The popover takes the column at the dock's end where the
+centred views leave it free, and otherwise goes over the drawings as above;
+for a view it is placed beside that view.
 Reserving the column at every width was weighed and left out: the stress tree
 needs the dock's whole width. So was a start-aligned diagram, which leaves
 the same column free and reads as a document, not a drawing.

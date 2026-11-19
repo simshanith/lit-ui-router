@@ -133,6 +133,9 @@ const ASIDE = 320;
 
 const MARGIN = 12;
 
+/** The least gap between the popover in its column and the drawing it stands beside. */
+const GAP_BESIDE = 8;
+
 /** How far a press travels before it is a drag; `mapview.ts` pans past as much. */
 const DRAG = 4;
 
@@ -1002,9 +1005,9 @@ export class DevtoolsPanel extends LitElement {
     );
   }
 
-  // A view is selected only beside the Map: in the popover's column where the split keeps it free, else beside the view.
+  // A view is selected only beside the Map: in the popover's column where the drawings leave it free, else beside the view.
   #viewPlace(size: Size, origin: DOMRect) {
-    if (this.#columnFree()) return this.#besidePlace(size, origin);
+    if (this.#columnFree(size, origin)) return this.#besidePlace(size, origin);
 
     const head = this.renderRoot.querySelector(
       '.vm-side [aria-selected="true"]',
@@ -1028,13 +1031,19 @@ export class DevtoolsPanel extends LitElement {
     }));
   }
 
-  // Whether the popover has a column of its own at the dock's end: beside the views, only where the split keeps it.
-  #columnFree(nested = this._nested()): boolean {
-    const split = this._mapLayout()?.split;
+  // Whether the popover has a column of its own at the dock's end: beside the views, only where their drawing leaves it.
+  #columnFree(size: Size, origin: DOMRect, nested = this._nested()): boolean {
+    const views = this.renderRoot.querySelector('.vm-side .vm-boxes');
 
-    if (split) return split.views.reserve >= ASIDE;
+    if (!this._mapLayout()?.split || !views)
+      return Boolean(nested && this._beside(nested));
 
-    return Boolean(nested && this._beside(nested));
+    const drawn = rectOf(views, origin);
+    const column = this.#besidePlace(size, origin).x;
+
+    return getComputedStyle(this).direction === 'rtl'
+      ? drawn.x >= column + size.width + GAP_BESIDE
+      : drawn.x + drawn.width + GAP_BESIDE <= column;
   }
 
   // The popover's own column, at the end of the dock.
@@ -1055,7 +1064,8 @@ export class DevtoolsPanel extends LitElement {
 
     if (!map) return placeBeside(anchor, size, bounds);
 
-    if (this.#columnFree(map.nested)) return this.#besidePlace(size, origin);
+    if (this.#columnFree(size, origin, map.nested))
+      return this.#besidePlace(size, origin);
 
     const clear = this._map?.keepClear(this, map.nested) ?? [];
 
@@ -1582,7 +1592,7 @@ export class DevtoolsPanel extends LitElement {
 
     const split =
       this._mapViews && this._viewMap && matchMedia(WIDE).matches
-        ? this._viewMap.splitOf(this, whole, this._max ? 0 : ASIDE)
+        ? this._viewMap.splitOf(this, whole, !this._max)
         : null;
 
     return {

@@ -544,13 +544,12 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
   </div>`;
 };
 
-/** The split's two rooms: the state Map's at the inline start, and the views' after it, ending in the popover's column. */
+/** The split's two rooms: the state Map's at the inline start, and the views' after it. */
 export interface Split {
   /** The rung the states are drawn at beside the views. */
   rung: Rung;
   states: Size;
-  /** `reserve` is the part of the popover's column kept free at the end; under its full width the popover overlays. */
-  views: Size & { reserve: number };
+  views: Size;
 }
 
 /** Room the two sides share beyond their drawings, half to each; a drawing centred in its side may stand nearer the rule. */
@@ -565,9 +564,10 @@ const FLOOR = RUNGS.indexOf('small');
 /** The step a hidden split stands at, past every rung. */
 const HIDDEN = RUNGS.length;
 
-// Everything the answer is weighed from: the room, the column kept for the popover, and what each rung tried leaves.
+// Everything the answer is weighed from: the room, the panel it is in, and what each rung tried leaves.
 interface Weighed extends Size {
-  aside: number;
+  /** The dock, or the maximised panel, whose room is measured a frame after a switch. */
+  docked: boolean;
   /** The whole room's rung, where the steps start. */
   from: Rung;
   /** What both drawings leave at each rung tried, mildest first, up to the one chosen. */
@@ -616,7 +616,7 @@ const settle = (host: DevtoolsPanel, first: Weighed) =>
 
       if (
         now?.fresh &&
-        now.aside === first.aside &&
+        now.docked === first.docked &&
         now.width === first.width &&
         now.height === first.height
       )
@@ -624,7 +624,7 @@ const settle = (host: DevtoolsPanel, first: Weighed) =>
     }),
   );
 
-type Room = Size & { aside: number; from: Rung };
+type Room = Size & { docked: boolean; from: Rung };
 
 /** A step of the ladder chosen, and what each rung tried on the way to it leaves. */
 interface Step {
@@ -653,8 +653,7 @@ const firstFit = (
 };
 
 // Read again with nothing changed it keeps its answer; a resize of the same panel takes a milder step back only with
-// room to spare, and the dock and the maximised panel, which reserve different columns, each weigh it afresh, up to
-// the first size measured for them.
+// room to spare, and the dock and the maximised panel each weigh it afresh, up to the first size measured for them.
 const choose = (
   host: DevtoolsPanel,
   now: Room,
@@ -662,7 +661,7 @@ const choose = (
 ): number => {
   const last = weighed.get(host);
   const from = RUNGS.indexOf(now.from);
-  const panel = last?.aside === now.aside;
+  const panel = last?.docked === now.docked;
   const sized = panel && last.width === now.width && last.height === now.height;
   const moved = last !== undefined && !panel;
   const fresh = moved || (sized && last.fresh);
@@ -688,13 +687,13 @@ const choose = (
 
 /**
  * The rooms of the split where the views fit beside the state Map, else `null`. The states take the mildest rung from
- * the whole room's down to the Map's floor that leaves the views their natural size. `aside` is the popover's column,
- * kept free at the end as far as what both drawings leave allows.
+ * the whole room's down to the Map's floor that leaves the views their natural size. No popover column is kept: the
+ * dock's popover takes its column only where the drawings leave it free.
  */
 export const splitOf = (
   host: DevtoolsPanel,
   whole: NestedLayout,
-  aside: number,
+  docked: boolean,
 ): Split | null => {
   const views = host._model.views?.views ?? [];
 
@@ -718,7 +717,7 @@ export const splitOf = (
 
   const chosen = choose(
     host,
-    { width, height, aside, from: whole.rung },
+    { width, height, docked, from: whole.rung },
     (rung) => free - statesAt(rung) - drawn,
   );
 
@@ -726,13 +725,12 @@ export const splitOf = (
 
   const states = statesAt(chosen);
   const extra = free - states - drawn;
-  const reserve = Math.min(aside, extra);
-  const side = states + Math.floor((extra - reserve + GAP) / 2);
+  const side = states + Math.floor((extra + GAP) / 2);
 
   return {
     rung: RUNGS[chosen],
     states: { width: side, height: room },
-    views: { width: width - side, height: room, reserve },
+    views: { width: width - side, height: room },
   };
 };
 
@@ -753,12 +751,12 @@ export const renderSplit = (
 
   const drawing = drawingOf(host, views, selected, linked);
 
-  const placed = packViews(drawing, fontsOf(host), {
-    width: split.views.width - split.views.reserve,
-    height: split.views.height,
-  });
+  const placed = packViews(drawing, fontsOf(host), split.views);
 
-  const layout = { placed, view: centred(placed, split.views) };
+  const layout = {
+    placed,
+    view: centred(placed, { ...split.views, reserve: 0 }),
+  };
 
   return html`<section class="split-side" aria-labelledby="h-split-states">
       <h3 class="section sub" id="h-split-states">

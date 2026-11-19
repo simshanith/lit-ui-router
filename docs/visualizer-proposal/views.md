@@ -84,9 +84,9 @@ heading and divided by a rule. The Views tab stays as it is.
   panning. The states take the mildest rung that leaves room. Each side is
   measured at the narrowest it packs to on the 4px grid, at the room's height
   less the headings, and the room must hold the sum of the two and 48px more
-  that the two sides share. The inspector popover's 320px column is kept free
-  at the end of the views' side only as far as what is left over allows; the
-  states never step down a rung to keep it. A resize that took a rung away,
+  that the two sides share. No column is kept for the inspector popover: it
+  floats over the dock, so keeping one would only push the views off the
+  middle of their side. A resize that took a rung away,
   or the split itself, gives it back only with a tenth of the room to spare,
   as the ladder does. It is not drawn while the Map is zoomed, or where even
   the floor rung leaves no room or the states pan. It is not offered below
@@ -108,14 +108,15 @@ heading and divided by a rule. The Views tab stays as it is.
   maximised panel with no room or with states that pan, where its title says
   so, and while the view map's module is still loading, where it names no
   cause.
-- **Rooms.** The 48px and whatever else the two drawings leave over past the
-  popover's column are split evenly, half to each side, and each drawing
-  stands in the middle of its own side, so the two can stand nearer each
-  other than 48px: the states' placed by `fitView` with no reserve, the
-  views' by the same rule as the Views tab with the part of the popover's
-  column kept free as the reserve at the end. Nothing moves on a selection.
-  Where the whole column is not kept, the popover stands beside the selected
-  view, over the place that covers fewest box headers on either side.
+- **Rooms.** The 48px and whatever else the two drawings leave over are split
+  evenly, half to each side, and each drawing stands in the middle of its own
+  side, across and down, so the two can stand nearer each other than 48px.
+  Both are centred down as well as across, as the Map's fitted view is, so a
+  short drawing sits level with the middle of a tall one rather than at its
+  top. Nothing moves on a selection. The popover takes its column at the
+  dock's end where the centred drawings leave it free; elsewhere it stands
+  beside the selection, over the place that covers fewest box headers on
+  either side.
 - **One inspector.** The split has no details of its own. A selected view is
   shown in the panel's inspector, the popover in the dock and the pane in the
   maximised panel, with the details listed above; a state there selects that
