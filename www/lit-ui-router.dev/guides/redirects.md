@@ -39,24 +39,26 @@ Navigating directly to `galaxy` (or visiting `/galaxy`) forwards straight into
 `galaxy` as a parent without triggering `redirectTo`, because `redirectTo` runs
 only when the state itself is the **target** of the transition.
 
-The [Hello Galaxy tutorial](/tutorial/hellogalaxy) uses this exact pattern on
-`galaxy`.
+The [Hello Galaxy tutorial](/tutorial/hellogalaxy#parent-child-relationships)
+uses this on `galaxy`.
 
 ## Dynamic and async `redirectTo` functions
 
 Pass a function `(transition: Transition) => ...` when the redirect depends on
 the incoming params or async data. Return:
 
-- `undefined` (or a falsy value) to let the transition continue normally;
-- a state name string or `{ state, params }`;
+- `undefined` to let the transition continue;
+- a state name string or `{ state, params }` (a string keeps the transition's
+  params; `{ state, params }` replaces them, and `{ params }` alone redirects
+  to the same state);
 - a `TargetState` (from `transition.targetState().withParams(...)` or
   `transition.router.stateService.target(state, params, options)` when you also
   need custom `TransitionOptions`); or
 - a `Promise` resolving to any of the above.
 
-The [Hello Solar System tutorial](/tutorial/hellosolarsystem) canonicalizes
-numbered body URLs (`/planets/4` → `/planets/earth`, since `solarBodies[0]` is
-the Sun) this way:
+The [Hello Solar System tutorial](/tutorial/hellosolarsystem#redirecting-numbered-urls)
+canonicalizes numbered body URLs (`/planets/4` → `/planets/earth`, counting the
+Sun as the first body) this way:
 
 ```ts check
 import { html } from 'lit';
@@ -81,8 +83,9 @@ const planetState = {
 } satisfies LitStateDeclaration;
 ```
 
-Because `@uirouter/core` runs `redirectTo` in an `onStart` hook, it fires after
-`onBefore` guards and before the state is entered.
+`@uirouter/core` runs `redirectTo` in an `onStart` hook: after `onBefore`
+guards, and before the state is entered or its resolves fetch. A resolve
+declared `policy: { when: 'EAGER' }` is the exception; it runs first.
 
 ## Redirecting from transition hooks
 
@@ -109,10 +112,36 @@ router.transitionService.onBefore(
 );
 ```
 
-Returning a `TargetState` cancels the original transition cleanly and starts
-the replacement transition instead — no intermediate view flashes. See
-[Route Guards](./route-guards) for the complete authentication and
-return-after-login pattern.
+Returning a `TargetState` ends the original transition as superseded and runs
+the target in its place; a `stateService.go()` that started it resolves with
+the redirect's result. `{ location: false }` keeps the attempted URL in the
+address bar. [Route Guards](./route-guards) builds this guard step by step,
+return-after-login included; upstream's
+[Redirecting a transition](https://ui-router.github.io/guide/transitionhooks#redirecting-a-transition)
+covers hook return values.
+
+## History and the Back button
+
+A redirect is a new transition, and only the transition that succeeds writes
+the URL. A redirect started from a link or `stateService.go()` adds one
+history entry, the target's.
+
+A redirect that started from a URL (a typed address, a bookmark, Back) runs
+with `location: 'replace'`: the redirecting URL gives up its history entry, so
+Back does not bounce off it. Two exceptions:
+
+- a target that sets `location: false`, as the login guard above does, leaves
+  the address bar and history alone;
+- the stock `hashLocationPlugin` ignores `replace` and always pushes, so the
+  redirecting URL stays in history. See
+  [`replace` under the hash plugin](./unmatched-urls#replace-under-the-hash-plugin).
+
+The new transition knows where it came from: `transition.redirectedFrom()`
+returns the transition it replaced, and `transition.originalTransition()` the
+first in a chain. [Route Guards](./route-guards#return-the-user-after-login)
+uses it to return the user after login. Core cuts a chain off after 20
+redirects, so two states that redirect to each other fail with "Too many
+consecutive Transition redirects (20+)" rather than loop.
 
 ## URL-level rules (`initial`, `when`, `otherwise`)
 
@@ -124,13 +153,14 @@ import type { UIRouterLit } from 'lit-ui-router';
 
 declare const router: UIRouterLit;
 
-// Rewrite a legacy path before state matching runs
+// Send a legacy path to its new URL; the rewrite replaces the history entry
 router.urlService.rules.when('/old-about', '/about');
 
-// Land the empty root URL on home, replacing the history entry so Back works
-router.urlService.rules.when(/^\/?$/, (_match, _urlParts, r) =>
-  r?.stateService.target('home', undefined, { location: 'replace' }),
-);
+// Land the empty root URL on home and replace its history entry
+router.urlService.rules.when(/^\/?$/, () => ({
+  state: 'home',
+  options: { location: 'replace' },
+}));
 ```
 
 - `urlService.rules.initial({ state: 'home' })` matches the empty root path
@@ -139,17 +169,20 @@ router.urlService.rules.when(/^\/?$/, (_match, _urlParts, r) =>
   `location: 'replace'` instead so navigating Back to `/` does not fall through
   to 404 — see [Unmatched URLs (404)](./unmatched-urls#caveat-the-app-root) and
   [Location Plugins](./location-plugins#the-initial-rule).
-- `urlService.rules.when(pattern, handler)` runs on every URL sync and can
-  return a replacement URL string or a `TargetState`.
+- `urlService.rules.when(pattern, handler)` is matched on every URL sync; its
+  handler returns a replacement URL string, a `{ state, params, options }`
+  object or a `TargetState`.
 
-## Server-side HTTP redirects
+## On a server
 
-Client-side redirects only run after the browser downloads and boots your app,
-so crawlers and HTTP clients see a `200 OK` response before the URL changes.
-When you need real HTTP `301`, `302`, or `308` responses — or static host
-`_redirects` rules emitted from your route table — declare them with
-`ui-router-server`; see
-[Redirects: data until they need code](./server-route-matching#redirects-data-until-they-need-code).
+A client-side redirect runs only after the browser has loaded the app, so a
+crawler or an HTTP client never sees it. The same `redirectTo` declarations can
+answer as HTTP redirects: `ui-router-server` reads a string or
+`{ state, params }` `redirectTo` from the URL alone, and a `lit-ui-router-ssr`
+render or prerender follows a `redirectTo` function. See
+[Redirects: data until they need code](/guides/server-route-matching#redirects-data-until-they-need-code)
+and
+[Page, response state or redirect](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when).
 
 ## Further reading
 
