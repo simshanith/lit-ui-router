@@ -30,7 +30,9 @@
     // from them, and neither rides the build edge.
     // WWW_DEV_PORT is an override of the code default, so it is transport, not
     // env — a different port is the same suite. E2E_WORKERS sizes the worker
-    // pool, transport too.
+    // pool, transport too. OTLP_TRACES_ENDPOINT and OTLP_TRACES_HEADERS hand the
+    // app suites' page a span export target and change no result, so they are transport as
+    // well, which keeps the key out of every cache key; a replayed suite exports nothing.
     // E2E_BASE_URL is env, not transport: it swaps the served site for another
     // origin's, so a remote run and a local one never share a cache entry.
     // WWW_WORKER_BUILD and WRANGLER_BUILD_CONDITIONS are env too: they pick the
@@ -75,7 +77,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     },
     "test:e2e:hash": {
@@ -92,7 +100,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     },
     "test:e2e:mobx": {
@@ -109,7 +123,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     },
     "test:e2e:pushstate": {
@@ -126,7 +146,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     },
     "test:e2e:signals": {
@@ -143,7 +169,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     },
     "test:e2e:vanilla": {
@@ -160,7 +192,13 @@
         "WWW_WORKER_BUILD",
         "WRANGLER_BUILD_CONDITIONS"
       ],
-      "passThroughEnv": ["WRANGLER_LOG", "WWW_DEV_PORT", "E2E_WORKERS"],
+      "passThroughEnv": [
+        "WRANGLER_LOG",
+        "WWW_DEV_PORT",
+        "E2E_WORKERS",
+        "OTLP_TRACES_ENDPOINT",
+        "OTLP_TRACES_HEADERS"
+      ],
       "outputs": []
     }
   }

@@ -58,6 +58,37 @@ domain type the runtime-neutral tables can't import.
 `src/registry/states.ts` holds those param types, each resolve token's
 value type, and the resolves each state's views receive.
 
+## Exporting spans
+
+`src/app/global/telemetry.ts` gives the devtools Timeline the router's spans, and can send them to an OTLP/HTTP
+receiver too, through a `BatchSpanProcessor` and the OTLP/HTTP exporter, which load as their own chunk
+(`otlpExport.ts`). It takes the receiver from the first of:
+
+1. `globalThis.__OTLP_TRACES__`, set before the app boots: `{ endpoint, headers? }`.
+2. The build variables `VITE_OTLP_TRACES_ENDPOINT` and `VITE_OTLP_TRACES_HEADERS`, for a local or one-off build.
+   Each app's `turbo.json` lists them in its build task's `env`.
+
+The endpoint is a full traces URL. Headers are `name=value` pairs joined by commas, the shape of
+`OTEL_EXPORTER_OTLP_HEADERS`. Each app's `.env` sets `VITE_OTLP_SERVICE_NAME`, the `service.name` of its spans.
+With neither, the exporter chunk is never loaded and nothing is sent; the deployed docs site sets neither. With
+an endpoint the plugin is installed with `redaction: { messages: false }`, so no error message leaves the page, and
+the Timeline shows none either, since redaction applies to a span and not to where it is sent.
+
+The processor sends a batch every few seconds and when the page is hidden, which includes unloading it; the
+exporter sends with `keepalive`, so the request outlives the page. The receiver must allow the page's origin
+through CORS.
+
+CI builds the apps without either variable, so its builds match the `run` job's and share its cache. The e2e jobs
+of `.github/workflows/build-test-run.yml` set `OTLP_TRACES_ENDPOINT` and `OTLP_TRACES_HEADERS` from the
+`OTLP_TRACES_ENDPOINT` repository variable and the `OTLP_TRACES_HEADERS_CI` secret. When both are set, the app
+suites' `page` fixture (`apps/sample-app-lit-e2e/src/playwright/app/fixtures.ts`) sets `__OTLP_TRACES__` from them in
+an init script. Playwright closes a test's context without hiding its page, so the fixture's teardown calls
+`__OTLP_TRACES__.flush`, which the app sets once it exports, to send the spans still batched. The suite tasks list both in `passThroughEnv`, outside every cache key, so a suite replayed from the
+cache exports nothing. After the key is added or changed, a run of `build-test.yml` with its `force` input reruns
+the suites and shows whether spans arrive. The key is in no built bundle and no cache entry, but a Playwright trace records the init
+script and the requests' headers, so a failed suite's `playwright-traces-<group>` artifact carries it: use an
+ingest-only key.
+
 ## Adding to the shared surface
 
 If a module is identical in both apps, move it here and keep relative

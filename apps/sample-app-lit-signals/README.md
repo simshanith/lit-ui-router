@@ -51,9 +51,10 @@ Set either on the Preferences page or in the URL, as `?feature-enable-visualizer
 
 With the panel loaded, `enable-otel` (on by default) adds [`ui-router-otel`](../../packages/ui-router-otel/README.md)
 and records OpenTelemetry spans for the panel's Timeline: the router's transitions, phases and resolves, and a span for
-each simulated REST call, such as `GET contacts`. The tracer provider's only processor is the panel, so no span leaves
-the page. Select a transition into Contacts or a message folder and open the Timeline: each REST call is a filled bar
-beside the resolve that made it, and its details say it is joined as a child of the router's span.
+each simulated REST call, such as `GET contacts`. The panel is the tracer provider's only processor unless an OTLP
+endpoint is set, so no span leaves the page (see [Exporting spans](../sample-app-shared/README.md#exporting-spans)).
+Select a transition into Contacts or a message folder and open the Timeline: each REST call is a filled bar beside the
+resolve that made it, and its details say it is joined as a child of the router's span.
 
 Note how states are _entered_ when they were previously not active, _exited_ and re-_entered_ when parameters change,
 and how parent states whose parameters did not change are _retained_. Each of these (_exited, entered, retained_)

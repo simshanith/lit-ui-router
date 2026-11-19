@@ -15,5 +15,5 @@ export async function installDevtools(
   if (!featureFlags.get('enable-otel')) return;
 
   const { installTelemetry } = await loadTelemetry();
-  installTelemetry(router, () => devtools.element);
+  await installTelemetry(router, () => devtools.element);
 }

@@ -30,6 +30,17 @@ export const test = base.extend<{
 
   // hash routing never rewrites location.search, so a query param would pin the flag as URL-overridden
   page: async ({ page, locationPlugin }, use) => {
+    const { OTLP_TRACES_ENDPOINT: endpoint, OTLP_TRACES_HEADERS: headers } =
+      process.env;
+
+    // The app's telemetry reads __OTLP_TRACES__ before its build variables; see sample-app-shared's README.
+    if (endpoint && headers) {
+      await page.addInitScript(
+        (otlp) => Object.assign(globalThis, { __OTLP_TRACES__: otlp }),
+        { endpoint, headers },
+      );
+    }
+
     if (locationPlugin) {
       await page.addInitScript((plugin) => {
         // SAFETY: the app's featureFlags.save writes this key as JSON of the flags
@@ -43,6 +54,23 @@ export const test = base.extend<{
     }
 
     await use(page);
+
+    // Closing a context hides no page, so the spans still batched go out here, capped so a dead receiver ends the test.
+    if (endpoint && headers && !page.isClosed()) {
+      await page
+        .evaluate(() =>
+          Promise.race([
+            // SAFETY: the app sets flush on the object the init script above assigned
+            (
+              globalThis as {
+                __OTLP_TRACES__?: { flush?: () => Promise<void> };
+              }
+            ).__OTLP_TRACES__?.flush?.(),
+            new Promise((resolve) => setTimeout(resolve, 3000)),
+          ]),
+        )
+        .catch(() => undefined);
+    }
   },
 
   // Hash-mode visits target the bare mount, which serves the shell with no redirect, so consecutive visits differ only by hash.

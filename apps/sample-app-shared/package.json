@@ -20,6 +20,8 @@
     "@api-viewer/docs": "catalog:",
     "@lit/context": "catalog:",
     "@opentelemetry/api": "catalog:",
+    "@opentelemetry/exporter-trace-otlp-http": "catalog:",
+    "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-trace": "catalog:",
     "@uirouter/core": "catalog:",
     "@uirouter/dsr": "catalog:",
