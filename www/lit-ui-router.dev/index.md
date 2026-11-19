@@ -45,3 +45,44 @@ features:
       height: 40
     details: By default, transitions wait for data before activating a state. Components render with data ready, and a failed fetch stops navigation.
 ---
+
+## A first example
+
+```ts check
+import { render, html } from 'lit';
+import { hashLocationPlugin } from '@uirouter/core';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  type LitStateDeclaration,
+} from 'lit-ui-router';
+
+const router = new UIRouterLit();
+router.plugin(hashLocationPlugin);
+
+// Simple routes using template functions - no LitElement classes needed!
+const states: LitStateDeclaration[] = [
+  { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
+  { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
+];
+states.forEach((state) => router.stateRegistry.register(state));
+router.urlService.rules.initial({ state: 'home' });
+
+router.start();
+
+render(
+  html`<ui-router .uiRouter=${router}>
+    <nav aria-label="Main">
+      <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+        >Home</a
+      >
+      <a ${uiSref('about')} ${uiSrefActive({ activeClasses: ['active'] })}
+        >About</a
+      >
+    </nav>
+    <ui-view></ui-view>
+  </ui-router>`,
+  document.getElementById('root')!,
+);
+```

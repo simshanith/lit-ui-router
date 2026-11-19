@@ -29,5 +29,7 @@ front_matter_title = ""
 front_matter_title = ""
 
 # CLAUDE.md is a one-line `@AGENTS.md` import with no heading.
+# VitePress `layout: home` renders the page's `<h1>` from hero frontmatter, so body sections start at `<h2>`.
 [per-file-ignores]
 "CLAUDE.md" = ["MD041"]
+"www/lit-ui-router.dev/index.md" = ["MD041"]
