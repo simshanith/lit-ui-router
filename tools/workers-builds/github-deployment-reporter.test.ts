@@ -426,13 +426,15 @@ describe('github-deployment-reporter', () => {
   const dir = mkdtempSync(join(tmpdir(), 'github-deployment-reporter-test-'));
   const lines = join(dir, 'lines.ndjson');
   writeFileSync(lines, ndjson(fixtures.versionsUpload));
+  const failedLines = join(dir, 'failed.ndjson');
+  writeFileSync(failedLines, ndjson(fixtures.failed));
 
-  // A stand-in deploy: writes the fixture where wrangler would, reports whether it saw the token.
-  const stub = (code: number) => [
+  // A stand-in deploy: appends `source` where wrangler would, reports whether it saw the token.
+  const stub = (code: number, source = lines) => [
     process.execPath,
     '-e',
     `const fs = require('node:fs');
-     fs.appendFileSync(process.env.${OUTPUT_PATH_ENV}, fs.readFileSync(${JSON.stringify(lines)}));
+     fs.appendFileSync(process.env.${OUTPUT_PATH_ENV}, fs.readFileSync(${JSON.stringify(source)}));
      console.log('token in child: ' + (process.env.${TOKEN_ENV} !== undefined));
      process.exit(${code});`,
   ];
@@ -484,21 +486,52 @@ describe('github-deployment-reporter', () => {
     assert.match(result.stderr, new RegExp(`skipped: ${TOKEN_ENV} is not set`));
   });
 
+  // Read from byte 0, the seeded preview entry would be reported.
   it('reads only the entries appended to a caller-set output file', () => {
     const existing = join(dir, 'cloudflare.ndjson');
     writeFileSync(existing, ndjson(fixtures.previewsDeploy));
 
-    const result = run(['--dry-run', '--', ...stub(0)], {
+    const result = run(['--dry-run', '--', ...stub(0, failedLines)], {
       ...ciEnv,
       [OUTPUT_PATH_ENV]: existing,
     });
 
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stderr, /preview\/lit-ui-router/);
+    assert.match(
+      result.stderr,
+      /skipped: no version-upload or preview entry in the output/,
+    );
     assert.match(
       readFileSync(existing, 'utf8'),
-      /release-ledger[\s\S]*lit-ui-router/,
+      /release-ledger[\s\S]*command-failed/,
     );
+  });
+
+  // The old file sorts after the new one and zz-notes.json after both, so either leak would win.
+  it('reads only the new wrangler-output files in a caller-set directory', () => {
+    const outputs = mkdtempSync(join(dir, 'outputs-'));
+    writeFileSync(
+      join(outputs, 'wrangler-output-old.json'),
+      ndjson(fixtures.previewsDeploy),
+    );
+
+    // Besides wrangler's new file, the run leaves a newer file wrangler did not write.
+    const deploy = [
+      process.execPath,
+      '-e',
+      `const fs = require('node:fs');
+       fs.writeFileSync(${JSON.stringify(join(outputs, 'zz-notes.json'))}, ${JSON.stringify(ndjson(fixtures.previewsDeploy))});
+       fs.writeFileSync(${JSON.stringify(join(outputs, 'wrangler-output-new.json'))}, fs.readFileSync(${JSON.stringify(lines)}));`,
+    ];
+
+    const result = run(['--dry-run', '--', ...deploy], {
+      ...ciEnv,
+      [OUTPUT_DIRECTORY_ENV]: outputs,
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /preview\/lit-ui-router/);
+    assert.doesNotMatch(result.stderr, /release-ledger/);
   });
 
   it('exits 2 without running anything on a missing --', () => {

@@ -412,8 +412,11 @@ the same branch and whose `created_at` is earlier than the new one's, so a rerun
 never retires a newer push. Nothing here retires a branch's deployments when its PR closes: a deploy
 step never sees that event.
 
-The token is `GITHUB_DEPLOYMENTS_TOKEN`, a dashboard secret: a fine-grained token, or a GitHub App
-installation, limited to this repository with **Deployments: read and write** and nothing else.
+The token is `GITHUB_DEPLOYMENTS_TOKEN`, a dashboard secret: a fine-grained personal access token
+limited to this repository with **Deployments: read and write** and nothing else. A GitHub App
+installation token expires after an hour and nothing here refreshes it, so it cannot sit in a static
+secret. The PAT carries an expiry date; rotate it in the dashboard before then, or reporting skips
+with a warning.
 The reporter strips it from the wrapped command's environment and scrubs it, and anything shaped
 like a GitHub token, from the errors it logs. Without it, the reporter logs one line and skips.
 Build variables and secrets are scoped to the whole build, so the build side drops it too:
