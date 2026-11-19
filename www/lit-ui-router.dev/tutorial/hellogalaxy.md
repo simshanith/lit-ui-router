@@ -12,6 +12,12 @@ Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces *
 
 <LiveExample name="hellogalaxy" />
 
+To run this step locally, copy the starter with [tiged](https://github.com/tiged/tiged), then run `npm install` and `npm run dev` in `my-app`:
+
+```bash
+npx tiged simshanith/lit-ui-router/examples/hellogalaxy my-app
+```
+
 ## What We're Building
 
 A three-level state tree:
@@ -27,7 +33,7 @@ A three-level state tree:
 
 ### Parent-Child Relationships
 
-In UI Router, states form parent-child relationships using dot notation:
+In UI-Router, states form parent-child relationships using dot notation:
 
 ```typescript
 // Parent shell state; owns the section nav and a nested <ui-view>
@@ -335,7 +341,7 @@ Note the resolve: instead of a top-level `import '@google/model-viewer'`, the st
 
 ## Router Setup
 
-As in Hello Solar System, the router logs each transition to the browser console, and the [UI Router visualizer](https://github.com/ui-router/visualizer) loads only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellogalaxy/?visualizer" target="_self">running example</a>.
+As in Hello Solar System, the router logs each transition to the browser console, and the [UI-Router visualizer](https://github.com/ui-router/visualizer) loads only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellogalaxy/?visualizer" target="_self">running example</a>.
 
 ```typescript
 const router = new UIRouterLit();
@@ -406,10 +412,13 @@ You've now learned the core concepts of lit-ui-router:
 
 ## What's Next?
 
-Explore the <a href="/app" target="_self">Sample App</a> to see a more complete example with:
+The tutorial uses hash URLs (`/#/galaxy/stars`) so each example works on any static host. When you move on to a real application, continue into the [Guides](/guides/):
 
-- Authentication and protected routes
-- Lazy-loaded states (see [Routed Components](/guides/routed-components#lazy-loading-a-route-s-element))
-- Sticky states and deep state redirect
-- Complex view targeting
-- And more!
+- [Location Plugins](/guides/location-plugins) — switch from hash URLs to real paths with `pushState` or the Navigation API
+- [Unmatched URLs (404)](/guides/unmatched-urls) — route unknown URLs to a 404 state without losing the attempted path
+- [Route Guards](/guides/route-guards) — protect subtrees with transition hooks and redirect unauthenticated users
+- [Loading and Error Views](/guides/loading-and-error-views) — show a pending indicator during slow resolves, `NOWAIT` skeletons, and an error view with retry
+- [Routed Components](/guides/routed-components) — type resolves and lazy-load feature modules with `.**` future states
+- [Reactive Components](/guides/reactive-components) — keep components outside `<ui-view>` in sync with `TransitionController`
+
+To see these patterns combined in one application (authentication, lazy loading, sticky states, named views, and 404 handling), read the [Sample App overview](/sample-app) or open the <a href="/app" target="_self">live Sample App</a>.

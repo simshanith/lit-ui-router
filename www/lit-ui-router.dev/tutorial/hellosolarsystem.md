@@ -12,6 +12,12 @@ Building on [Hello World](./helloworld), this tutorial introduces data fetching 
 
 <LiveExample name="hellosolarsystem" />
 
+To run this step locally, copy the starter with [tiged](https://github.com/tiged/tiged), then run `npm install` and `npm run dev` in `my-app`:
+
+```bash
+npx tiged simshanith/lit-ui-router/examples/hellosolarsystem my-app
+```
+
 ## What We're Building
 
 - A `planets` state listing every body in the solar system, ordered by distance from the Sun
@@ -289,7 +295,7 @@ On a server or a prerendered site, the same function becomes an HTTP redirect. S
 
 ## Router Setup
 
-The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [UI Router visualizer](https://github.com/ui-router/visualizer), a diagram of the state tree and its transitions, loaded only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?visualizer" target="_self">running example</a>.
+The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [UI-Router visualizer](https://github.com/ui-router/visualizer), a diagram of the state tree and its transitions, loaded only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?visualizer" target="_self">running example</a>.
 
 ```typescript
 const router = new UIRouterLit();
