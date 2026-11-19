@@ -13,6 +13,14 @@ export interface LedgerPackage {
   latest: LedgerVersion | null;
 }
 
+/** The Actions run whose claim a version's publish posted to the ledger. */
+export interface PublishRun {
+  repository: string;
+  job_workflow_ref: string;
+  run_id: string;
+  run_attempt: number;
+}
+
 /** The RPC methods of the ledger worker's `LedgerReader` entrypoint that these pages call. */
 export interface LedgerReader {
   /** Every package with a recorded version, by name, each with its `latest` row or null. */
@@ -21,6 +29,8 @@ export interface LedgerReader {
   distTags(name: string): Promise<readonly DistTagRow[]>;
   tagged(name: string, tag: string): Promise<LedgerVersion | null>;
   versions(name: string): Promise<readonly LedgerVersion[]>;
+  /** The run that published a version, or null for one no run claimed; a ledger deployed before the method has none. */
+  publishRun?(name: string, version: string): Promise<PublishRun | null>;
 }
 
 /** A package's npm dist-tags, by the version each points at. */
@@ -206,4 +216,24 @@ export const distTagsOf =
       );
 
     return byVersion;
+  };
+
+/** The run that published a version, or null when the ledger records none, lacks the method or fails the read. */
+export const publishRunOf =
+  (ledger: LedgerReader) =>
+  async ({
+    pkg,
+    version,
+  }: {
+    pkg: string;
+    version: string;
+  }): Promise<PublishRun | null> => {
+    try {
+      return (await ledger.publishRun?.(pkg, version)) ?? null;
+    } catch (error) {
+      // A service binding's stub has every method, so a ledger without this one rejects the call.
+      console.warn(`no publish run for ${pkg}@${version}`, error);
+
+      return null;
+    }
   };

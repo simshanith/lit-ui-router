@@ -28,7 +28,12 @@ import {
   QUEUE_BACKOFF,
   queueCeiling,
 } from './consume.ts';
-import { findPackages, findTagged, findVersions } from './ledger-sql.ts';
+import {
+  findPackages,
+  findPublishRun,
+  findTagged,
+  findVersions,
+} from './ledger-sql.ts';
 import {
   ObservationError,
   Observer,
@@ -731,6 +736,63 @@ describe('queue consumer', { timeout: 120_000 }, () => {
       ['sweep', null, null, null],
     );
     assert.equal(claim?.body, JSON.stringify(sweepClaim));
+  });
+
+  it('reads no publish run for a version only a sweep claimed', async () => {
+    const { origin: _run, ...claim } = claimOf();
+
+    await deliver([
+      messageOf({
+        ...claim,
+        origin: {
+          kind: 'sweep',
+          repository: 'simshanith/lit-ui-router',
+          cron: '0 6 * * *',
+          scheduledAt: '2026-10-17T06:00:00.000Z',
+          sha: SHA,
+        },
+      }),
+    ]);
+
+    assert.equal((await all('claims')).length, 1);
+    assert.deepEqual(
+      await run(findPublishRun({ name: NAME, version: VERSION })),
+      Option.none(),
+    );
+  });
+
+  it("reads a version's earliest run claim as its publish run", async () => {
+    const first = claimOf();
+
+    const later: Claim = {
+      ...first,
+      origin: {
+        kind: 'run',
+        repository: first.origin.repository,
+        jobWorkflowRef:
+          'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/heads/main',
+        runId: '200',
+        runAttempt: '2',
+        sha: SHA,
+      },
+    };
+
+    await deliver([messageOf(first)]);
+    await deliver([messageOf(later)]);
+
+    assert.equal((await all('claims')).length, 2);
+    assert.deepEqual(
+      Option.getOrThrow(
+        await run(findPublishRun({ name: NAME, version: VERSION })),
+      ),
+      {
+        repository: 'simshanith/lit-ui-router',
+        job_workflow_ref:
+          'simshanith/lit-ui-router/.github/workflows/publish-npm.yml@refs/tags/lit-ui-router@1.0.0',
+        run_id: '100',
+        run_attempt: 1,
+      },
+    );
   });
 
   it('folds a manual claim to applied, recording its actor and no run columns', async () => {

@@ -75,6 +75,31 @@ export const findTagged = (request: typeof NameTag.Type) =>
     })(request);
   });
 
+const PublishRunSchema = Schema.Struct({
+  repository: Schema.String,
+  job_workflow_ref: Schema.String,
+  run_id: Schema.String,
+  run_attempt: Schema.Number,
+});
+
+/** The Actions run whose claim a version's publish posted. */
+export type PublishRun = typeof PublishRunSchema.Type;
+
+/** A version's earliest run claim; only the publish job's last step posts one. */
+export const findPublishRun = (request: typeof NameVersion.Type) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+
+    return yield* SqlSchema.findOneOption({
+      Request: NameVersion,
+      Result: PublishRunSchema,
+      execute: ({ name, version }) =>
+        sql`SELECT repository, job_workflow_ref, run_id, run_attempt FROM claims
+            WHERE name = ${name} AND version = ${version} AND origin = 'run'
+            ORDER BY id LIMIT 1`,
+    })(request);
+  });
+
 /** A package the ledger has recorded, with the version its npm `latest` dist-tag points at. */
 export interface LedgerPackage {
   name: string;

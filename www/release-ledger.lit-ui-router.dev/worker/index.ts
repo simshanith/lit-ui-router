@@ -16,9 +16,11 @@ import {
   findDistTags,
   findLedger,
   findPackages,
+  findPublishRun,
   findTagged,
   findVersions,
   type LedgerPackage,
+  type PublishRun,
 } from '../src/ledger-sql.ts';
 import { ObserverLive } from '../src/observe.ts';
 import { LEDGER_PATH, readLedger } from '../src/read.ts';
@@ -67,6 +69,17 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
     return run(
       'ledger.reader.versions',
       findVersions({ name }).pipe(Effect.provide(database(this.env))),
+    );
+  }
+
+  /** The Actions run that published a version, from its earliest run claim, or null for a version no run claimed. */
+  publishRun(name: string, version: string): Promise<PublishRun | null> {
+    return run(
+      'ledger.reader.publish-run',
+      findPublishRun({ name, version }).pipe(
+        Effect.map(Option.getOrNull),
+        Effect.provide(database(this.env)),
+      ),
     );
   }
 
