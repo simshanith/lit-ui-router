@@ -113,7 +113,7 @@ Two shapes type-check:
 - **Thread the generic** onto the declaration: `LitStateDeclaration<{ users: User[] }>[]`.
   A bare `RoutedLitTemplate` view still fits beside the typed one.
 - **A table mixing resolve shapes** threads one type alias that covers every view,
-  such as `UserResolves & ContactResolves`. Each view keeps its own required
+  such as `UserListResolves & ContactResolves`. Each view keeps its own required
   members. An alias with every member optional also fits, at the cost of `?.` at
   each use inside the views.
 
@@ -179,7 +179,12 @@ import type { LitStateDeclaration } from 'lit-ui-router';
 import { ContactsView } from './ContactsView.js';
 
 export const states: LitStateDeclaration[] = [
-  { name: 'contacts', url: '/contacts', component: ContactsView },
+  {
+    name: 'contacts',
+    parent: 'app',
+    url: '/contacts',
+    component: ContactsView,
+  },
 ];
 ```
 
