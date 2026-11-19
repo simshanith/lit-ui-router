@@ -19,6 +19,9 @@ hero:
       link: ./app
       target: _self
 
+positioning: >-
+  For Lit apps that have outgrown a path-to-component map: nested layouts, data that loads before a view shows, guards and redirects in one place. It runs on <code>@uirouter/core</code>, the same core as UI-Router for Angular and React.
+
 features:
   - title: State-based Routing
     icon:

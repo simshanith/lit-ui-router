@@ -1,13 +1,15 @@
+<script setup lang="ts">
+import { useData } from 'vitepress';
+
+const { frontmatter } = useData();
+</script>
+
 <template>
   <!-- Rendered in home-features-before so home-hero-after stays open for #2129's releases strip. -->
-  <div class="home-positioning">
+  <div v-if="frontmatter.positioning" class="home-positioning">
     <div class="container">
-      <p class="copy">
-        For Lit apps that have outgrown a path-to-component map: nested layouts,
-        data that loads before a view shows, guards and redirects in one place.
-        It runs on <code>@uirouter/core</code>, the same core as UI-Router for
-        Angular and React.
-      </p>
+      <!-- positioning is an authored frontmatter string in index.md, not user input -->
+      <p class="copy" v-html="frontmatter.positioning"></p>
     </div>
   </div>
 </template>
@@ -45,7 +47,7 @@
   text-wrap: pretty;
 }
 
-.copy code {
+.copy :deep(code) {
   font-family: var(--vp-font-family-mono);
   font-size: 0.9em;
   color: var(--site-color-text);
