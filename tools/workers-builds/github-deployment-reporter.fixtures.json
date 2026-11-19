@@ -1,0 +1,60 @@
+{
+  "$comment": "Fixtures for github-deployment-reporter.test.ts. Each array is one output file's NDJSON, one object per line, in the shape wrangler 4.164's and cf 1.0.0-rc.1's writeOutput append (src/versions/upload.ts version-upload, src/preview preview, src/index.ts wrangler-session). `versionsUpload` mirrors the lit-ui-router build on PR #2270 (commit preview 2bb6eca1, branch alias docs-v1-snapshot-llms-full); `previewsDeploy` is a Workers Previews deploy of the ledger.",
+  "sha": "99c2ed6fc79c23dff476d5671774dfd5dc5ddd74",
+  "buildUuid": "963e54c1-a8ee-4145-8873-d1277a7adacc",
+  "branch": "docs/v1-snapshot-llms-full",
+  "versionsUpload": [
+    {
+      "type": "wrangler-session",
+      "version": 1,
+      "wrangler_version": "4.164.0",
+      "command_line_args": [
+        "versions",
+        "upload",
+        "--config",
+        "www/lit-ui-router.dev/wrangler.jsonc"
+      ],
+      "log_file_path": "/opt/buildhome/.config/.wrangler/logs/wrangler-2026-11-19_03-17-40_123.log",
+      "timestamp": "2026-11-19T03:17:40.123Z"
+    },
+    {
+      "type": "version-upload",
+      "version": 1,
+      "worker_name": "lit-ui-router",
+      "worker_tag": "0f4c3d2b1a09487f8e6d5c4b3a291807",
+      "version_id": "2bb6eca1-5d0e-4c8f-9a3b-7e6f5d4c3b2a",
+      "preview_url": "https://2bb6eca1-lit-ui-router.shane-cf1.workers.dev",
+      "preview_alias_url": "https://docs-v1-snapshot-llms-full-lit-ui-router.shane-cf1.workers.dev",
+      "worker_name_overridden": false,
+      "bundle_size": { "raw_bytes": 412345, "gzip_bytes": 98765 },
+      "timestamp": "2026-11-19T03:18:02.456Z"
+    }
+  ],
+  "previewsDeploy": [
+    {
+      "type": "preview",
+      "version": 1,
+      "worker_name": "release-ledger",
+      "preview_id": "5b1f0c2e-3d4a-4e5f-8a6b-7c8d9e0f1a2b",
+      "preview_name": "docs/v1-snapshot-llms-full",
+      "preview_slug": "docs-v1-snapshot-llms-full",
+      "preview_urls": [
+        "https://docs-v1-snapshot-llms-full-release-ledger.shane-cf1.workers.dev"
+      ],
+      "deployment_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "deployment_urls": [
+        "https://a1b2c3d4-release-ledger.shane-cf1.workers.dev"
+      ],
+      "timestamp": "2026-11-19T03:18:02.456Z"
+    }
+  ],
+  "failed": [
+    {
+      "type": "command-failed",
+      "version": 1,
+      "code": 10021,
+      "message": "Uncaught Error: No such module",
+      "timestamp": "2026-11-19T03:18:02.456Z"
+    }
+  ]
+}

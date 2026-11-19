@@ -23,7 +23,7 @@
       "trigger_uuid": "preview-uuid",
       "trigger_name": "Preview",
       "build_command": "./tools/workers-builds/cloudflare-build.ts",
-      "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch",
+      "deploy_command": "./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts branch",
       "branch_includes": ["*"],
       "branch_excludes": ["main"],
       "environment_variables": {
@@ -41,7 +41,7 @@
         "trigger_uuid": "preview-uuid",
         "kind": "preview",
         "patch": {
-          "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch"
+          "deploy_command": "./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts branch"
         },
         "environmentPatch": {}
       }

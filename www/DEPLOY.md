@@ -77,10 +77,10 @@ the build output beside it).
 
 ### Build & Deploy Commands
 
-| Environment                                                                                             | Build                                        | Deploy                                               |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Production                                                                                              | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+| Environment                                                                                             | Build                                        | Deploy                                                                                                       |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/cloudflare-deploy.ts main`                                                           |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.ts` | `./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts branch` |
 
 Every other site appends its key to both commands (`cloudflare-build.ts <site>`,
 `cloudflare-deploy.ts main <site>`), as its entry in
@@ -389,6 +389,29 @@ Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Pr
 tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale
 token shows up as the grey `workers-builds (triggers)` badge, not a red run.
 
+### GitHub Deployments for previews
+
+Every preview `deploy_command` runs under
+[`github-deployment-reporter.ts`](../tools/workers-builds/github-deployment-reporter.ts), which
+records the preview URL as a GitHub Deployment on the commit, in the `preview/<worker>`
+environment. The reporter runs the command after `--` with inherited stdio and exits with its
+code; a reporting failure only warns.
+
+wrangler and `cf` both append NDJSON entries to `WRANGLER_OUTPUT_FILE_PATH`
+(`WRANGLER_OUTPUT_FILE_DIRECTORY` when only that is set). The reporter reads the location the
+environment already names, since Workers Builds may read it too, and sets a temporary file only
+when neither is set. The `version-upload` entry's `preview_url` becomes the deployment's
+`environment_url` and its `preview_alias_url` the status description; a `preview` entry's first
+`deployment_urls` entry stands in for a Workers Preview. A failed deploy reports nothing: the
+Cloudflare check run already carries the failure, and the output has no URL to point at.
+
+The token is `GITHUB_DEPLOYMENTS_TOKEN`, a dashboard secret: a fine-grained token, or a GitHub App
+installation, limited to this repository with **Deployments: read and write** and nothing else.
+The reporter strips it from the wrapped command's environment and scrubs it, and anything shaped
+like a GitHub token, from the errors it logs. Without it, the reporter logs one line and skips.
+Build variables and secrets are scoped to the whole build, so the build command, which runs
+`pnpm install` and the site's build, can read the token too; the stripping covers the deploy only.
+
 ### Build Environment Variables
 
 Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
@@ -411,6 +434,7 @@ and leaves every other variable on the trigger untouched.
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
 - `TURBO_`-prefixed [Remote Cache](../docs/REMOTE_CACHE.md) variables and secrets
+- `GITHUB_DEPLOYMENTS_TOKEN` — per [GitHub Deployments for previews](#github-deployments-for-previews)
 
 Drift semantics for a declared key: a wrong or absent live value is drift and is patched; a key
 the dashboard has marked secret is reported and **not** overwritten, since the config holds

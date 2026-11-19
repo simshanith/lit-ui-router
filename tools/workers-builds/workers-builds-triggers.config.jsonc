@@ -21,6 +21,8 @@
       // invocations, keyed by the trigger the mode argument names, in
       // cloudflare-deploy.ts. These two stay bare because every open branch's
       // preview runs them, including branches that predate the site argument.
+      // Preview deploys run under github-deployment-reporter.ts, which records the
+      // preview URL as a GitHub Deployment; production deploys stay unwrapped.
       // SKIP_DEPENDENCY_INSTALL=1 is what hands the install to that script; without
       // it Cloudflare runs its own corepack-provisioned `pnpm install` first.
       // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
@@ -38,7 +40,7 @@
       },
       "preview": {
         "build_command": "./tools/workers-builds/cloudflare-build.ts",
-        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch",
+        "deploy_command": "./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts branch",
         "environment_variables": {
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
@@ -71,7 +73,7 @@
       },
       "preview": {
         "build_command": "./tools/workers-builds/cloudflare-build.ts release-ledger.lit-ui-router.dev",
-        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-ledger.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts preview release-ledger.lit-ui-router.dev",
         "path_includes": [
           "www/release-ledger.lit-ui-router.dev/*",
           "tools/release-ledger/*",
@@ -107,7 +109,7 @@
       },
       "preview": {
         "build_command": "./tools/workers-builds/cloudflare-build.ts release-diffs.lit-ui-router.dev",
-        "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts preview release-diffs.lit-ui-router.dev",
+        "deploy_command": "./tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts preview release-diffs.lit-ui-router.dev",
         "path_includes": [
           "www/release-diffs.lit-ui-router.dev/*",
           "pnpm-lock.yaml",

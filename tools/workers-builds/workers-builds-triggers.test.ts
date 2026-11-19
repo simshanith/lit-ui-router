@@ -119,6 +119,17 @@ const BUILD_SCRIPT = './tools/workers-builds/cloudflare-build.ts';
 
 const DEPLOY_SCRIPT = './tools/workers-builds/cloudflare-deploy.ts';
 
+const REPORTER_SCRIPT = './tools/workers-builds/github-deployment-reporter.ts';
+
+// A preview deploy runs under the reporter: `<reporter> -- <deploy script> <mode> [site]`.
+const unwrapReporter = (command: string | undefined) => {
+  const prefix = `${REPORTER_SCRIPT} -- `;
+
+  return command?.startsWith(prefix)
+    ? { wrapped: true, command: command.slice(prefix.length) }
+    : { wrapped: false, command };
+};
+
 const workerNameAt = async (config: string): Promise<string> =>
   workerName(join(workspaceRoot, config));
 
@@ -187,7 +198,7 @@ describe('desiredStateFromConfig', () => {
     );
     assert.equal(
       desired.preview.deploy_command,
-      './tools/workers-builds/cloudflare-deploy.ts branch',
+      './tools/workers-builds/github-deployment-reporter.ts -- ./tools/workers-builds/cloudflare-deploy.ts branch',
     );
   });
 
@@ -261,6 +272,7 @@ describe('desiredStateFromConfig', () => {
   it('points every deploy command at the deploy script, mode and site', async () => {
     // The pinned path must name a real file: readFile rejects if it does not.
     await readFile(join(workspaceRoot, DEPLOY_SCRIPT), 'utf8');
+    await readFile(join(workspaceRoot, REPORTER_SCRIPT), 'utf8');
 
     // A legacy preview trigger uploads versions; a Previews base config previews.
     const modesFor: Record<'production' | 'preview', readonly DeployMode[]> = {
@@ -279,7 +291,16 @@ describe('desiredStateFromConfig', () => {
       const config = ['--config', worker.workerConfig];
 
       for (const kind of ['production', 'preview'] as const) {
-        const { path, args } = parseCommand(worker[kind].deploy_command);
+        const { wrapped, command } = unwrapReporter(
+          worker[kind].deploy_command,
+        );
+
+        assert.equal(
+          wrapped,
+          kind === 'preview',
+          `${worker.site} ${kind} reporter wrapping`,
+        );
+        const { path, args } = parseCommand(command);
         const [argMode, key = DEFAULT_SITE, ...extra] = args;
         const mode = modesFor[kind].find((allowed) => allowed === argMode);
         assert.equal(path, DEPLOY_SCRIPT);
