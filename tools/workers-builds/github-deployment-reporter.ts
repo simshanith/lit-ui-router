@@ -129,8 +129,8 @@ export const deactivateSuperseded = async (
   {
     environment,
     branch,
-    keep,
-  }: { environment: string; branch: string; keep: number },
+    current,
+  }: { environment: string; branch: string; current: number },
 ): Promise<number[]> => {
   const listed = await request(
     api,
@@ -141,7 +141,7 @@ export const deactivateSuperseded = async (
 
   const deactivated: number[] = [];
 
-  for (const id of supersededDeploymentIds(listed, branch, keep)) {
+  for (const id of supersededDeploymentIds(listed, branch, current)) {
     const statuses = await request(
       api,
       'GET',
@@ -284,7 +284,7 @@ export const report = async (
     const deactivated = await deactivateSuperseded(api, {
       environment: requests.deployment.environment,
       branch,
-      keep: deployment.id,
+      current: deployment.id,
     });
 
     return {

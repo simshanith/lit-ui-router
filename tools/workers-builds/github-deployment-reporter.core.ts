@@ -376,6 +376,7 @@ export const deploymentRequests = (
 export const ListedDeploymentsSchema = v.array(
   v.looseObject({
     id: v.number(),
+    created_at: v.pipe(v.string(), v.isoTimestamp()),
     payload: v.fallback(v.looseObject({ branch: v.nullish(v.string()) }), {
       branch: null,
     }),
@@ -392,20 +393,29 @@ export const DeploymentStatusesSchema = v.array(
 export type DeploymentStatuses = v.InferOutput<typeof DeploymentStatusesSchema>;
 
 /**
- * The deployments a new one supersedes: same branch in its payload, other id. The
- * environment is shared by every PR, and a transient one never triggers `auto_inactive`.
+ * The deployments a new one supersedes: same branch in its payload, created before it.
+ * The environment is shared by every PR, and a transient one never triggers `auto_inactive`.
+ * A late or rerun report must not retire a newer push, and one missing from the listing retires nothing.
  */
 export const supersededDeploymentIds = (
   listed: ListedDeployments,
   branch: string,
-  keep: number,
-): number[] =>
-  listed
+  current: number,
+): number[] => {
+  const posted = listed.find((deployment) => deployment.id === current);
+
+  if (posted === undefined) return [];
+
+  const before = Date.parse(posted.created_at);
+
+  return listed
     .filter(
       (deployment) =>
-        deployment.id !== keep && deployment.payload.branch === branch,
+        deployment.payload.branch === branch &&
+        Date.parse(deployment.created_at) < before,
     )
     .map((deployment) => deployment.id);
+};
 
 /** Whether a deployment's statuses (newest first, as GitHub lists them) leave it active. */
 export const isStillActive = (statuses: DeploymentStatuses): boolean =>

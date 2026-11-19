@@ -407,8 +407,10 @@ Cloudflare check run already carries the failure, and the output has no URL to p
 
 Every PR shares the `preview/<worker>` environment, and GitHub's `auto_inactive` skips transient
 deployments, so the reporter retires superseded ones itself: it records `WORKERS_CI_BRANCH` in the
-deployment payload, then marks `inactive` each earlier deployment in the environment whose payload
-names the same branch.
+deployment payload, then marks `inactive` each deployment in the environment whose payload names
+the same branch and whose `created_at` is earlier than the new one's, so a rerun of an older build
+never retires a newer push. Nothing here retires a branch's deployments when its PR closes: a deploy
+step never sees that event.
 
 The token is `GITHUB_DEPLOYMENTS_TOKEN`, a dashboard secret: a fine-grained token, or a GitHub App
 installation, limited to this repository with **Deployments: read and write** and nothing else.

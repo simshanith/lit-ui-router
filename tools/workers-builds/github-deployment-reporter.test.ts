@@ -159,19 +159,32 @@ describe('deploymentRequests', () => {
 });
 
 describe('supersededDeploymentIds and isStillActive', () => {
-  it('keeps the same branch, drops this deployment and foreign payloads', () => {
-    const listed = [
-      { id: 3, payload: { branch: 'a' } },
-      { id: 2, payload: { branch: 'b' } },
-      { id: 1, payload: 'free text' },
-      { id: 0, payload: { branch: 'a' } },
-    ];
+  const at = (minute: number) =>
+    `2026-11-19T04:${String(minute).padStart(2, '0')}:00Z`;
 
-    assert.deepEqual(
-      supersededDeploymentIds(v.parse(ListedDeploymentsSchema, listed), 'a', 3),
-      [0],
-    );
+  it('keeps the same branch, drops this deployment and foreign payloads', () => {
+    const listed = v.parse(ListedDeploymentsSchema, [
+      { id: 3, created_at: at(3), payload: { branch: 'a' } },
+      { id: 2, created_at: at(2), payload: { branch: 'b' } },
+      { id: 1, created_at: at(1), payload: 'free text' },
+      { id: 0, created_at: at(0), payload: { branch: 'a' } },
+    ]);
+
+    assert.deepEqual(supersededDeploymentIds(listed, 'a', 3), [0]);
     assert.throws(() => v.parse(ListedDeploymentsSchema, { message: 'x' }));
+  });
+
+  // A rerun of an older build reports after the branch has moved on.
+  it('never retires a newer deployment on the branch', () => {
+    const listed = v.parse(ListedDeploymentsSchema, [
+      { id: 12, created_at: at(12), payload: { branch: 'a' } },
+      { id: 13, created_at: at(10), payload: { branch: 'a' } },
+      { id: 11, created_at: at(10), payload: { branch: 'a' } },
+      { id: 10, created_at: at(5), payload: { branch: 'a' } },
+    ]);
+
+    assert.deepEqual(supersededDeploymentIds(listed, 'a', 11), [10]);
+    assert.deepEqual(supersededDeploymentIds(listed, 'a', 99), []);
   });
 
   it('reads the newest status', () => {
@@ -278,13 +291,18 @@ describe('report', () => {
     const requests: Request[] = [];
     const { branch } = fixtures;
 
-    // GitHub lists newest first; 43 is the one this run creates.
+    // GitHub lists newest first; 43 is the one this run creates, 44 a newer push it must leave alone.
     const listed = [
-      { id: 43, payload: { branch } },
-      { id: 42, payload: { branch } },
-      { id: 41, payload: { branch: 'other' } },
-      { id: 40, payload: '' },
-      { id: 39, payload: { branch } },
+      { id: 44, created_at: '2026-11-19T04:05:00Z', payload: { branch } },
+      { id: 43, created_at: '2026-11-19T04:04:00Z', payload: { branch } },
+      { id: 42, created_at: '2026-11-19T04:03:00Z', payload: { branch } },
+      {
+        id: 41,
+        created_at: '2026-11-19T04:02:00Z',
+        payload: { branch: 'other' },
+      },
+      { id: 40, created_at: '2026-11-19T04:01:00Z', payload: '' },
+      { id: 39, created_at: '2026-11-19T04:00:00Z', payload: { branch } },
     ];
 
     const statuses = new Map([
