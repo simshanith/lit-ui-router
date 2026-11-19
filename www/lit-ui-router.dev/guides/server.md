@@ -6,11 +6,17 @@ type: index
 
 # Server-Side Overview
 
+A single-page app deployed with a catch-all rewrite returns `200 OK` for every
+URL, including typos, and ships an empty shell until JavaScript boots.
+[`ui-router-server`](/packages/ui-router-server) runs your route table on the
+server so each request gets the right HTTP status, redirect, or custom response,
+and [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) renders the matching Lit
+views to HTML at build time or per request.
+
 Three choices place an app on the server: the **verdict** the router gives a
-request, how much of the page the server **renders**, and the **host** that
-serves it. [`ui-router-server`](/packages/ui-router-server) owns the verdict
-and the hosts; [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) owns the
-render. Pick one of each, then follow the row in
+request (whether it matches a page, a redirect, a 404, a custom HTTP response,
+or a delegated handler), how much of the page the server **renders**, and the
+**host** that serves it. Pick one of each, then follow the row in
 [Find your combination](#find-your-combination).
 
 ## Verdict
@@ -20,13 +26,13 @@ app's code runs. [The verdict](/packages/ui-router-server#the-verdict) lists
 the shapes; [which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)
 covers the answers a transition changes later.
 
-| Answer         | Declared as                                      | Read                                                                                                    |
-| -------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Page           | a state with a url                               | [Server-Side Routing](./server-route-matching#the-verdict)                                              |
-| Redirect       | a pattern rule in `redirects`, or a `redirectTo` | [Redirects: data until they need code](./server-route-matching#redirects-data-until-they-need-code)     |
-| 404            | no matching state, or the mount's `otherwise`    | [Real 404s, per mount](./server-route-matching#real-404s-per-mount), [Unmatched URLs](./unmatched-urls) |
-| Response state | `response: true` and a host handler              | [Response states](/packages/ui-router-server#response-states)                                           |
-| Delegate       | `delegate` and a host handler                    | [Delegating states](/packages/ui-router-server#delegating-states)                                       |
+| Answer         | Declared as                                                                                                                                   | Read                                                                                                    |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Page           | a state with a url                                                                                                                            | [Server-Side Routing](./server-route-matching#the-verdict)                                              |
+| Redirect       | a pattern rule in `redirects`, or a `redirectTo`                                                                                              | [Redirects: data until they need code](./server-route-matching#redirects-data-until-they-need-code)     |
+| 404            | no matching state, or the mount's `otherwise` (a mount is the URL prefix one app is served under)                                             | [Real 404s, per mount](./server-route-matching#real-404s-per-mount), [Unmatched URLs](./unmatched-urls) |
+| Response state | `response: true` and a host handler — answers with a `Response` built from its resolves (a redirect, JSON, an image) instead of a routed page | [Response states](/packages/ui-router-server#response-states)                                           |
+| Delegate       | `delegate` and a host handler — hands its url to a host handler: a command endpoint, a form POST, a JSON feed                                 | [Delegating states](/packages/ui-router-server#delegating-states)                                       |
 
 ## Render
 

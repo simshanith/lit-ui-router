@@ -122,6 +122,4 @@ declare module 'ui-router-mobx' {
 - [Releases](/releases/ui-router-mobx/){target="_self"} — every version, newest first, with its release notes
 - [lit-ui-router-mobx](/packages/lit-ui-router-mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
-- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-mobx) — this package as
-  a brick in sheet 2's model in the round, sized by its authored files and
-  seated on what it peers
+- [Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-mobx) — package size and dependency map

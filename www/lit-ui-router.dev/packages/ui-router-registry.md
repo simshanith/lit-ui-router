@@ -8,7 +8,7 @@ type: package
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-registry" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-registry" /></a>
-<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-registry" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-registry@*" /></a>
+<a href="https://lit-ui-router.dev/gh/releases/ui-router-registry/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-registry@*" /></a>
 </p>
 
 [`ui-router-registry`](https://npmx.dev/package/ui-router-registry) types the
@@ -210,6 +210,10 @@ declare its return type too:
   component: (): TemplateResult => html`<a ${uiSref('contacts.contact', { contactId })}>…</a>`,
 }
 ```
+
+## Releases
+
+<ReleaseDiffPicker name="ui-router-registry" />
 
 ## Further reading
 

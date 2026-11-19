@@ -26,6 +26,4 @@ covers the one difference the bindings' callers see.
   runs the solar system tutorial on `lit-ui-router-mobx`.
 - The <a href="/app-mobx" target="_self">MobX sample app</a> keeps its client
   state in MobX stores through the same bindings.
-- Both stand on [the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-mobx) as
-  bricks in sheet 2's model in the round, each sized by its authored files and
-  seated on what it peers.
+- See how both packages sit in the workspace on [the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=lit-ui-router-mobx).
