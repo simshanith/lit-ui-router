@@ -50,11 +50,11 @@ catalogs:
       specifier: ^0.11.0
       version: 0.11.0
     '@distilled.cloud/cloudflare':
-      specifier: 1.0.0-rc.18
-      version: 1.0.0-rc.18
+      specifier: 1.0.0-rc.20
+      version: 1.0.0-rc.20
     '@distilled.cloud/core':
-      specifier: 1.0.0-rc.18
-      version: 1.0.0-rc.18
+      specifier: 1.0.0-rc.20
+      version: 1.0.0-rc.20
     '@effect/sql-d1':
       specifier: ^4.1.4
       version: 4.1.4
@@ -705,6 +705,7 @@ packageExtensionsChecksum: sha256-ctxSB3VGJoNbxuCrcgOUHgPXFV8hlUBqG/8XcmRiBcE=
 patchedDependencies:
   '@api-viewer/docs': c6c7a1ebb74597e0dd7dc19971feaf6f3db19f2f05b57efc350682d93a412098
   '@api-viewer/tabs': efaf5cff6c9c2374e2b5cb22f9f886d43efec2cbd201e743a638bbe1f989b83e
+  '@distilled.cloud/cloudflare': b890624e35e2eaa442b888a4c76d63f3ddbc17b7e927a852a89f675872620c80
   '@uirouter/visualizer': 74bfbc33376d1b01d6d2cc8f661de8c05ee57615c8ee376ff5a5af7ce2cc42df
   eslint-plugin-pnpm: 021497402f3f31eb4769042dfd83624734afae69141909bd2f1396a7fec03d6a
   lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
@@ -2729,10 +2730,10 @@ importers:
     dependencies:
       '@distilled.cloud/cloudflare':
         specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.4)
+        version: 1.0.0-rc.20(patch_hash=b890624e35e2eaa442b888a4c76d63f3ddbc17b7e927a852a89f675872620c80)(effect@4.1.4)
       '@distilled.cloud/core':
         specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.4)
+        version: 1.0.0-rc.20(effect@4.1.4)
       effect:
         specifier: 'catalog:'
         version: 4.1.4
@@ -3508,7 +3509,7 @@ importers:
         version: 1.0.0-rc.1
       '@distilled.cloud/cloudflare':
         specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.4)
+        version: 1.0.0-rc.20(patch_hash=b890624e35e2eaa442b888a4c76d63f3ddbc17b7e927a852a89f675872620c80)(effect@4.1.4)
       '@tools/bootstrap':
         specifier: catalog:workspace
         version: link:../bootstrap
@@ -3750,7 +3751,7 @@ importers:
     dependencies:
       '@distilled.cloud/cloudflare':
         specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.4)
+        version: 1.0.0-rc.20(patch_hash=b890624e35e2eaa442b888a4c76d63f3ddbc17b7e927a852a89f675872620c80)(effect@4.1.4)
       '@effect/sql-d1':
         specifier: 'catalog:'
         version: 4.1.4(effect@4.1.4)
@@ -4136,15 +4137,25 @@ packages:
   '@custom-elements-manifest/find-dependencies@0.0.7':
     resolution: {integrity: sha512-icHEBPHcOXSrpDOFkQhvM7vljEbqrEReW251RBxSzDctXzYWIL0Hk2yMDINn3d6mZ4KSsqLZlaFiGFp/2nn9rA==}
 
-  '@distilled.cloud/cloudflare@1.0.0-rc.18':
-    resolution: {integrity: sha512-UJB7pitkg7msm7BGTuAE8yYx4GzKdPLRtiOm3G3XHw07xLUlqEiEr4xpSf0CeziWzDygjI53FSkpC2qyVZr49g==}
+  '@distilled.cloud/aws4signer@1.0.0-rc.20':
+    resolution: {integrity: sha512-7lYmG5Pj7/hqEhygqMmkeb4eph0Z8BEJFDlGDrNrHNxa03F39JqmZpp+YXO8v85Jx0O5G92Fl9UnfwHxvY4D1w==}
     peerDependencies:
-      effect: ^4.0.5
+      effect: ^4.1.2
 
-  '@distilled.cloud/core@1.0.0-rc.18':
-    resolution: {integrity: sha512-Iui60+sNl1CwUu7NKGLuFf3VC4H9xYzfm0Fc8ZQvd87qwf1sDMB3EAWZrq/QFgrwzSY16z2mJ0PNHaBUnGet8A==}
+  '@distilled.cloud/cloudflare@1.0.0-rc.20':
+    resolution: {integrity: sha512-Vcb9hNRqlrec3pSaf9mOFHg5bKoUfpKytAH9w6+Y9L2HmU2Bval3zAXx4viQx9yqUeU5CbhaEH+/SdKywcaEZw==}
     peerDependencies:
-      effect: ^4.0.5
+      effect: ^4.1.2
+
+  '@distilled.cloud/core@1.0.0-rc.20':
+    resolution: {integrity: sha512-uoZ8W5QhxcSyyM6/XZzRJCKc55FC4fZfXWX2ypx8AOIC4PTOtdyDZ3fswGpVp/SRiC4ua0HYGhAgFA8Ub7Ot5Q==}
+    peerDependencies:
+      effect: ^4.1.2
+
+  '@distilled.cloud/s3@1.0.0-rc.20':
+    resolution: {integrity: sha512-MqJlG+CVCgkIX7iPDo8hb4YlcEELYTlJFLg2Whp8TjBPieViNiiRAJR/5TtDApa38dzrTsMc69ul965Myagrdg==}
+    peerDependencies:
+      effect: ^4.1.2
 
   '@docsearch/css@4.7.1':
     resolution: {integrity: sha512-AsMPnbNmVLDNjhtgfq4ZRskNvWR8vuK6riEegHp3kjBFtxbmTWPzZ5s1FJ04SGr2D0ZXglueUNISsV2sDgV6Jw==}
@@ -10832,13 +10843,25 @@ snapshots:
       oxc-resolver: 11.24.2
       rs-module-lexer: 2.8.0
 
-  '@distilled.cloud/cloudflare@1.0.0-rc.18(effect@4.1.4)':
+  '@distilled.cloud/aws4signer@1.0.0-rc.20(effect@4.1.4)':
     dependencies:
-      '@distilled.cloud/core': 1.0.0-rc.18(effect@4.1.4)
+      '@distilled.cloud/core': 1.0.0-rc.20(effect@4.1.4)
       effect: 4.1.4
 
-  '@distilled.cloud/core@1.0.0-rc.18(effect@4.1.4)':
+  '@distilled.cloud/cloudflare@1.0.0-rc.20(patch_hash=b890624e35e2eaa442b888a4c76d63f3ddbc17b7e927a852a89f675872620c80)(effect@4.1.4)':
     dependencies:
+      '@distilled.cloud/core': 1.0.0-rc.20(effect@4.1.4)
+      '@distilled.cloud/s3': 1.0.0-rc.20(effect@4.1.4)
+      effect: 4.1.4
+
+  '@distilled.cloud/core@1.0.0-rc.20(effect@4.1.4)':
+    dependencies:
+      effect: 4.1.4
+
+  '@distilled.cloud/s3@1.0.0-rc.20(effect@4.1.4)':
+    dependencies:
+      '@distilled.cloud/aws4signer': 1.0.0-rc.20(effect@4.1.4)
+      '@distilled.cloud/core': 1.0.0-rc.20(effect@4.1.4)
       effect: 4.1.4
 
   '@docsearch/css@4.7.1': {}
