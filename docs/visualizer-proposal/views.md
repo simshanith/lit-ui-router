@@ -64,11 +64,13 @@ the start of an axis it overflows, so scrolling reaches all of it. The offset
 is in whole pixels, set as logical margins so it mirrors in a right-to-left
 panel, and nothing is scaled or animated, under reduced motion or not.
 
-Where the details will stand beside the boxes, their column is kept free
-before any view is selected, as the Map keeps its inspector's column, so
-selecting a view moves nothing. Where they open below, there is no row to
-keep: selecting a view shortens the room, and the drawing moves up to the
-middle of what is left, at once.
+Where the details will stand beside the boxes, the boxes are packed for the
+room the details leave, and the drawing is placed in the whole room as it is
+before any view is selected: in its middle while the details' column stays
+free either side, else as near the middle as keeps that column free, as the
+Map keeps its inspector's column. Selecting a view moves nothing. Where they
+open below, there is no row to keep: selecting a view shortens the room, and
+the drawing moves up to the middle of what is left, at once.
 
 ## Beside the Map
 

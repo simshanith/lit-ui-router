@@ -452,30 +452,40 @@ const packViews = (
 const centred = (placed: Placed, room: Size & { reserve: number }): View =>
   fitView(placed, { ...room, slack: 0, foot: 0, rtl: false });
 
+// The Views' container, whose width puts the details beside the boxes; before it is drawn, the room it will hold.
+const containerOf = (host: DevtoolsPanel, width: number, margin: number) =>
+  host.renderRoot.querySelector('.views-scroll')?.clientWidth ??
+  width + margin * 2;
+
 /**
  * Packs the views for the room they are drawn in and places them as the Map's fitted view does: in the middle on an
- * axis they fit, at the start of one they overflow. Before a view is selected the details' column is kept free where
- * the dock has room for it, so selecting one moves nothing.
+ * axis they fit, at the start of one they overflow. Where the dock puts the details beside the boxes, the drawing is
+ * packed for the room they leave and placed in the whole room as it is before a view is selected, in the middle
+ * while their column stays free, else as near it as keeps the column free, so selecting one moves nothing.
  */
-const layoutOf = (
-  host: DevtoolsPanel,
-  drawing: Drawing,
-  selected: boolean,
-): Layout => {
+const layoutOf = (host: DevtoolsPanel, drawing: Drawing): Layout => {
   const margin = parseFloat(
     getComputedStyle(host).getPropertyValue('--uird-margin'),
   );
 
   const { width } = host._mapSize;
-  const reserve = !selected && width + margin * 2 >= BESIDE ? DETAIL : 0;
+  const container = containerOf(host, width, margin);
+  const beside = container >= BESIDE;
+  // Beside the details the room is the container's, which a selection leaves as it was.
+  const whole = beside ? container - margin * 2 : width;
   const height = Math.max(0, host._mapSize.height - footOf(host));
 
   const placed = packViews(drawing, fontsOf(host), {
-    width: width - reserve,
+    width: beside ? whole - DETAIL : width,
     height,
   });
 
-  return { placed, view: centred(placed, { width, height, reserve }) };
+  // As the Map keeps the popover's column: centred while it is free either side, past that the end margin goes first.
+  const reserve = beside
+    ? Math.max(0, Math.min(DETAIL, DETAIL * 2 - (whole - placed.width)))
+    : 0;
+
+  return { placed, view: centred(placed, { width: whole, height, reserve }) };
 };
 
 const renderTree = (
@@ -525,12 +535,7 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
     <div class="vm-main">
       ${
         drawing.rows.length
-          ? renderTree(
-              host,
-              drawing,
-              layoutOf(host, drawing, Boolean(selected)),
-              'h-states',
-            )
+          ? renderTree(host, drawing, layoutOf(host, drawing), 'h-states')
           : html`<p class="empty">No ui-view is registered with the router.</p>`
       }
       ${renderUnmatched(host, snapshot.unmatched)}
