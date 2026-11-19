@@ -19,7 +19,11 @@ import { shellMounts } from 'sample-app-routes/shell-mounts';
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
 import routeFocusHook from './app/global/routeFocus.hook.js';
-import { startAfterDevtools } from './app/global/devtools.js';
+import {
+  exportsSpans,
+  installDevtools,
+  startAfterDevtools,
+} from './app/global/devtools.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
   featureFlags,
@@ -191,9 +195,13 @@ export function configureRouter(router = new UIRouterLit()) {
   routeFocusHook(router.transitionService);
   googleAnalyticsHook(router.transitionService);
 
-  if (featureFlags.get('enable-devtools')) {
+  // An exporting page waits for the install so its first transition is traced; any other starts at once.
+  if (!featureFlags.get('enable-devtools')) {
+    router.start();
+  } else if (exportsSpans()) {
     void startAfterDevtools(router, () => router.start());
   } else {
+    void installDevtools(router);
     router.start();
   }
 

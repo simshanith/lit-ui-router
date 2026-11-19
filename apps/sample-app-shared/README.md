@@ -74,6 +74,10 @@ With neither, the exporter chunk is never loaded and nothing is sent; the deploy
 an endpoint the plugin is installed with `redaction: { messages: false }`, so no error message leaves the page, and
 the Timeline shows none either, since redaction applies to a span and not to where it is sent.
 
+With an endpoint the router also starts only after the devtools and telemetry chunks have loaded, so the first
+transition is traced. Without one it starts at once, and the Timeline misses the transition that ran before the
+chunks arrived.
+
 The processor sends a batch every few seconds and when the page is hidden, which includes unloading it; the
 exporter sends with `keepalive`, so the request outlives the page. The receiver must allow the page's origin
 through CORS.

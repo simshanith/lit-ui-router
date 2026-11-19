@@ -32,3 +32,11 @@ export async function startAfterDevtools(
 
   start();
 }
+
+/** Whether spans leave the page: `enable-otel` is on and a harness override or the build names an OTLP endpoint. */
+export const exportsSpans = (): boolean =>
+  featureFlags.get('enable-otel') &&
+  Boolean(
+    globalThis.__OTLP_TRACES__?.endpoint ||
+    import.meta.env.VITE_OTLP_TRACES_ENDPOINT,
+  );
