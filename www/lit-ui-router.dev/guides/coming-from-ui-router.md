@@ -22,7 +22,7 @@ component integration change to fit Lit and custom elements.
 | Viewport              | `<ui-view>` / `<ui-view name="…">`                         | `<UIView />` / `<UIView name="…" />`                                                  | `<ui-view>` / `<ui-view name="…">` (light DOM)                                                                       |
 | Navigation link       | `uiSref="state"` `[uiParams]` `[uiOptions]`                | `<UISref to="state" params={...} options={...}>` or `useSref(...)`                    | `${uiSref('state', params, options)}` or `href=${srefHref('state', params, options)}`                                |
 | Active link state     | `uiSrefActive="active"` / `uiSrefActiveEq="exact"`         | `<UISrefActive class="active" exact={...}>` or `useSrefActive` / `useSrefActiveExact` | `${uiSrefActive({ activeClasses, exactClasses })}`, `srefActiveClass` + `srefAriaCurrent`, or `SrefStatusController` |
-| Reading resolves      | `@Input()` matching each resolve token                     | Props spread from `resolves` (plus `resolves` and `transition` props)                 | `uiViewProps?: UIViewInjectedProps<T>` on `LitElement`, or `(props) => html\`...\`` template parameter               |
+| Reading resolves      | `@Input()` matching each resolve token                     | Props spread from `resolves` (plus a `transition` prop)                               | `uiViewProps?: UIViewInjectedProps<T>` on `LitElement`, or `` (props) => html`...` `` template parameter             |
 | Exit guard            | `uiCanExit(trans)` on component class                      | `uiCanExit(trans)` on class components, or `useTransitionHook(...)`                   | `uiCanExit(trans)` on `LitElement` (`UiOnExit`)                                                                      |
 | Dynamic param updates | `uiOnParamsChanged(newParams, trans)` on component class   | `useCurrentStateAndParams()` or `useOnStateChanged` / `useTransitionHook`             | `uiOnParamsChanged(newParams, trans)` on `LitElement` (`UiOnParamsChanged`)                                          |
 | Router outside views  | DI (`UIRouter`, `StateService`, `TransitionService`)       | `useRouter()`, `useCurrentStateAndParams()`, `useIsActive()`                          | `TransitionController`, `SrefStatusController`, `requestRouter` (or Effect / MobX / Signals companions)              |
@@ -86,8 +86,9 @@ export const contactState = {
 ```
 
 For lightweight views that do not need a custom element class, pass a template
-function `(props) => html\`...\``instead. See
-[Routed Components](./routed-components) for typing resolves and reaching`routedElement`.
+function `` (props) => html`...` `` instead. See
+[Routed Components](./routed-components) for typing resolves and reaching
+`routedElement`.
 
 ### 2. No framework DI container — router discovery uses DOM context
 
