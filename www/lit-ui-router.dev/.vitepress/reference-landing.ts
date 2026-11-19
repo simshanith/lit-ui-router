@@ -219,13 +219,16 @@ export function referenceLanding(
   return withSummaries(page, dirname(id), read);
 }
 
+/** Every index page under a package's reference: its root, a module's, and a category's or kind's; `/reference/index.md` is not one. */
+export const REFERENCE_INDEX = /\/reference\/[^/]+\/(?:.+\/)?index\.md$/;
+
 /** Rewrites each generated reference index before VitePress and the llms plugin read it; local search reads the file from disk, so the summaries stay out of its index. */
 export function referenceLandingPlugin(): Plugin {
   return {
     name: 'reference-landing',
     enforce: 'pre',
     transform: {
-      filter: { id: /\/reference\/[^/]+\/(?:.+\/)?index\.md$/ },
+      filter: { id: REFERENCE_INDEX },
       handler(markdown, id) {
         const page = referenceLanding(markdown, id, (path) => {
           this.addWatchFile(pageFile(path));

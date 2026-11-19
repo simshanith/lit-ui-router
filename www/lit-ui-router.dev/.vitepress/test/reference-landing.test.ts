@@ -8,6 +8,7 @@ import { API_REFERENCES, FEATURED_EXPORTS } from '../../catalog/references.ts';
 import {
   packageLine,
   readPage,
+  REFERENCE_INDEX,
   referenceLanding,
   referenceRoot,
   summaryOf,
@@ -133,7 +134,21 @@ describe('summaryOf', () => {
 describe('withSummaries', () => {
   const pages = new Map([
     ['/ref/classes/Example.md', page('Keeps its host in sync. More.')],
-    ['/ref/classes/Bare.md', page('## Constructors')],
+    // An element class as typedoc writes it today: tags, and no text ahead of them.
+    [
+      '/ref/classes/Bare.md',
+      page(
+        'Defined in: src/bare.ts:1',
+        '',
+        '## Slots',
+        '',
+        '- <em>default</em> — Slotted content.',
+        '',
+        '## Extends',
+        '',
+        '- `LitElement`',
+      ),
+    ],
     ['/ref/Category', page('Lists by category.')],
   ]);
 
@@ -221,7 +236,59 @@ describe('referenceLanding', () => {
   });
 });
 
+describe('REFERENCE_INDEX', () => {
+  it("matches a reference's root, module and category indexes", () => {
+    for (const id of [
+      '/site/reference/lit-ui-router/index.md',
+      '/site/reference/ui-router-server/connect/index.md',
+      '/site/reference/lit-ui-router/core/index.md',
+    ])
+      assert.match(id, REFERENCE_INDEX);
+  });
+
+  it('leaves the API page, member pages and other sections alone', () => {
+    for (const id of [
+      '/site/reference/index.md',
+      '/site/reference/lit-ui-router/core/UIRouterLit.md',
+      '/site/packages/index.md',
+      '/site/guides/server.md',
+    ])
+      assert.doesNotMatch(id, REFERENCE_INDEX);
+  });
+});
+
 describe('the generated reference indexes', () => {
+  // The fixtures above hold the extraction to a page shape; these hold it to the shape typedoc-plugin-markdown writes today.
+  describe('lit-ui-router, as generated', () => {
+    const id = join(site, 'reference/lit-ui-router/index.md');
+
+    const entries = withSummaries(readFileSync(id, 'utf8'), dirname(id))
+      .split('\n')
+      .filter((line) => line.startsWith('- ['));
+
+    it('follows the UIRouterLit entry with prose from its page', () => {
+      const entry = entries.find((line) =>
+        line.startsWith('- [UIRouterLit](core/UIRouterLit.md)'),
+      );
+
+      assert.ok(entry, `no UIRouterLit entry in ${id}`);
+      assert.match(entry, /\) — \S.*[.!?]$/);
+      // Neither the source line nor the signature read as the comment.
+      assert.doesNotMatch(entry, /\.ts:\d+|Defined in|```/);
+    });
+
+    it('gives nine entries in ten a summary', () => {
+      const summarised = entries.filter((line) => line.includes(') — '));
+
+      // typedoc fails the build on an undocumented export, so only a comment with no text ahead of its tags lists bare; a changed page shape would bare them all.
+      assert.ok(entries.length > 0);
+      assert.ok(
+        summarised.length >= entries.length * 0.9,
+        `${summarised.length} of ${entries.length} entries have a summary`,
+      );
+    });
+  });
+
   for (const { name } of PACKAGES) {
     const reference = API_REFERENCES[name];
 
