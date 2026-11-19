@@ -24,6 +24,7 @@ jobs:
     if: >-
       github.event_name == 'check_run' &&
       github.event.check_run.app.slug == 'cloudflare-workers-and-pages' &&
+      startsWith(github.event.check_run.name, 'Workers Builds: ') &&
       github.event.check_run.conclusion == 'success'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
