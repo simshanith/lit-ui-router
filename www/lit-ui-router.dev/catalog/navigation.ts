@@ -170,8 +170,6 @@ export const SIDEBAR: SidebarEntry[] = [
       { text: 'Hello World', link: '/tutorial/helloworld' },
       { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
       { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-      { text: 'All Examples', link: '/examples/' },
-      { text: 'Live Examples', link: '/examples/live' },
     ],
   },
   {
@@ -186,6 +184,14 @@ export const SIDEBAR: SidebarEntry[] = [
         collapsed: false,
         items,
       })),
+    ],
+  },
+  {
+    text: 'Examples',
+    collapsed: true,
+    items: [
+      { text: 'Overview', link: '/examples/' },
+      { text: 'Live examples', link: '/examples/live' },
     ],
   },
   { text: 'Releases', link: '/releases/', target: '_self', items: [] },
@@ -234,6 +240,7 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'Guides', link: '/guides/' },
+      { text: 'Examples', link: '/examples/' },
       { text: 'Releases', link: '/releases/', target: '_self' },
       { text: 'Packages', link: '/packages/' },
       { text: 'API', link: '/reference/' },
