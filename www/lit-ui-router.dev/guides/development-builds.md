@@ -131,29 +131,18 @@ would fire and stays silent for `production`; under every other condition it
 always answers yes. `deno` keeps the production build, because reading
 `NODE_ENV` there needs `--allow-env`.
 
-### The setup we run
+### Recommended server workflow
 
-lit-ui-router.dev serves its sample apps through `ui-router-server` on
-Cloudflare Workers, and every change to this repo is tested on that path:
-
-- **Develop with Vite.** Build the router in the Vite config and hand it to
-  `serverRouterPlugin`, as the site's
-  [`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
-  does. The config loader resolves the development build, so warnings print
-  in the terminal. Nothing to set.
-- **Assert in CI.** A unit test asserts that
-  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]`, as
-  [`apps/sample-app-routes/test/routes.test.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
-  does. It reports in every build, so it catches what a dev run never reaches.
-- **Preview the Worker** with `wrangler dev` on the development build, setting
-  `WRANGLER_BUILD_CONDITIONS` on the command that starts it as
-  [below](#what-to-set). The site's
-  [`scripts/wrangler-dev.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/scripts/wrangler-dev.ts)
-  launcher does this by default.
-- **Test the production build.** The e2e suites serve the Worker with the
-  conditions `wrangler deploy` uses, so they test the production build that
-  ships; see
-  [`run-e2e.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-lit-e2e/scripts/run-e2e.ts).
+- **Develop with Vite.** Build the router in your Vite config and pass it to
+  `serverRouterPlugin`: the config loader resolves the development build, so
+  warnings print in the terminal with nothing extra to configure.
+- **Assert mounts in unit tests.** Assert that
+  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]` — it reports in
+  every build and catches route issues a manual dev run never reaches.
+- **Preview Workers in development, test with production conditions.** Pass
+  `WRANGLER_BUILD_CONDITIONS` on the `wrangler dev` command (as
+  [below](#what-to-set)) during local previews, and run end-to-end checks with
+  the default production conditions `wrangler deploy` uses.
 
 Elsewhere, develop on the development build and deploy with
 `NODE_ENV=production` or a `production` condition. A Node or Bun server
@@ -216,11 +205,7 @@ development run may never reach.
 
 ## How the split is kept honest
 
-Each package with two builds declares its development-only message prefixes in a
-`dev-warnings.json` beside its manifest. The `check:dev-split` task
-(`@tools/oxc-emit`) reads that list after a build and asserts both directions:
-every declared prefix appears in `dist/development/*.js`, and none appears in
-`dist/*.js`. Adding a warning behind the `import.meta.env.DEV` guard without
-declaring it fails the check — so the list cannot silently drift from the code,
-in either direction. The same task fails any emitted file that mentions
-`process` unless a `package.json#imports` `node` target reaches it.
+Every published package with two builds is verified at build time in both
+directions: every declared development warning appears in `dist/development/`,
+none appears in `dist/`, and browser or Worker outputs never reference
+`process`.

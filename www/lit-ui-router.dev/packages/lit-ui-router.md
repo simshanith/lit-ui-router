@@ -369,6 +369,10 @@ Routed components receive [`UIViewInjectedProps`](/reference/lit-ui-router/types
 [Routed Components](/guides/routed-components) covers what a routed component
 reads from them.
 
+## Releases
+
+<ReleaseDiffPicker name="lit-ui-router" />
+
 ## Further reading
 
 - [API reference](/reference/lit-ui-router/)
