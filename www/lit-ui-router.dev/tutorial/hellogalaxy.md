@@ -421,4 +421,8 @@ The tutorial uses hash URLs (`/#/galaxy/stars`) so each example works on any sta
 - [Routed Components](/guides/routed-components) — type resolves and lazy-load feature modules with `.**` future states
 - [Reactive Components](/guides/reactive-components) — keep components outside `<ui-view>` in sync with `TransitionController`
 
-To see these patterns combined in one application (authentication, lazy loading, sticky states, named views, and 404 handling), read the [Sample App overview](/sample-app) or open the <a href="/app" target="_self">live Sample App</a>.
+To see these patterns combined in one application (authentication, lazy loading,
+sticky states, named views, and 404 handling), open the
+<a href="/app" target="_self">live Sample App</a>, browse its
+[shared route source](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-shared/src/app),
+or read the [Sample App overview](/sample-app).
