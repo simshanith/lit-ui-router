@@ -371,3 +371,48 @@ export const deploymentRequests = (
     description: statusDescription(target),
   },
 });
+
+// fallback: a payload this reporter did not write (a string, another tool's shape) matches no branch.
+export const ListedDeploymentsSchema = v.array(
+  v.looseObject({
+    id: v.number(),
+    payload: v.fallback(v.looseObject({ branch: v.nullish(v.string()) }), {
+      branch: null,
+    }),
+  }),
+);
+
+export type ListedDeployments = v.InferOutput<typeof ListedDeploymentsSchema>;
+
+/** GET …/deployments/{id}/statuses, newest first. */
+export const DeploymentStatusesSchema = v.array(
+  v.looseObject({ state: v.string() }),
+);
+
+export type DeploymentStatuses = v.InferOutput<typeof DeploymentStatusesSchema>;
+
+/**
+ * The deployments a new one supersedes: same branch in its payload, other id. The
+ * environment is shared by every PR, and a transient one never triggers `auto_inactive`.
+ */
+export const supersededDeploymentIds = (
+  listed: ListedDeployments,
+  branch: string,
+  keep: number,
+): number[] =>
+  listed
+    .filter(
+      (deployment) =>
+        deployment.id !== keep && deployment.payload.branch === branch,
+    )
+    .map((deployment) => deployment.id);
+
+/** Whether a deployment's statuses (newest first, as GitHub lists them) leave it active. */
+export const isStillActive = (statuses: DeploymentStatuses): boolean =>
+  statuses[0]?.state !== 'inactive';
+
+/** The status that retires a superseded deployment; GitHub shows a transient one as destroyed. */
+export const INACTIVE_STATUS = {
+  state: 'inactive',
+  description: 'Superseded by a newer push to the branch',
+} as const;

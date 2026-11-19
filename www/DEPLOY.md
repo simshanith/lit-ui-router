@@ -405,12 +405,19 @@ when neither is set. The `version-upload` entry's `preview_url` becomes the depl
 `deployment_urls` entry stands in for a Workers Preview. A failed deploy reports nothing: the
 Cloudflare check run already carries the failure, and the output has no URL to point at.
 
+Every PR shares the `preview/<worker>` environment, and GitHub's `auto_inactive` skips transient
+deployments, so the reporter retires superseded ones itself: it records `WORKERS_CI_BRANCH` in the
+deployment payload, then marks `inactive` each earlier deployment in the environment whose payload
+names the same branch.
+
 The token is `GITHUB_DEPLOYMENTS_TOKEN`, a dashboard secret: a fine-grained token, or a GitHub App
 installation, limited to this repository with **Deployments: read and write** and nothing else.
 The reporter strips it from the wrapped command's environment and scrubs it, and anything shaped
 like a GitHub token, from the errors it logs. Without it, the reporter logs one line and skips.
-Build variables and secrets are scoped to the whole build, so the build command, which runs
-`pnpm install` and the site's build, can read the token too; the stripping covers the deploy only.
+Build variables and secrets are scoped to the whole build, so the build side drops it too:
+[`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) unsets it, and
+[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) leaves it out of the
+environment of every step it runs, `pnpm install` and the site build included.
 
 ### Build Environment Variables
 

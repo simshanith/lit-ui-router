@@ -29,6 +29,16 @@ import { workspaceRoot } from '../bootstrap/src/root.ts';
 // dependency is what typecheck resolves rather than a name nothing reads.
 requireManifest satisfies (dir: string) => PackageManifest;
 
+/** The deploy step's GitHub token (github-deployment-reporter.core.ts), kept from every build child. */
+export const DEPLOYMENTS_TOKEN_ENV = 'GITHUB_DEPLOYMENTS_TOKEN';
+
+/** The environment each build child gets: the caller's, minus the deploy step's token. */
+export const buildEnv = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => {
+  const { [DEPLOYMENTS_TOKEN_ENV]: _token, ...rest } = env;
+
+  return rest;
+};
+
 /** A command and its argv tail, run from the repo root. */
 export type Step = readonly [command: string, args: readonly string[]];
 
@@ -166,11 +176,15 @@ const main = (argv: readonly string[]): void => {
     return;
   }
 
+  // Install scripts and the site build run arbitrary package code; none of it gets the token.
+  const env = buildEnv(process.env);
+
   // Ask npm where it will write: asdf puts its own shims on PATH, so resolving
   // `node` finds ~/.asdf/shims, not the installs/nodejs/<version>/bin that the
   // corepack shims and the global install both land in.
   const npmPrefix = execFileSync('npm', ['prefix', '-g'], {
     encoding: 'utf8',
+    env,
   }).trim();
 
   // The root is derived, not inherited: turbo resolves its plan from the cwd it
@@ -181,7 +195,11 @@ const main = (argv: readonly string[]): void => {
     `${npmPrefix}/bin`,
     resolved.site,
   )) {
-    execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
+    execFileSync(command, [...args], {
+      stdio: 'inherit',
+      cwd: workspaceRoot,
+      env,
+    });
   }
 };
 

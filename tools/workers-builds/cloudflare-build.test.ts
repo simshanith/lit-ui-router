@@ -19,13 +19,16 @@ import { promisify } from 'node:util';
 
 import {
   DEFAULT_SITE,
+  DEPLOYMENTS_TOKEN_ENV,
   type Site,
   type SiteResult,
+  buildEnv,
   buildSteps,
   pnpmSpec,
   resolveSite,
   siteFromArgs,
 } from './cloudflare-build.ts';
+import { TOKEN_ENV } from './github-deployment-reporter.core.ts';
 
 const siteOf = (result: SiteResult): Site => {
   if (!result.ok) assert.fail(result.error);
@@ -231,5 +234,39 @@ describe('cloudflare-build.ts resolution', () => {
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('the deploy step token', () => {
+  it('names the reporter token and never reaches a build child', () => {
+    assert.equal(DEPLOYMENTS_TOKEN_ENV, TOKEN_ENV);
+    assert.deepEqual(buildEnv({ [TOKEN_ENV]: 'secret', HUSKY: '0' }), {
+      HUSKY: '0',
+    });
+  });
+
+  // The shim runs first on per-branch triggers that still name it.
+  it('is unset by the .sh shim before the .ts runs', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cloudflare-build-shim-'));
+    const scripts = join(dir, 'tools', 'workers-builds');
+    mkdirSync(scripts, { recursive: true });
+    writeFileSync(
+      join(scripts, 'cloudflare-build.ts'),
+      `#!/bin/sh\necho "token=\${${TOKEN_ENV}-unset}"\n`,
+      { mode: 0o755 },
+    );
+
+    const result = spawnSync(
+      'bash',
+      [fileURLToPath(new URL('./cloudflare-build.sh', import.meta.url))],
+      {
+        cwd: dir,
+        encoding: 'utf8',
+        env: { ...process.env, [TOKEN_ENV]: 'secret' },
+      },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), 'token=unset');
   });
 });

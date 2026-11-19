@@ -10,6 +10,7 @@ import type { Json } from '@tools/bootstrap/types.ts';
 import * as v from 'valibot';
 
 import {
+  ListedDeploymentsSchema,
   OUTPUT_DIRECTORY_ENV,
   OUTPUT_PATH_ENV,
   TOKEN_ENV,
@@ -17,10 +18,12 @@ import {
   ciContext,
   deploymentRequests,
   exitCodeOf,
+  isStillActive,
   parseOutputEntries,
   previewTarget,
   redact,
   reporterArgs,
+  supersededDeploymentIds,
 } from './github-deployment-reporter.core.ts';
 import { report } from './github-deployment-reporter.ts';
 
@@ -155,6 +158,32 @@ describe('deploymentRequests', () => {
   });
 });
 
+describe('supersededDeploymentIds and isStillActive', () => {
+  it('keeps the same branch, drops this deployment and foreign payloads', () => {
+    const listed = [
+      { id: 3, payload: { branch: 'a' } },
+      { id: 2, payload: { branch: 'b' } },
+      { id: 1, payload: 'free text' },
+      { id: 0, payload: { branch: 'a' } },
+    ];
+
+    assert.deepEqual(
+      supersededDeploymentIds(v.parse(ListedDeploymentsSchema, listed), 'a', 3),
+      [0],
+    );
+    assert.throws(() => v.parse(ListedDeploymentsSchema, { message: 'x' }));
+  });
+
+  it('reads the newest status', () => {
+    assert.equal(isStillActive([{ state: 'success' }]), true);
+    assert.equal(isStillActive([]), true);
+    assert.equal(
+      isStillActive([{ state: 'inactive' }, { state: 'success' }]),
+      false,
+    );
+  });
+});
+
 describe('redact', () => {
   it('scrubs the token itself and any GitHub-token-shaped string', () => {
     const text = `Bearer ${TOKEN} and ghp_${'a'.repeat(36)}`;
@@ -245,16 +274,42 @@ describe('report', () => {
     });
   });
 
-  it('posts the deployment, then its status', async () => {
+  it("posts the deployment and its status, then retires the branch's earlier one", async () => {
     const requests: Request[] = [];
+    const { branch } = fixtures;
+
+    // GitHub lists newest first; 43 is the one this run creates.
+    const listed = [
+      { id: 43, payload: { branch } },
+      { id: 42, payload: { branch } },
+      { id: 41, payload: { branch: 'other' } },
+      { id: 40, payload: '' },
+      { id: 39, payload: { branch } },
+    ];
+
+    const statuses = new Map([
+      ['42', [{ state: 'success' }]],
+      ['39', [{ state: 'inactive' }]],
+    ]);
 
     const fetch = (input: string | URL | Request, init?: RequestInit) => {
-      requests.push(new Request(input, init));
+      const request = new Request(input, init);
+      requests.push(request);
+      const path = new URL(request.url).pathname;
+      const statusesOf = /\/deployments\/(\d+)\/statuses$/.exec(path)?.[1];
+
+      if (request.method === 'POST') {
+        return Promise.resolve(
+          Response.json(
+            { id: 43, url: 'https://api.github.com/x/43' },
+            { status: 201 },
+          ),
+        );
+      }
 
       return Promise.resolve(
         Response.json(
-          { id: 42, url: 'https://api.github.com/x/42' },
-          { status: 201 },
+          statusesOf === undefined ? listed : statuses.get(statusesOf),
         ),
       );
     };
@@ -269,15 +324,57 @@ describe('report', () => {
       fetch,
     );
 
-    assert.equal(result.outcome, 'reported');
+    assert.ok(result.outcome === 'reported');
+    assert.deepEqual(result.deactivated, [42]);
+    assert.equal(result.warning, undefined);
     assert.deepEqual(
-      requests.map((request) => new URL(request.url).pathname),
+      requests.map(
+        (request) => `${request.method} ${new URL(request.url).pathname}`,
+      ),
       [
-        '/repos/simshanith/lit-ui-router/deployments',
-        '/repos/simshanith/lit-ui-router/deployments/42/statuses',
+        'POST /repos/simshanith/lit-ui-router/deployments',
+        'POST /repos/simshanith/lit-ui-router/deployments/43/statuses',
+        'GET /repos/simshanith/lit-ui-router/deployments',
+        'GET /repos/simshanith/lit-ui-router/deployments/42/statuses',
+        'POST /repos/simshanith/lit-ui-router/deployments/42/statuses',
+        'GET /repos/simshanith/lit-ui-router/deployments/39/statuses',
       ],
     );
+    assert.equal(
+      new URL(requests[2]?.url ?? '').searchParams.get('environment'),
+      'preview/lit-ui-router',
+    );
+    assert.deepEqual(await requests[4]?.json(), {
+      state: 'inactive',
+      description: 'Superseded by a newer push to the branch',
+    });
     assert.equal(requests[0]?.headers.get('authorization'), `Bearer ${TOKEN}`);
+  });
+
+  it('warns, without failing the report, when retiring earlier deployments fails', async () => {
+    const fetch = (input: string | URL | Request, init?: RequestInit) =>
+      Promise.resolve(
+        new Request(input, init).method === 'POST'
+          ? Response.json({ id: 43, url: 'u' }, { status: 201 })
+          : new Response(`rate limited ${TOKEN}`, { status: 403 }),
+      );
+
+    const result = await report(
+      {
+        exitCode: 0,
+        output,
+        env: { ...ciEnv, [TOKEN_ENV]: TOKEN },
+        dryRun: false,
+      },
+      fetch,
+    );
+
+    assert.ok(result.outcome === 'reported');
+    assert.match(
+      result.warning ?? '',
+      /retiring earlier deployments failed: GET .*HTTP 403/,
+    );
+    assert.doesNotMatch(result.warning ?? '', new RegExp(TOKEN));
   });
 
   it('surfaces an HTTP error whose text the caller can scrub', async () => {

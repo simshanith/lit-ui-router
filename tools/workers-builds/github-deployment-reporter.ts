@@ -18,6 +18,9 @@ import * as v from 'valibot';
 
 import {
   DEFAULT_REPOSITORY,
+  DeploymentStatusesSchema,
+  ListedDeploymentsSchema,
+  INACTIVE_STATUS,
   type DeploymentRequests,
   type Env,
   type OutputSource,
@@ -28,10 +31,12 @@ import {
   ciContext,
   deploymentRequests,
   exitCodeOf,
+  isStillActive,
   parseOutputEntries,
   previewTarget,
   redact,
   reporterArgs,
+  supersededDeploymentIds,
 } from './github-deployment-reporter.core.ts';
 
 /** What the reporter did after the command exited. */
@@ -42,6 +47,8 @@ export type Report =
       readonly outcome: 'reported';
       readonly requests: DeploymentRequests;
       readonly deployment: { readonly id: number; readonly url: string };
+      readonly deactivated: readonly number[];
+      readonly warning: string | undefined;
     }
   | { readonly outcome: 'failed'; readonly reason: string };
 
@@ -54,15 +61,23 @@ export type GitHubApi = {
 
 const CreatedSchema = v.looseObject({ id: v.number(), url: v.string() });
 
-const post = async (
+type RequestBody =
+  | DeploymentRequests['deployment']
+  | DeploymentRequests['status']
+  | typeof INACTIVE_STATUS;
+
+/** One GitHub REST call: the body parsed with `schema`, or a throw on any non-2xx. */
+const request = async <const Schema extends v.GenericSchema>(
   api: GitHubApi,
+  method: 'GET' | 'POST',
   path: string,
-  body: DeploymentRequests['deployment'] | DeploymentRequests['status'],
-): Promise<v.InferOutput<typeof CreatedSchema>> => {
+  schema: Schema,
+  body?: RequestBody,
+): Promise<v.InferOutput<Schema>> => {
   const response = await api.fetch(
     `https://api.github.com/repos/${api.repository}${path}`,
     {
-      method: 'POST',
+      method,
       headers: {
         accept: 'application/vnd.github+json',
         authorization: `Bearer ${api.token}`,
@@ -70,7 +85,7 @@ const post = async (
         'user-agent': 'workers-builds-deployment-reporter',
         'x-github-api-version': '2022-11-28',
       },
-      body: JSON.stringify(body),
+      body: body === undefined ? undefined : JSON.stringify(body),
       // a hung API must not hold the deploy step open
       signal: AbortSignal.timeout(15_000),
     },
@@ -78,14 +93,21 @@ const post = async (
 
   const text = await response.text();
 
-  if (response.status !== 201) {
+  if (!response.ok) {
     throw new Error(
-      `POST ${path}: HTTP ${response.status}: ${text.slice(0, 500)}`,
+      `${method} ${path}: HTTP ${response.status}: ${text.slice(0, 500)}`,
     );
   }
 
-  return v.parse(CreatedSchema, JSON.parse(text));
+  return v.parse(schema, JSON.parse(text));
 };
+
+const post = (
+  api: GitHubApi,
+  path: string,
+  body: RequestBody,
+): Promise<v.InferOutput<typeof CreatedSchema>> =>
+  request(api, 'POST', path, CreatedSchema, body);
 
 /** Creates the deployment and its success status; throws on any non-201. */
 export const createDeployment = async (
@@ -96,6 +118,44 @@ export const createDeployment = async (
   await post(api, `/deployments/${id}/statuses`, requests.status);
 
   return { id, url };
+};
+
+/**
+ * Marks the branch's earlier deployments in the environment inactive. Reads the
+ * newest page only: older ones were superseded by pushes this already covered.
+ */
+export const deactivateSuperseded = async (
+  api: GitHubApi,
+  {
+    environment,
+    branch,
+    keep,
+  }: { environment: string; branch: string; keep: number },
+): Promise<number[]> => {
+  const listed = await request(
+    api,
+    'GET',
+    `/deployments?environment=${encodeURIComponent(environment)}&per_page=100`,
+    ListedDeploymentsSchema,
+  );
+
+  const deactivated: number[] = [];
+
+  for (const id of supersededDeploymentIds(listed, branch, keep)) {
+    const statuses = await request(
+      api,
+      'GET',
+      `/deployments/${id}/statuses?per_page=1`,
+      DeploymentStatusesSchema,
+    );
+
+    if (!isStillActive(statuses)) continue;
+
+    await post(api, `/deployments/${id}/statuses`, INACTIVE_STATUS);
+    deactivated.push(id);
+  }
+
+  return deactivated;
 };
 
 /** A snapshot of the output location, so only this run's entries are read. */
@@ -205,12 +265,44 @@ export const report = async (
     };
   }
 
-  const deployment = await createDeployment(
-    { token, repository, fetch },
-    requests,
-  );
+  const api = { token, repository, fetch };
+  const deployment = await createDeployment(api, requests);
+  const branch = ci.ci.branch;
 
-  return { outcome: 'reported', requests, deployment };
+  if (branch === undefined) {
+    return {
+      outcome: 'reported',
+      requests,
+      deployment,
+      deactivated: [],
+      warning:
+        'WORKERS_CI_BRANCH is not set, so no earlier deployment was retired',
+    };
+  }
+
+  try {
+    const deactivated = await deactivateSuperseded(api, {
+      environment: requests.deployment.environment,
+      branch,
+      keep: deployment.id,
+    });
+
+    return {
+      outcome: 'reported',
+      requests,
+      deployment,
+      deactivated,
+      warning: undefined,
+    };
+  } catch (error) {
+    return {
+      outcome: 'reported',
+      requests,
+      deployment,
+      deactivated: [],
+      warning: `retiring earlier deployments failed: ${redact(messageOf(error), [token])}`,
+    };
+  }
 };
 
 const describe = (result: Report): string => {
@@ -224,7 +316,14 @@ const describe = (result: Report): string => {
     return `dry run, would send:\n${JSON.stringify(result.requests, null, 2)}`;
   }
 
-  return `created deployment ${result.deployment.id} for ${result.requests.deployment.environment}: ${result.requests.status.environment_url}`;
+  const retired =
+    result.deactivated.length > 0
+      ? `; marked ${result.deactivated.join(', ')} inactive`
+      : '';
+
+  const warning = result.warning ? `\nwarning: ${result.warning}` : '';
+
+  return `created deployment ${result.deployment.id} for ${result.requests.deployment.environment}: ${result.requests.status.environment_url}${retired}${warning}`;
 };
 
 const main = async (argv: string[]): Promise<void> => {
