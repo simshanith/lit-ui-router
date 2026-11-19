@@ -181,8 +181,8 @@ import type { UIRouterLit } from 'lit-ui-router';
 declare const router: UIRouterLit;
 
 router.urlService.config.type('slug', {
-  encode: (val: string) => encodeURIComponent(val),
-  decode: (val: string) => decodeURIComponent(val),
+  encode: (val: string) => val,
+  decode: (val: string) => val,
   is: (val: unknown): val is string =>
     typeof val === 'string' && /^[a-z0-9-]+$/.test(val),
   equals: (a: string, b: string) => a === b,
