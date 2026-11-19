@@ -4,6 +4,7 @@ import type { LitStateDeclaration } from 'lit-ui-router/pure';
 import type { ResponseHandlers } from 'lit-ui-router-ssr';
 import { mergeSearch } from 'ui-router-server';
 import type { ResponseState } from 'ui-router-server';
+import * as v from 'valibot';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import type { DiffIndex, DiffPair, ReleaseDiffs } from './diff-data.ts';
@@ -22,13 +23,21 @@ import {
   type PublishedPair,
   type PublishRun,
   publishRunOf,
+  recentOf,
   taggedOf,
   versionIn,
   versionsOf,
 } from './ledger.ts';
 import { FILE_FILTERS, type FileFilter } from './npm-diff/file-filter.ts';
 import type { NotesReader, ReleaseNotes } from './notes.ts';
-import { GH_MOUNT, ghRoutes, RELEASES_MOUNT, releaseRoutes } from './routes.ts';
+import {
+  DEFAULT_RECENT,
+  GH_MOUNT,
+  ghRoutes,
+  RECENT_PARAM,
+  RELEASES_MOUNT,
+  releaseRoutes,
+} from './routes.ts';
 import {
   inSitemap,
   type SitemapEntry,
@@ -54,7 +63,10 @@ type ResponseName = ResponseState<Route>;
 
 /** What each state's view or responder reads from its resolves. */
 interface ResolvesOf {
-  releases: { packages: readonly LedgerPackage[] };
+  releases: {
+    packages: readonly LedgerPackage[];
+    recent: LedgerVersion[] | null;
+  };
   'releases.sitemap': { sitemap: SitemapEntry[] };
   'releases.package': {
     versions: LedgerVersion[];
@@ -253,6 +265,24 @@ const notesResolve = (notes: NotesReader) => ({
       : Promise.resolve({}),
 });
 
+/** The recent list's length: the state's param when it is a positive integer, the default otherwise. */
+const RecentParam = v.fallback(
+  v.pipe(v.number(), v.integer(), v.minValue(1)),
+  DEFAULT_RECENT,
+);
+
+/** The index alone lists recent releases; the pages below it never read them. */
+const recentResolve = (ledger: LedgerReader) => ({
+  token: 'recent',
+  deps: ['$transition$'],
+  resolveFn: (trans: Transition): Promise<LedgerVersion[] | null> =>
+    trans.to().name === 'releases'
+      ? recentOf(ledger)({
+          limit: v.parse(RecentParam, trans.params()[RECENT_PARAM]),
+        })
+      : Promise.resolve(null),
+});
+
 const attach = (
   ledger: LedgerReader,
   diffs: ReleaseDiffs,
@@ -260,7 +290,10 @@ const attach = (
 ): Attached => ({
   releases: {
     component: ReleasesView,
-    resolve: [{ token: 'packages', resolveFn: packagesOf(ledger) }],
+    resolve: [
+      { token: 'packages', resolveFn: packagesOf(ledger) },
+      recentResolve(ledger),
+    ],
   },
   'releases.sitemap': {
     resolve: [

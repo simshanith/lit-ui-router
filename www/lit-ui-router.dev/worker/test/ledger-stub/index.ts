@@ -23,6 +23,10 @@ export class LedgerReader extends WorkerEntrypoint {
   publishRun(name: string, version: string) {
     return fixtureLedger.publishRun?.(name, version) ?? null;
   }
+
+  recent(limit: number) {
+    return fixtureLedger.recent(limit);
+  }
 }
 
 export default {

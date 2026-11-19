@@ -31,8 +31,10 @@ import {
 import {
   findPackages,
   findPublishRun,
+  findRecent,
   findTagged,
   findVersions,
+  RECENT_MAX,
 } from './ledger-sql.ts';
 import {
   ObservationError,
@@ -948,6 +950,71 @@ describe('queue consumer', { timeout: 120_000 }, () => {
         gh_state: 'final',
         status: 'released',
       });
+    });
+  });
+
+  describe('findRecent', () => {
+    const at = (day: number) =>
+      `2026-01-${String(day).padStart(2, '0')}T00:00:00.000Z`;
+
+    const published = (name: string, version: string, day: number) =>
+      seed({ ...ROWS.released, name, version, npm_published_at: at(day) });
+
+    const summary = async (limit: number) =>
+      (await run(findRecent({ limit }))).map(
+        ({ name, version }) => `${name}@${version}`,
+      );
+
+    it('reads an empty ledger as no releases', async () => {
+      assert.deepEqual(await run(findRecent({ limit: 10 })), []);
+    });
+
+    it('reads stable published versions across packages, newest publish first, up to the limit', async () => {
+      await published('alpha', '1.0.0', 1);
+      await published('zeta', '0.2.0', 4);
+      await published('alpha', '1.1.0', 3);
+      await published('mid', '3.0.0', 2);
+      // A later publish of a lower version still sorts by its publish time.
+      await published('alpha', '0.9.1', 5);
+      await published('zeta', '0.3.0-rc.0', 6);
+      await published('zeta', '0.3.0-canary.1', 7);
+      await seed({ ...ROWS.tagged, name: 'mid', version: '4.0.0' });
+
+      assert.deepEqual(await summary(10), [
+        'alpha@0.9.1',
+        'zeta@0.2.0',
+        'alpha@1.1.0',
+        'mid@3.0.0',
+        'alpha@1.0.0',
+      ]);
+      assert.deepEqual(await summary(2), ['alpha@0.9.1', 'zeta@0.2.0']);
+
+      const [newest] = await run(findRecent({ limit: 1 }));
+      assert.equal(newest?.status, 'released');
+      assert.equal(newest?.npm_published_at, at(5));
+    });
+
+    it('breaks a tied publish time by name, then version', async () => {
+      await published('zeta', '1.0.0', 1);
+      await published('alpha', '1.0.1', 1);
+      await published('alpha', '1.0.0', 1);
+
+      assert.deepEqual(await summary(10), [
+        'alpha@1.0.0',
+        'alpha@1.0.1',
+        'zeta@1.0.0',
+      ]);
+    });
+
+    it('reads at least one row and at most the cap, whatever the limit', async () => {
+      await published('alpha', '1.0.0', 1);
+      await published('alpha', '1.1.0', 2);
+
+      for (const limit of [0, -3, Number.NaN, 0.5])
+        assert.deepEqual(await summary(limit), ['alpha@1.1.0']);
+
+      for (const limit of [RECENT_MAX + 1, Number.POSITIVE_INFINITY])
+        assert.equal((await summary(limit)).length, 2);
     });
   });
 

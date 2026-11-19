@@ -12,7 +12,11 @@ import {
   queryByText,
   within,
 } from '@testing-library/dom';
+import { render } from '@lit-labs/ssr';
+import { collectResult } from '@lit-labs/ssr/lib/render-result.js';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
+import { UIRouterLit } from 'lit-ui-router/pure';
+import { installServerLocation } from 'ui-router-server/location';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
 import '../dom-shim.ts';
@@ -25,16 +29,20 @@ import {
 } from '../releases/document.ts';
 import {
   type LedgerReader,
+  type LedgerVersion,
   latestOf,
   NotInLedger,
   previousIn,
+  recentOf,
   versionIn,
   versionsOf,
 } from '../releases/ledger.ts';
 import { FRESH_MS, KEEP_MS, STORED_AT } from '../releases/edge-cache.ts';
 import { releaseNotes } from '../../.vitepress/changelog.ts';
+import { RECENT_PARAM, RELEASES_MOUNT, urlConfig } from '../releases/routes.ts';
 import { serveReleases } from '../releases/serve.ts';
-import { diffUrl } from '../releases/views.ts';
+import { releaseStates } from '../releases/states.ts';
+import { diffUrl, RecentReleasesView } from '../releases/views.ts';
 import {
   FIXTURE_ROWS,
   FIXTURE_RUN,
@@ -68,6 +76,7 @@ const DOWN: LedgerReader = {
   distTags: () => Promise.reject(new Error('ledger down')),
   tagged: () => Promise.reject(new Error('ledger down')),
   versions: () => Promise.reject(new Error('ledger down')),
+  recent: () => Promise.reject(new Error('ledger down')),
 };
 
 describe('the ledger queries', () => {
@@ -106,6 +115,56 @@ describe('the ledger queries', () => {
       latestOf(fixtureLedger)({ pkg: 'ui-router-signals' }),
       NotInLedger,
     );
+  });
+
+  const [released] = FIXTURE_ROWS;
+  assert.ok(released);
+
+  const publishedOn = (name: string, version: string, day: number) => ({
+    ...released,
+    name,
+    version,
+    npm_published_at: `2026-03-${String(day).padStart(2, '0')}T12:00:00.000Z`,
+  });
+
+  it('reads the recent releases in the order the ledger gives, stable only, up to the limit', async () => {
+    const asked: number[] = [];
+
+    const ledger: LedgerReader = {
+      ...fixtureLedger,
+      recent: (limit) => {
+        asked.push(limit);
+
+        return Promise.resolve([
+          publishedOn('ui-router-server', '0.4.0', 9),
+          publishedOn('lit-ui-router', '2.0.0-rc.0', 8),
+          publishedOn('lit-ui-router', '1.12.0-canary.3', 7),
+          publishedOn('lit-ui-router', '1.11.0', 6),
+          publishedOn('ui-router-server', '0.3.1', 5),
+        ]);
+      },
+    };
+
+    const recent = await recentOf(ledger)({ limit: 2 });
+
+    assert.deepEqual(asked, [2]);
+    assert.deepEqual(
+      recent?.map(({ name, version }) => `${name}@${version}`),
+      ['ui-router-server@0.4.0', 'lit-ui-router@1.11.0'],
+    );
+  });
+
+  it('reads no recent releases, without failing, from a ledger that cannot list them', async () => {
+    assert.equal(await recentOf(DOWN)({ limit: 10 }), null);
+
+    // A deployed ledger from before the query has no such method.
+    const older = { ...fixtureLedger, recent: undefined };
+
+    // SAFETY: the binding is typed by this interface, not by what the deployed ledger serves.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the object deliberately lacks a method the interface requires
+    const ledger = older as unknown as LedgerReader;
+
+    assert.equal(await recentOf(ledger)({ limit: 10 }), null);
   });
 });
 
@@ -743,6 +802,11 @@ describe('the /gh verdicts', () => {
 
         return fixtureLedger.versions(name);
       },
+      recent: (limit) => {
+        reads.push('recent');
+
+        return fixtureLedger.recent(limit);
+      },
     };
 
     await serve('/gh/releases/lit-ui-router/latest', {}, ledger);
@@ -804,6 +868,11 @@ describe('the /gh edge cache', () => {
         reads += 1;
 
         return base.versions(name);
+      },
+      recent: (limit) => {
+        reads += 1;
+
+        return base.recent(limit);
       },
     };
 
@@ -1039,7 +1108,13 @@ describe('the /releases pages', () => {
       (heading) => heading.textContent,
     );
 
-    assert.deepEqual(groups, ['Renderer', 'Reactivity', 'Server', 'Other']);
+    assert.deepEqual(groups, [
+      'Recent releases',
+      'Renderer',
+      'Reactivity',
+      'Server',
+      'Other',
+    ]);
 
     const packagesIn = (group: string) =>
       getAllByRole(
@@ -1055,6 +1130,184 @@ describe('the /releases pages', () => {
     assert.deepEqual(packagesIn('Server'), ['ui-router-server']);
     assert.deepEqual(packagesIn('Other'), ['a-new-package']);
     assert.equal(hrefOf(doc.body, 'a-new-package'), '/releases/a-new-package/');
+  });
+
+  describe('the recent releases', () => {
+    const [released] = FIXTURE_ROWS;
+    assert.ok(released);
+
+    const at = (day: number) =>
+      `2026-03-${String(day).padStart(2, '0')}T12:00:00.000Z`;
+
+    // Newest first, as the ledger answers; the versions deliberately not in semver order.
+    const RECENT = [
+      { ...released, name: 'ui-router-server', version: '0.3.0' },
+      { ...released, name: 'lit-ui-router', version: '1.9.0' },
+      { ...released, name: 'lit-ui-router', version: '1.10.0' },
+    ].map((row, index) => ({ ...row, npm_published_at: at(20 - index) }));
+
+    const recording = (rows = RECENT) => {
+      const asked: number[] = [];
+
+      const ledger: LedgerReader = {
+        ...fixtureLedger,
+        recent: (limit) => {
+          asked.push(limit);
+
+          return Promise.resolve(rows.slice(0, limit));
+        },
+      };
+
+      return { ledger, asked };
+    };
+
+    const recentIn = (doc: Document) =>
+      getByRole(doc.body, 'region', { name: 'Recent releases' });
+
+    it('lists them above the packages under their own heading, as the ledger orders them, each linking its version page', async () => {
+      const { ledger, asked } = recording();
+      const doc = await page('/releases/', ledger);
+      const region = recentIn(doc);
+
+      assert.deepEqual(asked, [10]);
+      assert.deepEqual(
+        getAllByRole(region, 'link').map((link) => [
+          link.textContent?.replaceAll(/\s+/g, ' ').trim(),
+          link.getAttribute('href'),
+        ]),
+        [
+          ['ui-router-server 0.3.0', '/releases/ui-router-server/0.3.0/'],
+          ['lit-ui-router 1.9.0', '/releases/lit-ui-router/1.9.0/'],
+          ['lit-ui-router 1.10.0', '/releases/lit-ui-router/1.10.0/'],
+        ],
+      );
+      assert.deepEqual(
+        getAllByRole(region, 'time').map((time) => [
+          time.getAttribute('datetime'),
+          time.textContent,
+        ]),
+        [
+          [at(20), 'Mar 20, 2026'],
+          [at(19), 'Mar 19, 2026'],
+          [at(18), 'Mar 18, 2026'],
+        ],
+      );
+      assert.equal(getAllByRole(region, 'listitem').length, 3);
+
+      const [first] = getAllByRole(doc.body, 'heading', { level: 2 });
+      assert.equal(first?.textContent, 'Recent releases');
+    });
+
+    it('leaves out a prerelease the ledger answers with', async () => {
+      const { ledger } = recording([
+        { ...released, version: '2.0.0-rc.0', npm_published_at: at(21) },
+        ...RECENT,
+      ]);
+
+      const region = recentIn(await page('/releases/', ledger));
+
+      assert.equal(queryByRole(region, 'link', { name: /rc/ }), null);
+      assert.equal(getAllByRole(region, 'listitem').length, 3);
+    });
+
+    it('renders the page without the list while the ledger cannot list them', async () => {
+      const ledger: LedgerReader = {
+        ...fixtureLedger,
+        recent: () => Promise.reject(new Error('no such method')),
+      };
+
+      const response = await serve('/releases/', undefined, ledger);
+      const doc = parseHtml((await response?.text()) ?? '');
+
+      assert.equal(response?.status, 200);
+      assert.equal(
+        response?.headers.get('Cache-Control'),
+        'public, max-age=60',
+      );
+      assert.equal(
+        queryByRole(doc.body, 'heading', { name: 'Recent releases' }),
+        null,
+      );
+      assert.equal(
+        hrefOf(doc.body, 'lit-ui-router'),
+        '/releases/lit-ui-router/',
+      );
+    });
+
+    it('renders no heading for a ledger with nothing published', async () => {
+      const doc = await page('/releases/', recording([]).ledger);
+
+      assert.equal(
+        queryByRole(doc.body, 'heading', { name: 'Recent releases' }),
+        null,
+      );
+    });
+
+    it('reads them for the index alone', async () => {
+      const { ledger, asked } = recording();
+
+      for (const path of [
+        '/releases/lit-ui-router/',
+        '/releases/lit-ui-router/1.10.0/',
+        '/releases/lit-ui-router/latest',
+        '/releases/sitemap.xml',
+        '/releases/no-such-package/',
+      ])
+        await serve(path, undefined, ledger);
+
+      assert.deepEqual(asked, []);
+    });
+
+    it("takes its length from the state's param, and renders on its own", async () => {
+      const { ledger, asked } = recording();
+
+      const router = installServerLocation(new UIRouterLit(), {
+        baseHref: `${RELEASES_MOUNT}/`,
+        urlConfig,
+      });
+
+      for (const state of releaseStates(
+        RELEASES_MOUNT,
+        ledger,
+        NO_DIFFS,
+        fixtureNotes,
+      ))
+        router.stateRegistry.register(state);
+
+      await router.stateService.go(
+        'releases',
+        { [RECENT_PARAM]: 2 },
+        { location: false },
+      );
+
+      const transition = router.globals.successfulTransitions.peekTail();
+      assert.ok(transition);
+
+      const fragment = parseHtml(
+        await collectResult(
+          render(
+            RecentReleasesView({
+              router,
+              transition,
+              resolves: {
+                recent: transition
+                  .injector()
+                  .get<LedgerVersion[] | null>('recent'),
+              },
+            }),
+          ),
+        ),
+      );
+
+      assert.deepEqual(asked, [2]);
+      assert.deepEqual(
+        getAllByRole(recentIn(fragment), 'link').map((link) =>
+          link.getAttribute('href'),
+        ),
+        ['/releases/ui-router-server/0.3.0/', '/releases/lit-ui-router/1.9.0/'],
+      );
+      assert.equal(queryByRole(fragment.body, 'heading', { level: 1 }), null);
+    });
   });
 
   it("lists a package's stable versions newest first, notes inline where its changelog has a section", async () => {

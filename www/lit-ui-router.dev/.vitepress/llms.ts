@@ -112,7 +112,7 @@ For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-
 
 /** The worker renders the release pages, so no Markdown source or sidebar item can list them; each package's changelog is a static Markdown copy. */
 export const LLMS_RELEASES = [
-  `- [Releases](${SITE_ORIGIN}${RELEASES_PATH}): The latest stable release of every package. Each package's page, at \`${SITE_ORIGIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`,
+  `- [Releases](${SITE_ORIGIN}${RELEASES_PATH}): The newest stable releases across packages, then the latest stable release of every package. Each package's page, at \`${SITE_ORIGIN}${RELEASES_PATH}<npm-name>/\`, lists every version it has released, with release notes and version diffs.`,
   ...PACKAGES.map(
     ({ name }) =>
       `- [${name} changelog](${SITE_ORIGIN}${changelogMarkdownPath(name)}): The release notes of every stable ${name} release, newest first, as Markdown.`,
