@@ -8,6 +8,10 @@ export class LedgerReader extends WorkerEntrypoint {
     return fixtureLedger.packages();
   }
 
+  distTags(name: string) {
+    return fixtureLedger.distTags(name);
+  }
+
   tagged(name: string, tag: string) {
     return fixtureLedger.tagged(name, tag);
   }

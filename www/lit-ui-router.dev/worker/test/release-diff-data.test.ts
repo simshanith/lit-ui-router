@@ -217,6 +217,7 @@ describe('the diff page data routes at the edge', () => {
       new Request(KEY),
       {
         packages: () => Promise.reject(new Error('ledger read')),
+        distTags: () => Promise.reject(new Error('ledger read')),
         tagged: () => Promise.reject(new Error('ledger read')),
         versions: () => Promise.reject(new Error('ledger read')),
       },

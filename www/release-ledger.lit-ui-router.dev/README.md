@@ -56,9 +56,10 @@ draws the worker, its queue and its readers.
   repository's tags through `git/matching-refs` and enqueues an ordinary claim
   for each release tag, so the ledger heals without an Actions run.
 - **`LedgerReader`** ([`worker/index.ts`](./worker/index.ts)) is a `WorkerEntrypoint`
-  for other workers to read through a service binding; its rows carry the
-  derived states from `version_states`. A D1 binding would give them write
-  access too.
+  for other workers to read through a service binding: packages, a package's
+  versions and dist-tags, and the version a dist-tag points at. Its version rows
+  carry the derived states from `version_states`. A D1 binding would give them
+  write access too.
 
 The consumer reads GitHub with the `GITHUB_TOKEN` secret, a read-only token.
 

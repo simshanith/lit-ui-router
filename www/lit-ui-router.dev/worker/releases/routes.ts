@@ -26,6 +26,12 @@ export const releaseRoutes = [
     },
   },
   { name: 'releases.package.latest', url: '/latest', response: true },
+  // A version starts with a digit, so a tag never shadows one.
+  {
+    name: 'releases.package.tag',
+    url: '/{tag:[^0-9/][^/]*}',
+    response: true,
+  },
   {
     name: 'releases.package.diff',
     url: '/diff?from&to&via',

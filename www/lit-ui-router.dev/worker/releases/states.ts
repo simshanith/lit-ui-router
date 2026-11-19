@@ -9,6 +9,8 @@ import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 import type { DiffIndex, DiffPair, ReleaseDiffs } from './diff-data.ts';
 import { type CacheKey, FRESH_MS, urlKey } from './edge-cache.ts';
 import {
+  type DistTags,
+  distTagsOf,
   type LedgerPackage,
   type LedgerReader,
   type LedgerVersion,
@@ -18,6 +20,7 @@ import {
   ordered,
   packagesOf,
   type PublishedPair,
+  taggedOf,
   versionIn,
   versionsOf,
 } from './ledger.ts';
@@ -51,8 +54,13 @@ type ResponseName = ResponseState<Route>;
 interface ResolvesOf {
   releases: { packages: readonly LedgerPackage[] };
   'releases.sitemap': { sitemap: SitemapEntry[] };
-  'releases.package': { versions: LedgerVersion[]; notes: ReleaseNotes };
+  'releases.package': {
+    versions: LedgerVersion[];
+    notes: ReleaseNotes;
+    distTags: DistTags;
+  };
   'releases.package.latest': { latest: LedgerVersion };
+  'releases.package.tag': { tagged: LedgerVersion };
   'releases.package.diff': { compare: string };
   'releases.package.compare': {
     pair: PublishedPair;
@@ -89,7 +97,7 @@ type Attached = {
 
 // SAFETY: every param these states declare is a string, and the url sets each one.
 const paramsOf = (trans: Transition) =>
-  trans.params() as { pkg: string; version: string };
+  trans.params() as { pkg: string; version: string; tag: string };
 
 // SAFETY: an absent query param is undefined and a repeated one an array, neither of which names a version.
 const diffParamsOf = (trans: Transition) =>
@@ -150,6 +158,16 @@ const latestResolve = (ledger: LedgerReader) => ({
   token: 'latest',
   deps: ['$transition$'],
   resolveFn: (trans: Transition) => latestOf(ledger)(paramsOf(trans)),
+});
+
+/** The package page alone labels versions; its child states never read the tags. */
+const distTagsResolve = (ledger: LedgerReader) => ({
+  token: 'distTags',
+  deps: ['$transition$'],
+  resolveFn: (trans: Transition): Promise<DistTags> =>
+    trans.to().name === 'releases.package'
+      ? distTagsOf(ledger)(paramsOf(trans))
+      : Promise.resolve(new Map()),
 });
 
 const IMMUTABLE = 'public, max-age=31536000, immutable';
@@ -256,9 +274,19 @@ const attach = (
         resolveFn: (trans: Transition) => versionsOf(ledger)(paramsOf(trans)),
       },
       notesResolve(notes),
+      distTagsResolve(ledger),
     ],
   },
   'releases.package.latest': { resolve: [latestResolve(ledger)] },
+  'releases.package.tag': {
+    resolve: [
+      {
+        token: 'tagged',
+        deps: ['$transition$'],
+        resolveFn: (trans: Transition) => taggedOf(ledger)(paramsOf(trans)),
+      },
+    ],
+  },
   'releases.package.diff': {
     resolve: [
       {
@@ -357,6 +385,10 @@ export const releaseResponses = {
   'releases.package.latest': ({ resolves, request }) =>
     found(
       mergeSearch(versionPath(resolves.latest), new URL(request.url).search),
+    ),
+  'releases.package.tag': ({ resolves, request }) =>
+    found(
+      mergeSearch(versionPath(resolves.tagged), new URL(request.url).search),
     ),
   // The search only names the pair, which the target spells in its own url.
   'releases.package.diff': ({ resolves }) => found(resolves.compare),

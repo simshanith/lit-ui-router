@@ -1,11 +1,11 @@
 // The ledger reads the release pages make, each a `(params) => query` over the LedgerReader service binding.
-import type { LedgerVersion } from '@tools/release-ledger';
+import type { DistTagRow, LedgerVersion } from '@tools/release-ledger';
 import compare from 'semver/functions/compare.js';
 import prerelease from 'semver/functions/prerelease.js';
 import valid from 'semver/functions/valid.js';
 import rcompare from 'semver/functions/rcompare.js';
 
-export type { LedgerVersion };
+export type { DistTagRow, LedgerVersion };
 
 /** A package the ledger has recorded, with the version its npm `latest` dist-tag points at. */
 export interface LedgerPackage {
@@ -17,9 +17,14 @@ export interface LedgerPackage {
 export interface LedgerReader {
   /** Every package with a recorded version, by name, each with its `latest` row or null. */
   packages(): Promise<readonly LedgerPackage[]>;
+  /** Every dist-tag of a package; a ledger deployed before this method rejects the call. */
+  distTags(name: string): Promise<readonly DistTagRow[]>;
   tagged(name: string, tag: string): Promise<LedgerVersion | null>;
   versions(name: string): Promise<readonly LedgerVersion[]>;
 }
+
+/** A package's npm dist-tags, by the version each points at. */
+export type DistTags = ReadonlyMap<string, readonly string[]>;
 
 /** A package or version the ledger has no row for. */
 export class NotInLedger extends Error {
@@ -162,4 +167,43 @@ export const latestOf =
     if (!row) throw new NotInLedger(`${pkg}@latest`);
 
     return row;
+  };
+
+/** The row one of the package's npm dist-tags points at, or a `NotInLedger` rejection for a tag it lacks. */
+export const taggedOf =
+  (ledger: LedgerReader) =>
+  async ({
+    pkg,
+    tag,
+  }: {
+    pkg: string;
+    tag: string;
+  }): Promise<LedgerVersion> => {
+    const row = await ledger.tagged(pkg, tag);
+
+    if (!row) throw new NotInLedger(`${pkg}@${tag}`);
+
+    return row;
+  };
+
+/** Each tagged version's dist-tags, `latest` first; empty while the ledger cannot list them, as one deployed before `distTags` cannot. */
+export const distTagsOf =
+  (ledger: LedgerReader) =>
+  async ({ pkg }: { pkg: string }): Promise<DistTags> => {
+    const byVersion = new Map<string, string[]>();
+
+    try {
+      for (const { tag, version } of await ledger.distTags(pkg))
+        byVersion.set(version, [...(byVersion.get(version) ?? []), tag]);
+    } catch {
+      return new Map();
+    }
+
+    for (const tags of byVersion.values())
+      tags.sort(
+        (a, b) =>
+          Number(b === 'latest') - Number(a === 'latest') || a.localeCompare(b),
+      );
+
+    return byVersion;
   };

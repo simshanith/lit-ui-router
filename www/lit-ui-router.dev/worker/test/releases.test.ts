@@ -61,6 +61,7 @@ const serve = (path: string, init?: RequestInit, ledger = fixtureLedger) =>
 
 const DOWN: LedgerReader = {
   packages: () => Promise.reject(new Error('ledger down')),
+  distTags: () => Promise.reject(new Error('ledger down')),
   tagged: () => Promise.reject(new Error('ledger down')),
   versions: () => Promise.reject(new Error('ledger down')),
 };
@@ -166,6 +167,18 @@ describe('the /releases verdicts', () => {
     ['/releases/lit-ui-router/1.10.0/', 200, null],
     ['/releases/lit-ui-router/latest', 302, '/releases/lit-ui-router/1.10.0/'],
     ['/releases/lit-ui-router/latest/', 302, '/releases/lit-ui-router/1.10.0/'],
+    [
+      '/releases/lit-ui-router/next',
+      302,
+      '/releases/lit-ui-router/1.11.0-rc.0/',
+    ],
+    [
+      '/releases/lit-ui-router/next/',
+      302,
+      '/releases/lit-ui-router/1.11.0-rc.0/',
+    ],
+    ['/releases/lit-ui-router/canary/', 404, null],
+    ['/releases/ui-router-server/next', 404, null],
     ['/releases/lit-ui-router/9.9.9/', 404, null],
     ['/releases/ui-router-signals/latest', 404, null],
     ['/releases/ui-router-signals/', 404, null],
@@ -190,6 +203,32 @@ describe('the /releases verdicts', () => {
       '/releases/lit-ui-router/1.10.0/?ref=badge',
     );
     assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+  });
+
+  it('redirects a dist-tag as it does latest, search kept', async () => {
+    const response = await serve('/releases/lit-ui-router/next?ref=badge');
+
+    assert.equal(
+      response?.headers.get('Location'),
+      '/releases/lit-ui-router/1.11.0-rc.0/?ref=badge',
+    );
+    assert.equal(response?.headers.get('Cache-Control'), 'public, max-age=60');
+  });
+
+  it('reads a segment that parses as a version as one, whatever the tags say', async () => {
+    const tags: string[] = [];
+
+    const response = await serve('/releases/lit-ui-router/1.9.0/', undefined, {
+      ...fixtureLedger,
+      tagged: (name, tag) => {
+        tags.push(tag);
+
+        return fixtureLedger.tagged(name, tag === 'latest' ? tag : 'next');
+      },
+    });
+
+    assert.equal(response?.status, 200);
+    assert.deepEqual(tags, ['latest']);
   });
 
   it('passes paths outside the mounts to the host', async () => {
@@ -684,6 +723,7 @@ describe('the /gh verdicts', () => {
     const reads: string[] = [];
 
     const ledger: LedgerReader = {
+      ...fixtureLedger,
       packages: () => {
         reads.push('packages');
 
@@ -745,6 +785,7 @@ describe('the /gh edge cache', () => {
     let reads = 0;
 
     const ledger: LedgerReader = {
+      ...base,
       packages: () => {
         reads += 1;
 
@@ -942,6 +983,7 @@ describe('the /gh edge cache', () => {
     const memory = memoryEdge();
     await serveVia(memory, '/releases/lit-ui-router/', fixtureLedger);
     await serveVia(memory, '/releases/lit-ui-router/latest', fixtureLedger);
+    await serveVia(memory, '/releases/lit-ui-router/next', fixtureLedger);
     await memory.settled();
 
     assert.deepEqual(memory.calls, []);
@@ -1574,6 +1616,93 @@ describe('the /releases pages', () => {
       }).nextElementSibling?.textContent?.trim(),
       'None recorded',
     );
+  });
+
+  const tagLabels = (item: HTMLElement) =>
+    within(item)
+      .queryAllByText('npm dist-tag')
+      .map((label) => label.parentElement?.textContent);
+
+  it('labels each tagged version with its dist-tags', async () => {
+    const doc = await page('/releases/lit-ui-router/?prereleases=show');
+    const main = getByRole(doc.body, 'main');
+
+    assert.deepEqual(tagLabels(main), [
+      'npm dist-tag next',
+      'npm dist-tag latest',
+    ]);
+    assert.deepEqual(
+      tagLabels(getByRole(main, 'article', { name: '1.10.0' })),
+      ['npm dist-tag latest'],
+    );
+    assert.deepEqual(
+      tagLabels(
+        getAllByRole(main, 'listitem').find(
+          ({ id }) => id === 'v1.11.0-rc.0',
+        ) ?? main,
+      ),
+      ['npm dist-tag next'],
+    );
+  });
+
+  it('lists a version with several dist-tags latest first', async () => {
+    const doc = await page('/releases/lit-ui-router/', {
+      ...fixtureLedger,
+      distTags: (name) =>
+        Promise.resolve(
+          ['stable', 'latest', 'lts'].map((tag) => ({
+            name,
+            tag,
+            version: '1.10.0',
+            updated_at: '2026-01-01T00:00:00.000Z',
+          })),
+        ),
+    });
+
+    assert.deepEqual(tagLabels(getByRole(doc.body, 'main')), [
+      'npm dist-tag latest',
+      'npm dist-tag lts',
+      'npm dist-tag stable',
+    ]);
+  });
+
+  it('renders the package page without labels while the ledger cannot list dist-tags', async () => {
+    const response = await serve('/releases/lit-ui-router/', undefined, {
+      ...fixtureLedger,
+      distTags: () => Promise.reject(new TypeError('no such method')),
+    });
+
+    assert.equal(response?.status, 200);
+
+    const main = getByRole(
+      parseHtml((await response?.text()) ?? '').body,
+      'main',
+    );
+
+    getByRole(main, 'article', { name: '1.10.0' });
+    assert.deepEqual(tagLabels(main), []);
+  });
+
+  it('reads the dist-tags only for the package page', async () => {
+    const reads: string[] = [];
+
+    for (const path of [
+      '/releases/',
+      '/releases/lit-ui-router/',
+      '/releases/lit-ui-router/1.10.0/',
+      '/releases/lit-ui-router/next',
+      `${FILES}/1.9.0...1.10.0/`,
+    ])
+      await serve(path, undefined, {
+        ...fixtureLedger,
+        distTags: (name) => {
+          reads.push(name);
+
+          return fixtureLedger.distTags(name);
+        },
+      });
+
+    assert.deepEqual(reads, ['lit-ui-router']);
   });
 
   it('reads notes only for the package, version and compare pages', async () => {

@@ -12,6 +12,7 @@ import { PACKAGES, ROLES } from '../../catalog/packages.ts';
 import { API_REFERENCES } from '../../catalog/references.ts';
 import {
   adjacentIn,
+  type DistTags,
   isOlderThan,
   isStable,
   pickerPair,
@@ -349,17 +350,30 @@ const breakingMark = (note: ReleaseNote): TemplateResult | typeof nothing =>
       >`
     : nothing;
 
-/** A version with notes: its heading, date, links and notes. */
+/** The npm dist-tags pointing at a version, each a text label. */
+const distTagLabels = (
+  tags: DistTags,
+  { version }: LedgerVersion,
+): TemplateResult[] =>
+  (tags.get(version) ?? []).map(
+    (tag) =>
+      html`<span class="tag"
+          ><span class="visually-hidden">npm dist-tag </span>${tag}</span
+        >${' '}`,
+  );
+
+/** A version with notes: its heading, dist-tags, date, links and notes. */
 const releaseEntry = (
   router: UIRouter,
   versions: readonly LedgerVersion[],
   row: LedgerVersion,
   note: ReleaseNote,
+  tags: DistTags,
 ): TemplateResult =>
   html`<article class="release" aria-labelledby=${anchorOf(row.version)}>
     <h3 id=${anchorOf(row.version)}>${row.version}${breakingMark(note)}</h3>
     <p class="release-meta">
-      ${date(row.npm_published_at ?? note.date)}${releaseLinks(
+      ${distTagLabels(tags, row)}${date(row.npm_published_at ?? note.date)}${releaseLinks(
         router,
         versions,
         row,
@@ -370,7 +384,11 @@ const releaseEntry = (
   </article>`;
 
 /** A version without notes, a prerelease or canary among them: one line linking its release page. */
-const versionLine = (router: UIRouter, row: LedgerVersion): TemplateResult =>
+const versionLine = (
+  router: UIRouter,
+  row: LedgerVersion,
+  tags: DistTags,
+): TemplateResult =>
   html`<li id=${anchorOf(row.version)}>
     <a href=${versionHref(router, row)}
       ><span class="visually-hidden">${row.name}@</span>${row.version}</a
@@ -379,7 +397,7 @@ const versionLine = (router: UIRouter, row: LedgerVersion): TemplateResult =>
         ? nothing
         : html` <span class="tag">prerelease</span>`
     }
-    ${date(row.npm_published_at)}${
+    ${distTagLabels(tags, row)}${date(row.npm_published_at)}${
       releaseUrl(row) ? html` ${githubRelease(row)}` : nothing
     }
   </li>`;
@@ -449,18 +467,21 @@ const prereleaseToggle = (
   </p>`;
 };
 
+const NO_TAGS: DistTags = new Map();
+
 /** Versions in order, as notes or one-line rows. */
 const entryList = (
   router: UIRouter,
   versions: readonly LedgerVersion[],
   rows: readonly LedgerVersion[],
   notes: ReleaseNotes,
+  tags: DistTags = NO_TAGS,
 ): TemplateResult[] =>
   entriesOf(rows, notes).map((entry) =>
     entry.kind === 'notes'
-      ? releaseEntry(router, versions, entry.row, entry.note)
+      ? releaseEntry(router, versions, entry.row, entry.note, tags)
       : html`<ul class="version-lines">
-          ${entry.rows.map((row) => versionLine(router, row))}
+          ${entry.rows.map((row) => versionLine(router, row, tags))}
         </ul>`,
   );
 
@@ -470,10 +491,11 @@ const lineSection = (
   versions: readonly LedgerVersion[],
   notes: ReleaseNotes,
   { name, rows }: Line<LedgerVersion>,
+  tags: DistTags,
 ): TemplateResult =>
   html`<section class="line" aria-labelledby=${lineAnchor(name)}>
     <h2 id=${lineAnchor(name)}>${name}</h2>
-    ${entryList(router, versions, rows, notes)}
+    ${entryList(router, versions, rows, notes, tags)}
   </section>`;
 
 const packagePage = (
@@ -482,6 +504,7 @@ const packagePage = (
   versions: readonly LedgerVersion[],
   notes: ReleaseNotes,
   view: PrereleaseView,
+  tags: DistTags,
 ): TemplateResult => {
   const stable = versions.filter((row) => isStable(row.version));
   const lines = linesOf(view === 'show' ? versions : stable);
@@ -499,7 +522,7 @@ const packagePage = (
     ${compareForm(router, pkg, versions)}
     ${prereleaseToggle(router, pkg, view, versions.length - stable.length)}
     ${outline(lines)}
-    ${lines.map((line) => lineSection(router, versions, notes, line))}
+    ${lines.map((line) => lineSection(router, versions, notes, line, tags))}
   `;
 };
 
@@ -507,6 +530,7 @@ const packagePage = (
 export const PackageView: RoutedLitTemplate<{
   versions: LedgerVersion[];
   notes: ReleaseNotes;
+  distTags: DistTags;
 }> = ({ router, resolves, transition }) => {
   if (!isLeaf(router, 'releases.package')) return uiView();
 
@@ -518,6 +542,7 @@ export const PackageView: RoutedLitTemplate<{
     resolves.versions,
     resolves.notes,
     v.parse(PrereleasesParam, params[PRERELEASES_PARAM]),
+    resolves.distTags,
   );
 };
 

@@ -4,7 +4,7 @@
 // service binding.
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { D1Client } from '@effect/sql-d1';
-import type { LedgerVersion } from '@tools/release-ledger';
+import type { DistTagRow, LedgerVersion } from '@tools/release-ledger';
 import { makeCloudflareTracer } from 'cloudflare-effect-tracer';
 import { Effect, Layer, Option, Tracer } from 'effect';
 import { FetchHttpClient } from 'effect/http';
@@ -13,6 +13,7 @@ import type { Claim } from '../src/claim.ts';
 import { consume } from '../src/consume.ts';
 import { respond } from '../src/ingest.ts';
 import {
+  findDistTags,
   findLedger,
   findPackages,
   findTagged,
@@ -50,6 +51,14 @@ export class LedgerReader extends WorkerEntrypoint<LedgerEnv> {
         Effect.map(Option.getOrNull),
         Effect.provide(database(this.env)),
       ),
+    );
+  }
+
+  /** Every dist-tag of a package, with the version it points at. */
+  distTags(name: string): Promise<readonly DistTagRow[]> {
+    return run(
+      'ledger.reader.distTags',
+      findDistTags({ name }).pipe(Effect.provide(database(this.env))),
     );
   }
 
