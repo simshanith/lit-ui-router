@@ -186,13 +186,27 @@ const resize = async (
   await element.updateComplete;
 };
 
-// What the shown split leaves past both drawings' narrowest: twice the states' room past theirs, less the shared 48px.
-const spareOf = (panel: DevtoolsPanel) => {
+// What the shown split leaves past both drawings at its rung: the popover's column it keeps, and twice the states' room
+// past their narrowest, less the shared 48px.
+const extraOf = (panel: DevtoolsPanel) => {
   const { split: rooms } = panel._mapLayout()!;
   const whole = panel._map!.layoutNested(panel);
-  const narrowest = panel._map!.narrowest(panel, whole, rooms!.states.height);
 
-  return 2 * (rooms!.states.width - narrowest) - 48;
+  const narrowest = panel._map!.narrowest(
+    panel,
+    whole,
+    rooms!.states.height,
+    rooms!.rung,
+  );
+
+  return rooms!.views.reserve + 2 * (rooms!.states.width - narrowest) - 48;
+};
+
+// The rung the states are drawn at beside the views, once the split shows.
+const rungOf = async (element: UIRouterDevtools) => {
+  await split(element);
+
+  return panelOf(element)._mapLayout()?.split?.rung;
 };
 
 // Two frames: the ResizeObserver's, and the one after it.
@@ -276,7 +290,7 @@ describe('the view map beside the Map', () => {
   });
 
   it('leaves the Map to the states in a narrow dock, a side sheet, and the node-link tree', async () => {
-    const { element } = await mailMap(1200, true);
+    const { element } = await mailMap(1000, true, WIDER_STATES);
 
     await noSplit(element);
 
@@ -296,56 +310,108 @@ describe('the view map beside the Map', () => {
   });
 
   it('holds a split first weighed without room to the same margin when the dock widens', async () => {
-    const probe = await mailMap(1600, true);
+    const probe = await mailMap(1400, true, WIDER_STATES);
 
-    await split(probe.element);
+    expect(await rungOf(probe.element)).toBe('small');
 
-    const spare = spareOf(panelOf(probe.element));
+    const extra = extraOf(panelOf(probe.element));
 
     routers.splice(routers.indexOf(probe.router), 1);
     probe.router.dispose();
     document.body.replaceChildren();
 
-    // A new panel whose first weigh leaves no room, widened to less than a tenth of the room spare.
-    const { element } = await mailMap(1600 - spare - 8, true);
+    // A new panel whose first weigh leaves no room even at the floor, widened to less than a tenth of the room spare.
+    const { element } = await mailMap(1400 - extra - 8, true, WIDER_STATES);
 
     await noSplit(element);
-    await resize(element, 1600 - spare + 8);
+    await resize(element, 1400 - extra + 8);
     await noSplit(element);
-    await resize(element, 1600);
-    await split(element);
+    await resize(element, 1400);
+    expect(await rungOf(element)).toBe('small');
   });
 
-  it('comes back after a resize only with room to spare', async () => {
-    const { element } = await mailMap(1600, true);
+  it('takes a milder rung back after a resize only with room to spare', async () => {
+    const { element } = await mailMap(1700, true, WIDER_STATES);
     const panel = panelOf(element);
 
-    await split(element);
+    expect(await rungOf(element)).toBe('expanded');
 
-    // The room the states have past their narrowest is half of what both spare, and half the gap between them.
-    const { split: rooms } = panel._mapLayout()!;
-    const whole = panel._map!.layoutNested(panel);
-    const narrowest = panel._map!.narrowest(panel, whole, rooms!.states.height);
-    const spare = 2 * (rooms!.states.width - narrowest) - 48;
+    const extra = extraOf(panel);
 
     const dock = async (width: number) => {
       await resize(element, width);
       expect(panel._mapSize.width).toBe(width - 50);
     };
 
-    expect(spare).toBeGreaterThan(160);
+    expect(extra).toBeGreaterThan(170);
 
-    // Just short of room for both the views go, and just past it they stay away until a tenth of the room is spare.
-    await dock(1600 - spare - 8);
-    await noSplit(element);
-    await dock(1600 - spare + 8);
-    await noSplit(element);
-    await dock(1600);
-    await split(element);
+    // Just short of room the states step down, and just past it they stay down until a tenth of the room is spare.
+    await dock(1700 - extra - 8);
+    expect(await rungOf(element)).toBe('small');
+    await dock(1700 - extra + 8);
+    expect(await rungOf(element)).toBe('small');
+    await dock(1700);
+    expect(await rungOf(element)).toBe('expanded');
 
-    // Shown, they stay until there is no room at all.
-    await dock(1600 - spare + 8);
-    await split(element);
+    // Back up, they stay until there is no room at all.
+    await dock(1700 - extra + 8);
+    expect(await rungOf(element)).toBe('expanded');
+  });
+
+  it('steps the states down to the Map’s floor before it hides the views', async () => {
+    const { element } = await mailMap(1200, true, WIDER_STATES);
+    const panel = panelOf(element);
+
+    expect(await rungOf(element)).toBe('small');
+
+    // The whole room still draws the states at their natural size; beside the views they are drawn at the floor.
+    expect(panel._map!.layoutNested(panel).rung).toBe('expanded');
+    expect(panel._mapLayout()?.nested.rung).toBe('small');
+
+    const { states, views } = await split(element);
+
+    expect(views.getBoundingClientRect().left).toBeGreaterThan(
+      states.getBoundingClientRect().right,
+    );
+  });
+
+  it('gives up the popover’s column before a rung, and moves nothing for a view selected under it', async () => {
+    const { element } = await mailMap(1600, true, WIDER_STATES);
+    const panel = panelOf(element);
+
+    expect(await rungOf(element)).toBe('expanded');
+
+    const reserve = panel._mapLayout()!.split!.views.reserve;
+
+    expect(reserve).toBeGreaterThan(0);
+    expect(reserve).toBeLessThan(320);
+
+    const { views } = await split(element);
+    const before = places(element);
+    const chosen = head(views, /^sidebar-navigation-four view/);
+
+    chosen.click();
+
+    const popover = await waitFor(() => {
+      const found = inspector(element);
+
+      expect(found.getBoundingClientRect().width).toBeGreaterThan(0);
+
+      return found;
+    });
+
+    expect(places(element)).toEqual(before);
+
+    // Without a column of its own the popover stands beside the selected view, not over it.
+    const over = popover.getBoundingClientRect();
+    const under = chosen.getBoundingClientRect();
+
+    expect(
+      over.right <= under.left ||
+        over.left >= under.right ||
+        over.bottom <= under.top ||
+        over.top >= under.bottom,
+    ).toBe(true);
   });
 
   it('hides and shows with its toggle, which the viewer’s next panel remembers', async () => {
@@ -666,37 +732,68 @@ describe('the view map beside the Map', () => {
     await noSplit(element);
   });
 
-  it('disables its toggle with the reason while wanted views are not drawn, and claims nothing pressed', async () => {
-    const { element } = await mailMap(1200, true);
+  it('maximises the panel from its toggle where the dock has no room, and claims nothing pressed', async () => {
+    const { element } = await mailMap(1000, true, WIDER_STATES);
+    const panel = panelOf(element);
 
     await noSplit(element);
     expect(toggle(element).ariaPressed).toBe('false');
-    expect(toggle(element).hasAttribute('disabled')).toBe(true);
+    expect(toggle(element).hasAttribute('disabled')).toBe(false);
     expect(toggle(element).title).toBe(
-      'No room for the view map beside the states',
+      'Maximise the panel to draw the view map beside the states',
     );
 
-    await resize(element, 1600);
+    toggle(element).click();
     await split(element);
+    expect(panel._max).toBe(true);
     expect(toggle(element).ariaPressed).toBe('true');
-    expect(toggle(element).hasAttribute('disabled')).toBe(false);
-
-    getByRole(shadow(element), 'button', { name: 'Zoom in' }).click();
-    await noSplit(element);
-    expect(toggle(element).hasAttribute('disabled')).toBe(true);
-    expect(toggle(element).title).toMatch(/fitted size/);
-
-    getByRole(shadow(element), 'button', { name: /^Fit/ }).click();
-    await split(element);
+    expect(toggle(element).title).toBe('Hide the view map beside the states');
 
     // Turned off, it stays enabled, so the views can be asked for again.
     toggle(element).click();
     await noSplit(element);
     expect(toggle(element).ariaPressed).toBe('false');
     expect(toggle(element).hasAttribute('disabled')).toBe(false);
+    expect(toggle(element).title).toBe('Show the view map beside the states');
   });
 
-  it('says the states pan when that keeps the views away', async () => {
+  it('maximises the panel when the views are turned on in a dock with no room', async () => {
+    const { element } = await mailMap(1400, true, WIDER_STATES);
+    const panel = panelOf(element);
+
+    await split(element);
+    toggle(element).click();
+    await noSplit(element);
+    await resize(element, 1000);
+    expect(toggle(element).title).toBe('Show the view map beside the states');
+    expect(panel._max).toBe(false);
+
+    toggle(element).click();
+    await split(element);
+    expect(panel._max).toBe(true);
+    expect(panel._mapViews).toBe(true);
+  });
+
+  it('fits a zoomed Map from its toggle', async () => {
+    const { element } = await mailMap(1600, true);
+    const panel = panelOf(element);
+
+    await split(element);
+    getByRole(shadow(element), 'button', { name: 'Zoom in' }).click();
+    await noSplit(element);
+    expect(toggle(element).hasAttribute('disabled')).toBe(false);
+    expect(toggle(element).ariaPressed).toBe('false');
+    expect(toggle(element).title).toBe(
+      'Fit the Map to draw the view map beside the states',
+    );
+
+    toggle(element).click();
+    await split(element);
+    expect(panel._mapZoom).toBeNull();
+    expect(panel._max).toBe(false);
+  });
+
+  it('says the states pan, once maximised, when that keeps the views away', async () => {
     const { element } = await mailMap(900, false, stressStates());
     const panel = panelOf(element);
 
@@ -704,8 +801,14 @@ describe('the view map beside the Map', () => {
     panel._mapOpen = new Map(stressStates().map(({ name }) => [name!, true]));
     await noSplit(element);
     expect(panel._nested()?.rung).toBe('pan');
+    expect(toggle(element).title).toMatch(/^Maximise/);
+
+    toggle(element).click();
+    await waitFor(() => expect(toggle(element).title).toMatch(/states pan/));
+    expect(panel._max).toBe(true);
+    expect(panel._nested()?.rung).toBe('pan');
     expect(toggle(element).hasAttribute('disabled')).toBe(true);
-    expect(toggle(element).title).toMatch(/states pan/);
+    expect(toggle(element).ariaPressed).toBe('false');
   });
 
   const leaves = [
@@ -721,8 +824,8 @@ describe('the view map beside the Map', () => {
         getByRole(shadow(element), 'button', { name: 'Tree' }).click(),
     ],
     [
-      'a resize below the threshold',
-      (element: UIRouterDevtools) => resize(element, 1200),
+      'a resize with no room left',
+      (element: UIRouterDevtools) => resize(element, 900),
     ],
     [
       'the Outline',
@@ -765,25 +868,25 @@ describe('the view map beside the Map', () => {
     };
 
     await switchMode();
-    await split(element);
+    expect(await rungOf(element)).toBe('expanded');
 
-    const spare = spareOf(panel);
+    const extra = extraOf(panel);
 
     await switchMode();
-    await resize(element, 1800 - spare - 8, 521);
+    await resize(element, 1800 - extra - 8, 521);
 
     const size = { ...panel._mapSize };
 
     await switchMode();
-    await noSplit(element);
+    expect(await rungOf(element)).toBe('small');
     expect(panel._mapSize).toEqual(size);
 
-    // Widened to less than a tenth of the room spare, as any resize of a hidden split.
-    await resize(element, 1800 - spare + 8, 521);
-    await noSplit(element);
+    // Widened to less than a tenth of the room spare, as any resize that took a rung away.
+    await resize(element, 1800 - extra + 8, 521);
+    expect(await rungOf(element)).toBe('small');
   });
 
-  it('weighs the split afresh for the dock and the maximised panel, though their Map panes are one size', async () => {
+  it('weighs the popover’s column afresh for the dock and the maximised panel, though their Map panes are one size', async () => {
     // At this viewport the dock's Map pane and the maximised one measure the same; only the popover's column differs.
     const { element } = await mailMap(1800, true, WIDER_STATES, 521);
     const panel = panelOf(element);
@@ -793,22 +896,27 @@ describe('the view map beside the Map', () => {
         name: 'Maximise devtools',
       }).click();
 
-    await noSplit(element);
-
+    const rung = await rungOf(element);
     const dock = { ...panel._mapSize };
-    const rung = panel._nested()?.rung;
+    const reserve = panel._mapLayout()!.split!.views.reserve;
+
+    expect(reserve).toBeGreaterThan(0);
+    expect(reserve).toBeLessThan(320);
 
     maximise();
 
-    await split(element);
+    await waitFor(() =>
+      expect(panel._mapLayout()?.split?.views.reserve).toBe(0),
+    );
     expect(panel._mapSize).toEqual(dock);
-    expect(panel._mapLayout()?.nested.rung).toBe(rung);
+    expect(await rungOf(element)).toBe(rung);
 
     maximise();
-    await element.updateComplete;
-    await noSplit(element);
+    await waitFor(() =>
+      expect(panel._mapLayout()?.split?.views.reserve).toBe(reserve),
+    );
     expect(panel._mapSize).toEqual(dock);
-    expect(panel._nested()?.rung).toBe(rung);
+    expect(await rungOf(element)).toBe(rung);
   });
 
   it('weighs a maximised split by the maximised room once it is measured, not by the dock’s', async () => {
@@ -881,9 +989,7 @@ describe('the view map beside the Map', () => {
 
     release();
     await split(element);
-    expect(toggle(element).title).toBe(
-      'The view map beside the states, where both fit',
-    );
+    expect(toggle(element).title).toBe('Hide the view map beside the states');
   });
 
   it('says the views did not load when their module fails', async () => {

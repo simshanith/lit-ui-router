@@ -309,23 +309,24 @@ const slotOf = (host: DevtoolsPanel, split: boolean) => {
   };
 };
 
-// The split's side holds no rung of its own, so it never draws below the rung the whole room has.
-const heldRung = (same: Cached | undefined, split: boolean) =>
-  split ? undefined : same?.layout.rung;
-
 /**
- * Packs the state tree for the Map viewport, or for `room` when the view map shares it, stepping down the fit ladder
- * until it fits. A resize that leaves the rung and the room's shape as they were keeps the layout, and only the view
- * of it moves.
+ * Packs the state tree for the Map viewport, stepping down the fit ladder until it fits, or for `room` at `rung` when
+ * the view map shares it, which weighed that rung for the room. A resize that leaves the rung and the room's shape as
+ * they were keeps the layout, and only the view of it moves.
  */
-export const layoutNested = (host: DevtoolsPanel, room?: Size): NestedLayout =>
+export const layoutNested = (
+  host: DevtoolsPanel,
+  room?: Size,
+  rung?: Rung,
+): NestedLayout =>
   // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
-  packNested(host, room ?? host._mapSize, room !== undefined);
+  packNested(host, room ?? host._mapSize, room !== undefined, rung);
 
 const packNested = (
   host: DevtoolsPanel,
   viewport: Size,
   split: boolean,
+  forced: Rung | undefined,
 ): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
@@ -351,7 +352,7 @@ const packNested = (
     host._mapZoom,
   ]);
 
-  const key = content + JSON.stringify(viewport);
+  const key = content + JSON.stringify([viewport, forced]);
 
   const slot = slotOf(host, split);
   const { cached } = slot;
@@ -365,7 +366,10 @@ const packNested = (
 
   // The ladder holds its rung across a resize only; a changed tree or selection starts from the top.
   const same = cached?.content === content ? cached : undefined;
-  const rung = chooseRung(sizeAt, viewport, heldRung(same, split), host._max);
+
+  const rung =
+    forced ?? chooseRung(sizeAt, viewport, same?.layout.rung, host._max);
+
   const zoom = host._mapZoom === null ? undefined : ZOOMS[host._mapZoom];
 
   if (
@@ -411,26 +415,31 @@ const packNested = (
 
 const narrowed = new WeakMap<NestedLayout, Map<string, number>>();
 
-/** The narrowest room, on the 4px grid and at this height, that the layout's rung still fits; `Infinity` when none does. */
+/**
+ * The narrowest room, on the 4px grid and at this height, that `rung` still fits for the layout's tree; `Infinity`
+ * when none does.
+ */
 export const narrowest = (
   host: DevtoolsPanel,
   layout: NestedLayout,
   height: number,
+  rung: Rung = layout.rung,
 ): number => {
   const max = host._mapSize.width;
   // The search is bounded by the room's width, so an answer holds for that width only.
-  const key = `${height}:${max}`;
+  const key = `${rung}:${height}:${max}`;
   const known = narrowed.get(layout) ?? new Map<string, number>();
   const hit = known.get(key);
 
   if (hit !== undefined) return hit;
 
-  const boxes = boxesOf(host, layout.options, layout.family);
+  const { metrics } = OPTIONS[rung];
+  const boxes = boxesOf(host, OPTIONS[rung], layout.family);
 
   const width = narrowestWidth((at) => {
-    const room = rungRoom(layout.rung, { width: at, height });
+    const room = rungRoom(rung, { width: at, height });
 
-    return fits(pack(boxes, room, layout.metrics), room);
+    return fits(pack(boxes, room, metrics), room);
   }, max);
 
   known.set(key, width);

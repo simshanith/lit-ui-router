@@ -163,6 +163,15 @@ const storeLayout = (layout: MapLayout): void => {
 
 const VIEWS_KEY = 'ui-router-devtools:map-views';
 
+/** What pressing View map does: hide the views, show them, or make room for them. */
+type ViewsPress = 'hide' | 'show' | 'fit' | 'maximise';
+
+/** What pressing View map would do, and its title: the press, or the cause when there is none. */
+interface ViewsAction {
+  press?: ViewsPress;
+  title?: string;
+}
+
 const storedViews = (): boolean => {
   try {
     return localStorage.getItem(VIEWS_KEY) !== 'off';
@@ -192,6 +201,14 @@ const rectOf = (element: Element, origin: DOMRect): Rect => {
     height: Math.round(rect.height),
   };
 };
+
+// Where the popover may stand over the dock: clear of the header strip and the transitions strip.
+const popBounds = (origin: Size): Rect => ({
+  x: 8,
+  y: 34,
+  width: origin.width - 16,
+  height: origin.height - 70,
+});
 
 // The Map's root and every element that stands for a state, parents first; the views beside it stay put.
 const MOVERS = ':is(.nested:not(.vm-boxes), .map), [data-name]';
@@ -395,6 +412,8 @@ export class DevtoolsPanel extends LitElement {
   _importViews = (): Promise<ViewMapModule> => import('./viewmap.ts');
   _viewMap: ViewMapModule | undefined;
   #viewsLoading = false;
+  // View map was pressed for views not yet drawn; it goes on making room for them until they show or cannot.
+  #viewsAsked = false;
   // The view under the pointer, and the one the locator last marked on the page.
   #pointedView: number | null = null;
   #markedView: ViewInfo | null = null;
@@ -892,6 +911,7 @@ export class DevtoolsPanel extends LitElement {
 
     if (this._view === 'views') this._viewMap?.measureViewMap(this);
     this.#measureMap();
+    this.#followViews();
     this.#placePopover();
     this.#showTick();
 
@@ -937,10 +957,9 @@ export class DevtoolsPanel extends LitElement {
 
     const origin = panel.getBoundingClientRect();
 
-    // A view is selected only beside the Map, whose split keeps the popover's column free.
     const place =
       this._inspect === 'view'
-        ? this.#besidePlace(popover.getBoundingClientRect(), origin)
+        ? this.#viewPlace(popover.getBoundingClientRect(), origin)
         : this.#anchoredPlace(popover, origin);
 
     if (!place) return;
@@ -983,6 +1002,41 @@ export class DevtoolsPanel extends LitElement {
     );
   }
 
+  // A view is selected only beside the Map: in the popover's column where the split keeps it free, else beside the view.
+  #viewPlace(size: Size, origin: DOMRect) {
+    if (this.#columnFree()) return this.#besidePlace(size, origin);
+
+    const head = this.renderRoot.querySelector(
+      '.vm-side [aria-selected="true"]',
+    );
+
+    if (!head) return undefined;
+
+    const anchor = rectOf(head, origin);
+
+    return placeBeside(anchor, size, popBounds(origin), [
+      { ...anchor, weight: 1000 },
+      ...this.#heads(origin, '.split-side .head'),
+    ]);
+  }
+
+  // Box headers the popover keeps off where it can.
+  #heads(origin: DOMRect, selector: string) {
+    return [...this.renderRoot.querySelectorAll(selector)].map((head) => ({
+      ...rectOf(head, origin),
+      weight: 1,
+    }));
+  }
+
+  // Whether the popover has a column of its own at the dock's end: beside the views, only where the split keeps it.
+  #columnFree(nested = this._nested()): boolean {
+    const split = this._mapLayout()?.split;
+
+    if (split) return split.views.reserve >= ASIDE;
+
+    return Boolean(nested && this._beside(nested));
+  }
+
   // The popover's own column, at the end of the dock.
   #besidePlace(size: Size, origin: Size) {
     const rtl = getComputedStyle(this).direction === 'rtl';
@@ -994,19 +1048,14 @@ export class DevtoolsPanel extends LitElement {
   #popoverPlace(
     anchor: Rect,
     size: Size,
-    origin: Size,
+    origin: DOMRect,
     map?: { nested: NestedLayout; at: { x: number; y: number } },
   ) {
-    const bounds = {
-      x: 8,
-      y: 34,
-      width: origin.width - 16,
-      height: origin.height - 70,
-    };
+    const bounds = popBounds(origin);
 
     if (!map) return placeBeside(anchor, size, bounds);
 
-    if (this._beside(map.nested)) return this.#besidePlace(size, origin);
+    if (this.#columnFree(map.nested)) return this.#besidePlace(size, origin);
 
     const clear = this._map?.keepClear(this, map.nested) ?? [];
 
@@ -1017,6 +1066,7 @@ export class DevtoolsPanel extends LitElement {
         x: rect.x + map.at.x,
         y: rect.y + map.at.y,
       })),
+      ...this.#heads(origin, '.vm-side .head'),
     ]);
   }
 
@@ -1536,7 +1586,9 @@ export class DevtoolsPanel extends LitElement {
         : null;
 
     return {
-      nested: split ? this._map.layoutNested(this, split.states) : whole,
+      nested: split
+        ? this._map.layoutNested(this, split.states, split.rung)
+        : whole,
       split,
     };
   }
@@ -2011,14 +2063,14 @@ export class DevtoolsPanel extends LitElement {
   // Draws the view map beside the nested Map where both fit; the viewer's choice is kept, and pressed means drawn.
   #renderViewsToggle(layout: NestedLayout) {
     const drawn = Boolean(this._mapLayout()?.split);
-    const away = this._mapViews && !drawn;
+    const { press, title } = this.#viewsPress(layout);
 
     return html`<div class="switch" role="group" aria-label="Beside the Map">
       <button
         aria-pressed=${drawn}
-        ?disabled=${away}
-        title=${away ? (this.#viewsAway(layout) ?? nothing) : 'The view map beside the states, where both fit'}
-        @click=${() => this.#chooseViews(!this._mapViews)}
+        ?disabled=${!press}
+        title=${title ?? nothing}
+        @click=${() => press && this.#pressViews(press)}
       >
         View map
       </button>
@@ -2030,16 +2082,62 @@ export class DevtoolsPanel extends LitElement {
     return Boolean(this._model.views?.views.length);
   }
 
-  // Why the views the viewer asked for are not drawn beside the Map; nothing while their module is still loading.
-  #viewsAway(layout: NestedLayout): string | undefined {
-    if (!this._viewMap) return this._viewsFailed ? VIEWS_FAILED : undefined;
+  // What pressing View map does: hides the views drawn, else whatever brings them; with nothing to press, the cause.
+  #viewsPress(layout: NestedLayout): ViewsAction {
+    if (this._mapLayout()?.split)
+      return { press: 'hide', title: 'Hide the view map beside the states' };
+
+    if (!this._mapViews)
+      return { press: 'show', title: 'Show the view map beside the states' };
+
+    // Nothing is named while the views' module is still loading.
+    if (!this._viewMap)
+      return { title: this._viewsFailed ? VIEWS_FAILED : undefined };
 
     if (this._mapZoom !== null)
-      return 'The view map is drawn at the fitted size; Fit brings it back';
+      return {
+        press: 'fit',
+        title: 'Fit the Map to draw the view map beside the states',
+      };
 
-    return layout.rung === 'pan'
-      ? 'The view map is not drawn while the states pan'
-      : 'No room for the view map beside the states';
+    if (!this._max)
+      return {
+        press: 'maximise',
+        title: 'Maximise the panel to draw the view map beside the states',
+      };
+
+    return {
+      title:
+        layout.rung === 'pan'
+          ? 'The view map is not drawn while the states pan'
+          : 'No room for the view map beside the states',
+    };
+  }
+
+  #pressViews(press: ViewsPress) {
+    const shown = press !== 'hide';
+
+    this.#viewsAsked = shown;
+    this.#chooseViews(shown);
+
+    if (press === 'maximise') this._max = true;
+
+    if (press === 'fit' || press === 'maximise') this._fit();
+  }
+
+  // Views asked for and not drawn get the next press's room: the fitted Map, then the maximised panel.
+  #followViews() {
+    if (!this.#viewsAsked || (!this._viewMap && !this._viewsFailed)) return;
+
+    this.#viewsAsked = false;
+
+    const layout = this._nested();
+
+    if (!layout || !matchMedia(WIDE).matches) return;
+
+    const { press } = this.#viewsPress(layout);
+
+    if (press === 'fit' || press === 'maximise') this.#pressViews(press);
   }
 
   // The view of the Map: its type step, and the way back to the fitted view.
