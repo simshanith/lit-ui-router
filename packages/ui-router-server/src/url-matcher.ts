@@ -599,9 +599,6 @@ const compileMatcher = <M>(
   });
 };
 
-// Core's sort weights: slash → 1, static text → 2, param → 3; search
-// params carry no weight. Memoized as in core; the WeakMap keeps the
-// cache off the matcher's inert data.
 /**
  * The pieces of a compiled pattern that sorting and url building read.
  *
@@ -612,6 +609,9 @@ export type MatcherParts = Pick<
   'segments' | 'pathParams' | 'searchParams'
 >;
 
+// Core's sort weights: slash → 1, static text → 2, param → 3; search
+// params carry no weight. Memoized as in core; the WeakMap keeps the
+// cache off the matcher's inert data.
 const weightsCache = new WeakMap<MatcherParts, number[]>();
 
 const segmentWeights = (matcher: MatcherParts): number[] => {
