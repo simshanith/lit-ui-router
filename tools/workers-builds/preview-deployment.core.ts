@@ -1,11 +1,6 @@
-// Pure logic for preview-deployment.ts: a Workers Builds build in, the GitHub
-// Deployment that names its preview URL out. No network here.
+// Pure logic for preview-deployment.ts: a Cloudflare Workers Builds check run
+// in, the GitHub Deployment that names its preview URL out. No network here.
 
-import type { ListBetaWorkerVersionsResponse } from '@distilled.cloud/cloudflare/workers';
-import type {
-  GetBuildResponse,
-  GetBuildsByVersionResponse,
-} from '@distilled.cloud/cloudflare/workers_builds';
 import * as v from 'valibot';
 
 import { isCommitSha } from './pages-deploy.core.ts';
@@ -16,86 +11,138 @@ export const ENVIRONMENT_PREFIX = 'preview/';
 /** The branch every Worker's production trigger builds; its builds are not previews. */
 export const PRODUCTION_BRANCH = 'main';
 
-/** `getBuildsByVersion` takes at most this many version ids. */
-export const MAX_VERSION_IDS = 20;
+/** The Cloudflare GitHub app that reports Workers Builds. */
+export const CLOUDFLARE_APP = 'cloudflare-workers-and-pages';
 
-/** The worker and build a Cloudflare check run's details_url names. */
-export type BuildRef = {
-  readonly worker: string;
-  readonly buildUuid: string;
-  /** The Workers Previews slug, present for a Worker switched to Previews. */
-  readonly previewSlug?: string;
+/** Each Workers Builds check run is named this plus the worker. */
+export const CHECK_RUN_PREFIX = 'Workers Builds: ';
+
+/** The check run fields `post` reads, from the event payload or the REST API. */
+export type CheckRun = {
+  readonly name: string;
+  readonly headSha: string;
+  readonly headBranch: string;
+  readonly detailsUrl: string;
+  readonly summary: string;
 };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/** The `Key: value` lines of a Workers Builds check run summary. */
+export type Summary = {
+  readonly buildUuid: string | null;
+  /** The Build ID line's dashboard link, which names `/previews/<slug>/` for a Workers Previews build. */
+  readonly buildUrl: string | null;
+  readonly versionId: string | null;
+  readonly previewUrl: string | null;
+  readonly aliasUrl: string | null;
+};
 
-// .../workers/services/view/<worker>/production[/previews/<slug>]/builds/<uuid>
-const BUILD_PATH =
-  /^\/(?:[0-9a-f]{32})\/workers\/services\/view\/([a-z0-9-]+)\/production(?:\/previews\/([a-z0-9-]+))?\/builds\/([0-9a-f-]+)$/;
+const LINE = /^(Build ID|Version ID|Preview URL|Preview Alias URL): (.+)$/;
 
-/** Whether `value` is a lowercase UUID, the form Workers Builds prints. */
-export function isUuid(value: string): boolean {
-  return UUID.test(value);
-}
+// Build ID: [<uuid>](<dashboard url>)
+const LINKED = /^\[([^\]]+)\]\(([^)]+)\)$/;
 
-/** The worker and build in a Cloudflare dashboard build URL, or undefined. */
-export function parseDetailsUrl(detailsUrl: string): BuildRef | undefined {
-  let url: URL;
+/** The summary's known lines; a line the format lacks reads as null. */
+export function parseSummary(summary: string): Summary {
+  const lines = new Map<string, string>();
 
-  try {
-    url = new URL(detailsUrl);
-  } catch {
-    return undefined;
+  for (const line of summary.split('\n')) {
+    const match = LINE.exec(line.trim());
+
+    if (match?.[1] !== undefined && match[2] !== undefined) {
+      lines.set(match[1], match[2].trim());
+    }
   }
 
-  if (url.origin !== 'https://dash.cloudflare.com') return undefined;
+  const build = LINKED.exec(lines.get('Build ID') ?? '');
 
-  const match = BUILD_PATH.exec(url.pathname);
-  const [, worker, previewSlug, buildUuid] = match ?? [];
-
-  if (worker === undefined || buildUuid === undefined || !isUuid(buildUuid)) {
-    return undefined;
-  }
-
-  return previewSlug === undefined
-    ? { worker, buildUuid }
-    : { worker, buildUuid, previewSlug };
+  return {
+    buildUuid: build?.[1] ?? lines.get('Build ID') ?? null,
+    buildUrl: build?.[2] ?? null,
+    versionId: lines.get('Version ID') ?? null,
+    previewUrl: lines.get('Preview URL') ?? null,
+    aliasUrl: lines.get('Preview Alias URL') ?? null,
+  };
 }
 
-const timestamp = v.pipe(
-  v.string(),
-  v.check((value) => !Number.isNaN(Date.parse(value)), 'not a timestamp'),
-);
+/** A preview build's URLs, ready to post as a deployment. */
+export type Preview = {
+  readonly worker: string;
+  readonly environment: string;
+  readonly sha: string;
+  readonly branch: string;
+  readonly buildUuid: string;
+  readonly versionId: string;
+  readonly commitUrl: string;
+  readonly branchUrl: string | null;
+  readonly logUrl: string;
+};
 
-// looseObject throughout: the SDK camelCases wire names but validates none of them.
-const BuildSchema = v.looseObject({
-  buildUuid: v.pipe(v.string(), v.check(isUuid, 'not a UUID')),
-  buildOutcome: v.nullish(v.string()),
-  createdOn: timestamp,
-  stoppedOn: v.nullish(timestamp),
-  // Despite its docs, the branch alias, not the commit's version URL.
-  previewUrl: v.nullish(v.string()),
-  buildTriggerMetadata: v.looseObject({
-    branch: v.nullish(v.string()),
-    commitHash: v.pipe(v.string(), v.check(isCommitSha, 'not a commit sha')),
-  }),
-});
+/** Why a check run gets no deployment. */
+export type Skip = { readonly worker: string; readonly skip: string };
 
-const VersionSchema = v.looseObject({
-  id: v.pipe(v.string(), v.check(isUuid, 'not a UUID')),
-  createdOn: timestamp,
-  urls: v.array(v.string()),
-});
+/** The check run's worker, or throw for a run Workers Builds did not name. */
+export function workerOf(name: string): string {
+  const worker = name.startsWith(CHECK_RUN_PREFIX)
+    ? name.slice(CHECK_RUN_PREFIX.length)
+    : '';
 
-const BuildsByVersionSchema = v.looseObject({
-  builds: v.nullish(
-    v.record(v.string(), v.looseObject({ buildUuid: v.nullish(v.string()) })),
-  ),
-});
+  if (!/^[a-z0-9-]+$/.test(worker)) {
+    throw new Error(`not a Workers Builds check run: ${JSON.stringify(name)}`);
+  }
 
-export type Build = v.InferOutput<typeof BuildSchema>;
+  return worker;
+}
 
-export type Version = v.InferOutput<typeof VersionSchema>;
+/**
+ * The check run's preview, or why it has none. A successful branch build of a
+ * versions-upload Worker without a `Preview URL:` line throws: the summary
+ * format changed, and a silent skip would drop every preview.
+ */
+export function previewFromCheckRun(run: CheckRun): Preview | Skip {
+  const worker = workerOf(run.name);
+
+  if (!isCommitSha(run.headSha)) {
+    throw new Error(`not a full commit sha: ${JSON.stringify(run.headSha)}`);
+  }
+
+  if (run.headBranch === PRODUCTION_BRANCH) {
+    return {
+      worker,
+      skip: `a ${PRODUCTION_BRANCH} build is a production deploy`,
+    };
+  }
+
+  const summary = parseSummary(run.summary);
+
+  if (summary.previewUrl === null && summary.buildUrl?.includes('/previews/')) {
+    return {
+      worker,
+      skip: 'Workers Previews build with preview URLs off: its summary names no URL',
+    };
+  }
+
+  if (
+    summary.previewUrl === null ||
+    summary.versionId === null ||
+    summary.buildUuid === null
+  ) {
+    throw new Error(
+      `${run.name} on ${run.headBranch} has no Build ID, Version ID and Preview URL lines; the summary format may have changed:\n${run.summary}`,
+    );
+  }
+
+  return {
+    worker,
+    environment: `${ENVIRONMENT_PREFIX}${worker}`,
+    sha: run.headSha,
+    branch: run.headBranch,
+    buildUuid: summary.buildUuid,
+    versionId: summary.versionId,
+    commitUrl: summary.previewUrl,
+    branchUrl: summary.aliasUrl,
+    logUrl: run.detailsUrl,
+  };
+}
 
 /** A parse's output; throws naming every issue's path. */
 function parsed<S extends v.GenericSchema>(
@@ -113,145 +160,54 @@ function parsed<S extends v.GenericSchema>(
   throw new Error([`unexpected ${what}:`, ...details].join('\n'));
 }
 
-/** A `getBuild` result, validated. */
-export function buildFromApi(result: GetBuildResponse): Build {
-  return parsed('Workers Builds build', v.safeParse(BuildSchema, result));
+// looseObject throughout: GitHub's objects carry far more than these reads.
+const CheckRunSchema = v.looseObject({
+  name: v.string(),
+  head_sha: v.string(),
+  status: v.string(),
+  conclusion: v.nullish(v.string()),
+  details_url: v.string(),
+  app: v.looseObject({ slug: v.string() }),
+  check_suite: v.looseObject({ id: v.number() }),
+  output: v.looseObject({ summary: v.nullish(v.string()) }),
+});
+
+export type RestCheckRun = v.InferOutput<typeof CheckRunSchema>;
+
+/** argv for `gh api` reading one check run. */
+export function checkRunArgs(repo: string, id: number): string[] {
+  return ['api', `repos/${repo}/check-runs/${id}`];
 }
 
-/** A `listBetaWorkerVersions` page, validated. */
-export function versionsFromApi(
-  result: ListBetaWorkerVersionsResponse['result'],
-): Version[] {
-  return parsed(
-    'Worker versions page',
-    v.safeParse(v.array(VersionSchema), result),
+/** argv for `gh api` printing a check suite's head branch. */
+export function checkSuiteBranchArgs(repo: string, id: number): string[] {
+  return ['api', `repos/${repo}/check-suites/${id}`, '--jq', '.head_branch'];
+}
+
+/** A `GET /check-runs/{id}` response, validated as a successful Workers Builds run. */
+export function checkRunFromApi(json: string): RestCheckRun {
+  const run = parsed(
+    'GitHub check run',
+    v.safeParse(CheckRunSchema, JSON.parse(json)),
   );
-}
 
-/** A `getBuildsByVersion` result as version id → build UUID. */
-export function buildsByVersionFromApi(
-  result: GetBuildsByVersionResponse,
-): Map<string, string> {
-  const { builds } = parsed(
-    'builds-by-version response',
-    v.safeParse(BuildsByVersionSchema, result),
-  );
-
-  return new Map(
-    Object.entries(builds ?? {}).flatMap(([versionId, build]) =>
-      build.buildUuid ? [[versionId, build.buildUuid] as const] : [],
-    ),
-  );
-}
-
-/** Whether a newest-first versions page reaches back past the build's start. */
-export function pageReachesBefore(
-  versions: readonly Version[],
-  build: Build,
-): boolean {
-  const start = Date.parse(build.createdOn);
-
-  return versions.some((version) => Date.parse(version.createdOn) < start);
-}
-
-/**
- * Versions the build could have uploaded: created while it ran. The API
- * documents no ordering, so this filters and sorts rather than slicing.
- */
-export function candidateVersions(
-  versions: readonly Version[],
-  build: Build,
-): Version[] {
-  const start = Date.parse(build.createdOn);
-
-  const end =
-    build.stoppedOn == null
-      ? Number.POSITIVE_INFINITY
-      : Date.parse(build.stoppedOn);
-
-  return [...versions]
-    .filter((version) => {
-      const created = Date.parse(version.createdOn);
-
-      return created >= start && created <= end;
-    })
-    .sort((a, b) => Date.parse(b.createdOn) - Date.parse(a.createdOn))
-    .slice(0, MAX_VERSION_IDS);
-}
-
-/** A preview build's URLs, ready to post as a deployment. */
-export type Preview = {
-  readonly worker: string;
-  readonly environment: string;
-  readonly sha: string;
-  readonly branch: string | null;
-  readonly buildUuid: string;
-  readonly versionId: string;
-  readonly commitUrl: string;
-  readonly branchUrl: string | null;
-  readonly logUrl: string;
-};
-
-/** Why a build gets no deployment. */
-export type Skip = { readonly skip: string };
-
-export type PreviewInput = {
-  readonly ref: BuildRef;
-  readonly build: Build;
-  readonly versions: readonly Version[];
-  readonly buildsByVersion: ReadonlyMap<string, string>;
-  readonly logUrl: string;
-};
-
-/** The build's preview, or why it has none to post. */
-export function previewFor({
-  ref,
-  build,
-  versions,
-  buildsByVersion,
-  logUrl,
-}: PreviewInput): Preview | Skip {
-  if (build.buildUuid !== ref.buildUuid) {
+  if (run.app.slug !== CLOUDFLARE_APP || run.conclusion !== 'success') {
     throw new Error(
-      `asked for build ${ref.buildUuid}, Cloudflare returned ${build.buildUuid}`,
+      `check run "${run.name}" is ${run.app.slug}'s, concluded ${run.conclusion ?? run.status}; post takes a successful ${CLOUDFLARE_APP} run`,
     );
   }
 
-  if (build.buildOutcome !== 'success') {
-    return { skip: `build outcome is ${build.buildOutcome ?? 'unknown'}` };
-  }
+  return run;
+}
 
-  const branch = build.buildTriggerMetadata.branch ?? null;
-
-  if (branch === PRODUCTION_BRANCH) {
-    return { skip: `a ${PRODUCTION_BRANCH} build is a production deploy` };
-  }
-
-  const version = versions.find(
-    (candidate) => buildsByVersion.get(candidate.id) === build.buildUuid,
-  );
-
-  const commitUrl = version?.urls[0];
-
-  if (version === undefined || commitUrl === undefined) {
-    return {
-      skip:
-        ref.previewSlug === undefined
-          ? 'no Worker version with a URL came from this build'
-          : `Workers Previews build (${ref.previewSlug}) uploaded no Worker version with a URL`,
-    };
-  }
-
+/** A REST check run and its suite's branch, in the event payload's shape. */
+export function checkRunOf(run: RestCheckRun, headBranch: string): CheckRun {
   return {
-    worker: ref.worker,
-    environment: `${ENVIRONMENT_PREFIX}${ref.worker}`,
-    sha: build.buildTriggerMetadata.commitHash,
-    branch,
-    buildUuid: build.buildUuid,
-    versionId: version.id,
-    commitUrl,
-    branchUrl: build.previewUrl ?? null,
-    logUrl,
+    name: run.name,
+    headSha: run.head_sha,
+    headBranch,
+    detailsUrl: run.details_url,
+    summary: run.output.summary ?? '',
   };
 }
 
@@ -267,6 +223,16 @@ export function listDeploymentsArgs(
   if (environment !== undefined) query.set('environment', environment);
 
   return ['api', `repos/${repo}/deployments?${query.toString()}`];
+}
+
+/** argv for `gh api` listing every deployment, all pages as one array per page. */
+export function allDeploymentsArgs(repo: string): string[] {
+  return [
+    'api',
+    '--paginate',
+    '--slurp',
+    `repos/${repo}/deployments?per_page=100`,
+  ];
 }
 
 /** argv for `gh api` creating the preview's deployment. */
@@ -293,9 +259,8 @@ export function createDeploymentArgs(repo: string, preview: Preview): string[] {
     'production_environment=false',
     '-f',
     `payload[build_uuid]=${preview.buildUuid}`,
-    ...(preview.branch === null
-      ? []
-      : ['-f', `payload[branch]=${preview.branch}`]),
+    '-f',
+    `payload[branch]=${preview.branch}`,
     '-f',
     `payload[version_id]=${preview.versionId}`,
     ...(preview.branchUrl === null
@@ -323,10 +288,13 @@ export function createStatusArgs(
     `log_url=${preview.logUrl}`,
     '-f',
     `description=Commit preview ${preview.versionId.slice(0, 8)}`,
-    '-F',
-    'auto_inactive=true',
   ];
 }
+
+const timestamp = v.pipe(
+  v.string(),
+  v.check((value) => !Number.isNaN(Date.parse(value)), 'not a timestamp'),
+);
 
 const DeploymentSchema = v.looseObject({
   id: v.number(),
@@ -336,9 +304,8 @@ const DeploymentSchema = v.looseObject({
   // GitHub stores a payload posted as a string verbatim; none of ours is.
   payload: v.fallback(
     v.looseObject({
-      build_uuid: v.optional(v.string()),
-      branch: v.optional(v.string()),
-      branch_url: v.optional(v.string()),
+      build_uuid: v.nullish(v.string()),
+      branch: v.nullish(v.string()),
     }),
     {},
   ),
@@ -362,6 +329,14 @@ export function deploymentsFromApi(json: string): GitHubDeployment[] {
   );
 }
 
+/** An `allDeploymentsArgs` response, flattened and validated. */
+export function deploymentPagesFromApi(json: string): GitHubDeployment[] {
+  return parsed(
+    'GitHub deployments pages',
+    v.safeParse(v.array(v.array(DeploymentSchema)), JSON.parse(json)),
+  ).flat();
+}
+
 /** The deployment already posted for this build, if a rerun got here first. */
 export function existingDeployment(
   deployments: readonly GitHubDeployment[],
@@ -374,33 +349,53 @@ export function existingDeployment(
   );
 }
 
+/** Whether `a` was created before `b`; the id breaks a same-second tie. */
+const createdBefore = (a: GitHubDeployment, b: GitHubDeployment): boolean => {
+  const delta = Date.parse(a.created_at) - Date.parse(b.created_at);
+
+  return delta < 0 || (delta === 0 && a.id < b.id);
+};
+
 /**
- * The branch's other deployments in the preview's environment. The environment
- * is shared by every PR, so auto_inactive would retire other branches' URLs.
+ * The branch's deployments in `current`'s environment created before it. The
+ * environment is shared by every PR, so auto_inactive would retire other
+ * branches' URLs; a late run must not retire a newer build's deployment.
  */
 export function supersededDeployments(
   deployments: readonly GitHubDeployment[],
-  preview: Preview,
-  currentId: number,
+  current: GitHubDeployment,
+  branch: string,
 ): GitHubDeployment[] {
-  return deployments.filter((deployment) => {
-    if (
-      deployment.environment !== preview.environment ||
-      deployment.id === currentId
-    ) {
-      return false;
-    }
-
-    const { branch, branch_url: branchUrl } = deployment.payload;
-
-    // Deployments posted before the branch was recorded carry only its alias.
-    if (branch === undefined) {
-      return preview.branchUrl !== null && branchUrl === preview.branchUrl;
-    }
-
-    return branch === preview.branch;
-  });
+  return deployments.filter(
+    (deployment) =>
+      deployment.environment === current.environment &&
+      deployment.payload.branch === branch &&
+      createdBefore(deployment, current),
+  );
 }
+
+/** Every preview deployment `branch` posted, in any `preview/*` environment. */
+export function branchDeployments(
+  deployments: readonly GitHubDeployment[],
+  branch: string,
+): GitHubDeployment[] {
+  return deployments.filter(
+    (deployment) =>
+      deployment.environment.startsWith(ENVIRONMENT_PREFIX) &&
+      deployment.payload.branch === branch,
+  );
+}
+
+/** argv for `gh api` reading a deployment's newest status. */
+export function latestStatusArgs(repo: string, id: number): string[] {
+  return ['api', `repos/${repo}/deployments/${id}/statuses?per_page=1`];
+}
+
+const StatusSchema = v.looseObject({
+  state: v.string(),
+  environment_url: v.nullish(v.string()),
+  log_url: v.nullish(v.string()),
+});
 
 /** Whether a `latestStatusArgs` response leaves the deployment still active. */
 export function needsInactive(statusesJson: string): boolean {
@@ -412,11 +407,11 @@ export function needsInactive(statusesJson: string): boolean {
   return status?.state !== 'inactive';
 }
 
-/** argv for `gh api` marking deployment `id` inactive, superseded by `preview`. */
+/** argv for `gh api` marking deployment `id` inactive, with why. */
 export function inactiveStatusArgs(
   repo: string,
   id: number,
-  preview: Preview,
+  description: string,
 ): string[] {
   return [
     'api',
@@ -426,7 +421,7 @@ export function inactiveStatusArgs(
     '-f',
     'state=inactive',
     '-f',
-    `description=Superseded by ${preview.sha.slice(0, 8)}`,
+    `description=${description}`,
   ];
 }
 
@@ -441,10 +436,7 @@ export function latestPreviewDeployments(
 
     const seen = newest.get(deployment.environment);
 
-    if (
-      seen === undefined ||
-      Date.parse(deployment.created_at) > Date.parse(seen.created_at)
-    ) {
+    if (seen === undefined || createdBefore(seen, deployment)) {
       newest.set(deployment.environment, deployment);
     }
   }
@@ -453,17 +445,6 @@ export function latestPreviewDeployments(
     a.environment.localeCompare(b.environment),
   );
 }
-
-/** argv for `gh api` reading a deployment's newest status. */
-export function latestStatusArgs(repo: string, id: number): string[] {
-  return ['api', `repos/${repo}/deployments/${id}/statuses?per_page=1`];
-}
-
-const StatusSchema = v.looseObject({
-  state: v.string(),
-  environment_url: v.nullish(v.string()),
-  log_url: v.nullish(v.string()),
-});
 
 /** One worker's preview as the Deployments API records it. */
 export type PreviewRecord = {

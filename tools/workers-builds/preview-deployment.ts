@@ -1,254 +1,68 @@
 #!/usr/bin/env node
 // Surfaces Workers Builds preview URLs as GitHub Deployments, one
-// `preview/<worker>` environment per Worker, and reads them back.
+// `preview/<worker>` environment per Worker, retires them, and reads them back.
 //
 // Usage:
-//   preview-deployment.ts post (--details-url <url> | --worker <name> --build <uuid>)
-//                              [--sha <sha>] [--dry-run] [--json | --json-out <path>]
+//   preview-deployment.ts post (--check-run <id> | --name <check run name> --sha <sha>
+//                               --branch <branch> --summary <text> --details-url <url>)
+//                              [--dry-run] [--json | --json-out <path>]
+//   preview-deployment.ts retire --branch <branch> [--dry-run] [--json | --json-out <path>]
 //   preview-deployment.ts read (--pr <number> | --sha <sha>) [--json | --json-out <path>]
 //
-// `post` needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (Workers Builds
-// and Workers Scripts read), and gh authenticated with deployments write
-// unless --dry-run. `read` needs gh only. GITHUB_REPOSITORY picks the repo.
-// Exit codes: 0 posted, skipped or read; 1 an API failure; 2 a usage error.
+// Every command talks to GitHub only, through gh: deployments write for post
+// and retire, read for the rest and for --dry-run. GITHUB_REPOSITORY picks the repo.
+// Exit codes: 0 posted, skipped, retired or read; 1 a failure; 2 a usage error.
 // All decisions live in preview-deployment.core.ts.
 
 import { parseArgs } from 'node:util';
 
-import { listBetaWorkerVersions } from '@distilled.cloud/cloudflare/workers';
-import {
-  getBuild,
-  getBuildsByVersion,
-} from '@distilled.cloud/cloudflare/workers_builds';
 import {
   type JsonOutput,
   jsonOutput,
   withoutJsonFlags,
   writeJsonOutput,
 } from '@tools/cli/json-output.ts';
-import { type CloudflareApi, call } from '@tools/cloudflare-api/call.ts';
 import { messageOf } from '@tools/shared/errors.ts';
 import { type Exec, defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 
 import { isCommitSha } from './pages-deploy.core.ts';
 import {
-  type BuildRef,
+  type CheckRun,
+  type GitHubDeployment,
   type Preview,
   type PreviewRecord,
   type Skip,
-  type Version,
-  buildFromApi,
-  buildsByVersionFromApi,
-  candidateVersions,
+  allDeploymentsArgs,
+  branchDeployments,
+  checkRunArgs,
+  checkRunFromApi,
+  checkRunOf,
+  checkSuiteBranchArgs,
   createDeploymentArgs,
   createStatusArgs,
   deploymentFromApi,
+  deploymentPagesFromApi,
   deploymentsFromApi,
   existingDeployment,
   inactiveStatusArgs,
-  isUuid,
   latestPreviewDeployments,
   latestStatusArgs,
   listDeploymentsArgs,
   needsInactive,
-  pageReachesBefore,
-  parseDetailsUrl,
   prHeadArgs,
-  previewFor,
+  previewFromCheckRun,
   previewRecord,
   recordsText,
   supersededDeployments,
-  versionsFromApi,
 } from './preview-deployment.core.ts';
 
 const USAGE = `usage:
-  preview-deployment.ts post (--details-url <url> | --worker <name> --build <uuid>) [--sha <sha>] [--dry-run] [--json]
+  preview-deployment.ts post (--check-run <id> | --name <name> --sha <sha> --branch <branch> --summary <text> --details-url <url>) [--dry-run] [--json]
+  preview-deployment.ts retire --branch <branch> [--dry-run] [--json]
   preview-deployment.ts read (--pr <number> | --sha <sha>) [--json]`;
 
 const DEFAULT_REPO = 'simshanith/lit-ui-router';
-
-/** Newest-first pages scanned for the build's version before giving up. */
-const MAX_VERSION_PAGES = 5;
-
-const VERSIONS_PER_PAGE = 50;
-
-/** The dashboard URL for a build, as the Cloudflare check run links it. */
-const buildLogUrl = (accountId: string, ref: BuildRef): string =>
-  `https://dash.cloudflare.com/${accountId}/workers/services/view/${ref.worker}/production/builds/${ref.buildUuid}`;
-
-/** The build and the Worker versions it could have uploaded, with their builds. */
-export async function resolvePreview(
-  api: CloudflareApi,
-  ref: BuildRef,
-  logUrl: string,
-): Promise<Preview | Skip> {
-  const build = buildFromApi(
-    await call(
-      api,
-      `GET /{account_id}/builds/builds/${ref.buildUuid}`,
-      getBuild({ accountId: api.accountId, buildUuid: ref.buildUuid }),
-    ),
-  );
-
-  const versions: Version[] = [];
-
-  for (let page = 1; page <= MAX_VERSION_PAGES; page += 1) {
-    const { result } = await call(
-      api,
-      `GET /{account_id}/workers/workers/${ref.worker}/versions?page=${page}`,
-      listBetaWorkerVersions({
-        accountId: api.accountId,
-        workerId: ref.worker,
-        page,
-        perPage: VERSIONS_PER_PAGE,
-      }),
-    );
-
-    const listed = versionsFromApi(result);
-
-    versions.push(...listed);
-
-    if (listed.length < VERSIONS_PER_PAGE || pageReachesBefore(listed, build))
-      break;
-  }
-
-  const candidates = candidateVersions(versions, build);
-
-  const buildsByVersion =
-    candidates.length === 0
-      ? new Map<string, string>()
-      : buildsByVersionFromApi(
-          await call(
-            api,
-            'GET /{account_id}/builds/builds?version_ids=…',
-            getBuildsByVersion({
-              accountId: api.accountId,
-              versionIds: candidates.map((version) => version.id).join(','),
-            }),
-          ),
-        );
-
-  return previewFor({
-    ref,
-    build,
-    versions: candidates,
-    buildsByVersion,
-    logUrl,
-  });
-}
-
-type PostResult =
-  | (Skip & { readonly ref: BuildRef })
-  | {
-      readonly preview: Preview;
-      readonly dryRun: boolean;
-      readonly deployment: string[];
-      readonly status: string[];
-      readonly deploymentId: number | null;
-      readonly existing: boolean;
-      readonly deactivated: readonly number[];
-    };
-
-/** Creates the deployment and its success status unless this build has one, then retires the branch's older ones. */
-type Posted = { id: number; existing: boolean; deactivated: number[] };
-
-async function postPreview(
-  exec: Exec,
-  repo: string,
-  preview: Preview,
-): Promise<Posted> {
-  await ensureGh(exec);
-
-  const listed = await exec(
-    'gh',
-    listDeploymentsArgs(repo, {
-      sha: preview.sha,
-      environment: preview.environment,
-    }),
-  );
-
-  const found = existingDeployment(deploymentsFromApi(listed.stdout), preview);
-  let id = found?.id;
-
-  if (id === undefined) {
-    const created = await exec('gh', createDeploymentArgs(repo, preview));
-
-    id = deploymentFromApi(created.stdout).id;
-    await exec('gh', createStatusArgs(repo, id, preview));
-  }
-
-  return {
-    id,
-    existing: found !== undefined,
-    deactivated: await deactivateSuperseded(exec, repo, preview, id),
-  };
-}
-
-/** Marks the branch's earlier deployments inactive; returns their ids. */
-async function deactivateSuperseded(
-  exec: Exec,
-  repo: string,
-  preview: Preview,
-  currentId: number,
-): Promise<number[]> {
-  const listed = await exec(
-    'gh',
-    listDeploymentsArgs(repo, { environment: preview.environment }),
-  );
-
-  const deactivated: number[] = [];
-
-  for (const deployment of supersededDeployments(
-    deploymentsFromApi(listed.stdout),
-    preview,
-    currentId,
-  )) {
-    const statuses = await exec('gh', latestStatusArgs(repo, deployment.id));
-
-    if (!needsInactive(statuses.stdout)) continue;
-
-    await exec('gh', inactiveStatusArgs(repo, deployment.id, preview));
-    deactivated.push(deployment.id);
-  }
-
-  return deactivated;
-}
-
-const postText = (result: PostResult): string => {
-  if ('skip' in result) {
-    return `no deployment for ${result.ref.worker} build ${result.ref.buildUuid}: ${result.skip}`;
-  }
-
-  const { preview } = result;
-
-  const lines = [
-    `${preview.environment} on ${preview.sha}`,
-    `  commit preview: ${preview.commitUrl}`,
-    `  branch alias:   ${preview.branchUrl ?? '(none)'}`,
-    `  version:        ${preview.versionId}`,
-    `  log:            ${preview.logUrl}`,
-  ];
-
-  if (result.dryRun) {
-    lines.push(
-      'dry run, would post:',
-      `  gh ${result.deployment.join(' ')}`,
-      `  gh ${result.status.join(' ')}`,
-    );
-  } else {
-    lines.push(
-      result.existing
-        ? `deployment ${result.deploymentId} already posted for this build`
-        : `created deployment ${result.deploymentId} with a success status`,
-      result.deactivated.length === 0
-        ? 'no earlier deployment of this branch to deactivate'
-        : `marked inactive: ${result.deactivated.join(', ')}`,
-    );
-  }
-
-  return lines.join('\n');
-};
 
 /** A bad invocation: main prints the usage and exits 2. */
 class UsageError extends Error {}
@@ -259,116 +73,245 @@ const isParseArgsError = (error: unknown): error is Error =>
   'code' in error &&
   String(error.code).startsWith('ERR_PARSE_ARGS_');
 
-const commitSha = (sha: string | undefined): string | undefined => {
-  if (sha !== undefined && !isCommitSha(sha)) {
-    throw new UsageError(`not a full commit sha: ${sha}`);
+const positiveInteger = (value: string, what: string): number => {
+  const number = Number(value);
+
+  if (!Number.isInteger(number) || number <= 0) {
+    throw new UsageError(`not a ${what}: ${value}`);
   }
 
-  return sha;
+  return number;
 };
 
-/** The `post` flags as a build reference. */
-const buildRefFrom = (values: {
-  'details-url'?: string;
-  worker?: string;
-  build?: string;
-}): BuildRef => {
-  const detailsUrl = values['details-url'];
+/** The active ones among `deployments`, each marked inactive unless `dryRun`. */
+async function deactivate(
+  exec: Exec,
+  repo: string,
+  deployments: readonly GitHubDeployment[],
+  description: string,
+  dryRun: boolean,
+): Promise<number[]> {
+  const deactivated: number[] = [];
 
-  if (detailsUrl !== undefined) {
-    const ref = parseDetailsUrl(detailsUrl);
+  for (const deployment of deployments) {
+    const statuses = await exec('gh', latestStatusArgs(repo, deployment.id));
 
-    if (ref === undefined) {
-      throw new UsageError(`not a Workers Builds build URL: ${detailsUrl}`);
+    if (!needsInactive(statuses.stdout)) continue;
+
+    if (!dryRun) {
+      await exec('gh', inactiveStatusArgs(repo, deployment.id, description));
     }
 
-    return ref;
+    deactivated.push(deployment.id);
   }
 
-  if (values.worker === undefined || values.build === undefined) {
-    throw new UsageError('pass --details-url, or --worker with --build');
-  }
+  return deactivated;
+}
 
-  if (!isUuid(values.build)) {
-    throw new UsageError(`not a build UUID: ${values.build}`);
-  }
-
-  return { worker: values.worker, buildUuid: values.build };
+type Posted = {
+  readonly id: number | null;
+  readonly existing: boolean;
+  readonly deactivated: readonly number[];
 };
 
-const cloudflareApi = (): CloudflareApi => {
-  const token = process.env.CLOUDFLARE_API_TOKEN;
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+/**
+ * Creates the deployment and its success status unless this build has one,
+ * then retires the branch's older ones. A dry run creates nothing and lists
+ * the branch's active deployments it would retire.
+ */
+async function postPreview(
+  exec: Exec,
+  repo: string,
+  preview: Preview,
+  dryRun: boolean,
+): Promise<Posted> {
+  const environment = preview.environment;
 
-  if (!token || !accountId) {
+  const onSha = await exec(
+    'gh',
+    listDeploymentsArgs(repo, { sha: preview.sha, environment }),
+  );
+
+  const found = existingDeployment(deploymentsFromApi(onSha.stdout), preview);
+  let id = found?.id ?? null;
+
+  if (id === null && !dryRun) {
+    const created = await exec('gh', createDeploymentArgs(repo, preview));
+
+    id = deploymentFromApi(created.stdout).id;
+    await exec('gh', createStatusArgs(repo, id, preview));
+  }
+
+  const listed = deploymentsFromApi(
+    (await exec('gh', listDeploymentsArgs(repo, { environment }))).stdout,
+  );
+
+  const current = listed.find((deployment) => deployment.id === id);
+
+  const older =
+    current === undefined
+      ? branchDeployments(listed, preview.branch).filter(
+          (deployment) => deployment.environment === environment,
+        )
+      : supersededDeployments(listed, current, preview.branch);
+
+  return {
+    id,
+    existing: found !== undefined,
+    deactivated: await deactivate(
+      exec,
+      repo,
+      older,
+      `Superseded by ${preview.sha.slice(0, 8)}`,
+      dryRun,
+    ),
+  };
+}
+
+/** The `post` flags as a check run: fetched by id, or as the workflow passes the event's fields. */
+async function checkRunFrom(
+  values: {
+    'check-run'?: string;
+    name?: string;
+    sha?: string;
+    branch?: string;
+    summary?: string;
+    'details-url'?: string;
+  },
+  repo: string,
+): Promise<CheckRun> {
+  if (values['check-run'] !== undefined) {
+    const id = positiveInteger(values['check-run'], 'check run id');
+
+    const run = checkRunFromApi(
+      (await defaultExec('gh', checkRunArgs(repo, id))).stdout,
+    );
+
+    const branch = await defaultExec(
+      'gh',
+      checkSuiteBranchArgs(repo, run.check_suite.id),
+    );
+
+    return checkRunOf(run, branch.stdout.trim());
+  }
+
+  const { name, sha, branch, summary } = values;
+  const detailsUrl = values['details-url'];
+
+  if (
+    name === undefined ||
+    sha === undefined ||
+    branch === undefined ||
+    summary === undefined ||
+    detailsUrl === undefined
+  ) {
     throw new UsageError(
-      'set CLOUDFLARE_API_TOKEN (Workers Builds and Workers Scripts read) and CLOUDFLARE_ACCOUNT_ID',
+      'pass --check-run, or all of --name, --sha, --branch, --summary and --details-url',
     );
   }
 
-  return { token, accountId, fetch: globalThis.fetch };
-};
+  return { name, headSha: sha, headBranch: branch, summary, detailsUrl };
+}
+
+type PostResult =
+  | Skip
+  | ({ readonly preview: Preview; readonly dryRun: boolean } & Posted);
 
 const post = async (args: string[], repo: string): Promise<PostResult> => {
   const { values } = parseArgs({
     args,
     options: {
-      'details-url': { type: 'string' },
-      worker: { type: 'string' },
-      build: { type: 'string' },
+      'check-run': { type: 'string' },
+      name: { type: 'string' },
       sha: { type: 'string' },
+      branch: { type: 'string' },
+      summary: { type: 'string' },
+      'details-url': { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
     },
     strict: true,
   });
 
-  const ref = buildRefFrom(values);
-  const sha = commitSha(values.sha);
-  const api = cloudflareApi();
-  const logUrl = values['details-url'] ?? buildLogUrl(api.accountId, ref);
-  const resolved = await resolvePreview(api, ref, logUrl);
+  await ensureGh();
 
-  if ('skip' in resolved) return { ...resolved, ref };
+  const preview = previewFromCheckRun(await checkRunFrom(values, repo));
 
-  // The check run's head_sha and the build's commit must agree, or the URL lands on the wrong commit.
-  if (sha !== undefined && sha !== resolved.sha) {
-    throw new Error(
-      `build ${ref.buildUuid} built ${resolved.sha}, not --sha ${sha}`,
-    );
-  }
+  if ('skip' in preview) return preview;
 
   const dryRun = values['dry-run'];
+  const posted = await postPreview(defaultExec, repo, preview, dryRun);
 
-  const posted = dryRun
-    ? undefined
-    : await postPreview(defaultExec, repo, resolved);
-
-  return {
-    preview: resolved,
-    dryRun,
-    deployment: createDeploymentArgs(repo, resolved),
-    status: createStatusArgs(repo, posted?.id ?? '{id}', resolved),
-    deploymentId: posted?.id ?? null,
-    existing: posted?.existing ?? false,
-    deactivated: posted?.deactivated ?? [],
-  };
+  return { preview, dryRun, ...posted };
 };
+
+const postText = (result: PostResult): string => {
+  if ('skip' in result) {
+    return `no deployment for ${result.worker}: ${result.skip}`;
+  }
+
+  const { preview } = result;
+
+  const retired =
+    result.deactivated.length === 0 ? 'none' : result.deactivated.join(', ');
+
+  return [
+    `${preview.environment} on ${preview.sha} (${preview.branch})`,
+    `  commit preview: ${preview.commitUrl}`,
+    `  branch alias:   ${preview.branchUrl ?? '(none)'}`,
+    `  version:        ${preview.versionId}`,
+    `  log:            ${preview.logUrl}`,
+    result.dryRun
+      ? `dry run: would ${result.existing ? `keep deployment ${result.id}` : 'create a deployment with a success status'}, then retire: ${retired}`
+      : `${result.existing ? 'kept' : 'created'} deployment ${result.id}; retired: ${retired}`,
+  ].join('\n');
+};
+
+type RetireResult = {
+  readonly branch: string;
+  readonly dryRun: boolean;
+  readonly deactivated: readonly number[];
+};
+
+const retire = async (args: string[], repo: string): Promise<RetireResult> => {
+  const { values } = parseArgs({
+    args,
+    options: {
+      branch: { type: 'string' },
+      'dry-run': { type: 'boolean', default: false },
+    },
+    strict: true,
+  });
+
+  const { branch } = values;
+
+  if (branch === undefined || branch === '') {
+    throw new UsageError('pass --branch');
+  }
+
+  await ensureGh();
+
+  const { stdout } = await defaultExec('gh', allDeploymentsArgs(repo));
+  const dryRun = values['dry-run'];
+
+  const deactivated = await deactivate(
+    defaultExec,
+    repo,
+    branchDeployments(deploymentPagesFromApi(stdout), branch),
+    'Pull request closed',
+    dryRun,
+  );
+
+  return { branch, dryRun, deactivated };
+};
+
+const retireText = ({ branch, dryRun, deactivated }: RetireResult): string =>
+  deactivated.length === 0
+    ? `no active preview deployment on ${branch}`
+    : `${dryRun ? 'would mark' : 'marked'} inactive on ${branch}: ${deactivated.join(', ')}`;
 
 type ReadResult = {
   readonly sha: string;
   readonly previews: readonly PreviewRecord[];
-};
-
-const prNumber = (pr: string | undefined): number | undefined => {
-  if (pr === undefined) return undefined;
-
-  const number = Number(pr);
-
-  if (!Number.isInteger(number) || number <= 0) {
-    throw new UsageError(`not a PR number: ${pr}`);
-  }
-
-  return number;
 };
 
 const read = async (args: string[], repo: string): Promise<ReadResult> => {
@@ -378,17 +321,24 @@ const read = async (args: string[], repo: string): Promise<ReadResult> => {
     strict: true,
   });
 
-  const pr = prNumber(values.pr);
-  const given = commitSha(values.sha);
-
-  if ((pr === undefined) === (given === undefined)) {
+  if ((values.pr === undefined) === (values.sha === undefined)) {
     throw new UsageError('pass one of --pr or --sha');
+  }
+
+  if (values.sha !== undefined && !isCommitSha(values.sha)) {
+    throw new UsageError(`not a full commit sha: ${values.sha}`);
   }
 
   await ensureGh();
 
   const sha =
-    given ?? (await defaultExec('gh', prHeadArgs(repo, pr ?? 0))).stdout.trim();
+    values.sha ??
+    (
+      await defaultExec(
+        'gh',
+        prHeadArgs(repo, positiveInteger(values.pr ?? '', 'PR number')),
+      )
+    ).stdout.trim();
 
   const { stdout } = await defaultExec(
     'gh',
@@ -411,6 +361,15 @@ const read = async (args: string[], repo: string): Promise<ReadResult> => {
   return { sha, previews };
 };
 
+const COMMANDS = {
+  post: { run: post, text: postText },
+  retire: { run: retire, text: retireText },
+  read: {
+    run: read,
+    text: (result: ReadResult) => recordsText(result.sha, result.previews),
+  },
+} as const;
+
 const outputFrom = (argv: string[]): JsonOutput => {
   try {
     return jsonOutput(argv);
@@ -419,34 +378,36 @@ const outputFrom = (argv: string[]): JsonOutput => {
   }
 };
 
+/** Runs one command, printing text unless its JSON goes to stdout. */
+async function runCommand<R>(
+  command: {
+    run: (args: string[], repo: string) => Promise<R>;
+    text: (result: R) => string;
+  },
+  args: string[],
+  output: JsonOutput,
+): Promise<void> {
+  const result = await command.run(
+    args,
+    process.env.GITHUB_REPOSITORY ?? DEFAULT_REPO,
+  );
+
+  if (output.kind !== 'stdout') console.log(command.text(result));
+
+  await writeJsonOutput(output, `${JSON.stringify(result, null, 2)}\n`);
+}
+
 const run = async (argv: string[]): Promise<void> => {
   const output = outputFrom(argv);
-  const [command, ...args] = withoutJsonFlags(argv);
-  const repo = process.env.GITHUB_REPOSITORY ?? DEFAULT_REPO;
+  const [name, ...args] = withoutJsonFlags(argv);
 
-  if (command === 'post') {
-    const result = await post(args, repo);
+  if (name === 'post') return runCommand(COMMANDS.post, args, output);
 
-    if (output.kind !== 'stdout') console.log(postText(result));
+  if (name === 'retire') return runCommand(COMMANDS.retire, args, output);
 
-    await writeJsonOutput(output, `${JSON.stringify(result, null, 2)}\n`);
+  if (name === 'read') return runCommand(COMMANDS.read, args, output);
 
-    return;
-  }
-
-  if (command === 'read') {
-    const result = await read(args, repo);
-
-    if (output.kind !== 'stdout') {
-      console.log(recordsText(result.sha, result.previews));
-    }
-
-    await writeJsonOutput(output, `${JSON.stringify(result, null, 2)}\n`);
-
-    return;
-  }
-
-  throw new UsageError(`unknown command: ${command ?? '(none)'}`);
+  throw new UsageError(`unknown command: ${name ?? '(none)'}`);
 };
 
 const main = async (argv: string[]): Promise<void> => {

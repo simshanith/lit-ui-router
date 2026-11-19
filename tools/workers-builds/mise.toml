@@ -4,11 +4,23 @@
 # first when invoking one standalone.
 
 [tasks.preview_deployment]
-# env: GH_TOKEN, GITHUB_REPOSITORY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
-description = "Post a Workers Builds preview build's URL as a GitHub Deployment on its commit"
+# env: GH_TOKEN, GITHUB_REPOSITORY.
+description = "Post a Workers Builds check run's preview URL as a GitHub Deployment on its commit"
 usage = '''
-flag "--details-url <details_url>" help="The Cloudflare check run's details_url, which names the worker and build" required=#true env="DETAILS_URL"
-flag "--sha <sha>" help="The check run's head sha; the build must have built it" required=#true env="HEAD_SHA"
-flag "--dry-run" help="Print the requests, post nothing" env="DRY_RUN"
+flag "--name <name>" help="The check run's name, Workers Builds: <worker>" required=#true env="CHECK_RUN_NAME"
+flag "--sha <sha>" help="The check run's head sha" required=#true env="HEAD_SHA"
+flag "--branch <branch>" help="The check suite's head branch" required=#true env="HEAD_BRANCH"
+flag "--summary <summary>" help="The check run's output.summary, which names the preview URL" required=#true env="CHECK_RUN_SUMMARY"
+flag "--details-url <details_url>" help="The check run's details_url, the build log" required=#true env="DETAILS_URL"
+flag "--dry-run" help="Print what would be posted and retired, post nothing" env="DRY_RUN"
 '''
-run = './preview-deployment.ts post --details-url "${usage_details_url?}" --sha "${usage_sha?}" ${usage_dry_run:+--dry-run}'
+run = './preview-deployment.ts post --name "${usage_name?}" --sha "${usage_sha?}" --branch "${usage_branch?}" --summary "${usage_summary?}" --details-url "${usage_details_url?}" ${usage_dry_run:+--dry-run}'
+
+[tasks.retire_preview_deployments]
+# env: GH_TOKEN, GITHUB_REPOSITORY.
+description = "Mark a closed branch's preview deployments inactive in every preview/<worker> environment"
+usage = '''
+flag "--branch <branch>" help="The closed pull request's head branch" required=#true env="HEAD_BRANCH"
+flag "--dry-run" help="Print the deployments that would be retired, retire nothing" env="DRY_RUN"
+'''
+run = './preview-deployment.ts retire --branch "${usage_branch?}" ${usage_dry_run:+--dry-run}'

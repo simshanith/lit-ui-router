@@ -200,20 +200,25 @@ until none of those branches remain.
 
 ### Preview deployments on GitHub
 
-[`preview-deployments.yml`](../.github/workflows/preview-deployments.yml) runs when a
-`Workers Builds: <worker>` check run succeeds. It runs
-[`preview-deployment.ts`](../tools/workers-builds/preview-deployment.ts) to find the Worker
-version that build uploaded, and records that version's URL as a GitHub Deployment in the
-`preview/<worker>` environment on the check run's commit. The build's own `preview_url` is the
-branch alias, so the tool finds the version through `GET /builds/builds?version_ids=`. Every PR
-shares the environment, so the deployments are transient and `auto_inactive` never retires them:
-the tool marks the branch's earlier deployments there inactive itself, matching the branch it
-records in each deployment's payload. A production build and a Workers Previews build get no deployment: the Previews Workers have
-preview URLs off and upload no Worker version.
+[`preview-deployments.yml`](../.github/workflows/preview-deployments.yml) runs
+[`preview-deployment.ts`](../tools/workers-builds/preview-deployment.ts) when a
+`Workers Builds: <worker>` check run succeeds. `post` reads the `Version ID:`, `Preview URL:` and
+`Preview Alias URL:` lines of the check run's summary, and records the preview URL as a GitHub
+Deployment in the `preview/<worker>` environment on the check run's commit, with the branch in
+its payload. It skips a `main` build, which is a production deploy, and a Workers Previews build
+whose summary names no URL. A successful branch build of any other Worker without a
+`Preview URL:` line fails the job, since that means the summary format changed.
+
+Every PR shares the environment, so the deployments are transient and `auto_inactive` never
+retires them. `post` marks the branch's deployments created before its own inactive, and the job
+runs one at a time per Worker. When a PR closes, the `retire` job runs `retire --branch` to
+mark the branch's deployments in every `preview/*` environment inactive. A `pull_request` run
+from a fork gets a read-only token, so that job skips forks; Workers Builds builds only this
+repository's branches.
 
 `./tools/workers-builds/preview-deployment.ts read --pr <number> --json` prints each Worker's
-recorded preview URL for a PR's head; `post --details-url <url> --dry-run` prints what the
-workflow would post for a build.
+recorded preview URL for a PR's head. `post --check-run <id> --dry-run` and
+`retire --branch <branch> --dry-run` print what the workflow would do, through `gh`.
 
 ### Frozen 1.x docs at `/v1/`
 
