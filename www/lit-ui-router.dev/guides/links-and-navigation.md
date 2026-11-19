@@ -16,6 +16,10 @@ For the full directive API summary and attribute-part details, see
 [Navigation Links](/packages/lit-ui-router#navigation-links) on the
 `lit-ui-router` package page.
 
+The snippets assume a router already running under `<ui-router>` with its states
+registered, as in [Quick Start](/packages/lit-ui-router#quick-start) or the
+[tutorial](/tutorial/helloworld).
+
 ## Declarative links with `uiSref`
 
 [`uiSref`](/reference/lit-ui-router/directives/uiSref) binds a state name,
@@ -44,15 +48,15 @@ middle-click, right-click → open in new tab) keep native browser behavior.
 The third argument accepts `assignHref` alongside `@uirouter/core`'s
 `TransitionOptions`:
 
-- `assignHref: 'auto'` writes `href` only to native HTML/SVG link elements
-  (`<a>`, `<area>`, SVG `<a>`). Use `'auto'` on `<button>`, `<tr>`, or `<div>`
-  so you do not attach an inert `href` attribute (this becomes the default in
-  2.0).
-- `assignHref: true` writes `href` to any element — needed for design-system
-  link custom elements like `<sp-link>` that forward `href` to an internal
-  anchor.
-- `assignHref: false` skips writing `href` entirely while keeping the click
-  handler.
+- `assignHref: true` is the 1.x default: `href` is written to whatever element
+  carries the directive. Pass it explicitly on a design-system link custom
+  element such as `<sp-link>`, which forwards `href` to an internal anchor, so
+  the link keeps its `href` when the default changes in 2.0.
+- `assignHref: 'auto'` writes `href` only where HTML defines one (`<a>`,
+  `<area>`, SVG `<a>`) and becomes the default in 2.0. Pass it on a
+  `<button>`, `<tr>` or `<div>` today: under the 1.x default those elements
+  get an inert `href`, and the development build warns once per element.
+- `assignHref: false` never writes `href`; the click still navigates.
 
 See [Design System Links](./design-system-links) for a live comparison of
 `true` and `'auto'`, and its table for `false`.
@@ -92,9 +96,9 @@ const nav = html`
 ### Wrapper elements and `ariaCurrentValue`
 
 Place `uiSrefActive` on a parent container (such as an `<li>`) to highlight the
-wrapper whenever any nested `uiSref` inside it is active. Non-link wrappers do
-not receive `aria-current` unless you opt in explicitly with
-`ariaCurrentValue`:
+wrapper whenever any link inside it is active. A non-link wrapper gets no
+`aria-current` unless you pass `ariaCurrentValue` on it, so the usual split is
+classes on the wrapper and `aria-current` on the link:
 
 ```ts check
 import { html } from 'lit';
@@ -113,6 +117,12 @@ const listItem = html`
 `;
 ```
 
+The object form marks an ancestor as well as the current page: the link above
+carries `aria-current="page"` at `users` and `aria-current="location"` at
+`users.detail`. A single token (`ariaCurrentValue: 'step'`) replaces `'page'`
+on exact match. [Accessible active links](/packages/lit-ui-router#accessible-active-links)
+covers every form.
+
 Pass `ariaCurrentValue: false` when your own code manages `aria-current`. You
 can also pass `state` (or `targetStates` built with `router.stateService.target()`)
 directly to `uiSrefActive` when highlighting an element that has no `uiSref`
@@ -130,6 +140,9 @@ against the view's owning state (the same syntax `@uirouter/core` uses in
 | `'^'`         | Parent state                                         |
 | `'^.sibling'` | Sibling state (up one level, then down to `sibling`) |
 | `'^.^.other'` | Two levels up, then `other`                          |
+
+Outside any `<ui-view>`, such as an app shell's nav, there is no base state for
+a relative name, so use full state names there.
 
 ```ts check
 import { html } from 'lit';
@@ -185,36 +198,15 @@ When a component already uses Lit's `classMap` or wants reactive booleans
 [`SrefStatusController`](/reference/lit-ui-router/controllers/SrefStatusController)
 instead of `uiSrefActive` or `srefActiveClass`:
 
-```ts check
-import { LitElement, html } from 'lit';
-import { property } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
-import { SrefStatusController, srefHref } from 'lit-ui-router';
-
-export class UsersNavItem extends LitElement {
-  @property({ type: Boolean }) locked = false;
-
-  private readonly status = new SrefStatusController(this, { state: 'users' });
-
-  override render() {
-    return html`
-      <a
-        href=${srefHref('users')}
-        class=${classMap({
-          'nav-link': true,
-          active: this.status.active,
-          disabled: this.locked,
-        })}
-        aria-current=${this.status.ariaCurrent()}
-        >Users</a
-      >
-    `;
-  }
-}
+```ts
+@property({ type: Boolean }) locked = false;
+private users = new SrefStatusController(this, { state: 'users' });
+// class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
+// aria-current=${this.users.ariaCurrent()}
 ```
 
-See [Active-link status](./reactive-components#active-link-status) for
-additional `SrefStatusController` options.
+See [Active-link status](./reactive-components#active-link-status) for the
+complete component example and additional `SrefStatusController` options.
 
 ## Programmatic navigation with `stateService`
 
@@ -232,17 +224,31 @@ await router.stateService.go('users.detail', { userId: '42' });
 // Replace the current history entry instead of pushing a new one
 await router.stateService.go('login', {}, { location: 'replace' });
 
-// Re-run resolves and re-enter the current state
+// Re-run every active state's resolves and re-enter them
 await router.stateService.reload();
 
-// Compute a URL without navigating (for copy-link buttons or emails)
-const url = router.stateService.href('users.detail', { userId: '42' });
+// Compute a URL without navigating; `absolute: true` adds the origin,
+// which a copied or emailed link needs
+const url = router.stateService.href(
+  'users.detail',
+  { userId: '42' },
+  { absolute: true },
+);
 ```
 
-Inside a routed component, read the router from `this.uiViewProps?.router` (or
-from `TransitionController` / `requestRouter` outside `<ui-view>`).
+`go` and `reload` return promises that reject when the transition does not
+finish: a hook aborted it, a newer navigation superseded it, or the target
+state does not exist. Catch the rejection where the next step depends on
+arriving. A `redirectTo` resolves with the state it ended on.
 
-Common `TransitionOptions` passed as the third argument to `stateService.go`:
+Inside a routed component, read the router from `this.uiViewProps?.router`
+(see [Reading params](./routed-components#reading-params)). A component outside
+`<ui-view>` gets it from a `TransitionController`'s `router`, or from
+`requestRouter(this)`, which is exported from `lit-ui-router/context` rather
+than the package root; see [Router discovery](./reactive-components#router-discovery).
+
+Common [`TransitionOptions`](https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html)
+passed as the third argument to `stateService.go`:
 
 | Option     | Effect                                                                           |
 | ---------- | -------------------------------------------------------------------------------- |
@@ -253,8 +259,9 @@ Common `TransitionOptions` passed as the third argument to `stateService.go`:
 
 ## Further reading
 
-- [Navigation Links](/packages/lit-ui-router#navigation-links) — complete
-  directive reference on the `lit-ui-router` package page
+- [Navigation Links](/packages/lit-ui-router#navigation-links) — the directive
+  summary, attribute-part forms and every `aria-current` option on the
+  `lit-ui-router` package page
 - [Design System Links](./design-system-links) — `assignHref: true` vs
   `srefHref` with custom link elements
 - [Routed Components](./routed-components) — reading state params via resolves
