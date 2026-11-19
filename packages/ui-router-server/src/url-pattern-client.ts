@@ -266,7 +266,10 @@ export class UrlPatternMatcher {
       path += param.raw ? encoded : encodeURIComponent(encoded);
     }
 
-    if (this.#engine.exec({ pathname: path }) === null) return null;
+    // The engine's own spelling of the path, so exec accepts what format builds.
+    const canonical = this.#engine.exec({ pathname: path })?.pathname.input;
+
+    if (canonical === undefined) return null;
 
     const query = [...details.values()]
       .filter((detail) => detail.param.isSearch())
@@ -275,7 +278,7 @@ export class UrlPatternMatcher {
 
     const hash = values['#'] ? `#${String(values['#'])}` : '';
 
-    return `${path}${query ? `?${query}` : ''}${hash}`;
+    return `${canonical}${query ? `?${query}` : ''}${hash}`;
   }
 }
 
@@ -348,6 +351,13 @@ const buildMatcher = (
     : parsed;
 
   const own = ownParams(router, state, parsed);
+  const inherited = new Set(parent?.parameters().map((param) => param.id));
+  const repeated = own.find((param) => inherited.has(param.id));
+
+  if (repeated)
+    throw new Error(
+      `State '${state.name}': duplicate parameter name '${repeated.id}' in URLPattern url '${chain.pathname}'`,
+    );
   const config = router.urlService.config;
 
   try {

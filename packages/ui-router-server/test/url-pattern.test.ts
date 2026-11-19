@@ -148,6 +148,17 @@ describe('urlPattern', () => {
     assert.throws(() => url('users'), /must start with '\/'/);
   });
 
+  it('rejects a query name that repeats a group or another query name', () => {
+    assert.throws(
+      () => url('/a/:id', { query: ['id'] }),
+      /URLPattern '\/a\/:id': duplicate parameter name 'id'/,
+    );
+    assert.throws(
+      () => url('/a', { query: ['q', 'q'] }),
+      /URLPattern '\/a': duplicate parameter name 'q'/,
+    );
+  });
+
   it('rejects an invalid query name', () => {
     assert.throws(
       () => url('/users', { query: ['a b'] }),
@@ -409,15 +420,45 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
     );
   });
 
-  it('names the state when the engine rejects the joined pattern', () => {
+  it('names the state when the engine rejects the pattern', () => {
+    assert.throws(
+      () => routerFor([{ name: 'a', url: url('/a/:id([)') }]),
+      /^Error: State 'a': /,
+    );
+  });
+
+  it('rejects a param id a parent url already declares', () => {
     assert.throws(
       () =>
         routerFor([
           { name: 'a', url: url('/a/:id') },
           { name: 'a.b', url: url('/b/:id') },
         ]),
-      /^Error: State 'a\.b': /,
+      /State 'a\.b': duplicate parameter name 'id' in URLPattern url '\/a\/:id\/b\/:id'/,
     );
+    assert.throws(
+      () =>
+        routerFor([
+          { name: 'a', url: url('/a', { query: ['sort'] }) },
+          { name: 'a.b', url: url('/b', { query: ['sort'] }) },
+        ]),
+      /State 'a\.b': duplicate parameter name 'sort'/,
+    );
+  });
+
+  it('formats the spelling the engine matches', () => {
+    const router = routerFor([
+      { name: 'cafe', url: url('/café/:id') },
+      { name: 'spaced', url: url('/a b') },
+    ]);
+
+    const href = router.stateService.href('cafe', { id: 'x y' });
+    assert.equal(href, '/caf%C3%A9/x%20y');
+    assert.deepEqual(coreMatch(router, href), {
+      state: 'cafe',
+      params: { id: 'x y' },
+    });
+    assert.equal(router.stateService.href('spaced'), '/a%20b');
   });
 });
 
@@ -618,13 +659,57 @@ describe('server tiers over urlPattern routes', () => {
       /group ':id' is required, so it can't declare a default/,
     );
     assert.throws(
+      () => compileRoutes([{ name: 'a', url: url('/a/:id([)') }]),
+      /^Error: Route 'a': /,
+    );
+  });
+
+  it('rejects a param id an ancestor url already declares', () => {
+    assert.throws(
       () =>
         compileRoutes([
           { name: 'a', url: url('/a/:id') },
           { name: 'a.b', url: url('/b/:id') },
         ]),
-      /^Error: Route 'a\.b': /,
+      /Route 'a\.b': duplicate parameter name 'id' in URLPattern url '\/a\/:id\/b\/:id'/,
     );
+    assert.throws(
+      () =>
+        compileRoutes([
+          { name: 'a', url: url('/a/:id') },
+          { name: 'a.b', url: url('/b', { query: ['id'] }) },
+        ]),
+      /Route 'a\.b': duplicate parameter name 'id'/,
+    );
+  });
+
+  it('formats the spelling the engine matches', async () => {
+    const routes = [
+      { name: 'cafe', url: url('/café/:id') },
+      { name: 'old', url: '/old/:id', redirectTo: 'cafe' },
+    ];
+
+    const [cafe] = compileRoutes(routes);
+    const href = formatRoute(cafe, { id: 'x y' });
+    assert.equal(href, '/caf%C3%A9/x%20y');
+    assert.deepEqual(execRoute(cafe, '/caf%C3%A9/x%20y'), { id: 'x y' });
+
+    const server = createServerRouter({
+      mounts: {
+        '/app': {
+          routes,
+          urlPattern: urlPatternCompiler,
+          ignoreDiagnostics: ['bareBaseNotFound'],
+        },
+      },
+    });
+
+    assert.deepEqual(await server.resolve('/app/old/7'), {
+      kind: 'redirect',
+      mount: '/app',
+      location: '/app/caf%C3%A9/7',
+      status: 302,
+    });
   });
 
   it('names the polyfill when the runtime has no URLPattern', () => {

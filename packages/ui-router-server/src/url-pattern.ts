@@ -267,21 +267,31 @@ export function urlPattern(
 
   if (!pathname.startsWith('/'))
     throw new Error(`URLPattern pathname '${pathname}' must start with '/'`);
+  const tokens = parsePathname(pathname);
   const query = [...(options.query ?? [])];
 
-  for (const name of query)
+  const names = new Set(
+    tokens.flatMap((token) => (token.kind === 'group' ? [token.name] : [])),
+  );
+
+  for (const name of query) {
     if (!QUERY_NAME.test(name))
       throw new Error(`URLPattern '${pathname}': invalid query name '${name}'`);
+
+    // A repeated id would let the query param overwrite the group's value.
+    if (names.has(name))
+      throw new Error(
+        `URLPattern '${pathname}': duplicate parameter name '${name}'`,
+      );
+    names.add(name);
+  }
 
   const declaration: UrlPatternDeclaration = Object.freeze({
     pathname,
     query: Object.freeze(query),
   });
 
-  parsedUrls.set(declaration, {
-    ...declaration,
-    tokens: parsePathname(pathname),
-  });
+  parsedUrls.set(declaration, { ...declaration, tokens });
 
   // SAFETY: the runtime value is the frozen declaration object, not a string; urlPatternOf and the url builders read it back.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the brand's one cast, keeping declaration sites cast-free

@@ -115,6 +115,14 @@ function compileUrlPattern(
     segments.push('');
   }
 
+  const ids = [...pathParams.map((param) => param.id), ...query];
+  const repeated = ids.find((id, index) => ids.indexOf(id) !== index);
+
+  if (repeated !== undefined)
+    throw new Error(
+      `${where}: duplicate parameter name '${repeated}' in URLPattern url '${pathname}'`,
+    );
+
   let engine: URLPattern;
 
   try {
@@ -164,9 +172,12 @@ function compileUrlPattern(
     )
       return null;
 
-    if (engine.exec({ pathname: built.path }) === null) return null;
+    // The engine's own spelling of the path, so exec accepts what format builds.
+    const canonical = engine.exec({ pathname: built.path })?.pathname.input;
 
-    return built.path + built.query + built.fragment;
+    return canonical === undefined
+      ? null
+      : canonical + built.query + built.fragment;
   };
 
   return Object.freeze({
