@@ -230,7 +230,7 @@ const indexPage = (
   <p>
     The ${RECENT_COUNT[DEFAULT_RECENT]} most recent stable releases, then the
     latest stable release of each package, grouped by role. Each package page
-    lists every version with its release notes.
+    lists every version, with notes for each stable release.
   </p>
   ${recent}
   ${byRole(packages).map(

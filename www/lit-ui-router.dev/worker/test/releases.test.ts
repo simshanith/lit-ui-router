@@ -1090,7 +1090,7 @@ describe('the /releases pages', () => {
 
     getByText(
       getByRole(doc.body, 'main'),
-      'The ten most recent stable releases, then the latest stable release of each package, grouped by role. Each package page lists every version with its release notes.',
+      'The ten most recent stable releases, then the latest stable release of each package, grouped by role. Each package page lists every version, with notes for each stable release.',
     );
   });
 
