@@ -25,7 +25,7 @@ npm install lit-ui-router lit @uirouter/core
 
 ## Quick Start
 
-```ts
+```ts check
 import {
   UIRouterLit,
   uiSref,
@@ -33,7 +33,14 @@ import {
   type LitStateDeclaration,
 } from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
-import { html, render } from 'lit';
+import { LitElement, html, render } from 'lit';
+
+class UserListElement extends LitElement {
+  override render() {
+    return html`<h1>Users</h1>`;
+  }
+}
+customElements.define('user-list', UserListElement);
 
 // 1. Create router and add location plugin
 const router = new UIRouterLit();
