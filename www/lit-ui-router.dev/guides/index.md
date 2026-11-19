@@ -16,6 +16,8 @@ client deployed across every point on the server-support spectrum.
 - [Location Plugins](./location-plugins) — choosing a URL strategy: hash,
   pushState, or the Navigation API; server rewrites, the `<base>` tag, and
   the `initial` rule
+- [State Parameters](./state-parameters) — path, query, typed, optional,
+  `squash`, dynamic, and non-URL parameters, plus custom parameter types
 - [Unmatched URLs (404)](./unmatched-urls) — route URLs that match no state
   to a deliberate 404 state with `urlService.rules.otherwise`
 

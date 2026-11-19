@@ -35,6 +35,7 @@ export type GuideTopic = (typeof GUIDE_TOPICS)[number]['id'];
 const GUIDES: Record<GuideTopic, NavLink[]> = {
   urls: [
     { text: 'Location Plugins', link: '/guides/location-plugins' },
+    { text: 'State Parameters', link: '/guides/state-parameters' },
     { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
   ],
   transitions: [
