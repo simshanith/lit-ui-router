@@ -38,7 +38,7 @@ router.start();
 
 render(
   html`<ui-router .uiRouter=${router}>
-    <nav>
+    <nav aria-label="Main">
       <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
         >Home</a
       >

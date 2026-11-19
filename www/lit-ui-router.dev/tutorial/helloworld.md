@@ -47,8 +47,9 @@ Vite's `lit-ts` template already sets both (see
 Here's the complete source code for this tutorial. Don't worry if it looks overwhelming - we'll break it down step by step below.
 
 ```typescript check
-import { html, LitElement, css, render } from 'lit';
+import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import {
   UIRouterLit,
@@ -137,8 +138,9 @@ Let's break down the code step by step.
 ### ES Module Imports
 
 ```typescript check
-import { html, LitElement, css, render } from 'lit';
+import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import {
   UIRouterLit,

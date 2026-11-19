@@ -38,12 +38,12 @@ earns. That is the axis this app ships today, end to end; the
 [Server-Side Routing guide](./guides/server-route-matching) is the deep dive.
 
 A second axis — **how the page body is rendered** — is orthogonal: it rides the
-same routing spine and returns the identical verdict at every setting. Today
-the sample app mounts are **client-rendered** throughout; build-time
-prerendering and request-time server rendering live in
-[`lit-ui-router-ssr`](/packages/lit-ui-router-ssr) (see
-[Prerender with Vite](./guides/prerender-with-vite) and
-[Prerender with Eleventy](./guides/prerender-with-eleventy)).
+same routing spine and returns the identical verdict at every setting. Today the sample app mounts are **client-rendered** throughout; build-time
+prerendering ([Prerender with Vite](./guides/prerender-with-vite),
+[Prerender with Eleventy](./guides/prerender-with-eleventy)) and request-time
+server rendering
+([Rendering one page per request](/packages/lit-ui-router-ssr#rendering-one-page-per-request))
+live in [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr).
 
 ## Source
 

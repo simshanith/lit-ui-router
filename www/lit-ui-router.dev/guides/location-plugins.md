@@ -107,11 +107,11 @@ link:
 router.urlService.rules.initial({ state: 'home' });
 ```
 
-`initial` only matches before the first transition has run. If you also
-register an `otherwise` rule for 404s, returning to the app root later (for
-example via Back) falls through to `otherwise`; match the empty path with
-`urlService.rules.when(/^\/?$/, ...)` and `location: 'replace'` instead — see
-[Unmatched URLs (404)](./unmatched-urls#caveat-the-app-root). Under the hash
+`initial` matches the empty path, and only before the first transition has run.
+If you also register an `otherwise` rule for 404s, returning to the app root
+later (for example via Back) falls through to `otherwise`; match the empty path
+with `urlService.rules.when(/^\/?$/, ...)` and `location: 'replace'` instead —
+see [Unmatched URLs (404)](./unmatched-urls#caveat-the-app-root). Under the hash
 plugin `replace` is a no-op, so the root keeps its history entry — see
 [`replace` under the hash plugin](./unmatched-urls#replace-under-the-hash-plugin).
 

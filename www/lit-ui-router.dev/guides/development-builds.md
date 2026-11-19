@@ -22,20 +22,20 @@ message strings included. A production bundle cannot be made to print them.
 
 ## Which packages ship it
 
-| Package                                | Two builds | Why                                                           |
-| -------------------------------------- | ---------- | ------------------------------------------------------------- |
-| `lit-ui-router`                        | yes        | five development warnings                                     |
-| `lit-ui-router-effect`                 | yes        | one development warning                                       |
-| `lit-ui-router-mobx`                   | yes        | one development warning                                       |
-| `lit-ui-router-signals`                | yes        | one development warning                                       |
-| `lit-ui-router-ssr`                    | yes        | twelve development warnings; also gated under `node`          |
-| `ui-router-server`                     | yes        | four development warnings (three prefixes); also under `node` |
-| `ui-router-effect`                     | no         | no runtime warnings to fold out                               |
-| `ui-router-mobx`                       | no         | no runtime warnings to fold out                               |
-| `ui-router-signals`                    | no         | no runtime warnings to fold out                               |
-| `ui-router-navigation-location-plugin` | no         | no runtime warnings to fold out                               |
-| `ui-router-registry`                   | no         | types only — emits no JavaScript                              |
-| `eslint-plugin-lit-ui-router`          | no         | a lint plugin — it never runs in your app bundle              |
+| Package                                | Two builds | Why                                                  |
+| -------------------------------------- | ---------- | ---------------------------------------------------- |
+| `lit-ui-router`                        | yes        | five development warnings                            |
+| `lit-ui-router-effect`                 | yes        | one development warning                              |
+| `lit-ui-router-mobx`                   | yes        | one development warning                              |
+| `lit-ui-router-signals`                | yes        | one development warning                              |
+| `lit-ui-router-ssr`                    | yes        | twelve development warnings; also gated under `node` |
+| `ui-router-server`                     | yes        | four development warnings; also gated under `node`   |
+| `ui-router-effect`                     | no         | no runtime warnings to fold out                      |
+| `ui-router-mobx`                       | no         | no runtime warnings to fold out                      |
+| `ui-router-signals`                    | no         | no runtime warnings to fold out                      |
+| `ui-router-navigation-location-plugin` | no         | no runtime warnings to fold out                      |
+| `ui-router-registry`                   | no         | types only — emits no JavaScript                     |
+| `eslint-plugin-lit-ui-router`          | no         | a lint plugin — it never runs in your app bundle     |
 
 The split exists where there is something to strip. A package with a single
 build is not missing a feature.
