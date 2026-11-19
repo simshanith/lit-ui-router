@@ -12,8 +12,10 @@
  * The subset is the one both directions can serve, since URLPattern matches
  * but has no API to build a url back: literal text, `:name` groups and
  * `:name(regexp)` groups, in `pathname` only. Wildcards (`*`), unnamed or
- * `{}` groups, modifiers (`?`, `*`, `+`) and every other component are
- * rejected when declared. A group takes a regexp or a declared param `type`,
+ * `{}` groups, modifiers (`?`, `*`, `+`), literal `.` and `..` segments and
+ * every other component are rejected when declared. A path the engine
+ * would rewrite before matching (dot segments, unencoded characters) never
+ * matches, as it never matches a string url. A group takes a regexp or a declared param `type`,
  * not both, and never a default or array mode. Query params are declared by
  * name, as ui-router's `?q&page`, and keep core's semantics.
  *
@@ -128,6 +130,8 @@ const OTHER_COMPONENTS = [
 
 const NAME = /[A-Za-z_]\w*/y;
 
+const DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i;
+
 const QUERY_NAME = /^\w+([-.]+\w+)*$/;
 
 const closingParen = (pathname: string, open: number): number => {
@@ -182,6 +186,17 @@ const parsePathname = (pathname: string): UrlPatternToken[] => {
   let index = 0;
 
   const flush = (): void => {
+    // The engine resolves a dot segment inside literal text, so the pattern would match another path.
+    if (
+      text
+        .split('/')
+        .slice(1)
+        .some((piece) => DOT_SEGMENT.test(piece))
+    )
+      throw new Error(
+        `URLPattern pathname '${pathname}': a '.' or '..' segment is outside the supported subset (URLPattern resolves it away)`,
+      );
+
     if (text) tokens.push({ kind: 'text', text });
     text = '';
   };

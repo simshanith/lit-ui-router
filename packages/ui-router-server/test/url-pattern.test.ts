@@ -114,6 +114,10 @@ describe('urlPattern', () => {
     ['/users{/:id}?', /'\{' at index 6/],
     ['/users/:id(\\d+', /unclosed '\('/],
     ['/users/:', /a ':' without a \\w name at index 7/],
+    ['/a/../b', /a '\.' or '\.\.' segment is outside the supported subset/],
+    ['/a/.:ext', /a '\.' or '\.\.' segment/],
+    ['/a/%2E/b', /a '\.' or '\.\.' segment/],
+    ['/:id/..', /a '\.' or '\.\.' segment/],
   ] as const)
     it(`rejects ${pathname}`, () => {
       assert.throws(() => url(pathname), reason);
@@ -128,6 +132,16 @@ describe('urlPattern', () => {
       () => url(new URLPattern({ pathname: '/a', hostname: 'x.test' })),
       /component 'hostname'/,
     );
+  });
+
+  it('keeps dots that are not a whole segment', () => {
+    for (const pathname of [
+      '/:name.:ext',
+      '/:name..',
+      '/.well-known/x',
+      '/a/..b',
+    ])
+      assert.equal(urlPatternOf(url(pathname))?.pathname, pathname);
   });
 
   it('rejects relative pathnames', () => {
@@ -436,6 +450,12 @@ describe('server tiers over urlPattern routes', () => {
     '/about',
     '/time/:now',
     '/nope',
+    // Paths the engine would rewrite before matching: no route of either kind takes them.
+    '/users/../about',
+    '/legacy/%2e%2E/about',
+    '/./about',
+    '/by/a b',
+    '/by/é',
   ];
 
   it('scan, trie and a core router with the plugin agree on a mixed table', () => {
@@ -469,6 +489,34 @@ describe('server tiers over urlPattern routes', () => {
         );
       }
     }
+  });
+
+  it('never matches a path the engine would rewrite first', () => {
+    const router = routerFor(mixedTable());
+    const routes = compileRoutes(mixedTable());
+
+    for (const path of ['/users/../about', '/./about', '/by/a b']) {
+      assert.equal(matchRoute(routes, path), null, path);
+      assert.equal(coreMatch(router, path), null, path);
+    }
+
+    assert.equal(matchRoute(routes, '/by/a%20b')?.state, 'slug');
+  });
+
+  it('expresses literals the engine keeps as written in the trie', () => {
+    const routes = compileRoutes([
+      { name: 'bracket', url: url('/docs/[id]') },
+      { name: 'pipe', url: url('/a|b/:id') },
+      { name: 'backslash', url: url('/a\\\\b') },
+    ]);
+
+    const trie = compileRouteTrie(routes);
+    assert.deepEqual(trie.inexpressible, []);
+
+    for (const path of ['/docs/[id]', '/a|b/1', '/a\\b', '/docs/%5Bid%5D'])
+      assert.deepEqual(trie.match(path), matchRoute(routes, path), path);
+    assert.equal(trie.match('/docs/[id]')?.state, 'bracket');
+    assert.equal(trie.match('/a\\b')?.state, 'backslash');
   });
 
   it('keeps routes the trie would mis-prune out of it', () => {

@@ -200,7 +200,8 @@ export class UrlPatternMatcher {
   exec(path: string, search: RawParams = {}, hash?: string): RawParams | null {
     const match = this.#engine.exec({ pathname: path });
 
-    if (match === null) return null;
+    // The engine rewrites a non-canonical path before matching; a string url never does.
+    if (match === null || match.pathname.input !== path) return null;
     const values: RawParams = {};
 
     for (const param of this.parameters()) {

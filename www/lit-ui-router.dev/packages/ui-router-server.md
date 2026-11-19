@@ -910,7 +910,11 @@ string urls loads no URLPattern code.
 
 - **Subset:** what can also be formatted back into a url, since `URLPattern` only matches: literal
   text, `:name` groups and `:name(regexp)` groups, in `pathname` only. `urlPattern()` throws for a
-  wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, and any other component.
+  wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, a literal `.` or `..`
+  segment, and any other component.
+- **Canonical paths:** `URLPattern` rewrites a path before matching it: it resolves dot segments
+  and percent-encodes characters such as a space. A path it would rewrite doesn't match, as it
+  doesn't match a string url, so the scan, the trie and the client agree on `/users/../about`.
 - **Params:** a group's string goes through the state's declared param, so
   `params: { id: { type: 'int' } }` matches `/users/42` as `42` and doesn't match `/users/abc`. A
   group takes a regexp or a declared `type`, not both, and no default or array mode. Query params

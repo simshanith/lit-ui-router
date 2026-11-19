@@ -42,8 +42,8 @@ import type { ParsedUrlPattern } from './url-pattern.ts';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 
-// Characters a URL path keeps as written; URLPattern encodes any other literal.
-const pathSafe = /^[\w\-.~!$&'()*+,;=:@/%]*$/;
+// The printable ASCII a URL path keeps as written; URLPattern encodes any other literal.
+const pathSafe = /^[\w\-.~!$&'()*+,;=:@/%[\]|\\]*$/;
 
 // Why the route trie can't express the pattern, if it can't.
 const inexpressibleOf = (
@@ -140,7 +140,8 @@ function compileUrlPattern(
   const exec = (path: string): RawParams | null => {
     const match = engine.exec({ pathname: path });
 
-    if (match === null) return null;
+    // The engine rewrites a non-canonical path before matching; a string url never does, nor the trie.
+    if (match === null || match.pathname.input !== path) return null;
     const { groups } = match.pathname;
 
     const values = decodeCaptures(

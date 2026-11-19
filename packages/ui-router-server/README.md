@@ -276,8 +276,9 @@ const server = createServerRouter({
 
 The subset is what can also be formatted back into a url, since `URLPattern` only matches:
 literal text, `:name` groups and `:name(regexp)` groups, in `pathname` only. `urlPattern()` throws
-for a wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, and any other
-component. A group takes a regexp or a declared param `type`, not both, and no default or array
+for a wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, a literal `.` or `..`
+segment, and any other component. A path the engine would rewrite before matching (dot segments,
+unencoded characters) doesn't match, as it doesn't match a string url. A group takes a regexp or a declared param `type`, not both, and no default or array
 mode. Query params are declared by name and keep core's types, defaults and squash. A child
 `urlPattern()` url joins its parent's pathname; a chain can't mix it with string urls, in either
 direction. `href()` and redirect targets return `null` for values the pattern rejects. Apply the
