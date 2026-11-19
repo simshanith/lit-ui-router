@@ -39,6 +39,7 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
   ],
   transitions: [
     { text: 'Route Guards', link: '/guides/route-guards' },
+    { text: 'Redirects', link: '/guides/redirects' },
     {
       text: 'Loading and Error Views',
       link: '/guides/loading-and-error-views',
