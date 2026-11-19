@@ -67,6 +67,7 @@
 /packages/ui-router-server#response-states lit-ui-router-ssr,ui-router-server
 /packages/ui-router-server#sharing-states-with-the-client ui-router-server
 /packages/ui-router-server#trailing-slashes ui-router-server
+/packages/ui-router-server#urlpattern-urls ui-router-server
 /packages/ui-router-server#values-beyond-plain-json lit-ui-router-ssr,ui-router-server
 /packages/ui-router-server#when-to-use-it ui-router-server
 /packages/ui-router-signals ui-router-signals
