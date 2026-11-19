@@ -148,6 +148,10 @@ const workspaces = {
     entry: ['src/steps/*.pnpmfile.mjs'],
   },
   'tools/shared': { entry: ['src/**/*.test-d.ts'] },
+  'tools/workers-builds': {
+    // run by path from the member's mise.toml, which knip does not read
+    entry: ['preview-deployment.ts'],
+  },
   'www/lit-ui-router.dev': {
     // is-server.ts is the wrangler alias target for lit-html/is-server.js
     entry: ['.vitepress/vite.config.ts', 'worker/is-server.ts'],

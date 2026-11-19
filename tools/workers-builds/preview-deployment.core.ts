@@ -225,13 +225,37 @@ export function listDeploymentsArgs(
   return ['api', `repos/${repo}/deployments?${query.toString()}`];
 }
 
-/** argv for `gh api` listing every deployment, all pages as one array per page. */
-export function allDeploymentsArgs(repo: string): string[] {
+/** argv for `gh api` printing the repo's environment names, one per line. */
+export function environmentsArgs(repo: string): string[] {
+  return [
+    'api',
+    '--paginate',
+    `repos/${repo}/environments?per_page=100`,
+    '--jq',
+    '.environments[].name',
+  ];
+}
+
+/** The `preview/*` names among `environmentsArgs` output. */
+export function previewEnvironments(stdout: string): string[] {
+  return stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((name) => name.startsWith(ENVIRONMENT_PREFIX));
+}
+
+/** argv for `gh api` listing every deployment in `environment`, as one array per page. */
+export function environmentDeploymentsArgs(
+  repo: string,
+  environment: string,
+): string[] {
+  const query = new URLSearchParams({ environment, per_page: '100' });
+
   return [
     'api',
     '--paginate',
     '--slurp',
-    `repos/${repo}/deployments?per_page=100`,
+    `repos/${repo}/deployments?${query.toString()}`,
   ];
 }
 
@@ -329,7 +353,7 @@ export function deploymentsFromApi(json: string): GitHubDeployment[] {
   );
 }
 
-/** An `allDeploymentsArgs` response, flattened and validated. */
+/** An `environmentDeploymentsArgs` response, flattened and validated. */
 export function deploymentPagesFromApi(json: string): GitHubDeployment[] {
   return parsed(
     'GitHub deployments pages',

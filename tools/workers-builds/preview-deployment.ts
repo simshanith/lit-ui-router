@@ -23,7 +23,7 @@ import {
   writeJsonOutput,
 } from '@tools/cli/json-output.ts';
 import { messageOf } from '@tools/shared/errors.ts';
-import { type Exec, defaultExec } from '@tools/shared/exec.ts';
+import { type Exec, defaultCapture, defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '@tools/shared/gh.ts';
 
 import { isCommitSha } from './pages-deploy.core.ts';
@@ -33,7 +33,6 @@ import {
   type Preview,
   type PreviewRecord,
   type Skip,
-  allDeploymentsArgs,
   branchDeployments,
   checkRunArgs,
   checkRunFromApi,
@@ -44,6 +43,8 @@ import {
   deploymentFromApi,
   deploymentPagesFromApi,
   deploymentsFromApi,
+  environmentDeploymentsArgs,
+  environmentsArgs,
   existingDeployment,
   inactiveStatusArgs,
   latestPreviewDeployments,
@@ -51,6 +52,7 @@ import {
   listDeploymentsArgs,
   needsInactive,
   prHeadArgs,
+  previewEnvironments,
   previewFromCheckRun,
   previewRecord,
   recordsText,
@@ -125,38 +127,25 @@ async function postPreview(
   preview: Preview,
   dryRun: boolean,
 ): Promise<Posted> {
-  const environment = preview.environment;
+  const listed = await environmentDeployments(exec, repo, preview.environment);
+  const found = existingDeployment(listed, preview);
+  let current = found;
 
-  const onSha = await exec(
-    'gh',
-    listDeploymentsArgs(repo, { sha: preview.sha, environment }),
-  );
-
-  const found = existingDeployment(deploymentsFromApi(onSha.stdout), preview);
-  let id = found?.id ?? null;
-
-  if (id === null && !dryRun) {
+  if (current === undefined && !dryRun) {
     const created = await exec('gh', createDeploymentArgs(repo, preview));
 
-    id = deploymentFromApi(created.stdout).id;
-    await exec('gh', createStatusArgs(repo, id, preview));
+    current = deploymentFromApi(created.stdout);
+    await exec('gh', createStatusArgs(repo, current.id, preview));
   }
 
-  const listed = deploymentsFromApi(
-    (await exec('gh', listDeploymentsArgs(repo, { environment }))).stdout,
-  );
-
-  const current = listed.find((deployment) => deployment.id === id);
-
+  // A dry run's deployment would be the newest, so every listed one of the branch is older.
   const older =
     current === undefined
-      ? branchDeployments(listed, preview.branch).filter(
-          (deployment) => deployment.environment === environment,
-        )
+      ? branchDeployments(listed, preview.branch)
       : supersededDeployments(listed, current, preview.branch);
 
   return {
-    id,
+    id: current?.id ?? null,
     existing: found !== undefined,
     deactivated: await deactivate(
       exec,
@@ -166,6 +155,17 @@ async function postPreview(
       dryRun,
     ),
   };
+}
+
+/** Every deployment in `environment`, all pages, read with no output ceiling. */
+async function environmentDeployments(
+  exec: Exec,
+  repo: string,
+  environment: string,
+): Promise<GitHubDeployment[]> {
+  const pages = await exec('gh', environmentDeploymentsArgs(repo, environment));
+
+  return deploymentPagesFromApi(pages.stdout);
 }
 
 /** The `post` flags as a check run: fetched by id, or as the workflow passes the event's fields. */
@@ -239,7 +239,7 @@ const post = async (args: string[], repo: string): Promise<PostResult> => {
   if ('skip' in preview) return preview;
 
   const dryRun = values['dry-run'];
-  const posted = await postPreview(defaultExec, repo, preview, dryRun);
+  const posted = await postPreview(defaultCapture, repo, preview, dryRun);
 
   return { preview, dryRun, ...posted };
 };
@@ -290,13 +290,24 @@ const retire = async (args: string[], repo: string): Promise<RetireResult> => {
 
   await ensureGh();
 
-  const { stdout } = await defaultExec('gh', allDeploymentsArgs(repo));
+  const environments = previewEnvironments(
+    (await defaultExec('gh', environmentsArgs(repo))).stdout,
+  );
+
+  const deployments: GitHubDeployment[] = [];
+
+  for (const environment of environments) {
+    deployments.push(
+      ...(await environmentDeployments(defaultCapture, repo, environment)),
+    );
+  }
+
   const dryRun = values['dry-run'];
 
   const deactivated = await deactivate(
     defaultExec,
     repo,
-    branchDeployments(deploymentPagesFromApi(stdout), branch),
+    branchDeployments(deployments, branch),
     'Pull request closed',
     dryRun,
   );

@@ -210,8 +210,8 @@ whose summary names no URL. A successful branch build of any other Worker withou
 `Preview URL:` line fails the job, since that means the summary format changed.
 
 Every PR shares the environment, so the deployments are transient and `auto_inactive` never
-retires them. `post` marks the branch's deployments created before its own inactive, and the job
-runs one at a time per Worker. When a PR closes, the `retire` job runs `retire --branch` to
+retires them. `post` reads every page of the environment's deployments and marks the branch's
+deployments created before its own inactive, and the job runs one at a time per Worker. When a PR closes, the `retire` job runs `retire --branch` to
 mark the branch's deployments in every `preview/*` environment inactive. A `pull_request` run
 from a fork gets a read-only token, so that job skips forks; Workers Builds builds only this
 repository's branches.

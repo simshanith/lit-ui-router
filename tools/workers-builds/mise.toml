@@ -14,7 +14,11 @@ flag "--summary <summary>" help="The check run's output.summary, which names the
 flag "--details-url <details_url>" help="The check run's details_url, the build log" required=#true env="DETAILS_URL"
 flag "--dry-run" help="Print what would be posted and retired, post nothing" env="DRY_RUN"
 '''
-run = './preview-deployment.ts post --name "${usage_name?}" --sha "${usage_sha?}" --branch "${usage_branch?}" --summary "${usage_summary?}" --details-url "${usage_details_url?}" ${usage_dry_run:+--dry-run}'
+# DRY_RUN=false exports usage_dry_run as "false", so only "true" adds the flag.
+run = '''
+if [ "${usage_dry_run:-}" = true ]; then set -- --dry-run; fi
+exec ./preview-deployment.ts post --name "${usage_name?}" --sha "${usage_sha?}" --branch "${usage_branch?}" --summary "${usage_summary?}" --details-url "${usage_details_url?}" "$@"
+'''
 
 [tasks.retire_preview_deployments]
 # env: GH_TOKEN, GITHUB_REPOSITORY.
@@ -23,4 +27,7 @@ usage = '''
 flag "--branch <branch>" help="The closed pull request's head branch" required=#true env="HEAD_BRANCH"
 flag "--dry-run" help="Print the deployments that would be retired, retire nothing" env="DRY_RUN"
 '''
-run = './preview-deployment.ts retire --branch "${usage_branch?}" ${usage_dry_run:+--dry-run}'
+run = '''
+if [ "${usage_dry_run:-}" = true ]; then set -- --dry-run; fi
+exec ./preview-deployment.ts retire --branch "${usage_branch?}" "$@"
+'''

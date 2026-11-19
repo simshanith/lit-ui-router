@@ -18,6 +18,7 @@ import {
   latestPreviewDeployments,
   needsInactive,
   parseSummary,
+  previewEnvironments,
   previewFromCheckRun,
   previewRecord,
   supersededDeployments,
@@ -294,6 +295,15 @@ describe('deployments', () => {
     assert.deepEqual(
       branchDeployments(listed, branch).map(({ id }) => id),
       [20, 10, 9, 8, 6],
+    );
+  });
+
+  it('retires across preview environments only', () => {
+    assert.deepEqual(
+      previewEnvironments(
+        'bump-version\npreview/lit-ui-router\npublish\npreview/release-diffs\n',
+      ),
+      ['preview/lit-ui-router', 'preview/release-diffs'],
     );
   });
 
