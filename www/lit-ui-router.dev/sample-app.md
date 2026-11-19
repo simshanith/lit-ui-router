@@ -1,35 +1,64 @@
 ---
 title: Sample App
-description: The lit-ui-router sample app — a webmail + contacts client — and every live mount it runs behind on lit-ui-router.dev, one per point on the server-support spectrum
+description: Overview and live mounts of the lit-ui-router sample app — a webmail and contacts client built in Vanilla, MobX, Effect, and Signals variants
 type: index
 ---
 
 # Sample App
 
-Every guide here is grounded in one running example: a small **webmail +
-contacts client** built with lit-ui-router. It is deployed several times over
-on lit-ui-router.dev — the same app (or a deliberate anti-pattern of it) behind
-different server configurations — so each mount is a live point on the
-[server-support spectrum](./guides/server-route-matching#the-server-support-spectrum).
+The sample app is a **webmail + contacts client** that puts lit-ui-router's
+guides together in one running application: nested and named views, protected
+routes with a login flow, lazy-loaded feature modules, sticky states, unsaved-changes
+guards, 404 handling, and a live feature-flags panel for switching location
+plugins.
+
+Authentication is mocked locally — pick any user and enter `password` to sign
+in.
+
+## What it demonstrates
+
+| Feature                              | Source file                                                                                                                                                                                                                                                          | Guide                                                                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Route guards & login redirect        | [`requiresAuth.hook.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/global/requiresAuth.hook.ts), [`Login.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/Login.ts)         | [Route Guards](./guides/route-guards)                                                                                        |
+| Lazy-loaded `.**` future states      | [`main/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/states.ts)                                                                                                                                              | [Routed Components](./guides/routed-components#lazy-load-a-whole-feature-with-a-future-state)                                |
+| Named views (`nav`, `header`, main)  | [`main/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/states.ts), [`mymessages/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/mymessages/states.ts)         | [Named Views](./guides/named-views)                                                                                          |
+| Unsaved-changes guard (`uiCanExit`)  | [`contacts/EditContact.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/contacts/EditContact.ts)                                                                                                                            | [Component Lifecycle Hooks](./guides/component-lifecycle#uicanexit-confirm-or-block-navigation)                              |
+| Sticky states & deep state redirect  | [`contacts/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/contacts/states.ts), [`mymessages/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/mymessages/states.ts) | [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-states), [`@uirouter/dsr`](https://github.com/ui-router/dsr) |
+| Location plugins & runtime switching | [`prefs/FeatureFlagsPanel.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/prefs/FeatureFlagsPanel.ts)                                                                                                                      | [Location Plugins](./guides/location-plugins)                                                                                |
+| Unmatched URLs & server verdicts     | [`main/NotFound.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/NotFound.ts), [`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)                               | [Unmatched URLs (404)](./guides/unmatched-urls), [Server-Side Routing](./guides/server-route-matching)                       |
+
+### Devtools and visualizer
+
+The sample app includes an in-repo devtools panel showing the state tree and
+each transition. Append `?feature-enable-visualizer=true` to any mount's URL to
+also load [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) (add
+`&feature-enable-devtools=false` to run the visualizer on its own).
 
 ## Live mounts
 
-| Mount                                                                | Level          | What it shows                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <a href="/app" target="_self">`/app`</a>                             | 3+4 · flagship | The **route-aware server**: the shell for real routes, computed 302s, and a real **404** for everything else. Vanilla reactivity.                                                                                                |
-| <a href="/app-mobx" target="_self">`/app-mobx`</a>                   | 3+4 · flagship | The same app and the same verdicts, with [MobX bindings](./packages/lit-ui-router-mobx) for state — routing is identical, so this varies the client-state axis, not a routing one.                                               |
-| <a href="/app-effect" target="_self">`/app-effect`</a>               | 3+4 · flagship | The same app and the same verdicts again, with state in [Effect](https://effect.website) `SubscriptionRef`s — a third point on the client-state axis, routing unchanged.                                                         |
-| <a href="/app-signals" target="_self">`/app-signals`</a>             | 3+4 · flagship | The same app and the same verdicts, with state in [TC39 Signals](./packages/signals) through `@lit-labs/signals` — a fourth point on the client-state axis, routing unchanged.                                                   |
-| <a href="/app-hash" target="_self">`/app-hash`</a>                   | 1 · hash       | [Hash location](./guides/location-plugins#hash-urls) done right: the route lives in the fragment, so the server serves the shell at **200** at the mount root and never redirects it. Needs no routing verdicts — and shows why. |
-| <a href="/not-found-naive" target="_self">`/not-found-naive`</a>     | 2 · exhibit    | The **anti-pattern baseline**: every path answers **200** with the shell, no matching at all — the soft-404 fallback most SPAs ship. `noindex`.                                                                                  |
-| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4 · exhibit    | **Shell-at-404**: real routes serve the shell at **200**; only a genuine miss serves the app shell at an honest **404**, where the client renders its in-app 404 view at the retained URL. `noindex`.                            |
-| <a href="/simulated-routing" target="_self">`/simulated-routing`</a> | 5 · exhibit    | Every verdict computed by a **real headless `@uirouter/core` router** replaying the URL per request — redirects and `otherwise()` run as real rules. `noindex`.                                                                  |
+The same routing table is deployed in four client-state variants (all behind the
+same route-aware edge worker) plus a hash-location build:
 
-The three `noindex` **exhibits** exist to teach server semantics side by side;
-each ships its own base-baked build (so the client renders real routes under
-the mount) and stays out of the search index. `/app`, `/app-mobx`,
-`/app-effect`, `/app-signals`, and
-`/app-hash` are the real, indexable app.
+| Mount                                                    | Client state & routing                                                                                                                                                                 |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="/app" target="_self">`/app`</a>                 | **Vanilla** (`TransitionController`) — flagship route-aware server (shell for real routes, computed 302s, real 404s).                                                                  |
+| <a href="/app-mobx" target="_self">`/app-mobx`</a>       | **[MobX](./packages/lit-ui-router-mobx)** — identical routes and server verdicts, with client state in MobX stores.                                                                    |
+| <a href="/app-effect" target="_self">`/app-effect`</a>   | **[Effect](./packages/lit-ui-router-effect)** — identical routes and server verdicts, with client state in `SubscriptionRef`s.                                                         |
+| <a href="/app-signals" target="_self">`/app-signals`</a> | **[Signals](./packages/signals)** — identical routes and server verdicts, with client state in TC39 Signals via `@lit-labs/signals`.                                                   |
+| <a href="/app-hash" target="_self">`/app-hash`</a>       | **[Hash location](./guides/location-plugins#hash-urls)** — the route lives in the fragment, so the server serves the shell at **200** at the mount root and needs no routing verdicts. |
+
+### Server-semantics exhibits
+
+Three additional `noindex` mounts deploy the same app behind different server
+configurations so you can compare each point on the
+[server-support spectrum](./guides/server-route-matching#the-server-support-spectrum)
+side by side:
+
+| Mount                                                                | Level       | What it shows                                                                                                                                                                     |
+| -------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="/not-found-naive" target="_self">`/not-found-naive`</a>     | 2 · exhibit | The **anti-pattern baseline**: every path answers **200** with the shell, no matching at all — the soft-404 fallback most SPAs ship. `noindex`.                                   |
+| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4 · exhibit | **Shell-at-404**: real routes serve the shell at **200**; only a genuine miss serves the app shell at an honest **404**, where the client renders its in-app 404 view. `noindex`. |
+| <a href="/simulated-routing" target="_self">`/simulated-routing`</a> | 5 · exhibit | Every verdict computed by a **real headless `@uirouter/core` router** replaying the URL per request — redirects and `otherwise()` run as real rules. `noindex`.                   |
 
 ## Two axes, one app
 
@@ -38,8 +67,9 @@ earns. That is the axis this app ships today, end to end; the
 [Server-Side Routing guide](./guides/server-route-matching) is the deep dive.
 
 A second axis — **how the page body is rendered** — is orthogonal: it rides the
-same routing spine and returns the identical verdict at every setting. Today the sample app mounts are **client-rendered** throughout; build-time
-prerendering ([Prerender with Vite](./guides/prerender-with-vite),
+same routing spine and returns the identical verdict at every setting. Today the
+sample app mounts are **client-rendered** throughout; build-time prerendering
+([Prerender with Vite](./guides/prerender-with-vite),
 [Prerender with Eleventy](./guides/prerender-with-eleventy)) and request-time
 server rendering
 ([Rendering one page per request](/packages/lit-ui-router-ssr#rendering-one-page-per-request))
@@ -47,11 +77,21 @@ live in [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr).
 
 ## Source
 
-- **Routing projection** — the shared route / redirect / mount tables the edge
-  imports:
-  [`apps/sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)
-- **App implementation** — shared across the vanilla, MobX, Effect, Signals,
-  and hash builds:
+Compare the four client-state entry points side by side against the shared
+routing and UI layers:
+
+- **Vanilla app** —
+  [`apps/sample-app-lit-vanilla`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-vanilla)
+- **MobX app** —
+  [`apps/sample-app-lit-mobx`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-mobx)
+- **Effect app** —
+  [`apps/sample-app-lit-effect`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-effect)
+- **Signals app** —
+  [`apps/sample-app-lit-signals`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-signals)
+- **Shared app implementation** —
   [`apps/sample-app-shared`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-shared)
+- **Shared routing projection** — the route, redirect, and mount tables the edge
+  worker imports:
+  [`apps/sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)
 - **Edge worker** — turns each verdict into HTTP:
   [`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)
