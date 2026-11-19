@@ -259,7 +259,7 @@ describe('the view map beside the Map', () => {
 
     // The views sit after the states, clear of the popover's column at the dock's end.
     // SAFETY: the trees are drawn inside the Map's room
-    const room = states.closest('.map-scroll') as HTMLElement;
+    const room = states.closest<HTMLElement>('.map-scroll')!;
 
     expect(views.getBoundingClientRect().left).toBeGreaterThan(
       states.getBoundingClientRect().right,
