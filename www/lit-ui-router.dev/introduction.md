@@ -26,7 +26,7 @@ import {
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 
-// Simple routes using template functions - no LitElement classes needed!
+// A state can render a template function; no LitElement class is required.
 const states: LitStateDeclaration[] = [
   { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
   { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
