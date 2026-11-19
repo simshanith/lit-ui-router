@@ -19,8 +19,8 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
   its height and shows the full log and inspector below it. On the sheets the
   Map takes the Outline's place above the log.
 - **The views share the room where both fit.** The nested layout draws the
-  [view map](views.md#beside-the-map) beside the states when both fit at
-  their natural size, the states at the rung the whole room gives them. A
+  [view map](views.md#beside-the-map) beside the states when the views fit
+  at their natural size and the states at some rung down to `small`. A
   view, a state and a transition are one selection, shown in the one
   inspector, and each marks what it is tied to on the other side.
 - **Boxes keep their natural size.** A leaf is its label and padding. A
@@ -126,9 +126,9 @@ The packer places every box, and CSS only draws them:
    [the popover's column](#the-inspector-popover) free. The room left over
    frames it; no box takes it. With the views beside it, the room is the
    states' side of the split: the diagram is packed again for that side,
-   below a section heading, at no lower rung than the whole room gives it,
-   and centred in it, while the popover's column is kept at the end of the
-   views' side.
+   below a section heading, at the rung the split chose for it, and centred
+   in it, while what is left of the popover's column is kept at the end of
+   the views' side.
 
 The rule comes from ELK's `rectpacking`, which keeps input order, stacks short
 boxes and aims for an aspect ratio. Area-weighted treemaps do not fit: they
@@ -316,7 +316,9 @@ size, before anything is selected:
 In the first two the popover is always in the same place, at the end of the
 dock, and neither a first selection nor a change of selection moves a box.
 With the views beside the diagram the split keeps the column at the end of
-the views' side, so the popover takes it for a state, a transition or a view.
+the views' side where the room allows, so the popover takes it for a state,
+a transition or a view; where it does not, the popover goes over the
+drawings as above, and for a view it is placed beside that view.
 Reserving the column at every width was weighed and left out: the stress tree
 needs the dock's whole width. So was a start-aligned diagram, which leaves
 the same column free and reads as a document, not a drawing.
