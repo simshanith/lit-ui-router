@@ -146,7 +146,7 @@ export const authenticate = (): void => {
   });
 };
 
-/** Resolves once the app's first transition has landed; the router starts after the devtools chunks load. */
+/** Resolves once the app's first transition has landed; a page that exports spans starts its router only after the devtools chunks load. */
 export const firstTransition = async (page: Page): Promise<void> => {
   await page.waitForFunction(
     () =>
