@@ -17,3 +17,18 @@ export async function installDevtools(
   const { installTelemetry } = await loadTelemetry();
   await installTelemetry(router, () => devtools.element);
 }
+
+/** Starts the router once the devtools are in, so their plugins see its first transition; a failed install still starts it. */
+export async function startAfterDevtools(
+  router: UIRouter,
+  start: () => void,
+  install: (router: UIRouter) => Promise<void> = installDevtools,
+): Promise<void> {
+  try {
+    await install(router);
+  } catch (error) {
+    console.warn('The devtools are off:', error);
+  }
+
+  start();
+}
