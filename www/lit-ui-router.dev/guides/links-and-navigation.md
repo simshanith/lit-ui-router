@@ -54,8 +54,8 @@ The third argument accepts `assignHref` alongside `@uirouter/core`'s
 - `assignHref: false` skips writing `href` entirely while keeping the click
   handler.
 
-See [Design System Links](./design-system-links) for a live comparison of all
-three `assignHref` settings.
+See [Design System Links](./design-system-links) for a live comparison of
+`true` and `'auto'`, and its table for `false`.
 
 ## Active classes and `aria-current`
 
@@ -170,9 +170,9 @@ const navLink = (locked: boolean) => html`
 ```
 
 Use either `uiSref` or `href=${srefHref(...)}` on a given element, never both.
-Because a `class` attribute holds only one toggling directive, pass any static
-or conditional classes through `srefActiveClass`'s `classes` option rather than
-combining it with `classMap`.
+Because a `class` attribute holds only one toggling directive, pass any
+conditional classes through `srefActiveClass`'s `classes` option rather than
+combining it with `classMap`; static classes can stay in the template.
 
 See [Attribute-part forms](/packages/lit-ui-router#attribute-part-forms) and
 [Links a server renderer can read](./server-route-matching#links-a-server-renderer-can-read)
