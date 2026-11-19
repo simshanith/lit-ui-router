@@ -191,9 +191,10 @@ export const states: LitStateDeclaration[] = [
 The state modules import their components statically, so the elements arrive
 in the same chunk. The sample app splits contacts, prefs and messages this way
 ([main/states.ts](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/states.ts)).
-If you also register an `otherwise` rule for 404s, note that a typo under a
-`.**` prefix triggers the lazy load before falling through — see
-[Unmatched URLs (404)](./unmatched-urls#caveat-lazy-loaded-future-states).
+If you also register an `otherwise` rule for 404s, a mistyped URL under a `.**`
+prefix still lazy loads the feature, and without the extra hook shown in
+[Unmatched URLs (404)](./unmatched-urls#caveat-lazy-loaded-future-states) the
+404 does not render.
 
 ## The routed element
 
