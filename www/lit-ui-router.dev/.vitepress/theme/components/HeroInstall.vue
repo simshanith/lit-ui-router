@@ -76,19 +76,21 @@ onBeforeUnmount(() => {
 <style scoped>
 .action {
   grid-column: 1 / -1;
+  min-inline-size: 0;
 }
 
 .hero-install {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--site-space-2);
+  gap: var(--site-space-1-5);
   inline-size: 100%;
+  min-inline-size: 0;
   max-inline-size: 100%;
   min-block-size: 44px;
-  padding-inline: var(--site-space-4);
+  padding-inline: var(--site-space-3);
   font-family: var(--vp-font-family-mono);
-  font-size: var(--site-text-sm);
+  font-size: var(--site-text-xs);
   color: var(--site-color-text);
   background: var(--site-color-surface-soft);
   border: var(--site-border-width) solid var(--site-color-line);
@@ -101,6 +103,14 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 480px) {
+  .hero-install {
+    gap: var(--site-space-2);
+    padding-inline: var(--site-space-4);
+    font-size: var(--site-text-sm);
+  }
+}
+
+@media (min-width: 640px) {
   .hero-install {
     font-size: var(--site-text-md);
   }
@@ -145,6 +155,7 @@ onBeforeUnmount(() => {
 }
 
 .hero-install code {
+  min-inline-size: 0;
   font: inherit;
   background: none;
   padding: 0;
