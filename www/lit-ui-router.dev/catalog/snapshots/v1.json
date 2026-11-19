@@ -1,8 +1,8 @@
 {
   "tag": "lit-ui-router-ssr@0.11.1",
   "files": 2069,
-  "bytes": 106717506,
-  "sha256": "63f48e02b587e7c9e3e2a1a002cf1d02a8091094beadcedb663f5c18a9f68392",
+  "bytes": 106716663,
+  "sha256": "ad62784c95fa603f62e508c397d49860053cc130758b99bebcc031328d104f7c",
   "pages": {
     "/v1/examples/": "/examples/",
     "/v1/examples/live": "/examples/live",
