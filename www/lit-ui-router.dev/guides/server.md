@@ -21,18 +21,18 @@ or a delegated handler), how much of the page the server **renders**, and the
 
 ## Verdict
 
-What the router decides for a request from its URL alone, before any of the
+What the router decides for a request from its url alone, before any of the
 app's code runs. [The verdict](/packages/ui-router-server#the-verdict) lists
 the shapes; [which decides when](/packages/lit-ui-router-ssr#page-response-state-or-redirect-which-decides-when)
 covers the answers a transition changes later.
 
-| Answer         | Declared as                                                                                        | Read                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Page           | a state with a URL                                                                                 | [Server-Side Routing](./server-route-matching#the-verdict)                                              |
-| Redirect       | a pattern rule in `redirects`, or a `redirectTo`                                                   | [Redirects: data until they need code](./server-route-matching#redirects-data-until-they-need-code)     |
-| 404            | no matching state, or the mount's `otherwise` (a mount is a URL prefix owned by one server router) | [Real 404s, per mount](./server-route-matching#real-404s-per-mount), [Unmatched URLs](./unmatched-urls) |
-| Response state | `response: true` and a host handler — returns a non-HTML HTTP response (such as JSON or XML)       | [Response states](/packages/ui-router-server#response-states)                                           |
-| Delegate       | `delegate` and a host handler — hands a URL subtree to another handler (such as static assets)     | [Delegating states](/packages/ui-router-server#delegating-states)                                       |
+| Answer         | Declared as                                                                                                                                   | Read                                                                                                    |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Page           | a state with a url                                                                                                                            | [Server-Side Routing](./server-route-matching#the-verdict)                                              |
+| Redirect       | a pattern rule in `redirects`, or a `redirectTo`                                                                                              | [Redirects: data until they need code](./server-route-matching#redirects-data-until-they-need-code)     |
+| 404            | no matching state, or the mount's `otherwise` (a mount is the URL prefix one app is served under)                                             | [Real 404s, per mount](./server-route-matching#real-404s-per-mount), [Unmatched URLs](./unmatched-urls) |
+| Response state | `response: true` and a host handler — answers with a `Response` built from its resolves (a redirect, JSON, an image) instead of a routed page | [Response states](/packages/ui-router-server#response-states)                                           |
+| Delegate       | `delegate` and a host handler — hands its url to a host handler: a command endpoint, a form POST, a JSON feed                                 | [Delegating states](/packages/ui-router-server#delegating-states)                                       |
 
 ## Render
 
