@@ -12,7 +12,7 @@ Building on [Hello World](./helloworld), this tutorial introduces data fetching 
 
 <LiveExample name="hellosolarsystem" />
 
-To run this step locally, copy the starter with [tiged](https://github.com/tiged/tiged), then run `npm install` and `npm run dev` in `my-app`:
+To run this step locally, copy this example with [tiged](https://github.com/tiged/tiged), then run `npm install` and `npm run dev` in `my-app`:
 
 ```bash
 npx tiged simshanith/lit-ui-router/examples/hellosolarsystem my-app
