@@ -255,13 +255,14 @@ export function previewFor({
   };
 }
 
-/** argv for `gh api` listing the deployments on `sha` in `environment`. */
+/** argv for `gh api` listing the newest deployments, narrowed by sha and environment. */
 export function listDeploymentsArgs(
   repo: string,
-  sha: string,
-  environment?: string,
+  { sha, environment }: { sha?: string; environment?: string },
 ): string[] {
-  const query = new URLSearchParams({ sha, per_page: '100' });
+  const query = new URLSearchParams({ per_page: '100' });
+
+  if (sha !== undefined) query.set('sha', sha);
 
   if (environment !== undefined) query.set('environment', environment);
 
@@ -292,6 +293,9 @@ export function createDeploymentArgs(repo: string, preview: Preview): string[] {
     'production_environment=false',
     '-f',
     `payload[build_uuid]=${preview.buildUuid}`,
+    ...(preview.branch === null
+      ? []
+      : ['-f', `payload[branch]=${preview.branch}`]),
     '-f',
     `payload[version_id]=${preview.versionId}`,
     ...(preview.branchUrl === null
@@ -331,7 +335,11 @@ const DeploymentSchema = v.looseObject({
   created_at: timestamp,
   // GitHub stores a payload posted as a string verbatim; none of ours is.
   payload: v.fallback(
-    v.looseObject({ build_uuid: v.optional(v.string()) }),
+    v.looseObject({
+      build_uuid: v.optional(v.string()),
+      branch: v.optional(v.string()),
+      branch_url: v.optional(v.string()),
+    }),
     {},
   ),
 });
@@ -364,6 +372,62 @@ export function existingDeployment(
       deployment.environment === preview.environment &&
       deployment.payload.build_uuid === preview.buildUuid,
   );
+}
+
+/**
+ * The branch's other deployments in the preview's environment. The environment
+ * is shared by every PR, so auto_inactive would retire other branches' URLs.
+ */
+export function supersededDeployments(
+  deployments: readonly GitHubDeployment[],
+  preview: Preview,
+  currentId: number,
+): GitHubDeployment[] {
+  return deployments.filter((deployment) => {
+    if (
+      deployment.environment !== preview.environment ||
+      deployment.id === currentId
+    ) {
+      return false;
+    }
+
+    const { branch, branch_url: branchUrl } = deployment.payload;
+
+    // Deployments posted before the branch was recorded carry only its alias.
+    if (branch === undefined) {
+      return preview.branchUrl !== null && branchUrl === preview.branchUrl;
+    }
+
+    return branch === preview.branch;
+  });
+}
+
+/** Whether a `latestStatusArgs` response leaves the deployment still active. */
+export function needsInactive(statusesJson: string): boolean {
+  const [status] = parsed(
+    'GitHub deployment statuses',
+    v.safeParse(v.array(StatusSchema), JSON.parse(statusesJson)),
+  );
+
+  return status?.state !== 'inactive';
+}
+
+/** argv for `gh api` marking deployment `id` inactive, superseded by `preview`. */
+export function inactiveStatusArgs(
+  repo: string,
+  id: number,
+  preview: Preview,
+): string[] {
+  return [
+    'api',
+    '--method',
+    'POST',
+    `repos/${repo}/deployments/${id}/statuses`,
+    '-f',
+    'state=inactive',
+    '-f',
+    `description=Superseded by ${preview.sha.slice(0, 8)}`,
+  ];
 }
 
 /** The newest deployment per preview environment. */

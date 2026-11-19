@@ -46,16 +46,19 @@ import {
   deploymentFromApi,
   deploymentsFromApi,
   existingDeployment,
+  inactiveStatusArgs,
   isUuid,
   latestPreviewDeployments,
   latestStatusArgs,
   listDeploymentsArgs,
+  needsInactive,
   pageReachesBefore,
   parseDetailsUrl,
   prHeadArgs,
   previewFor,
   previewRecord,
   recordsText,
+  supersededDeployments,
   versionsFromApi,
 } from './preview-deployment.core.ts';
 
@@ -144,31 +147,72 @@ type PostResult =
       readonly status: string[];
       readonly deploymentId: number | null;
       readonly existing: boolean;
+      readonly deactivated: readonly number[];
     };
 
-/** Creates the deployment and its success status, unless this build has one. */
+/** Creates the deployment and its success status unless this build has one, then retires the branch's older ones. */
+type Posted = { id: number; existing: boolean; deactivated: number[] };
+
 async function postPreview(
   exec: Exec,
   repo: string,
   preview: Preview,
-): Promise<{ id: number; existing: boolean }> {
+): Promise<Posted> {
   await ensureGh(exec);
 
   const listed = await exec(
     'gh',
-    listDeploymentsArgs(repo, preview.sha, preview.environment),
+    listDeploymentsArgs(repo, {
+      sha: preview.sha,
+      environment: preview.environment,
+    }),
   );
 
   const found = existingDeployment(deploymentsFromApi(listed.stdout), preview);
+  let id = found?.id;
 
-  if (found !== undefined) return { id: found.id, existing: true };
+  if (id === undefined) {
+    const created = await exec('gh', createDeploymentArgs(repo, preview));
 
-  const created = await exec('gh', createDeploymentArgs(repo, preview));
-  const { id } = deploymentFromApi(created.stdout);
+    id = deploymentFromApi(created.stdout).id;
+    await exec('gh', createStatusArgs(repo, id, preview));
+  }
 
-  await exec('gh', createStatusArgs(repo, id, preview));
+  return {
+    id,
+    existing: found !== undefined,
+    deactivated: await deactivateSuperseded(exec, repo, preview, id),
+  };
+}
 
-  return { id, existing: false };
+/** Marks the branch's earlier deployments inactive; returns their ids. */
+async function deactivateSuperseded(
+  exec: Exec,
+  repo: string,
+  preview: Preview,
+  currentId: number,
+): Promise<number[]> {
+  const listed = await exec(
+    'gh',
+    listDeploymentsArgs(repo, { environment: preview.environment }),
+  );
+
+  const deactivated: number[] = [];
+
+  for (const deployment of supersededDeployments(
+    deploymentsFromApi(listed.stdout),
+    preview,
+    currentId,
+  )) {
+    const statuses = await exec('gh', latestStatusArgs(repo, deployment.id));
+
+    if (!needsInactive(statuses.stdout)) continue;
+
+    await exec('gh', inactiveStatusArgs(repo, deployment.id, preview));
+    deactivated.push(deployment.id);
+  }
+
+  return deactivated;
 }
 
 const postText = (result: PostResult): string => {
@@ -197,6 +241,9 @@ const postText = (result: PostResult): string => {
       result.existing
         ? `deployment ${result.deploymentId} already posted for this build`
         : `created deployment ${result.deploymentId} with a success status`,
+      result.deactivated.length === 0
+        ? 'no earlier deployment of this branch to deactivate'
+        : `marked inactive: ${result.deactivated.join(', ')}`,
     );
   }
 
@@ -303,6 +350,7 @@ const post = async (args: string[], repo: string): Promise<PostResult> => {
     status: createStatusArgs(repo, posted?.id ?? '{id}', resolved),
     deploymentId: posted?.id ?? null,
     existing: posted?.existing ?? false,
+    deactivated: posted?.deactivated ?? [],
   };
 };
 
@@ -342,7 +390,10 @@ const read = async (args: string[], repo: string): Promise<ReadResult> => {
   const sha =
     given ?? (await defaultExec('gh', prHeadArgs(repo, pr ?? 0))).stdout.trim();
 
-  const { stdout } = await defaultExec('gh', listDeploymentsArgs(repo, sha));
+  const { stdout } = await defaultExec(
+    'gh',
+    listDeploymentsArgs(repo, { sha }),
+  );
 
   const previews = await Promise.all(
     latestPreviewDeployments(deploymentsFromApi(stdout)).map(

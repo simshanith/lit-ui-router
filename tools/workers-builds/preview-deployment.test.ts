@@ -15,6 +15,9 @@ import {
   createStatusArgs,
   deploymentsFromApi,
   existingDeployment,
+  inactiveStatusArgs,
+  needsInactive,
+  supersededDeployments,
   latestPreviewDeployments,
   parseDetailsUrl,
   previewFor,
@@ -289,6 +292,7 @@ describe('GitHub requests', () => {
       'transient_environment=true',
       'production_environment=false',
       `payload[build_uuid]=${preview.buildUuid}`,
+      'payload[branch]=docs/v1-snapshot-llms-full',
       `payload[branch_url]=${docs.expected.branchUrl}`,
     ]) {
       assert.ok(args.includes(field), field);
@@ -380,5 +384,99 @@ describe('GitHub requests', () => {
         logUrl: docs.detailsUrl,
       },
     );
+  });
+
+  describe('superseded deployments', () => {
+    const environment = 'preview/lit-ui-router';
+    const at = '2026-11-19T03:20:00Z';
+
+    const shared = deploymentsFromApi(
+      JSON.stringify([
+        {
+          id: 10,
+          sha: preview.sha,
+          environment,
+          created_at: at,
+          payload: { build_uuid: preview.buildUuid, branch: preview.branch },
+        },
+        {
+          id: 11,
+          sha: 'a'.repeat(40),
+          environment,
+          created_at: at,
+          payload: { build_uuid: 'older', branch: preview.branch },
+        },
+        {
+          id: 12,
+          sha: 'b'.repeat(40),
+          environment,
+          created_at: at,
+          payload: { build_uuid: 'other-pr', branch: 'feat/other' },
+        },
+        {
+          id: 13,
+          sha: 'c'.repeat(40),
+          environment,
+          created_at: at,
+          payload: {
+            build_uuid: 'before-branch',
+            branch_url: preview.branchUrl,
+          },
+        },
+        {
+          id: 14,
+          sha: 'd'.repeat(40),
+          environment,
+          created_at: at,
+          payload: {
+            build_uuid: 'other-alias',
+            branch_url:
+              'https://feat-other-lit-ui-router.shane-cf1.workers.dev',
+          },
+        },
+        {
+          id: 15,
+          sha: 'e'.repeat(40),
+          environment: 'preview/release-diffs',
+          created_at: at,
+          payload: { build_uuid: 'other-worker', branch: preview.branch },
+        },
+      ]),
+    );
+
+    it("selects only this branch's other deployments in the environment", () => {
+      assert.deepEqual(
+        supersededDeployments(shared, preview, 10).map(
+          (deployment) => deployment.id,
+        ),
+        [11, 13],
+      );
+    });
+
+    it('never matches a branch-less deployment by a missing alias', () => {
+      assert.deepEqual(
+        supersededDeployments(shared, { ...preview, branchUrl: null }, 10).map(
+          (deployment) => deployment.id,
+        ),
+        [11],
+      );
+    });
+
+    it('deactivates only a deployment whose newest status is not inactive', () => {
+      assert.equal(needsInactive(JSON.stringify([{ state: 'success' }])), true);
+      assert.equal(needsInactive(JSON.stringify([])), true);
+      assert.equal(
+        needsInactive(JSON.stringify([{ state: 'inactive' }])),
+        false,
+      );
+    });
+
+    it('posts an inactive status naming the superseding commit', () => {
+      const args = inactiveStatusArgs(REPO, 11, preview);
+
+      assert.equal(args[3], `repos/${REPO}/deployments/11/statuses`);
+      assert.ok(args.includes('state=inactive'));
+      assert.ok(args.includes('description=Superseded by 99c2ed6f'));
+    });
   });
 });

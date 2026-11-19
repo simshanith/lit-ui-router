@@ -205,8 +205,10 @@ until none of those branches remain.
 [`preview-deployment.ts`](../tools/workers-builds/preview-deployment.ts) to find the Worker
 version that build uploaded, and records that version's URL as a GitHub Deployment in the
 `preview/<worker>` environment on the check run's commit. The build's own `preview_url` is the
-branch alias, so the tool finds the version through `GET /builds/builds?version_ids=`. A
-production build and a Workers Previews build get no deployment: the Previews Workers have
+branch alias, so the tool finds the version through `GET /builds/builds?version_ids=`. Every PR
+shares the environment, so the deployments are transient and `auto_inactive` never retires them:
+the tool marks the branch's earlier deployments there inactive itself, matching the branch it
+records in each deployment's payload. A production build and a Workers Previews build get no deployment: the Previews Workers have
 preview URLs off and upload no Worker version.
 
 `./tools/workers-builds/preview-deployment.ts read --pr <number> --json` prints each Worker's
