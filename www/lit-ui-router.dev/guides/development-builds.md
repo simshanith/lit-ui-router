@@ -134,15 +134,24 @@ always answers yes. `deno` keeps the production build, because reading
 ### Recommended server workflow
 
 - **Develop with Vite.** Build the router in your Vite config and pass it to
-  `serverRouterPlugin`: the config loader resolves the development build, so
-  warnings print in the terminal with nothing extra to configure.
+  `serverRouterPlugin`, as this site's
+  [`.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)
+  does. The config loader resolves the development build, so warnings print in
+  the terminal with nothing extra to configure.
 - **Assert mounts in unit tests.** Assert that
-  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]` — it reports in
-  every build and catches route issues a manual dev run never reaches.
-- **Preview Workers in development, test with production conditions.** Pass
-  `WRANGLER_BUILD_CONDITIONS` on the `wrangler dev` command (as
-  [below](#what-to-set)) during local previews, and run end-to-end checks with
-  the default production conditions `wrangler deploy` uses.
+  `diagnoseMounts(createServerRouter({ mounts }))` returns `[]`, as
+  [`apps/sample-app-routes/test/routes.test.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/test/routes.test.ts)
+  does — it reports in every build and catches route issues a manual dev run
+  never reaches.
+- **Preview Workers in development.** Pass `WRANGLER_BUILD_CONDITIONS` on the
+  `wrangler dev` command (as [below](#what-to-set)) during local previews, as
+  this site's
+  [`scripts/wrangler-dev.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/scripts/wrangler-dev.ts)
+  launcher does.
+- **Test with production conditions.** Run end-to-end checks with the default
+  production conditions `wrangler deploy` uses, as
+  [`apps/sample-app-lit-e2e/scripts/run-e2e.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-lit-e2e/scripts/run-e2e.ts)
+  does.
 
 Elsewhere, develop on the development build and deploy with
 `NODE_ENV=production` or a `production` condition. A Node or Bun server
