@@ -54,11 +54,11 @@ configurations so you can compare each point on the
 [server-support spectrum](./guides/server-route-matching#the-server-support-spectrum)
 side by side:
 
-| Mount                                                                | Level       | What it shows                                                                                                                                                                     |
-| -------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <a href="/not-found-naive" target="_self">`/not-found-naive`</a>     | 2 · exhibit | The **anti-pattern baseline**: every path answers **200** with the shell, no matching at all — the soft-404 fallback most SPAs ship. `noindex`.                                   |
-| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4 · exhibit | **Shell-at-404**: real routes serve the shell at **200**; only a genuine miss serves the app shell at an honest **404**, where the client renders its in-app 404 view. `noindex`. |
-| <a href="/simulated-routing" target="_self">`/simulated-routing`</a> | 5 · exhibit | Every verdict computed by a **real headless `@uirouter/core` router** replaying the URL per request — redirects and `otherwise()` run as real rules. `noindex`.                   |
+| Mount                                                                | Spectrum level | What it shows                                                                                                                                                                     |
+| -------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="/not-found-naive" target="_self">`/not-found-naive`</a>     | 2              | The **anti-pattern baseline**: every path answers **200** with the shell, no matching at all — the soft-404 fallback most SPAs ship. `noindex`.                                   |
+| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4              | **Shell-at-404**: real routes serve the shell at **200**; only a genuine miss serves the app shell at an honest **404**, where the client renders its in-app 404 view. `noindex`. |
+| <a href="/simulated-routing" target="_self">`/simulated-routing`</a> | 5              | Every verdict computed by a **real headless `@uirouter/core` router** replaying the URL per request — redirects and `otherwise()` run as real rules. `noindex`.                   |
 
 ## Two axes, one app
 
@@ -68,9 +68,9 @@ variants share the same route table and verdicts, varying only client-state
 bindings). The [Server-Side Routing guide](./guides/server-route-matching) is
 the deep dive on that routing axis.
 
-A second axis — **how the page body is rendered** — is orthogonal: it rides the
-same routing spine and returns the identical verdict at every setting. Today the
-sample app mounts are **client-rendered** throughout; build-time prerendering
+How the page body is rendered is a separate choice: it does not change which
+status or redirect a URL gets. Today the sample app mounts are
+**client-rendered** throughout; build-time prerendering
 ([Prerender with Vite](./guides/prerender-with-vite),
 [Prerender with Eleventy](./guides/prerender-with-eleventy)) and request-time
 server rendering
