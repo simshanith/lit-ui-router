@@ -1,0 +1,14 @@
+# Workers Builds tasks, addressed as //tools/workers-builds:<step>. Inputs are
+# env-backed usage flags, as in tools/build_and_test/mise.toml; secrets stay in
+# workflow step env. Tasks assume node_modules exists; run `mise run setup`
+# first when invoking one standalone.
+
+[tasks.preview_deployment]
+# env: GH_TOKEN, GITHUB_REPOSITORY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+description = "Post a Workers Builds preview build's URL as a GitHub Deployment on its commit"
+usage = '''
+flag "--details-url <details_url>" help="The Cloudflare check run's details_url, which names the worker and build" required=#true env="DETAILS_URL"
+flag "--sha <sha>" help="The check run's head sha; the build must have built it" required=#true env="HEAD_SHA"
+flag "--dry-run" help="Print the requests, post nothing" env="DRY_RUN"
+'''
+run = './preview-deployment.ts post --details-url "${usage_details_url?}" --sha "${usage_sha?}" ${usage_dry_run:+--dry-run}'

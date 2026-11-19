@@ -198,6 +198,21 @@ copied `build_command` as `./tools/workers-builds/cloudflare-build.sh`, so
 [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) stays as a shim over the `.ts`
 until none of those branches remain.
 
+### Preview deployments on GitHub
+
+[`preview-deployments.yml`](../.github/workflows/preview-deployments.yml) runs when a
+`Workers Builds: <worker>` check run succeeds. It runs
+[`preview-deployment.ts`](../tools/workers-builds/preview-deployment.ts) to find the Worker
+version that build uploaded, and records that version's URL as a GitHub Deployment in the
+`preview/<worker>` environment on the check run's commit. The build's own `preview_url` is the
+branch alias, so the tool finds the version through `GET /builds/builds?version_ids=`. A
+production build and a Workers Previews build get no deployment: the Previews Workers have
+preview URLs off and upload no Worker version.
+
+`./tools/workers-builds/preview-deployment.ts read --pr <number> --json` prints each Worker's
+recorded preview URL for a PR's head; `post --details-url <url> --dry-run` prints what the
+workflow would post for a build.
+
 ### Frozen 1.x docs at `/v1/`
 
 The 1.x docs are their own Worker, `lit-ui-router-docs-v1`, configured in
