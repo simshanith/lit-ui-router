@@ -343,7 +343,7 @@ describe('the Views', () => {
       );
 
       // SAFETY: the tree is drawn inside the Views' main area
-      const main = tree.closest('.vm-main') as HTMLElement;
+      const main = tree.closest<HTMLElement>('.vm-main')!;
       const style = getComputedStyle(main);
 
       const room = () => ({
@@ -382,7 +382,7 @@ describe('the Views', () => {
   // The drawing's distance from each edge of the room it is drawn in, above the list of configs no view took.
   const margins = (tree: HTMLElement) => {
     // SAFETY: the tree is drawn inside the Views' main area
-    const main = tree.closest('.vm-main') as HTMLElement;
+    const main = tree.closest<HTMLElement>('.vm-main')!;
     const style = getComputedStyle(main);
     const room = main.getBoundingClientRect();
     const drawn = tree.getBoundingClientRect();
