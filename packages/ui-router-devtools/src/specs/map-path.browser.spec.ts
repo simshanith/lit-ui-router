@@ -527,6 +527,25 @@ describe('the view path under the Map', () => {
         getAllByRole(home, 'button').filter((each) => each.tabIndex === 0),
       ).toEqual([item(home, /^\$default view, filled by home/)]),
     );
+
+    // Focus stays in the path, on its tab stop.
+    await waitFor(() =>
+      expect(focused(element)).toBe(
+        item(home, /^\$default view, filled by home/),
+      ),
+    );
+  });
+
+  it('leaves focus outside the path where it is when the path changes', async () => {
+    const { element, router } = await mailMap();
+
+    await pathOf(element);
+    toggle(element).focus();
+    await router.stateService.go('home');
+    await pathOf(element, 'Views of home');
+    await element.updateComplete;
+
+    expect(focused(element)).toBe(toggle(element));
   });
 
   it('outlines the view under the pointer on the page', async () => {

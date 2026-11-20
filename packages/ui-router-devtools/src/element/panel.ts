@@ -404,6 +404,8 @@ export class DevtoolsPanel extends LitElement {
   #viewsLoading = false;
   // The state whose view path a view was selected from, which the path keeps drawing while the view is selected.
   #pathFrom: string | null = null;
+  // The view path's item that had focus before an update, kept while a re-render that removed it leaves none.
+  #pathFocused: Element | null = null;
   // The view under the pointer, and the one the locator last marked on the page.
   #pointedView: number | null = null;
   #markedView: ViewInfo | null = null;
@@ -736,8 +738,17 @@ export class DevtoolsPanel extends LitElement {
 
   // A re-pack can move the focused box to another row, which rebuilds it; focus then returns to the same state.
   protected update(changed: PropertyValues<this>): void {
-    if (this.shadowRoot?.activeElement?.matches('.box > .head'))
-      this._moveFocus = true;
+    const focused = this.shadowRoot?.activeElement;
+
+    if (focused?.matches('.box > .head')) this._moveFocus = true;
+
+    // A path drawn between snapshots can have no items; focus its removal dropped is still the path's.
+    const dropped =
+      !focused &&
+      document.activeElement === document.body &&
+      this.#pathFocused?.isConnected === false;
+
+    if (!dropped) this.#pathFocused = focused?.closest('.vp') ? focused : null;
 
     this.#before = this.#mapMoved() ? this.#measureMovers() : null;
     super.update(changed);
@@ -902,11 +913,29 @@ export class DevtoolsPanel extends LitElement {
     if (this.#before) this.#flip(this.#before);
     this.#before = null;
 
+    this.#keepPathFocus();
+
     if (!this._moveFocus) return;
     this._moveFocus = false;
     this.renderRoot
       .querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]')
       ?.focus();
+  }
+
+  // Focus in the view path stays there when a re-render replaces its items, on the path's tab stop.
+  #keepPathFocus() {
+    if (!this.#pathFocused) return;
+
+    if (!this._pathShown()) {
+      this.#pathFocused = null;
+
+      return;
+    }
+
+    const stop =
+      this.renderRoot.querySelector<HTMLElement>('.vp [tabindex="0"]');
+
+    if (stop && this.shadowRoot?.activeElement !== stop) stop.focus();
   }
 
   // The nested Map packs for the Map viewport, and the Views for the area beside their details, so that content box is observed.
