@@ -14,8 +14,8 @@ const DocsVersion = v.object({
   tag: v.optional(v.pipe(v.string(), v.nonEmpty())),
 });
 
-/** A line's URL segment: `v` and a major, `v0` included. */
-export const LINE_ID = /^v(\d+)$/;
+/** A line's URL segment: `v` and a major, `v0` included; no leading zeros, so one major has one id. */
+export const LINE_ID = /^v(0|[1-9]\d*)$/;
 
 /** One major of one package: its page at `/packages/<pkg>/<id>`, its reference under `/reference/<pkg>/<id>/`. */
 const PackageLine = v.object({

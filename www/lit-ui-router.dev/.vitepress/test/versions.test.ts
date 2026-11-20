@@ -103,6 +103,8 @@ describe('VersionManifest', () => {
     for (const line of [
       { ...serverLines[0], id: '0.x' },
       { ...serverLines[0], id: 'v0.9' },
+      { ...serverLines[0], id: 'v00' },
+      { ...serverLines[0], id: 'v01' },
       { ...serverLines[0], tag: '' },
       { id: 'v0', status: 'frozen' },
       { ...serverLines[0], status: 'latest' },
