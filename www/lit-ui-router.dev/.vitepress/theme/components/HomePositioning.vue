@@ -55,4 +55,28 @@ const { frontmatter } = useData();
   padding: 0.1em 0.35em;
   border-radius: var(--site-radius-control-inner);
 }
+
+.copy :deep(a) {
+  font-weight: 500;
+  color: var(--site-color-interaction);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  transition: color var(--site-duration-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .copy :deep(a:hover) {
+    color: var(--site-color-interaction-hover);
+  }
+}
+
+.copy :deep(a:focus-visible) {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+
+.copy :deep(a > code) {
+  color: inherit;
+}
 </style>
