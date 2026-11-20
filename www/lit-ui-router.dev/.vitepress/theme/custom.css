@@ -194,6 +194,18 @@ html:has(.site-expand:modal) {
   padding-block-end: 0.625rem;
 }
 
+/* A package name in the sidebar: the family prefix keeps the sidebar's muted text and the rest takes body text. */
+.VPSidebarItem .package-name-rest {
+  color: var(--site-color-text);
+  transition: color 0.25s;
+}
+
+/* Current or hovered, VitePress gives the label the link colour, so the whole name takes it. */
+.VPSidebarItem.is-active > .item .package-name-rest,
+.VPSidebarItem.is-link > .item > .link:hover .package-name-rest {
+  color: var(--site-color-interaction);
+}
+
 /* Version badges on package pages */
 .vp-doc .badges {
   display: flex;

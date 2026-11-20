@@ -1,6 +1,6 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
 import { SAMPLE_APPS } from './examples.ts';
-import { PACKAGES, ROLES, type Role } from './packages.ts';
+import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
 import { API_REFERENCES } from './references.ts';
 
 /** A page link, in VitePress's shape. */
@@ -88,60 +88,46 @@ export const guideGroups = GUIDE_TOPICS.map(({ id, label }) => ({
   items: GUIDES[id],
 }));
 
+/** A package's page, labelled by its npm name as its URL and API reference are. */
+const packagePage = (name: PackageName): SidebarEntry => ({
+  text: name,
+  link: `/packages/${name}`,
+});
+
 // Keyed by role, so a new role fails typecheck until it has a group.
 const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
-  renderer: [{ text: 'lit-ui-router', link: '/packages/lit-ui-router' }],
+  renderer: [packagePage('lit-ui-router')],
   reactivity: [
     {
       text: 'Effect',
       link: '/packages/effect',
       collapsed: true,
       items: [
-        { text: 'ui-router-effect', link: '/packages/ui-router-effect' },
-        {
-          text: 'lit-ui-router-effect',
-          link: '/packages/lit-ui-router-effect',
-        },
+        packagePage('ui-router-effect'),
+        packagePage('lit-ui-router-effect'),
       ],
     },
     {
       text: 'MobX',
       link: '/packages/mobx',
       collapsed: true,
-      items: [
-        { text: 'ui-router-mobx', link: '/packages/ui-router-mobx' },
-        { text: 'lit-ui-router-mobx', link: '/packages/lit-ui-router-mobx' },
-      ],
+      items: [packagePage('ui-router-mobx'), packagePage('lit-ui-router-mobx')],
     },
     {
       text: 'Signals',
       link: '/packages/signals',
       collapsed: true,
       items: [
-        { text: 'ui-router-signals', link: '/packages/ui-router-signals' },
-        {
-          text: 'lit-ui-router-signals',
-          link: '/packages/lit-ui-router-signals',
-        },
+        packagePage('ui-router-signals'),
+        packagePage('lit-ui-router-signals'),
       ],
     },
   ],
-  location: [
-    {
-      text: 'Navigation API Plugin',
-      link: '/packages/ui-router-navigation-location-plugin',
-    },
-  ],
-  server: [
-    { text: 'Server', link: '/packages/ui-router-server' },
-    {
-      text: 'Server-Side Rendering (SSR)',
-      link: '/packages/lit-ui-router-ssr',
-    },
-  ],
+  location: [packagePage('ui-router-navigation-location-plugin')],
+  server: [packagePage('ui-router-server'), packagePage('lit-ui-router-ssr')],
   dx: [
-    { text: 'Registry', link: '/packages/ui-router-registry' },
-    { text: 'ESLint Plugin', link: '/packages/eslint-plugin-lit-ui-router' },
+    packagePage('ui-router-registry'),
+    packagePage('eslint-plugin-lit-ui-router'),
   ],
 };
 

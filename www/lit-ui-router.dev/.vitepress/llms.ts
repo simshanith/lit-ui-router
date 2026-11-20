@@ -9,6 +9,7 @@ import {
   githubTreeSrc,
   stackblitzOpenSrc,
 } from './theme/components/examples.ts';
+import { SIDEBAR } from '../catalog/navigation.ts';
 import { PACKAGES } from '../catalog/packages.ts';
 import { changelogMarkdownPath } from './changelog.ts';
 import { RELEASES_PATH } from './release-stubs.ts';
@@ -203,13 +204,8 @@ export function llmsPlugins(): Plugin[] {
         ignoreFiles: pageGlobs(({ llms }) => llms === false),
         // Member pages the sidebar filter drops would otherwise land under "Other".
         ignoreFilesPerOutput: { llmsTxt: LLMS_TXT_IGNORE },
-        sidebar: (sidebar) => {
-          if (!Array.isArray(sidebar)) {
-            throw new Error('llms: expected the themeConfig sidebar array');
-          }
-
-          return llmsSidebar(sidebar);
-        },
+        // The catalog's own labels: config.ts marks up the package names for the rendered sidebar.
+        sidebar: llmsSidebar(SIDEBAR),
       }),
     ),
   ];
