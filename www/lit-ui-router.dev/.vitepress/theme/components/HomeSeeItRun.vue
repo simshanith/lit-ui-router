@@ -171,38 +171,10 @@ function onHash(hash: string) {
   color: var(--site-color-text);
 }
 
-/* The frame reserves the tallest card's height at its own width, measured: 16px margins, the card and a 12px gap over the 32px pager, so nothing is left under the pager. The live page keeps the registry's height. */
-.app-panel {
-  container-type: inline-size;
-}
-
+/* The frame sizes itself to the tour once it loads; this is its height until then. */
 .embed {
   --tour-frame-height: 444px;
   margin-block-start: var(--site-space-3);
-}
-
-@container (inline-size < 36rem) {
-  .embed {
-    --tour-frame-height: 452px;
-  }
-}
-
-@container (inline-size < 26rem) {
-  .embed {
-    --tour-frame-height: 476px;
-  }
-}
-
-@container (inline-size < 21rem) {
-  .embed {
-    --tour-frame-height: 500px;
-  }
-}
-
-@container (inline-size < 18rem) {
-  .embed {
-    --tour-frame-height: 548px;
-  }
 }
 
 /* The drawing sits under its heading and the transition log closes the tile. */
