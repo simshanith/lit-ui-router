@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="none">
+<radialGradient id="core" cx="740" cy="300" r="900" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffe0a3"/><stop offset="0.22" stop-color="#50ffff"/><stop offset="0.5" stop-color="#29abe6"/><stop offset="1" stop-color="#0098dc"/></radialGradient>
+<filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="14"/></filter>
+<filter id="haze" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="70"/></filter>
+<filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" seed="7"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.55 0 0 0 -0.12"/>
+</filter>
+<rect width="1200" height="800" fill="url(#core)"/>
+<g filter="url(#soft)" opacity="0.45"><path d="M740 300L2322 539L2290 696z" fill="#ffe0a3"/><path d="M740 300L2062 1202L1965 1329z" fill="#00e8ff"/><path d="M740 300L1539 1686L1397 1759z" fill="#4dbbec"/><path d="M740 300L859 1896L699 1899z" fill="#50ffff"/><path d="M740 300L155 1789L9 1723z" fill="#ffe0a3"/><path d="M740 300L-433 1388L-536 1265z" fill="#00e8ff"/><path d="M740 300L-789 771L-828 616z" fill="#4dbbec"/><path d="M740 300L-842 61L-810 -96z" fill="#50ffff"/><path d="M740 300L-582 -602L-485 -729z" fill="#ffe0a3"/><path d="M740 300L-59 -1086L83 -1159z" fill="#00e8ff"/><path d="M740 300L621 -1296L781 -1299z" fill="#4dbbec"/><path d="M740 300L1325 -1189L1471 -1123z" fill="#50ffff"/><path d="M740 300L1913 -788L2016 -665z" fill="#ffe0a3"/><path d="M740 300L2269 -171L2308 -16z" fill="#00e8ff"/></g>
+<ellipse cx="740" cy="300" rx="240" ry="150" fill="#ffe0a3" opacity="0.7" filter="url(#haze)"/>
+<rect width="1200" height="800" filter="url(#grain)"/>
+</svg>

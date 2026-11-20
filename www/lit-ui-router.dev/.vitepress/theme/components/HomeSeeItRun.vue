@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { withBase } from 'vitepress';
 import ExampleEmbed from './ExampleEmbed.vue';
-import StateViewDiagram from './StateViewDiagram.vue';
+import StateViewDiagram, { type Backdrop } from './StateViewDiagram.vue';
 import { EXAMPLES, staticSrc } from './examples';
-import { FEATURES_TOUR_INITIAL, stateForHash } from './features-tour-states';
+import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
 
 const example = EXAMPLES['features-tour'];
 
-const active = ref(FEATURES_TOUR_INITIAL);
+const card = ref<CardId>(INITIAL_CARD);
+
+const from = ref<CardId>();
+
+const entries = ref(0);
 
 const panel = useTemplateRef('panel');
+
+const stage = useTemplateRef('stage');
 
 // Keyed by document: a frame's WindowProxy outlives a reload, its listeners do not.
 const watched = new WeakSet<Document>();
@@ -22,7 +29,13 @@ function follow(frame: HTMLIFrameElement) {
     if (!view || view.location.origin !== location.origin) return;
 
     const read = () => {
-      active.value = stateForHash(view.location.hash) ?? active.value;
+      const next = cardForHash(view.location.hash);
+
+      if (!next || next === card.value) return;
+
+      from.value = card.value;
+      card.value = next;
+      entries.value += 1;
     };
 
     read();
@@ -31,7 +44,7 @@ function follow(frame: HTMLIFrameElement) {
     watched.add(view.document);
     view.addEventListener('hashchange', read);
   } catch {
-    // An unreadable frame: the diagram keeps the state it last showed.
+    // An unreadable frame: the diagram keeps the card it last showed.
   }
 }
 
@@ -40,12 +53,63 @@ function onLoad({ target }: Event) {
   if (target instanceof HTMLIFrameElement) follow(target);
 }
 
-// A frame that loaded before hydration fired its load event unheard.
+// Before measuring, the drawing samples the burst at its own size.
+const backdrop = ref<Backdrop>({ x: -2, y: -2, width: 340, height: 362 });
+
+// Every ring shows the one burst painted over the whole stage, so each is told where it sits in it.
+function place() {
+  const ground = stage.value;
+
+  if (!ground) return;
+
+  const box = ground.getBoundingClientRect();
+
+  ground.style.setProperty('--burst-w', `${box.width}px`);
+  ground.style.setProperty('--burst-h', `${box.height}px`);
+
+  for (const ring of ground.querySelectorAll<HTMLElement>('[data-ring]')) {
+    const at = ring.getBoundingClientRect();
+
+    ring.style.setProperty('--burst-x', `${at.left - box.left}px`);
+    ring.style.setProperty('--burst-y', `${at.top - box.top}px`);
+  }
+
+  const drawing = ground.querySelector<SVGSVGElement>('.state-diagram svg');
+
+  if (!drawing) return;
+
+  const at = drawing.getBoundingClientRect();
+  const view = drawing.viewBox.baseVal;
+  const scale = view.width / at.width;
+
+  backdrop.value = {
+    x: view.x + (box.left - at.left) * scale,
+    y: view.y + (box.top - at.top) * scale,
+    width: box.width * scale,
+    height: box.height * scale,
+  };
+}
+
+let resized: ResizeObserver | undefined;
+
 onMounted(() => {
+  // A frame that loaded before hydration fired its load event unheard.
   const frame = panel.value?.querySelector('iframe');
 
-  if (frame) follow(frame);
+  if (frame) {
+    frame.dataset.ring = '';
+    follow(frame);
+  }
+
+  resized = new ResizeObserver(place);
+
+  for (const el of stage.value?.querySelectorAll('[data-ring], svg') ?? [])
+    resized.observe(el);
+
+  if (stage.value) resized.observe(stage.value);
 });
+
+onBeforeUnmount(() => resized?.disconnect());
 </script>
 
 <template>
@@ -53,10 +117,11 @@ onMounted(() => {
     <div class="container">
       <h2 id="see-it-run-title" class="title">See it run</h2>
       <p class="lede">
-        A small app with one route for each feature above, running. Move between
-        them, and the diagram marks the state the router made active.
+        The feature cards above as a small lit-ui-router app. Each card is the
+        same state with a new parameter, and the diagram follows the router as
+        it re-enters the state.
       </p>
-      <div class="panels">
+      <div ref="stage" class="panels">
         <div ref="panel" class="panel" @load.capture="onLoad">
           <h3 class="panel-title">The app</h3>
           <div class="embed">
@@ -68,15 +133,20 @@ onMounted(() => {
           </div>
         </div>
         <div class="panel diagram-panel">
-          <h3 class="panel-title">Its states and views</h3>
-          <div class="diagram-ground">
-            <StateViewDiagram :active="active" />
+          <h3 class="panel-title">Its state and view</h3>
+          <div class="diagram-ground" data-ring>
+            <StateViewDiagram
+              :card="card"
+              :from="from"
+              :entries="entries"
+              :backdrop="backdrop"
+            />
           </div>
         </div>
       </div>
       <p class="next">
-        <a href="/tutorial/helloworld">Start the tutorial</a>
-        <a href="/introduction">Read the introduction</a>
+        <a :href="withBase('/tutorial/helloworld')">Start the tutorial</a>
+        <a :href="withBase('/introduction')">Read the introduction</a>
       </p>
     </div>
   </section>
@@ -126,12 +196,6 @@ onMounted(() => {
 }
 
 .panels {
-  /* Both panels wear the current state's ink-to-glow gradient as a 2px ring. */
-  --panel-ring: linear-gradient(
-    135deg,
-    var(--site-color-identity-ink),
-    var(--site-color-diagram-glow)
-  );
   display: grid;
   gap: var(--site-space-8);
   margin-block-start: var(--site-space-6);
@@ -161,28 +225,40 @@ onMounted(() => {
   margin-block-start: var(--site-space-3);
 }
 
-/* The ring is the border box's background showing through a transparent border, so the radius holds. */
-.embed :deep(.example-embed iframe) {
+/* A ring is a window onto the burst painted over the whole stage: the burst fills the border box, sized to the stage and shifted by the ring's place in it; the fill covers the rest. */
+.embed :deep(.example-embed iframe),
+.diagram-ground {
+  --ring-fill: var(--site-color-surface);
   border: 2px solid transparent;
   background:
-    linear-gradient(var(--site-color-surface) 0 0) padding-box,
-    var(--panel-ring) border-box;
+    linear-gradient(var(--ring-fill) 0 0) padding-box,
+    var(--site-burst-image) border-box no-repeat;
+  background-position:
+    0 0,
+    calc(-1 * var(--burst-x, 0px)) calc(-1 * var(--burst-y, 0px));
+  background-size:
+    auto,
+    var(--burst-w, 100%) var(--burst-h, 100%);
 }
 
 .diagram-ground {
+  --ring-fill: var(--site-color-surface-soft);
   margin-block-start: var(--site-space-3);
   padding: var(--site-space-8) var(--site-space-3);
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--site-color-surface-soft) 0 0) padding-box,
-    var(--panel-ring) border-box;
   border-radius: var(--site-radius-card);
+}
+
+/* Expanded, the frame leaves the stage, so it takes a plain line. */
+.embed :deep(.example-embed:modal iframe) {
+  border: var(--site-border-width) solid var(--site-color-line);
+  background: var(--site-color-surface);
 }
 
 @media (forced-colors: active) {
   .embed :deep(.example-embed iframe),
   .diagram-ground {
     border-color: CanvasText;
+    background: Canvas;
   }
 }
 

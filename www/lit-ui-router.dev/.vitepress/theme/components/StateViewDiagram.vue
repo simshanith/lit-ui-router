@@ -1,207 +1,171 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
-import {
-  FEATURES_TOUR_STATES,
-  NESTED_VIEW_HOST,
-  RESOLVE_TOKEN,
-  type FeaturesTourStateName,
-} from './features-tour-states';
+import { withBase } from 'vitepress';
+import { CARD_IDS, CARD_STATE, type CardId } from './features-tour-states';
 
-const props = defineProps<{ active: FeaturesTourStateName }>();
+/** Where the panel's burst sits, in this drawing's user units. */
+export interface Backdrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
-// Top-level states sit in three 96-wide columns, 12 apart, on a 4px grid; the arrow leaves each column at `edge`.
-const LAYOUT = [
-  { name: 'routing', x: 12, height: 56, edge: 60, label: 68, anchor: 'start' },
-  { name: 'nested', x: 120, height: 112, edge: 148, label: 140, anchor: 'end' },
-  {
-    name: 'resolves',
-    x: 228,
-    height: 56,
-    edge: 276,
-    label: 268,
-    anchor: 'end',
-  },
-] as const;
+const props = defineProps<{
+  card: CardId;
+  /** The card the last transition left, or none before the first. */
+  from?: CardId;
+  /** Counts transitions, so the re-entry mark replays on each. */
+  entries: number;
+  backdrop: Backdrop;
+}>();
 
-const leaves = LAYOUT.map((layout) => ({
-  ...layout,
-  url: FEATURES_TOUR_STATES.find(({ name }) => name === layout.name)?.url,
+// Chips sit on a 4px grid, 8 apart, sized to their mono labels.
+const CHIP_WIDTH: Record<CardId, number> = {
+  states: 60,
+  views: 52,
+  resolves: 72,
+};
+
+const chips = CARD_IDS.map((id, index) => ({
+  id,
+  width: CHIP_WIDTH[id],
+  x:
+    100 +
+    CARD_IDS.slice(0, index).reduce(
+      (sum, before) => sum + CHIP_WIDTH[before] + 8,
+      0,
+    ),
 }));
 
-const child = FEATURES_TOUR_STATES.find(({ parent }) => parent)!;
-
-// What the current top-level state's content shows beside its name, where it holds no view.
-const DETAIL: Partial<Record<FeaturesTourStateName, readonly string[]>> = {
-  routing: ["url: '/routing'", "href: '#/routing'"],
-  resolves: [`resolve: '${RESOLVE_TOKEN}'`, 'ready before render'],
-};
-
-// One id per instance, so two diagrams on a page keep their own gradients.
+// One id per instance, so two diagrams on a page keep their own patterns.
 const uid = useId();
 
-const strokes = {
-  '--diagram-state-stroke': `url(#${uid}-state)`,
-  '--diagram-view-stroke': `url(#${uid}-view)`,
+const burst = { '--diagram-burst': `url(#${uid}-burst)` };
+
+const images = {
+  light: withBase('/images/see-it-run-burst.svg'),
+  dark: withBase('/images/see-it-run-burst-dark.svg'),
 };
 
-const top = computed(
-  () =>
-    FEATURES_TOUR_STATES.find(({ name }) => name === props.active)?.top ??
-    'routing',
-);
-
-const childActive = computed(() => props.active === child.name);
-
-const role = (name: string) =>
-  name === props.active
-    ? 'current'
-    : props.active.startsWith(`${name}.`)
-      ? 'ancestor'
-      : 'idle';
+const reentered = computed(() => props.from !== undefined);
 </script>
 
 <template>
-  <figure class="state-diagram" :data-active="active" :style="strokes">
+  <figure class="state-diagram" :data-card="card" :style="burst">
     <svg
       class="drawing"
-      viewBox="-2 -2 340 444"
+      viewBox="-2 -2 340 362"
       width="340"
-      height="444"
+      height="362"
       aria-hidden="true"
     >
       <defs>
-        <!-- Glow into ink toward the arrow, so the solid ink arrow joins both boxes at their ink edge. -->
-        <linearGradient :id="`${uid}-state`" x1="0" y1="0" x2="0" y2="1">
-          <stop class="glow" offset="0" />
-          <stop class="ink" offset="1" />
-        </linearGradient>
-        <linearGradient :id="`${uid}-view`" x1="0" y1="0" x2="0" y2="1">
-          <stop class="ink" offset="0" />
-          <stop class="glow" offset="1" />
-        </linearGradient>
+        <!-- One image of the panel's burst, placed at the panel's coordinates, so every stroke samples the same backdrop. -->
+        <pattern
+          :id="`${uid}-burst`"
+          patternUnits="userSpaceOnUse"
+          :x="backdrop.x"
+          :y="backdrop.y"
+          :width="backdrop.width"
+          :height="backdrop.height"
+        >
+          <image
+            v-for="(href, theme) in images"
+            :key="theme"
+            :class="['burst', theme]"
+            :href="href"
+            :width="backdrop.width"
+            :height="backdrop.height"
+            preserveAspectRatio="none"
+          />
+        </pattern>
       </defs>
 
       <text class="region" x="0" y="10">States</text>
-      <rect class="box root" x="0" y="24" width="336" height="168" rx="6" />
-      <circle class="glyph ring root" cx="20" cy="44" r="5" />
-      <circle class="glyph dot root" cx="20" cy="44" r="2" />
-      <text class="name root" x="36" y="48.5">(root)</text>
+      <rect class="box window" x="0" y="24" width="336" height="152" rx="6" />
+      <circle class="glyph ring on" cx="20" cy="44" r="5" />
+      <circle class="glyph dot" cx="20" cy="44" r="2" />
+      <text class="name quiet" x="36" y="48.5">(root)</text>
 
+      <rect
+        class="box window current"
+        x="12"
+        y="64"
+        width="312"
+        height="96"
+        rx="6"
+      />
+      <circle class="glyph disc" cx="30" cy="84" r="5.75" />
+      <text class="name strong" x="44" y="88.5">{{ CARD_STATE.name }}</text>
+      <text class="url end on-wash" x="312" y="88.5">{{ CARD_STATE.url }}</text>
+      <text class="url on-wash" x="44" y="129">{{ CARD_STATE.param }}</text>
       <g
-        v-for="leaf in leaves"
-        :key="leaf.name"
-        class="leaf"
-        :class="role(leaf.name)"
+        v-for="chip in chips"
+        :key="chip.id"
+        class="chip"
+        :class="{ on: chip.id === card }"
       >
-        <rect
-          class="box"
-          :x="leaf.x"
-          y="64"
-          width="96"
-          :height="leaf.height"
-          rx="6"
-        />
-        <circle class="glyph ring" :cx="leaf.x + 16" cy="84" r="5" />
-        <circle class="glyph dot" :cx="leaf.x + 16" cy="84" r="2" />
-        <text class="name" :x="leaf.x + 28" y="88.5">{{ leaf.name }}</text>
-        <text class="url" :x="leaf.x + 28" y="107">{{ leaf.url }}</text>
-        <path class="edge" :d="`M${leaf.edge} ${64 + leaf.height}V255`" />
-        <path class="arrowhead" :d="`M${leaf.edge - 5} 254h10l-5 8z`" />
-        <text
-          v-if="leaf.name === active"
-          class="edge-label"
-          :x="leaf.label"
-          y="236"
-          :text-anchor="leaf.anchor"
-        >
-          renders now
-        </text>
+        <rect :x="chip.x" y="113" :width="chip.width" height="22" rx="11" />
+        <text :x="chip.x + chip.width / 2" y="128.5">{{ chip.id }}</text>
       </g>
 
-      <g class="leaf" :class="role(child.name)">
-        <rect class="box" x="128" y="116" width="80" height="48" rx="6" />
-        <circle class="glyph ring" cx="142" cy="132" r="5" />
-        <text class="name" x="154" y="136.5">.child</text>
-        <text class="url" x="154" y="154">{{ child.url }}</text>
-        <template v-if="top === child.parent">
-          <path class="edge" d="M196 164V335" />
-          <path class="arrowhead" d="M191 334h10l-5 8z" />
-          <text v-if="childActive" class="edge-label" x="204" y="236">
-            renders now
-          </text>
-        </template>
-      </g>
-
-      <text class="region" x="0" y="252">Views</text>
-      <rect class="box view" x="0" y="264" width="336" height="176" rx="6" />
-      <rect class="glyph view" x="15" y="279" width="10" height="10" rx="2" />
-      <text class="name view" x="36" y="288.5">&lt;ui-view&gt;</text>
-      <text class="url end" x="312" y="288.5">in &lt;app-root&gt;</text>
-
-      <rect class="box filled" x="12" y="304" width="312" height="124" rx="6" />
-      <circle class="glyph disc" cx="30" cy="324" r="5.75" />
-      <text class="name strong" x="44" y="328.5">{{ top }}</text>
-      <text
-        v-for="(line, index) in DETAIL[top]"
-        :key="line"
-        class="url on-wash"
-        x="44"
-        :y="352 + index * 20"
-      >
-        {{ line }}
+      <path class="edge" d="M60 160V255" />
+      <path class="arrowhead" d="M55 254h10l-5 8z" />
+      <text class="log" x="72" y="204">
+        {{ reentered ? 'exited and re-entered card' : 'entered card' }}
+      </text>
+      <text class="log url" x="72" y="224">
+        {{
+          reentered
+            ? `${CARD_STATE.param}: '${from}' → '${card}'`
+            : `${CARD_STATE.param}: '${card}'`
+        }}
       </text>
 
-      <template v-if="top === child.parent">
-        <rect class="box view" x="24" y="344" width="288" height="72" rx="6" />
-        <rect class="glyph view" x="39" y="359" width="10" height="10" rx="2" />
-        <text class="name view" x="56" y="363.5">&lt;ui-view&gt;</text>
-        <text class="url end on-wash" x="300" y="363.5">
-          in &lt;{{ NESTED_VIEW_HOST }}&gt;
-        </text>
-        <template v-if="childActive">
-          <rect
-            class="box filled"
-            x="36"
-            y="376"
-            width="264"
-            height="28"
-            rx="6"
-          />
-          <circle class="glyph disc" cx="52" cy="390" r="5" />
-          <text class="name strong" x="64" y="394.5">{{ child.name }}</text>
-        </template>
-        <text v-else class="url on-wash" x="40" y="394.5">
-          fallback content
-        </text>
-      </template>
+      <text class="region" x="0" y="252">Views</text>
+      <rect class="box window" x="0" y="264" width="336" height="92" rx="6" />
+      <rect class="glyph" x="15" y="279" width="10" height="10" rx="2" />
+      <text class="name" x="36" y="288.5">&lt;ui-view&gt;</text>
+      <text class="url end" x="312" y="288.5">in &lt;app-root&gt;</text>
+      <rect
+        class="box window current"
+        x="12"
+        y="304"
+        width="312"
+        height="40"
+        rx="6"
+      />
+      <circle class="glyph disc" cx="30" cy="324" r="5.75" />
+      <text class="name strong" x="44" y="328.5">{{ CARD_STATE.name }}</text>
+      <text class="url end on-wash" x="312" y="328.5">
+        { {{ CARD_STATE.param }}: '{{ card }}' }
+      </text>
+
+      <!-- Keyed by the transition count, so the flash replays on each re-entry. -->
+      <g :key="entries" class="flash">
+        <rect x="12" y="64" width="312" height="96" rx="6" />
+        <rect x="12" y="304" width="312" height="40" rx="6" />
+      </g>
     </svg>
 
     <figcaption class="visually-hidden">
       <p>
-        The features tour registers {{ FEATURES_TOUR_STATES.length }} states
-        under the router's root state. A top-level state renders into the
-        <code>&lt;ui-view&gt;</code> in <code>&lt;app-root&gt;</code>; the child
-        state renders into the <code>&lt;ui-view&gt;</code> inside
-        <code>&lt;{{ NESTED_VIEW_HOST }}&gt;</code>, its parent's component.
+        The features tour registers one state,
+        <code>{{ CARD_STATE.name }}</code>, under the router's root state, at
+        the URL <code>{{ CARD_STATE.url }}</code>. It renders into the
+        <code>&lt;ui-view&gt;</code> in <code>&lt;app-root&gt;</code>. Each card
+        is a value of its <code>{{ CARD_STATE.param }}</code> parameter:
+        {{ CARD_IDS.join(', ') }}.
       </p>
-      <ul>
-        <li v-for="state in FEATURES_TOUR_STATES" :key="state.name">
-          State <code>{{ state.name }}</code> owns the URL
-          <code>{{ state.path }}</code>
-          {{
-            state.parent
-              ? `and renders into the view inside its parent, ${state.parent}.`
-              : 'and renders into the top-level view.'
-          }}
-          {{
-            role(state.name) === 'current'
-              ? 'It is the active state.'
-              : role(state.name) === 'ancestor'
-                ? 'It is active, as the parent of the active state.'
-                : ''
-          }}
-        </li>
-      </ul>
+      <p>
+        The active value is <code>{{ card }}</code>.
+        {{
+          reentered
+            ? `The last transition exited and re-entered the state, from ${from}.`
+            : ''
+        }}
+      </p>
     </figcaption>
   </figure>
 </template>
@@ -211,19 +175,21 @@ const role = (name: string) =>
   --diagram-ink: var(--site-color-text);
   --diagram-muted: var(--site-color-text-muted);
   --diagram-current: var(--site-color-identity-ink);
-  --diagram-glow: var(--site-color-diagram-glow);
   --diagram-wash: var(--site-color-diagram-wash);
-  --diagram-root: var(--site-color-diagram-root);
-  --diagram-view: var(--site-color-diagram-view);
+  --diagram-chip-ink: var(--site-color-surface);
   margin: 0;
 }
 
-.ink {
-  stop-color: var(--diagram-current);
+.burst.dark {
+  display: none;
 }
 
-.glow {
-  stop-color: var(--diagram-glow);
+:root.dark .burst.light {
+  display: none;
+}
+
+:root.dark .burst.dark {
+  display: inline;
 }
 
 .drawing {
@@ -242,7 +208,7 @@ text {
 }
 
 .region,
-.edge-label {
+.log:not(.url) {
   font-family: var(--vp-font-family-base);
   font-size: var(--site-text-caption);
 }
@@ -253,38 +219,44 @@ text {
   text-transform: uppercase;
 }
 
+.log {
+  fill: var(--diagram-ink);
+}
+
 .name {
   font-size: 13px;
   fill: var(--diagram-ink);
 }
 
-/* The outer boxes: the root and the ui-view it fills, in accent colours at 1px, secondary to the current state's 2px. */
-.name.root {
-  fill: var(--diagram-root);
+.name.quiet {
+  fill: var(--diagram-muted);
 }
 
-.name.view {
-  fill: var(--diagram-view);
+.name.strong {
+  font-weight: 700;
 }
 
 .end {
   text-anchor: end;
 }
 
+.on-wash {
+  fill: var(--diagram-ink);
+}
+
+/* Every box's stroke is a window onto the panel's burst; the current ones open wider over a wash. */
 .box {
   fill: none;
-  stroke: var(--diagram-muted);
-  stroke-width: 1;
+  stroke-width: 1.5;
 }
 
-.box.root,
-.glyph.root {
-  stroke: var(--diagram-root);
+.window {
+  stroke: var(--diagram-burst);
 }
 
-.box.view,
-.glyph.view {
-  stroke: var(--diagram-view);
+.box.current {
+  fill: var(--diagram-wash);
+  stroke-width: 3;
 }
 
 .glyph {
@@ -293,95 +265,75 @@ text {
   stroke-width: 1.5;
 }
 
-.glyph.dot {
-  fill: var(--diagram-root);
-  stroke: none;
+.glyph.on {
+  stroke: var(--diagram-current);
 }
 
-/* A leaf's dot marks it only as the active parent of the current state. */
-.leaf .glyph.dot {
-  display: none;
-}
-
+.glyph.dot,
 .glyph.disc {
   fill: var(--diagram-current);
   stroke: none;
 }
 
-.edge {
+.chip rect {
   fill: none;
   stroke: var(--diagram-muted);
   stroke-width: 1;
-  stroke-dasharray: 3 4;
+}
+
+.chip text {
+  text-anchor: middle;
+}
+
+/* The current value: a filled chip in bold, so it reads without colour. */
+.chip.on rect {
+  fill: var(--diagram-current);
+  stroke: var(--diagram-current);
+}
+
+.chip.on text {
+  font-weight: 700;
+  fill: var(--diagram-chip-ink);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--diagram-current);
+  stroke-width: 2;
 }
 
 .arrowhead {
-  fill: var(--diagram-muted);
-}
-
-/* The current state and the content it fills the view with: weight, wash and a solid mark, so the role reads without colour. */
-.current .box,
-.box.filled {
-  fill: var(--diagram-wash);
-  stroke-width: 2;
-}
-
-.current .box {
-  stroke: var(--diagram-state-stroke);
-}
-
-.box.filled {
-  stroke: var(--diagram-view-stroke);
-}
-
-.current .glyph.ring {
-  fill: var(--diagram-current);
-  stroke: var(--diagram-current);
-}
-
-.current .name,
-.name.strong {
-  font-weight: 700;
-}
-
-.current .url,
-.on-wash {
-  fill: var(--diagram-ink);
-}
-
-.current .edge {
-  stroke: var(--diagram-current);
-  stroke-width: 2;
-  stroke-dasharray: none;
-}
-
-.current .arrowhead {
   fill: var(--diagram-current);
 }
 
-.current .edge-label {
-  fill: var(--diagram-ink);
+.flash {
+  display: none;
 }
 
-/* The current state's parent is active too: 1px ink, a ring with a dot, and its own solid arrow, since it fills the top view. */
-.ancestor .box,
-.ancestor .glyph.ring {
-  stroke: var(--diagram-current);
+@media (prefers-reduced-motion: no-preference) {
+  .flash {
+    display: inline;
+  }
+
+  .flash rect {
+    fill: none;
+    stroke: var(--diagram-burst);
+    stroke-width: 3;
+    animation: flash calc(2 * var(--site-duration-slow)) var(--ease-out)
+      forwards;
+  }
 }
 
-.ancestor .glyph.dot {
-  display: inline;
-  fill: var(--diagram-current);
-}
+@keyframes flash {
+  from {
+    stroke-width: 9;
+    opacity: 1;
+  }
 
-.ancestor .edge {
-  stroke: var(--diagram-current);
-  stroke-width: 2;
-  stroke-dasharray: none;
-}
-
-.ancestor .arrowhead {
-  fill: var(--diagram-current);
+  to {
+    stroke-width: 3;
+    opacity: 0;
+  }
 }
 
 @media (forced-colors: active) {
@@ -389,16 +341,21 @@ text {
     --diagram-ink: CanvasText;
     --diagram-muted: CanvasText;
     --diagram-current: Highlight;
-    --diagram-glow: Highlight;
     --diagram-wash: Canvas;
-    --diagram-root: CanvasText;
-    --diagram-view: CanvasText;
+    --diagram-chip-ink: HighlightText;
   }
 
-  /* The stroke urls are set inline, so the boxes take the system colour directly. */
-  .current .box,
-  .box.filled {
+  /* The burst url is set inline, so the windows take the system colours directly. */
+  .window {
+    stroke: CanvasText;
+  }
+
+  .box.current {
     stroke: Highlight;
+  }
+
+  .flash {
+    display: none;
   }
 }
 </style>

@@ -19,6 +19,7 @@ export const GROUNDS = {
     property: '--site-color-ground-shade',
     over: 'surface-soft',
   },
+  'identity-ink': { property: '--site-color-identity-ink' },
   'diagram-wash': {
     property: '--site-color-diagram-wash',
     over: 'surface-soft',
@@ -113,22 +114,10 @@ export const ROLES = [
     on: ['surface', 'surface-soft', 'diagram-wash'],
   },
   {
-    property: '--site-color-diagram-glow',
-    kind: 'mark',
-    use: "the end of the home diagram's current-state gradient and the panel rings",
-    on: ['surface', 'surface-soft', 'diagram-wash'],
-  },
-  {
-    property: '--site-color-diagram-root',
+    property: '--site-color-surface',
     kind: 'text',
-    use: "the home diagram's root state: its border, glyph and name",
-    on: ['surface', 'surface-soft'],
-  },
-  {
-    property: '--site-color-diagram-view',
-    kind: 'text',
-    use: "the home diagram's ui-view boxes: their border, glyph and name",
-    on: ['surface', 'surface-soft', 'diagram-wash'],
+    use: "the label of the home diagram's current-value chip",
+    on: ['identity-ink'],
   },
   {
     property: '--site-color-identity-sweep-start',
