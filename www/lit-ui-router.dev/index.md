@@ -19,6 +19,9 @@ hero:
       link: ./app
       target: _self
 
+positioning: >-
+  Start minimal with simple, plain Lit templates and scale cleanly to non-trivial apps without switching routers. Built on <a href="https://npmx.dev/package/@uirouter/core" target="_blank" rel="noopener"><code>@uirouter/core</code></a>, the same engine behind UI-Router for <a href="https://npmx.dev/package/@uirouter/angular" target="_blank" rel="noopener">Angular</a> and <a href="https://npmx.dev/package/@uirouter/react" target="_blank" rel="noopener">React</a>.
+
 features:
   - title: State-based Routing
     icon:
