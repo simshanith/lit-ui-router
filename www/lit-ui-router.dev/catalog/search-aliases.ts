@@ -5,4 +5,5 @@ export const SEARCH_ALIASES = [
   ['11ty', 'eleventy'],
   ['ui-view', 'uiview'],
   ['prerender', 'ssg'],
+  ['ssr', 'server-side rendering'],
 ] as const;

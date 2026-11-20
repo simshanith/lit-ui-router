@@ -11,9 +11,10 @@ type: package
 <a href="https://lit-ui-router.dev/gh/releases/ui-router-registry/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-registry@*" /></a>
 </p>
 
-[`ui-router-registry`](https://npmx.dev/package/ui-router-registry) types the
-state names and params of a `@uirouter/core` router from the app's own
-`as const` state declarations. It is types only and emits no JavaScript.
+[`ui-router-registry`](https://npmx.dev/package/ui-router-registry) is a
+types-only registry for typed routes — state names and params — on a
+`@uirouter/core` router, inferred from the app's own `as const` state
+declarations. It emits no JavaScript.
 
 ## Installation
 

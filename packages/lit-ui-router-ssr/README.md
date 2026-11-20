@@ -6,8 +6,11 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/lit-ui-router-ssr)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-ssr)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-ssr)
 
-Static prerendering for [lit-ui-router](https://lit-ui-router.dev): a
-[`ui-router-server`](https://lit-ui-router.dev/packages/ui-router-server) mount table in, an emitted site out.
+Server-side rendering (SSR) and static prerendering for
+[lit-ui-router](https://lit-ui-router.dev): render a Lit template with a
+settled router per request, or turn a
+[`ui-router-server`](https://lit-ui-router.dev/packages/ui-router-server) mount
+table into an emitted static site.
 
 `prerender()` asks the mount table for a verdict per path and turns each one into an artefact: a
 shell verdict becomes `<subpath>/index.html`, a redirect becomes a host rules line and no page, and

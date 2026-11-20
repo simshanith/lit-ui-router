@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/eslint-plugin-lit-ui-router)
 
-ESLint rules that understand [lit-ui-router](https://lit-ui-router.dev) directives.
+An ESLint plugin with rules that understand [lit-ui-router](https://lit-ui-router.dev) directives.
 
 A lit-ui-router anchor carries no static `href` — the element-part directive assigns one at runtime — so stock accessibility rules report every correct call site. These rules keep the base rules' real coverage while understanding what the directives do.
 

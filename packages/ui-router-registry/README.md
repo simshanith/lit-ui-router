@@ -1,6 +1,6 @@
 # ui-router-registry
 
-Typed state names and params for [UI-Router](https://ui-router.github.io): a types-only registry for `@uirouter/core`. It emits no JavaScript.
+A types-only registry for typed routes — state names and params — on a [UI-Router](https://ui-router.github.io) (`@uirouter/core`) router, inferred from the app's own `as const` state declarations. It emits no JavaScript.
 
 ## Installation
 

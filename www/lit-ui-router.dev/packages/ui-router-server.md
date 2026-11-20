@@ -11,10 +11,11 @@ type: package
 <a href="https://lit-ui-router.dev/gh/releases/ui-router-server/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*" /></a>
 </p>
 
-[`ui-router-server`](https://npmx.dev/package/ui-router-server) runs the
-client's route table on the server, so a static single-page app can answer
-deep links honestly: the app shell for real routes, a computed 302 for
-redirects, and a real 404 for everything else.
+[`ui-router-server`](https://npmx.dev/package/ui-router-server) provides
+server-side routing for UI-Router state trees, running the client's route table
+on the server so a static single-page app can answer deep links honestly: the
+app shell for real routes, a computed 302 for redirects, and a real 404 for
+everything else.
 
 It is a **verdict** engine, not a framework. A pathname goes in and a plain
 object comes out — no `fetch`, no `Response`, no runtime assumptions in the
