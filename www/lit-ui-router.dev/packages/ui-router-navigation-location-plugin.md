@@ -20,11 +20,7 @@ something the classic plugins cannot do.
 
 It works with **any** `@uirouter/core`-based router, not just lit-ui-router.
 
-The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where
-navigations actually commit and events actually fire — run on Chromium on every
-pull request via `test`/`test:coverage`, and on Firefox and WebKit on every
-push to `main` via `test:engines` (on demand through a `ci-main/` branch or the
-`mainGraph` dispatch). The Playwright end-to-end suite runs in Chrome only.
+Tested in Chromium, Firefox, and WebKit.
 
 ## How location plugins fit in
 
@@ -393,6 +389,4 @@ See the full [API reference](/reference/ui-router-navigation-location-plugin/).
 - [Chrome for Developers — Modern client-side routing: the Navigation API](https://developer.chrome.com/docs/web-platform/navigation-api)
 - [Can I Use — Navigation API](https://caniuse.com/mdn-api_navigation)
 - [@uirouter/core — LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
-- [On the Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-navigation-location-plugin) — this package as
-  a brick in sheet 2's model in the round, sized by its authored files and
-  seated on what it peers
+- [Altitude Atlas](https://atlas.lit-ui-router.dev/bricks/?focus=ui-router-navigation-location-plugin) — package size and dependency map
