@@ -245,12 +245,23 @@ by path) and each page's canonical target. The docs build fails if a target is n
 nor a `catalog/redirects.ts` source, so moving a page that 1.x points at owes a redirect. It also
 fails if `sitemap-pages.xml`, `llms.txt` or `llms-full.txt` lists a `/v1/` URL.
 
+[`public/versions.json`](lit-ui-router.dev/public/versions.json), served at `/versions.json`, is the
+one list of docs versions, and its schema is `VersionManifest` in `.vitepress/versions.ts`. `others`
+holds the site-wide snapshots, each with the `tag` it is built from, and `packages` holds each
+package's lines by npm name: a line's id (`v0`, `v1`), the tag it was baked from and whether it is
+`current` or `frozen`. No package line is baked yet, so `packages` is empty. The version menu reads
+it through `.vitepress/lines.ts`: a package's page and reference list that package's lines, the
+guides list the site-wide versions, which `lit-ui-router`'s pages list too until it has a line of
+that major, and the menu is hidden where one entry or none is left: a package with no line, the
+site page and the release stubs. Every build fetches the live manifest, so a frozen build lists
+lines baked after it.
+
 To produce, deploy or replace the snapshot (mise and git required; `cf` logged in to the account):
 
 1. Build this checkout's site: `mise exec -- turbo run build --filter=@www/lit-ui-router.dev`.
 2. `pnpm run docs:snapshot` in the site package
    ([`scripts/docs-snapshot.ts`](lit-ui-router.dev/scripts/docs-snapshot.ts)). It checks out the tag
-   named for the version in `SNAPSHOT_TAGS` (`.vitepress/snapshot.ts`) in a throwaway worktree,
+   named as the version's `tag` in `public/versions.json` in a throwaway worktree,
    copies in this checkout's version banner and menu, runs `mise run setup` and the site's turbo
    build there, then rebuilds the site with `vitepress build --base /v1/` into
    `www/v1.versions.lit-ui-router.dev/dist/v1/` (gitignored). It removes what the main site serves
@@ -265,7 +276,7 @@ To produce, deploy or replace the snapshot (mise and git required; `cf` logged i
    runs `cf deploy` in the Worker's package and writes the manifest; commit it.
 
 The snapshot is refreshed by hand, once per release round and not per release: when the last
-package of a round has published, set `SNAPSHOT_TAGS` to that release's tag and run the three steps
+package of a round has published, set the version's `tag` in `public/versions.json` to that release's tag and run the three steps
 again. A round that changes no 1.x page owes no refresh. The last 1.x tag before 2.0 lands on `main`
 always gets one; after that, a 1.x fix reaches the snapshot the same way, from the branch cut from
 the last tag.

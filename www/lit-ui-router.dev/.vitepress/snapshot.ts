@@ -12,16 +12,15 @@ import {
   redirectsFileBody,
   servedFiles,
 } from './redirects.ts';
-import { SITE_ORIGIN, type VersionManifest } from './versions.ts';
+import {
+  BUNDLED_MANIFEST,
+  SITE_ORIGIN,
+  type VersionManifest,
+} from './versions.ts';
 
-/** The tag each frozen snapshot is built from, keyed by version id. */
-export const SNAPSHOT_TAGS = {
-  v1: 'lit-ui-router-ssr@0.11.1',
-} as const satisfies Readonly<Record<string, string>>;
-
-/** A version id with a snapshot tag. */
-export const hasSnapshotTag = (id: string): id is keyof typeof SNAPSHOT_TAGS =>
-  Object.hasOwn(SNAPSHOT_TAGS, id);
+/** The tag a frozen site-wide snapshot is built from, as the version manifest records it. */
+export const snapshotTag = (id: string): string | undefined =>
+  BUNDLED_MANIFEST.others.find((other) => other.id === id)?.tag;
 
 /** The `www/` package that holds a snapshot's Worker config and, gitignored, its built assets. */
 export const snapshotPackage = (id: string): string =>
