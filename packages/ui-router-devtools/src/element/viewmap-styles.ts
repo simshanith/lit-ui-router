@@ -107,37 +107,148 @@ export const viewMapStyles: CSSResult = css`
     overflow-wrap: anywhere;
   }
 
-  /* Beside the nested Map: two rooms, the state Map's at the inline start; each drawing places itself in its own. */
-  .map-scroll[data-split] {
-    position: relative;
-    display: grid;
-    grid-template-columns: var(--uird-split) minmax(0, 1fr);
-    overflow: clip;
-    user-select: none;
+  /* The view path under the Map: nested boxes in the sheet, one row of items in the dock. */
+  .tree-pane > .vp {
+    grid-column: 1 / -1;
   }
 
-  .split-side {
+  .vp {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     min-inline-size: 0;
-  }
-
-  .split-side > .section {
+    padding-block: 4px 8px;
     padding-inline: var(--uird-margin);
+    border-block-start: 1px solid var(--uird-rule);
+    font: 400 var(--uird-size) / var(--uird-line) var(--uird-font-mono);
   }
 
-  /* The rule between the rooms takes no width from the views' room. */
-  .vm-side {
-    position: relative;
+  .vp-caption {
+    flex: none;
+    font: 700 var(--uird-size-small) / var(--uird-row) var(--uird-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
-  .vm-side::before {
-    content: '';
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: 0;
-    border-inline-start: 1px solid var(--uird-rule);
+  .vp-of {
+    font: 400 var(--uird-size) / var(--uird-line) var(--uird-font-mono);
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--uird-muted);
   }
 
-  /* A box tied to the selection on the other side: the selection's ring, dashed. */
+  .vp-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-inline-size: 0;
+    padding-block-end: 6px;
+    padding-inline: 6px;
+    border: 1px solid var(--uird-line, var(--uird-rule-strong));
+    border-radius: 2px;
+  }
+
+  .vp-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .vp-sep {
+    display: none;
+    color: var(--uird-muted);
+  }
+
+  .vp-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-inline-size: 0;
+    padding-block: 2px;
+    white-space: nowrap;
+    border-radius: 2px;
+  }
+
+  .vp-chip > .name:not(.vm-fill) {
+    flex: none;
+  }
+
+  /* Names are code, read left to right in either direction, so a leading dollar sign stays at the start. */
+  :is(.vp-chip, .vp-of) > .name,
+  .vp-of {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  .vp-chip > .vm-fill {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Selected: the selection's ring, clear of the focus ring inside it. */
+  .vp-chip[aria-pressed='true'] {
+    box-shadow:
+      0 0 0 2px var(--uird-surface),
+      0 0 0 4px var(--uird-select);
+  }
+
+  .vp-more,
+  .vp-none {
+    flex: none;
+    align-self: flex-start;
+    font: 400 var(--uird-size-small) / var(--uird-row) var(--uird-font);
+    color: var(--uird-muted);
+    white-space: nowrap;
+  }
+
+  /* In the dock the path is one row; a path longer than the room scrolls, and a focused item scrolls into view. */
+  @media (width > 880px) {
+    .vp {
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      padding-block: 4px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .vp-item,
+    .vp-inner {
+      display: contents;
+    }
+
+    .vp-sep {
+      display: inline;
+      flex: none;
+    }
+
+    .vp-more,
+    .vp-none {
+      align-self: center;
+    }
+
+    .vp-chip {
+      flex: none;
+      padding-block: 1px;
+      padding-inline: 6px;
+      border: 1px solid var(--uird-line, var(--uird-rule-strong));
+    }
+
+    .vp-chip > .vm-fill {
+      overflow: visible;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .vp-chip[aria-pressed='true'] {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
+
+  /* A state tied to the view selected from the path: the selection's ring, dashed. */
   .box.linked {
     outline: 1px dashed var(--uird-select);
     outline-offset: 2px;

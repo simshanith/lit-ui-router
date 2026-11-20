@@ -19,10 +19,8 @@ import {
   fits,
   LARGE_METRICS,
   METRICS,
-  narrowestWidth,
   pack,
   ROOMY_METRICS,
-  rungRoom,
   SMALL_METRICS,
   type Box,
   type Drawn,
@@ -234,22 +232,10 @@ const openOf = (boxes: readonly Box[]): string[] =>
     box.children.length ? [box.name, ...openOf(box.children)] : [],
   );
 
-interface Cached {
-  content: string;
-  key: string;
-  layout: NestedLayout;
-  room: Size;
-}
-
-// The whole room's layout and the split's state side are cached apart, so the split can weigh one against the other.
-const cache = new WeakMap<DevtoolsPanel, Map<boolean, Cached>>();
-
-const boxesOf = (host: DevtoolsPanel, options: Options, family: string) => {
-  const children = host._children();
-  const build = { host, children, keep: keepOpen(host), options, family };
-
-  return (children.get(null) ?? []).map((state) => buildBox(build, state));
-};
+const cache = new WeakMap<
+  DevtoolsPanel,
+  { content: string; key: string; layout: NestedLayout; room: Size }
+>();
 
 const sameAspect = (a: Size, b: Size): boolean => {
   const ratio = (a.width * b.height) / Math.max(1, a.height * b.width);
@@ -298,42 +284,21 @@ const allRects = (
   return rects;
 };
 
-const slotOf = (host: DevtoolsPanel, split: boolean) => {
-  const slots = cache.get(host) ?? new Map<boolean, Cached>();
-
-  cache.set(host, slots);
-
-  return {
-    cached: slots.get(split),
-    keep: (entry: Cached) => slots.set(split, entry),
-  };
-};
-
 /**
- * Packs the state tree for the Map viewport, stepping down the fit ladder until it fits, or for `room` at `rung` when
- * the view map shares it, which weighed that rung for the room. A resize that leaves the rung and the room's shape as
- * they were keeps the layout, and only the view of it moves.
+ * Packs the state tree for the Map viewport, stepping down the fit ladder until it fits.
+ * A resize that leaves the rung and the room's shape as they were keeps the layout, and only the view of it moves.
  */
-export const layoutNested = (
-  host: DevtoolsPanel,
-  room?: Size,
-  rung?: Rung,
-): NestedLayout =>
-  // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
-  packNested(host, room ?? host._mapSize, room !== undefined, rung);
-
-const packNested = (
-  host: DevtoolsPanel,
-  viewport: Size,
-  split: boolean,
-  forced: Rung | undefined,
-): NestedLayout => {
+export const layoutNested = (host: DevtoolsPanel): NestedLayout => {
   const { states, current } = host._model;
   const keep = keepOpen(host);
   const style = getComputedStyle(host);
   // State names are set in the monospace face, so that is the face measured.
   const family = style.getPropertyValue('--uird-font-mono');
   const rtl = style.direction === 'rtl';
+
+  // The Map viewport is the scroller's content box; the panel's 12px padding is the diagram's outer margin.
+  const viewport = host._mapSize;
+
   const children = host._children();
 
   // Only a compound without a hand-set fold can change the packing, so a selection that opens nothing keeps the layout.
@@ -352,32 +317,34 @@ const packNested = (
     host._mapZoom,
   ]);
 
-  const key = content + JSON.stringify([viewport, forced]);
+  const key = content + JSON.stringify(viewport);
 
-  const slot = slotOf(host, split);
-  const { cached } = slot;
+  const cached = cache.get(host);
 
   if (cached?.key === key) return cached.layout;
 
-  const boxesWith = (options: Options) => boxesOf(host, options, family);
+  const boxesWith = (options: Options) => {
+    const build = { host, children, keep, options, family };
 
-  const sizeAt = (rung: Rung, at: Size): Size =>
-    pack(boxesWith(OPTIONS[rung]), at, OPTIONS[rung].metrics);
+    return (children.get(null) ?? []).map((state) => buildBox(build, state));
+  };
+
+  const sizeAt = (rung: Rung, room: Size): Size =>
+    pack(boxesWith(OPTIONS[rung]), room, OPTIONS[rung].metrics);
 
   // The ladder holds its rung across a resize only; a changed tree or selection starts from the top.
   const same = cached?.content === content ? cached : undefined;
-
-  const rung =
-    forced ?? chooseRung(sizeAt, viewport, same?.layout.rung, host._max);
-
+  const rung = chooseRung(sizeAt, viewport, same && host._rung, host._max);
   const zoom = host._mapZoom === null ? undefined : ZOOMS[host._mapZoom];
+
+  host._rung = rung;
 
   if (
     same?.layout.rung === rung &&
     sameAspect(same.room, viewport) &&
     (zoom || rung === 'pan' || fits(same.layout.placed, viewport))
   ) {
-    slot.keep({ ...same, key });
+    cache.set(host, { ...same, key });
 
     return same.layout;
   }
@@ -408,44 +375,9 @@ const packNested = (
     step: ZOOMS.indexOf(options.metrics),
   };
 
-  slot.keep({ content, key, layout, room: viewport });
+  cache.set(host, { content, key, layout, room: viewport });
 
   return layout;
-};
-
-const narrowed = new WeakMap<NestedLayout, Map<string, number>>();
-
-/**
- * The narrowest room, on the 4px grid and at this height, that `rung` still fits for the layout's tree; `Infinity`
- * when none does.
- */
-export const narrowest = (
-  host: DevtoolsPanel,
-  layout: NestedLayout,
-  height: number,
-  rung: Rung = layout.rung,
-): number => {
-  const max = host._mapSize.width;
-  // The search is bounded by the room's width, so an answer holds for that width only.
-  const key = `${rung}:${height}:${max}`;
-  const known = narrowed.get(layout) ?? new Map<string, number>();
-  const hit = known.get(key);
-
-  if (hit !== undefined) return hit;
-
-  const { metrics } = OPTIONS[rung];
-  const boxes = boxesOf(host, OPTIONS[rung], layout.family);
-
-  const width = narrowestWidth((at) => {
-    const room = rungRoom(rung, { width: at, height });
-
-    return fits(pack(boxes, room, metrics), room);
-  }, max);
-
-  known.set(key, width);
-  narrowed.set(layout, known);
-
-  return width;
 };
 
 // Edges

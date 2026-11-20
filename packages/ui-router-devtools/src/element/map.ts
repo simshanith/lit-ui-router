@@ -3,7 +3,6 @@ export {
   anchorRect,
   keepClear,
   layoutNested,
-  narrowest,
   renderNested,
   ZOOMS,
   type NestedLayout,

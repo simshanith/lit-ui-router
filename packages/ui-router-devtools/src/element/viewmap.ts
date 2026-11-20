@@ -5,23 +5,18 @@ import type { DevtoolsPanel } from './panel.ts';
 import type { ViewFill, ViewInfo } from '../schema.ts';
 import { ancestorsOf } from '../fold.ts';
 import { truncateMiddle } from '../notation.ts';
-import { targetText, viewTree, type ViewNode } from '../views.ts';
+import { targetText, viewPath, viewTree, type ViewNode } from '../views.ts';
 import { textWidth } from './measure.ts';
 import {
   drawnIn,
-  fits,
   METRICS,
-  narrowestWidth,
   pack,
-  RUNGS,
   type Box,
   type Drawn,
   type Metrics,
   type Placed,
-  type Rung,
   type Size,
 } from './pack.ts';
-import type { NestedLayout } from './nested.ts';
 import { fitView, type View } from './viewport.ts';
 
 export { viewMapStyles } from './viewmap-styles.ts';
@@ -63,8 +58,6 @@ interface Scene {
   rows: ReadonlyMap<number, ViewRow>;
   /** The view drawn as selected. */
   selected: number | null;
-  /** Views tied to the state selected beside them, on the Map. */
-  linked: ReadonlySet<number>;
 }
 
 const viewName = (view: ViewInfo, scene: Pick<Scene, 'repeated'>): string =>
@@ -195,7 +188,7 @@ const onKey = (
   event.preventDefault();
 };
 
-const renderFill = (view: ViewInfo, scene: Scene) => {
+const renderFill = (view: ViewInfo, scene: Pick<Scene, 'host' | 'active'>) => {
   const { fill } = view;
 
   if (!fill) return html`<span class="tag">Empty</span>`;
@@ -243,7 +236,6 @@ const boxClasses = (scene: Scene, view: ViewInfo, compound: boolean) =>
     view.fill ? scene.host._depthClass(view.fill.state) : 'vacant',
     inactive(view.fill, scene) && 'inactive',
     scene.selected === view.id && 'selected',
-    scene.linked.has(view.id) && 'linked',
   ]
     .filter(Boolean)
     .join(' ');
@@ -283,7 +275,7 @@ const renderBox = (
   </div>`;
 };
 
-// A state named in the details; it selects that state on the Map beside the views, and in the Outline from the Views.
+// A state named in the details; it selects that state on the Map from the view path, and in the Outline from the Views.
 const stateLink = (host: DevtoolsPanel, name: string) =>
   name
     ? html`<button
@@ -404,7 +396,6 @@ const drawingOf = (
   host: DevtoolsPanel,
   views: readonly ViewInfo[],
   selected: number | null,
-  linked: ReadonlySet<number> = new Set(),
 ): Drawing => {
   const roots = viewTree(views);
   const rows = viewRows(roots);
@@ -418,7 +409,6 @@ const drawingOf = (
       rows[0]?.node.view.id,
     rows: new Map(rows.map((row) => [row.node.view.id, row])),
     selected,
-    linked,
   };
 
   const nodes = new Map(
@@ -544,235 +534,182 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
   </div>`;
 };
 
-/** The split's two rooms: the state Map's at the inline start, and the views' after it. */
-export interface Split {
-  /** The rung the states are drawn at beside the views. */
-  rung: Rung;
-  states: Size;
-  views: Size;
+// The view path under the Map
+
+/** The width past which the path is one row; below it the panel is a sheet or tabs, and the path stacks. */
+const WIDE = '(width > 880px)';
+
+const OTHERS = 'others';
+
+const keyOf = (id: number): string => `view-${id}`;
+
+const STEPS: ReadonlyMap<string, number> = new Map([
+  ['ArrowLeft', -1],
+  ['ArrowUp', -1],
+  ['ArrowRight', 1],
+  ['ArrowDown', 1],
+]);
+
+const flat = (nodes: readonly ViewNode[]): ViewNode[] =>
+  nodes.flatMap((node) => [node, ...flat(node.children)]);
+
+interface PathScene extends Pick<Scene, 'host' | 'repeated' | 'active'> {
+  /** The item that takes Tab. */
+  focus: string | undefined;
 }
 
-/** Room the two sides share beyond their drawings, half to each; a drawing centred in its side may stand nearer the rule. */
-const GAP = 48;
+// The path is one tab stop; the arrow keys step through its items in order, Home and End to either end.
+const onPathKey = (host: DevtoolsPanel, event: KeyboardEvent) => {
+  const items = [
+    ...host.renderRoot.querySelectorAll<HTMLElement>('.vp button'),
+  ];
 
-/** The share of the room a resize must leave to spare before the split takes a milder step back, as the fit ladder does. */
-const RESTORE = 0.1;
+  const at = items.findIndex((item) => item === event.target);
+  const rtl = getComputedStyle(host).direction === 'rtl';
+  const key = (rtl && MIRRORED.get(event.key)) || event.key;
+  const step = STEPS.get(key);
 
-/** The last rung the states step down to beside the views: the Map's own floor before it pans. */
-const FLOOR = RUNGS.indexOf('small');
+  const next =
+    key === 'Home'
+      ? items[0]
+      : key === 'End'
+        ? items.at(-1)
+        : step === undefined
+          ? undefined
+          : items[at + step];
 
-/** The step a hidden split stands at, past every rung. */
-const HIDDEN = RUNGS.length;
+  if (!next) return;
 
-// Everything the answer is weighed from: the room, the panel it is in, and what each rung tried leaves.
-interface Weighed extends Size {
-  /** The dock, or the maximised panel, whose room is measured a frame after a switch. */
-  docked: boolean;
-  /** The whole room's rung, where the steps start. */
-  from: Rung;
-  /** What both drawings leave at each rung tried, mildest first, up to the one chosen. */
-  extras: readonly number[];
-  /** The rung chosen, as its place in `RUNGS`, or `HIDDEN`. */
-  chosen: number;
-  // Weighed for a changed column in a room still measured for the old one, so the next size is weighed afresh too.
-  fresh: boolean;
-}
-
-const weighed = new WeakMap<DevtoolsPanel, Weighed>();
-
-const narrowViews = new WeakMap<object, { key: string; width: number }>();
-
-// A snapshot is replaced, never changed, so its list keys the cache.
-const viewsWidth = (
-  host: DevtoolsPanel,
-  views: readonly ViewInfo[],
-  height: number,
-  max: number,
-): number => {
-  const fonts = fontsOf(host);
-  const drawing = drawingOf(host, views, null);
-  const key = JSON.stringify([height, max, fonts, [...drawing.scene.active]]);
-  const known = narrowViews.get(views);
-
-  if (known?.key === key) return known.width;
-
-  const width = narrowestWidth((at) => {
-    const room = { width: at, height };
-
-    return fits(packViews(drawing, fonts, room), room);
-  }, max);
-
-  narrowViews.set(views, { key, width });
-
-  return width;
+  event.preventDefault();
+  next.focus();
 };
 
-// The ResizeObserver measures the new column's room in the frame after its first weigh; past that frame, a weigh at
-// another size is a resize.
-const settle = (host: DevtoolsPanel, first: Weighed) =>
-  requestAnimationFrame(() =>
-    setTimeout(() => {
-      const now = weighed.get(host);
+const separator = (glyph: string) =>
+  html`<span class="vp-sep" aria-hidden="true">${glyph}</span>`;
 
-      if (
-        now?.fresh &&
-        now.docked === first.docked &&
-        now.width === first.width &&
-        now.height === first.height
-      )
-        weighed.set(host, { ...now, fresh: false });
-    }),
-  );
+const renderItem = (
+  scene: PathScene,
+  node: ViewNode,
+  index: number,
+): TemplateResult => {
+  const { host } = scene;
+  const { view } = node;
+  const key = keyOf(view.id);
 
-type Room = Size & { docked: boolean; from: Rung };
+  // In the row a nested view follows the view that holds it, and a sibling follows the one before it.
+  const sep = index
+    ? separator('+')
+    : node.depth > 1
+      ? separator('›')
+      : nothing;
 
-/** A step of the ladder chosen, and what each rung tried on the way to it leaves. */
-interface Step {
-  chosen: number;
-  extras: number[];
-}
-
-// The first rung that leaves room, trying each down to the floor; one milder than `held` needs `restore` to spare.
-const firstFit = (
-  extraAt: (rung: number) => number,
-  from: number,
-  held: number,
-  restore: number,
-): Step => {
-  const extras: number[] = [];
-
-  for (let rung = from; rung <= FLOOR; rung++) {
-    const extra = extraAt(rung);
-
-    extras.push(extra);
-
-    if (extra >= (rung < held ? restore : 0)) return { chosen: rung, extras };
-  }
-
-  return { chosen: HIDDEN, extras };
+  return html`<div
+    class="vp-item ${view.fill ? host._depthClass(view.fill.state) : 'vacant'}"
+  >
+    ${sep}<button
+      class="vp-chip"
+      tabindex=${key === scene.focus ? 0 : -1}
+      aria-pressed=${host._inspect === 'view' && host._viewSelected === view.id}
+      aria-label=${describeView(view, scene)}
+      title=${view.fqn}
+      @click=${() => host._selectView(view.id)}
+      @focus=${() => (host._pathFocus = key)}
+      @pointerenter=${() => host._pointView(view.id)}
+      @pointerleave=${() => host._pointView(null)}
+    >
+      <span class="name">${viewName(view, scene)}</span
+      >${renderFill(view, scene)}
+    </button>
+    ${
+      node.children.length
+        ? html`<div class="vp-inner">
+            ${node.children.map((child, at) => renderItem(scene, child, at))}
+          </div>`
+        : nothing
+    }
+  </div>`;
 };
 
-// Read again with nothing changed it keeps its answer; a resize of the same panel takes a milder step back only with
-// room to spare, and the dock and the maximised panel each weigh it afresh, up to the first size measured for them.
-const choose = (
-  host: DevtoolsPanel,
-  now: Room,
-  extraAt: (rung: number) => number,
-): number => {
-  const last = weighed.get(host);
-  const from = RUNGS.indexOf(now.from);
-  const panel = last?.docked === now.docked;
-  const sized = panel && last.width === now.width && last.height === now.height;
-  const moved = last !== undefined && !panel;
-  const fresh = moved || (sized && last.fresh);
-  const held = panel && !sized && !last.fresh ? last.chosen : 0;
-
-  const same =
-    sized &&
-    last.from === now.from &&
-    last.extras.every((extra, index) => extra === extraAt(from + index));
-
-  const next = same
-    ? { chosen: last.chosen, extras: last.extras }
-    : firstFit(extraAt, from, held, now.width * RESTORE);
-
-  const entry = { ...now, ...next, fresh };
-
-  weighed.set(host, entry);
-
-  if (moved) settle(host, entry);
-
-  return next.chosen;
-};
+const renderOthers = (host: DevtoolsPanel, others: number, focus?: string) =>
+  others
+    ? html`<button
+        class="vp-more"
+        tabindex=${focus === OTHERS ? 0 : -1}
+        title="Every view, in the Views tab"
+        @click=${() => (host._view = 'views')}
+        @focus=${() => (host._pathFocus = OTHERS)}
+      >
+        +${others} other ${others === 1 ? 'view' : 'views'}
+      </button>`
+    : nothing;
 
 /**
- * The rooms of the split where the views fit beside the state Map, else `null`. The states take the mildest rung from
- * the whole room's down to the Map's floor that leaves the views their natural size. No popover column is kept: the
- * dock's popover takes its column only where the drawings leave it free.
+ * The view path under the Map: the views the selected state fills, else the active state's, inside the views that
+ * hold them, as one row of items in the dock and as nested boxes in the sheet. A state on the active path that fills
+ * no view shows the path of the nearest ancestor that does.
  */
-export const splitOf = (
-  host: DevtoolsPanel,
-  whole: NestedLayout,
-  docked: boolean,
-): Split | null => {
-  const views = host._model.views?.views ?? [];
-
-  if (!views.length || whole.rung === 'pan' || host._mapZoom !== null)
-    return null;
-
-  const { width, height } = host._mapSize;
-
-  const head = parseFloat(
-    getComputedStyle(host).getPropertyValue('--uird-row'),
-  );
-
-  const room = height - head;
-  const free = width - GAP;
-  const drawn = viewsWidth(host, views, room, free);
-  // SAFETY: the panel weighs a split only for a layout the Map's module packed
-  const map = host._map!;
-
-  const statesAt = (rung: number) =>
-    map.narrowest(host, whole, room, RUNGS[rung]);
-
-  const chosen = choose(
-    host,
-    { width, height, docked, from: whole.rung },
-    (rung) => free - statesAt(rung) - drawn,
-  );
-
-  if (chosen === HIDDEN) return null;
-
-  const states = statesAt(chosen);
-  const extra = free - states - drawn;
-  const side = states + Math.floor((extra + GAP) / 2);
-
-  return {
-    rung: RUNGS[chosen],
-    states: { width: side, height: room },
-    views: { width: width - side, height: room },
-  };
-};
-
-/** The view map beside the state Map: each side in its own labelled region, centred in its own room. */
-export const renderSplit = (
-  host: DevtoolsPanel,
-  split: Split,
-  states: TemplateResult,
-): TemplateResult => {
-  // SAFETY: a split is weighed only for a snapshot that holds views
+export const renderPath = (host: DevtoolsPanel): TemplateResult => {
+  // SAFETY: the panel draws the path only for a snapshot that holds views
   const { views } = host._model.views!;
-  const selected = host._inspect === 'view' ? host._viewSelected : null;
-  const state = host._inspect === 'state' ? host._selectedState : null;
+  const state = host._pathState();
+  const active = activeStates(host);
 
-  const linked = new Set(
-    views.flatMap((view) => (view.fill?.state === state ? [view.id] : [])),
+  const path = viewPath(
+    views,
+    state,
+    active.has(state) ? ancestorsOf(host._model.states, state) : [],
   );
 
-  const drawing = drawingOf(host, views, selected, linked);
+  if (!path)
+    return html`<div
+      class="vp"
+      role="group"
+      aria-label="Views of ${state || 'the root'}"
+    >
+      <span class="vp-caption">Views</span>
+      <span class="vp-none">${stateText(state)} fills no view now</span>
+    </div>`;
 
-  const placed = packViews(drawing, fontsOf(host), split.views);
+  const items = flat(path.nodes);
+  const own = items.find((node) => node.view.fill?.state === path.state);
 
-  const layout = {
-    placed,
-    view: centred(placed, { ...split.views, reserve: 0 }),
-  };
+  const keys = [
+    ...items.map((node) => keyOf(node.view.id)),
+    ...(path.others ? [OTHERS] : []),
+  ];
 
-  return html`<section class="split-side" aria-labelledby="h-split-states">
-      <h3 class="section sub" id="h-split-states">
-        <span class="title">States</span>
-      </h3>
-      ${states}
-    </section>
-    <section class="split-side vm-side" aria-labelledby="h-split-views">
-      <h3 class="section sub" id="h-split-views">
-        <span class="title">Views</span>
-      </h3>
-      ${renderTree(host, drawing, layout, 'h-split-views')}
-    </section>`;
+  const selected =
+    host._inspect === 'view' && host._viewSelected !== null
+      ? keyOf(host._viewSelected)
+      : undefined;
+
+  const focus =
+    [host._pathFocus, selected, own && keyOf(own.view.id)].find(
+      (key): key is string => Boolean(key && keys.includes(key)),
+    ) ?? keys[0];
+
+  const scene = { host, repeated: repeatedNames(views), active, focus };
+
+  return html`<div
+    class="vp"
+    role="toolbar"
+    aria-label="Views of ${path.state || 'the root'}"
+    aria-orientation=${matchMedia(WIDE).matches ? 'horizontal' : 'vertical'}
+    @keydown=${(event: KeyboardEvent) => onPathKey(host, event)}
+  >
+    <span class="vp-caption" aria-hidden="true"
+      >Views${
+        path.state === state
+          ? nothing
+          : html` <span class="vp-of">of ${stateText(path.state)}</span>`
+      }</span
+    >
+    ${path.nodes.map((node, index) => renderItem(scene, node, index))}
+    ${renderOthers(host, path.others, focus)}
+  </div>`;
 };
 
-/** The view selected beside the Map, in the panel's own inspector. */
+/** The view selected from the Map's view path, in the panel's own inspector. */
 export const renderViewInspector = (host: DevtoolsPanel): TemplateResult => {
   // SAFETY: the panel drops a view selection when its view leaves the snapshot
   const { views } = host._model.views!;
