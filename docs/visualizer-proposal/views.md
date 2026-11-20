@@ -102,7 +102,8 @@ stays as it is.
 - **Toggle.** `View path`, beside the Map's layout buttons, hides or shows the
   row. It is on unless the viewer turns it off, and the choice is kept in
   `localStorage` (`ui-router-devtools:map-views`) as the layout choice is. It
-  is pressed while the row is drawn. If the view map's module fails to load
+  is pressed while the row is on, including while its module loads, so a press
+  always turns it off. If the view map's module fails to load
   while the row is on, it is disabled and its title says so; with the row off,
   turning it on tries the load again. It is not shown for a session that holds
   no views, which includes a views snapshot with no view in it.
@@ -122,8 +123,9 @@ stays as it is.
   with it. The Views tab keeps the view selected for its own details.
 - **Marks.** A selected view marks the state that fills it and the state whose
   content created it: in the nested layout on the box that draws it or the
-  collapsed compound that holds it, in the node-link tree on its node. A mark is the selection's ring, dashed, so it reads without
-  colour; forced colours draw it in `Highlight` at 2px. A marked state's
+  collapsed compound that holds it, in the node-link tree on its node. A mark
+  is the selection's ring, dashed, so it reads without colour; forced colours
+  draw it in `Highlight` at 2px. A marked state's
   description says how it is tied: `fills the selected view` or `created the
   selected view`. The selected item carries the selection's ring, which
   forced colours draw as a `Highlight` outline.
