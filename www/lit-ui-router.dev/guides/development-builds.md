@@ -35,6 +35,7 @@ message strings included. A production bundle cannot be made to print them.
 | `ui-router-signals`                    | no         | no runtime warnings to fold out                      |
 | `ui-router-navigation-location-plugin` | no         | no runtime warnings to fold out                      |
 | `ui-router-registry`                   | no         | types only — emits no JavaScript                     |
+| `ui-router-devtools`                   | no         | no runtime warnings to fold out                      |
 | `eslint-plugin-lit-ui-router`          | no         | a lint plugin — it never runs in your app bundle     |
 
 The split exists where there is something to strip. A package with a single

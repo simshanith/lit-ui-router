@@ -9,6 +9,7 @@ interface UiViewElement extends HTMLElement {
   uiRouter?: unknown;
 }
 
+/** Options for {@link litViewLocator}. */
 export interface LitViewLocatorOptions {
   /** The document whose `<ui-view>`s are searched, open shadow roots included; the page's own by default. */
   document?: Document;

@@ -1,9 +1,8 @@
 {
   "name": "ui-router-devtools",
   "version": "0.0.0",
-  "private": true,
   "description": "Devtools for any @uirouter/core router: a transition recorder, a Lit panel, a router plugin and Performance and console reporters",
-  "homepage": "https://lit-ui-router.dev",
+  "homepage": "https://lit-ui-router.dev/packages/ui-router-devtools",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -65,7 +64,11 @@
     "build:js": "oxc-emit-js",
     "build:schema": "node scripts/json-schema.ts",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"ui-router-devtools@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "floor-guard && check-bundle-inputs",
+    "codecov:bundle": "upload-entry-bundles",
     "dev": "vite",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/ui-router-devtools && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "lint:oxlint": "oxlint .",
@@ -74,38 +77,103 @@
     "test": "VITEST_BROWSER_API_PORT=63380 vitest run --project=node --project=chrome",
     "test:coverage": "VITEST_BROWSER_API_PORT=63385 vitest run --coverage --project=node --project=chrome",
     "test:engines": "VITEST_BROWSER_API_PORT=63381 vitest run --project=firefox --project=safari",
+    "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "d3-hierarchy": "catalog:",
-    "lit": "catalog:",
-    "valibot": "catalog:"
+    "d3-hierarchy": "catalog:publishedDependencies",
+    "lit": "catalog:publishedDependencies",
+    "valibot": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
+    "@release-it/conventional-changelog": "catalog:",
     "@repo/router-events": "catalog:workspace",
     "@testing-library/dom": "catalog:",
     "@tools/bootstrap": "catalog:workspace",
+    "@tools/bundle-probe": "catalog:workspace",
+    "@tools/compat-guards": "catalog:workspace",
     "@tools/lit-test-env": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/d3-hierarchy": "catalog:",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@valibot/to-json-schema": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "lit-floor": "catalog:devtools-floor",
     "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",
+    "release-it": "catalog:",
+    "rimraf": "catalog:",
     "rolldown": "catalog:",
-    "typescript": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "valibot-floor": "catalog:devtools-floor",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@uirouter/core": "catalog:"
+    "@uirouter/core": "catalog:publishedPeer"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "lit",
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./console": {
+      "free": [
+        "lit",
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./define": {
+      "free": [
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./lit-ui-router": {
+      "free": [
+        "lit",
+        "d3-hierarchy",
+        "valibot",
+        "lit-ui-router"
+      ]
+    },
+    "./performance": {
+      "free": [
+        "lit",
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./plugin": {
+      "free": [
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./testing": {
+      "free": [
+        "lit",
+        "d3-hierarchy",
+        "valibot"
+      ]
+    }
   }
 }

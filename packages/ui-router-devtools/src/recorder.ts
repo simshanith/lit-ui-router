@@ -16,6 +16,7 @@ import {
   type ViewsEvent,
 } from './schema.ts';
 
+/** Options for {@link record}: the adapter's, plus the ring buffer's size and the views snapshot. */
 export interface RecordOptions extends ObserveOptions {
   /** Ring-buffer size for transition-scoped events; snapshots are kept outside it, and a full buffer drops its oldest transitions whole. */
   limit?: number;
@@ -23,15 +24,21 @@ export interface RecordOptions extends ObserveOptions {
   views?: boolean;
 }
 
+/** A recording of one router's events, from {@link record}. */
 export interface Recorder {
+  /** The router's id on this page, shared by every recorder of that router. */
   readonly routerId: string;
+  /** The ring buffer's transition-scoped events, in order; the snapshots are in `session()` only. */
   readonly events: readonly RouterEvent[];
   /** Events discarded since recording began, by the ring buffer or by `clear()`. */
   readonly dropped: number;
   /** The recording as a session file; `redaction` defaults to param keys without their values, messages kept. */
   session(redaction?: Partial<Redaction>): Session;
+  /** Empties the ring buffer, counting its events in `dropped`; the snapshots stay. */
   clear(): void;
+  /** Stops recording and detaches from the router. */
   stop(): void;
+  /** Calls `listener` with each event as it is recorded; the returned function unsubscribes. */
   subscribe(listener: (event: RouterEvent) => void): () => void;
 }
 
@@ -94,6 +101,7 @@ type Buffered = Exclude<
 const keyOf = (event: Buffered): number =>
   'id' in event ? event.id : -event.seq;
 
+/** Records a router's events into a ring buffer, through the adapter `observe`. */
 export const record = (
   router: UIRouter,
   { limit = 2000, views = true, ...options }: RecordOptions = {},
