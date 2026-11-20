@@ -22,7 +22,6 @@ import {
   canonicalOf,
   canonicalPath,
   canonicalProblems,
-  hasSnapshotTag,
   htmlPath,
   indexProblems,
   readSnapshotManifest,
@@ -32,7 +31,7 @@ import {
   snapshotPackage,
   snapshotPages,
   snapshotRedirects,
-  SNAPSHOT_TAGS,
+  snapshotTag,
   unversionWorkerLinks,
   versionExampleLinks,
   withCanonical,
@@ -80,7 +79,7 @@ function outDir(files: Record<string, string> | string[]): string {
 describe('the version manifest', () => {
   it('gives every other version a snapshot tag and a path from its id', () => {
     for (const { id, path } of BUNDLED_MANIFEST.others) {
-      assert.ok(hasSnapshotTag(id), id);
+      assert.ok(snapshotTag(id), id);
       assert.equal(path, `/${id}/`);
     }
   });
@@ -88,7 +87,12 @@ describe('the version manifest', () => {
   it('serves 1.x at the snapshot prefix', () => {
     assert.deepEqual(
       BUNDLED_MANIFEST.others.find(({ id }) => id === 'v1'),
-      { id: 'v1', label: '1.x', path: SNAPSHOT_PREFIX },
+      {
+        id: 'v1',
+        label: '1.x',
+        path: SNAPSHOT_PREFIX,
+        tag: 'lit-ui-router-ssr@0.11.1',
+      },
     );
   });
 
@@ -302,7 +306,7 @@ describe('the committed 1.x manifest', () => {
   const manifest = readSnapshotManifest('v1');
 
   it('names the tag the recipe builds from and lists every page under the prefix', () => {
-    assert.equal(manifest.tag, SNAPSHOT_TAGS.v1);
+    assert.equal(manifest.tag, snapshotTag('v1'));
 
     const pages = Object.entries(manifest.pages);
 

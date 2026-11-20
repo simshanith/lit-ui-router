@@ -8,13 +8,12 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import {
   canonicalOf,
-  hasSnapshotTag,
   htmlPath,
   manifestPath,
   snapshotDigest,
   snapshotPackage,
   snapshotPages,
-  SNAPSHOT_TAGS,
+  snapshotTag,
   type SnapshotManifest,
 } from '../.vitepress/snapshot.ts';
 
@@ -28,8 +27,12 @@ const main = async (): Promise<void> => {
   const dryRun = args.includes('--dry-run');
   const id = args.find((arg) => !arg.startsWith('--')) ?? 'v1';
 
-  if (!hasSnapshotTag(id)) {
-    console.error(`docs-snapshot-publish.ts: no snapshot tag for ${id}`);
+  const tag = snapshotTag(id);
+
+  if (!tag) {
+    console.error(
+      `docs-snapshot-publish.ts: no versions.json entry with a tag for ${id}`,
+    );
     process.exitCode = 2;
 
     return;
@@ -72,7 +75,7 @@ const main = async (): Promise<void> => {
   }
 
   const manifest: SnapshotManifest = {
-    tag: SNAPSHOT_TAGS[id],
+    tag,
     ...snapshotDigest(root),
     pages,
   };

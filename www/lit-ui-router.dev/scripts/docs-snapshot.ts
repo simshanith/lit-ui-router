@@ -19,11 +19,9 @@ import { redirectLines } from '../.vitepress/redirects.ts';
 import {
   bakeCanonicals,
   finishSnapshot,
-  hasSnapshotTag,
   snapshotDigest,
   snapshotPackage,
   snapshotPages,
-  SNAPSHOT_TAGS,
   writeSnapshotRules,
 } from '../.vitepress/snapshot.ts';
 import { BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
@@ -41,6 +39,7 @@ const PACKAGE = join(import.meta.dirname, '..');
 /** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner and menu. */
 const VERSION_FILES = [
   '.vitepress/versions.ts',
+  '.vitepress/lines.ts',
   '.vitepress/theme/use-versions.ts',
   '.vitepress/theme/components/VersionBanner.vue',
   '.vitepress/theme/components/VersionMenu.vue',
@@ -169,12 +168,12 @@ const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
   const bakeOnly = args.includes('--bake-only');
   const id = args.find((arg) => !arg.startsWith('--')) ?? 'v1';
-  const tag = hasSnapshotTag(id) ? SNAPSHOT_TAGS[id] : undefined;
   const version = BUNDLED_MANIFEST.others.find((other) => other.id === id);
+  const tag = version?.tag;
 
   if (!tag || !version) {
     console.error(
-      `docs-snapshot.ts: no snapshot tag or versions.json entry for ${id}`,
+      `docs-snapshot.ts: no versions.json entry with a tag for ${id}`,
     );
     process.exitCode = 2;
 

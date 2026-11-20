@@ -3,7 +3,8 @@ import { useData } from 'vitepress';
 import VPNavMenuGroup from 'vitepress/dist/client/theme-default/components/VPNavMenuGroup.vue';
 import { computed, onMounted, shallowRef } from 'vue';
 
-import { menuVersions, sameVersionPage, SITE_ORIGIN } from '../../versions.ts';
+import { versionMenu } from '../../lines.ts';
+import { pagePath, SITE_ORIGIN } from '../../versions.ts';
 import { goToVersionPage, isPlainClick, useVersions } from '../use-versions.ts';
 
 const { screenMenu, menu } = defineProps<{
@@ -11,9 +12,9 @@ const { screenMenu, menu } = defineProps<{
   menu?: boolean;
 }>();
 
-const { page } = useData();
+const { page, site } = useData();
 
-const { manifest, version } = useVersions();
+const { manifest } = useVersions();
 
 // Absolute, so VitePress doesn't prefix this build's base; SSR can't know the host.
 const origin = shallowRef(SITE_ORIGIN);
@@ -22,29 +23,29 @@ onMounted(() => {
   origin.value = location.origin;
 });
 
-const entries = computed(() =>
-  menuVersions(manifest.value).map((target) => ({
-    target,
-    link: new URL(
-      sameVersionPage(
-        target,
-        page.value.relativePath,
-        page.value.isNotFound ?? false,
-      ),
-      origin.value,
-    ).href,
-  })),
+// From the page source, not the address bar, so the server and the client render the same entries.
+const state = computed(() =>
+  versionMenu(
+    manifest.value,
+    `${site.value.base}${pagePath(page.value.relativePath)}`,
+    page.value.isNotFound ?? false,
+  ),
 );
 
-const label = computed(
-  () => version.value?.label ?? manifest.value.current.label,
+const entries = computed(() =>
+  state.value.entries.map(({ label, href, fallback }) => ({
+    label,
+    fallback,
+    link: new URL(href, origin.value).href,
+  })),
 );
 
 // A listed group (mobile screen, overflow menu) needs the context the bar's flyout gets from its place.
 const item = computed(() => ({
-  text: screenMenu || menu ? `Version: ${label.value}` : label.value,
-  items: entries.value.map(({ target, link }) => ({
-    text: target.label,
+  text:
+    screenMenu || menu ? `Version: ${state.value.label}` : state.value.label,
+  items: entries.value.map(({ label, link }) => ({
+    text: label,
     link,
     target: '_self',
     noIcon: true,
@@ -59,7 +60,7 @@ function onClick(event: MouseEvent) {
   if (!anchor || !entry) return;
 
   event.preventDefault();
-  void goToVersionPage(anchor.href, entry.target.path);
+  void goToVersionPage(anchor.href, entry.fallback);
 }
 </script>
 

@@ -10,20 +10,39 @@ const DocsVersion = v.object({
   id: v.pipe(v.string(), v.nonEmpty()),
   label: v.pipe(v.string(), v.nonEmpty()),
   path: v.pipe(v.string(), v.startsWith('/'), v.endsWith('/')),
+  /** The release tag a frozen site-wide snapshot is built from. */
+  tag: v.optional(v.pipe(v.string(), v.nonEmpty())),
+});
+
+/** A line's URL segment: `v` and a major, `v0` included; no leading zeros, so one major has one id. */
+export const LINE_ID = /^v(0|[1-9]\d*)$/;
+
+/** One major of one package: its page at `/packages/<pkg>/<id>`, its reference under `/reference/<pkg>/<id>/`. */
+const PackageLine = v.object({
+  id: v.pipe(v.string(), v.regex(LINE_ID)),
+  /** The release tag the line was baked from, `<package>@<version>`. */
+  tag: v.pipe(v.string(), v.nonEmpty()),
+  /** `current` holds the latest release and is re-baked each release round; `frozen` is an older major. */
+  status: v.picklist(['current', 'frozen']),
 });
 
 /** The version manifest at `/versions.json`: every served build of this site and how each is shown. */
 export const VersionManifest = v.object({
+  /** The unversioned URLs, which follow `main`. */
   current: DocsVersion,
-  /** Every served non-current version, newest first, hidden ones included. */
+  /** Every served site-wide version, newest first, hidden ones included: the guides at the router's major. */
   others: v.array(DocsVersion),
-  /** Ids of versions that get the deprecated banner. */
+  /** Ids of site-wide versions that get the deprecated banner. */
   deprecated: v.array(v.string()),
-  /** Ids of versions left out of the menu and search, still served. */
+  /** Ids of site-wide versions left out of the menu and search, still served. */
   hidden: v.array(v.string()),
+  /** Each package's baked lines, keyed by npm name; a package without one is absent. */
+  packages: v.optional(v.record(v.string(), v.array(PackageLine)), {}),
 });
 
 export type DocsVersion = v.InferOutput<typeof DocsVersion>;
+
+export type PackageLine = v.InferOutput<typeof PackageLine>;
 
 export type VersionManifest = v.InferOutput<typeof VersionManifest>;
 
@@ -45,7 +64,53 @@ export function versionOf(
   );
 }
 
-/** The version menu's entries: the current version, then the others that aren't hidden. */
+/** A line id's major. */
+export const lineMajor = (id: string): number =>
+  Number(LINE_ID.exec(id)?.[1] ?? Number.NaN);
+
+/** A package's lines, newest major first. */
+export const packageLines = (
+  manifest: VersionManifest,
+  name: string,
+): PackageLine[] =>
+  (Object.hasOwn(manifest.packages, name)
+    ? [...(manifest.packages[name] ?? [])]
+    : []
+  ).sort((a, b) => lineMajor(b.id) - lineMajor(a.id));
+
+/** What the schema can't say about the package lines: each names a catalog package, a tag of that package at the line's major, and one line per major with the newest current. */
+export function lineProblems(
+  manifest: VersionManifest,
+  packages: readonly string[],
+): string[] {
+  return Object.entries(manifest.packages).flatMap(([name, listed]) => {
+    if (!packages.includes(name)) return [`${name}: not a catalog package`];
+
+    const lines = packageLines(manifest, name);
+    const ids = lines.map(({ id }) => id);
+
+    return [
+      ...lines.flatMap(({ id, tag }) =>
+        tag.startsWith(`${name}@${lineMajor(id)}.`)
+          ? []
+          : [`${name} ${id}: tag ${tag} is not ${name}@${lineMajor(id)}.x`],
+      ),
+      ...ids.flatMap((id, index) =>
+        ids.indexOf(id) === index ? [] : [`${name} ${id}: listed twice`],
+      ),
+      ...lines.flatMap(({ id, status }, index) =>
+        (status === 'current') === (index === 0)
+          ? []
+          : index === 0
+            ? [`${name} ${id}: the newest line is not current`]
+            : [`${name} ${id}: an older line is current`],
+      ),
+      ...(listed.length === 0 ? [`${name}: lists no line`] : []),
+    ];
+  });
+}
+
+/** The version menu's site-wide entries: the current version, then the others that aren't hidden. */
 export function menuVersions(manifest: VersionManifest): DocsVersion[] {
   const hidden = new Set(manifest.hidden);
 
