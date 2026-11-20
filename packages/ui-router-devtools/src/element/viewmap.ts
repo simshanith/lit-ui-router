@@ -5,7 +5,7 @@ import type { DevtoolsPanel } from './panel.ts';
 import type { ViewFill, ViewInfo } from '../schema.ts';
 import { ancestorsOf } from '../fold.ts';
 import { truncateMiddle } from '../notation.ts';
-import { targetText, viewTree, type ViewNode } from '../views.ts';
+import { targetText, viewPath, viewTree, type ViewNode } from '../views.ts';
 import { textWidth } from './measure.ts';
 import {
   drawnIn,
@@ -15,6 +15,7 @@ import {
   type Drawn,
   type Metrics,
   type Placed,
+  type Size,
 } from './pack.ts';
 import { fitView, type View } from './viewport.ts';
 
@@ -55,6 +56,8 @@ interface Scene {
   active: ReadonlySet<string>;
   focus: number | undefined;
   rows: ReadonlyMap<number, ViewRow>;
+  /** The view drawn as selected. */
+  selected: number | null;
 }
 
 const viewName = (view: ViewInfo, scene: Pick<Scene, 'repeated'>): string =>
@@ -185,7 +188,7 @@ const onKey = (
   event.preventDefault();
 };
 
-const renderFill = (view: ViewInfo, scene: Scene) => {
+const renderFill = (view: ViewInfo, scene: Pick<Scene, 'host' | 'active'>) => {
   const { fill } = view;
 
   if (!fill) return html`<span class="tag">Empty</span>`;
@@ -215,7 +218,7 @@ const renderHead = (scene: Scene, node: ViewNode) => {
     aria-posinset=${row?.posinset ?? 1}
     aria-owns=${compound ? `vm-kids-${view.id}` : nothing}
     aria-expanded=${compound ? 'true' : nothing}
-    aria-selected=${host._viewSelected === view.id}
+    aria-selected=${scene.selected === view.id}
     @click=${() => host._selectView(view.id)}
     @focus=${() => (host._viewFocus = view.id)}
     @pointerenter=${() => host._pointView(view.id)}
@@ -232,7 +235,7 @@ const boxClasses = (scene: Scene, view: ViewInfo, compound: boolean) =>
     compound ? 'open' : 'leaf',
     view.fill ? scene.host._depthClass(view.fill.state) : 'vacant',
     inactive(view.fill, scene) && 'inactive',
-    scene.host._viewSelected === view.id && 'selected',
+    scene.selected === view.id && 'selected',
   ]
     .filter(Boolean)
     .join(' ');
@@ -272,7 +275,7 @@ const renderBox = (
   </div>`;
 };
 
-// A state named in the details; it opens the Outline with that state selected.
+// A state named in the details; it selects that state on the Map from the view path, and in the Outline from the Views.
 const stateLink = (host: DevtoolsPanel, name: string) =>
   name
     ? html`<button
@@ -286,7 +289,7 @@ const stateLink = (host: DevtoolsPanel, name: string) =>
 
 type Fact = readonly [term: string, value: unknown];
 
-const facts = (host: DevtoolsPanel, view: ViewInfo): Fact[] => {
+export const facts = (host: DevtoolsPanel, view: ViewInfo): Fact[] => {
   const { fill } = view;
   // An imported session's page is not the recorded one, so it has no place to report.
   const place = host._imported ? undefined : host.viewLocator?.describe?.(view);
@@ -382,47 +385,129 @@ interface Layout {
   view: View;
 }
 
-/**
- * Packs the views for the room they are drawn in and places them as the Map's fitted view does: in the middle on an
- * axis they fit, at the start of one they overflow. Before a view is selected the details' column is kept free where
- * the dock has room for it, so selecting one moves nothing.
- */
-const layoutOf = (
+interface Drawing {
+  roots: ViewNode[];
+  rows: ViewRow[];
+  scene: Scene;
+  nodes: ReadonlyMap<string, ViewNode>;
+}
+
+const drawingOf = (
   host: DevtoolsPanel,
-  roots: readonly ViewNode[],
-  scene: Pick<Scene, 'repeated' | 'active'>,
-  selected: boolean,
-): Layout => {
+  views: readonly ViewInfo[],
+  selected: number | null,
+): Drawing => {
+  const roots = viewTree(views);
+  const rows = viewRows(roots);
+
+  const scene: Scene = {
+    host,
+    repeated: repeatedNames(views),
+    active: activeStates(host),
+    focus:
+      rows.find((row) => row.node.view.id === host._viewFocus)?.node.view.id ??
+      rows[0]?.node.view.id,
+    rows: new Map(rows.map((row) => [row.node.view.id, row])),
+    selected,
+  };
+
+  const nodes = new Map(
+    rows.map((row) => [String(row.node.view.id), row.node]),
+  );
+
+  return { roots, rows, scene, nodes };
+};
+
+const fontsOf = (host: DevtoolsPanel): Fonts => {
   const style = getComputedStyle(host);
 
-  const fonts = {
+  return {
     mono: style.getPropertyValue('--uird-font-mono'),
     sans: style.getPropertyValue('--uird-font'),
   };
+};
 
-  const margin = parseFloat(style.getPropertyValue('--uird-margin')) || 0;
-  const { width } = host._mapSize;
-  const reserve = !selected && width + margin * 2 >= BESIDE ? DETAIL : 0;
-  const height = Math.max(0, host._mapSize.height - footOf(host));
-
-  const placed = pack(
+const packViews = (
+  { roots, scene }: Drawing,
+  fonts: Fonts,
+  room: Size,
+): Placed =>
+  pack(
     roots.map((root) => boxOf(root, scene, fonts)),
-    { width: width - reserve, height },
+    room,
     VIEW_METRICS,
   );
 
-  // Margins are logical, so the view is taken as left to right and mirrors with the page.
-  const view = fitView(placed, {
-    width,
+// Margins are logical, so the view is taken as left to right and mirrors with the page.
+const centred = (placed: Placed, room: Size & { reserve: number }): View =>
+  fitView(placed, { ...room, slack: 0, foot: 0, rtl: false });
+
+// The Views' container, whose width puts the details beside the boxes; before it is drawn, the room it will hold.
+const containerOf = (host: DevtoolsPanel, width: number, margin: number) =>
+  host.renderRoot.querySelector('.views-scroll')?.clientWidth ??
+  width + margin * 2;
+
+/**
+ * Packs the views for the room they are drawn in and places them as the Map's fitted view does: in the middle on an
+ * axis they fit, at the start of one they overflow. Where the dock puts the details beside the boxes, the drawing is
+ * packed for the room they leave and placed in the whole room as it is before a view is selected, in the middle
+ * while their column stays free, else as near it as keeps the column free, so selecting one moves nothing.
+ */
+const layoutOf = (host: DevtoolsPanel, drawing: Drawing): Layout => {
+  const margin = parseFloat(
+    getComputedStyle(host).getPropertyValue('--uird-margin'),
+  );
+
+  const { width } = host._mapSize;
+  const container = containerOf(host, width, margin);
+  const beside = container >= BESIDE;
+  // Beside the details the room is the container's, which a selection leaves as it was.
+  const whole = beside ? container - margin * 2 : width;
+  const height = Math.max(0, host._mapSize.height - footOf(host));
+
+  const placed = packViews(drawing, fontsOf(host), {
+    width: beside ? whole - DETAIL : width,
     height,
-    reserve,
-    slack: 0,
-    foot: 0,
-    rtl: false,
   });
 
-  return { placed, view };
+  // As the Map keeps the popover's column: centred while it is free either side, past that the end margin goes first.
+  const reserve = beside
+    ? Math.max(0, Math.min(DETAIL, DETAIL * 2 - (whole - placed.width)))
+    : 0;
+
+  return { placed, view: centred(placed, { width: whole, height, reserve }) };
 };
+
+const renderTree = (
+  host: DevtoolsPanel,
+  { rows, scene, nodes }: Drawing,
+  { placed, view }: Layout,
+  label: string,
+) =>
+  html`<div
+    class="nested vm-boxes"
+    role="tree"
+    aria-labelledby=${label}
+    style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-start:${view.x}px;margin-block-start:${view.y}px"
+    @keydown=${(event: KeyboardEvent) => onKey(host, event, rows, scene.focus)}
+  >
+    ${
+      placed.box
+        ? renderBox(
+            scene,
+            {
+              box: placed.box,
+              placed,
+              x: 0,
+              y: 0,
+              width: placed.width,
+              height: placed.height,
+            },
+            nodes,
+          )
+        : renderBoxes(scene, placed, nodes)
+    }
+  </div>`;
 
 /** The router's `ui-view`s as nested boxes, each named with what fills it, and the selected view's details. */
 export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
@@ -430,65 +515,219 @@ export const renderViewMap = (host: DevtoolsPanel): TemplateResult => {
 
   if (!snapshot) return html`<p class="empty">This session holds no views.</p>`;
 
-  const roots = viewTree(snapshot.views);
-  const rows = viewRows(roots);
-
-  const scene: Scene = {
-    host,
-    repeated: repeatedNames(snapshot.views),
-    active: activeStates(host),
-    focus:
-      rows.find((row) => row.node.view.id === host._viewFocus)?.node.view.id ??
-      rows[0]?.node.view.id,
-    rows: new Map(rows.map((row) => [row.node.view.id, row])),
-  };
+  const drawing = drawingOf(host, snapshot.views, host._viewSelected);
 
   const selected = snapshot.views.find(
     (view) => view.id === host._viewSelected,
   );
 
-  const nodes = new Map(
-    rows.map((row) => [String(row.node.view.id), row.node]),
-  );
-
-  const layout = rows.length
-    ? layoutOf(host, roots, scene, Boolean(selected))
-    : undefined;
-
-  const placed = layout?.placed;
-
   return html`<div class="viewmap" ?data-detail=${Boolean(selected)}>
     <div class="vm-main">
       ${
-        placed && layout
-          ? html`<div
-              class="nested vm-boxes"
-              role="tree"
-              aria-labelledby="h-states"
-              style="inline-size:${placed.width}px;block-size:${placed.height}px;margin-inline-start:${layout.view.x}px;margin-block-start:${layout.view.y}px"
-              @keydown=${(event: KeyboardEvent) => onKey(host, event, rows, scene.focus)}
-            >
-              ${
-                placed.box
-                  ? renderBox(
-                      scene,
-                      {
-                        box: placed.box,
-                        placed,
-                        x: 0,
-                        y: 0,
-                        width: placed.width,
-                        height: placed.height,
-                      },
-                      nodes,
-                    )
-                  : renderBoxes(scene, placed, nodes)
-              }
-            </div>`
+        drawing.rows.length
+          ? renderTree(host, drawing, layoutOf(host, drawing), 'h-states')
           : html`<p class="empty">No ui-view is registered with the router.</p>`
       }
       ${renderUnmatched(host, snapshot.unmatched)}
     </div>
     ${renderDetail(host, selected)}
+  </div>`;
+};
+
+// The view path under the Map
+
+/** The width past which the path is one row; below it the panel is a sheet or tabs, and the path stacks. */
+const WIDE = '(width > 880px)';
+
+const OTHERS = 'others';
+
+const keyOf = (id: number): string => `view-${id}`;
+
+const STEPS: ReadonlyMap<string, number> = new Map([
+  ['ArrowLeft', -1],
+  ['ArrowUp', -1],
+  ['ArrowRight', 1],
+  ['ArrowDown', 1],
+]);
+
+const flat = (nodes: readonly ViewNode[]): ViewNode[] =>
+  nodes.flatMap((node) => [node, ...flat(node.children)]);
+
+interface PathScene extends Pick<Scene, 'host' | 'repeated' | 'active'> {
+  /** The item that takes Tab. */
+  focus: string | undefined;
+}
+
+// The path is one tab stop; the arrow keys step through its items in order, Home and End to either end.
+const onPathKey = (host: DevtoolsPanel, event: KeyboardEvent) => {
+  const items = [
+    ...host.renderRoot.querySelectorAll<HTMLElement>('.vp button'),
+  ];
+
+  const at = items.findIndex((item) => item === event.target);
+  const rtl = getComputedStyle(host).direction === 'rtl';
+  const key = (rtl && MIRRORED.get(event.key)) || event.key;
+  const step = STEPS.get(key);
+
+  const next =
+    key === 'Home'
+      ? items[0]
+      : key === 'End'
+        ? items.at(-1)
+        : step === undefined
+          ? undefined
+          : items[at + step];
+
+  if (!next) return;
+
+  event.preventDefault();
+  next.focus();
+};
+
+const separator = (glyph: string) =>
+  html`<span class="vp-sep" aria-hidden="true">${glyph}</span>`;
+
+const renderItem = (
+  scene: PathScene,
+  node: ViewNode,
+  index: number,
+): TemplateResult => {
+  const { host } = scene;
+  const { view } = node;
+  const key = keyOf(view.id);
+
+  // In the row a nested view follows the view that holds it, and a sibling follows the one before it.
+  const sep = index
+    ? separator('+')
+    : node.depth > 1
+      ? separator('›')
+      : nothing;
+
+  return html`<div
+    class="vp-item ${view.fill ? host._depthClass(view.fill.state) : 'vacant'}"
+  >
+    ${sep}<button
+      class="vp-chip"
+      tabindex=${key === scene.focus ? 0 : -1}
+      aria-pressed=${host._inspect === 'view' && host._viewSelected === view.id}
+      aria-label=${describeView(view, scene)}
+      title=${view.fqn}
+      @click=${() => host._selectView(view.id)}
+      @focus=${() => (host._pathFocus = key)}
+      @pointerenter=${() => host._pointView(view.id)}
+      @pointerleave=${() => host._pointView(null)}
+    >
+      <span class="name">${viewName(view, scene)}</span
+      >${renderFill(view, scene)}
+    </button>
+    ${
+      node.children.length
+        ? html`<div class="vp-inner">
+            ${node.children.map((child, at) => renderItem(scene, child, at))}
+          </div>`
+        : nothing
+    }
+  </div>`;
+};
+
+const renderOthers = (host: DevtoolsPanel, others: number, focus?: string) =>
+  others
+    ? html`<button
+        class="vp-more"
+        tabindex=${focus === OTHERS ? 0 : -1}
+        title="Every view, in the Views tab"
+        @click=${() => (host._view = 'views')}
+        @focus=${() => (host._pathFocus = OTHERS)}
+      >
+        +${others} other ${others === 1 ? 'view' : 'views'}
+      </button>`
+    : nothing;
+
+/**
+ * The view path under the Map: the views the selected state fills, else the active state's, inside the views that
+ * hold them, as one row of items in the dock and as nested boxes in the sheet. A state on the active path that fills
+ * no view shows the path of the nearest ancestor that does.
+ */
+export const renderPath = (host: DevtoolsPanel): TemplateResult => {
+  // SAFETY: the panel draws the path only for a snapshot that holds views
+  const { views } = host._model.views!;
+  const state = host._pathState();
+  const active = activeStates(host);
+
+  const path = viewPath(
+    views,
+    state,
+    active.has(state) ? ancestorsOf(host._model.states, state) : [],
+  );
+
+  if (!path)
+    return html`<div
+      class="vp"
+      role="group"
+      aria-label="Views of ${state || 'the root'}"
+    >
+      <span class="vp-caption">Views</span>
+      <span class="vp-none">${stateText(state)} fills no view now</span>
+    </div>`;
+
+  const items = flat(path.nodes);
+  // SAFETY: a path is found only for a state that fills one of its views
+  const own = items.find((node) => node.view.fill?.state === path.state)!;
+
+  const keys = [
+    ...items.map((node) => keyOf(node.view.id)),
+    ...(path.others ? [OTHERS] : []),
+  ];
+
+  const selected =
+    host._inspect === 'view' && host._viewSelected !== null
+      ? keyOf(host._viewSelected)
+      : undefined;
+
+  const focus =
+    [host._pathFocus, selected].find((key): key is string =>
+      Boolean(key && keys.includes(key)),
+    ) ?? keyOf(own.view.id);
+
+  const scene = { host, repeated: repeatedNames(views), active, focus };
+
+  return html`<div
+    class="vp"
+    role="toolbar"
+    aria-label="Views of ${path.state || 'the root'}"
+    aria-orientation=${matchMedia(WIDE).matches ? 'horizontal' : 'vertical'}
+    @keydown=${(event: KeyboardEvent) => onPathKey(host, event)}
+  >
+    <span class="vp-caption" aria-hidden="true"
+      >Views${
+        path.state === state
+          ? nothing
+          : html` <span class="vp-of">of ${stateText(path.state)}</span>`
+      }</span
+    >
+    ${path.nodes.map((node, index) => renderItem(scene, node, index))}
+    ${renderOthers(host, path.others, focus)}
+  </div>`;
+};
+
+/** The view selected from the Map's view path, in the panel's own inspector. */
+export const renderViewInspector = (host: DevtoolsPanel): TemplateResult => {
+  // SAFETY: the panel drops a view selection when its view leaves the snapshot
+  const { views } = host._model.views!;
+  const view = views.find((each) => each.id === host._viewSelected)!;
+
+  return html`<div class="inspector vm-inspector">
+    <p class="insp-title">
+      <span class="name"
+        >${viewName(view, { repeated: repeatedNames(views) })}</span
+      >
+    </p>
+    <dl class="facts">
+      ${facts(host, view).map(
+        ([term, value]) =>
+          html`<dt>${term}</dt>
+            <dd>${value}</dd>`,
+      )}
+    </dl>
   </div>`;
 };

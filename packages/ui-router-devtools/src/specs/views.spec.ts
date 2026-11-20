@@ -5,7 +5,7 @@ import { redactSession } from '@repo/router-events/redaction';
 import { record, viewTree, type ViewInfo, type ViewsEvent } from '../index.ts';
 import { readSession } from '../session-schema.ts';
 import { fold } from '../fold.ts';
-import { targetText } from '../views.ts';
+import { targetText, viewPath } from '../views.ts';
 import type { Session, ViewFill } from '../schema.ts';
 
 const fill = (state: string, view = '$default', anchor = ''): ViewFill => ({
@@ -117,6 +117,76 @@ describe('viewTree', () => {
       targetText(fill('mymessages.messagelist', 'messagelist', 'mymessages')),
     ).toBe('messagelist@mymessages');
     expect(targetText(fill('home'))).toBe('$default@');
+  });
+});
+
+describe('viewPath', () => {
+  it('keeps the views a state fills and the views they sit inside, and counts the rest', () => {
+    const path = viewPath(app(), 'mymessages.messagelist');
+
+    expect(path?.state).toBe('mymessages.messagelist');
+    expect(fqns(path!.nodes)).toEqual([
+      [
+        '$default',
+        [['$default.mymessages', ['$default.mymessages.messagelist']]],
+      ],
+    ]);
+    expect(path?.others).toBe(2);
+  });
+
+  it('keeps every view a state fills, under the views they share', () => {
+    const views = app();
+    const [root] = views;
+
+    const second = view(
+      '$default.sidebar',
+      'app',
+      fill('mymessages', 'sidebar'),
+    );
+
+    const path = viewPath([...views, second], 'mymessages');
+
+    expect(fqns(path!.nodes)).toEqual([
+      ['$default', ['$default.mymessages', '$default.sidebar']],
+    ]);
+    expect(path!.nodes[0]?.view).toBe(root);
+    expect(path?.others).toBe(3);
+  });
+
+  it('takes the nearest ancestor that fills a view for a state that fills none', () => {
+    const path = viewPath(app(), 'mymessages.messagelist.message', [
+      'mymessages.messagelist',
+      'mymessages',
+      'app',
+    ]);
+
+    expect(path?.state).toBe('mymessages.messagelist');
+  });
+
+  it('gives no path when neither the state nor an ancestor fills a view', () => {
+    expect(viewPath(app(), 'home')).toBeNull();
+    expect(viewPath([], 'app')).toBeNull();
+  });
+
+  it('goes as deep as the views do', () => {
+    const deep = Array.from({ length: 8 }, (_, depth) =>
+      view(
+        ['$default', ...Array.from({ length: depth }, (__, n) => `v${n}`)].join(
+          '.',
+        ),
+        depth ? `s${depth - 1}` : '',
+        fill(`s${depth}`),
+      ),
+    );
+
+    const path = viewPath(deep, 's7');
+    const depths: number[] = [];
+
+    for (let nodes = path!.nodes; nodes.length; nodes = nodes[0].children)
+      depths.push(nodes[0].depth);
+
+    expect(depths).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(path?.others).toBe(0);
   });
 });
 

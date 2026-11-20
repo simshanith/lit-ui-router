@@ -18,6 +18,10 @@ direction, and [devtools scope](devtools.md) the package's wider plans.
   beside the diagram. The maximised panel gives the diagram three fifths of
   its height and shows the full log and inspector below it. On the sheets the
   Map takes the Outline's place above the log.
+- **The view path sits under the Map.** One row under the diagram shows the
+  [view path](views.md#the-view-path) of the selected state, else the active
+  one; the diagram keeps the rest of the room. A view, a state and a
+  transition are one selection, shown in the one inspector.
 - **Boxes keep their natural size.** A leaf is its label and padding. A
   compound shrink-wraps its children. Nothing stretches to fill the viewport;
   the diagram sits in the room [left for it](#the-inspector-popover).
@@ -530,7 +534,9 @@ pay.
 The nested layout, the packer, the edge router, the chips, the viewport and the node-link tree, with
 `d3-hierarchy`, are one module, `src/element/map.ts`, that the panel imports
 on first use of the Map tab. A panel that only ever shows the Outline does not
-load it. The package's build emits a module per source file, so the import is
+load it. The view path under the Map is the [view map's](views.md#loading)
+module, loaded with it once a views snapshot is recorded. The package's build
+emits a module per source file, so the import is
 a relative `import('./element/map.js')` in `dist`, which a bundler turns into
 a chunk of its own.
 

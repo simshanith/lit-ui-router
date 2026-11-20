@@ -801,6 +801,8 @@ interface View {
   depths: ReadonlyMap<string, number>;
   focus: string | undefined;
   pivot: string | undefined;
+  /** Drawn boxes tied to the view selected from the path under the Map, with how. */
+  linked: ReadonlyMap<string, string>;
 }
 
 const initialMark = svg`<svg class="initial" viewBox="0 0 20 12" width="20" height="12" aria-hidden="true">
@@ -876,8 +878,13 @@ const renderHead = (
   const labelled = kind === 'collapsed' ? `${full} ${hidden}` : full;
   const unlabelled = kind === 'leaf' && name === full;
 
-  const description =
-    kind === 'collapsed' ? `${described}, ${hidden} states inside` : described;
+  const tie = view.linked.get(box.name);
+
+  const description = [
+    described,
+    ...(kind === 'collapsed' ? [`${hidden} states inside`] : []),
+    ...(tie ? [tie] : []),
+  ].join(', ');
 
   /* oxlint-disable lit-a11y/role-supports-aria-attr -- aria-description is a global attribute in ARIA 1.3 */
   return html`<div
@@ -912,6 +919,7 @@ const boxClasses = (view: View, item: Drawn, kind: Kind): string => {
     facts(state, view.host._model.current.name),
     kind,
     view.host._selectedState === box.name && 'selected',
+    view.linked.has(box.name) && 'linked',
     box.merge && 'merging',
     placed.indent > 0 && 'merged',
     box.lead && 'led',
@@ -973,6 +981,24 @@ const nestedKeys = (host: DevtoolsPanel, layout: NestedLayout) => ({
   },
 });
 
+// A tied state hidden in a collapsed compound is marked on the box that holds it.
+const linkedBoxes = (
+  host: DevtoolsPanel,
+  layout: NestedLayout,
+): Map<string, string> => {
+  const linked = new Map<string, string>();
+
+  for (const [name, tie] of host._linkedStates()) {
+    const drawn = [name, ...ancestorsOf(host._model.states, name)].filter(
+      (each) => layout.rects.has(each),
+    );
+
+    for (const each of drawn.slice(0, 1)) linked.set(each, tie);
+  }
+
+  return linked;
+};
+
 /** The Map as statechart containment: a box per state, child states inside their parent. */
 export const renderNested = (
   host: DevtoolsPanel,
@@ -1009,6 +1035,7 @@ export const renderNested = (
     depths: new Map(rows.map((row) => [row.state.name, row.depth])),
     focus,
     pivot: host._focusTx?.retained.at(-1),
+    linked: linkedBoxes(host, layout),
   };
 
   const onKey = (event: KeyboardEvent) => {

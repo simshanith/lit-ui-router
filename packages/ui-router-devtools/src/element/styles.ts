@@ -1006,7 +1006,8 @@ export const styles: CSSResult = css`
       .panel[data-view='map']:not([data-max]):is(
           [data-inspect='state'],
           [data-inspect='tx'],
-          [data-inspect='router']
+          [data-inspect='router'],
+          [data-inspect='view']
         )
         .inspector-pane {
         opacity: 0;

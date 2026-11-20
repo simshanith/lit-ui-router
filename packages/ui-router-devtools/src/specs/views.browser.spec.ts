@@ -405,31 +405,39 @@ describe('the Views', () => {
     );
   };
 
-  it('centres the drawing, keeping the dock’s details column free so a selection moves nothing', async () => {
-    const { element, tree } = await mailApp();
+  // Centred while the details' column is free either side; past that the drawing gives up its end margin first.
+  const keepsColumn = ({ start, end }: { start: number; end: number }) =>
+    expect(Math.abs(end - Math.max(296, start))).toBeLessThanOrEqual(1);
 
-    // Closed, the drawing centres in the room left of the column the details will take.
-    await waitFor(() => {
-      const closed = margins(tree);
+  it.each([
+    ['in the middle of the whole room', [], true],
+    ['at the column’s edge for a wider drawing', SIDEBARS, false],
+  ] as const)(
+    'keeps the dock’s details column free, %s, so a selection moves nothing',
+    async (_, asides, middle) => {
+      const { element, tree } = await mailApp({ asides });
 
-      expect(Math.abs(closed.end - 296 - closed.start)).toBeLessThanOrEqual(1);
-      expect(Math.abs(closed.bottom - closed.top)).toBeLessThanOrEqual(1);
-    });
+      await waitFor(() => {
+        const closed = margins(tree);
 
-    const before = tree.getBoundingClientRect();
+        keepsColumn(closed);
+        expect(Math.abs(closed.end - closed.start) <= 1).toBe(middle);
+        expect(Math.abs(closed.bottom - closed.top)).toBeLessThanOrEqual(1);
+      });
 
-    await select(element, tree);
-    await waitFor(() => {
-      const open = margins(tree);
+      const before = tree.getBoundingClientRect();
 
-      expect(Math.abs(open.end - open.start)).toBeLessThanOrEqual(1);
-      expect(Math.abs(open.bottom - open.top)).toBeLessThanOrEqual(1);
-    });
-    expect(tree.getBoundingClientRect().toJSON()).toEqual(before.toJSON());
-  });
+      await select(element, tree);
+      await waitFor(() =>
+        getByRole(shadow(element), 'region', { name: '$default' }),
+      );
+      await element.updateComplete;
+      expect(tree.getBoundingClientRect().toJSON()).toEqual(before.toJSON());
+    },
+  );
 
   it('keeps the details column free at the inline end in a right-to-left panel', async () => {
-    const { element, tree } = await mailApp();
+    const { element, tree } = await mailApp({ asides: SIDEBARS });
 
     element.dir = 'rtl';
 
@@ -437,7 +445,8 @@ describe('the Views', () => {
     await waitFor(() => {
       const { start: end, end: start } = margins(tree);
 
-      expect(Math.abs(end - 296 - start)).toBeLessThanOrEqual(1);
+      keepsColumn({ start, end });
+      expect(end - start).toBeGreaterThan(1);
     });
   });
 

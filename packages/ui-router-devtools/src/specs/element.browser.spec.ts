@@ -1851,6 +1851,92 @@ describe('the nested Map', () => {
     return listbox;
   };
 
+  // A future state stands in for a tree its lazy load registers, and the load takes the placeholder away.
+  const withFuture = (element: UIRouterDevtools) => {
+    // SAFETY: the element `./define` registers is a DevtoolsPanel, and the plugin set its router
+    const router = panelOf(element).router!;
+
+    router.stateRegistry.register({
+      name: 'later.**',
+      lazyLoad: () => Promise.resolve({ states: [{ name: 'later' }] }),
+    });
+
+    return router;
+  };
+
+  const LAYOUTS = [
+    [
+      'nested',
+      (element: UIRouterDevtools, name: RegExp) =>
+        getByRole(shadow(element), 'treeitem', { name }),
+      'aria-selected',
+    ],
+    [
+      'node-link',
+      (element: UIRouterDevtools, name: RegExp) =>
+        getByRole(shadow(element), 'button', { name }),
+      'aria-pressed',
+    ],
+  ] as const;
+
+  const inLayout = async (element: UIRouterDevtools, layout: string) => {
+    await tree(element);
+
+    if (layout === 'node-link')
+      getByRole(shadow(element), 'button', { name: 'Tree' }).click();
+
+    await element.updateComplete;
+  };
+
+  it.each(LAYOUTS)(
+    'follows a selected future state to the state its lazy load registered, in the %s layout',
+    async (layout, node, selected) => {
+      const element = await openMap(1280);
+      const router = withFuture(element);
+      const panel = panelOf(element);
+
+      await inLayout(element, layout);
+      (await waitFor(() => node(element, /^later\b/))).click();
+      await waitFor(() => expect(panel._selectedState).toBe('later.**'));
+      await waitFor(() => expect(popoverShown(element)).toBe(true));
+
+      await router.stateService.go('later');
+
+      await waitFor(() => expect(panel._selectedState).toBe('later'));
+      await waitFor(() =>
+        expect(node(element, /^later(,|$)/).getAttribute(selected)).toBe(
+          'true',
+        ),
+      );
+      expect(panel._inspect).toBe('state');
+      expect(popoverShown(element)).toBe(true);
+      expect(
+        within(
+          getByRole(shadow(element), 'region', { name: /Inspector/ }),
+        ).getByText('later', { selector: '.name' }),
+      ).toBeTruthy();
+    },
+  );
+
+  it.each(LAYOUTS)(
+    'clears a selected state the registry lets go of with nothing in its place, in the %s layout',
+    async (layout, node) => {
+      const element = await openMap(1280);
+      const router = withFuture(element);
+      const panel = panelOf(element);
+
+      await inLayout(element, layout);
+      (await waitFor(() => node(element, /^later\b/))).click();
+      await waitFor(() => expect(popoverShown(element)).toBe(true));
+
+      router.stateRegistry.deregister('later.**');
+
+      await waitFor(() => expect(panel._selectedState).toBeNull());
+      expect(panel._inspect).toBe('none');
+      await waitFor(() => expect(popoverShown(element)).toBe(false));
+    },
+  );
+
   it('closes the inspector from its close button and returns focus to the scrubber', async () => {
     const element = await openMap(1280);
     await tree(element);

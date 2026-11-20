@@ -69,3 +69,46 @@ export const viewTree = (views: readonly ViewInfo[]): ViewNode[] => {
 /** A view config's target as a state's `views` can write it, `name@anchor`; the root's anchor is empty. */
 export const targetText = ({ target }: ViewFill): string =>
   `${target.name}@${target.anchor}`;
+
+/** The views a state fills, inside the views that hold them, and how many other views the snapshot has. */
+export interface ViewPath {
+  /** The state the views are filled by: the one asked for, or the nearest of its ancestors that fills one. */
+  state: string;
+  /** The view tree pruned to the state's views and the views that hold them, in snapshot order. */
+  nodes: ViewNode[];
+  /** Views on no branch of `nodes`. */
+  others: number;
+}
+
+const prune = (nodes: readonly ViewNode[], state: string): ViewNode[] =>
+  nodes.flatMap((node) => {
+    const children = prune(node.children, state);
+
+    return node.view.fill?.state === state || children.length
+      ? [{ ...node, children }]
+      : [];
+  });
+
+const count = (nodes: readonly ViewNode[]): number =>
+  nodes.reduce((total, node) => total + 1 + count(node.children), 0);
+
+/**
+ * The view path of `state`: each view it fills and the views it sits inside. A state that fills none gives the path
+ * of the first of `ancestors`, nearest first, that does; null when none of them fills a view.
+ */
+export const viewPath = (
+  views: readonly ViewInfo[],
+  state: string,
+  ancestors: readonly string[] = [],
+): ViewPath | null => {
+  const tree = viewTree(views);
+
+  for (const name of [state, ...ancestors]) {
+    const nodes = prune(tree, name);
+
+    if (nodes.length)
+      return { state: name, nodes, others: views.length - count(nodes) };
+  }
+
+  return null;
+};
