@@ -72,68 +72,61 @@ Map keeps its inspector's column. Selecting a view moves nothing. Where they
 open below, there is no row to keep: selecting a view shortens the room, and
 the drawing moves up to the middle of what is left, at once.
 
-## Beside the Map
+## The view path
 
-The nested Map draws the view map beside the states, in two labelled regions,
-_States_ at the inline start and _Views_ after it, each under a section
-heading and divided by a rule. The Views tab stays as it is.
+Under the Map, nested or node-link, one row shows the view path of the
+selected state, else of the active state: the views the state fills, inside
+the views that hold them, in snapshot order. The Map keeps the rest of the
+room; the row's height is taken from it before it is packed. The Views tab
+stays as it is.
 
-- **When.** Wherever the views fit at their natural size beside the states at
-  some rung of the [fit ladder](map.md#when-it-does-not-fit), from the one the
-  whole room gives them down to `small`, the last rung the Map draws without
-  panning. The states take the mildest rung that leaves room. Each side is
-  measured at the narrowest it packs to on the 4px grid, at the room's height
-  less the headings, and the room must hold the sum of the two and 48px more
-  that the two sides share. No column is kept for the inspector popover: it
-  floats over the dock, so keeping one would only push the views off the
-  middle of their side. A resize that took a rung away,
-  or the split itself, gives it back only with a tenth of the room to spare,
-  as the ladder does. It is not drawn while the Map is zoomed, or where even
-  the floor rung leaves no room or the states pan. It is not offered below
-  880px of viewport, in the node-link tree, or for a session that holds no
-  views, which includes a views snapshot with no view in it; there the toggle
-  is not shown.
-- **Stacked was left out.** Views under the states would need the dock's
-  height twice over: the dock's Map is 256px high, and in the vanilla
-  sample the states alone take 164px at their floor and the views about
-  230px. Maximised, the ladder above already fits them side by side down to
-  the 880px viewport where the dock stops.
-- **Toggle.** `View map`, beside the Map's layout buttons. It is on unless
-  the viewer turns it off, and the choice is kept in `localStorage` as the
-  layout choice is. It is pressed only while the views are drawn, and its
-  title says what pressing it does: hide them; show them; fit a zoomed Map;
-  or, where the dock has no room, maximise the panel. Pressed to show the
-  views, it goes on to fit the Map and maximise the panel as each is needed.
-  It is disabled only where nothing it could do would draw them: in the
-  maximised panel with no room or with states that pan, where its title says
-  so; while the view map's module is loading, where it names no cause; or
-  after that module failed to load, where its title says so too.
-- **Rooms.** The 48px and whatever else the two drawings leave over are split
-  evenly, half to each side, and each drawing stands in the middle of its own
-  side, across and down, so the two can stand nearer each other than 48px.
-  Both are centred down as well as across, as the Map's fitted view is, so a
-  short drawing sits level with the middle of a tall one rather than at its
-  top. Nothing moves on a selection. The popover takes its column at the
-  dock's end where the centred drawings leave it free; elsewhere it stands
-  beside the selection, over the place that covers fewest box headers on
-  either side.
-- **One inspector.** The split has no details of its own. A selected view is
+- **Items.** Each view is an item in the colour of the state that fills it,
+  named as in the Views, with that state's name middle-truncated as the Views
+  truncate it. A view follows the view that holds it after `›`, and a second
+  view the state fills follows the first after `+`. The row ends with the
+  count of the snapshot's other views, which opens the Views tab.
+- **Which state.** The selected state, else the state whose path a selected
+  view was picked from, else the active state. A state on the active path that
+  fills no view, one drawn into its parent's view, shows the path of the
+  nearest ancestor that fills one, and the row says whose (`of mail.list`). A
+  selected state that is not active fills no view in the snapshot, and the
+  row says so.
+- **Long and deep paths.** The row scrolls along its length. Truncating it
+  instead would drop the views in the middle, which are the point of a path;
+  the state names in it are truncated as everywhere in the Views, with the
+  full name in the item's title.
+- **The sheet and the tabs.** Below 880px of viewport the same items stack as
+  nested boxes, each view's box inside the box of the view that holds it,
+  under the node-link tree.
+- **Toggle.** `View path`, beside the Map's layout buttons, hides or shows the
+  row. It is on unless the viewer turns it off, and the choice is kept in
+  `localStorage` (`ui-router-devtools:map-views`) as the layout choice is. It
+  is pressed while the row is drawn. If the view map's module fails to load it
+  is disabled and its title says so. It is not shown for a session that holds
+  no views, which includes a views snapshot with no view in it.
+- **Keys.** The row is a toolbar and one tab stop. The arrow keys step through
+  its items in order, the inline ones mirrored in a right-to-left panel, Home
+  and End go to either end, and Enter or Space selects. The tab stop is the
+  item last focused, else the selected view, else the state's own view.
+- **One inspector.** The row has no details of its own. A selected view is
   shown in the panel's inspector, the popover in the dock and the pane in the
   maximised panel, with the details listed above; a state there selects that
-  state on the Map. A view, a state and a transition are one selection: each
-  takes the place of the others, and every way of clearing a selection,
-  Escape included, clears a view. A view is inspected only while the split is
-  drawn: when the split goes, by the toggle, a zoom, the node-link tree, a
-  resize or another tab, the inspection and the page's outline go with it.
-  The Views tab keeps the view selected for its own details.
-- **Marks.** A selected state marks the views it fills, and a selected view
-  marks the state that fills it and the state whose content created it, on
-  the box that draws it or the collapsed compound that holds it. A mark is the
-  selection's ring, dashed, so it reads without colour; forced colours draw it
-  in `Highlight` at 2px. A marked state's description says how it is tied:
-  `fills the selected view` or `created the selected view`.
-- **Page outline.** Pointing at or selecting a view in the split calls the
-  same `ViewLocator` as the Views tab.
+  state on the Map. The popover is placed beside the selected item, off the
+  row's other items, by the rule the Map's popover uses when it has no column.
+  A view, a state and a transition are one selection: each takes the place of
+  the others, and every way of clearing a selection, Escape included, clears
+  a view. A view is inspected only while the row is drawn: when the toggle or
+  another tab takes the row away, the inspection and the page's outline go
+  with it. The Views tab keeps the view selected for its own details.
+- **Marks.** A selected view marks the state that fills it and the state whose
+  content created it, on the box that draws it or the collapsed compound that
+  holds it. A mark is the selection's ring, dashed, so it reads without
+  colour; forced colours draw it in `Highlight` at 2px. A marked state's
+  description says how it is tied: `fills the selected view` or `created the
+  selected view`. The selected item carries the selection's ring, which
+  forced colours draw as a `Highlight` outline.
+- **Page outline.** Pointing at or selecting an item calls the same
+  `ViewLocator` as the Views tab.
 
 A selected transition does not recolour the views. The snapshot is the
 latest one, so the views a past transition entered or emptied are not in it;
@@ -284,9 +277,11 @@ Space select a view and show its details, and Escape hides them. One item is a
 tab stop. The page outline is decoration and is hidden from assistive
 technology; the details say where the view is in words.
 
-Beside the Map, each region holds its own tree with its own tab stop: Tab
-moves from one to the other, and the arrow keys stay in the tree that has
-focus. The status region announces nothing for a selection there.
+The view path is a toolbar named for its state, `Views of mail.list`, and
+each item is a button named as the Views name a view and pressed while it is
+selected. The status region announces nothing for a selection there. In a
+right-to-left panel the names stay isolated left to right, so a leading `$`
+keeps its place.
 
 Forced colours draw every border in `CanvasText` and the selection ring in
 `Highlight`. Nothing in the Views moves, so reduced motion changes nothing but
@@ -295,19 +290,18 @@ the inline start, so they mirror in a right-to-left panel.
 
 ## Loading
 
-The view map, its layout, the split beside the Map and their styles are one
-module, `src/element/viewmap.ts`, that the panel imports on first use of the
-Views, or of the nested Map once a views snapshot is recorded, and whose
-styles it adopts then. It shares the packer and `fitView` with the Map in a
-chunk of its own, and reaches the Map's own code through the Map's loaded
-module, so neither chunk holds the other. A panel that never shows the Views
-or the nested Map does not load it.
+The view map, its layout, the view path under the Map and their styles are
+one module, `src/element/viewmap.ts`, that the panel imports on first use of
+the Views, or of the Map once a views snapshot is recorded, and whose styles
+it adopts then. It shares the packer and `fitView` with the Map in a chunk of
+its own, so neither chunk holds the other. A panel that never shows the Views
+or the Map does not load it.
 
 ## Not covered
 
 - No history: the Views show the latest snapshot only.
-- No transition marks on the views beside the Map; see
-  [Beside the Map](#beside-the-map).
+- No transition marks on the view path; see
+  [The view path](#the-view-path).
 - The configs no view took are listed in the Views tab only.
 - No hydration or SSR detail: whether a view adopted a server-rendered element
   is `lit-ui-router-ssr`'s, and is not read.
