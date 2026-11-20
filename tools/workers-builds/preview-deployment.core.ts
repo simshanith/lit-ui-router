@@ -169,7 +169,7 @@ export type Target = {
   readonly url: string;
 };
 
-/** The branch alias's deployment, when the summary names one, then the commit preview's. */
+/** The commit preview's deployment, then the branch alias's, posted last so a PR lists it first. */
 export function previewTargets(preview: Preview): Target[] {
   const commit: Target = {
     link: 'commit',
@@ -180,12 +180,12 @@ export function previewTargets(preview: Preview): Target[] {
   if (preview.branchUrl === null) return [commit];
 
   return [
+    commit,
     {
       link: 'branch',
       environment: environmentOf(preview.worker, 'branch'),
       url: preview.branchUrl,
     },
-    commit,
   ];
 }
 

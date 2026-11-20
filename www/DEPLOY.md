@@ -204,10 +204,10 @@ until none of those branches remain.
 [`preview-deployment.ts`](../tools/workers-builds/preview-deployment.ts) when a
 `Workers Builds: <worker>` check run succeeds. `post` reads the `Version ID:`, `Preview URL:` and
 `Preview Alias URL:` lines of the check run's summary, and records two GitHub Deployments on the
-check run's commit, each with the branch in its payload: the branch alias in the `preview/<worker>`
-environment, which a PR shows first and which always serves the branch's latest build, and the
-commit's own preview in `preview/<worker>/commit`. A summary without an alias gets only the
-`/commit` deployment. It skips a `main` build, which is a production deploy, and a Workers Previews build
+check run's commit, each with the branch in its payload: the commit's own preview in
+`preview/<worker>/commit`, then the branch alias, which always serves the branch's latest build, in
+`preview/<worker>`. A PR lists the newest deployment first, so the alias heads its deployments box.
+A summary without an alias gets only the `/commit` deployment. It skips a `main` build, which is a production deploy, and a Workers Previews build
 whose summary names no URL. A successful branch build of any other Worker without a
 `Preview URL:` line fails the job, since that means the summary format changed.
 

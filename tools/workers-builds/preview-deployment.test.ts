@@ -174,22 +174,22 @@ assert.ok(!('skip' in preview));
 
 const typed: Preview = preview;
 
-const [branchTarget, commitTarget] = previewTargets(typed);
+const [commitTarget, branchTarget] = previewTargets(typed);
 
 assert.ok(branchTarget && commitTarget);
 
 describe('environments', () => {
-  it('links the branch alias in preview/<worker> and the commit preview in preview/<worker>/commit', () => {
+  it('posts the commit preview to preview/<worker>/commit, then the branch alias to preview/<worker>, newest listed first', () => {
     assert.deepEqual(previewTargets(typed), [
-      {
-        link: 'branch',
-        environment: 'preview/lit-ui-router',
-        url: typed.branchUrl,
-      },
       {
         link: 'commit',
         environment: 'preview/lit-ui-router/commit',
         url: typed.commitUrl,
+      },
+      {
+        link: 'branch',
+        environment: 'preview/lit-ui-router',
+        url: typed.branchUrl,
       },
     ]);
   });
