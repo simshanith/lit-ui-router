@@ -270,7 +270,8 @@ describe('the view path under the Map', () => {
   it('draws a selected state’s path in place of the active one, and moves nothing', async () => {
     const { element } = await mailMap();
 
-    await drawnStates(element);
+    // Measured once the row is drawn, so the row's own arrival is not counted as the selection moving boxes.
+    await pathOf(element);
     const before = boxes(element);
 
     head(states(element), 'mail').click();
