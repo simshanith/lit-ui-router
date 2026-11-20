@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from 'vue';
-import LiveExample from './LiveExample.vue';
+import ExampleEmbed from './ExampleEmbed.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
+import { EXAMPLES, staticSrc } from './examples';
 import { HELLO_WORLD_INITIAL, stateForHash } from './helloworld-states';
+
+const example = EXAMPLES.helloworld;
 
 const active = ref(HELLO_WORLD_INITIAL);
 
@@ -11,7 +14,7 @@ const panel = useTemplateRef('panel');
 // Keyed by document: a frame's WindowProxy outlives a reload, its listeners do not.
 const watched = new WeakSet<Document>();
 
-// The preview frame is same-origin; the StackBlitz one throws on access and is skipped.
+// The frame is same-origin and the example routes by hash, so its location is readable here.
 function follow(frame: HTMLIFrameElement) {
   try {
     const view = frame.contentWindow;
@@ -28,7 +31,7 @@ function follow(frame: HTMLIFrameElement) {
     watched.add(view.document);
     view.addEventListener('hashchange', read);
   } catch {
-    // A cross-origin frame: the diagram keeps the state it last showed.
+    // An unreadable frame: the diagram keeps the state it last showed.
   }
 }
 
@@ -56,7 +59,13 @@ onMounted(() => {
       <div class="panels">
         <div ref="panel" class="panel" @load.capture="onLoad">
           <h3 class="panel-title">The app</h3>
-          <LiveExample name="helloworld" />
+          <div class="embed">
+            <ExampleEmbed
+              :src="staticSrc('helloworld')"
+              :title="`${example.title} example`"
+              :height="example.height"
+            />
+          </div>
         </div>
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its states and views</h3>
@@ -142,8 +151,8 @@ onMounted(() => {
   color: var(--site-color-text);
 }
 
-.panel :deep(.live-example) {
-  margin-block: var(--site-space-3) 0;
+.embed {
+  margin-block-start: var(--site-space-3);
 }
 
 .diagram-ground {
