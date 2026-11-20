@@ -619,8 +619,8 @@ trailing-slash spelling logs one warning naming that page — see
 [Static hosts add a trailing slash](#static-hosts-add-a-trailing-slash). Two
 more come from `lit-ui-router-ssr`: a registry that holds no `<ui-view>` when
 the call starts logs one warning (every view on those pages would render empty),
-and a shadow-DOM `LitElement` that reaches no renderer logs once per tag. The
-other ten fire in the browser, during hydration and adoption (twelve
+and a shadow-DOM `LitElement` that reaches no renderer logs once per tag. This
+package's other ten fire in the browser, during hydration and adoption (twelve
 `lit-ui-router-ssr` development warnings in total). Plain `node` resolves the development build through the `node` export condition and
 warns unless `NODE_ENV=production`; pass `node -C production` or set
 `NODE_ENV=production` to silence them.

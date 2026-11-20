@@ -95,7 +95,7 @@ that renders once with its initial value and never again.
 | `createServerRouter`: mount answers bare base with 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/`                            |
 | `prerender`: unclaimed path                            | a path in `paths` matches no route and its mount declares no `otherwise` projection                                              | Remove the path, add a matching route, or configure `otherwise` on the mount                                      |
 | `prerender`: mount rejects trailing slash              | the first prerendered `<subpath>/index.html` page's trailing-slash spelling does not resolve to the same shell                   | Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client |
-| `seed`: transported resolve could not be rebuilt       | `seed()` finds a dehydrated resolve with a custom transporter name it cannot deserialize                                         | Pass the matching `transport` to `seed()` / `bootstrap()`                                                         |
+| `seed`: transported resolve could not be rebuilt       | `seed()` finds a dehydrated resolve using a transporter it was not given, or whose `decode` throws                               | Pass the matching `transport` to `seed()` / `bootstrap()`, or fix its `decode`                                    |
 
 The mount diagnostic is a development-only warning, but the check is not.
 [`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
