@@ -16,6 +16,9 @@ export const SNAPSHOT_PREFIX = '/v1/';
 /** Kept free for a future HTTP API at `/api/v<N>/`: no built file may sit under it. */
 export const RESERVED_PREFIX = '/api/';
 
+/** The unreleased docs' alias: the worker redirects the whole prefix to the root, so no built file may sit under it. */
+export const MAIN_ALIAS = '/main';
+
 /** Every URL the site once served at a path that now redirects, one per line. */
 export const movedUrls = (): string[] =>
   readFileSync(new URL('../catalog/api-urls.txt', import.meta.url), 'utf8')
@@ -239,11 +242,17 @@ export function movedProblems(
   });
 }
 
-/** A built file under the reserved prefix. */
-export const reservedProblems = (outDir: string): string[] =>
-  existsSync(join(outDir, RESERVED_PREFIX))
+/** A built file under the reserved prefix, or one the alias's redirect would hide. */
+export const reservedProblems = (outDir: string): string[] => [
+  ...(existsSync(join(outDir, RESERVED_PREFIX))
     ? [`${RESERVED_PREFIX}: built files sit under the reserved prefix`]
-    : [];
+    : []),
+  ...([MAIN_ALIAS, `${MAIN_ALIAS}.html`].some((path) =>
+    existsSync(join(outDir, path)),
+  )
+    ? [`${MAIN_ALIAS}: built files sit under the alias the worker redirects`]
+    : []),
+];
 
 /** The build's `buildEnd`: fails on a dead target, a live source or a lost moved URL, then writes `_redirects`. */
 export async function writeRedirects(outDir: string): Promise<void> {

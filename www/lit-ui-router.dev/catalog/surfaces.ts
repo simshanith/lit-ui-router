@@ -83,6 +83,16 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
+    // The unreleased docs' alias: the worker redirects the whole prefix to the same path at the root.
+    id: 'main-alias',
+    paths: ['/main', '/main/*'],
+    renderer: 'worker',
+    sitemap: false,
+    llms: false,
+    search: false,
+    deadLinks: 'check',
+  },
+  {
     id: 'sample-apps',
     paths: [
       '/app',

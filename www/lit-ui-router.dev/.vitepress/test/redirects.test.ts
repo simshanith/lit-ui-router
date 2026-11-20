@@ -8,6 +8,7 @@ import { REDIRECTS } from '../../catalog/redirects.ts';
 import { SURFACES } from '../../catalog/surfaces.ts';
 import {
   builtProblems,
+  MAIN_ALIAS,
   matchRedirect,
   movedProblems,
   movedUrls,
@@ -276,6 +277,18 @@ describe('reservedProblems', () => {
     assert.deepEqual(reservedProblems(outDir), [
       '/api/: built files sit under the reserved prefix',
     ]);
+  });
+
+  it("flags a built page the alias's redirect would hide", () => {
+    for (const file of ['main.html', 'main/index.html']) {
+      const outDir = mkdtempSync(join(tmpdir(), 'alias-'));
+
+      mkdirSync(dirname(join(outDir, file)), { recursive: true });
+      writeFileSync(join(outDir, file), '');
+      assert.deepEqual(reservedProblems(outDir), [
+        `${MAIN_ALIAS}: built files sit under the alias the worker redirects`,
+      ]);
+    }
   });
 });
 
