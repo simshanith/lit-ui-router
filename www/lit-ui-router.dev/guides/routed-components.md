@@ -100,22 +100,27 @@ reverse: a view that requires a resolve does not fit the default, and TypeScript
 reports the error at `component:` rather than at the generic.
 
 ```ts
-const TeamView: RoutedLitTemplate<{ members: Member[] }> = (props) =>
-  html`<p>${props.resolves.members.length} members</p>`;
+const GalleryView: RoutedLitTemplate<{ manifest: Manifest }> = (props) =>
+  html`<p>${props.resolves.manifest.sheets.length}</p>`;
 
 const states: LitStateDeclaration[] = [
-  { name: 'team', url: '/team', component: TeamView }, // TS2322 at component:
+  { name: 'gallery', url: '/', component: GalleryView }, // TS2322 at component:
 ];
 ```
 
 Two shapes type-check:
 
-- **Thread the generic** onto the declaration: `LitStateDeclaration<{ members: Member[] }>[]`.
+- **Thread the generic** onto the declaration: `LitStateDeclaration<{ manifest: Manifest }>[]`.
   A bare `RoutedLitTemplate` view still fits beside the typed one.
 - **A table mixing resolve shapes** threads one type alias that covers every view,
-  such as `TeamResolves & ContactResolves`. Each view keeps its own required
+  such as `GalleryResolves & SheetResolves`. Each view keeps its own required
   members. An alias with every member optional also fits, at the cost of `?.` at
   each use inside the views.
+
+The example is modelled on [the Altitude Atlas](https://atlas.lit-ui-router.dev),
+whose gallery and sheet
+[views](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/src/views.ts)
+use the all-optional form.
 
 ## Lazy-loading a route's element
 
