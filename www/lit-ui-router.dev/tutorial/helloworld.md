@@ -72,22 +72,17 @@ class AppRoot extends LitElement {
         background: light-dark(#f0f0f0, #2c2c2c);
       }
     }
-    nav a.active {
-      background: light-dark(#e0e0e0, #444);
-      text-decoration: underline 2px;
-      text-underline-offset: 4px;
+    nav a[aria-current='page'] {
+      background: light-dark(#1f1f1f, #ededed);
+      color: light-dark(#fff, #111);
     }
   `;
 
   render() {
     return html`
       <nav aria-label="Hello World">
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
-          >Hello</a
-        >
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
-          >About</a
-        >
+        <a ${uiSrefActive({})} ${uiSref('hello')}>Hello</a>
+        <a ${uiSrefActive({})} ${uiSref('about')}>About</a>
       </nav>
       <ui-view></ui-view>
     `;
@@ -204,12 +199,8 @@ class AppRoot extends LitElement {
   render() {
     return html`
       <nav aria-label="Hello World">
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
-          >Hello</a
-        >
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
-          >About</a
-        >
+        <a ${uiSrefActive({})} ${uiSref('hello')}>Hello</a>
+        <a ${uiSrefActive({})} ${uiSref('about')}>About</a>
       </nav>
       <ui-view></ui-view>
     `;
@@ -218,7 +209,7 @@ class AppRoot extends LitElement {
 ```
 
 - **`uiSref('hello')`**: Creates a link to the `hello` state. The directive sets the `href` attribute and handles click events.
-- **`uiSrefActive({ activeClasses: ['active'] })`**: Adds the `active` class when the linked state is currently active. On a link it also sets `aria-current="page"` when that exact state is active, so screen reader users get the same "you are here" cue as the highlight.
+- **`uiSrefActive({})`**: Sets `aria-current="page"` on the link while its state is active. Screen readers announce it as the current page, and the `nav a[aria-current='page']` rule draws the highlight from the same attribute, so the look cannot drift from what assistive technology reports. Pass `activeClasses` to add CSS classes as well.
 - **`<ui-view>`**: The viewport where routed components are rendered.
 
 ::: tip What is `sref`?

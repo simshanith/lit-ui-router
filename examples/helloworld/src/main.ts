@@ -23,22 +23,17 @@ export class AppRoot extends LitElement {
         background: light-dark(#f0f0f0, #2c2c2c);
       }
     }
-    nav a.active {
-      background: light-dark(#e0e0e0, #444);
-      text-decoration: underline 2px;
-      text-underline-offset: 4px;
+    nav a[aria-current='page'] {
+      background: light-dark(#1f1f1f, #ededed);
+      color: light-dark(#fff, #111);
     }
   `;
 
   render() {
     return html`
       <nav aria-label="Hello World">
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
-          >Hello</a
-        >
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
-          >About</a
-        >
+        <a ${uiSrefActive({})} ${uiSref('hello')}>Hello</a>
+        <a ${uiSrefActive({})} ${uiSref('about')}>About</a>
       </nav>
       <ui-view></ui-view>
     `;

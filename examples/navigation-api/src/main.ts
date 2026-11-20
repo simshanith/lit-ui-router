@@ -101,10 +101,9 @@ export class AppRoot extends LitElement {
       text-decoration: none;
       background: light-dark(#f0f0f0, #2c2c2c);
     }
-    nav a.active {
-      background: light-dark(#dcdcdc, #444);
-      text-decoration: underline 2px;
-      text-underline-offset: 4px;
+    nav a[aria-current='page'] {
+      background: light-dark(#1f1f1f, #ededed);
+      color: light-dark(#fff, #111);
     }
     nav a.external {
       margin-inline-start: auto;
@@ -325,14 +324,10 @@ export class AppRoot extends LitElement {
         </p>
 
         <nav aria-label="Navigation API example">
-          <a
-            ${uiSref('folder', { folder: 'inbox' })}
-            ${uiSrefActive({ activeClasses: ['active'] })}
+          <a ${uiSref('folder', { folder: 'inbox' })} ${uiSrefActive({})}
             >Inbox</a
           >
-          <a
-            ${uiSref('folder', { folder: 'archive' })}
-            ${uiSrefActive({ activeClasses: ['active'] })}
+          <a ${uiSref('folder', { folder: 'archive' })} ${uiSrefActive({})}
             >Archive</a
           >
           <a class="external" href="signed-out.html">Sign out</a>
