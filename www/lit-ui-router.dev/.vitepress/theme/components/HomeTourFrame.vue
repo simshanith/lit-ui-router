@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef } from 'vue';
 
-defineProps<{ src: string; title: string; height: string }>();
+defineProps<{ src: string; title: string }>();
 
 const emit = defineEmits<{ hash: [hash: string] }>();
 
@@ -39,7 +39,6 @@ onMounted(follow);
     class="tour-frame"
     :src="src"
     :title="title"
-    :style="{ '--tour-frame-height': height }"
     loading="lazy"
     @load="follow"
   />
@@ -49,7 +48,7 @@ onMounted(follow);
 .tour-frame {
   display: block;
   inline-size: 100%;
-  block-size: var(--tour-frame-height);
+  block-size: var(--tour-frame-height, auto);
   border: 0;
   border-radius: var(--site-radius-control);
   /* Shows only until the example paints. */

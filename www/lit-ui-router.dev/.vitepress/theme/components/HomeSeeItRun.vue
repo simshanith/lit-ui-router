@@ -8,10 +8,6 @@ import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
 
 const example = EXAMPLES['features-tour'];
 
-// Exactly the tour's height from a 30rem column up: 16px margins, its 23rem card and a 12px gap
-// over the 32px pager, so nothing is left under the pager. The live page keeps example.height.
-const FRAME_HEIGHT = 'calc(23rem + 76px)';
-
 const card = ref<CardId>(INITIAL_CARD);
 
 const from = ref<CardId>();
@@ -46,7 +42,6 @@ function onHash(hash: string) {
             class="embed"
             :src="staticSrc('features-tour')"
             :title="`${example.title} example`"
-            :height="FRAME_HEIGHT"
             @hash="onHash"
           />
         </div>
@@ -131,21 +126,19 @@ function onHash(hash: string) {
     var(--site-see-it-run-texture) center / 2816px 1536px no-repeat,
     var(--site-see-it-run-gradient);
   background-blend-mode: normal, var(--site-see-it-run-blend), normal;
-  /* Stacked, the frame is narrower than the column check:embeds measures, so it reserves a phone's height. */
-  --see-it-run-narrow-frame: 560px;
 }
 
 @media (min-width: 40rem) {
   .panels {
-    --gutter: var(--site-space-6);
     margin-inline: 0;
     border-radius: calc(var(--site-radius-card) + var(--gutter));
   }
 }
 
-/* Two columns where the diagram keeps its natural width; the app takes the rest. */
+/* Two columns where the diagram keeps its natural width; the app takes the rest. Side by side, the gutters slim to a hairline of texture. */
 @container (inline-size >= 52rem) {
   .panels {
+    --gutter: var(--site-space-2);
     grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   }
 }
@@ -178,13 +171,37 @@ function onHash(hash: string) {
   color: var(--site-color-text);
 }
 
+/* The frame reserves the tallest card's height at its own width, measured: 16px margins, the card and a 12px gap over the 32px pager, so nothing is left under the pager. The live page keeps the registry's height. */
+.app-panel {
+  container-type: inline-size;
+}
+
 .embed {
+  --tour-frame-height: 444px;
   margin-block-start: var(--site-space-3);
 }
 
-@container (inline-size < 30rem) {
+@container (inline-size < 36rem) {
   .embed {
-    block-size: var(--see-it-run-narrow-frame);
+    --tour-frame-height: 452px;
+  }
+}
+
+@container (inline-size < 26rem) {
+  .embed {
+    --tour-frame-height: 476px;
+  }
+}
+
+@container (inline-size < 21rem) {
+  .embed {
+    --tour-frame-height: 500px;
+  }
+}
+
+@container (inline-size < 18rem) {
+  .embed {
+    --tour-frame-height: 548px;
   }
 }
 
