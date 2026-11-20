@@ -80,10 +80,10 @@ live in [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr).
 
 ## Source
 
-Compare the four client-state entry points side by side against the shared
-routing and UI layers. The repository's lint runs the
+The repository's lint runs the
 [`eslint-plugin-lit-ui-router`](/packages/eslint-plugin-lit-ui-router) rules
-over every app:
+over every app. Compare the four client-state entry points side by side against
+the shared routing and UI layers:
 
 - **Vanilla app** —
   [`apps/sample-app-lit-vanilla`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-vanilla)
