@@ -710,8 +710,8 @@ const planetState = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
-  // A numbered url redirects to the slug, the canonical url. A redirect from
-  // the address bar replaces its history entry.
+  // A numbered url redirects to the slug, the canonical url. The hash plugin
+  // pushes the redirect; a path location plugin replaces the history entry.
   redirectTo: ($transition$: Transition) => {
     const planetId = numberedPlanetId(
       $transition$.params<{ planetId: string }>().planetId,
