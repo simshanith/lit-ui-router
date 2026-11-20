@@ -93,6 +93,15 @@ describe('search aliases', () => {
     ]);
   });
 
+  it('aliases ssr and server-side rendering in both directions', () => {
+    assert.deepEqual(aliasesIn('lit-ui-router-ssr'), [
+      'server',
+      'side',
+      'rendering',
+    ]);
+    assert.deepEqual(aliasesIn('server-side rendering'), ['ssr']);
+  });
+
   it('finds the same sections for ui-view and UiView', async () => {
     const expected = new Set([
       '/guides/named-views#named-views',
