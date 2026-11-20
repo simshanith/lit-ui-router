@@ -32,8 +32,8 @@ export const EXAMPLES = {
   'features-tour': {
     title: 'Features Tour',
     summary:
-      'The home page tour: one route each for state-based routing, a nested view with a child state, and a resolve',
-    height: '540px',
+      'The home page tour: one state with a `cardId` param, re-entered as a timed slideshow steps through the feature cards',
+    height: '464px',
     file: 'src/main.ts',
   },
   hellosolarsystem: {
