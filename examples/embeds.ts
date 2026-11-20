@@ -32,7 +32,7 @@ export const EXAMPLES = {
   'features-tour': {
     title: 'Features Tour',
     summary:
-      'The home page tour: one state with a `cardId` param, re-entered as a timed slideshow steps through the feature cards',
+      'The home page tour: one state with a `cardId` param, re-entered as its pager steps through the feature cards',
     height: '464px',
     file: 'src/main.ts',
   },

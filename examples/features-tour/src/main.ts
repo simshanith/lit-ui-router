@@ -6,14 +6,8 @@ import {
   svg,
   type SVGTemplateResult,
 } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import {
-  BrowserLocationConfig,
-  HashLocationService,
-  locationPluginFactory,
-  type Transition,
-  type UIRouter,
-} from '@uirouter/core';
+import { customElement } from 'lit/decorators.js';
+import { hashLocationPlugin, type Transition } from '@uirouter/core';
 import {
   TransitionController,
   UIRouterLit,
@@ -83,14 +77,10 @@ const step = (id: string, by: number): string => {
   return CARDS[(index + by + CARDS.length) % CARDS.length].id;
 };
 
-const ADVANCE_MS = 7000;
-
-// Lucide icons (ISC licence), inlined: chevron-left, chevron-right, play, pause.
+// Lucide icons (ISC licence), inlined: chevron-left and chevron-right.
 const ICONS = {
   previous: svg`<path d="m15 18l-6-6l6-6" />`,
   next: svg`<path d="m9 18l6-6l-6-6" />`,
-  play: svg`<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />`,
-  pause: svg`<rect width="5" height="18" x="14" y="3" rx="1" /><rect width="5" height="18" x="5" y="3" rx="1" />`,
 } satisfies Record<string, SVGTemplateResult>;
 
 const icon = (name: keyof typeof ICONS) =>
@@ -180,8 +170,7 @@ export class AppRoot extends LitElement {
       margin-block-start: 12px;
     }
     /* Every control keeps a 32px hit area; the dots draw smaller inside theirs. */
-    .pager a,
-    .pager button {
+    .pager a {
       display: inline-grid;
       place-items: center;
       inline-size: 32px;
@@ -193,7 +182,7 @@ export class AppRoot extends LitElement {
       color: inherit;
       cursor: pointer;
     }
-    .pager :is(a, button):focus-visible {
+    .pager a:focus-visible {
       outline: 2px solid light-dark(#006a9a, #29abe6);
       outline-offset: 1px;
     }
@@ -219,119 +208,45 @@ export class AppRoot extends LitElement {
       }
     }
     @media (hover: hover) and (pointer: fine) {
-      .pager :is(a, button):hover {
+      .pager a:hover {
         background: light-dark(#f0f0f0, #2c2c2c);
       }
     }
   `;
 
-  // Re-renders the pager and restarts the timer after each transition.
+  // Re-renders the pager after each transition, so Previous and Next follow the current card.
   private readonly transitions = new TransitionController(this, {
     criteria: { to: 'card' },
-    callback: () => this.schedule(),
   });
 
   private get cardId(): string {
     return String(this.transitions.params.cardId ?? CARDS[0].id);
   }
 
-  @state() private playing = true;
-
-  private readonly paused = { hovered: false, focused: false };
-
-  private timer?: ReturnType<typeof setTimeout>;
-
-  private readonly motion = matchMedia('(prefers-reduced-motion: reduce)');
-
-  private readonly onMotion = () => this.schedule();
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.motion.addEventListener('change', this.onMotion);
-    this.schedule();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.motion.removeEventListener('change', this.onMotion);
-    clearTimeout(this.timer);
-  }
-
-  private hold(reason: 'hovered' | 'focused', on: boolean) {
-    this.paused[reason] = on;
-    this.schedule();
-  }
-
-  // Auto-advance through the router, replacing the history entry so Back does not step through cards.
-  private schedule() {
-    clearTimeout(this.timer);
-
-    if (
-      this.motion.matches ||
-      !this.playing ||
-      this.paused.hovered ||
-      this.paused.focused
-    )
-      return;
-
-    this.timer = setTimeout(() => {
-      void router.stateService.go(
-        'card',
-        { cardId: step(this.cardId, 1) },
-        { location: 'replace' },
-      );
-    }, ADVANCE_MS);
-  }
-
-  private toggle() {
-    this.playing = !this.playing;
-    this.schedule();
-  }
-
   render() {
     return html`
-      <div
-        @pointerenter=${() => this.hold('hovered', true)}
-        @pointerleave=${() => this.hold('hovered', false)}
-        @focusin=${() => this.hold('focused', true)}
-        @focusout=${() => this.hold('focused', false)}
-      >
-        <ui-view></ui-view>
-        <nav class="pager" aria-label="Feature cards">
-          <a
-            aria-label="Previous card"
-            ${uiSref('card', { cardId: step(this.cardId, -1) })}
-            >${icon('previous')}</a
-          >
-          ${CARDS.map(
-            (card, index) =>
-              html`<a
-                class="dot"
-                aria-label="${card.title}, card ${index + 1} of ${CARDS.length}"
-                ${uiSrefActive({ activeClasses: ['active'] })}
-                ${uiSref('card', { cardId: card.id })}
-              ></a>`,
-          )}
-          <a
-            aria-label="Next card"
-            ${uiSref('card', { cardId: step(this.cardId, 1) })}
-            >${icon('next')}</a
-          >
-          ${
-            this.motion.matches
-              ? ''
-              : html`<button
-                  type="button"
-                  aria-label=${
-                    this.playing ? 'Pause slideshow' : 'Play slideshow'
-                  }
-                  @click=${this.toggle}
-                >
-                  ${icon(this.playing ? 'pause' : 'play')}
-                </button>`
-          }
-        </nav>
-      </div>
+      <ui-view></ui-view>
+      <nav class="pager" aria-label="Feature cards">
+        <a
+          aria-label="Previous card"
+          ${uiSref('card', { cardId: step(this.cardId, -1) })}
+          >${icon('previous')}</a
+        >
+        ${CARDS.map(
+          (card, index) =>
+            html`<a
+              class="dot"
+              aria-label="${card.title}, card ${index + 1} of ${CARDS.length}"
+              ${uiSrefActive({ activeClasses: ['active'] })}
+              ${uiSref('card', { cardId: card.id })}
+            ></a>`,
+        )}
+        <a
+          aria-label="Next card"
+          ${uiSref('card', { cardId: step(this.cardId, 1) })}
+          >${icon('next')}</a
+        >
+      </nav>
     `;
   }
 }
@@ -354,27 +269,6 @@ const cardState: LitStateDeclaration<Resolved> = {
       ? undefined
       : { state: 'card', params: { cardId: CARDS[0].id } },
 };
-
-// The stock hash service ignores `location: 'replace'`; this one honours it, so the timer's
-// advances replace the history entry instead of adding one.
-class ReplaceableHashLocationService extends HashLocationService {
-  constructor(router?: UIRouter) {
-    // SAFETY: locationPluginFactory always constructs its service with the router.
-    super(router!);
-  }
-
-  _set(state: null, title: string, url: string, replace: boolean): void {
-    if (replace) location.replace(`#${url}`);
-    else super._set(state, title, url, replace);
-  }
-}
-
-const hashLocationPlugin = locationPluginFactory(
-  'features-tour.hashLocation',
-  false,
-  ReplaceableHashLocationService,
-  BrowserLocationConfig,
-);
 
 // Router setup
 const router = new UIRouterLit();
