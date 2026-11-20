@@ -16,6 +16,8 @@ export interface SidebarEntry {
   link?: string;
   target?: string;
   collapsed?: boolean;
+  /** The entry's label in the prev/next pager, in place of its sidebar text. */
+  docFooterText?: string;
   items?: SidebarEntry[];
 }
 
@@ -150,16 +152,13 @@ export const packageGroups = ROLES.map(({ id, label }) => ({
 }));
 
 // The top nav and the sidebar both list these.
-const sampleAppItems: NavLink[] = [
-  { text: 'Overview', link: '/sample-app' },
-  ...Object.entries(SAMPLE_APPS).map(([link, { label: text }]) => ({
-    text,
-    link,
-    target: '_self',
-  })),
-];
+const sampleAppOverview: NavLink = { text: 'Overview', link: '/sample-app' };
 
-/** The sidebar sections, in order; each API reference entry gets its generated members in config.ts. */
+const sampleAppMounts: NavLink[] = Object.entries(SAMPLE_APPS).map(
+  ([link, { label: text }]) => ({ text, link, target: '_self' }),
+);
+
+/** The sidebar sections, in order; each API reference entry gets its generated members in config.ts. An Overview entry names its section in the pager. */
 export const SIDEBAR: SidebarEntry[] = [
   {
     text: 'Introduction',
@@ -172,8 +171,6 @@ export const SIDEBAR: SidebarEntry[] = [
       { text: 'Hello World', link: '/tutorial/helloworld' },
       { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
       { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-      { text: 'All Examples', link: '/examples/' },
-      { text: 'Live Examples', link: '/examples/live' },
     ],
   },
   {
@@ -181,7 +178,7 @@ export const SIDEBAR: SidebarEntry[] = [
     text: 'Guides',
     collapsed: true,
     items: [
-      { text: 'Overview', link: '/guides/' },
+      { text: 'Overview', link: '/guides/', docFooterText: 'Guides' },
       ...guideGroups.map(({ text, link, items }) => ({
         text,
         link,
@@ -190,12 +187,20 @@ export const SIDEBAR: SidebarEntry[] = [
       })),
     ],
   },
+  {
+    text: 'Examples',
+    collapsed: true,
+    items: [
+      { text: 'Overview', link: '/examples/', docFooterText: 'Examples' },
+      { text: 'Live examples', link: '/examples/live' },
+    ],
+  },
   { text: 'Releases', link: '/releases/', target: '_self', items: [] },
   {
     text: 'Packages',
     collapsed: true,
     items: [
-      { text: 'Overview', link: '/packages/' },
+      { text: 'Overview', link: '/packages/', docFooterText: 'Packages' },
       ...packageGroups.map(({ text, items }) => ({
         text,
         collapsed: false,
@@ -203,12 +208,19 @@ export const SIDEBAR: SidebarEntry[] = [
       })),
     ],
   },
-  { text: 'Sample App', collapsed: true, items: sampleAppItems },
+  {
+    text: 'Sample App',
+    collapsed: true,
+    items: [
+      { ...sampleAppOverview, docFooterText: 'Sample App' },
+      ...sampleAppMounts,
+    ],
+  },
   {
     text: 'API',
     collapsed: true,
     items: [
-      { text: 'Overview', link: '/reference/' },
+      { text: 'Overview', link: '/reference/', docFooterText: 'API' },
       ...ROLES.map(({ id, label }) => ({
         text: label,
         collapsed: false,
@@ -236,11 +248,12 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'Guides', link: '/guides/' },
+      { text: 'Examples', link: '/examples/' },
       { text: 'Releases', link: '/releases/', target: '_self' },
       { text: 'Packages', link: '/packages/' },
       { text: 'API', link: '/reference/' },
     ],
   },
-  { text: 'Sample App', items: sampleAppItems },
+  { text: 'Sample App', items: [sampleAppOverview, ...sampleAppMounts] },
   { text: 'Atlas', link: 'https://atlas.lit-ui-router.dev' },
 ];
