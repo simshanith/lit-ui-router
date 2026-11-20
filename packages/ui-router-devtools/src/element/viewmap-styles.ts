@@ -250,13 +250,13 @@ export const viewMapStyles: CSSResult = css`
   }
 
   /* A state tied to the view selected from the path: the selection's ring, dashed. */
-  .box.linked {
+  :is(.box, .map-node).linked {
     outline: 1px dashed var(--uird-select);
     outline-offset: 2px;
   }
 
   @media (forced-colors: active) {
-    .box.linked {
+    :is(.box, .map-node).linked {
       outline: 2px dashed Highlight;
     }
   }

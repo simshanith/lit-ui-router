@@ -1,4 +1,4 @@
-import { html, type TemplateResult } from 'lit';
+import { html, nothing, type TemplateResult } from 'lit';
 import { hierarchy, tree } from 'd3-hierarchy';
 import type { DevtoolsPanel } from './panel.ts';
 import type { StateInfo } from '../schema.ts';
@@ -32,6 +32,8 @@ export const renderMap = (host: DevtoolsPanel): TemplateResult => {
   );
 
   const nodes = layout.descendants();
+  // Every state is drawn, so a state tied to the view selected from the path is marked on its own node.
+  const linked = host._linkedStates();
   const pivot = host._focusTx?.retained.at(-1);
   const current = host._model.current.name;
 
@@ -114,13 +116,15 @@ export const renderMap = (host: DevtoolsPanel): TemplateResult => {
       const isPivot = role === 'retained' && state.name === pivot;
       const marks = stateMarks(state, host._model.states);
       const selected = host._selectedState === state.name;
+      const tie = linked.get(state.name);
 
       return html`<button
-        class="map-node role-${role} ${depthClass(node.depth)} ${facts(state, current)} ${selected ? 'selected' : ''} ${state.name === host._anchorState ? 'anchor' : ''}"
+        class="map-node role-${role} ${depthClass(node.depth)} ${facts(state, current)} ${selected ? 'selected' : ''} ${state.name === host._anchorState ? 'anchor' : ''} ${tie ? 'linked' : ''}"
         data-name=${state.name}
         style="inset-inline-start:${x - 6}px;inset-block-start:${y - 12}px"
         aria-pressed=${selected}
         aria-label="${state.name}, ${words(state, role, isPivot, marks)}"
+        aria-description=${tie ?? nothing}
         @click=${(e: MouseEvent) => host._selectState(state.name, e.detail > 1)}
         @mousedown=${host._keepText}
         @dblclick=${() => host._goState(state.name)}

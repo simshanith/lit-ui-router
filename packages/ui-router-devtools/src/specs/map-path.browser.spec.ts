@@ -365,6 +365,31 @@ describe('the view path under the Map', () => {
     await waitFor(() => expect(overlay()).toBeNull());
   });
 
+  it('marks a selected view’s states in the node-link tree too', async () => {
+    const { element } = await mailMap();
+    const path = await pathOf(element);
+
+    getByRole(shadow(element), 'button', { name: 'Tree' }).click();
+    await element.updateComplete;
+    item(path, /^list view/).click();
+    await element.updateComplete;
+
+    const node = (name: RegExp) =>
+      getByRole(shadow(element), 'button', { name });
+
+    await waitFor(() =>
+      expect(node(/^mail\.list,/).classList).toContain('linked'),
+    );
+    expect(node(/^mail\.list,/).getAttribute('aria-description')).toBe(
+      'fills the selected view',
+    );
+    expect(node(/^mail,/).getAttribute('aria-description')).toBe(
+      'created the selected view',
+    );
+    expect(node(/^home,/).classList).not.toContain('linked');
+    expect(node(/^home,/).hasAttribute('aria-description')).toBe(false);
+  });
+
   it('clears a view selection every way a selection clears', async () => {
     const { element, router } = await mailMap();
     const panel = panelOf(element);

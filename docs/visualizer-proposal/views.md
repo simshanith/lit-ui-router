@@ -120,8 +120,8 @@ stays as it is.
   another tab takes the row away, the inspection and the page's outline go
   with it. The Views tab keeps the view selected for its own details.
 - **Marks.** A selected view marks the state that fills it and the state whose
-  content created it, on the box that draws it or the collapsed compound that
-  holds it. A mark is the selection's ring, dashed, so it reads without
+  content created it: in the nested layout on the box that draws it or the
+  collapsed compound that holds it, in the node-link tree on its node. A mark is the selection's ring, dashed, so it reads without
   colour; forced colours draw it in `Highlight` at 2px. A marked state's
   description says how it is tied: `fills the selected view` or `created the
   selected view`. The selected item carries the selection's ring, which
