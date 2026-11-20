@@ -75,8 +75,8 @@ export const ROLES = [
   {
     property: '--site-color-text-muted',
     kind: 'text',
-    use: 'secondary text: captions, blurbs, idle tabs, notes',
-    on: [...PAGE_GROUNDS, 'ground-shade'],
+    use: "secondary text: captions, blurbs, idle tabs, notes, the home diagram's idle chips",
+    on: [...PAGE_GROUNDS, 'ground-shade', 'diagram-wash'],
   },
   {
     property: '--site-color-text-inactive',
