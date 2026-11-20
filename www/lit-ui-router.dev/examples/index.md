@@ -34,10 +34,9 @@ Each entry lists its facets, read from the example's own files:
 ## Sample apps
 
 The [sample app](/sample-app) is a full webmail and contacts client, built from
-this repository and mounted live on this site. It runs once per reactivity
-binding, so the variants compare the same routes with Vanilla, MobX, Effect and
-Signals client state. [The sample app overview](/sample-app) lists each mount,
-what it demonstrates and its source.
+this repository and mounted live on this site: one mount per reactivity binding
+(Vanilla, MobX, Effect and Signals), plus a hash-location build. That page lists
+each mount, what it demonstrates and its source.
 
 ## Elsewhere
 
