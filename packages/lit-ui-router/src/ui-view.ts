@@ -170,9 +170,9 @@ const noParentViewUnsubscribe = () => {};
  * {@link parentUiViewContext} with itself, from the same listener position, so
  * an element built on <code>@lit/context</code> finds its enclosing view too.
  * A view never answers its own request, so a nested
- * <code>&lt;ui-view&gt;</code> gets the view above it, nor one from its
- * fallback set, which resolves against the view above as the template that
- * authored it does.
+ * <code>&lt;ui-view&gt;</code> gets the view above it. Nor does it answer a
+ * request from its fallback set: that markup was authored in the enclosing
+ * view's template, so it resolves against the view above as well.
  *
  * @summary
  *
