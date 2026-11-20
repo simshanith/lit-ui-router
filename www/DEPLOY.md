@@ -253,7 +253,7 @@ package's lines by npm name: a line's id (`v0`, `v1`), the tag it was baked from
 it through `.vitepress/lines.ts`: a package's page and reference list that package's lines, the
 guides list the site-wide versions, which `lit-ui-router`'s pages list too until it has a line of
 that major, and the menu is hidden where one entry or none is left: a package with no line, the
-site page and the release stubs. A build fetches the live manifest, so a frozen build lists what
+reactivity hubs and the package and reference indexes, the site page and the release stubs. A build fetches the live manifest, so a frozen build lists what
 was baked after it, as far as its own menu reads the manifest: the published `/v1/` snapshot
 predates package lines and lists the site-wide versions only, until it is rebuilt.
 

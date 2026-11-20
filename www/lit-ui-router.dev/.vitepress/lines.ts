@@ -47,6 +47,9 @@ const PACKAGE_PAGE = /^packages\/([^/]+)(?:\/(v\d+))?\/?$/;
 // A line segment is `v<major>`, so no reference entry point may take that name.
 const REFERENCE_PAGE = /^reference\/([^/]+)(?:\/(v\d+))?(?:\/(.*))?$/;
 
+// Hubs and indexes here describe packages that version on their own, so the router's major says nothing about them.
+const PER_PACKAGE = /^(?:packages|reference)(?:\/|$)/;
+
 /** Locates a root-absolute URL path: its site-wide line, and its package and package line when it is a package's page. */
 export function locate(manifest: VersionManifest, path: string): Place {
   const siteLine = manifest.others.find(
@@ -136,13 +139,17 @@ interface Candidate {
 
 /** The targets a place offers: the unversioned docs, the package's lines, and the site-wide lines where the router's major applies. */
 function candidates(manifest: VersionManifest, place: Place): Candidate[] {
-  const { package: name, packageLine, siteLine } = place;
+  const { package: name, packageLine, page, siteLine } = place;
   const lines = name ? packageLines(manifest, name) : [];
   const site = menuVersions(manifest).slice(1);
 
   // A site-wide line also covers the router's own pages, until the router has a line of that major.
+  const followsRouter = name
+    ? name === ROUTER_PACKAGE
+    : !PER_PACKAGE.test(page);
+
   const siteWide =
-    !name || name === ROUTER_PACKAGE || siteLine
+    followsRouter || siteLine
       ? site.filter((line) => lines.every(({ id }) => id !== line.id))
       : [];
 

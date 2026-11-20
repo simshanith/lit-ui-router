@@ -265,6 +265,21 @@ describe('versionMenu', () => {
     ]);
   });
 
+  it('leaves a hub or an index of packages only the unversioned entry', () => {
+    assert.deepEqual(links('/packages/effect'), [
+      ['latest', '/packages/effect'],
+    ]);
+    assert.deepEqual(links('/packages/'), [['latest', '/packages/']]);
+    assert.deepEqual(links('/reference/'), [['latest', '/reference/']]);
+  });
+
+  it("keeps a site-wide line's own entry on its hub pages", () => {
+    assert.deepEqual(links('/v1/packages/effect'), [
+      ['latest', '/packages/effect'],
+      ['1.x', '/v1/packages/effect'],
+    ]);
+  });
+
   it("keeps the site-wide lines on the router's own pages", () => {
     assert.deepEqual(links('/packages/lit-ui-router'), [
       ['latest', '/packages/lit-ui-router'],
