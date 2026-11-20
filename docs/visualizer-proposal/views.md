@@ -89,8 +89,9 @@ stays as it is.
   view was picked from, else the active state. A state on the active path that
   fills no view, one drawn into its parent's view, shows the path of the
   nearest ancestor that fills one, and the row says whose (`of mail.list`). A
-  selected state that is not active fills no view in the snapshot, and the
-  row says so.
+  selected state that is not active usually fills no view in the snapshot,
+  and the row says so. A sticky state keeps its views filled after it is
+  left, so the row draws its path with `Inactive` tags.
 - **Long and deep paths.** The row scrolls along its length. Truncating it
   instead would drop the views in the middle, which are the point of a path;
   the state names in it are truncated as everywhere in the Views, with the
