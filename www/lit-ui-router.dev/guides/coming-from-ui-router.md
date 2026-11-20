@@ -111,8 +111,17 @@ function `` (props) => html`...` `` instead. See
 Mount `<ui-router .uiRouter=${router}>` near the root of your tree. Directives
 (`uiSref`, `uiSrefActive`, `srefHref`, `srefActiveClass`, `srefAriaCurrent`),
 `<ui-view>`, and controllers (`TransitionController`, `SrefStatusController`)
-discover the router automatically via the web-components `context-request`
-protocol, crossing shadow DOM boundaries without prop-drilling.
+discover the router automatically via the Web Components Community Group
+[Context protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md)
+(`context-request`), crossing shadow DOM boundaries without prop-drilling.
+
+Because [`routerContext`](/reference/lit-ui-router/core/routerContext) (from
+`lit-ui-router/context`) implements that protocol directly, it also works with
+[`@lit/context`](https://lit.dev/docs/data/context/)
+(`@consume({ context: routerContext })` and `ContextProvider`) — see
+[Router discovery](./reactive-components#router-discovery) for the low-level
+API and
+[`parentUiViewContext`](/reference/lit-ui-router/core/parentUiViewContext).
 
 A resolve's `deps` can name other resolve tokens, `Transition` and `UIRouter`.
 `@uirouter/angular` also lets `deps` name an Angular service; here no injector
@@ -120,9 +129,10 @@ stands behind the router, so that resolve fails with
 `Could not find Dependency Injection token`. Import the service in the module
 that declares the state, or supply it from a parent state's resolve.
 
-For components that react to route changes outside `<ui-view>`, replace
-Angular's injected `TransitionService` or React's `useCurrentStateAndParams()`
-with [`TransitionController`](./reactive-components):
+For components that react to route changes outside `<ui-view>`,
+[`TransitionController`](./reactive-components) is the most direct translation
+of Angular's injected `TransitionService` or React's
+`useCurrentStateAndParams()`:
 
 ```ts check
 import { LitElement, html } from 'lit';
@@ -137,13 +147,29 @@ export class CurrentRouteBanner extends LitElement {
 }
 ```
 
+The same DOM context also powers `SrefStatusController` (for active-link state
+outside directives) and the reactive companion packages —
+[Effect](/packages/effect), [MobX](/packages/mobx), and
+[TC39 Signals](/packages/signals) — when you prefer to read route state through
+a reactive store, `SubscriptionRef`, or signal instead of transition callbacks
+(see [Reactive state ecosystems](#6-reactive-state-ecosystems)).
+
 ### 4. `<ui-view>` renders in light DOM
 
-`<ui-view>` renders routed markup into its **light DOM** (not a shadow root),
-so document styles and parent layouts flow through naturally while each routed
-`LitElement` keeps its own shadow DOM encapsulation. Target the active routed
-element with `ui-view > [routed]` or `view.routedElement` — see
-[The routed element](./routed-components#the-routed-element).
+Unlike most `LitElement` components, `<ui-view>` overrides `createRenderRoot()`
+to render into its **light DOM** instead of creating a shadow root of its own —
+matching how `<ui-view>` in Angular and `<UIView />` in React behave. That means
+`<ui-view>` does not insert an extra shadow boundary between your layout and
+what it mounts:
+
+- Template-function views render straight into `<ui-view>`'s light DOM, where
+  parent styles reach them directly.
+- Custom-element views (such as a `LitElement` subclass) are mounted as
+  light-DOM children of `<ui-view>` — reachable via `ui-view > [routed]` or
+  `view.routedElement` — while the custom element itself still owns whatever
+  render root it defines (shadow DOM by default).
+
+See [The routed element](./routed-components#the-routed-element).
 
 ### 5. Element-part vs attribute-part links, and `assignHref`
 
@@ -163,9 +189,13 @@ element with `ui-view > [routed]` or `view.routedElement` — see
 
 ### 6. Reactive state ecosystems
 
-`@uirouter/angular` installs the `@uirouter/rx` plugin, which adds `params$`,
-`success$`, `start$` and `states$` to `router.globals`; `UIRouterLit` does not.
-For reactive router state, optional companion packages bridge `@uirouter/core`
+`@uirouter/angular` installs the
+[`@uirouter/rx`](https://npmx.dev/package/@uirouter/rx) plugin, which adds
+`params$`, `success$`, `start$` and `states$` to `router.globals`;
+`UIRouterLit` does not install it by default. Because `UIRouterLit` is a
+`@uirouter/core` router, you can still register `UIRouterRx` directly
+(`router.plugin(UIRouterRx)`) if your app already uses RxJS streams. For newer
+reactive state ecosystems, optional companion packages bridge `@uirouter/core`
 to [Effect](/packages/effect), [MobX](/packages/mobx), or
 [TC39 Signals](/packages/signals), each shown in a live
 [Sample App](/sample-app) variant.
