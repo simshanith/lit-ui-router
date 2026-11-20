@@ -53,6 +53,7 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
     { text: 'Named Views', link: '/guides/named-views' },
     { text: 'View Fallback Content', link: '/guides/view-fallback-content' },
     { text: 'Component Lifecycle Hooks', link: '/guides/component-lifecycle' },
+    { text: 'Links and Navigation', link: '/guides/links-and-navigation' },
     { text: 'Design System Links', link: '/guides/design-system-links' },
   ],
   reactivity: [

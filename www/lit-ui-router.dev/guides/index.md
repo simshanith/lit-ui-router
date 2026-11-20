@@ -46,6 +46,10 @@ client deployed across every point on the server-support spectrum.
   master/detail idiom, and what a prerendered shell emits
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
+- [Links and Navigation](./links-and-navigation) — declarative links with
+  `uiSref`, active classes and `aria-current` with `uiSrefActive`, relative
+  targets, attribute-part `sref*` forms, `SrefStatusController`, and
+  programmatic navigation with `stateService`
 - [Design System Links](./design-system-links) — driving a design system's
   link component (`<sp-link>`, `<md-*>`, an in-house one) with `uiSref`:
   `assignHref: true` is the option for a custom element that declares its own
