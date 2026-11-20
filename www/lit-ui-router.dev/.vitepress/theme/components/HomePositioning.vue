@@ -5,7 +5,6 @@ const { frontmatter } = useData();
 </script>
 
 <template>
-  <!-- Rendered in home-features-before so home-hero-after stays open for #2129's releases strip. -->
   <div v-if="frontmatter.positioning" class="home-positioning">
     <div class="container">
       <!-- positioning is an authored frontmatter string in index.md, not user input -->
