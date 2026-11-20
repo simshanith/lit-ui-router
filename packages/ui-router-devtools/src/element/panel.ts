@@ -1586,12 +1586,23 @@ export class DevtoolsPanel extends LitElement {
   // The state whose view path is drawn: the selected state, the one a selected view was picked from, else the active one.
   _pathState(): string {
     if (this._inspect === 'state' && this._selectedState !== null)
-      return this._selectedState;
+      return this.#liveState(this._selectedState);
 
     if (this._inspect === 'view' && this.#pathFrom !== null)
-      return this.#pathFrom;
+      return this.#liveState(this.#pathFrom);
 
     return this._model.current.name;
+  }
+
+  // A future state's `name.**` gives way to `name` once its lazy load registers it; a name no state has falls back to the active state.
+  #liveState(name: string): string {
+    const names = new Set(this._model.states.map((state) => state.name));
+
+    if (names.has(name)) return name;
+
+    const loaded = name.replace(/\.\*\*$/, '');
+
+    return names.has(loaded) ? loaded : this._model.current.name;
   }
 
   #chooseLayout(layout: MapLayout) {

@@ -303,6 +303,55 @@ describe('the view path under the Map', () => {
     ).toEqual(['›', '+']);
   });
 
+  // A future state stands in for a tree its lazy load registers, and the load takes the placeholder away.
+  const FUTURE: LitStateDeclaration[] = [
+    {
+      name: 'later.**',
+      url: '/later',
+      lazyLoad: () =>
+        Promise.resolve({
+          states: [
+            {
+              name: 'later',
+              url: '/later',
+              component: () => html`<p>later</p>`,
+            },
+          ],
+        }),
+    },
+  ];
+
+  it('follows a selected future state to the state its lazy load registered', async () => {
+    const { element, router } = await mailMap(1280, 'mail.list', FUTURE);
+
+    head(states(element), /^later/).click();
+    await waitFor(() =>
+      expect(panelOf(element)._selectedState).toBe('later.**'),
+    );
+
+    // As a double-click does: go to it, which loads it.
+    await router.stateService.go('later');
+
+    const path = await pathOf(element, 'Views of later');
+
+    expect(items(path)).toContain('$default view, filled by later');
+  });
+
+  it('draws the active state’s path once a selected state is gone with nothing in its place', async () => {
+    const { element, router } = await mailMap(1280, 'mail.list', FUTURE);
+
+    head(states(element), /^later/).click();
+    await waitFor(() =>
+      expect(panelOf(element)._selectedState).toBe('later.**'),
+    );
+
+    router.stateRegistry.deregister('later.**');
+    await pathOf(element, 'Views of mail.list');
+    expect(
+      queryByRole(shadow(element), 'group', { name: /^Views of later/ }),
+    ).toBeNull();
+  });
+
   it('says a selected state that is not active fills no view', async () => {
     const { element } = await mailMap();
 
