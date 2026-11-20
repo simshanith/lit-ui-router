@@ -101,8 +101,9 @@ stays as it is.
 - **Toggle.** `View path`, beside the Map's layout buttons, hides or shows the
   row. It is on unless the viewer turns it off, and the choice is kept in
   `localStorage` (`ui-router-devtools:map-views`) as the layout choice is. It
-  is pressed while the row is drawn. If the view map's module fails to load it
-  is disabled and its title says so. It is not shown for a session that holds
+  is pressed while the row is drawn. If the view map's module fails to load
+  while the row is on, it is disabled and its title says so; with the row off,
+  turning it on tries the load again. It is not shown for a session that holds
   no views, which includes a views snapshot with no view in it.
 - **Keys.** The row is a toolbar and one tab stop. The arrow keys step through
   its items in order, the inline ones mirrored in a right-to-left panel, Home
