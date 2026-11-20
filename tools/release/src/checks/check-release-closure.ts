@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Every member a release lane runs in must be inside the closure `setup --release` installs.
 import { requireEnv } from '../lib/env.core.ts';
 import { defaultCapture, defaultExec } from '@tools/shared/exec.ts';
