@@ -37,18 +37,21 @@ Every mount above differs only in its **routing** — the HTTP verdict a URL
 earns. That is the axis this app ships today, end to end; the
 [Server-Side Routing guide](./guides/server-route-matching) is the deep dive.
 
-A second axis — **how the page body is rendered** — is orthogonal: it would
-ride the same routing spine and return the identical verdict at every setting.
-Today the sample app is **client-rendered** throughout; build-time
-pre-rendering and request-time server-rendering are on the roadmap. The sample
-app is the vehicle that axis will grow on.
+A second axis — **how the page body is rendered** — is orthogonal: it rides the
+same routing spine and returns the identical verdict at every setting. Today the sample app mounts are **client-rendered** throughout; build-time
+prerendering ([Prerender with Vite](./guides/prerender-with-vite),
+[Prerender with Eleventy](./guides/prerender-with-eleventy)) and request-time
+server rendering
+([Rendering one page per request](/packages/lit-ui-router-ssr#rendering-one-page-per-request))
+live in [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr).
 
 ## Source
 
 - **Routing projection** — the shared route / redirect / mount tables the edge
   imports:
   [`apps/sample-app-routes`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)
-- **App implementation** — shared across the vanilla, MobX, and hash builds:
+- **App implementation** — shared across the vanilla, MobX, Effect, Signals,
+  and hash builds:
   [`apps/sample-app-shared`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-shared)
 - **Edge worker** — turns each verdict into HTTP:
   [`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)

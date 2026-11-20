@@ -183,9 +183,6 @@ That is the runtime requirement: the other entries' type declarations still
 reference `@uirouter/core` types, so a TypeScript project without it either
 installs it as a dev dependency or keeps `skipLibCheck` on.
 
-`latest` is the stable line (`0.1.0` today), and the only dist-tag — the
-pre-release seed tags have been retired.
-
 ## Quick start
 
 Routes are **data**, not state declarations — a server runtime cannot import

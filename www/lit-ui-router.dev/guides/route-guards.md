@@ -147,5 +147,6 @@ router.transitionService.onBefore(criteria, async (transition) => {
 
 For per-component concerns — like an edit form warning about unsaved changes
 before the user navigates away — implement the `uiCanExit` lifecycle hook on
-the routed component instead of a global guard. See the
-[UiOnExit](/reference/lit-ui-router/hooks/UiOnExit) interface.
+the routed component instead of a global guard. See
+[Component Lifecycle Hooks](./component-lifecycle#uicanexit-confirm-or-block-navigation)
+(and the [`UiOnExit`](/reference/lit-ui-router/hooks/UiOnExit) interface).

@@ -220,8 +220,8 @@ it.
 
 This is the minimal version — the solar-system tutorial with a store layered
 in where the router stops helping, small enough to read in one sitting. For
-the full comparison, the two sample apps below build the same application
-twice, once with each idiom.
+the full comparison, the sample apps below build the same application four
+times, once in each reactivity idiom.
 
 <LiveExample name="hellosolarsystem-mobx" />
 
@@ -231,10 +231,13 @@ The <a href="/app" target="_self">vanilla sample app</a> is built on this
 pattern — its
 [`App`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-lit-vanilla/src/app/main/App.ts),
 nav header, and message compose view each use a `TransitionController`. The
-behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
-solves the same problems with the observable store and reaction controllers
-from [`lit-ui-router-mobx`](/packages/), one of the
-[companion packages](/packages/) — if your app already uses MobX, prefer
-[those bindings](/packages/lit-ui-router-mobx); the
-[two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+behaviorally identical <a href="/app-mobx" target="_self">MobX</a>,
+<a href="/app-effect" target="_self">Effect</a>, and
+<a href="/app-signals" target="_self">Signals</a> sample apps solve the same
+problems with their companion packages —
+[`lit-ui-router-mobx`](/packages/lit-ui-router-mobx),
+[`lit-ui-router-effect`](/packages/lit-ui-router-effect), and
+[`lit-ui-router-signals`](/packages/lit-ui-router-signals). If your app already
+uses one of those libraries, prefer its bindings; the
+[four codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.

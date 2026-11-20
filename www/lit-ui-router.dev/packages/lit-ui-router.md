@@ -25,15 +25,22 @@ npm install lit-ui-router lit @uirouter/core
 
 ## Quick Start
 
-```ts
+```ts check
 import {
   UIRouterLit,
   uiSref,
   uiSrefActive,
-  LitStateDeclaration,
+  type LitStateDeclaration,
 } from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
-import { html } from 'lit';
+import { LitElement, html, render } from 'lit';
+
+class UserListElement extends LitElement {
+  override render() {
+    return html`<h1>Users</h1>`;
+  }
+}
+customElements.define('user-list', UserListElement);
 
 // 1. Create router and add location plugin
 const router = new UIRouterLit();
@@ -49,17 +56,24 @@ const states: LitStateDeclaration[] = [
 states.forEach((state) => router.stateRegistry.register(state));
 router.urlService.rules.initial({ state: 'home' });
 router.start();
-```
 
-```html
-<!-- 4. Use in your app -->
-<ui-router .uiRouter="${router}">
-  <nav>
-    <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}>Home</a>
-    <a ${uiSref('users')} ${uiSrefActive({ activeClasses: ['active'] })}>Users</a>
-  </nav>
-  <ui-view></ui-view>
-</ui-router>
+// 4. Render your app
+render(
+  html`
+    <ui-router .uiRouter=${router}>
+      <nav>
+        <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Home</a
+        >
+        <a ${uiSref('users')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Users</a
+        >
+      </nav>
+      <ui-view></ui-view>
+    </ui-router>
+  `,
+  document.getElementById('root')!,
+);
 ```
 
 `rules.initial({ state: 'home' })` lands on the state with no params; a landing
@@ -92,9 +106,11 @@ Every entry point above publishes twice: `dist/development/*.js` alongside
 `dist/*.js`, picked by the `development` export condition, which bundlers
 resolve automatically. Nothing to configure.
 
-The development build carries three console warnings — `uiSref` writing an
-inert `href`, `uiSrefActive` taking over an `aria-current` it did not set, and
-any binding finding no `<ui-router>` ancestor. Each is gated on lit's own
+The development build carries five console warnings — `uiSref` writing an
+inert `href`, `uiSrefActive` taking over an `aria-current` it did not set,
+any binding finding no `<ui-router>` ancestor, swapping `uiRouter` on a
+`<ui-router>` after its first update, and a view component class extending a
+different copy of `LitElement`. Each is gated on lit's own
 development build as well, and none of them, message text included, is
 present in a production bundle. See
 [Development and Production Builds](/guides/development-builds) for what each

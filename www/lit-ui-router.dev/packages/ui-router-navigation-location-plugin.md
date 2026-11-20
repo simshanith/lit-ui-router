@@ -191,8 +191,8 @@ Pass a function instead of `true` to return the
 `navigate` time, before the router transition exists, so its `focusReset` and
 `scroll` are fixed before the destination state is known. Its `handler` runs
 after the router transition settles, which is the place to wait for views that
-render later ([#982](https://github.com/simshanith/lit-ui-router/issues/982)
-tracks a `lit-ui-router` signal for that moment), and receives that transition,
+render later ([`viewRendered(router, transition)`](/guides/component-lifecycle#after-the-transition-waiting-for-the-view-to-render)
+resolves once `lit-ui-router`'s views have updated), and receives that transition,
 or `undefined` when the traversal's URL started none. To restore scroll only
 for some states, return `scroll: 'manual'` and call `event.scroll()` from the
 handler:

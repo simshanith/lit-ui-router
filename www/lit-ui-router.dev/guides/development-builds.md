@@ -22,15 +22,20 @@ message strings included. A production bundle cannot be made to print them.
 
 ## Which packages ship it
 
-| Package                       | Two builds | Why                                               |
-| ----------------------------- | ---------- | ------------------------------------------------- |
-| `lit-ui-router`               | yes        | three development warnings                        |
-| `lit-ui-router-effect`        | yes        | one development warning                           |
-| `lit-ui-router-mobx`          | yes        | one development warning                           |
-| `lit-ui-router-ssr`           | yes        | ten development warnings; also gated under `node` |
-| `navigation-location-plugin`  | no         | no runtime warnings to fold out                   |
-| `ui-router-server`            | yes        | one development warning; also gated under `node`  |
-| `eslint-plugin-lit-ui-router` | no         | a lint plugin — it never runs in your app bundle  |
+| Package                                | Two builds | Why                                                  |
+| -------------------------------------- | ---------- | ---------------------------------------------------- |
+| `lit-ui-router`                        | yes        | five development warnings                            |
+| `lit-ui-router-effect`                 | yes        | one development warning                              |
+| `lit-ui-router-mobx`                   | yes        | one development warning                              |
+| `lit-ui-router-signals`                | yes        | one development warning                              |
+| `lit-ui-router-ssr`                    | yes        | twelve development warnings; also gated under `node` |
+| `ui-router-server`                     | yes        | four development warnings; also gated under `node`   |
+| `ui-router-effect`                     | no         | no runtime warnings to fold out                      |
+| `ui-router-mobx`                       | no         | no runtime warnings to fold out                      |
+| `ui-router-signals`                    | no         | no runtime warnings to fold out                      |
+| `ui-router-navigation-location-plugin` | no         | no runtime warnings to fold out                      |
+| `ui-router-registry`                   | no         | types only — emits no JavaScript                     |
+| `eslint-plugin-lit-ui-router`          | no         | a lint plugin — it never runs in your app bundle     |
 
 The split exists where there is something to strip. A package with a single
 build is not missing a feature.
@@ -59,43 +64,59 @@ resolves lit's production build, so its warnings would never fire.
 
 ### `lit-ui-router`
 
-| Warning                                    | Fires when                                                                                            | Fix                                                                                                    |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `uiSref` wrote an inert `href`             | `assignHref: true` (the default) writes `href` to an element with no `href` in HTML                   | Pass `assignHref: 'auto'` to scope it to real links — see [Design System Links](./design-system-links) |
-| `uiSrefActive` took over an `aria-current` | the directive finds an `aria-current` it did not set, and will remove it when the state goes inactive | Pass `ariaCurrentValue: false` to keep the attribute yours                                             |
-| no `<ui-router>` ancestor                  | a `<ui-view>`, `uiSref`, or `uiSrefActive` finds no router after its seek has actually run            | Wrap the subtree in `<ui-router>`, or pass a router explicitly                                         |
+| Warning                                           | Fires when                                                                                              | Fix                                                                                                    |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `uiSref` wrote an inert `href`                    | `assignHref: true` (the default) writes `href` to an element with no `href` in HTML                     | Pass `assignHref: 'auto'` to scope it to real links — see [Design System Links](./design-system-links) |
+| `uiSrefActive` took over an `aria-current`        | the directive finds an `aria-current` it did not set, and will remove it when the state goes inactive   | Pass `ariaCurrentValue: false` to keep the attribute yours                                             |
+| no `<ui-router>` ancestor                         | a `<ui-view>`, `uiSref`, or `uiSrefActive` finds no router after its seek has actually run              | Wrap the subtree in `<ui-router>`, or pass a router explicitly                                         |
+| `<ui-router>` given a different `uiRouter`        | `uiRouter` is replaced on `<ui-router>` after its first update, leaving existing views on the old one   | Set `uiRouter` before the element first updates, or replace the `<ui-router>` element                  |
+| view component class does not extend `LitElement` | a routed component class fails `instanceof LitElement`, usually because two copies of `lit` are bundled | Deduplicate `lit` so the app and `lit-ui-router` share one copy                                        |
 
 The missing-router warning fires once per element across all three sites, not
 once per binding: a single missing provider trips `uiSref`'s render and its
 click on the same element, and a wall of near-identical messages obscures the
 one fix.
 
-### `lit-ui-router-mobx`
+### `lit-ui-router-mobx`, `lit-ui-router-effect`, and `lit-ui-router-signals`
 
-| Warning                   | Fires when                                                        | Fix                                                         |
-| ------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------- |
-| no `<ui-router>` ancestor | a `RouterReactionController`'s host has no `<ui-router>` above it | Wrap the subtree in `<ui-router>`, or pass `options.router` |
+| Warning                   | Fires when                                                                                         | Fix                                                                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| no `<ui-router>` ancestor | a `RouterReactionController`, `RouterRefController`, or `RouterSignalController` finds no provider | Wrap the subtree in `<ui-router>`, pass `options.router`, or call `setRouter()` on `RouterRefController` / `RouterSignalController` |
 
-This one has a consequence the message does not state: the controller then
+This warning has a consequence the message does not state: the controller then
 observes nothing. `.value` stays at `options.initialValue` for the life of the
 host, and the host is never asked to update — so the symptom is a component
 that renders once with its initial value and never again.
 
 ### `ui-router-server`
 
-| Warning                                  | Fires when                                                                                                                       | Fix                                                                                    |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| a mount answers its bare base with a 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/` |
+| Warning                                                | Fires when                                                                                                                       | Fix                                                                                                               |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `createServerRouter`: mount answers bare base with 404 | `createServerRouter` compiles a mount other than `/` whose bare base (`/app`) resolves to `notFound` or an `otherwise` shell-404 | Add a `url: ''` route, or a redirect rule matching the empty subpath such as `/^\/?$/`                            |
+| `prerender`: unclaimed path                            | a path in `paths` matches no route and its mount declares no `otherwise` projection                                              | Remove the path, add a matching route, or configure `otherwise` on the mount                                      |
+| `prerender`: mount rejects trailing slash              | the first prerendered `<subpath>/index.html` page's trailing-slash spelling does not resolve to the same shell                   | Pass `config: { strict: false }` on the mount and call `router.urlService.config.strictMode(false)` on the client |
+| `seed`: transported resolve could not be rebuilt       | `seed()` finds a dehydrated resolve using a transporter it was not given, or whose `decode` throws                               | Pass the matching `transport` to `seed()` / `bootstrap()`, or fix its `decode`                                    |
 
-It is a development-only warning, but the check is not.
+The mount diagnostic is a development-only warning, but the check is not.
 [`diagnoseMounts(router)`](/reference/ui-router-server/index/functions/diagnoseMounts)
 returns the same findings as data in every build, so asserting it is empty in
 a test catches the problem in CI, whichever build the test resolves. See
-[Server Route Matching](./server-route-matching).
+[Server-Side Routing](./server-route-matching).
 
 A mount that answers its bare base with a 404 on purpose lists the kind in its
 [`ignoreDiagnostics`](/reference/ui-router-server/index/interfaces/MountConfig#ignorediagnostics),
 which turns it off for that mount in the warning and in `diagnoseMounts` alike.
+
+### `lit-ui-router-ssr`
+
+`lit-ui-router-ssr` carries twelve development warnings across its server and
+client entries: two during prerendering (`<ui-view>` missing from
+`customElements`; a shadow-DOM `LitElement` rendered empty without a shadow
+renderer) and ten during client hydration and adoption (release-line skew,
+missing `lit-part` markers, render mismatches, views waking without an adopter
+or still asleep under `defer-hydration`, and booting into a different state or
+adopting zero drawn views). See
+[`lit-ui-router-ssr` — Development and production builds](/packages/lit-ui-router-ssr#development-and-production-builds).
 
 ## Server runtimes
 

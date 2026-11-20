@@ -37,8 +37,10 @@ To add the router to an existing Vite project, install it with its peers:
 npm install lit-ui-router lit @uirouter/core
 ```
 
-See [Getting started](../introduction#add-to-an-existing-project) for the
-TypeScript settings the code below needs.
+The code below uses TypeScript decorators (`@customElement`). In `tsconfig.json`,
+set `"experimentalDecorators": true` and `"useDefineForClassFields": false` —
+Vite's `lit-ts` template already sets both (see
+[Getting started](../introduction#add-to-an-existing-project)).
 
 ## Full Source Code
 
@@ -110,6 +112,7 @@ const aboutState: LitStateDeclaration = {
 // Router setup
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
+router.trace.enable('TRANSITION');
 router.stateRegistry.register(helloState);
 router.stateRegistry.register(aboutState);
 router.urlService.rules.initial({ state: 'hello' });
@@ -169,7 +172,7 @@ These are standard Lit templates. When navigation occurs, lit-ui-router will ren
 
 ### State Definitions
 
-States are the fundamental building blocks of UI Router. Each state defines a URL and the component to render:
+States are the fundamental building blocks of UI-Router. Each state defines a URL and the component to render:
 
 ```typescript
 const helloState: LitStateDeclaration = {
