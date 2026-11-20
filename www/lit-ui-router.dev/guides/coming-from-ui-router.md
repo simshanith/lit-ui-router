@@ -72,13 +72,14 @@ containing `router`, `transition`, and `resolves` — onto the routed
 
 ```ts check
 import { LitElement, html } from 'lit';
-import { property } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import type { LitStateDeclaration, UIViewInjectedProps } from 'lit-ui-router';
 
 interface ContactResolves {
   contact: { name: string };
 }
 
+@customElement('contact-view')
 export class ContactView extends LitElement {
   @property({ attribute: false })
   uiViewProps?: UIViewInjectedProps<ContactResolves>;
@@ -137,8 +138,10 @@ of Angular's injected `TransitionService` or React's
 
 ```ts check
 import { LitElement, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { TransitionController } from 'lit-ui-router';
 
+@customElement('current-route-banner')
 export class CurrentRouteBanner extends LitElement {
   private readonly route = new TransitionController(this);
 
