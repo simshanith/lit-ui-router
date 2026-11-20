@@ -29,6 +29,7 @@ export const GUIDE_TOPICS = [
   { id: 'reactivity', label: 'Reactivity' },
   { id: 'server', label: 'Server-side' },
   { id: 'builds', label: 'Builds & Diagnostics' },
+  { id: 'migration', label: 'Coming from Another Router' },
 ] as const;
 
 export type GuideTopic = (typeof GUIDE_TOPICS)[number]['id'];
@@ -72,6 +73,9 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
       text: 'Development and Production Builds',
       link: '/guides/development-builds',
     },
+  ],
+  migration: [
+    { text: 'Coming from UI-Router', link: '/guides/coming-from-ui-router' },
   ],
 };
 

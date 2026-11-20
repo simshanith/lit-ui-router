@@ -87,6 +87,12 @@ choices to the pages below.
   export condition, the warnings the development build carries and the
   production build cannot print, and which packages ship two builds at all
 
+## Coming from Another Router
+
+- [Coming from UI-Router](./coming-from-ui-router) — side-by-side mapping from
+  `@uirouter/angular` and `@uirouter/react` to `lit-ui-router`, what stays
+  identical in `@uirouter/core`, and what changes in Lit
+
 ## Companion Packages
 
 The [companion packages](/packages/) — Effect, MobX and Signals bindings, the
