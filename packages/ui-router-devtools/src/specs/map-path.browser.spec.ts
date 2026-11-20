@@ -159,6 +159,8 @@ const mailMap = async (
   await element.updateComplete;
   getByRole(shadow(element), 'button', { name: 'map' }).click();
   await waitFor(() => toggle(element));
+  // The toggle draws before the lazy Map does; side-sheet specs below 880px wait for what they read themselves.
+  if (width >= 880) await drawnStates(element);
 
   return { router, element };
 };
