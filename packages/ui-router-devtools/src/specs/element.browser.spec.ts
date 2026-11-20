@@ -1941,6 +1941,8 @@ describe('the nested Map', () => {
     const element = await openMap(1280);
     await tree(element);
     const listbox = await selectTick(element, 3);
+    // The boxes may still be easing from the Map's first draw to their laid-out place.
+    await finish(element);
 
     const diagram = element.renderRoot
       .querySelector('.nested')!
@@ -1962,6 +1964,8 @@ describe('the nested Map', () => {
     expect(
       queryByRole(shadow(element), 'button', { name: 'Close inspector' }),
     ).toBeNull();
+
+    await finish(element);
     expect(
       element.renderRoot
         .querySelector('.nested')!
