@@ -449,7 +449,9 @@ rate-limited (`gh variable set PULLFROG_MODEL --body opencode/big-pickle`, and
 `gh variable delete PULLFROG_MODEL` to go back). The job signs in to
 OpenCode over OIDC, so no provider key is stored, and no other credential
 reaches it: the OpenCode workspace decides which models can run, so a metered
-model runs only if the workspace allows it. Which PRs it reviews is set in
+model runs only if the workspace allows it. The model reaches the action as an
+environment variable, so a model picked in the Pullfrog console or a `--model=`
+flag on a comment does not apply, and Pullfrog's hosted trial models stay off. Which PRs it reviews is set in
 the Pullfrog console, and what it looks for in
 [`.github/pullfrog/review.md`](../.github/pullfrog/review.md). Comment
 `@pullfrog` on a PR to ask for a run; only collaborators can. It cannot push. It
