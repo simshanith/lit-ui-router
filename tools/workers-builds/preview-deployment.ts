@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Surfaces Workers Builds preview URLs as GitHub Deployments, one
-// `preview/<worker>` environment per Worker, retires them, and reads them back.
+// Surfaces Workers Builds preview URLs as GitHub Deployments, retires them, and
+// reads them back: `preview/<worker>` links the branch alias, `preview/<worker>/commit`
+// the commit's own preview.
 //
 // Usage:
 //   preview-deployment.ts post (--check-run <id> | --name <check run name> --sha <sha>
@@ -33,6 +34,7 @@ import {
   type Preview,
   type PreviewRecord,
   type Skip,
+  type Target,
   branchDeployments,
   checkRunArgs,
   checkRunFromApi,
@@ -54,7 +56,9 @@ import {
   prHeadArgs,
   previewEnvironments,
   previewFromCheckRun,
-  previewRecord,
+  previewLink,
+  previewRecords,
+  previewTargets,
   recordsText,
   supersededDeployments,
 } from './preview-deployment.core.ts';
@@ -111,31 +115,36 @@ async function deactivate(
 }
 
 type Posted = {
+  readonly target: Target;
   readonly id: number | null;
   readonly existing: boolean;
   readonly deactivated: readonly number[];
 };
 
 /**
- * Creates the deployment and its success status unless this build has one,
- * then retires the branch's older ones. A dry run creates nothing and lists
- * the branch's active deployments it would retire.
+ * Creates `target`'s deployment and its success status unless this build has
+ * one, then retires the branch's older ones there. A dry run creates nothing
+ * and lists the branch's active deployments it would retire.
  */
-async function postPreview(
+async function postTarget(
   exec: Exec,
   repo: string,
   preview: Preview,
+  target: Target,
   dryRun: boolean,
 ): Promise<Posted> {
-  const listed = await environmentDeployments(exec, repo, preview.environment);
-  const found = existingDeployment(listed, preview);
+  const listed = await environmentDeployments(exec, repo, target.environment);
+  const found = existingDeployment(listed, preview, target);
   let current = found;
 
   if (current === undefined && !dryRun) {
-    const created = await exec('gh', createDeploymentArgs(repo, preview));
+    const created = await exec(
+      'gh',
+      createDeploymentArgs(repo, preview, target),
+    );
 
     current = deploymentFromApi(created.stdout);
-    await exec('gh', createStatusArgs(repo, current.id, preview));
+    await exec('gh', createStatusArgs(repo, current.id, preview, target));
   }
 
   // A dry run's deployment would be the newest, so every listed one of the branch is older.
@@ -145,6 +154,7 @@ async function postPreview(
       : supersededDeployments(listed, current, preview.branch);
 
   return {
+    target,
     id: current?.id ?? null,
     existing: found !== undefined,
     deactivated: await deactivate(
@@ -215,7 +225,11 @@ async function checkRunFrom(
 
 type PostResult =
   | Skip
-  | ({ readonly preview: Preview; readonly dryRun: boolean } & Posted);
+  | {
+      readonly preview: Preview;
+      readonly dryRun: boolean;
+      readonly posted: readonly Posted[];
+    };
 
 const post = async (args: string[], repo: string): Promise<PostResult> => {
   const { values } = parseArgs({
@@ -239,9 +253,26 @@ const post = async (args: string[], repo: string): Promise<PostResult> => {
   if ('skip' in preview) return preview;
 
   const dryRun = values['dry-run'];
-  const posted = await postPreview(defaultCapture, repo, preview, dryRun);
+  const posted: Posted[] = [];
 
-  return { preview, dryRun, ...posted };
+  for (const target of previewTargets(preview)) {
+    posted.push(
+      await postTarget(defaultCapture, repo, preview, target, dryRun),
+    );
+  }
+
+  return { preview, dryRun, posted };
+};
+
+const postedText = (posted: Posted, dryRun: boolean): string => {
+  const retired =
+    posted.deactivated.length === 0 ? 'none' : posted.deactivated.join(', ');
+
+  const action = dryRun
+    ? `would ${posted.existing ? `keep deployment ${posted.id}` : 'create a deployment'}, then retire: ${retired}`
+    : `${posted.existing ? 'kept' : 'created'} deployment ${posted.id}; retired: ${retired}`;
+
+  return `${posted.target.environment}: ${posted.target.url}\n  ${action}`;
 };
 
 const postText = (result: PostResult): string => {
@@ -249,20 +280,15 @@ const postText = (result: PostResult): string => {
     return `no deployment for ${result.worker}: ${result.skip}`;
   }
 
-  const { preview } = result;
-
-  const retired =
-    result.deactivated.length === 0 ? 'none' : result.deactivated.join(', ');
+  const { preview, dryRun, posted } = result;
 
   return [
-    `${preview.environment} on ${preview.sha} (${preview.branch})`,
-    `  commit preview: ${preview.commitUrl}`,
-    `  branch alias:   ${preview.branchUrl ?? '(none)'}`,
-    `  version:        ${preview.versionId}`,
-    `  log:            ${preview.logUrl}`,
-    result.dryRun
-      ? `dry run: would ${result.existing ? `keep deployment ${result.id}` : 'create a deployment with a success status'}, then retire: ${retired}`
-      : `${result.existing ? 'kept' : 'created'} deployment ${result.id}; retired: ${retired}`,
+    `${preview.worker} on ${preview.sha} (${preview.branch}), version ${preview.versionId}${dryRun ? ', dry run' : ''}`,
+    `  log: ${preview.logUrl}`,
+    ...(preview.branchUrl === null
+      ? ['  no branch alias in the summary: posting the commit preview only']
+      : []),
+    ...posted.map((each) => postedText(each, dryRun)),
   ].join('\n');
 };
 
@@ -356,7 +382,7 @@ const read = async (args: string[], repo: string): Promise<ReadResult> => {
     listDeploymentsArgs(repo, { sha }),
   );
 
-  const previews = await Promise.all(
+  const links = await Promise.all(
     latestPreviewDeployments(deploymentsFromApi(stdout)).map(
       async (deployment) => {
         const statuses = await defaultExec(
@@ -364,12 +390,12 @@ const read = async (args: string[], repo: string): Promise<ReadResult> => {
           latestStatusArgs(repo, deployment.id),
         );
 
-        return previewRecord(deployment, statuses.stdout);
+        return previewLink(deployment, statuses.stdout);
       },
     ),
   );
 
-  return { sha, previews };
+  return { sha, previews: previewRecords(links) };
 };
 
 const COMMANDS = {
