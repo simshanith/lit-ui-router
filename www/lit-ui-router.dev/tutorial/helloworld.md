@@ -73,8 +73,8 @@ class AppRoot extends LitElement {
       }
     }
     nav a[aria-current='page'] {
-      background: light-dark(#1f1f1f, #ededed);
-      color: light-dark(#fff, #111);
+      background: light-dark(#e0e0e0, #444);
+      box-shadow: inset 0 -2px currentColor;
     }
   `;
 

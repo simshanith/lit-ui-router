@@ -239,8 +239,8 @@ export class AppShell extends LitElement {
     }
     nav a[aria-current='page'],
     nav a.active {
-      background: light-dark(#1f1f1f, #ededed);
-      color: light-dark(#fff, #111);
+      background: light-dark(#dcdcdc, #444);
+      box-shadow: inset 0 -2px currentColor;
     }
     nav.tabs {
       margin-block: 0 12px;

@@ -102,8 +102,8 @@ export class AppRoot extends LitElement {
       background: light-dark(#f0f0f0, #2c2c2c);
     }
     nav a[aria-current='page'] {
-      background: light-dark(#1f1f1f, #ededed);
-      color: light-dark(#fff, #111);
+      background: light-dark(#dcdcdc, #444);
+      box-shadow: inset 0 -2px currentColor;
     }
     nav a.external {
       margin-inline-start: auto;
