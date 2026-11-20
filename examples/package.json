@@ -9,6 +9,7 @@
   "scripts": {
     "build:embeds": "node build-embeds.ts",
     "example:install:design-system-links": "npm ci --prefix design-system-links",
+    "example:install:features-tour": "npm ci --prefix features-tour",
     "example:install:hellogalaxy": "npm ci --prefix hellogalaxy",
     "example:install:hellogalaxy-effect": "npm ci --prefix hellogalaxy-effect",
     "example:install:hellogalaxy-signals": "npm ci --prefix hellogalaxy-signals",
@@ -30,6 +31,7 @@
     "lint:oxlint": "oxlint .",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"*.test.ts\"",
     "typecheck:example:design-system-links": "tsc -p design-system-links",
+    "typecheck:example:features-tour": "tsc -p features-tour",
     "typecheck:example:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:example:hellogalaxy-effect": "tsc -p hellogalaxy-effect",
     "typecheck:example:hellogalaxy-signals": "tsc -p hellogalaxy-signals",

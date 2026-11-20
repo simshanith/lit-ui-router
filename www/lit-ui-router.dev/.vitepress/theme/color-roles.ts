@@ -19,6 +19,11 @@ export const GROUNDS = {
     property: '--site-color-ground-shade',
     over: 'surface-soft',
   },
+  'identity-ink': { property: '--site-color-identity-ink' },
+  'diagram-wash': {
+    property: '--site-color-diagram-wash',
+    over: 'surface-soft',
+  },
   code: { property: '--vp-code-bg', over: 'surface' },
   'callout-tip': { property: '--vp-custom-block-tip-bg', over: 'surface' },
   'callout-warning': {
@@ -59,13 +64,19 @@ export const ROLES = [
     property: '--site-color-text',
     kind: 'text',
     use: 'body text, control labels, inline code',
-    on: [...PAGE_GROUNDS, 'code', 'callout-tip', 'callout-warning'],
+    on: [
+      ...PAGE_GROUNDS,
+      'code',
+      'callout-tip',
+      'callout-warning',
+      'diagram-wash',
+    ],
   },
   {
     property: '--site-color-text-muted',
     kind: 'text',
-    use: 'secondary text: captions, blurbs, idle tabs, notes',
-    on: [...PAGE_GROUNDS, 'ground-shade'],
+    use: "secondary text: captions, blurbs, idle tabs, notes, the home diagram's idle chips",
+    on: [...PAGE_GROUNDS, 'ground-shade', 'diagram-wash'],
   },
   {
     property: '--site-color-text-inactive',
@@ -99,8 +110,14 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the brand scale and this stack's marks on the spectrum",
-    on: ['surface', 'surface-soft'],
+    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state",
+    on: ['surface', 'surface-soft', 'diagram-wash'],
+  },
+  {
+    property: '--site-color-surface',
+    kind: 'text',
+    use: "the label of the home diagram's current-value chip",
+    on: ['identity-ink'],
   },
   {
     property: '--site-color-identity-sweep-start',

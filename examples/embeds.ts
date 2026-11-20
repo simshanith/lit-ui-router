@@ -29,6 +29,14 @@ export const EXAMPLES = {
     height: '190px',
     file: 'public/main.js',
   },
+  'features-tour': {
+    title: 'Features Tour',
+    summary:
+      'The home page tour: one state with a `cardId` param, re-entered as its pager steps through the feature cards',
+    // Reserves the tallest card at a phone's column (546px at 320-375), so the live page never scrolls inside; wider columns get slack below.
+    height: '560px',
+    file: 'src/main.ts',
+  },
   hellosolarsystem: {
     title: 'Hello Solar System',
     summary:
