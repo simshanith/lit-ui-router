@@ -146,16 +146,8 @@ const accountState = {
   component: () =>
     html`<h3>Account</h3>
       <nav class="tabs" aria-label="Account">
-        <a
-          ${uiSref('account.profile')}
-          ${uiSrefActive({ activeClasses: ['active'] })}
-          >Profile</a
-        >
-        <a
-          ${uiSref('account.activity')}
-          ${uiSrefActive({ activeClasses: ['active'] })}
-          >Activity</a
-        >
+        <a ${uiSref('account.profile')} ${uiSrefActive({})}>Profile</a>
+        <a ${uiSref('account.activity')} ${uiSrefActive({})}>Activity</a>
       </nav>
       <ui-view></ui-view>`,
 } satisfies LitStateDeclaration;
@@ -245,10 +237,9 @@ export class AppShell extends LitElement {
       text-decoration: none;
       background: light-dark(#f0f0f0, #2c2c2c);
     }
-    nav a.active {
-      background: light-dark(#dcdcdc, #444);
-      text-decoration: underline 2px;
-      text-underline-offset: 4px;
+    nav a[aria-current] {
+      background: light-dark(#1f1f1f, #ededed);
+      color: light-dark(#fff, #111);
     }
     nav.tabs {
       margin-block: 0 12px;
@@ -369,13 +360,11 @@ export class AppShell extends LitElement {
         data arrives. Check <em>Fail requests</em> to see each error view.
       </p>
       <nav aria-label="Loading and error views example">
-        <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
-          >Home</a
-        >
-        <a ${uiSref('report')} ${uiSrefActive({ activeClasses: ['active'] })}
-          >Report</a
-        >
-        <a ${uiSref('account')} ${uiSrefActive({ activeClasses: ['active'] })}
+        <a ${uiSref('home')} ${uiSrefActive({})}>Home</a>
+        <a ${uiSref('report')} ${uiSrefActive({})}>Report</a>
+        <a
+          ${uiSref('account')}
+          ${uiSrefActive({ ariaCurrentValue: { active: 'location' } })}
           >Account</a
         >
       </nav>
