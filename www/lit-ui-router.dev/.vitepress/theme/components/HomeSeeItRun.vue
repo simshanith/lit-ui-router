@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { ref } from 'vue';
 import { withBase } from 'vitepress';
-import ExampleEmbed from './ExampleEmbed.vue';
+import HomeTourFrame from './HomeTourFrame.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
 import { EXAMPLES, staticSrc } from './examples';
 import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
 
 const example = EXAMPLES['features-tour'];
+
+// Exactly the tour's height from a 30rem column up: 16px margins, its 23rem card and a 12px gap
+// over the 32px pager, so nothing is left under the pager. The live page keeps example.height.
+const FRAME_HEIGHT = 'calc(23rem + 76px)';
 
 const card = ref<CardId>(INITIAL_CARD);
 
@@ -14,49 +18,16 @@ const from = ref<CardId>();
 
 const entries = ref(0);
 
-const panel = useTemplateRef('panel');
+// The frame reports its hash on load and on every hashchange; a new card is a re-entry.
+function onHash(hash: string) {
+  const next = cardForHash(hash);
 
-// Keyed by document: a frame's WindowProxy outlives a reload, its listeners do not.
-const watched = new WeakSet<Document>();
+  if (!next || next === card.value) return;
 
-// The frame is same-origin and the example routes by hash, so its location is readable here.
-function follow(frame: HTMLIFrameElement) {
-  try {
-    const view = frame.contentWindow;
-
-    if (!view || view.location.origin !== location.origin) return;
-
-    const read = () => {
-      const next = cardForHash(view.location.hash);
-
-      if (!next || next === card.value) return;
-
-      from.value = card.value;
-      card.value = next;
-      entries.value += 1;
-    };
-
-    read();
-
-    if (watched.has(view.document)) return;
-    watched.add(view.document);
-    view.addEventListener('hashchange', read);
-  } catch {
-    // An unreadable frame: the diagram keeps the card it last showed.
-  }
+  from.value = card.value;
+  card.value = next;
+  entries.value += 1;
 }
-
-// Restart reloads the frame into a new window, so every load is followed.
-function onLoad({ target }: Event) {
-  if (target instanceof HTMLIFrameElement) follow(target);
-}
-
-// A frame that loaded before hydration fired its load event unheard.
-onMounted(() => {
-  const frame = panel.value?.querySelector('iframe');
-
-  if (frame) follow(frame);
-});
 </script>
 
 <template>
@@ -69,15 +40,15 @@ onMounted(() => {
         it re-enters the state.
       </p>
       <div class="panels">
-        <div ref="panel" class="panel app-panel" @load.capture="onLoad">
+        <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
-          <div class="embed">
-            <ExampleEmbed
-              :src="staticSrc('features-tour')"
-              :title="`${example.title} example`"
-              :height="example.height"
-            />
-          </div>
+          <HomeTourFrame
+            class="embed"
+            :src="staticSrc('features-tour')"
+            :title="`${example.title} example`"
+            :height="FRAME_HEIGHT"
+            @hash="onHash"
+          />
         </div>
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>
@@ -147,7 +118,7 @@ onMounted(() => {
   padding: var(--gutter);
   position: relative;
   isolation: isolate;
-  /* A scrim over a monochrome texture blended into the logo's gradient; the texture's halftone dots stay crisp at exactly 2x. */
+  /* A scrim over a monochrome texture blended into the logo's gradient, at exactly 2x and smoothly scaled so the filaments read as lines. */
   background:
     linear-gradient(
       color-mix(
@@ -160,14 +131,13 @@ onMounted(() => {
     var(--site-see-it-run-texture) center / 2816px 1536px no-repeat,
     var(--site-see-it-run-gradient);
   background-blend-mode: normal, var(--site-see-it-run-blend), normal;
-  image-rendering: pixelated;
   /* Stacked, the frame is narrower than the column check:embeds measures, so it reserves a phone's height. */
   --see-it-run-narrow-frame: 560px;
 }
 
 @media (min-width: 40rem) {
   .panels {
-    --gutter: var(--site-space-4);
+    --gutter: var(--site-space-6);
     margin-inline: 0;
     border-radius: calc(var(--site-radius-card) + var(--gutter));
   }
@@ -213,23 +183,17 @@ onMounted(() => {
 }
 
 @container (inline-size < 30rem) {
-  .embed :deep(.example-embed:not(:modal) iframe) {
-    height: min(
-      var(--see-it-run-narrow-frame),
-      var(--example-frame-max-height)
-    );
+  .embed {
+    block-size: var(--see-it-run-narrow-frame);
   }
 }
 
+/* The drawing sits under its heading and the transition log closes the tile. */
 .diagram-ground {
-  display: grid;
-  place-items: start center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding-block-start: var(--site-space-4);
-}
-
-/* The tile is the frame, so the embed drops its own border: tile, then card. */
-.embed :deep(.example-embed:not(:modal) iframe) {
-  border-color: transparent;
 }
 
 @media (forced-colors: active) {

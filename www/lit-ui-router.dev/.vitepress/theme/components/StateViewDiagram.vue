@@ -35,9 +35,9 @@ const reentered = computed(() => props.from !== undefined);
   <figure class="state-diagram" :data-card="card">
     <svg
       class="drawing"
-      viewBox="-2 -2 340 362"
+      viewBox="-2 -2 340 306"
       width="340"
-      height="362"
+      height="306"
       aria-hidden="true"
     >
       <text class="region" x="0" y="10">States</text>
@@ -61,37 +61,39 @@ const reentered = computed(() => props.from !== undefined);
         <text :x="chip.x + chip.width / 2" y="128.5">{{ chip.id }}</text>
       </g>
 
-      <path class="edge" d="M60 160V255" />
-      <path class="arrowhead" d="M55 254h10l-5 8z" />
-      <text class="log" x="72" y="204">
-        {{ reentered ? 'exited and re-entered card' : 'entered card' }}
-      </text>
-      <text class="log url" x="72" y="224">
-        {{
-          reentered
-            ? `${CARD_STATE.param}: '${from}' → '${card}'`
-            : `${CARD_STATE.param}: '${card}'`
-        }}
-      </text>
+      <path class="edge" d="M60 160V199" />
+      <path class="arrowhead" d="M55 198h10l-5 8z" />
 
-      <text class="region" x="0" y="252">Views</text>
-      <rect class="box" x="0" y="264" width="336" height="92" rx="6" />
-      <rect class="glyph" x="15" y="279" width="10" height="10" rx="2" />
-      <text class="name" x="36" y="288.5">&lt;ui-view&gt;</text>
-      <text class="url end" x="312" y="288.5">in &lt;app-root&gt;</text>
-      <rect class="box current" x="12" y="304" width="312" height="40" rx="6" />
-      <circle class="glyph disc" cx="30" cy="324" r="5.75" />
-      <text class="name strong" x="44" y="328.5">{{ CARD_STATE.name }}</text>
-      <text class="url end on-wash" x="312" y="328.5">
+      <text class="region" x="0" y="196">Views</text>
+      <rect class="box" x="0" y="208" width="336" height="92" rx="6" />
+      <rect class="glyph" x="15" y="223" width="10" height="10" rx="2" />
+      <text class="name" x="36" y="232.5">&lt;ui-view&gt;</text>
+      <text class="url end" x="312" y="232.5">in &lt;app-root&gt;</text>
+      <rect class="box current" x="12" y="248" width="312" height="40" rx="6" />
+      <circle class="glyph disc" cx="30" cy="268" r="5.75" />
+      <text class="name strong" x="44" y="272.5">{{ CARD_STATE.name }}</text>
+      <text class="url end on-wash" x="312" y="272.5">
         { {{ CARD_STATE.param }}: '{{ card }}' }
       </text>
 
       <!-- Keyed by the transition count, so the flash replays on each re-entry. -->
       <g :key="entries" class="flash">
         <rect x="12" y="64" width="312" height="96" rx="6" />
-        <rect x="12" y="304" width="312" height="40" rx="6" />
+        <rect x="12" y="248" width="312" height="40" rx="6" />
       </g>
     </svg>
+
+    <!-- The transition log closes the tile, as a devtools log line would. -->
+    <p class="log">
+      <span>{{
+        reentered ? 'exited and re-entered card' : 'entered card'
+      }}</span>
+      <code>{{
+        reentered
+          ? `${CARD_STATE.param}: '${from}' → '${card}'`
+          : `${CARD_STATE.param}: '${card}'`
+      }}</code>
+    </p>
 
     <figcaption class="visually-hidden">
       <p>
@@ -102,14 +104,7 @@ const reentered = computed(() => props.from !== undefined);
         is a value of its <code>{{ CARD_STATE.param }}</code> parameter:
         {{ CARD_IDS.join(', ') }}.
       </p>
-      <p>
-        The active value is <code>{{ card }}</code>.
-        {{
-          reentered
-            ? `The last transition exited and re-entered the state, from ${from}.`
-            : ''
-        }}
-      </p>
+      <p>The active value is <code>{{ card }}</code>.</p>
     </figcaption>
   </figure>
 </template>
@@ -121,6 +116,10 @@ const reentered = computed(() => props.from !== undefined);
   --diagram-current: var(--site-color-identity-ink);
   --diagram-wash: var(--site-color-diagram-wash);
   --diagram-chip-ink: var(--site-color-surface);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--site-space-6);
   margin: 0;
 }
 
@@ -139,20 +138,31 @@ text {
   fill: var(--diagram-muted);
 }
 
-.region,
-.log:not(.url) {
+.region {
   font-family: var(--vp-font-family-base);
   font-size: var(--site-text-caption);
-}
-
-.region {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+/* The log line sits at the foot of the figure, however tall the tile runs. */
 .log {
-  fill: var(--diagram-ink);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-1) var(--site-space-2);
+  align-items: baseline;
+  margin: auto 0 0;
+  padding-block-start: var(--site-space-4);
+  border-block-start: var(--site-border-width) solid var(--site-color-line);
+  font-size: var(--site-text-xs);
+  line-height: 1.5;
+  color: var(--site-color-text-muted);
+}
+
+.log code {
+  font-family: var(--vp-font-family-mono);
+  color: var(--site-color-text);
 }
 
 .name {
