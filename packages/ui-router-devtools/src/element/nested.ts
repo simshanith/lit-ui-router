@@ -801,7 +801,7 @@ interface View {
   depths: ReadonlyMap<string, number>;
   focus: string | undefined;
   pivot: string | undefined;
-  /** Drawn boxes tied to the view selected beside the Map, with how. */
+  /** Drawn boxes tied to the view selected from the path under the Map, with how. */
   linked: ReadonlyMap<string, string>;
 }
 

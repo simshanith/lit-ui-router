@@ -3,8 +3,8 @@
 The Views tab draws the router's `ui-view`s: which exist, how they nest, what
 each is called, which state's content created it and what fills it. It draws
 them as the nested Map draws states, a box per view with the views registered
-inside it drawn inside its box, and the nested Map draws them beside its
-states where both fit. This page records what it shows, the data it
+inside it drawn inside its box, and the Map draws the view path of a state
+under it. This page records what it shows, the data it
 reads and where the line falls between the part that serves any UI-Router
 renderer and the part that needs `lit-ui-router`. The [proposal](README.md)
 holds the design direction, and [the nested Map](map.md) the box rules it
@@ -203,7 +203,7 @@ optional interface the panel calls when it is set, `ViewLocator`:
 | `describe(view)`  | Optional: where the page shows the view, in words, or `null`   |
 
 The panel marks the view under the pointer, else the selected one, while the
-Views tab or the views beside the Map show the live router and the panel is
+Views tab or the view path under the Map show the live router and the panel is
 open. It never calls the locator
 for an imported session, whose page is not this one. The details show
 `describe`'s answer as _On page_.

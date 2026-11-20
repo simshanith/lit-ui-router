@@ -1179,7 +1179,7 @@ export class DevtoolsPanel extends LitElement {
     this.#pill?.focus();
   }
 
-  // The Map holds one selection at a time, so a state or transition takes the place of a view selected beside it.
+  // The Map holds one selection at a time, so a state or transition takes the place of a view selected from its path.
   #dropView() {
     if (this._inspect === 'view') this._viewSelected = null;
   }
