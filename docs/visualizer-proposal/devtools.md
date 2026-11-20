@@ -42,30 +42,30 @@ a transport or an outside host; **4** build time. Cost is S, M or L.
 
 ### Recommended
 
-| Capability                  | What the developer gets                                                                                           | Data                                                                                  | Cost | Tier |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---- | ---- |
-| State outline and Map       | The tree, lazy and abstract markers, the active path                                                              | `stateRegistry.get()`, `onStatesChanged`, `stateService.target().$state()`; public    | S    | 1    |
-| Transition log              | Numbered rows with entered, exited and retained states, outcome and duration                                      | `onBefore`, `treeChanges()`, `promise`, `Rejection.type`; public                      | S    | 1    |
-| Why it did not navigate     | A plain reason on each ignored, superseded, aborted or invalid row                                                | `Rejection.type` and `detail`, `ignored()`, `onInvalid`; public                       | M    | 1    |
-| Redirect chains and options | Chain rails; badges for source (link, URL, redirect), `replace`, `reload`, `inherit`                              | `redirectedFrom()`, `originalTransition()`, `options()`; public                       | S    | 1    |
-| Param diff                  | Before and after values; dynamic params flagged                                                                   | `params('from')`, `params('to')`; public                                              | S    | 1    |
-| Session export and import   | Download a session as JSON for a bug report; drop one into the panel                                              | Adapter events                                                                        | S    | 1    |
-| Router config card          | Location plugin, base href, hash prefix, strict mode, plugin list                                                 | `urlService.config`, `getPlugin()`; public                                            | S    | 1    |
-| Performance-panel track     | Transitions, phases and resolves as spans in Chrome's Performance panel; plain User Timing marks everywhere else  | `performance.measure` with `detail.devtools`                                          | S    | 0    |
-| Console reporter            | One collapsed group per transition; a structured alternative to `trace`                                           | Adapter events                                                                        | S    | 0    |
-| Recorder and test helper    | `record(router)` and assertions such as "ended at X after a redirect from Y"; attach the log to a failed e2e test | Adapter events                                                                        | S–M  | 0    |
-| URL playground              | Type a URL and see the matched rule, state, params, and whether `otherwise` fired                                 | `urlService.match()`, `rules()`, `stateService.href()`; public                        | S–M  | 2    |
-| Param editor and go         | A form built from the param schema; go, or copy the URL or a snippet                                              | `StateObject.parameters()`, `go()`; public                                            | M    | 2    |
-| View tree and overlay       | `ui-view` nesting, named views, what fills each; highlight a view's element on the page                           | `viewService._pluginapi`; the element lookup needs a dev-only `lit-ui-router` subpath | M    | 2    |
-| Link inspector              | Every link on the page with its state and params; dead targets flagged                                            | `urlService.match()` over `a[href]`; public                                           | M    | 2    |
-| Resolve values and reuse    | Tokens per state, a value preview, and whether a resolve ran or was reused from a retained state                  | `injector().get()`, `getResolveTokens()`; public                                      | M    | 2    |
-| Hooks registry              | Hooks per event with criteria, priority and invoke count                                                          | `transitionService._pluginapi.getHooks()`                                             | S–M  | 2    |
-| SSR and hydration report    | Boot outcome and each view adopted or re-rendered                                                                 | `BootstrapResult`, the `ui-view:adopt` event; public in `lit-ui-router-ssr`           | M    | 2    |
-| Lazy-state timing           | Time from the transition to the states registering, and the retry row                                             | `onStatesChanged` timestamps; public                                                  | S    | 2    |
-| Search and jump             | Filter states; jump to one                                                                                        | As for the outline                                                                    | S–M  | 2    |
-| Panel on the docs page      | The full panel beside an example, outside its 800px iframe                                                        | The transport                                                                         | M    | 3    |
-| Verdict playground          | A URL's server verdict next to its client match                                                                   | `ServerRouter.resolve()`, `diagnoseMounts()`; server side                             | M    | 3    |
-| Static state diagram        | Mermaid, SVG or JSON of the tree for READMEs and docs                                                             | The `states` payload from an exported session or the prerender step                   | M    | 4    |
+| Capability                        | What the developer gets                                                                                           | Data                                                                               | Cost | Tier |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---- | ---- |
+| State outline and Map             | The tree, lazy and abstract markers, the active path                                                              | `stateRegistry.get()`, `onStatesChanged`, `stateService.target().$state()`; public | S    | 1    |
+| Transition log                    | Numbered rows with entered, exited and retained states, outcome and duration                                      | `onBefore`, `treeChanges()`, `promise`, `Rejection.type`; public                   | S    | 1    |
+| Why it did not navigate           | A plain reason on each ignored, superseded, aborted or invalid row                                                | `Rejection.type` and `detail`, `ignored()`, `onInvalid`; public                    | M    | 1    |
+| Redirect chains and options       | Chain rails; badges for source (link, URL, redirect), `replace`, `reload`, `inherit`                              | `redirectedFrom()`, `originalTransition()`, `options()`; public                    | S    | 1    |
+| Param diff                        | Before and after values; dynamic params flagged                                                                   | `params('from')`, `params('to')`; public                                           | S    | 1    |
+| Session export and import         | Download a session as JSON for a bug report; drop one into the panel                                              | Adapter events                                                                     | S    | 1    |
+| Router config card                | Location plugin, base href, hash prefix, strict mode, plugin list                                                 | `urlService.config`, `getPlugin()`; public                                         | S    | 1    |
+| Performance-panel track           | Transitions, phases and resolves as spans in Chrome's Performance panel; plain User Timing marks everywhere else  | `performance.measure` with `detail.devtools`                                       | S    | 0    |
+| Console reporter                  | One collapsed group per transition; a structured alternative to `trace`                                           | Adapter events                                                                     | S    | 0    |
+| Recorder and test helper          | `record(router)` and assertions such as "ended at X after a redirect from Y"; attach the log to a failed e2e test | Adapter events                                                                     | S–M  | 0    |
+| URL playground                    | Type a URL and see the matched rule, state, params, and whether `otherwise` fired                                 | `urlService.match()`, `rules()`, `stateService.href()`; public                     | S–M  | 2    |
+| Param editor and go               | A form built from the param schema; go, or copy the URL or a snippet                                              | `StateObject.parameters()`, `go()`; public                                         | M    | 2    |
+| [View tree and overlay](views.md) | `ui-view` nesting, named views, what fills each; highlight a view's element on the page                           | `viewService._pluginapi`; the element lookup is the `./lit-ui-router` subpath      | M    | 2    |
+| Link inspector                    | Every link on the page with its state and params; dead targets flagged                                            | `urlService.match()` over `a[href]`; public                                        | M    | 2    |
+| Resolve values and reuse          | Tokens per state, a value preview, and whether a resolve ran or was reused from a retained state                  | `injector().get()`, `getResolveTokens()`; public                                   | M    | 2    |
+| Hooks registry                    | Hooks per event with criteria, priority and invoke count                                                          | `transitionService._pluginapi.getHooks()`                                          | S–M  | 2    |
+| SSR and hydration report          | Boot outcome and each view adopted or re-rendered                                                                 | `BootstrapResult`, the `ui-view:adopt` event; public in `lit-ui-router-ssr`        | M    | 2    |
+| Lazy-state timing                 | Time from the transition to the states registering, and the retry row                                             | `onStatesChanged` timestamps; public                                               | S    | 2    |
+| Search and jump                   | Filter states; jump to one                                                                                        | As for the outline                                                                 | S–M  | 2    |
+| Panel on the docs page            | The full panel beside an example, outside its 800px iframe                                                        | The transport                                                                      | M    | 3    |
+| Verdict playground                | A URL's server verdict next to its client match                                                                   | `ServerRouter.resolve()`, `diagnoseMounts()`; server side                          | M    | 3    |
+| Static state diagram              | Mermaid, SVG or JSON of the tree for READMEs and docs                                                             | The `states` payload from an exported session or the prerender step                | M    | 4    |
 
 Eight of these make the package clearly better than both the old visualizer and
 `trace`: the reasons, redirect chains with options, session export with the test
@@ -103,6 +103,13 @@ The last one only this repo can offer.
   change from a `go()` call, so the adapter reads it.
 - **Location kind is inferred** from the registered location plugin's name; core
   has no public field for it.
+- **Views are read after core syncs them.** `viewService._pluginapi`, typed
+  internal, is the only source of the registered `ui-view`s. Its `_onSync`
+  listener pairs each view with the config that fills it; the adapter reads
+  a microtask later, so a view removed without a sync is gone, and records a
+  `views` snapshot. Finding a view's element needs the renderer, so it is an
+  optional interface with a `lit-ui-router` implementation in its own
+  subpath. [The view map](views.md) has the rest.
 - **Reporters verified.** In headless Chromium the demo sequence produces
   measures on the `Transitions`, `Phases` and `Resolves` tracks with the
   documented `detail.devtools` shape, and faults use the `error` colour.
@@ -163,16 +170,17 @@ behind a flag, because any script on the page can reach a global.
 - **One package with subpaths.** Every layer shares the schema and the adapter.
   Host libraries are optional peers, so a subpath costs only its users.
 
-  | Subpath                            | Contents                                   | When   |
-  | ---------------------------------- | ------------------------------------------ | ------ |
-  | `.`                                | Adapter, recorder, schema types            | First  |
-  | `./define`                         | Registers the element                      | First  |
-  | `./plugin`                         | The `UIRouterPlugin`                       | First  |
-  | `./performance`                    | Performance-panel and User Timing reporter | First  |
-  | `./console`                        | Console reporter                           | First  |
-  | `./testing`                        | Recorder helpers for e2e and unit tests    | First  |
-  | `./transport`                      | `postMessage` bridge                       | Second |
-  | `./vite`, `./tanstack`, `./webmcp` | Host integrations                          | Later  |
+  | Subpath                            | Contents                                                    | When   |
+  | ---------------------------------- | ----------------------------------------------------------- | ------ |
+  | `.`                                | Adapter, recorder, schema types                             | First  |
+  | `./define`                         | Registers the element                                       | First  |
+  | `./plugin`                         | The `UIRouterPlugin`                                        | First  |
+  | `./performance`                    | Performance-panel and User Timing reporter                  | First  |
+  | `./console`                        | Console reporter                                            | First  |
+  | `./testing`                        | Recorder helpers for e2e and unit tests                     | First  |
+  | `./lit-ui-router`                  | Finds and outlines a `<ui-view>` on the page, for the Views | Second |
+  | `./transport`                      | `postMessage` bridge                                        | Second |
+  | `./vite`, `./tanstack`, `./webmcp` | Host integrations                                           | Later  |
 
 - **OpenTelemetry in its own package.** The reporter is production telemetry,
   not development tooling, so it is

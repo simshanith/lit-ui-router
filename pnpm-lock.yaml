@@ -2067,6 +2067,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
+      lit-ui-router:
+        specifier: catalog:workspace
+        version: link:../lit-ui-router
       oxfmt:
         specifier: 'catalog:'
         version: 0.78.0

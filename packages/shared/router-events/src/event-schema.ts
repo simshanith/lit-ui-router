@@ -170,6 +170,42 @@ export interface CurrentEvent extends EventBase {
   params: Params;
 }
 
+/** The view config filling a `ui-view`: which state declared it, under which key, and the view it targets. */
+export interface ViewFill {
+  /** The state whose `views` declared it; `''` for the root. */
+  state: string;
+  /** Its key in that state's `views`, `$default` for a state's one view. */
+  view: string;
+  /** The view it targets, as core normalized it: a `ui-view` name, or a dotted path of them, and the state it is anchored to. */
+  target: { name: string; anchor: string };
+  /** The declared component's name: a string as declared, or a function's or class's own name; absent when it has none. */
+  component?: string;
+}
+
+/** A `ui-view` registered with core's view service. Nesting is read from `fqn`, one segment per enclosing view. */
+export interface ViewInfo {
+  /** The renderer's id for the view, unique among a router's registered views. */
+  id: number;
+  /** The view's name, `$default` when it has none. */
+  name: string;
+  /** The names of the enclosing views and its own, outermost first, joined by dots. */
+  fqn: string;
+  /** The renderer's view type, such as `lit`, `ng1` or `react`. */
+  type: string;
+  /** The state whose content created the view; `''` for the root. */
+  context: string;
+  /** What fills it; null while it is empty. */
+  fill: ViewFill | null;
+}
+
+/** The router's `ui-view`s after core's view service synced them, sent when they change. */
+export interface ViewsEvent extends EventBase {
+  type: 'views';
+  views: ViewInfo[];
+  /** Active view configs that no `ui-view` took, so their content is nowhere on the page. */
+  unmatched: ViewFill[];
+}
+
 export type RouterEvent =
   | ConfigEvent
   | StatesEvent
@@ -178,7 +214,8 @@ export type RouterEvent =
   | ResolveEvent
   | ResultEvent
   | InvalidEvent
-  | CurrentEvent;
+  | CurrentEvent
+  | ViewsEvent;
 
 export interface Redaction {
   /** Param keys whose values are kept; every other value becomes `[redacted]`. `'all'` keeps every value. */
@@ -229,7 +266,7 @@ export interface Session {
   timeResolves: boolean;
   /** What the export scrubbed. */
   redaction: Redaction;
-  /** The latest config, states and current snapshots first, then the kept events in `seq` order. */
+  /** The latest config, states, current and views snapshots first, then the kept events in `seq` order. */
   events: RouterEvent[];
   /** Spans that ran during a recorded transition, when the panel was given any; absent otherwise. */
   spans?: SpanRecord[];

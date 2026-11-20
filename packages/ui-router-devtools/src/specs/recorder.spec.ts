@@ -67,6 +67,7 @@ it('counts cleared events as dropped and writes the envelope', async () => {
     'config',
     'states',
     'current',
+    'views',
   ]);
   recorder.stop();
   router.dispose();

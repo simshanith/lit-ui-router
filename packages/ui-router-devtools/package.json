@@ -42,6 +42,10 @@
       "default": "./dist/define.js"
     },
     "./dist/*": "./dist/*",
+    "./lit-ui-router": {
+      "types": "./dist/lit-ui-router.d.ts",
+      "default": "./dist/lit-ui-router.js"
+    },
     "./package.json": "./package.json",
     "./performance": {
       "types": "./dist/performance.d.ts",
@@ -92,6 +96,7 @@
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "lit-ui-router": "catalog:workspace",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",

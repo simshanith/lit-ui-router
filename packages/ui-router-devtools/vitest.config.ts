@@ -17,7 +17,7 @@ const reduceMotion: BrowserCommand<[reduce: boolean]> = async (
 const allSpecs = ['src/specs/**/*.spec.ts'];
 
 // The element opens through the Popover API, which happy-dom does not implement.
-const browserOnlySpecs = ['src/specs/element.browser.spec.ts'];
+const browserOnlySpecs = ['src/specs/*.browser.spec.ts'];
 
 // Key caches by the API port so the concurrently running `test` and
 // `test:coverage` turbo tasks never share a Vite dep-optimizer dir.

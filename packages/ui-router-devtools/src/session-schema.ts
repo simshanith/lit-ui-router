@@ -168,6 +168,29 @@ const currentEvent = v.looseObject({
   params,
 });
 
+const viewFill = v.looseObject({
+  state: v.string(),
+  view: v.string(),
+  target: v.looseObject({ name: v.string(), anchor: v.string() }),
+  component: v.optional(v.string()),
+});
+
+const viewInfo = v.looseObject({
+  id: v.number(),
+  name: v.string(),
+  fqn: v.string(),
+  type: v.string(),
+  context: v.string(),
+  fill: v.nullable(viewFill),
+});
+
+const viewsEvent = v.looseObject({
+  ...base,
+  type: v.literal('views'),
+  views: v.array(viewInfo),
+  unmatched: v.array(viewFill),
+});
+
 const EVENTS = {
   config: configEvent,
   states: statesEvent,
@@ -177,6 +200,7 @@ const EVENTS = {
   result: resultEvent,
   invalid: invalidEvent,
   current: currentEvent,
+  views: viewsEvent,
 };
 
 const attributeValue = v.union([
@@ -206,6 +230,7 @@ const KNOWN = v.picklist([
   'result',
   'invalid',
   'current',
+  'views',
 ]);
 
 // A later v1 may add event types; a reader skips them.
@@ -255,6 +280,7 @@ export interface EventSchemas {
   readonly ResultEvent: v.GenericSchema;
   readonly InvalidEvent: v.GenericSchema;
   readonly CurrentEvent: v.GenericSchema;
+  readonly ViewsEvent: v.GenericSchema;
   readonly LaterEvent: v.GenericSchema;
   readonly SpanRecord: v.GenericSchema;
 }
@@ -268,6 +294,7 @@ export const eventSchemas = (): EventSchemas => ({
   ResultEvent: resultEvent,
   InvalidEvent: invalidEvent,
   CurrentEvent: currentEvent,
+  ViewsEvent: viewsEvent,
   LaterEvent: laterEvent,
   SpanRecord: spanRecord,
 });

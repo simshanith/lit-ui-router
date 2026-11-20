@@ -12,6 +12,7 @@ import {
 import { errorNameOf, messageOf } from './thrown.ts';
 import { timeResolvables } from './resolve-timing.ts';
 import { sourceOf } from './transition-source.ts';
+import { observeViews } from './views.ts';
 import {
   SCHEMA_VERSION,
   type ConfigEvent,
@@ -30,6 +31,8 @@ import {
 export interface ObserveOptions {
   /** Time each resolve by wrapping its `resolveFn`; off by default because it patches core objects. */
   timeResolves?: boolean;
+  /** Send a `views` snapshot of the router's `ui-view`s whenever core syncs them; off by default. */
+  views?: boolean;
 }
 
 type Draft<E> = E extends RouterEvent ? Omit<E, 'v' | 'seq' | 't'> : never;
@@ -352,7 +355,7 @@ const names = (nodes: PathNode[]): string[] =>
 export const observe = (
   router: UIRouter,
   listener: (event: RouterEvent) => void,
-  { timeResolves = false }: ObserveOptions = {},
+  { timeResolves = false, views = false }: ObserveOptions = {},
 ): (() => void) => {
   let seq = 0;
 
@@ -392,6 +395,8 @@ export const observe = (
   emitConfig();
   emitStates();
   emitCurrent();
+
+  const stopViews = views ? observeViews(router, emit) : undefined;
 
   // A redirect's origin rejects before its successor starts, so its result waits for the successor or a task.
   const pendingRedirects = new Map<number, () => void>();
@@ -557,5 +562,8 @@ export const observe = (
     }),
   );
 
-  return () => deregister.splice(0).forEach((fn) => fn());
+  return () => {
+    stopViews?.();
+    deregister.splice(0).forEach((fn) => fn());
+  };
 };
