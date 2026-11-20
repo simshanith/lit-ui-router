@@ -118,18 +118,13 @@ import type { UIViewInjectedProps } from 'lit-ui-router';
 
 @customElement('planet-list')
 class PlanetListComponent extends LitElement {
-  // The router constructs routed components with injected props.
+  // Assigned by <ui-view> before the first render, then each time the view renders.
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ planets: SolarBody[] }>;
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this.uiViewProps.resolves!.planets;
+    return this.uiViewProps?.resolves.planets ?? [];
   }
 
   render() {
@@ -159,7 +154,7 @@ class PlanetListComponent extends LitElement {
 Key points:
 
 - **`uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
-- **Constructor parameter**: The props are passed to the constructor when the component is created
+- **Assigned as a property**: `<ui-view>` assigns `uiViewProps` before the element first renders, and again each time the view renders, so the class needs no constructor. Declaring it with `@property` re-renders the element when the props change
 - **`resolves.planets`**: Access data using the resolve's token name
 
 Each list item draws its body as a `radial-gradient` circle. A `dotSize` helper log-scales the circle by real diameter, so the Sun and Pluto fit on the same screen:
@@ -217,16 +212,11 @@ The detail view renders a larger orb plus a definition list of facts:
 @customElement('planet-detail')
 class PlanetDetailComponent extends LitElement {
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this.uiViewProps.resolves!.planet;
+    return this.uiViewProps?.resolves.planet;
   }
 
   render() {

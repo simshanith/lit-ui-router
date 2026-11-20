@@ -94,14 +94,6 @@ The `galaxy` state's component is a shell: section navigation plus a `<ui-view>`
 ```typescript
 @customElement('galaxy-shell')
 class GalaxyShellComponent extends LitElement {
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
-
   render() {
     return html`
       <nav aria-label="Hello Galaxy">
@@ -134,15 +126,10 @@ The `galaxy.stars` component splits into a list column and a detail panel. The d
 @customElement('stars-container')
 class StarsContainerComponent extends LitElement {
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ stars: Star[] }>;
 
   get stars(): Star[] {
-    return this.uiViewProps.resolves!.stars;
+    return this.uiViewProps?.resolves.stars ?? [];
   }
 
   render() {
@@ -281,14 +268,6 @@ Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of
 ```typescript
 @customElement('astronaut-detail')
 class AstronautDetailComponent extends LitElement {
-  @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this.uiViewProps = props;
-  }
-
   render() {
     return html`
       <h2>Someone is exploring out here too</h2>

@@ -286,14 +286,9 @@ class PlanetListComponent extends LitElement {
     }
   `;
 
-  // The router constructs routed components with injected props.
+  // Assigned by <ui-view> before the first render, then each time the view renders.
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ planets: SolarBody[] }>;
-
-  constructor(props: UIViewInjectedProps<{ planets: SolarBody[] }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ planets: SolarBody[] }>;
 
   // The `planets` resolve loads once per activation; the visited set keeps
   // moving after it. Selecting the computed means this re-renders when the
@@ -302,7 +297,7 @@ class PlanetListComponent extends LitElement {
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this.uiViewProps.resolves.planets;
+    return this.uiViewProps?.resolves.planets ?? [];
   }
 
   render() {
@@ -400,16 +395,11 @@ class PlanetDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  uiViewProps!: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
-
-  constructor(props: UIViewInjectedProps<{ planet: SolarBody | undefined }>) {
-    super();
-    this.uiViewProps = props;
-  }
+  uiViewProps?: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this.uiViewProps.resolves.planet;
+    return this.uiViewProps?.resolves.planet;
   }
 
   render() {
