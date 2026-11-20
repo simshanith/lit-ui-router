@@ -79,9 +79,9 @@ one fix.
 
 ### `lit-ui-router-mobx`, `lit-ui-router-effect`, and `lit-ui-router-signals`
 
-| Warning                   | Fires when                                                                                         | Fix                                                                         |
-| ------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| no `<ui-router>` ancestor | a `RouterReactionController`, `RouterRefController`, or `RouterSignalController` finds no provider | Wrap the subtree in `<ui-router>`, or pass `options.router` / `setRouter()` |
+| Warning                   | Fires when                                                                                         | Fix                                                                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| no `<ui-router>` ancestor | a `RouterReactionController`, `RouterRefController`, or `RouterSignalController` finds no provider | Wrap the subtree in `<ui-router>`, pass `options.router`, or call `setRouter()` on `RouterRefController` / `RouterSignalController` |
 
 This warning has a consequence the message does not state: the controller then
 observes nothing. `.value` stays at `options.initialValue` for the life of the
