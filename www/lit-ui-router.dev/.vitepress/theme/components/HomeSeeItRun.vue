@@ -162,7 +162,7 @@ onMounted(() => {
   background-blend-mode: normal, var(--site-see-it-run-blend), normal;
   image-rendering: pixelated;
   /* Stacked, the frame is narrower than the column check:embeds measures, so it reserves a phone's height. */
-  --see-it-run-narrow-frame: 600px;
+  --see-it-run-narrow-frame: 560px;
 }
 
 @media (min-width: 40rem) {
