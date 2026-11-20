@@ -151,18 +151,16 @@ export class CurrentRouteBanner extends LitElement {
 }
 ```
 
-The same DOM context also powers `SrefStatusController` (for active-link state
-outside directives) and the companion packages' Lit controllers when you prefer
+The companion packages' Lit controllers use the same DOM context when you prefer
 a reactive store, `SubscriptionRef`, or signal over transition callbacks (see
-[Reactive state ecosystems](#reactive-state-ecosystems)).
+[Reactive state ecosystems](#_6-reactive-state-ecosystems)). <!-- rumdl-disable-line MD051 -->
 
 ### 4. `<ui-view>` renders in light DOM
 
 Unlike a typical `LitElement`, `<ui-view>` overrides `createRenderRoot()` to
-render into its **light DOM** instead of creating a shadow root of its own —
-like Angular's `<ui-view>` (whereas React's `<UIView />` adds no wrapper
-element at all), it adds no shadow boundary between your layout and what it
-mounts:
+render into its **light DOM** instead of a shadow root of its own, as Angular's
+`<ui-view>` does; React's `<UIView />` adds no wrapper element at all. So
+`<ui-view>` adds no shadow boundary between your layout and what it mounts:
 
 - Template-function views render straight into `<ui-view>`'s light DOM, where
   parent styles reach them directly.
@@ -170,8 +168,8 @@ mounts:
   light-DOM children of `<ui-view>`, while the custom element itself still owns
   whatever render root it defines (shadow DOM by default).
 
-In both cases, target the active routed element with `ui-view > [routed]` or
-`view.routedElement` — see
+In both cases, target the active routed element (a template view's first
+element) with `ui-view > [routed]` or `view.routedElement` — see
 [The routed element](./routed-components#the-routed-element).
 
 ### 5. Element-part vs attribute-part links, and `assignHref`
@@ -190,7 +188,7 @@ In both cases, target the active routed element with `ui-view > [routed]` or
   `aria-current=${srefAriaCurrent(...)}` — see
   [Attribute-part forms](/packages/lit-ui-router#attribute-part-forms).
 
-### 6. Reactive state ecosystems {#reactive-state-ecosystems}
+### 6. Reactive state ecosystems
 
 `@uirouter/angular` installs the
 [`@uirouter/rx`](https://npmx.dev/package/@uirouter/rx) plugin, which adds
