@@ -173,7 +173,7 @@ function onHash(hash: string) {
 
 /* The frame sizes itself to the tour once it loads; this is its height until then. */
 .embed {
-  --tour-frame-height: 444px;
+  --tour-frame-height: 426px;
   margin-block-start: var(--site-space-3);
 }
 

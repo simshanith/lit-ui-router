@@ -100,7 +100,7 @@ const icon = (name: keyof typeof ICONS) =>
 
 type Resolved = { card: Card };
 
-const CardPage: RoutedLitTemplate<Resolved> = ({ resolves: { card } }) => html`
+const cardView = (card: Card) => html`
   <article class="card">
     <div class="icon">
       <img src=${card.icon} alt="" width="40" height="40" />
@@ -118,15 +118,30 @@ const CardPage: RoutedLitTemplate<Resolved> = ({ resolves: { card } }) => html`
   </article>
 `;
 
+const CardPage: RoutedLitTemplate<Resolved> = ({ resolves: { card } }) =>
+  cardView(card);
+
 @customElement('app-root')
 export class AppRoot extends LitElement {
   static styles = css`
     :host {
       display: block;
     }
+    .stage {
+      display: grid;
+    }
+    .stage > * {
+      grid-area: 1 / 1;
+    }
+    /* The routed card fills the cell, so every card reads the same size. */
+    ui-view {
+      display: grid;
+    }
+    .sizer {
+      visibility: hidden;
+    }
     .card {
       box-sizing: border-box;
-      min-block-size: 23rem;
       padding: 24px;
       border: 1px solid light-dark(#f6f6f7, #202127);
       border-radius: 12px;
@@ -225,7 +240,16 @@ export class AppRoot extends LitElement {
 
   render() {
     return html`
-      <ui-view></ui-view>
+      <!-- Hidden copies of every card share the routed card's grid cell, so the cell is always as tall as the tallest card and the pager holds still. -->
+      <div class="stage">
+        <ui-view></ui-view>
+        ${CARDS.map(
+          (card) =>
+            html`<div class="sizer" aria-hidden="true" inert>
+              ${cardView(card)}
+            </div>`,
+        )}
+      </div>
       <nav class="pager" aria-label="Feature cards">
         <a
           aria-label="Previous card"
