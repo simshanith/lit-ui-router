@@ -162,7 +162,10 @@ is a standalone Vite app using Adobe Spectrum Web Components
 (`@spectrum-web-components/link` and `@spectrum-web-components/theme`). See
 [`examples/design-system-links/src`](https://github.com/simshanith/lit-ui-router/tree/main/examples/design-system-links/src)
 for the complete `<sp-theme>` setup and lazy light/dark theme loader that
-follows the page's color scheme.
+follows the page's color scheme. The live demo above follows this page's
+appearance toggle as well as your OS setting because a page that sets
+`color-scheme` propagates it to a same-origin `<iframe>`, flipping the embedded
+document's `prefers-color-scheme` with the docs theme.
 
 Nothing about the pairing is Spectrum-specific: any link-shaped custom element
 takes the same option.

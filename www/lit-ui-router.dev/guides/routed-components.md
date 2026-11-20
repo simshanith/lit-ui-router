@@ -117,10 +117,10 @@ Two shapes type-check:
   members. An alias with every member optional also fits, at the cost of `?.` at
   each use inside the views.
 
-The example is modelled on [the Altitude Atlas](https://atlas.lit-ui-router.dev),
-whose gallery and sheet
+The names come from [the Altitude Atlas](https://atlas.lit-ui-router.dev), whose
+gallery and sheet
 [views](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/src/views.ts)
-use the all-optional form.
+use the last of these, an alias with every member optional.
 
 ## Lazy-loading a route's element
 
