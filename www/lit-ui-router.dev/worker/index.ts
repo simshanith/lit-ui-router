@@ -5,6 +5,7 @@ import { createServerRouter } from 'ui-router-server';
 import { createFetchHandler } from 'ui-router-server/fetch';
 
 import type { ReleaseDiffs } from './releases/diff-data.ts';
+import { isMainAliasPath, redirectMainAlias } from './main-alias.ts';
 import type { LedgerReader } from './releases/ledger.ts';
 import { assetNotes } from './releases/notes.ts';
 import { serveReleases } from './releases/serve.ts';
@@ -62,6 +63,8 @@ const site = {
 
     if (isSnapshotPath(url.pathname))
       return serveSnapshot(request, env.DOCS_V1);
+
+    if (isMainAliasPath(url.pathname)) return redirectMainAlias(url);
 
     // SAFETY: wrangler types the binding as an untyped Service; LedgerReader names the entrypoint's methods.
     // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an untyped Service shares no members with the RPC methods, so one assertion can't reach them
