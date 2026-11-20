@@ -21,10 +21,12 @@ host_concurrency = 4
 user_agent = "Mozilla/5.0 (compatible; lychee link checker)"
 
 # Manifest `repository.url` is a git+https clone URL; check its web page.
-# npmjs.com answers datacenter runners 403; the registry checks the same package.
+# npmjs.com answers datacenter runners 403 and npmx.dev rate-limits them with 429;
+# the registry checks the same package.
 remap = [
   '^git\+(https://github\.com/.+)\.git$ $1',
   '^https://www\.npmjs\.com/package/((@[^/]+/)?[^/?#]+)/?$ https://registry.npmjs.org/$1',
+  '^https://npmx\.dev/package/((@[^/]+/)?[^/?#]+)/?$ https://registry.npmjs.org/$1',
 ]
 
 exclude = [
@@ -35,6 +37,8 @@ exclude = [
   '^https?://([a-z0-9-]+\.)*(localhost|test|invalid)(:\d+)?([/?#]|$)',
   # npmjs.com answers datacenter runners 403, and the home page has no registry twin.
   '^https://www\.npmjs\.com/?$',
+  # npmx.dev is a small community site; any shape the remap misses stays unrequested.
+  '^https?://([a-z0-9-]+\.)*npmx\.dev([/?#:]|$)',
 ]
 
 # The abbreviated packument keeps registry checks small.
