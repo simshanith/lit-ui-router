@@ -12,7 +12,7 @@ type: package
 </p>
 
 [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-is a small set of ESLint rules that understand lit-ui-router's directives.
+is an ESLint plugin with rules that understand lit-ui-router's directives.
 
 A lit-ui-router anchor carries no static `href` — the
 [`uiSref`](/reference/lit-ui-router/directives/uiSref) element part assigns one at

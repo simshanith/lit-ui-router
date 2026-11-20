@@ -11,10 +11,12 @@ type: package
 <a href="https://lit-ui-router.dev/gh/releases/lit-ui-router-ssr/latest" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-ssr@*" /></a>
 </p>
 
-[`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr) turns a
-[`ui-router-server`](/packages/ui-router-server) mount table into an emitted static
-site. `prerender()` asks the table for a verdict per path and makes each one
-an artefact: a shell verdict becomes `<subpath>/index.html`, a redirect
+[`lit-ui-router-ssr`](https://npmx.dev/package/lit-ui-router-ssr) adds
+server-side rendering (SSR) and static prerendering for `lit-ui-router`: it
+renders a Lit template with a settled router per request, or turns a
+[`ui-router-server`](/packages/ui-router-server) mount table into an emitted
+static site. `prerender()` asks the table for a verdict per path and makes each
+one an artefact: a shell verdict becomes `<subpath>/index.html`, a redirect
 becomes a host rules line and no page, and the mount's `otherwise` projection
 becomes the 404 document.
 
