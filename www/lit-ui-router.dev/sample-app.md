@@ -26,6 +26,7 @@ in.
 | Sticky states & deep state redirect                                     | [`contacts/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/contacts/states.ts), [`mymessages/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/mymessages/states.ts)                                                                                                                     | [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-states), [`@uirouter/dsr`](https://github.com/ui-router/dsr) |
 | Location plugins & runtime switching                                    | [`prefs/FeatureFlagsPanel.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/prefs/FeatureFlagsPanel.ts)                                                                                                                                                                                                                                          | [Location Plugins](./guides/location-plugins)                                                                                |
 | Unmatched URLs & server verdicts                                        | [`main/NotFound.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/main/NotFound.ts), [`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)                                                                                                                                                   | [Unmatched URLs (404)](./guides/unmatched-urls), [Server-Side Routing](./guides/server-route-matching)                       |
+| Typed state names                                                       | [`registry/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/registry/states.ts), [`contacts/states.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/contacts/states.ts)                                                                                                                             | [`ui-router-registry`](/packages/ui-router-registry)                                                                         |
 
 ### Devtools and visualizer
 
@@ -80,7 +81,9 @@ live in [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr).
 ## Source
 
 Compare the four client-state entry points side by side against the shared
-routing and UI layers:
+routing and UI layers. The repository's lint runs the
+[`eslint-plugin-lit-ui-router`](/packages/eslint-plugin-lit-ui-router) rules
+over every app:
 
 - **Vanilla app** —
   [`apps/sample-app-lit-vanilla`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-lit-vanilla)

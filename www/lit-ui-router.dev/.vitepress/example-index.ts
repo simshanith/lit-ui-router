@@ -12,7 +12,6 @@ import {
   EXAMPLE_KINDS,
   type ExampleFacets,
   type ExampleKind,
-  SAMPLE_APPS,
 } from '../catalog/examples.ts';
 import { code, selfLink } from './index-markdown.ts';
 import { pageUrl } from './surfaces.ts';
@@ -24,9 +23,6 @@ import {
 } from './theme/components/examples.ts';
 
 const SITE = join(import.meta.dirname, '..');
-
-const GITHUB_APPS =
-  'https://github.com/simshanith/lit-ui-router/tree/main/apps';
 
 const manifestIn = (dir: string): PackageManifest => {
   const manifest = readManifest(dir);
@@ -43,7 +39,7 @@ const depsOf = ({ dependencies, devDependencies }: PackageManifest) => ({
 
 const BINDINGS = ['mobx', 'signals', 'effect'] as const;
 
-/** Facets an app's dependencies decide: its Lit bindings, prerendering, the registry and the lint plugin. */
+/** Facets an app's dependencies decide: its Lit bindings, prerendering, the registry and its own lint plugin. */
 export function dependencyFacets(deps: DependencyMap): ExampleFacets {
   const bindings = BINDINGS.filter((name) => `lit-ui-router-${name}` in deps);
 
@@ -86,7 +82,7 @@ export function locationOf(
 const KIND_PREFIXES = {
   'lit-ui-router-tutorial-': 'tutorial',
   'lit-ui-router-example-': 'example',
-} as const satisfies Record<string, Exclude<ExampleKind, 'sample-app'>>;
+} as const satisfies Record<string, ExampleKind>;
 
 /** An example's kind, from its package name. */
 export function kindOf(packageName = ''): ExampleKind {
@@ -255,25 +251,7 @@ function exampleEntry(
   ];
 }
 
-/** One sample-app mount's facets: the app package's dependencies decide them. */
-export function sampleAppFacets(app: string): ExampleFacets {
-  return {
-    kind: 'sample-app',
-    ...dependencyFacets(depsOf(manifestIn(join(workspaceRoot, 'apps', app)))),
-  };
-}
-
-function sampleAppEntries(): string[] {
-  return Object.entries(SAMPLE_APPS).flatMap(([mount, { label, app }]) => [
-    `### ${label} sample app`,
-    '',
-    `- Facets: ${facetLine(sampleAppFacets(app))}`,
-    `- ${selfLink(`Open ${code(mount)}`, mount)} · [Source](${GITHUB_APPS}/${app})`,
-    '',
-  ]);
-}
-
-/** One section per kind, in vocabulary order: the embedded examples, then the live sample-app mounts. */
+/** One section per kind, in vocabulary order. */
 export function exampleIndex(): string {
   const pages = embeddingPages();
 
@@ -284,11 +262,9 @@ export function exampleIndex(): string {
   return EXAMPLE_KINDS.flatMap(({ id, label }) => [
     `## ${label}`,
     '',
-    ...(id === 'sample-app'
-      ? sampleAppEntries()
-      : EXAMPLE_NAMES.filter((name) => facets.get(name)?.kind === id).flatMap(
-          (name) =>
-            exampleEntry(name, facets.get(name) ?? {}, pages.get(name) ?? []),
-        )),
+    ...EXAMPLE_NAMES.filter((name) => facets.get(name)?.kind === id).flatMap(
+      (name) =>
+        exampleEntry(name, facets.get(name) ?? {}, pages.get(name) ?? []),
+    ),
   ]).join('\n');
 }

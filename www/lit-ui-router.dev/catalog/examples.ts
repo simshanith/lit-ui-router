@@ -5,7 +5,6 @@ import type { mounts } from 'sample-app-routes';
 export const EXAMPLE_KINDS = [
   { id: 'tutorial', label: 'Tutorial' },
   { id: 'example', label: 'Examples' },
-  { id: 'sample-app', label: 'Sample apps' },
 ] as const;
 
 export type ExampleKind = (typeof EXAMPLE_KINDS)[number]['id'];
