@@ -66,22 +66,20 @@ describe('packageLabelHtml', () => {
   });
 });
 
+/** Entries the catalog does not hold: an entry point's label, and a label with a footer name of its own. */
+const EXTRA: DefaultTheme.SidebarItem[] = [
+  { text: 'ui-router-server/vite', link: '/reference/ui-router-server/vite/' },
+  { text: 'Overview', link: '/elsewhere/', docFooterText: 'Elsewhere' },
+];
+
 describe('withPackageLabels', () => {
-  const marked = flat(
-    withPackageLabels([
-      ...SIDEBAR,
-      {
-        text: 'ui-router-server/vite',
-        link: '/reference/ui-router-server/vite/',
-      },
-    ]),
-  );
+  const marked = flat(withPackageLabels([...SIDEBAR, ...EXTRA]));
 
   const plain = (text: string) => marked.find((item) => item.text === text);
 
   it('marks up every package label and keeps its plain name for the page footer', () => {
-    const labelled = marked.flatMap(({ text = '', docFooterText }) =>
-      docFooterText ? [{ text, docFooterText }] : [],
+    const labelled = marked.flatMap(({ text = '', docFooterText = '' }) =>
+      /[<>]/.test(text) ? [{ text, docFooterText }] : [],
     );
 
     assert.deepEqual(
@@ -94,6 +92,13 @@ describe('withPackageLabels', () => {
     }
   });
 
+  it('keeps the footer name an entry already carries', () => {
+    assert.equal(
+      marked.find(({ link: href }) => href === '/elsewhere/')?.docFooterText,
+      'Elsewhere',
+    );
+  });
+
   it('leaves the family hubs and every other label alone', () => {
     for (const text of ['Effect', 'MobX', 'Signals', 'Server', 'Overview']) {
       assert.ok(plain(text), text);
@@ -103,9 +108,7 @@ describe('withPackageLabels', () => {
   it('keeps each entry its link and children', () => {
     assert.deepEqual(
       marked.map(({ link: href }) => href),
-      flat([...SIDEBAR, { link: '/reference/ui-router-server/vite/' }]).map(
-        ({ link: href }) => href,
-      ),
+      flat([...SIDEBAR, ...EXTRA]).map(({ link: href }) => href),
     );
   });
 });
