@@ -12,6 +12,7 @@ import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
 import HomePositioning from './components/HomePositioning.vue';
+import HomeSeeItRun from './components/HomeSeeItRun.vue';
 import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
 import VersionBanner from './components/VersionBanner.vue';
 import VersionMenu from './components/VersionMenu.vue';
@@ -25,6 +26,7 @@ export default {
       'not-found': () => h('main', h(NotFound)),
       'home-hero-actions-before-actions': () => h(HeroInstall),
       'home-features-before': () => h(HomePositioning),
+      'home-features-after': () => h(HomeSeeItRun),
     }),
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);

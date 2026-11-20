@@ -1,0 +1,183 @@
+<script setup lang="ts">
+import { onMounted, ref, useTemplateRef } from 'vue';
+import LiveExample from './LiveExample.vue';
+import StateViewDiagram from './StateViewDiagram.vue';
+import { HELLO_WORLD_INITIAL, stateForHash } from './helloworld-states';
+
+const active = ref(HELLO_WORLD_INITIAL);
+
+const panel = useTemplateRef('panel');
+
+const watched = new WeakSet<Window>();
+
+// The preview frame is same-origin; the StackBlitz one throws on access and is skipped.
+function follow(frame: HTMLIFrameElement) {
+  try {
+    const view = frame.contentWindow;
+
+    if (!view || view.location.origin !== location.origin) return;
+
+    const read = () => {
+      active.value = stateForHash(view.location.hash) ?? active.value;
+    };
+
+    read();
+
+    if (watched.has(view)) return;
+    watched.add(view);
+    view.addEventListener('hashchange', read);
+  } catch {
+    // A cross-origin frame: the diagram keeps the state it last showed.
+  }
+}
+
+// Restart reloads the frame into a new window, so every load is followed.
+function onLoad({ target }: Event) {
+  if (target instanceof HTMLIFrameElement) follow(target);
+}
+
+// A frame that loaded before hydration fired its load event unheard.
+onMounted(() => {
+  const frame = panel.value?.querySelector('iframe');
+
+  if (frame) follow(frame);
+});
+</script>
+
+<template>
+  <section class="see-it-run" aria-labelledby="see-it-run-title">
+    <div class="container">
+      <h2 id="see-it-run-title" class="title">See it run</h2>
+      <p class="lede">
+        This is the Hello World example, running. Switch between Hello and
+        About, and the diagram marks the state the router made active.
+      </p>
+      <div class="panels">
+        <div ref="panel" class="panel" @load.capture="onLoad">
+          <h3 class="panel-title">The app</h3>
+          <LiveExample name="helloworld" />
+        </div>
+        <div class="panel diagram-panel">
+          <h3 class="panel-title">Its states and views</h3>
+          <div class="diagram-ground">
+            <StateViewDiagram :active="active" />
+          </div>
+        </div>
+      </div>
+      <p class="next">
+        <a href="/tutorial/helloworld">Build it in the tutorial</a>
+        <a href="/introduction">Read the introduction</a>
+      </p>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.see-it-run {
+  padding-inline: 1.5rem;
+  margin-block-start: 3rem;
+}
+
+@media (min-width: 40rem) {
+  .see-it-run {
+    padding-inline: 3rem;
+    margin-block-start: 4rem;
+  }
+}
+
+@media (min-width: 60rem) {
+  .see-it-run {
+    padding-inline: 4rem;
+  }
+}
+
+.container {
+  margin-inline: auto;
+  max-inline-size: 72rem;
+  container-type: inline-size;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--site-color-text);
+}
+
+.lede {
+  margin-block: var(--site-space-2) 0;
+  max-inline-size: 68ch;
+  font-size: var(--site-text-md);
+  line-height: 1.6;
+  color: var(--site-color-text-muted);
+  text-wrap: pretty;
+}
+
+.panels {
+  display: grid;
+  gap: var(--site-space-8);
+  margin-block-start: var(--site-space-6);
+}
+
+/* Two columns only where each keeps the diagram's natural width. */
+@container (inline-size >= 50rem) {
+  .panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--site-space-8) 3rem;
+  }
+}
+
+.panel {
+  min-inline-size: 0;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: var(--site-text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--site-color-text);
+}
+
+.panel :deep(.live-example) {
+  margin-block: var(--site-space-3) 0;
+}
+
+.diagram-ground {
+  margin-block-start: var(--site-space-3);
+  padding: var(--site-space-8) var(--site-space-3);
+  background: var(--site-color-surface-soft);
+  border-radius: var(--site-radius-card);
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-2) var(--site-space-6);
+  margin-block: var(--site-space-8) 0;
+  font-size: var(--site-text-md);
+  line-height: 1.6;
+}
+
+.next a {
+  font-weight: 500;
+  color: var(--site-color-interaction);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  transition: color var(--site-duration-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .next a:hover {
+    color: var(--site-color-interaction-hover);
+  }
+}
+
+.next a:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+</style>
