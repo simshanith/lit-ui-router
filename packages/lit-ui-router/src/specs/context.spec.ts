@@ -391,6 +391,18 @@ describe('lit-ui-router/context', () => {
       expect(requestContext(nested, parentUiViewContext)).toBe(view);
     });
 
+    it('leaves a request from its fallback set to the view above', async () => {
+      const view = await mountView();
+      const inner = document.createElement('ui-view');
+      const fallback = document.createElement('div');
+      inner.appendChild(fallback);
+      view.appendChild(inner);
+      await waitForUpdate(inner);
+
+      expect(requestContext(fallback, parentUiViewContext)).toBe(view);
+      expect(UiView.seekParentView(fallback)).toBe(view);
+    });
+
     it('returns undefined with no enclosing view', async () => {
       await mountView();
       const orphan = document.createElement('div');
