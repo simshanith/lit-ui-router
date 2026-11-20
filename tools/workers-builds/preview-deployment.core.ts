@@ -8,6 +8,26 @@ import { isCommitSha } from './pages-deploy.core.ts';
 /** GitHub environment prefix; the worker name follows it. */
 export const ENVIRONMENT_PREFIX = 'preview/';
 
+/** The suffix of the environment that links each commit's own preview. */
+export const COMMIT_SUFFIX = '/commit';
+
+/** Which URL a deployment links: the branch alias, or the commit's own preview. */
+export type Link = 'branch' | 'commit';
+
+/** `preview/<worker>` links the branch alias; `preview/<worker>/commit` the commit preview. */
+export function environmentOf(worker: string, link: Link): string {
+  return `${ENVIRONMENT_PREFIX}${worker}${link === 'commit' ? COMMIT_SUFFIX : ''}`;
+}
+
+/** The worker a `preview/*` environment belongs to. */
+export function workerOfEnvironment(environment: string): string {
+  const name = environment.slice(ENVIRONMENT_PREFIX.length);
+
+  return name.endsWith(COMMIT_SUFFIX)
+    ? name.slice(0, -COMMIT_SUFFIX.length)
+    : name;
+}
+
 /** The branch every Worker's production trigger builds; its builds are not previews. */
 export const PRODUCTION_BRANCH = 'main';
 
@@ -64,10 +84,9 @@ export function parseSummary(summary: string): Summary {
   };
 }
 
-/** A preview build's URLs, ready to post as a deployment. */
+/** A preview build's URLs, ready to post as deployments. */
 export type Preview = {
   readonly worker: string;
-  readonly environment: string;
   readonly sha: string;
   readonly branch: string;
   readonly buildUuid: string;
@@ -133,7 +152,6 @@ export function previewFromCheckRun(run: CheckRun): Preview | Skip {
 
   return {
     worker,
-    environment: `${ENVIRONMENT_PREFIX}${worker}`,
     sha: run.headSha,
     branch: run.headBranch,
     buildUuid: summary.buildUuid,
@@ -142,6 +160,33 @@ export function previewFromCheckRun(run: CheckRun): Preview | Skip {
     branchUrl: summary.aliasUrl,
     logUrl: run.detailsUrl,
   };
+}
+
+/** One deployment `post` makes for a preview: its environment and the URL it links. */
+export type Target = {
+  readonly link: Link;
+  readonly environment: string;
+  readonly url: string;
+};
+
+/** The branch alias's deployment, when the summary names one, then the commit preview's. */
+export function previewTargets(preview: Preview): Target[] {
+  const commit: Target = {
+    link: 'commit',
+    environment: environmentOf(preview.worker, 'commit'),
+    url: preview.commitUrl,
+  };
+
+  if (preview.branchUrl === null) return [commit];
+
+  return [
+    {
+      link: 'branch',
+      environment: environmentOf(preview.worker, 'branch'),
+      url: preview.branchUrl,
+    },
+    commit,
+  ];
 }
 
 /** A parse's output; throws naming every issue's path. */
@@ -259,8 +304,12 @@ export function environmentDeploymentsArgs(
   ];
 }
 
-/** argv for `gh api` creating the preview's deployment. */
-export function createDeploymentArgs(repo: string, preview: Preview): string[] {
+/** argv for `gh api` creating the preview's deployment in `target`'s environment. */
+export function createDeploymentArgs(
+  repo: string,
+  preview: Preview,
+  target: Target,
+): string[] {
   return [
     'api',
     '--method',
@@ -269,7 +318,7 @@ export function createDeploymentArgs(repo: string, preview: Preview): string[] {
     '-f',
     `ref=${preview.sha}`,
     '-f',
-    `environment=${preview.environment}`,
+    `environment=${target.environment}`,
     '-f',
     `description=Workers Builds ${preview.buildUuid}`,
     // A sha ref has nothing to merge, and the Cloudflare check run is the gate.
@@ -287,17 +336,20 @@ export function createDeploymentArgs(repo: string, preview: Preview): string[] {
     `payload[branch]=${preview.branch}`,
     '-f',
     `payload[version_id]=${preview.versionId}`,
+    '-f',
+    `payload[link]=${target.link}`,
     ...(preview.branchUrl === null
       ? []
       : ['-f', `payload[branch_url]=${preview.branchUrl}`]),
   ];
 }
 
-/** argv for `gh api` marking deployment `id` live; a dry run passes the `{id}` placeholder. */
+/** argv for `gh api` marking deployment `id` live at `target`'s URL. */
 export function createStatusArgs(
   repo: string,
-  id: number | '{id}',
+  id: number,
   preview: Preview,
+  target: Target,
 ): string[] {
   return [
     'api',
@@ -307,11 +359,11 @@ export function createStatusArgs(
     '-f',
     'state=success',
     '-f',
-    `environment_url=${preview.commitUrl}`,
+    `environment_url=${target.url}`,
     '-f',
     `log_url=${preview.logUrl}`,
     '-f',
-    `description=Commit preview ${preview.versionId.slice(0, 8)}`,
+    `description=${target.link === 'branch' ? 'Branch preview' : 'Commit preview'} ${preview.versionId.slice(0, 8)}`,
   ];
 }
 
@@ -330,8 +382,10 @@ const DeploymentSchema = v.looseObject({
     v.looseObject({
       build_uuid: v.nullish(v.string()),
       branch: v.nullish(v.string()),
+      // Deployments posted before the branch alias had its own environment carry no link: commit.
+      link: v.fallback(v.picklist(['branch', 'commit']), 'commit'),
     }),
-    {},
+    { link: 'commit' },
   ),
 });
 
@@ -361,14 +415,16 @@ export function deploymentPagesFromApi(json: string): GitHubDeployment[] {
   ).flat();
 }
 
-/** The deployment already posted for this build, if a rerun got here first. */
+/** The deployment already posted for this build and target, if a rerun got here first. */
 export function existingDeployment(
   deployments: readonly GitHubDeployment[],
   preview: Preview,
+  target: Target,
 ): GitHubDeployment | undefined {
   return deployments.find(
     (deployment) =>
-      deployment.environment === preview.environment &&
+      deployment.environment === target.environment &&
+      deployment.payload.link === target.link &&
       deployment.payload.build_uuid === preview.buildUuid,
   );
 }
@@ -470,34 +526,63 @@ export function latestPreviewDeployments(
   );
 }
 
-/** One worker's preview as the Deployments API records it. */
-export type PreviewRecord = {
+/** One preview deployment and its newest status. */
+export type PreviewLink = {
   readonly worker: string;
-  readonly environment: string;
+  readonly link: Link;
   readonly sha: string;
   readonly state: string | null;
   readonly url: string | null;
   readonly logUrl: string | null;
 };
 
-/** A deployment and its `latestStatusArgs` response, as one record. */
-export function previewRecord(
+/** A deployment and its `latestStatusArgs` response, as one link. */
+export function previewLink(
   deployment: GitHubDeployment,
   statusesJson: string,
-): PreviewRecord {
+): PreviewLink {
   const [status] = parsed(
     'GitHub deployment statuses',
     v.safeParse(v.array(StatusSchema), JSON.parse(statusesJson)),
   );
 
   return {
-    worker: deployment.environment.slice(ENVIRONMENT_PREFIX.length),
-    environment: deployment.environment,
+    worker: workerOfEnvironment(deployment.environment),
+    link: deployment.payload.link,
     sha: deployment.sha,
     state: status?.state ?? null,
     url: status?.environment_url ?? null,
     logUrl: status?.log_url ?? null,
   };
+}
+
+/** One worker's preview as the Deployments API records it. */
+export type PreviewRecord = {
+  readonly worker: string;
+  readonly state: string | null;
+  readonly branchUrl: string | null;
+  readonly commitUrl: string | null;
+  readonly logUrl: string | null;
+};
+
+/** One record per worker; the commit link's state and log, else the branch link's. */
+export function previewRecords(links: readonly PreviewLink[]): PreviewRecord[] {
+  const workers = [...new Set(links.map(({ worker }) => worker))].sort();
+
+  return workers.map((worker) => {
+    const own = links.filter((link) => link.worker === worker);
+    const branch = own.find(({ link }) => link === 'branch');
+    const commit = own.find(({ link }) => link === 'commit');
+    const primary = commit ?? branch;
+
+    return {
+      worker,
+      state: primary?.state ?? null,
+      branchUrl: branch?.url ?? null,
+      commitUrl: commit?.url ?? null,
+      logUrl: primary?.logUrl ?? null,
+    };
+  });
 }
 
 /** argv for `gh api` printing a PR's head sha. */
@@ -513,9 +598,12 @@ export function recordsText(
   if (records.length === 0) return `no preview deployments on ${sha}`;
 
   return records
-    .map(
-      (record) =>
-        `${record.worker}: ${record.url ?? `(${record.state ?? 'no status'})`}`,
+    .map((record) =>
+      [
+        `${record.worker}: ${record.state ?? 'no status'}`,
+        `  branch: ${record.branchUrl ?? '(none)'}`,
+        `  commit: ${record.commitUrl ?? '(none)'}`,
+      ].join('\n'),
     )
     .join('\n');
 }

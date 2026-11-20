@@ -13,6 +13,7 @@ import {
   createStatusArgs,
   deploymentPagesFromApi,
   deploymentsFromApi,
+  environmentOf,
   existingDeployment,
   inactiveStatusArgs,
   latestPreviewDeployments,
@@ -20,9 +21,12 @@ import {
   parseSummary,
   previewEnvironments,
   previewFromCheckRun,
-  previewRecord,
+  previewLink,
+  previewRecords,
+  previewTargets,
   supersededDeployments,
   workerOf,
+  workerOfEnvironment,
 } from './preview-deployment.core.ts';
 
 /** A check run as the event payload carries it. */
@@ -96,7 +100,6 @@ describe('previewFromCheckRun', () => {
   it("posts #2270's commit preview with its branch alias", () => {
     assert.deepEqual(previewFromCheckRun(fromEvent(fixtures.pr2270)), {
       worker: 'lit-ui-router',
-      environment: 'preview/lit-ui-router',
       sha: '99c2ed6fc79c23dff476d5671774dfd5dc5ddd74',
       branch: 'docs/v1-snapshot-llms-full',
       buildUuid: '963e54c1-a8ee-4145-8873-d1277a7adacc',
@@ -171,9 +174,48 @@ assert.ok(!('skip' in preview));
 
 const typed: Preview = preview;
 
+const [branchTarget, commitTarget] = previewTargets(typed);
+
+assert.ok(branchTarget && commitTarget);
+
+describe('environments', () => {
+  it('links the branch alias in preview/<worker> and the commit preview in preview/<worker>/commit', () => {
+    assert.deepEqual(previewTargets(typed), [
+      {
+        link: 'branch',
+        environment: 'preview/lit-ui-router',
+        url: typed.branchUrl,
+      },
+      {
+        link: 'commit',
+        environment: 'preview/lit-ui-router/commit',
+        url: typed.commitUrl,
+      },
+    ]);
+  });
+
+  it('posts only the commit preview when the summary has no branch alias', () => {
+    assert.deepEqual(
+      previewTargets({ ...typed, branchUrl: null }).map(
+        ({ environment }) => environment,
+      ),
+      ['preview/lit-ui-router/commit'],
+    );
+  });
+
+  it('reads the worker back from either environment', () => {
+    for (const link of ['branch', 'commit'] as const) {
+      assert.equal(
+        workerOfEnvironment(environmentOf('release-diffs', link)),
+        'release-diffs',
+      );
+    }
+  });
+});
+
 describe('GitHub requests', () => {
-  it('creates a transient, non-production deployment on the sha recording its branch', () => {
-    const args = createDeploymentArgs(REPO, typed);
+  it('creates a transient, non-production deployment on the sha recording its branch and link', () => {
+    const args = createDeploymentArgs(REPO, typed, branchTarget);
 
     assert.deepEqual(args.slice(0, 4), [
       'api',
@@ -192,28 +234,45 @@ describe('GitHub requests', () => {
       `payload[build_uuid]=${typed.buildUuid}`,
       'payload[branch]=t3/async-pr-metadata-bubbling',
       `payload[branch_url]=${typed.branchUrl ?? ''}`,
+      'payload[link]=branch',
     ]) {
       assert.ok(args.includes(field), field);
     }
+
+    assert.ok(
+      createDeploymentArgs(REPO, typed, commitTarget).includes(
+        'environment=preview/lit-ui-router/commit',
+      ),
+    );
   });
 
   it('omits the branch alias when the summary has none', () => {
-    const args = createDeploymentArgs(REPO, { ...typed, branchUrl: null });
+    const args = createDeploymentArgs(
+      REPO,
+      { ...typed, branchUrl: null },
+      commitTarget,
+    );
 
     assert.ok(!args.some((arg) => arg.startsWith('payload[branch_url]')));
   });
 
-  it('marks the deployment live at the commit preview, linking the build log', () => {
-    const args = createStatusArgs(REPO, 42, typed);
+  it("marks each deployment live at its target's URL, linking the build log", () => {
+    for (const [target, description] of [
+      [branchTarget, 'Branch preview'],
+      [commitTarget, 'Commit preview'],
+    ] as const) {
+      const args = createStatusArgs(REPO, 42, typed, target);
 
-    assert.equal(args[3], `repos/${REPO}/deployments/42/statuses`);
+      assert.equal(args[3], `repos/${REPO}/deployments/42/statuses`);
 
-    for (const field of [
-      'state=success',
-      `environment_url=${typed.commitUrl}`,
-      `log_url=${typed.logUrl}`,
-    ]) {
-      assert.ok(args.includes(field), field);
+      for (const field of [
+        'state=success',
+        `environment_url=${target.url}`,
+        `log_url=${typed.logUrl}`,
+        `description=${description} ${typed.versionId.slice(0, 8)}`,
+      ]) {
+        assert.ok(args.includes(field), field);
+      }
     }
   });
 
@@ -233,7 +292,7 @@ describe('deployments', () => {
   const deployment = (
     id: number,
     createdAt: string,
-    payload: { [key: string]: string | null } | string,
+    payload: { [key: string]: string | null },
     env = environment,
   ) => ({
     id,
@@ -245,10 +304,15 @@ describe('deployments', () => {
 
   const listed = deploymentsFromApi(
     JSON.stringify([
-      deployment(20, '2026-11-19T19:00:00Z', { build_uuid: 'newer', branch }),
+      deployment(20, '2026-11-19T19:00:00Z', {
+        build_uuid: 'newer',
+        branch,
+        link: 'branch',
+      }),
       deployment(10, '2026-11-19T18:50:00Z', {
         build_uuid: typed.buildUuid,
         branch,
+        link: 'branch',
       }),
       deployment(9, '2026-11-19T18:50:00Z', { build_uuid: 'tie', branch }),
       deployment(8, '2026-11-19T18:40:00Z', { build_uuid: 'older', branch }),
@@ -262,16 +326,37 @@ describe('deployments', () => {
         { build_uuid: 'other-worker', branch },
         'preview/release-diffs',
       ),
-      deployment(5, '2026-11-19T18:10:00Z', '', 'tag-release'),
+      // A payload posted as a string reads as an empty one.
+      {
+        id: 5,
+        sha: typed.sha,
+        environment: 'tag-release',
+        created_at: '2026-11-19T18:10:00Z',
+        payload: '',
+      },
     ]),
   );
 
-  it('finds the deployment a rerun already posted for this build', () => {
-    assert.equal(existingDeployment(listed, typed)?.id, 10);
+  it('finds the deployment a rerun already posted for this build and link', () => {
+    assert.equal(existingDeployment(listed, typed, branchTarget)?.id, 10);
     assert.equal(
-      existingDeployment(listed, { ...typed, buildUuid: 'new' }),
+      existingDeployment(listed, { ...typed, buildUuid: 'new' }, branchTarget),
       undefined,
     );
+  });
+
+  it('never reuses a deployment posted before the branch link, which linked the commit', () => {
+    const legacy = deploymentsFromApi(
+      JSON.stringify([
+        deployment(3, '2026-11-19T18:00:00Z', {
+          build_uuid: typed.buildUuid,
+          branch,
+        }),
+      ]),
+    );
+
+    assert.equal(legacy[0]?.payload.link, 'commit');
+    assert.equal(existingDeployment(legacy, typed, branchTarget), undefined);
   });
 
   it("retires only the branch's deployments created before the current one, never a newer one", () => {
@@ -301,9 +386,13 @@ describe('deployments', () => {
   it('retires across preview environments only', () => {
     assert.deepEqual(
       previewEnvironments(
-        'bump-version\npreview/lit-ui-router\npublish\npreview/release-diffs\n',
+        'bump-version\npreview/lit-ui-router\npreview/lit-ui-router/commit\npublish\npreview/release-diffs\n',
       ),
-      ['preview/lit-ui-router', 'preview/release-diffs'],
+      [
+        'preview/lit-ui-router',
+        'preview/lit-ui-router/commit',
+        'preview/release-diffs',
+      ],
     );
   });
 
@@ -326,35 +415,60 @@ describe('deployments', () => {
   });
 
   it('reads back the newest preview deployment per environment', () => {
-    const latest = latestPreviewDeployments(listed);
-
     assert.deepEqual(
-      latest.map(({ id }) => id),
+      latestPreviewDeployments(listed).map(({ id }) => id),
       [20, 6],
     );
+  });
 
-    const [newest] = latest;
+  it("reads one record per worker with both links, a pre-split deployment's URL as the commit's", () => {
+    const status = (url: string) =>
+      JSON.stringify([
+        { state: 'success', environment_url: url, log_url: typed.logUrl },
+      ]);
 
-    assert.ok(newest);
+    const [split, legacy] = deploymentsFromApi(
+      JSON.stringify([
+        deployment(
+          31,
+          '2026-11-19T20:00:00Z',
+          { branch, link: 'commit' },
+          'preview/lit-ui-router/commit',
+        ),
+        deployment(
+          21,
+          '2026-11-19T18:00:00Z',
+          { branch },
+          'preview/release-diffs',
+        ),
+      ]),
+    );
+
+    const [newest] = latestPreviewDeployments(listed);
+
+    assert.ok(split && legacy && newest);
     assert.deepEqual(
-      previewRecord(
-        newest,
-        JSON.stringify([
-          {
-            state: 'success',
-            environment_url: typed.commitUrl,
-            log_url: typed.logUrl,
-          },
-        ]),
-      ),
-      {
-        worker: 'lit-ui-router',
-        environment,
-        sha: typed.sha,
-        state: 'success',
-        url: typed.commitUrl,
-        logUrl: typed.logUrl,
-      },
+      previewRecords([
+        previewLink(newest, status(typed.branchUrl ?? '')),
+        previewLink(split, status(typed.commitUrl)),
+        previewLink(legacy, status('https://legacy.example')),
+      ]),
+      [
+        {
+          worker: 'lit-ui-router',
+          state: 'success',
+          branchUrl: typed.branchUrl,
+          commitUrl: typed.commitUrl,
+          logUrl: typed.logUrl,
+        },
+        {
+          worker: 'release-diffs',
+          state: 'success',
+          branchUrl: null,
+          commitUrl: 'https://legacy.example',
+          logUrl: typed.logUrl,
+        },
+      ],
     );
   });
 });

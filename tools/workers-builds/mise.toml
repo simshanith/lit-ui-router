@@ -5,7 +5,7 @@
 
 [tasks.preview_deployment]
 # env: GH_TOKEN, GITHUB_REPOSITORY.
-description = "Post a Workers Builds check run's preview URL as a GitHub Deployment on its commit"
+description = "Post a Workers Builds check run's branch alias and commit preview as GitHub Deployments on its commit"
 usage = '''
 flag "--name <name>" help="The check run's name, Workers Builds: <worker>" required=#true env="CHECK_RUN_NAME"
 flag "--sha <sha>" help="The check run's head sha" required=#true env="HEAD_SHA"

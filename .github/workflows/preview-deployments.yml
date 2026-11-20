@@ -1,7 +1,8 @@
-# Mirrors each successful Workers Builds preview build as a GitHub Deployment
-# in the `preview/<worker>` environment, so a PR names its commit preview URL
-# in the deployments box, and retires a branch's deployments when its PR
-# closes. tools/workers-builds/preview-deployment.ts reads the URL from the
+# Mirrors each successful Workers Builds preview build as GitHub Deployments,
+# the branch alias in `preview/<worker>` and the commit preview in
+# `preview/<worker>/commit`, so a PR links both in its deployments box, and
+# retires a branch's deployments when its PR closes.
+# tools/workers-builds/preview-deployment.ts reads both URLs from the
 # Cloudflare check run's summary. A workflow of its own: its triggers are the
 # app's check run and a closed PR, which no existing workflow pairs with this.
 name: Preview deployments
