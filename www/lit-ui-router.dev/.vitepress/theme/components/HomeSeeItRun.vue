@@ -8,7 +8,8 @@ const active = ref(HELLO_WORLD_INITIAL);
 
 const panel = useTemplateRef('panel');
 
-const watched = new WeakSet<Window>();
+// Keyed by document: a frame's WindowProxy outlives a reload, its listeners do not.
+const watched = new WeakSet<Document>();
 
 // The preview frame is same-origin; the StackBlitz one throws on access and is skipped.
 function follow(frame: HTMLIFrameElement) {
@@ -23,8 +24,8 @@ function follow(frame: HTMLIFrameElement) {
 
     read();
 
-    if (watched.has(view)) return;
-    watched.add(view);
+    if (watched.has(view.document)) return;
+    watched.add(view.document);
     view.addEventListener('hashchange', read);
   } catch {
     // A cross-origin frame: the diagram keeps the state it last showed.
