@@ -104,6 +104,14 @@ const STATES: LitStateDeclaration[] = [
   },
   // Drawn into the list view's parent, so it fills no view of its own.
   { name: 'mail.list.read', url: '/read' },
+  {
+    name: 'mail.both',
+    url: '/both',
+    views: {
+      list: () => html`<p>list</p>`,
+      content: () => html`<p>content</p>`,
+    },
+  },
   { name: 'home', url: '/home', component: () => html`<p>home</p>` },
 ];
 
@@ -279,6 +287,20 @@ describe('the view path under the Map', () => {
 
     expect(within(path).getByText(/^of mail\.list$/)).toBeTruthy();
     expect(items(path)).toContain('list view, filled by mail.list');
+  });
+
+  it('draws each view a state fills, the second after the first', async () => {
+    const { element } = await mailMap(1280, 'mail.both');
+    const path = await pathOf(element, 'Views of mail.both');
+
+    expect(items(path)).toEqual([
+      '$default view, filled by mail',
+      'list view, filled by mail.both',
+      'content view, filled by mail.both',
+    ]);
+    expect(
+      [...path.querySelectorAll('.vp-sep')].map((sep) => sep.textContent),
+    ).toEqual(['›', '+']);
   });
 
   it('says a selected state that is not active fills no view', async () => {
@@ -559,6 +581,24 @@ describe('the view path under the Map', () => {
         item(home, /^\$default view, filled by home/),
       ),
     );
+  });
+
+  it('lets go of the path’s focus once the path is taken away', async () => {
+    const { element } = await mailMap();
+    const panel = panelOf(element);
+    const path = await pathOf(element);
+
+    item(path, /^list view/).focus();
+    panel._mapViews = false;
+    await noPath(element);
+
+    // Drawn again later, the path does not take focus back.
+    panel._mapViews = true;
+
+    const again = await pathOf(element);
+
+    await element.updateComplete;
+    expect(again.contains(focused(element) ?? null)).toBe(false);
   });
 
   it('leaves focus outside the path where it is when the path changes', async () => {
