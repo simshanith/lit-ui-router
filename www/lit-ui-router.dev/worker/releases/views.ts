@@ -34,7 +34,7 @@ import {
   PrereleasesParam,
 } from './lines.ts';
 import type { ReleaseNote, ReleaseNotes } from './notes.ts';
-import { RELEASES_MOUNT } from './routes.ts';
+import { DEFAULT_RECENT, RELEASES_MOUNT } from './routes.ts';
 
 export const REPOSITORY = 'https://github.com/simshanith/lit-ui-router';
 
@@ -215,6 +215,12 @@ export const RecentReleasesView: RoutedLitTemplate<{
         </ol>
       </section>`;
 
+// Keyed by the default, so a new one fails typecheck until the intro has its word.
+const RECENT_COUNT = { 10: 'ten' } satisfies Record<
+  typeof DEFAULT_RECENT,
+  string
+>;
+
 const indexPage = (
   router: UIRouter,
   packages: readonly LedgerPackage[],
@@ -222,9 +228,9 @@ const indexPage = (
 ): TemplateResult => html`
   <h1>Releases</h1>
   <p>
-    The newest stable releases across packages, then the latest stable release
-    of each package, as the release ledger records it, grouped by role. Each
-    package lists every version it has released.
+    The ${RECENT_COUNT[DEFAULT_RECENT]} most recent stable releases, then the
+    latest stable release of each package, grouped by role. Each package page
+    lists every version, with notes for each stable release.
   </p>
   ${recent}
   ${byRole(packages).map(

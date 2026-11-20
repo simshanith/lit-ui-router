@@ -111,6 +111,11 @@ img {
   color: var(--site-color-text);
   text-decoration: none;
   padding-block: 0.25rem;
+  min-inline-size: 1.5rem;
+  text-align: center;
+}
+.site nav a[aria-current] {
+  color: var(--site-color-interaction);
 }
 .site nav a:active,
 .home:active {

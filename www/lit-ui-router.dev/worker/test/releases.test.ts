@@ -19,6 +19,7 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
+import { NAV } from '../../catalog/navigation.ts';
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
 import type { NotesReader } from '../releases/notes.ts';
@@ -42,7 +43,7 @@ import { releaseNotes } from '../../.vitepress/changelog.ts';
 import { RECENT_PARAM, RELEASES_MOUNT, urlConfig } from '../releases/routes.ts';
 import { serveReleases } from '../releases/serve.ts';
 import { releaseStates } from '../releases/states.ts';
-import { diffUrl, RecentReleasesView } from '../releases/views.ts';
+import { diffUrl, RecentReleasesView, REPOSITORY } from '../releases/views.ts';
 import {
   FIXTURE_ROWS,
   FIXTURE_RUN,
@@ -1082,6 +1083,78 @@ describe('the /releases pages', () => {
     assert.equal(doc.title, 'Releases | Lit UI Router');
     // A meta element has no role.
     assert.equal(doc.querySelector('meta[name="robots"]'), null);
+  });
+
+  it('says what the index lists, in words a reader has met', async () => {
+    const doc = await page('/releases/');
+
+    getByText(
+      getByRole(doc.body, 'main'),
+      'The ten most recent stable releases, then the latest stable release of each package, grouped by role. Each package page lists every version, with notes for each stable release.',
+    );
+  });
+
+  describe('the header', () => {
+    const siteLinks = (doc: Document) =>
+      within(getByRole(doc.body, 'navigation', { name: 'Site' })).getAllByRole(
+        'link',
+      );
+
+    it("links the docs navigation's destinations, in its order, then GitHub", async () => {
+      // The logo links home; the menu that lists the releases is spread out, any other is its first page.
+      const destinations = NAV.flatMap((entry) => {
+        if (!('items' in entry))
+          return entry.link === '/' ? [] : [[entry.text, entry.link]];
+
+        return entry.items.some(({ link }) => link === '/releases/')
+          ? entry.items.map(({ text, link }) => [text, link])
+          : [[entry.text, entry.items[0]?.link]];
+      });
+
+      for (const path of [
+        '/releases/',
+        '/releases/lit-ui-router/',
+        '/releases/lit-ui-router/1.10.0/',
+        '/releases/no-such-package/',
+      ]) {
+        const doc = await page(path);
+
+        assert.deepEqual(
+          siteLinks(doc).map((link) => [
+            link.textContent,
+            link.getAttribute('href'),
+          ]),
+          [...destinations, ['GitHub', REPOSITORY]],
+          path,
+        );
+        assert.equal(
+          hrefOf(getByRole(doc.body, 'banner'), 'Lit UI Router'),
+          '/',
+        );
+      }
+    });
+
+    it('marks Releases as the current page on the index and as the current section below it', async () => {
+      const current = async (path: string, ledger = fixtureLedger) =>
+        siteLinks(await page(path, ledger))
+          .filter((link) => link.hasAttribute('aria-current'))
+          .map((link) => [link.textContent, link.getAttribute('aria-current')]);
+
+      assert.deepEqual(await current('/releases/'), [['Releases', 'page']]);
+      assert.deepEqual(await current('/releases/lit-ui-router/'), [
+        ['Releases', 'true'],
+      ]);
+      assert.deepEqual(await current('/releases/lit-ui-router/1.10.0/'), [
+        ['Releases', 'true'],
+      ]);
+      assert.deepEqual(await current('/releases/no-such-package/'), [
+        ['Releases', 'true'],
+      ]);
+      // The index's url, answering as the unavailable page.
+      assert.deepEqual(await current('/releases/', DOWN), [
+        ['Releases', 'true'],
+      ]);
+    });
   });
 
   it('groups the packages by role, in catalog order, unknown ones last', async () => {
