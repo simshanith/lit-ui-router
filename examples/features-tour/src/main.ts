@@ -1,6 +1,12 @@
 import { css, html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { hashLocationPlugin, type Transition } from '@uirouter/core';
+import {
+  BrowserLocationConfig,
+  HashLocationService,
+  locationPluginFactory,
+  type Transition,
+  type UIRouter,
+} from '@uirouter/core';
 import {
   TransitionController,
   UIRouterLit,
@@ -313,6 +319,27 @@ const cardState: LitStateDeclaration<Resolved> = {
       ? undefined
       : { state: 'card', params: { cardId: CARDS[0].id } },
 };
+
+// The stock hash service ignores `location: 'replace'`; this one honours it, so the timer's
+// advances replace the history entry instead of adding one.
+class ReplaceableHashLocationService extends HashLocationService {
+  constructor(router?: UIRouter) {
+    // SAFETY: locationPluginFactory always constructs its service with the router.
+    super(router!);
+  }
+
+  _set(state: null, title: string, url: string, replace: boolean): void {
+    if (replace) location.replace(`#${url}`);
+    else super._set(state, title, url, replace);
+  }
+}
+
+const hashLocationPlugin = locationPluginFactory(
+  'features-tour.hashLocation',
+  false,
+  ReplaceableHashLocationService,
+  BrowserLocationConfig,
+);
 
 // Router setup
 const router = new UIRouterLit();
