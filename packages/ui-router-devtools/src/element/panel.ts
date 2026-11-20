@@ -1139,7 +1139,7 @@ export class DevtoolsPanel extends LitElement {
     const follow = (name: string | null) => {
       if (name === null || names.has(name)) return name;
 
-      const loaded = name.replace(/\.\*\*$/, '');
+      const loaded = bareName(name);
 
       return names.has(loaded) ? loaded : null;
     };
@@ -2084,13 +2084,13 @@ export class DevtoolsPanel extends LitElement {
       }`;
   }
 
-  // Draws the view path under the Map; the viewer's choice is kept, and pressed means drawn.
+  // Draws the view path under the Map; the viewer's choice is kept, and pressed means wanted, so the press and the click agree while the module loads.
   #renderViewsToggle() {
     const failed = this._mapViews && this._viewsFailed;
 
     return html`<div class="switch" role="group" aria-label="Under the Map">
       <button
-        aria-pressed=${this._pathShown()}
+        aria-pressed=${this._mapViews && !failed}
         ?disabled=${failed}
         title=${failed ? VIEWS_FAILED : this._mapViews ? 'Hide the view path under the Map' : 'Show the view path under the Map'}
         @click=${() => this.#chooseViews(!this._mapViews)}

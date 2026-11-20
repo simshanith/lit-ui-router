@@ -798,8 +798,11 @@ describe('the view path under the Map', () => {
     });
 
     await element.updateComplete;
-    expect(toggle(element).ariaPressed).toBe('false');
+    expect(toggle(element).ariaPressed).toBe('true');
     expect(toggle(element).hasAttribute('disabled')).toBe(false);
+    expect(
+      queryByRole(shadow(element), 'toolbar', { name: /^Views/ }),
+    ).toBeNull();
 
     release();
     await pathOf(element);
