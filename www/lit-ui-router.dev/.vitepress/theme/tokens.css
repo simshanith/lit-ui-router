@@ -76,9 +76,9 @@
   --site-color-identity-sweep-start: #0077ad;
   --site-color-identity-sweep-end: #009aa6;
 
-  /* The home diagram's wash, and the burst its rings open onto: deep in light mode and bright in dark, so a ring holds 3:1 on either card. */
+  /* The home diagram's wash, and its section's background: a dithered filament field, its amber shifted to the logo's cyan, with lightness inverted for daylight. */
   --site-color-diagram-wash: rgb(0 152 220 / 0.12);
-  --site-burst-image: url(/images/see-it-run-burst.svg);
+  --site-see-it-run-image: url(/images/see-it-run-light.avif);
 
   /* One accent: the brand scale is the identity ink. */
   --vp-c-brand-1: var(--site-color-identity-ink);
@@ -103,7 +103,7 @@
   --site-color-identity-sweep-start: var(--site-color-identity-start);
   --site-color-identity-sweep-end: #50ffff;
   --site-color-diagram-wash: rgb(0 152 220 / 0.16);
-  --site-burst-image: url(/images/see-it-run-burst-dark.svg);
+  --site-see-it-run-image: url(/images/see-it-run-dark.avif);
   --vp-c-brand-2: #4dbbec;
   --vp-c-brand-3: #006a9a;
   --vp-c-brand-soft: rgb(0 152 220 / 0.16);

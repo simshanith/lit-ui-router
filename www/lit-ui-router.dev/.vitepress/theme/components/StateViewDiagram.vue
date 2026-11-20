@@ -3,7 +3,7 @@ import { computed, useId } from 'vue';
 import { withBase } from 'vitepress';
 import { CARD_IDS, CARD_STATE, type CardId } from './features-tour-states';
 
-/** Where the panel's burst sits, in this drawing's user units. */
+/** Where the section's background image sits, in this drawing's user units. */
 export interface Backdrop {
   x: number;
   y: number;
@@ -41,18 +41,18 @@ const chips = CARD_IDS.map((id, index) => ({
 // One id per instance, so two diagrams on a page keep their own patterns.
 const uid = useId();
 
-const burst = { '--diagram-burst': `url(#${uid}-burst)` };
+const imageStroke = { '--diagram-image': `url(#${uid}-image)` };
 
 const images = {
-  light: withBase('/images/see-it-run-burst.svg'),
-  dark: withBase('/images/see-it-run-burst-dark.svg'),
+  light: withBase('/images/see-it-run-light.avif'),
+  dark: withBase('/images/see-it-run-dark.avif'),
 };
 
 const reentered = computed(() => props.from !== undefined);
 </script>
 
 <template>
-  <figure class="state-diagram" :data-card="card" :style="burst">
+  <figure class="state-diagram" :data-card="card" :style="imageStroke">
     <svg
       class="drawing"
       viewBox="-2 -2 340 362"
@@ -61,9 +61,9 @@ const reentered = computed(() => props.from !== undefined);
       aria-hidden="true"
     >
       <defs>
-        <!-- One image of the panel's burst, placed at the panel's coordinates, so every stroke samples the same backdrop. -->
+        <!-- The section's background image at the size and place the CSS draws it, so every stroke samples the same picture. -->
         <pattern
-          :id="`${uid}-burst`"
+          :id="`${uid}-image`"
           patternUnits="userSpaceOnUse"
           :x="backdrop.x"
           :y="backdrop.y"
@@ -73,7 +73,7 @@ const reentered = computed(() => props.from !== undefined);
           <image
             v-for="(href, theme) in images"
             :key="theme"
-            :class="['burst', theme]"
+            :class="['backdrop', theme]"
             :href="href"
             :width="backdrop.width"
             :height="backdrop.height"
@@ -96,6 +96,7 @@ const reentered = computed(() => props.from !== undefined);
         height="96"
         rx="6"
       />
+      <rect class="box outline" x="12" y="64" width="312" height="96" rx="6" />
       <circle class="glyph disc" cx="30" cy="84" r="5.75" />
       <text class="name strong" x="44" y="88.5">{{ CARD_STATE.name }}</text>
       <text class="url end on-wash" x="312" y="88.5">{{ CARD_STATE.url }}</text>
@@ -136,6 +137,7 @@ const reentered = computed(() => props.from !== undefined);
         height="40"
         rx="6"
       />
+      <rect class="box outline" x="12" y="304" width="312" height="40" rx="6" />
       <circle class="glyph disc" cx="30" cy="324" r="5.75" />
       <text class="name strong" x="44" y="328.5">{{ CARD_STATE.name }}</text>
       <text class="url end on-wash" x="312" y="328.5">
@@ -180,15 +182,15 @@ const reentered = computed(() => props.from !== undefined);
   margin: 0;
 }
 
-.burst.dark {
+.backdrop.dark {
   display: none;
 }
 
-:root.dark .burst.light {
+:root.dark .backdrop.light {
   display: none;
 }
 
-:root.dark .burst.dark {
+:root.dark .backdrop.dark {
   display: inline;
 }
 
@@ -244,19 +246,24 @@ text {
   fill: var(--diagram-ink);
 }
 
-/* Every box's stroke is a window onto the panel's burst; the current ones open wider over a wash. */
+/* Every box's stroke is a window onto the section's image; the current ones open wider over a wash, with a solid ink line on top that holds 3:1 against it. */
 .box {
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: 3;
 }
 
 .window {
-  stroke: var(--diagram-burst);
+  stroke: var(--diagram-image);
 }
 
 .box.current {
   fill: var(--diagram-wash);
-  stroke-width: 3;
+  stroke-width: 8;
+}
+
+.box.outline {
+  stroke: var(--diagram-current);
+  stroke-width: 2;
 }
 
 .glyph {
@@ -317,7 +324,7 @@ text {
 
   .flash rect {
     fill: none;
-    stroke: var(--diagram-burst);
+    stroke: var(--diagram-image);
     stroke-width: 3;
     animation: flash calc(2 * var(--site-duration-slow)) var(--ease-out)
       forwards;
@@ -345,12 +352,16 @@ text {
     --diagram-chip-ink: HighlightText;
   }
 
-  /* The burst url is set inline, so the windows take the system colours directly. */
+  /* The image url is set inline, so the windows take the system colours directly. */
   .window {
     stroke: CanvasText;
   }
 
   .box.current {
+    stroke: Canvas;
+  }
+
+  .box.outline {
     stroke: Highlight;
   }
 

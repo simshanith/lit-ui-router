@@ -53,26 +53,28 @@ function onLoad({ target }: Event) {
   if (target instanceof HTMLIFrameElement) follow(target);
 }
 
-// Before measuring, the drawing samples the burst at its own size.
+// Before measuring, the drawing samples the image at its own size.
 const backdrop = ref<Backdrop>({ x: -2, y: -2, width: 340, height: 362 });
 
-// Every ring shows the one burst painted over the whole stage, so each is told where it sits in it.
+// The diagram's strokes sample the stage's background image, so it is told where the stage sits in its own units.
 function place() {
   const ground = stage.value;
 
   if (!ground) return;
 
-  const box = ground.getBoundingClientRect();
+  const stageBox = ground.getBoundingClientRect();
 
-  ground.style.setProperty('--burst-w', `${box.width}px`);
-  ground.style.setProperty('--burst-h', `${box.height}px`);
+  // The image is centred at a fixed size, so the drawing samples that rect rather than the stage's.
+  const [width, height] = getComputedStyle(ground)
+    .backgroundSize.split(' ')
+    .map((size) => Number.parseFloat(size));
 
-  for (const ring of ground.querySelectorAll<HTMLElement>('[data-ring]')) {
-    const at = ring.getBoundingClientRect();
-
-    ring.style.setProperty('--burst-x', `${at.left - box.left}px`);
-    ring.style.setProperty('--burst-y', `${at.top - box.top}px`);
-  }
+  const box = {
+    left: stageBox.left + (stageBox.width - width) / 2,
+    top: stageBox.top + (stageBox.height - height) / 2,
+    width,
+    height,
+  };
 
   const drawing = ground.querySelector<SVGSVGElement>('.state-diagram svg');
 
@@ -96,14 +98,11 @@ onMounted(() => {
   // A frame that loaded before hydration fired its load event unheard.
   const frame = panel.value?.querySelector('iframe');
 
-  if (frame) {
-    frame.dataset.ring = '';
-    follow(frame);
-  }
+  if (frame) follow(frame);
 
   resized = new ResizeObserver(place);
 
-  for (const el of stage.value?.querySelectorAll('[data-ring], svg') ?? [])
+  for (const el of stage.value?.querySelectorAll('svg') ?? [])
     resized.observe(el);
 
   if (stage.value) resized.observe(stage.value);
@@ -122,7 +121,7 @@ onBeforeUnmount(() => resized?.disconnect());
         it re-enters the state.
       </p>
       <div ref="stage" class="panels">
-        <div ref="panel" class="panel" @load.capture="onLoad">
+        <div ref="panel" class="panel app-panel" @load.capture="onLoad">
           <h3 class="panel-title">The app</h3>
           <div class="embed">
             <ExampleEmbed
@@ -134,7 +133,7 @@ onBeforeUnmount(() => resized?.disconnect());
         </div>
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>
-          <div class="diagram-ground" data-ring>
+          <div class="diagram-ground">
             <StateViewDiagram
               :card="card"
               :from="from"
@@ -196,21 +195,62 @@ onBeforeUnmount(() => resized?.disconnect());
 }
 
 .panels {
+  --gutter: var(--site-space-3);
   display: grid;
-  gap: var(--site-space-8);
+  gap: var(--gutter);
   margin-block-start: var(--site-space-6);
+  /* Full-bleed on narrow screens, out to the section's own padding. */
+  margin-inline: -1.5rem;
+  padding: var(--gutter);
+  position: relative;
+  isolation: isolate;
+  /* The halftone dots are baked in, so the image keeps its native size, or exactly twice it, never a fractional scale. */
+  background: var(--site-see-it-run-image) center / 1408px 768px no-repeat;
+  image-rendering: pixelated;
+  /* Stacked, the frame is narrower than the column check:embeds measures, so it reserves a phone's height. */
+  --see-it-run-narrow-frame: 600px;
 }
 
-/* Two columns only where each keeps the diagram's natural width. */
-@container (inline-size >= 50rem) {
+@media (min-width: 40rem) {
   .panels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--site-space-8) 3rem;
+    --gutter: var(--site-space-4);
+    margin-inline: 0;
+    border-radius: calc(var(--site-radius-card) + var(--gutter));
   }
 }
 
+/* Stacked, the panel outgrows the image's 768px, so it draws at 2x. */
+@container (inline-size < 52rem) {
+  .panels {
+    background-size: 2816px 1536px;
+  }
+}
+
+/* Two columns where the diagram keeps its natural width; the app takes the rest. */
+@container (inline-size >= 52rem) {
+  .panels {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+  }
+}
+
+/* The tiles are cut out of the image: solid grounds, so the image shows only in the gutters. */
 .panel {
+  display: flex;
+  flex-direction: column;
   min-inline-size: 0;
+  padding: var(--site-space-3);
+  background: var(--site-color-surface);
+  border-radius: var(--site-radius-card);
+}
+
+@media (min-width: 40rem) {
+  .panel {
+    padding: var(--site-space-4);
+  }
+}
+
+.diagram-panel {
+  background: var(--site-color-surface-soft);
 }
 
 .panel-title {
@@ -225,40 +265,29 @@ onBeforeUnmount(() => resized?.disconnect());
   margin-block-start: var(--site-space-3);
 }
 
-/* A ring is a window onto the burst painted over the whole stage: the burst fills the border box, sized to the stage and shifted by the ring's place in it; the fill covers the rest. */
-.embed :deep(.example-embed iframe),
-.diagram-ground {
-  --ring-fill: var(--site-color-surface);
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--ring-fill) 0 0) padding-box,
-    var(--site-burst-image) border-box no-repeat;
-  background-position:
-    0 0,
-    calc(-1 * var(--burst-x, 0px)) calc(-1 * var(--burst-y, 0px));
-  background-size:
-    auto,
-    var(--burst-w, 100%) var(--burst-h, 100%);
+@container (inline-size < 30rem) {
+  .embed :deep(.example-embed:not(:modal) iframe) {
+    height: min(
+      var(--see-it-run-narrow-frame),
+      var(--example-frame-max-height)
+    );
+  }
 }
 
 .diagram-ground {
-  --ring-fill: var(--site-color-surface-soft);
-  margin-block-start: var(--site-space-3);
-  padding: var(--site-space-8) var(--site-space-3);
-  border-radius: var(--site-radius-card);
-}
-
-/* Expanded, the frame leaves the stage, so it takes a plain line. */
-.embed :deep(.example-embed:modal iframe) {
-  border: var(--site-border-width) solid var(--site-color-line);
-  background: var(--site-color-surface);
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding-block: var(--site-space-4);
 }
 
 @media (forced-colors: active) {
-  .embed :deep(.example-embed iframe),
-  .diagram-ground {
-    border-color: CanvasText;
-    background: Canvas;
+  .panels {
+    background: none;
+  }
+
+  .panel {
+    border: var(--site-border-width) solid CanvasText;
   }
 }
 
@@ -266,7 +295,7 @@ onBeforeUnmount(() => resized?.disconnect());
   display: flex;
   flex-wrap: wrap;
   gap: var(--site-space-2) var(--site-space-6);
-  margin-block: var(--site-space-8) 0;
+  margin-block: var(--site-space-6) 0;
   font-size: var(--site-text-md);
   line-height: 1.6;
 }
