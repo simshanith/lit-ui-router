@@ -32,6 +32,7 @@
     "typescript-6": "catalog:typescript6",
     "typescript-7": "catalog:",
     "typescript-7.1": "catalog:",
+    "ui-router-devtools": "catalog:workspace",
     "ui-router-effect": "catalog:workspace",
     "ui-router-mobx": "catalog:workspace",
     "ui-router-navigation-location-plugin": "catalog:workspace",

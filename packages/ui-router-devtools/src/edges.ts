@@ -1,15 +1,18 @@
 import { fold, type Model } from './fold.ts';
 import type { Outcome, Session } from './schema.ts';
 
+/** A transition's outcome, or `running` for one that has not settled. */
 export type EdgeOutcome = Outcome | 'running';
 
 /** The traffic one ordered pair of states has seen. A router declares no transitions, so every edge is an observed one. */
 export interface ObservedEdge {
   /** The state the transitions left; `''` is the root, which the first transition leaves. */
   from: string;
+  /** The state the transitions entered. */
   to: string;
   /** Every transition recorded for the pair, whatever its outcome. */
   count: number;
+  /** The count of each outcome the pair's transitions had. */
   outcomes: Partial<Record<EdgeOutcome, number>>;
   /** Transition ids, in start order. */
   ids: number[];

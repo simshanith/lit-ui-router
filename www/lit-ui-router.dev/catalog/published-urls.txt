@@ -54,6 +54,7 @@
 /packages/ssr#how-this-compares lit-ui-router-ssr
 /packages/ssr#page-response-state-or-redirect-which-decides-when lit-ui-router-ssr
 /packages/ssr#response-states lit-ui-router-ssr
+/packages/ui-router-devtools ui-router-devtools
 /packages/ui-router-effect lit-ui-router-effect,ui-router-effect
 /packages/ui-router-mobx lit-ui-router-mobx,ui-router-mobx
 /packages/ui-router-navigation-location-plugin ui-router-navigation-location-plugin

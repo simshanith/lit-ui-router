@@ -4,7 +4,7 @@ A replacement for `@uirouter/visualizer`: a Lit custom element that shows the
 state tree and the transition log of any `@uirouter/core` router. This is a
 research proposal. Its implementation is
 [`packages/ui-router-devtools`](../../packages/ui-router-devtools/README.md),
-a private package that is not published.
+the `ui-router-devtools` package.
 
 [Devtools scope and ecosystem](devtools.md) covers what the package can provide
 beyond the panel and which devtools hosts it can plug into.
@@ -452,8 +452,8 @@ so the exact red and the letterspacing rules are not taken from it.
   [package README](../../packages/ui-router-devtools/README.md). The demo registers the
   `examples/hellogalaxy` states plus a rejecting resolve, a redirect and a lazy
   state, and `?demo=1` plays a fixed sequence.
-- The package is a private workspace member: the repo's build, typecheck, lint
-  and test lanes cover it, and it has no release wiring.
+- The repo's build, typecheck, lint and test lanes cover the package, and it
+  releases through the same pipeline as the other packages.
 - Known weak spots: the outline's exit rail is overdrawn by the fault rail where
   they share a trunk; under RTL the rails mirror but Latin text is not
   bidi-isolated; durations vary between runs.

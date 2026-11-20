@@ -120,7 +120,7 @@ const reportTx = (tx: Tx) => {
     );
 };
 
-// Writes settled transitions as User Timing entries; with a recorder it keeps reporting until the returned function is called.
+/** Writes settled transitions as User Timing track entries for the Performance panel; with a recorder it keeps reporting until the returned function is called. */
 export function reportToPerformance(
   source: readonly RouterEvent[] | Recorder,
 ): () => void {

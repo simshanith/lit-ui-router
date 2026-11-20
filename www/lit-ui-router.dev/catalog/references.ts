@@ -15,6 +15,7 @@ export const API_REFERENCES = {
   'ui-router-server': '/reference/ui-router-server/',
   'lit-ui-router-ssr': '/reference/lit-ui-router-ssr/',
   'ui-router-registry': '/reference/ui-router-registry/',
+  'ui-router-devtools': '/reference/ui-router-devtools/',
   'eslint-plugin-lit-ui-router': null,
 } as const satisfies Record<PackageName, string | null>;
 
@@ -34,5 +35,10 @@ export const FEATURED_EXPORTS = {
     { name: 'uiSrefActive' },
     { name: 'TransitionController' },
     { name: 'LitStateDeclaration' },
+  ],
+  'ui-router-devtools': [
+    { name: 'DevtoolsPlugin' },
+    { name: 'UIRouterDevtools', element: 'ui-router-devtools' },
+    { name: 'record' },
   ],
 } as const satisfies Partial<Record<PackageName, readonly FeaturedExport[]>>;

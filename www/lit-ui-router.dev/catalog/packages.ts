@@ -123,6 +123,13 @@ export const PACKAGES = [
     runtime: ['type-check'],
   },
   {
+    name: 'ui-router-devtools',
+    role: 'dx',
+    subject: 'router',
+    layer: 'agnostic',
+    runtime: ['browser'],
+  },
+  {
     // Peers only on eslint, so no peer decides its layer; it lints lit-ui-router templates.
     name: 'eslint-plugin-lit-ui-router',
     role: 'dx',
