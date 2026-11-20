@@ -938,7 +938,11 @@ export class DevtoolsPanel extends LitElement {
     const stop =
       this.renderRoot.querySelector<HTMLElement>('.vp [tabindex="0"]');
 
-    if (stop && this.shadowRoot?.activeElement !== stop) stop.focus();
+    if (!stop) return;
+
+    this.#pathFocused = stop;
+
+    if (this.shadowRoot?.activeElement !== stop) stop.focus();
   }
 
   // The nested Map packs for the Map viewport, and the Views for the area beside their details, so that content box is observed.
@@ -1145,6 +1149,7 @@ export class DevtoolsPanel extends LitElement {
     };
 
     this._focusState = follow(this._focusState);
+    this.#pathFrom = follow(this.#pathFrom);
 
     const selected = follow(this._selectedState);
 
