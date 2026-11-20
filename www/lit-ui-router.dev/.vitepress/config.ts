@@ -191,7 +191,8 @@ if (!GOOGLE_ANALYTICS_TRACKING_ID) {
 const config = {
   outDir: 'dist',
   title: 'Lit UI Router',
-  description: 'A @uirouter implementation for Lit',
+  description:
+    "State-based routing for Lit web components, built on UI-Router's core.",
   cleanUrls: true,
   // After the sitemap and the llms copies, so the check sees every emitted file.
   buildEnd: async ({ outDir }: SiteConfig) => {
