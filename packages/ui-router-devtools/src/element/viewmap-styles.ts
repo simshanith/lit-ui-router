@@ -174,9 +174,10 @@ export const viewMapStyles: CSSResult = css`
     flex: none;
   }
 
-  /* Names are code, read left to right in either direction, so a leading dollar sign stays at the start. */
+  /* Names and the count are read left to right in either direction, so a leading $ or + stays at the start. */
   :is(.vp-chip, .vp-of) > .name,
-  .vp-of {
+  .vp-of,
+  .vp-more {
     direction: ltr;
     unicode-bidi: isolate;
   }

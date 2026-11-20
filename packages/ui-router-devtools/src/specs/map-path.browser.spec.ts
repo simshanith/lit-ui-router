@@ -496,6 +496,13 @@ describe('the view path under the Map', () => {
     press(element, 'ArrowRight');
     expect(focused(element)).toBe(item(path, /^list view/));
 
+    // Names and the count keep their order in a right-to-left panel.
+    expect(getComputedStyle(all.at(-1)!).direction).toBe('ltr');
+    expect(
+      getComputedStyle(item(path, /^\$default view/).querySelector('.name')!)
+        .direction,
+    ).toBe('ltr');
+
     // Enter or Space presses the focused item, which is a button.
     expect(item(path, /^list view/).tagName).toBe('BUTTON');
   });
