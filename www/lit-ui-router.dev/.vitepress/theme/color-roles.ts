@@ -109,19 +109,25 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the brand scale, this stack's marks on the spectrum, the home diagram's gradient start",
+    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state",
     on: ['surface', 'surface-soft', 'diagram-wash'],
   },
   {
-    property: '--site-color-diagram-current',
+    property: '--site-color-diagram-glow',
     kind: 'mark',
-    use: "the home diagram's current state: its glyph, arrow and gradient end",
+    use: "the end of the home diagram's current-state gradient and the panel rings",
     on: ['surface', 'surface-soft', 'diagram-wash'],
   },
   {
-    property: '--site-color-diagram-ancestor',
-    kind: 'mark',
-    use: "the home diagram's active ancestor: the root's border and glyph",
+    property: '--site-color-diagram-root',
+    kind: 'text',
+    use: "the home diagram's root state: its border, glyph and name",
+    on: ['surface', 'surface-soft'],
+  },
+  {
+    property: '--site-color-diagram-view',
+    kind: 'text',
+    use: "the home diagram's ui-view boxes: their border, glyph and name",
     on: ['surface', 'surface-soft'],
   },
   {

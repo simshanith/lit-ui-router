@@ -126,28 +126,15 @@ onMounted(() => {
 }
 
 .panels {
-  /* Both panels wear the logo's blue, the root's violet and the current state's orange as a 2px ring. */
+  /* Both panels wear the current state's ink-to-glow gradient as a 2px ring. */
   --panel-ring: linear-gradient(
     135deg,
     var(--site-color-identity-ink),
-    var(--site-color-diagram-ancestor),
-    var(--site-color-diagram-current)
+    var(--site-color-diagram-glow)
   );
   display: grid;
   gap: var(--site-space-8);
   margin-block-start: var(--site-space-6);
-}
-
-/* Through violet in both themes, where sRGB would grey the blue-to-orange middle. */
-@supports (background: linear-gradient(in oklch increasing hue, red, blue)) {
-  .panels {
-    --panel-ring: linear-gradient(
-      135deg in oklch increasing hue,
-      var(--site-color-identity-ink),
-      var(--site-color-diagram-ancestor),
-      var(--site-color-diagram-current)
-    );
-  }
 }
 
 /* Two columns only where each keeps the diagram's natural width. */

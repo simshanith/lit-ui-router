@@ -37,23 +37,21 @@ const current = computed(
       aria-hidden="true"
     >
       <defs>
-        <!-- Both run blue into orange toward the arrow, so it joins the warm ends. -->
+        <!-- Glow into ink toward the arrow, so the solid ink arrow joins both boxes at their ink edge. -->
         <linearGradient :id="`${uid}-state`" x1="0" y1="0" x2="0" y2="1">
-          <stop class="cool" offset="0" />
-          <stop class="mid" offset="0.5" />
-          <stop class="warm" offset="1" />
+          <stop class="glow" offset="0" />
+          <stop class="ink" offset="1" />
         </linearGradient>
         <linearGradient :id="`${uid}-view`" x1="0" y1="0" x2="0" y2="1">
-          <stop class="warm" offset="0" />
-          <stop class="mid" offset="0.5" />
-          <stop class="cool" offset="1" />
+          <stop class="ink" offset="0" />
+          <stop class="glow" offset="1" />
         </linearGradient>
       </defs>
       <text class="region" x="0" y="10">States</text>
-      <rect class="box ancestor" x="0" y="24" width="316" height="120" rx="6" />
-      <circle class="glyph ring on" cx="20" cy="44" r="5" />
-      <circle class="glyph dot on" cx="20" cy="44" r="2" />
-      <text class="name quiet" x="36" y="48.5">(root)</text>
+      <rect class="box root" x="0" y="24" width="316" height="120" rx="6" />
+      <circle class="glyph ring root" cx="20" cy="44" r="5" />
+      <circle class="glyph dot root" cx="20" cy="44" r="2" />
+      <text class="name root" x="36" y="48.5">(root)</text>
 
       <g
         v-for="leaf in leaves"
@@ -73,9 +71,9 @@ const current = computed(
       </g>
 
       <text class="region" x="0" y="204">Views</text>
-      <rect class="box" x="0" y="216" width="316" height="116" rx="6" />
-      <rect class="glyph frame" x="15" y="231" width="10" height="10" rx="2" />
-      <text class="name" x="36" y="240.5">&lt;ui-view&gt;</text>
+      <rect class="box view" x="0" y="216" width="316" height="116" rx="6" />
+      <rect class="glyph view" x="15" y="231" width="10" height="10" rx="2" />
+      <text class="name view" x="36" y="240.5">&lt;ui-view&gt;</text>
       <text class="url end" x="292" y="240.5">in &lt;app-root&gt;</text>
       <rect class="box filled" x="24" y="256" width="268" height="52" rx="6" />
       <circle class="glyph disc" cx="42" cy="282" r="5.75" />
@@ -108,28 +106,20 @@ const current = computed(
 .state-diagram {
   --diagram-ink: var(--site-color-text);
   --diagram-muted: var(--site-color-text-muted);
-  --diagram-ancestor: var(--site-color-diagram-ancestor);
-  --diagram-current: var(--site-color-diagram-current);
-  --diagram-cool: var(--site-color-identity-ink);
+  --diagram-current: var(--site-color-identity-ink);
+  --diagram-glow: var(--site-color-diagram-glow);
   --diagram-wash: var(--site-color-diagram-wash);
+  --diagram-root: var(--site-color-diagram-root);
+  --diagram-view: var(--site-color-diagram-view);
   margin: 0;
 }
 
-/* The logo's blue into the current state's orange; the middle turns through violet, as the root does. */
-.cool {
-  stop-color: var(--diagram-cool);
-}
-
-.mid {
-  stop-color: color-mix(
-    in oklch increasing hue,
-    var(--diagram-cool),
-    var(--diagram-current)
-  );
-}
-
-.warm {
+.ink {
   stop-color: var(--diagram-current);
+}
+
+.glow {
+  stop-color: var(--diagram-glow);
 }
 
 .drawing {
@@ -164,8 +154,13 @@ text {
   fill: var(--diagram-ink);
 }
 
-.name.quiet {
-  fill: var(--diagram-muted);
+/* The outer boxes: the root and the ui-view it fills, in accent colours at 1px, secondary to the current state's 2px. */
+.name.root {
+  fill: var(--diagram-root);
+}
+
+.name.view {
+  fill: var(--diagram-view);
 }
 
 .end {
@@ -178,8 +173,14 @@ text {
   stroke-width: 1;
 }
 
-.box.ancestor {
-  stroke: var(--diagram-ancestor);
+.box.root,
+.glyph.root {
+  stroke: var(--diagram-root);
+}
+
+.box.view,
+.glyph.view {
+  stroke: var(--diagram-view);
 }
 
 .glyph {
@@ -188,12 +189,8 @@ text {
   stroke-width: 1.5;
 }
 
-.glyph.on {
-  stroke: var(--diagram-ancestor);
-}
-
 .glyph.dot {
-  fill: var(--diagram-ancestor);
+  fill: var(--diagram-root);
   stroke: none;
 }
 
@@ -261,20 +258,17 @@ text {
   .state-diagram {
     --diagram-ink: CanvasText;
     --diagram-muted: CanvasText;
-    --diagram-ancestor: Highlight;
     --diagram-current: Highlight;
-    --diagram-cool: Highlight;
+    --diagram-glow: Highlight;
     --diagram-wash: Canvas;
+    --diagram-root: CanvasText;
+    --diagram-view: CanvasText;
   }
 
   /* The stroke urls are set inline, so the boxes take the system colour directly. */
   .current .box,
   .box.filled {
     stroke: Highlight;
-  }
-
-  .mid {
-    stop-color: Highlight;
   }
 }
 </style>
