@@ -76,8 +76,8 @@ const reentered = computed(() => props.from !== undefined);
         { {{ CARD_STATE.param }}: '{{ card }}' }
       </text>
 
-      <!-- Keyed by the transition count, so the flash replays on each re-entry. -->
-      <g :key="entries" class="flash">
+      <!-- Only after a transition, and keyed by its count, so the flash marks each re-entry and not the first render. -->
+      <g v-if="reentered" :key="entries" class="flash">
         <rect x="12" y="64" width="312" height="96" rx="6" />
         <rect x="12" y="248" width="312" height="40" rx="6" />
       </g>
