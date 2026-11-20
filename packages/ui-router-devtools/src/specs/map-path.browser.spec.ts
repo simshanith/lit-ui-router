@@ -183,6 +183,10 @@ const head = (tree: HTMLElement, name: RegExp | string) =>
 const states = (element: UIRouterDevtools) =>
   getByRole(shadow(element), 'tree', { name: 'State map' });
 
+// The toggle draws before the lazy Map does, so a spec that starts on the Map waits for it.
+const drawnStates = (element: UIRouterDevtools) =>
+  waitFor(() => states(element));
+
 const boxOf = (element: HTMLElement) => element.closest<HTMLElement>('.box');
 
 const rects = (elements: readonly (Element | null)[]) =>
@@ -254,6 +258,8 @@ describe('the view path under the Map', () => {
 
   it('draws a selected state’s path in place of the active one, and moves nothing', async () => {
     const { element } = await mailMap();
+
+    await drawnStates(element);
     const before = boxes(element);
 
     head(states(element), 'mail').click();
@@ -278,7 +284,7 @@ describe('the view path under the Map', () => {
   it('says a selected state that is not active fills no view', async () => {
     const { element } = await mailMap();
 
-    head(states(element), 'home').click();
+    head(await drawnStates(element), 'home').click();
 
     const path = await waitFor(() =>
       getByRole(shadow(element), 'group', { name: 'Views of home' }),
@@ -319,7 +325,7 @@ describe('the view path under the Map', () => {
     const { element } = await mailMap();
     const path = await pathOf(element);
 
-    head(states(element), 'mail').click();
+    head(await drawnStates(element), 'mail').click();
     await element.updateComplete;
 
     const before = places(element);
