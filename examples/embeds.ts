@@ -29,6 +29,13 @@ export const EXAMPLES = {
     height: '190px',
     file: 'public/main.js',
   },
+  'features-tour': {
+    title: 'Features Tour',
+    summary:
+      'The home page tour: one route each for state-based routing, a nested view with a child state, and a resolve',
+    height: '540px',
+    file: 'src/main.ts',
+  },
   hellosolarsystem: {
     title: 'Hello Solar System',
     summary:

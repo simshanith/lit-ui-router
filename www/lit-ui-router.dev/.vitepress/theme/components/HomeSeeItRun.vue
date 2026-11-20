@@ -3,11 +3,11 @@ import { onMounted, ref, useTemplateRef } from 'vue';
 import ExampleEmbed from './ExampleEmbed.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
 import { EXAMPLES, staticSrc } from './examples';
-import { HELLO_WORLD_INITIAL, stateForHash } from './helloworld-states';
+import { FEATURES_TOUR_INITIAL, stateForHash } from './features-tour-states';
 
-const example = EXAMPLES.helloworld;
+const example = EXAMPLES['features-tour'];
 
-const active = ref(HELLO_WORLD_INITIAL);
+const active = ref(FEATURES_TOUR_INITIAL);
 
 const panel = useTemplateRef('panel');
 
@@ -53,15 +53,15 @@ onMounted(() => {
     <div class="container">
       <h2 id="see-it-run-title" class="title">See it run</h2>
       <p class="lede">
-        This is the Hello World example, running. Switch between Hello and
-        About, and the diagram marks the state the router made active.
+        A small app with one route for each feature above, running. Move between
+        them, and the diagram marks the state the router made active.
       </p>
       <div class="panels">
         <div ref="panel" class="panel" @load.capture="onLoad">
           <h3 class="panel-title">The app</h3>
           <div class="embed">
             <ExampleEmbed
-              :src="staticSrc('helloworld')"
+              :src="staticSrc('features-tour')"
               :title="`${example.title} example`"
               :height="example.height"
             />
@@ -75,7 +75,7 @@ onMounted(() => {
         </div>
       </div>
       <p class="next">
-        <a href="/tutorial/helloworld">Build it in the tutorial</a>
+        <a href="/tutorial/helloworld">Start the tutorial</a>
         <a href="/introduction">Read the introduction</a>
       </p>
     </div>

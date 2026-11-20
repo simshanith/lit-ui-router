@@ -128,7 +128,7 @@ export const ROLES = [
     property: '--site-color-diagram-view',
     kind: 'text',
     use: "the home diagram's ui-view boxes: their border, glyph and name",
-    on: ['surface', 'surface-soft'],
+    on: ['surface', 'surface-soft', 'diagram-wash'],
   },
   {
     property: '--site-color-identity-sweep-start',
