@@ -671,7 +671,8 @@ export const renderPath = (host: DevtoolsPanel): TemplateResult => {
     </div>`;
 
   const items = flat(path.nodes);
-  const own = items.find((node) => node.view.fill?.state === path.state);
+  // SAFETY: a path is found only for a state that fills one of its views
+  const own = items.find((node) => node.view.fill?.state === path.state)!;
 
   const keys = [
     ...items.map((node) => keyOf(node.view.id)),
@@ -684,9 +685,9 @@ export const renderPath = (host: DevtoolsPanel): TemplateResult => {
       : undefined;
 
   const focus =
-    [host._pathFocus, selected, own && keyOf(own.view.id)].find(
-      (key): key is string => Boolean(key && keys.includes(key)),
-    ) ?? keys[0];
+    [host._pathFocus, selected].find((key): key is string =>
+      Boolean(key && keys.includes(key)),
+    ) ?? keyOf(own.view.id);
 
   const scene = { host, repeated: repeatedNames(views), active, focus };
 
