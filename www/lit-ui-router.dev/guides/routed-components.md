@@ -119,7 +119,7 @@ Two shapes type-check:
 
 The names come from [the Altitude Atlas](https://atlas.lit-ui-router.dev), whose
 gallery and sheet
-[views](https://github.com/simshanith/lit-ui-router/blob/www/atlas/www/atlas.lit-ui-router.dev/app/src/views.ts)
+[views](https://github.com/simshanith/lit-ui-router/blob/52b1984806b12fb3bbd11fa47a5cf622af1fca4d/www/atlas.lit-ui-router.dev/app/src/views.ts#L1448-L1449)
 use the last of these, an alias with every member optional.
 
 ## Lazy-loading a route's element
