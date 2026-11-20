@@ -1,4 +1,11 @@
-import { css, html, LitElement, render } from 'lit';
+import {
+  css,
+  html,
+  LitElement,
+  render,
+  svg,
+  type SVGTemplateResult,
+} from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import {
   BrowserLocationConfig,
@@ -78,6 +85,29 @@ const step = (id: string, by: number): string => {
 
 const ADVANCE_MS = 7000;
 
+// Lucide icons (ISC licence), inlined: chevron-left, chevron-right, play, pause.
+const ICONS = {
+  previous: svg`<path d="m15 18l-6-6l6-6" />`,
+  next: svg`<path d="m9 18l6-6l-6-6" />`,
+  play: svg`<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />`,
+  pause: svg`<rect width="5" height="18" x="14" y="3" rx="1" /><rect width="5" height="18" x="5" y="3" rx="1" />`,
+} satisfies Record<string, SVGTemplateResult>;
+
+const icon = (name: keyof typeof ICONS) =>
+  html`<svg
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    ${ICONS[name]}
+  </svg>`;
+
 type Resolved = { card: Card };
 
 const CardPage: RoutedLitTemplate<Resolved> = ({ resolves: { card } }) => html`
@@ -144,56 +174,54 @@ export class AppRoot extends LitElement {
     }
     .pager {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 4px;
       margin-block-start: 12px;
     }
+    /* Every control keeps a 32px hit area; the dots draw smaller inside theirs. */
     .pager a,
     .pager button {
       display: inline-grid;
       place-items: center;
-      min-inline-size: 32px;
+      inline-size: 32px;
       block-size: 32px;
-      padding-inline: 10px;
-      border: 1px solid light-dark(#c2c2c4, #3c3f44);
+      padding: 0;
+      border: 0;
       border-radius: 999px;
       background: none;
       color: inherit;
-      font: inherit;
-      font-size: 14px;
-      line-height: 1;
-      text-decoration: none;
       cursor: pointer;
     }
-    .pager a[aria-current='page'] {
-      border-color: CanvasText;
-      background: CanvasText;
-      color: Canvas;
+    .pager :is(a, button):focus-visible {
+      outline: 2px solid light-dark(#006a9a, #29abe6);
+      outline-offset: 1px;
     }
-    /* The inverted pill is a fill, which forced colours drop, so it takes the system's selected pair. */
+    .dot::before {
+      content: '';
+      display: block;
+      inline-size: 8px;
+      block-size: 8px;
+      border-radius: 999px;
+      background: light-dark(#c2c2c4, #4a4d55);
+    }
+    /* The current dot is filled and stretched, so it reads without colour. */
+    .dot[aria-current='page']::before {
+      inline-size: 20px;
+      background: CanvasText;
+    }
     @media (forced-colors: active) {
-      .pager a[aria-current='page'] {
-        forced-color-adjust: none;
-        border-color: Highlight;
+      .dot::before {
+        background: CanvasText;
+      }
+      .dot[aria-current='page']::before {
         background: Highlight;
-        color: HighlightText;
       }
     }
     @media (hover: hover) and (pointer: fine) {
-      .pager a:not([aria-current='page']):hover,
-      .pager button:hover {
+      .pager :is(a, button):hover {
         background: light-dark(#f0f0f0, #2c2c2c);
       }
-    }
-    .hidden {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
     }
   `;
 
@@ -270,29 +298,36 @@ export class AppRoot extends LitElement {
       >
         <ui-view></ui-view>
         <nav class="pager" aria-label="Feature cards">
-          <a ${uiSref('card', { cardId: step(this.cardId, -1) })}>
-            <span aria-hidden="true">‹</span>
-            <span class="hidden">Previous card</span>
-          </a>
+          <a
+            aria-label="Previous card"
+            ${uiSref('card', { cardId: step(this.cardId, -1) })}
+            >${icon('previous')}</a
+          >
           ${CARDS.map(
             (card, index) =>
               html`<a
+                class="dot"
+                aria-label="${card.title}, card ${index + 1} of ${CARDS.length}"
                 ${uiSrefActive({ activeClasses: ['active'] })}
                 ${uiSref('card', { cardId: card.id })}
-                >${index + 1}<span class="hidden"> ${card.title}</span></a
-              >`,
+              ></a>`,
           )}
-          <a ${uiSref('card', { cardId: step(this.cardId, 1) })}>
-            <span aria-hidden="true">›</span>
-            <span class="hidden">Next card</span>
-          </a>
+          <a
+            aria-label="Next card"
+            ${uiSref('card', { cardId: step(this.cardId, 1) })}
+            >${icon('next')}</a
+          >
           ${
             this.motion.matches
               ? ''
-              : html`<button type="button" @click=${this.toggle}>
-                  ${this.playing ? 'Pause' : 'Play'}<span class="hidden">
-                    slideshow</span
-                  >
+              : html`<button
+                  type="button"
+                  aria-label=${
+                    this.playing ? 'Pause slideshow' : 'Play slideshow'
+                  }
+                  @click=${this.toggle}
+                >
+                  ${icon(this.playing ? 'pause' : 'play')}
                 </button>`
           }
         </nav>
