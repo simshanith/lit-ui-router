@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 import {
   HELLO_WORLD_STATES,
   type HelloWorldStateName,
@@ -14,13 +14,21 @@ const leaves = HELLO_WORLD_STATES.map((state, index) => ({
   mid: 86 + index * 144,
 }));
 
+// One id per instance, so two diagrams on a page keep their own gradients.
+const uid = useId();
+
+const strokes = {
+  '--diagram-state-stroke': `url(#${uid}-state)`,
+  '--diagram-view-stroke': `url(#${uid}-view)`,
+};
+
 const current = computed(
   () => leaves.find(({ name }) => name === props.active) ?? leaves[0],
 );
 </script>
 
 <template>
-  <figure class="state-diagram" :data-active="active">
+  <figure class="state-diagram" :data-active="active" :style="strokes">
     <svg
       class="drawing"
       viewBox="-2 -2 320 336"
@@ -28,6 +36,19 @@ const current = computed(
       height="336"
       aria-hidden="true"
     >
+      <defs>
+        <!-- Both run blue into orange toward the arrow, so it joins the warm ends. -->
+        <linearGradient :id="`${uid}-state`" x1="0" y1="0" x2="0" y2="1">
+          <stop class="cool" offset="0" />
+          <stop class="mid" offset="0.5" />
+          <stop class="warm" offset="1" />
+        </linearGradient>
+        <linearGradient :id="`${uid}-view`" x1="0" y1="0" x2="0" y2="1">
+          <stop class="warm" offset="0" />
+          <stop class="mid" offset="0.5" />
+          <stop class="cool" offset="1" />
+        </linearGradient>
+      </defs>
       <text class="region" x="0" y="10">States</text>
       <rect class="box ancestor" x="0" y="24" width="316" height="120" rx="6" />
       <circle class="glyph ring on" cx="20" cy="44" r="5" />
@@ -87,13 +108,28 @@ const current = computed(
 .state-diagram {
   --diagram-ink: var(--site-color-text);
   --diagram-muted: var(--site-color-text-muted);
-  --diagram-active: var(--site-color-interaction);
-  --diagram-wash: color-mix(
-    in srgb,
-    var(--site-color-interaction) 12%,
-    transparent
-  );
+  --diagram-ancestor: var(--site-color-diagram-ancestor);
+  --diagram-current: var(--site-color-diagram-current);
+  --diagram-cool: var(--site-color-identity-ink);
+  --diagram-wash: var(--site-color-diagram-wash);
   margin: 0;
+}
+
+/* The logo's blue into the current state's orange; the middle turns through violet, as the root does. */
+.cool {
+  stop-color: var(--diagram-cool);
+}
+
+.mid {
+  stop-color: color-mix(
+    in oklch increasing hue,
+    var(--diagram-cool),
+    var(--diagram-current)
+  );
+}
+
+.warm {
+  stop-color: var(--diagram-current);
 }
 
 .drawing {
@@ -143,7 +179,7 @@ text {
 }
 
 .box.ancestor {
-  stroke: var(--diagram-active);
+  stroke: var(--diagram-ancestor);
 }
 
 .glyph {
@@ -153,12 +189,16 @@ text {
 }
 
 .glyph.on {
-  stroke: var(--diagram-active);
+  stroke: var(--diagram-ancestor);
 }
 
-.glyph.dot,
+.glyph.dot {
+  fill: var(--diagram-ancestor);
+  stroke: none;
+}
+
 .glyph.disc {
-  fill: var(--diagram-active);
+  fill: var(--diagram-current);
   stroke: none;
 }
 
@@ -177,13 +217,20 @@ text {
 .current .box,
 .box.filled {
   fill: var(--diagram-wash);
-  stroke: var(--diagram-active);
   stroke-width: 2;
 }
 
+.current .box {
+  stroke: var(--diagram-state-stroke);
+}
+
+.box.filled {
+  stroke: var(--diagram-view-stroke);
+}
+
 .current .glyph.ring {
-  fill: var(--diagram-active);
-  stroke: var(--diagram-active);
+  fill: var(--diagram-current);
+  stroke: var(--diagram-current);
 }
 
 .current .name,
@@ -197,13 +244,13 @@ text {
 }
 
 .current .edge {
-  stroke: var(--diagram-active);
+  stroke: var(--diagram-current);
   stroke-width: 2;
   stroke-dasharray: none;
 }
 
 .current .arrowhead {
-  fill: var(--diagram-active);
+  fill: var(--diagram-current);
 }
 
 .current .edge-label {
@@ -214,8 +261,20 @@ text {
   .state-diagram {
     --diagram-ink: CanvasText;
     --diagram-muted: CanvasText;
-    --diagram-active: Highlight;
+    --diagram-ancestor: Highlight;
+    --diagram-current: Highlight;
+    --diagram-cool: Highlight;
     --diagram-wash: Canvas;
+  }
+
+  /* The stroke urls are set inline, so the boxes take the system colour directly. */
+  .current .box,
+  .box.filled {
+    stroke: Highlight;
+  }
+
+  .mid {
+    stop-color: Highlight;
   }
 }
 </style>

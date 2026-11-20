@@ -76,6 +76,11 @@
   --site-color-identity-sweep-start: #0077ad;
   --site-color-identity-sweep-end: #009aa6;
 
+  /* The home diagram's accents: the logo's warm end deepened to orange, the hero glow's indigo turned violet. */
+  --site-color-diagram-current: #b84d00;
+  --site-color-diagram-ancestor: #7535e0;
+  --site-color-diagram-wash: rgb(184 77 0 / 0.1);
+
   /* One accent: the brand scale is the identity ink. */
   --vp-c-brand-1: var(--site-color-identity-ink);
   --vp-c-brand-2: #00577f;
@@ -98,6 +103,9 @@
   --site-color-identity-ink: #29abe6;
   --site-color-identity-sweep-start: var(--site-color-identity-start);
   --site-color-identity-sweep-end: #50ffff;
+  --site-color-diagram-current: #ff9f4a;
+  --site-color-diagram-ancestor: #b39dff;
+  --site-color-diagram-wash: rgb(255 159 74 / 0.14);
   --vp-c-brand-2: #4dbbec;
   --vp-c-brand-3: #006a9a;
   --vp-c-brand-soft: rgb(0 152 220 / 0.16);

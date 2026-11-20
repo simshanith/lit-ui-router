@@ -126,9 +126,28 @@ onMounted(() => {
 }
 
 .panels {
+  /* Both panels wear the logo's blue, the root's violet and the current state's orange as a 2px ring. */
+  --panel-ring: linear-gradient(
+    135deg,
+    var(--site-color-identity-ink),
+    var(--site-color-diagram-ancestor),
+    var(--site-color-diagram-current)
+  );
   display: grid;
   gap: var(--site-space-8);
   margin-block-start: var(--site-space-6);
+}
+
+/* Through violet in both themes, where sRGB would grey the blue-to-orange middle. */
+@supports (background: linear-gradient(in oklch increasing hue, red, blue)) {
+  .panels {
+    --panel-ring: linear-gradient(
+      135deg in oklch increasing hue,
+      var(--site-color-identity-ink),
+      var(--site-color-diagram-ancestor),
+      var(--site-color-diagram-current)
+    );
+  }
 }
 
 /* Two columns only where each keeps the diagram's natural width. */
@@ -155,11 +174,29 @@ onMounted(() => {
   margin-block-start: var(--site-space-3);
 }
 
+/* The ring is the border box's background showing through a transparent border, so the radius holds. */
+.embed :deep(.example-embed iframe) {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--site-color-surface) 0 0) padding-box,
+    var(--panel-ring) border-box;
+}
+
 .diagram-ground {
   margin-block-start: var(--site-space-3);
   padding: var(--site-space-8) var(--site-space-3);
-  background: var(--site-color-surface-soft);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--site-color-surface-soft) 0 0) padding-box,
+    var(--panel-ring) border-box;
   border-radius: var(--site-radius-card);
+}
+
+@media (forced-colors: active) {
+  .embed :deep(.example-embed iframe),
+  .diagram-ground {
+    border-color: CanvasText;
+  }
 }
 
 .next {

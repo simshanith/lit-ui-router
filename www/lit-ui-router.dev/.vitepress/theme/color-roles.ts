@@ -19,6 +19,10 @@ export const GROUNDS = {
     property: '--site-color-ground-shade',
     over: 'surface-soft',
   },
+  'diagram-wash': {
+    property: '--site-color-diagram-wash',
+    over: 'surface-soft',
+  },
   code: { property: '--vp-code-bg', over: 'surface' },
   'callout-tip': { property: '--vp-custom-block-tip-bg', over: 'surface' },
   'callout-warning': {
@@ -59,7 +63,13 @@ export const ROLES = [
     property: '--site-color-text',
     kind: 'text',
     use: 'body text, control labels, inline code',
-    on: [...PAGE_GROUNDS, 'code', 'callout-tip', 'callout-warning'],
+    on: [
+      ...PAGE_GROUNDS,
+      'code',
+      'callout-tip',
+      'callout-warning',
+      'diagram-wash',
+    ],
   },
   {
     property: '--site-color-text-muted',
@@ -99,7 +109,19 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the brand scale and this stack's marks on the spectrum",
+    use: "the brand scale, this stack's marks on the spectrum, the home diagram's gradient start",
+    on: ['surface', 'surface-soft', 'diagram-wash'],
+  },
+  {
+    property: '--site-color-diagram-current',
+    kind: 'mark',
+    use: "the home diagram's current state: its glyph, arrow and gradient end",
+    on: ['surface', 'surface-soft', 'diagram-wash'],
+  },
+  {
+    property: '--site-color-diagram-ancestor',
+    kind: 'mark',
+    use: "the home diagram's active ancestor: the root's border and glyph",
     on: ['surface', 'surface-soft'],
   },
   {
