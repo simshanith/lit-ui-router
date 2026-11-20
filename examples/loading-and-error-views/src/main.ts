@@ -237,7 +237,8 @@ export class AppShell extends LitElement {
       text-decoration: none;
       background: light-dark(#f0f0f0, #2c2c2c);
     }
-    nav a[aria-current] {
+    nav a[aria-current='page'],
+    nav a.active {
       background: light-dark(#1f1f1f, #ededed);
       color: light-dark(#fff, #111);
     }
@@ -362,9 +363,7 @@ export class AppShell extends LitElement {
       <nav aria-label="Loading and error views example">
         <a ${uiSref('home')} ${uiSrefActive({})}>Home</a>
         <a ${uiSref('report')} ${uiSrefActive({})}>Report</a>
-        <a
-          ${uiSref('account')}
-          ${uiSrefActive({ ariaCurrentValue: { active: 'location' } })}
+        <a ${uiSref('account')} ${uiSrefActive({ activeClasses: ['active'] })}
           >Account</a
         >
       </nav>
