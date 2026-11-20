@@ -20,7 +20,7 @@ hero:
       target: _self
 
 positioning: >-
-  For Lit apps that have outgrown a path-to-component map: nested layouts, data that loads before a view shows, guards and redirects in one place. It runs on <code>@uirouter/core</code>, the same core as UI-Router for Angular and React.
+  Start minimal with simple, plain Lit templates and scale cleanly to non-trivial apps without switching routers. Built on <code>@uirouter/core</code>, the same engine behind UI-Router for Angular and React.
 
 features:
   - title: State-based Routing
