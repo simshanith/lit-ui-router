@@ -587,9 +587,9 @@ export class DevtoolsPanel extends LitElement {
     }
   }
 
-  // The Map, the Timeline and the Views load on first use; a failed load retries when the view is chosen again.
+  // The Map, the Timeline and the Views load on first use; a failed load retries when the view, or the view path, is chosen again.
   #loadViews(changed: PropertyValues<this>) {
-    const retry = changed.has('_view');
+    const retry = changed.has('_view') || changed.has('_mapViews');
 
     const due = (
       shown: boolean,

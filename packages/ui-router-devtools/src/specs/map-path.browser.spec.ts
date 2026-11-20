@@ -706,6 +706,34 @@ describe('the view path under the Map', () => {
     expect(toggle(element).ariaPressed).toBe('false');
   });
 
+  it('loads the views again when the path is turned on after the Views tab failed to load them', async () => {
+    let attempts = 0;
+
+    const { element } = await mailMap(1280, 'mail.list', [], (panel) => {
+      panel._mapViews = false;
+      panel._importViews = () => {
+        attempts += 1;
+
+        return Promise.reject(new Error('chunk failed'));
+      };
+    });
+
+    getByRole(shadow(element), 'button', { name: 'views' }).click();
+    await waitFor(() => expect(panelOf(element)._viewsFailed).toBe(true));
+    getByRole(shadow(element), 'button', { name: 'map' }).click();
+    await element.updateComplete;
+    expect(attempts).toBe(1);
+    expect(toggle(element).hasAttribute('disabled')).toBe(false);
+
+    toggle(element).click();
+    await waitFor(() => expect(attempts).toBe(2));
+    await waitFor(() =>
+      expect(toggle(element).title).toBe(
+        'The Views did not load. Switch views to retry.',
+      ),
+    );
+  });
+
   it('keeps a view selected from the path for the Views tab’s own details', async () => {
     const { element } = await mailMap();
     const panel = panelOf(element);
