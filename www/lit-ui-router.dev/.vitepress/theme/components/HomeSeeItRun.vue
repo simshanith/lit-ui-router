@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { onMounted, ref, useTemplateRef } from 'vue';
 import { withBase } from 'vitepress';
 import ExampleEmbed from './ExampleEmbed.vue';
-import StateViewDiagram, { type Backdrop } from './StateViewDiagram.vue';
+import StateViewDiagram from './StateViewDiagram.vue';
 import { EXAMPLES, staticSrc } from './examples';
 import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
 
@@ -15,8 +15,6 @@ const from = ref<CardId>();
 const entries = ref(0);
 
 const panel = useTemplateRef('panel');
-
-const stage = useTemplateRef('stage');
 
 // Keyed by document: a frame's WindowProxy outlives a reload, its listeners do not.
 const watched = new WeakSet<Document>();
@@ -53,62 +51,12 @@ function onLoad({ target }: Event) {
   if (target instanceof HTMLIFrameElement) follow(target);
 }
 
-// Before measuring, the drawing samples the image at its own size.
-const backdrop = ref<Backdrop>({ x: -2, y: -2, width: 340, height: 362 });
-
-// The diagram's strokes sample the stage's background image, so it is told where the stage sits in its own units.
-function place() {
-  const ground = stage.value;
-
-  if (!ground) return;
-
-  const stageBox = ground.getBoundingClientRect();
-
-  // The image is centred at a fixed size, so the drawing samples that rect rather than the stage's.
-  const [width, height] = getComputedStyle(ground)
-    .backgroundSize.split(' ')
-    .map((size) => Number.parseFloat(size));
-
-  const box = {
-    left: stageBox.left + (stageBox.width - width) / 2,
-    top: stageBox.top + (stageBox.height - height) / 2,
-    width,
-    height,
-  };
-
-  const drawing = ground.querySelector<SVGSVGElement>('.state-diagram svg');
-
-  if (!drawing) return;
-
-  const at = drawing.getBoundingClientRect();
-  const view = drawing.viewBox.baseVal;
-  const scale = view.width / at.width;
-
-  backdrop.value = {
-    x: view.x + (box.left - at.left) * scale,
-    y: view.y + (box.top - at.top) * scale,
-    width: box.width * scale,
-    height: box.height * scale,
-  };
-}
-
-let resized: ResizeObserver | undefined;
-
+// A frame that loaded before hydration fired its load event unheard.
 onMounted(() => {
-  // A frame that loaded before hydration fired its load event unheard.
   const frame = panel.value?.querySelector('iframe');
 
   if (frame) follow(frame);
-
-  resized = new ResizeObserver(place);
-
-  for (const el of stage.value?.querySelectorAll('svg') ?? [])
-    resized.observe(el);
-
-  if (stage.value) resized.observe(stage.value);
 });
-
-onBeforeUnmount(() => resized?.disconnect());
 </script>
 
 <template>
@@ -120,7 +68,7 @@ onBeforeUnmount(() => resized?.disconnect());
         same state with a new parameter, and the diagram follows the router as
         it re-enters the state.
       </p>
-      <div ref="stage" class="panels">
+      <div class="panels">
         <div ref="panel" class="panel app-panel" @load.capture="onLoad">
           <h3 class="panel-title">The app</h3>
           <div class="embed">
@@ -134,12 +82,7 @@ onBeforeUnmount(() => resized?.disconnect());
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>
           <div class="diagram-ground">
-            <StateViewDiagram
-              :card="card"
-              :from="from"
-              :entries="entries"
-              :backdrop="backdrop"
-            />
+            <StateViewDiagram :card="card" :from="from" :entries="entries" />
           </div>
         </div>
       </div>
@@ -204,8 +147,19 @@ onBeforeUnmount(() => resized?.disconnect());
   padding: var(--gutter);
   position: relative;
   isolation: isolate;
-  /* The halftone dots are baked in, so the image keeps its native size, or exactly twice it, never a fractional scale. */
-  background: var(--site-see-it-run-image) center / 1408px 768px no-repeat;
+  /* A scrim over a monochrome texture blended into the logo's gradient; the texture's halftone dots stay crisp at exactly 2x. */
+  background:
+    linear-gradient(
+      color-mix(
+          in oklab,
+          var(--site-color-surface) var(--site-see-it-run-scrim),
+          transparent
+        )
+        0 0
+    ),
+    var(--site-see-it-run-texture) center / 2816px 1536px no-repeat,
+    var(--site-see-it-run-gradient);
+  background-blend-mode: normal, var(--site-see-it-run-blend), normal;
   image-rendering: pixelated;
   /* Stacked, the frame is narrower than the column check:embeds measures, so it reserves a phone's height. */
   --see-it-run-narrow-frame: 600px;
@@ -216,13 +170,6 @@ onBeforeUnmount(() => resized?.disconnect());
     --gutter: var(--site-space-4);
     margin-inline: 0;
     border-radius: calc(var(--site-radius-card) + var(--gutter));
-  }
-}
-
-/* Stacked, the panel outgrows the image's 768px, so it draws at 2x. */
-@container (inline-size < 52rem) {
-  .panels {
-    background-size: 2816px 1536px;
   }
 }
 
@@ -276,9 +223,13 @@ onBeforeUnmount(() => resized?.disconnect());
 
 .diagram-ground {
   display: grid;
-  flex: 1;
-  place-items: center;
-  padding-block: var(--site-space-4);
+  place-items: start center;
+  padding-block-start: var(--site-space-4);
+}
+
+/* The tile is the frame, so the embed drops its own border: tile, then card. */
+.embed :deep(.example-embed:not(:modal) iframe) {
+  border-color: transparent;
 }
 
 @media (forced-colors: active) {

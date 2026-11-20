@@ -1,15 +1,6 @@
 <script setup lang="ts">
-import { computed, useId } from 'vue';
-import { withBase } from 'vitepress';
+import { computed } from 'vue';
 import { CARD_IDS, CARD_STATE, type CardId } from './features-tour-states';
-
-/** Where the section's background image sits, in this drawing's user units. */
-export interface Backdrop {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 const props = defineProps<{
   card: CardId;
@@ -17,7 +8,6 @@ const props = defineProps<{
   from?: CardId;
   /** Counts transitions, so the re-entry mark replays on each. */
   entries: number;
-  backdrop: Backdrop;
 }>();
 
 // Chips sit on a 4px grid, 8 apart, sized to their mono labels.
@@ -38,21 +28,11 @@ const chips = CARD_IDS.map((id, index) => ({
     ),
 }));
 
-// One id per instance, so two diagrams on a page keep their own patterns.
-const uid = useId();
-
-const imageStroke = { '--diagram-image': `url(#${uid}-image)` };
-
-const images = {
-  light: withBase('/images/see-it-run-light.avif'),
-  dark: withBase('/images/see-it-run-dark.avif'),
-};
-
 const reentered = computed(() => props.from !== undefined);
 </script>
 
 <template>
-  <figure class="state-diagram" :data-card="card" :style="imageStroke">
+  <figure class="state-diagram" :data-card="card">
     <svg
       class="drawing"
       viewBox="-2 -2 340 362"
@@ -60,43 +40,13 @@ const reentered = computed(() => props.from !== undefined);
       height="362"
       aria-hidden="true"
     >
-      <defs>
-        <!-- The section's background image at the size and place the CSS draws it, so every stroke samples the same picture. -->
-        <pattern
-          :id="`${uid}-image`"
-          patternUnits="userSpaceOnUse"
-          :x="backdrop.x"
-          :y="backdrop.y"
-          :width="backdrop.width"
-          :height="backdrop.height"
-        >
-          <image
-            v-for="(href, theme) in images"
-            :key="theme"
-            :class="['backdrop', theme]"
-            :href="href"
-            :width="backdrop.width"
-            :height="backdrop.height"
-            preserveAspectRatio="none"
-          />
-        </pattern>
-      </defs>
-
       <text class="region" x="0" y="10">States</text>
-      <rect class="box window" x="0" y="24" width="336" height="152" rx="6" />
+      <rect class="box" x="0" y="24" width="336" height="152" rx="6" />
       <circle class="glyph ring on" cx="20" cy="44" r="5" />
       <circle class="glyph dot" cx="20" cy="44" r="2" />
       <text class="name quiet" x="36" y="48.5">(root)</text>
 
-      <rect
-        class="box window current"
-        x="12"
-        y="64"
-        width="312"
-        height="96"
-        rx="6"
-      />
-      <rect class="box outline" x="12" y="64" width="312" height="96" rx="6" />
+      <rect class="box current" x="12" y="64" width="312" height="96" rx="6" />
       <circle class="glyph disc" cx="30" cy="84" r="5.75" />
       <text class="name strong" x="44" y="88.5">{{ CARD_STATE.name }}</text>
       <text class="url end on-wash" x="312" y="88.5">{{ CARD_STATE.url }}</text>
@@ -125,19 +75,11 @@ const reentered = computed(() => props.from !== undefined);
       </text>
 
       <text class="region" x="0" y="252">Views</text>
-      <rect class="box window" x="0" y="264" width="336" height="92" rx="6" />
+      <rect class="box" x="0" y="264" width="336" height="92" rx="6" />
       <rect class="glyph" x="15" y="279" width="10" height="10" rx="2" />
       <text class="name" x="36" y="288.5">&lt;ui-view&gt;</text>
       <text class="url end" x="312" y="288.5">in &lt;app-root&gt;</text>
-      <rect
-        class="box window current"
-        x="12"
-        y="304"
-        width="312"
-        height="40"
-        rx="6"
-      />
-      <rect class="box outline" x="12" y="304" width="312" height="40" rx="6" />
+      <rect class="box current" x="12" y="304" width="312" height="40" rx="6" />
       <circle class="glyph disc" cx="30" cy="324" r="5.75" />
       <text class="name strong" x="44" y="328.5">{{ CARD_STATE.name }}</text>
       <text class="url end on-wash" x="312" y="328.5">
@@ -180,18 +122,6 @@ const reentered = computed(() => props.from !== undefined);
   --diagram-wash: var(--site-color-diagram-wash);
   --diagram-chip-ink: var(--site-color-surface);
   margin: 0;
-}
-
-.backdrop.dark {
-  display: none;
-}
-
-:root.dark .backdrop.light {
-  display: none;
-}
-
-:root.dark .backdrop.dark {
-  display: inline;
 }
 
 .drawing {
@@ -246,22 +176,15 @@ text {
   fill: var(--diagram-ink);
 }
 
-/* Every box's stroke is a window onto the section's image; the current ones open wider over a wash, with a solid ink line on top that holds 3:1 against it. */
+/* Plain outlines: neutral for the root and the view, solid ink over a wash for the current state and its content. */
 .box {
   fill: none;
-  stroke-width: 3;
-}
-
-.window {
-  stroke: var(--diagram-image);
+  stroke: var(--diagram-muted);
+  stroke-width: 1.5;
 }
 
 .box.current {
   fill: var(--diagram-wash);
-  stroke-width: 8;
-}
-
-.box.outline {
   stroke: var(--diagram-current);
   stroke-width: 2;
 }
@@ -324,8 +247,8 @@ text {
 
   .flash rect {
     fill: none;
-    stroke: var(--diagram-image);
-    stroke-width: 3;
+    stroke: var(--diagram-current);
+    stroke-width: 2;
     animation: flash calc(2 * var(--site-duration-slow)) var(--ease-out)
       forwards;
   }
@@ -333,12 +256,12 @@ text {
 
 @keyframes flash {
   from {
-    stroke-width: 9;
-    opacity: 1;
+    stroke-width: 8;
+    opacity: 0.6;
   }
 
   to {
-    stroke-width: 3;
+    stroke-width: 2;
     opacity: 0;
   }
 }
@@ -350,19 +273,6 @@ text {
     --diagram-current: Highlight;
     --diagram-wash: Canvas;
     --diagram-chip-ink: HighlightText;
-  }
-
-  /* The image url is set inline, so the windows take the system colours directly. */
-  .window {
-    stroke: CanvasText;
-  }
-
-  .box.current {
-    stroke: Canvas;
-  }
-
-  .box.outline {
-    stroke: Highlight;
   }
 
   .flash {
