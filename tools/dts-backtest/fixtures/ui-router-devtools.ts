@@ -60,8 +60,7 @@ if (span) element.addSpan(span);
 
 export const done: Promise<void> = settled(recorder);
 
-export const created: UIRouterDevtools = document.createElement(
-  'ui-router-devtools',
-);
+export const created: UIRouterDevtools =
+  document.createElement('ui-router-devtools');
 
 export const constructed: UIRouterDevtools = new UIRouterDevtools();
