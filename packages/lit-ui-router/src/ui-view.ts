@@ -56,6 +56,8 @@ let viewIdCounter = 0;
  */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
 
+const FOLLOWING = 4 satisfies Node['DOCUMENT_POSITION_FOLLOWING'];
+
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
  * comment, or a part marker a render wrote under whatever prefix.
@@ -170,7 +172,9 @@ const noParentViewUnsubscribe = () => {};
  * {@link parentUiViewContext} with itself, from the same listener position, so
  * an element built on <code>@lit/context</code> finds its enclosing view too.
  * A view never answers its own request, so a nested
- * <code>&lt;ui-view&gt;</code> gets the view above it.
+ * <code>&lt;ui-view&gt;</code> gets the view above it. Nor does it answer a
+ * request from its fallback set: that markup was authored in the enclosing
+ * view's template, so it resolves against the view above as well.
  *
  * @summary
  *
@@ -315,9 +319,40 @@ export class UiView extends LitElement {
   @state()
   private parentView!: ParentView | null;
 
+  /**
+   * Whether this view should leave an enclosing-view request to the view above:
+   * its own, or one from its fallback set, which the parent's template authored.
+   */
+  private passesOn(event: Event): boolean {
+    // `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
+    const path = event.composedPath();
+
+    if (path[0] === this) {
+      return true;
+    }
+
+    // SAFETY: a path entry that is not a node never matches a fallback node
+    const child = path[path.indexOf(this) - 1] as ChildNode;
+
+    return this.fallbackNodes.includes(child) || this.amidFallback(child);
+  }
+
+  /** Whether `child` stands between two fallback nodes, where a part of the parent's template renders after capture. */
+  private amidFallback(child: ChildNode): boolean {
+    const nodes = this.fallbackNodes;
+
+    if (this.fallbackParked || nodes.length < 2) {
+      return false;
+    }
+
+    return (
+      !!(nodes[0].compareDocumentPosition(child) & FOLLOWING) &&
+      !!(child.compareDocumentPosition(nodes[nodes.length - 1]) & FOLLOWING)
+    );
+  }
+
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
-    // can't adopt self; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
-    if (event.composedPath()[0] === this) {
+    if (this.passesOn(event)) {
       return;
     }
 
@@ -333,11 +368,7 @@ export class UiView extends LitElement {
    * view of its descendants for as long as it is connected.
    */
   private readonly onParentViewContextRequest = (event: Event) => {
-    // A view's own request must reach the view above it; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is.
-    if (
-      event.composedPath()[0] === this ||
-      !isContextRequest(event, parentUiViewContext)
-    ) {
+    if (this.passesOn(event) || !isContextRequest(event, parentUiViewContext)) {
       return;
     }
 

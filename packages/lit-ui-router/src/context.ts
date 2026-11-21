@@ -474,7 +474,9 @@ export type ParentUiViewContext = Context<ParentUiViewContextKey, ParentUiView>;
  *
  * A `<ui-view>` seeks its own parent over the house `ui-view-context` event;
  * this key is the protocol form of that answer, for everyone else. The nearest
- * enclosing view wins, and no view answers its own request.
+ * enclosing view wins. No view answers its own request, nor one from its
+ * fallback set: that markup was authored in the enclosing view's template, so
+ * the view above answers it.
  *
  * @example
  * ```ts
