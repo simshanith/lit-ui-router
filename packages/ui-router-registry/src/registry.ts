@@ -211,28 +211,102 @@ type Split<
 
 type UrlOf<D> = D extends { url: infer U extends string } ? U : '';
 
-type PathPart<U extends string> = U extends `${infer P}?${string}` ? P : U;
+type WordChars<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? WordChars<R, Acc | C>
+  : Acc;
 
-type QueryPart<U extends string> = U extends `${string}?${infer Q}` ? Q : '';
+// Core's placeholder name characters: `[\w\[\]]`.
+type WordChar =
+  WordChars<'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_[]'>;
 
-// [name, type] for `:name`, `{name}` and `{name:type}`.
-type PlaceholderEntry<S extends string> = S extends `:${infer Name}`
-  ? [Name, 'path']
-  : S extends `{${infer Body}}`
-    ? Body extends `${infer Name}:${infer Type}`
-      ? [Name, Type]
-      : [Body, 'path']
-    : never;
+type Space = ' ' | '\t' | '\n' | '\r' | '\f' | '\v';
+
+// Walks the url as core's `placeholder` regex does: [path entries, query string].
+type ScanPath<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends '?' | ':' | '*' | '{'
+    ? C extends '?'
+      ? [Acc, R]
+      : C extends '{'
+        ? ScanCurly<R, '', Acc, R>
+        : ScanName<R, '', Acc>
+    : ScanPath<R, Acc>
+  : [Acc, ''];
+
+type ScanName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanPath<S, Acc>
+      : ScanPath<S, Acc | [Name, 'path']>
+  : Name extends ''
+    ? [Acc, '']
+    : [Acc | [Name, 'path'], ''];
+
+// `{name}` or `{name:body}`; anything else leaves the `{` as literal text, resuming at `Resume`.
+type ScanCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanPath<Resume, Acc>
+      : C extends '}'
+        ? ScanPath<R, Acc | [Name, 'path']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume>
+          : ScanPath<Resume, Acc>
+  : ScanPath<Resume, Acc>;
+
+type SkipSpace<S extends string> = S extends `${Space}${infer R}`
+  ? SkipSpace<R>
+  : S;
+
+// A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
+type ScanBody<
+  S extends string,
+  Name extends string,
+  Body extends string,
+  Nested extends boolean,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends '\\'
+    ? R extends `${infer E}${infer T}`
+      ? ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume>
+      : ScanPath<Resume, Acc>
+    : C extends '{'
+      ? Nested extends true
+        ? ScanPath<Resume, Acc>
+        : ScanBody<R, Name, `${Body}${C}`, true, Acc, Resume>
+      : C extends '}'
+        ? Nested extends true
+          ? ScanBody<R, Name, `${Body}${C}`, false, Acc, Resume>
+          : Body extends ''
+            ? ScanPath<Resume, Acc>
+            : ScanPath<R, Acc | [Name, Body]>
+        : ScanBody<R, Name, `${Body}${C}`, Nested, Acc, Resume>
+  : ScanPath<Resume, Acc>;
+
+type Scan<D> = ScanPath<UrlOf<D>>;
 
 type QueryEntry<S extends string> = S extends ''
   ? never
   : S extends `{${string}}`
-    ? PlaceholderEntry<S>
-    : [S, 'query'];
+    ? ScanPath<S>[0]
+    : S extends `:${infer Name}`
+      ? [Name, 'query']
+      : [S, 'query'];
 
-type PathEntries<D> = PlaceholderEntry<Split<PathPart<UrlOf<D>>, '/'>>;
+type PathEntries<D> = Scan<D>[0];
 
-type QueryEntries<D> = QueryEntry<Split<QueryPart<UrlOf<D>>, '&'>>;
+type QueryEntries<D> = QueryEntry<Split<Scan<D>[1], '&'>>;
 
 // Core's built-in param types; a regex placeholder (`{id:[0-9]+}`) or a custom type reads as `string`.
 type BuiltInType<T> = T extends 'int'
