@@ -295,7 +295,15 @@ type IsArray<C, K> = C extends { array: infer A }
 
 type ArrayOf<T, A> = A extends true ? T[] : T;
 
-// Core wraps a scalar default and keeps an array one, so either names the element type.
+// Only `go` (`inherit: true`) wraps a scalar default on an array param; `transitionTo` reads it back as is.
+type ScalarDefault<C, K> =
+  IsArray<C, K> extends true
+    ? Exclude<Invoked<DefaultOf<C>>, readonly unknown[] | null | undefined>
+    : never;
+
+type Invoked<V> = V extends () => infer R ? R : V;
+
+// A scalar default and an array one both name the element type.
 type DefaultElement<V> = [V] extends [never]
   ? unknown
   : Widen<V> extends infer W
@@ -308,12 +316,14 @@ type DefaultElement<V> = [V] extends [never]
 
 // An untyped non-url param is core's `any`, so only its default's type is known.
 type ConfigType<C, UrlType, K> = C extends { type: infer T extends string }
-  ? ArrayOf<BuiltInType<T>, IsArray<C, K>> | NullDefault<C>
+  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>>, C, K>
   : [UrlType] extends [never]
     ? IsArray<C, K> extends true
-      ? DefaultElement<DefaultOf<C>>[] | NullDefault<C>
+      ? WithDefaults<DefaultElement<DefaultOf<C>>[], C, K>
       : Widen<DefaultOf<C>>
-    : ArrayOf<UrlType, IsArray<C, K>> | NullDefault<C>;
+    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>>, C, K>;
+
+type WithDefaults<T, C, K> = T | NullDefault<C> | ScalarDefault<C, K>;
 
 type UrlKeys<D> = PathEntries<D>[0] | QueryEntries<D>[0];
 

@@ -26,6 +26,10 @@ const arrayStates = [
     },
   },
   {
+    name: 'typeddefault',
+    params: { n: { type: 'int', array: true, value: 3 } },
+  },
+  {
     name: 'defaulted',
     url: '/defaulted?tag',
     params: { tag: { array: true, value: 'all' } },
@@ -40,6 +44,8 @@ declare const stateService: TypedStateService;
 
 /** Assignability probe: the call typechecks iff the argument satisfies T. */
 declare function accepts<T>(value: T): T;
+
+type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
 // -- passing: `array: true` and a `name[]` query key take an array -----------
 
@@ -79,26 +85,26 @@ accepts<ResolvedParamsOf<'pages'>['ids']>([1]);
 // @ts-expect-error an `array: true` path param reads back an array
 accepts<ResolvedParamsOf<'pages'>['ids']>(1);
 
-// A scalar default reads back wrapped: core runs it through the array type's `$normalize`.
-accepts<ResolvedParamsOf<'defaulted'>['tag']>(['all']);
+// A scalar default reads back wrapped after `go`, and as is after `transitionTo`.
+accepts<Equal<ResolvedParamsOf<'defaulted'>['tag'], string[] | 'all'>>(true);
 
-// @ts-expect-error a scalar default still reads back an array
-accepts<ResolvedParamsOf<'defaulted'>['tag']>('all');
+accepts<Equal<ResolvedParamsOf<'typeddefault'>['n'], number[] | 3>>(true);
+
+// @ts-expect-error only the default itself passes as a scalar
+accepts<ParamsOf<'defaulted'>>({ tag: 'other' });
 
 // -- an untyped non-url param: the element type comes from the default -------
 
-type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-
 type Untyped = ResolvedParamsOf<'untyped'>;
 
-// A scalar default is wrapped, an array default is read as is, and `null` stays `null`.
-accepts<Equal<Untyped['tags'], string[]>>(true);
+// The default names the element type; a scalar one can also read back as is.
+accepts<Equal<Untyped['tags'], string[] | 'all'>>(true);
 
 accepts<Equal<Untyped['ids'], number[]>>(true);
 
 accepts<Equal<Untyped['none'], unknown[] | null>>(true);
 
-accepts<Equal<Untyped['keys[]'], string[]>>(true);
+accepts<Equal<Untyped['keys[]'], string[] | 'k'>>(true);
 
 accepts<ParamsOf<'untyped'>>({ tags: ['a'], 'keys[]': ['b'] });
 
