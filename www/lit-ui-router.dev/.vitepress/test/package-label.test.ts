@@ -45,6 +45,7 @@ describe('splitFamilyPrefix', () => {
         ['lit-ui-router-', 'ssr'],
         ['ui-router-', 'registry'],
         ['', 'eslint-plugin-lit-ui-router'],
+        ['ui-router-', 'otel'],
       ],
     );
   });

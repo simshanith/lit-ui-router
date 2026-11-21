@@ -144,6 +144,7 @@ you need to start; the companions are optional layers.
 | [`ui-router-mobx`](https://npmx.dev/package/ui-router-mobx)                                             | [MobX](https://mobx.js.org) for UI-Router: a framework-agnostic observable store of the router's state. [Package →](./packages/ui-router-mobx)                                                                |
 | [`ui-router-registry`](https://npmx.dev/package/ui-router-registry)                                     | Typed state names and params for UI-Router: a types-only registry for `@uirouter/core`. [Package →](./packages/ui-router-registry)                                                                            |
 | [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)                   | ESLint rules that understand the router's directives — hrefless anchors, inert `href`s, `aria-current` conflicts and misplaced directives. [Package →](./packages/eslint-plugin-lit-ui-router)                |
+| [`ui-router-otel`](https://npmx.dev/package/ui-router-otel)                                             | OpenTelemetry for UI-Router: reports each transition, with its phases and resolves, as spans on the tracer your app already has. [Package →](./packages/ui-router-otel)                                       |
 
 Because `lit-ui-router` is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample

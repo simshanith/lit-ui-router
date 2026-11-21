@@ -16,6 +16,7 @@ export const API_REFERENCES = {
   'lit-ui-router-ssr': '/reference/lit-ui-router-ssr/',
   'ui-router-registry': '/reference/ui-router-registry/',
   'eslint-plugin-lit-ui-router': null,
+  'ui-router-otel': '/reference/ui-router-otel/',
 } as const satisfies Record<PackageName, string | null>;
 
 /** An export a package's reference index leads with; `element` is the custom element tag its class defines. */

@@ -7,6 +7,7 @@ export const ROLES = [
   { id: 'location', label: 'Location' },
   { id: 'server', label: 'Server' },
   { id: 'dx', label: 'DX' },
+  { id: 'observability', label: 'Observability' },
 ] as const;
 
 export type Role = (typeof ROLES)[number]['id'];
@@ -129,6 +130,13 @@ export const PACKAGES = [
     subject: 'router',
     layer: 'lit',
     runtime: ['editor', 'ci'],
+  },
+  {
+    name: 'ui-router-otel',
+    role: 'observability',
+    subject: 'router',
+    layer: 'agnostic',
+    runtime: ['browser', 'server'],
   },
 ] as const satisfies readonly PackageEntry[];
 

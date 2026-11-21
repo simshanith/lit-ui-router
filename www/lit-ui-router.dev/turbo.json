@@ -69,6 +69,7 @@
         "ui-router-effect#docs:api",
         "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-otel#docs:api",
         "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api",
@@ -117,6 +118,7 @@
         "ui-router-effect#docs:api",
         "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-otel#docs:api",
         "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api"
@@ -138,6 +140,7 @@
         "ui-router-effect#docs:api",
         "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-otel#docs:api",
         "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api"
@@ -193,6 +196,7 @@
         "ui-router-effect#docs:api",
         "ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-otel#docs:api",
         "ui-router-registry#docs:api",
         "ui-router-server#docs:api",
         "ui-router-signals#docs:api",

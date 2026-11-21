@@ -16,21 +16,31 @@ import type {
  * `@opentelemetry/api` alone. SDK 1.x names the parent by `parentSpanId`, later ones by `parentSpanContext`.
  */
 export interface ProcessedSpan {
+  /** The span's name. */
   readonly name: string;
+  /** The span's trace and span ids. */
   spanContext(): SpanContext;
+  /** The parent span's context, on SDK 2.x and later. */
   readonly parentSpanContext?: SpanContext;
+  /** The parent span's id, on SDK 1.x. */
   readonly parentSpanId?: string;
+  /** When the span started. */
   readonly startTime: HrTime;
+  /** When the span ended; read only once it has. */
   readonly endTime: HrTime;
+  /** The span's status code and message. */
   readonly status: SpanStatus;
+  /** The span's attributes. */
   readonly attributes: Attributes;
 }
 
 /** Where spans go: the `<ui-router-devtools>` element, or anything else with its `addSpan`. */
 export interface SpanSink {
+  /** Takes one span, as the devtools panel reads it; a span sent again under its `spanId` replaces the earlier one. */
   addSpan(span: SpanRecord): void;
 }
 
+/** What `DevtoolsSpanProcessor` takes as its second argument. */
 export interface DevtoolsSpanProcessorOptions {
   /** Send each span when it starts as well as when it ends, so a running span shows as running; on by default. */
   started?: boolean;
@@ -127,14 +137,17 @@ export class DevtoolsSpanProcessor {
     this.#started = started;
   }
 
+  /** Sends the span as running, unless `started` is false. */
   onStart(span: ProcessedSpan, _parentContext?: Context): void {
     if (this.#started) this.#send(span, false);
   }
 
+  /** Sends the span as ended. */
   onEnd(span: ProcessedSpan): void {
     this.#send(span, true);
   }
 
+  /** Resolves at once: every span is sent as it starts or ends, so none waits. */
   forceFlush(): Promise<void> {
     return Promise.resolve();
   }
