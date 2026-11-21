@@ -269,8 +269,12 @@ export class UiView extends LitElement {
 
   private resolveContext!: ResolveContext;
 
+  // Outlives the per-connect registration, so a re-attached view keeps its routed element.
+  private appliedConfig?: LitViewConfig;
+
   private _viewConfigUpdated(config: ViewConfig) {
     if (!config) {
+      this.appliedConfig = undefined;
       this.component = null;
       this.requestUpdate();
 
@@ -282,7 +286,9 @@ export class UiView extends LitElement {
     }
 
     // The "new" viewconfig is already applied, so exit early
-    if (this._uiViewData.config === config) {
+    if (this.appliedConfig === config) {
+      this._uiViewData.config = config;
+
       return;
     }
 
@@ -291,6 +297,7 @@ export class UiView extends LitElement {
   }
 
   private _applyUpdatedConfig(config: LitViewConfig) {
+    this.appliedConfig = config;
     this._uiViewData.config = config;
 
     if (!this.viewAddress && config?.viewDecl?.$context) {
