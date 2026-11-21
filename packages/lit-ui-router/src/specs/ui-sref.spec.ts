@@ -15,6 +15,7 @@ import {
 } from '../sref-internals.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';
+import type { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -1463,6 +1464,32 @@ describe('uiSref directive', () => {
         expect(link(root, 'Show the child').getAttribute('href')).toBe(
           '#/nested/child',
         );
+      });
+
+      it('registers a view nested in a fallback under the enclosing state', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view
+              ><ui-view name="inner"><p>Inner fallback</p></ui-view></ui-view
+            >`,
+        );
+
+        const panel: LitStateDeclaration = {
+          name: 'nested.panel',
+          url: '/panel',
+          views: {
+            'inner@nested': { component: () => html`<p>Panel</p>` },
+          },
+        };
+
+        router.stateRegistry.register(panel);
+
+        await routerGo(router, 'nested.panel');
+        await tick(50);
+
+        const inner = root.querySelector<UiView>('ui-view[name="inner"]')!;
+        expect(inner.uiViewData?.fqn).toBe('$default.inner');
+        expect(inner.textContent?.trim()).toBe('Panel');
       });
 
       it('keeps a routed component resolving against its own state', async () => {
