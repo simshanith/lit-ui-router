@@ -23,6 +23,7 @@ import {
   DEFAULT_SITE,
   type Site,
   buildSteps,
+  misePin,
   resolveSite,
 } from './cloudflare-build.ts';
 import {
@@ -213,7 +214,13 @@ describe('desiredStateFromConfig', () => {
         assert.equal(key, worker.site, `${worker.site} ${kind} builds ${key}`);
 
         const site = siteAt(workspaceRoot, key);
-        const steps = buildSteps(workspaceRoot, '/nonexistent/bin', site);
+
+        const steps = buildSteps(
+          workspaceRoot,
+          '/nonexistent/bin',
+          site,
+          misePin(workspaceRoot, 'npm:npm'),
+        );
 
         assert.ok(
           steps.some(

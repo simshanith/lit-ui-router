@@ -22,6 +22,8 @@ import {
   type Site,
   type SiteResult,
   buildSteps,
+  misePin,
+  npmSpec,
   pnpmSpec,
   resolveSite,
   siteFromArgs,
@@ -42,6 +44,61 @@ const rootWith = (packageManager?: string): string => {
 
   return dir;
 };
+
+const rootWithMiseConfig = (toml: string): string => {
+  const dir = mkdtempSync(join(tmpdir(), 'cloudflare-build-'));
+  mkdirSync(join(dir, '.config/mise'), { recursive: true });
+  writeFileSync(join(dir, '.config/mise/config.toml'), toml);
+
+  return dir;
+};
+
+// Runs the mise-pinned bun, the version in the Workers Builds image.
+describe('misePin', () => {
+  it('reads a plain version pin from [tools]', () => {
+    const root = rootWithMiseConfig(
+      '[settings]\nexperimental = true\n\n[tools]\n"npm:npm" = "12.3.4"\nnode = "24"\n',
+    );
+
+    assert.equal(misePin(root, 'npm:npm'), '12.3.4');
+  });
+
+  it('is empty for a tool with no pin', () => {
+    assert.equal(
+      misePin(rootWithMiseConfig('[tools]\nnode = "24"\n'), 'npm:npm'),
+      '',
+    );
+  });
+
+  it('is empty for a table-form pin', () => {
+    const root = rootWithMiseConfig(
+      '[tools]\n"npm:npm" = { version = "12.3.4" }\n',
+    );
+
+    assert.equal(misePin(root, 'npm:npm'), '');
+  });
+
+  it('is empty for a config with no [tools] table', () => {
+    assert.equal(
+      misePin(rootWithMiseConfig('[env]\nA = "1"\n'), 'npm:npm'),
+      '',
+    );
+  });
+
+  it('fails on a config that is not TOML', () => {
+    assert.throws(() => misePin(rootWithMiseConfig('version = \n'), 'npm:npm'));
+  });
+});
+
+describe('npmSpec', () => {
+  it('pins npm to the mise version', () => {
+    assert.equal(npmSpec('12.3.4'), 'npm@12.3.4');
+  });
+
+  it('rejects a missing mise pin', () => {
+    assert.throws(() => npmSpec(''), /no "npm:npm" version pin/);
+  });
+});
 
 describe('pnpmSpec', () => {
   it('drops the integrity hash npm has no use for', () => {
@@ -99,12 +156,25 @@ describe('resolveSite', () => {
     });
   });
 
+  it('installs the pinned npm before pnpm', () => {
+    assert.deepEqual(
+      buildSteps(
+        root,
+        '/nonexistent/bin',
+        siteOf(resolveSite(root, 'example.test')),
+        '12.3.4',
+      ).at(0),
+      ['npm', ['install', '--global', 'npm@12.3.4']],
+    );
+  });
+
   it('builds the site package through turbo after the install', () => {
     assert.deepEqual(
       buildSteps(
         root,
         '/nonexistent/bin',
         siteOf(resolveSite(root, 'example.test')),
+        '12.3.4',
       ).at(-1),
       ['npx', ['turbo', '@www/example.test#build']],
     );
