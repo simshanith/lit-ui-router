@@ -191,6 +191,7 @@
         "**/*.ts",
         "**/*.js",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
         "!**/coverage-effect3/**",
@@ -335,6 +336,7 @@
         // not gitignore-pruned, so the generated trees come off by hand
         "{apps,examples,packages,tools,www}/**/*.{css,vue,ts,mts,cts,js,mjs,cjs}",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
         "!**/coverage-effect3/**",
@@ -352,6 +354,7 @@
         "$TURBO_DEFAULT$",
         "**/package.json",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         "!.claude/worktrees/**",
         "!**/.vitepress/cache/**",
         "eslint.config.ts",
@@ -371,6 +374,7 @@
       "inputs": [
         "**/*.md",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
         // the sample apps stage READMEs into dist, typedoc writes www api/,
         // docs:release-stubs writes www package-releases/, cf build copies
@@ -422,6 +426,7 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         // gitignored mise overrides (setup writes one per worktree)
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
@@ -436,6 +441,7 @@
         "**/*.sh",
         "**/*.bash",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         "$TURBO_ROOT$/.config/mise/tasks/**",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
@@ -593,6 +599,7 @@
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue,css}",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         "!**/dist/**",
         "!**/coverage/**",
         "!**/coverage-effect3/**",
@@ -622,6 +629,7 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        "!**/client_modules/**",
         // gitignored mise overrides (setup writes one per worktree)
         "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
