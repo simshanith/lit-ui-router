@@ -5,7 +5,6 @@ import type { mounts } from 'sample-app-routes';
 export const EXAMPLE_KINDS = [
   { id: 'tutorial', label: 'Tutorial' },
   { id: 'example', label: 'Examples' },
-  { id: 'sample-app', label: 'Sample apps' },
 ] as const;
 
 export type ExampleKind = (typeof EXAMPLE_KINDS)[number]['id'];
@@ -27,11 +26,11 @@ export type ExampleFacets = {
 
 type AppMount = Extract<keyof typeof mounts, `/app${string}`>;
 
-/** Each live sample-app mount and the app package it serves; keyed by mount, so a new /app* mount fails typecheck until it has a row. */
+/** Each live sample-app mount's sidebar label; keyed by mount, so a new /app* mount fails typecheck until it has a row. */
 export const SAMPLE_APPS = {
-  '/app': { label: 'Vanilla', app: 'sample-app-lit-vanilla' },
-  '/app-mobx': { label: 'MobX', app: 'sample-app-lit-mobx' },
-  '/app-effect': { label: 'Effect', app: 'sample-app-lit-effect' },
-  '/app-signals': { label: 'Signals', app: 'sample-app-lit-signals' },
-  '/app-hash': { label: 'Hash', app: 'sample-app-lit-vanilla' },
-} as const satisfies Record<AppMount, { label: string; app: string }>;
+  '/app': { label: 'Vanilla' },
+  '/app-mobx': { label: 'MobX' },
+  '/app-effect': { label: 'Effect' },
+  '/app-signals': { label: 'Signals' },
+  '/app-hash': { label: 'Hash' },
+} as const satisfies Record<AppMount, { label: string }>;
