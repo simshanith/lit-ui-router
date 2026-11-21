@@ -87,7 +87,8 @@ idiomatic_version_file_enable_tools = ["node"]
 "npm:npm" = "12.2.1"
 # The bun that parses this file for tools/workers-builds/cloudflare-build.ts;
 # every Workers Builds trigger sets BUN_VERSION to this version, so the tests
-# run the parser the deploy does.
+# run the parser the deploy does; the @types/bun catalog pin matches it
+# (tools/repo-checks/bun-pin.test.ts).
 "aqua:oven-sh/bun" = "1.4.4"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.

@@ -11,6 +11,8 @@ updates:
     cooldown:
       default-days: 1
     ignore:
+      # pinned exactly to the mise bun and the Workers Builds BUN_VERSION (tools/repo-checks/bun-pin.test.ts); bump all three together
+      - dependency-name: '@types/bun'
       # node is pinned via mise; keep @types/node on the matching major
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
