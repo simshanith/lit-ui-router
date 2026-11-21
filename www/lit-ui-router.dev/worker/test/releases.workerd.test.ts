@@ -25,7 +25,7 @@ import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 import { notesAsset } from '../releases/notes.ts';
 import { FIXTURE_NOTES } from './notes-stub.ts';
 
-// The docs worker's bundle in workerd, its LEDGER and RELEASE_DIFFS bindings served by stub workers over RPC.
+// The docs worker's bundle in workerd, its LEDGER and RELEASE_DIFFS bindings served by stub workers over RPC, its snapshot bucket local.
 const SITE = join(import.meta.dirname, '../..');
 
 // wrangler writes its bundles under <root>/.wrangler; keep them out of the tree turbo hashes.
@@ -44,6 +44,9 @@ const WranglerConfig = v.object({
       entrypoint: v.string(),
     }),
     v.object({ binding: v.string(), service: v.string() }),
+  ]),
+  r2_buckets: v.tuple([
+    v.object({ binding: v.string(), bucket_name: v.string() }),
   ]),
 });
 
@@ -96,6 +99,8 @@ const server = createTestHarness({
           ]),
         ),
         services: [ledger, diffs],
+        // Local storage under SCRATCH, seeded by the snapshot tests.
+        r2_buckets: site.r2_buckets,
         assets: {
           directory: ASSETS,
           binding: 'ASSETS',
@@ -245,5 +250,64 @@ describe('the release pages in workerd', { timeout: 120_000 }, () => {
       level: 1,
       name: 'Not found',
     });
+  });
+});
+
+describe('the snapshot bucket in workerd', { timeout: 120_000 }, () => {
+  before(async () => {
+    const env = await server
+      .getWorker<{
+        DOCS_SNAPSHOTS: {
+          put: (key: string, value: string) => Promise<object | null>;
+        };
+      }>()
+      .getEnv();
+
+    await env.DOCS_SNAPSHOTS.put('v1/index.html', '<h1>1.x</h1>');
+    await env.DOCS_SNAPSHOTS.put('v1/404.html', '<h1>Not found</h1>');
+    await env.DOCS_SNAPSHOTS.put('v1/assets/app.abc123.js', 'app()');
+  });
+
+  it('serves a page through run_worker_first, with the snapshot headers', async () => {
+    const response = await server.fetch('/v1/');
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), '<h1>1.x</h1>');
+    assert.equal(response.headers.get('Content-Type'), 'text/html');
+    assert.equal(
+      response.headers.get('Cache-Control'),
+      'public, max-age=0, must-revalidate',
+    );
+    assert.match(response.headers.get('Link') ?? '', /<\/v1\/llms\.txt>/);
+  });
+
+  it('redirects the bare prefix and answers a miss with the 404 page', async () => {
+    const bare = await server.fetch('/v1', { redirect: 'manual' });
+
+    assert.equal(bare.status, 307);
+    assert.equal(bare.headers.get('Location'), '/v1/');
+
+    const miss = await server.fetch('/v1/nope');
+
+    assert.equal(miss.status, 404);
+    assert.equal(await miss.text(), '<h1>Not found</h1>');
+  });
+
+  it("answers R2's own ETag with a 304 on a revalidation", async () => {
+    const first = await server.fetch('/v1/assets/app.abc123.js');
+    const etag = first.headers.get('ETag');
+
+    await first.arrayBuffer();
+    assert.ok(etag);
+    assert.equal(
+      first.headers.get('Cache-Control'),
+      'public, max-age=31536000, immutable',
+    );
+
+    const again = await server.fetch('/v1/assets/app.abc123.js', {
+      headers: { 'If-None-Match': etag },
+    });
+
+    assert.equal(again.status, 304);
   });
 });

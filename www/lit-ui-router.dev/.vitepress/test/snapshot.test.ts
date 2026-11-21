@@ -24,6 +24,12 @@ import {
   canonicalProblems,
   htmlPath,
   indexProblems,
+  lineFiles,
+  listPrefixes,
+  markerBody,
+  markerKey,
+  md5Of,
+  ownsKey,
   readSnapshotManifest,
   snapshotDigest,
   snapshotHeaders,
@@ -33,11 +39,12 @@ import {
   snapshotRedirects,
   snapshotTag,
   unversionWorkerLinks,
+  uploadPlan,
   versionExampleLinks,
   withCanonical,
-  WORKER_MOUNTS,
   writeSnapshotRules,
 } from '../snapshot.ts';
+import { lineAt, snapshotLines, WORKER_MOUNTS } from '../../worker/snapshot.ts';
 import { pageUrl, surfaceOf } from '../surfaces.ts';
 import { BUNDLED_MANIFEST, SITE_ORIGIN } from '../versions.ts';
 
@@ -429,5 +436,92 @@ describe('indexProblems', () => {
     assert.deepEqual(await indexProblems(BUNDLED_MANIFEST, dir), [
       `sitemap-pages.xml: lists ${SITE_ORIGIN}/v1/`,
     ]);
+  });
+});
+
+describe('the snapshot upload', () => {
+  const [site, pkg] = snapshotLines({
+    others: [{ id: 'v1', path: '/v1/' }],
+    packages: { 'ui-router-server': [{ id: 'v0' }] },
+  });
+
+  it("keys a line's files by URL path: under its roots, and the page at a bare root", () => {
+    const dir = outDir([
+      '_headers',
+      '_redirects',
+      'v1/index.html',
+      'v1/assets/app.js',
+      'v10/index.html',
+      'packages/ui-router-server/v0.html',
+      'packages/ui-router-server.html',
+      'reference/ui-router-server/v0/index.html',
+      'reference/ui-router-server/index.html',
+    ]);
+
+    assert.ok(site && pkg);
+    assert.deepEqual(lineFiles(dir, site), [
+      'v1/assets/app.js',
+      'v1/index.html',
+    ]);
+    assert.deepEqual(lineFiles(dir, pkg), [
+      'packages/ui-router-server/v0.html',
+      'reference/ui-router-server/v0/index.html',
+    ]);
+  });
+
+  it("lists a line's bare-root page and keeps a sibling major out", () => {
+    assert.ok(site && pkg);
+    assert.deepEqual(listPrefixes(site), ['v1']);
+    assert.deepEqual(listPrefixes(pkg), [
+      'packages/ui-router-server/v0',
+      'reference/ui-router-server/v0',
+    ]);
+    assert.ok(ownsKey(pkg, 'packages/ui-router-server/v0.html'));
+    assert.ok(!ownsKey(pkg, 'packages/ui-router-server/v01.html'));
+    assert.ok(!ownsKey(site, 'v10/index.html'));
+  });
+
+  it('uploads what differs or is missing, and keeps what the build dropped', () => {
+    assert.deepEqual(
+      uploadPlan(
+        new Map([
+          ['v1/a', '1'],
+          ['v1/b', '2'],
+          ['v1/c', '3'],
+        ]),
+        new Map([
+          ['v1/a', '1'],
+          ['v1/b', 'x'],
+          ['v1/old', '9'],
+        ]),
+      ),
+      { upload: ['v1/b', 'v1/c'], unchanged: 1, stale: ['v1/old'] },
+    );
+  });
+
+  it('records a publish under a key no line serves, without the page list', () => {
+    assert.equal(markerKey('v1'), '_manifests/v1.json');
+    assert.equal(lineAt(`/${markerKey('v1')}`), undefined);
+    assert.deepEqual(
+      JSON.parse(
+        markerBody({
+          tag: 't@1.0.0',
+          files: 1,
+          bytes: 2,
+          sha256: 'a'.repeat(64),
+          pages: { '/v1/': '/' },
+        }),
+      ),
+      { tag: 't@1.0.0', files: 1, bytes: 2, sha256: 'a'.repeat(64) },
+    );
+  });
+
+  it("hashes a file as R2's single-part ETag", () => {
+    const dir = outDir({ 'llms.txt': 'llms' });
+
+    assert.equal(
+      md5Of(join(dir, 'llms.txt')),
+      'a54750ca93027f5b2c652399259459ab',
+    );
   });
 });

@@ -233,21 +233,27 @@ it.
 
 ### Frozen 1.x docs at `/v1/`
 
-The 1.x docs are their own Worker, `lit-ui-router-docs-v1`, configured in
-[`www/v1.versions.lit-ui-router.dev`](v1.versions.lit-ui-router.dev/README.md). It has static
-assets and no script: the snapshot sits under `v1/` in its assets, so it answers `/v1/...` paths
-itself, with the docs site's `auto-trailing-slash` HTML handling and its own `/v1/404.html` for a
-miss. Its `_redirects` sends `/v1/<mount>` and `/v1/<mount>/*` to the unversioned mount for every
-worker row in `catalog/surfaces.ts` but its own, since the VitePress client renders some nav links
-with the `/v1/` base, such as the mobile menu. Its `_headers` is the main site's, moved under
-`/v1/`.
+The docs lines live in one R2 bucket, `lit-ui-router-docs-snapshots`, which the docs worker binds as
+`DOCS_SNAPSHOTS` and serves itself (`worker/snapshot.ts`). The bucket mirrors the URL space: an
+object's key is its URL path without the leading slash, so `/v1/guides/` is `v1/guides/index.html`.
+A line's keys sit under the paths it owns: a site-wide version such as `v1` under `v1/`, and a
+package line (none is baked yet) at `packages/<pkg>/vN.html` and under `reference/<pkg>/vN/`. A
+publish also writes `_manifests/<line>.json`, the record of the upload, outside every line so the
+worker never serves it.
 
-The docs worker lists `/v1` and `/v1/*` in `run_worker_first` and hands those requests unchanged to
-the `DOCS_V1` service binding (`worker/snapshot.ts`). A service binding reaches the bound Worker's
-production deployment, so the docs worker's branch versions serve `/v1/` too. Without the binding,
-or when the snapshot Worker fails, `/v1/*` answers a plain 503. The snapshot Worker has no route,
-custom domain, `workers.dev` URL or Workers Builds trigger, and no deploy of the docs site touches
-it; the docs build and its tests run without the snapshot.
+Which paths are lines comes from `public/versions.json`, bundled into the worker: each of
+`others` owns its `path`, and each package line its page and reference. Every root must also be in
+`run_worker_first`, bare and with `/*`, or the assets binding answers before the worker; a test
+fails until it is. The route answers the way the assets binding answered for the snapshot:
+`auto-trailing-slash` HTML handling (`307` to the canonical URL, query kept), the nearest
+`404.html` up to the line's root at status 404, content types by extension, the object's ETag
+with a `304` on a match, and `public, max-age=0, must-revalidate` except a line's hashed
+`assets/`, which are immutable. A site-wide line also gets the main site's `Link` header moved
+under its base and a `301` from `/v1/<mount>` to the unversioned mount for every worker row in
+`catalog/surfaces.ts`, since the VitePress client renders some nav links with the `/v1/` base,
+such as the mobile menu. A missing binding or a failed read answers a plain 503, never a main-site
+page. Branch previews bind the same bucket, so they serve `/v1/` too; no deploy of the docs site
+writes to it, and the docs build and its tests run without it.
 
 The repo keeps a manifest instead of the files:
 [`catalog/snapshots/v1.json`](lit-ui-router.dev/catalog/snapshots/v1.json) records the tag, the file
@@ -268,7 +274,7 @@ reactivity hubs and the package and reference indexes, the site page and the rel
 was baked after it, as far as its own menu reads the manifest: the published `/v1/` snapshot
 predates package lines and lists the site-wide versions only, until it is rebuilt.
 
-To produce, deploy or replace the snapshot (mise and git required; `cf` logged in to the account):
+To produce, publish or replace the snapshot (mise and git required; `cf` logged in to the account):
 
 1. Build this checkout's site: `mise exec -- turbo run build --filter=@www/lit-ui-router.dev`.
 2. `pnpm run docs:snapshot` in the site package
@@ -282,10 +288,16 @@ To produce, deploy or replace the snapshot (mise and git required; `cf` logged i
    unversioned paths, moves the embedded examples under `/v1/examples/`, and rewrites `llms.txt` and
    `llms-full.txt` to list the `/v1/` pages. Last, it gives every page a canonical link to the same
    path in step 1's build, else where `catalog/redirects.ts` sends it, else the home page, and
-   writes `_redirects` and `_headers`. `--bake-only` redoes only that last step.
+   writes `_redirects` and `_headers`, which only the retiring assets-only Worker reads.
+   `--bake-only` redoes only that last step.
 3. `pnpm run docs:snapshot:publish -- --dry-run`, then without `--dry-run`
    ([`scripts/docs-snapshot-publish.ts`](lit-ui-router.dev/scripts/docs-snapshot-publish.ts)). It
-   runs `cf deploy` in the Worker's package and writes the manifest; commit it.
+   uploads the line's files to the bucket with `cf r2 objects put`, then the upload record, and
+   writes the manifest; commit it. It is safe to rerun: when the digest equals the committed
+   manifest's and the bucket's record matches, it uploads nothing, and otherwise it uploads only
+   the files whose MD5 differs from the bucket's ETag. Objects the new build lacks stay in the
+   bucket. It spaces its requests under the API's limit of 1200 per five minutes and backs off on
+   a 429, so a first upload of `/v1/` takes about ten minutes.
 
 The snapshot is refreshed by hand, once per release round and not per release: when the last
 package of a round has published, set the version's `tag` in `public/versions.json` to that release's tag and run the three steps
