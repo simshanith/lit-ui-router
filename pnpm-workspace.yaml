@@ -50,6 +50,7 @@ catalog:
   '@pnpm/workspace.workspace-manifest-reader': 1100.3.3
   '@release-it/conventional-changelog': ^12.0.2
   '@testing-library/dom': ^10.4.2
+  '@types/bun': 1.4.4
   '@types/d3-hierarchy': ^3.1.7
   '@types/dom-navigation': ^1.0.7
   '@types/escape-html': ^1.0.4

@@ -11,7 +11,7 @@
 // node_modules. Type imports are erased before execution, so they name the
 // package instead.
 //
-// The image has node and npm; this script installs pnpm; everything past that
+// The image has node, npm and bun; this script installs npm 12 and pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
 // tools (taplo, shellcheck, rumdl, actionlint, zizmor) exists here — keep them
 // out of anything the turbo target below reaches.
@@ -122,6 +122,39 @@ export const pnpmSpec = (root: string): string => {
 };
 
 /**
+ * A tool's version pin from `.config/mise/config.toml`, parsed by the build
+ * image's bun (mise pins the same version for local runs and the tests): node
+ * has no TOML parser, and none can be installed before `pnpm install`. Empty
+ * when the tool has no plain version pin.
+ */
+export const misePin = (root: string, tool: string): string =>
+  execFileSync(
+    'bun',
+    [
+      join(import.meta.dirname, 'bun/mise-pin.bun.ts'),
+      join(root, '.config/mise/config.toml'),
+      tool,
+    ],
+    { encoding: 'utf8' },
+  ).trim();
+
+/**
+ * The npm to install, from the mise pin that shadows node's bundled npm
+ * everywhere else, so an example's `npm ci` here runs the npm it runs locally
+ * and in CI: the image's npm 10 ignores npm 12 manifest fields such as
+ * `patchedDependencies`.
+ */
+export const npmSpec = (version: string): string => {
+  if (version === '') {
+    throw new Error(
+      'cloudflare-build: no "npm:npm" version pin in .config/mise/config.toml',
+    );
+  }
+
+  return `npm@${version}`;
+};
+
+/**
  * Exported so the trigger test can assert the frozen install is still here —
  * SKIP_DEPENDENCY_INSTALL=1 is only safe while this script installs, and the
  * steps are read rather than grepped out of this file's source.
@@ -130,7 +163,10 @@ export const buildSteps = (
   root: string,
   npmBin: string,
   site: Site,
+  npmVersion: string,
 ): readonly Step[] => [
+  ['npm', ['install', '--global', npmSpec(npmVersion)]],
+
   // npm refuses to overwrite a file it does not own (EEXIST), and its global
   // bin is the same node bin dir corepack's shims sit in, so clear them first
   // rather than reaching for --force.
@@ -180,6 +216,7 @@ const main = (argv: readonly string[]): void => {
     workspaceRoot,
     `${npmPrefix}/bin`,
     resolved.site,
+    misePin(workspaceRoot, 'npm:npm'),
   )) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
