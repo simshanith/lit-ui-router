@@ -12,6 +12,7 @@
         "SKIP_DEPENDENCY_INSTALL": { "value": "1", "is_secret": false },
         "CYPRESS_INSTALL_BINARY": { "value": "0", "is_secret": false },
         "HUSKY": { "value": "0", "is_secret": false },
+        "BUN_VERSION": { "value": "1.4.4", "is_secret": false },
         "VITE_GOOGLE_ANALYTICS_TRACKING_ID": {
           "value": "G-XXXXXXXXXX",
           "is_secret": false
@@ -30,6 +31,7 @@
         "SKIP_DEPENDENCY_INSTALL": { "value": "1", "is_secret": false },
         "CYPRESS_INSTALL_BINARY": { "value": "0", "is_secret": false },
         "HUSKY": { "value": "0", "is_secret": false },
+        "BUN_VERSION": { "value": "1.4.4", "is_secret": false },
         "TURBO_TOKEN": { "is_secret": true }
       }
     }

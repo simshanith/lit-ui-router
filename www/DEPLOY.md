@@ -114,7 +114,8 @@ has to be a file whose own imports are node builtins all the way down — which 
 
 The build image is Ubuntu with node, npm and bun; the script reads the mise npm pin with bun's
 TOML parser, installs that npm and pnpm, and `pnpm install` provides everything after that.
-There is no mise, so none of the repo's mise-managed tools —
+Every trigger sets `BUN_VERSION` to the bun that mise pins, so that parse runs the version the
+tests run. There is no mise, so none of the repo's mise-managed tools —
 `taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. The build's
 turbo target is `@www/<site>#build`; `build` is defined at the root, so a site with no build
 script of its own (wrangler bundles it at deploy) builds only its dependencies and succeeds.
