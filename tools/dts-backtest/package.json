@@ -12,6 +12,7 @@
     "test:matrix": "node run.ts --versions=full"
   },
   "devDependencies": {
+    "@opentelemetry/api": "catalog:",
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
     "effect": "catalog:",
@@ -35,6 +36,7 @@
     "ui-router-effect": "catalog:workspace",
     "ui-router-mobx": "catalog:workspace",
     "ui-router-navigation-location-plugin": "catalog:workspace",
+    "ui-router-otel": "catalog:workspace",
     "ui-router-registry": "catalog:workspace",
     "ui-router-server": "catalog:workspace",
     "ui-router-signals": "catalog:workspace"

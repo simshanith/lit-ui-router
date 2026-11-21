@@ -444,6 +444,9 @@ catalogs:
       specifier: npm:@oxc-project/runtime@0.50.0
       version: 0.50.0
   peerFloor:
+    '@opentelemetry/api-floor':
+      specifier: npm:@opentelemetry/api@1.9.0
+      version: 1.9.0
     '@uirouter/core-floor':
       specifier: npm:@uirouter/core@6.0.8
       version: 6.0.8
@@ -2213,6 +2216,9 @@ importers:
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.10.0
+      '@opentelemetry/api-floor':
+        specifier: catalog:peerFloor
+        version: '@opentelemetry/api@1.9.0'
       '@opentelemetry/context-async-hooks':
         specifier: 'catalog:'
         version: 3.1.1(@opentelemetry/api@1.10.0)
@@ -2222,18 +2228,36 @@ importers:
       '@opentelemetry/sdk-trace':
         specifier: 'catalog:'
         version: 3.1.1(@opentelemetry/api@1.10.0)
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2))
       '@repo/router-events':
         specifier: catalog:workspace
         version: link:../shared/router-events
+      '@tools/bundle-probe':
+        specifier: catalog:workspace
+        version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: catalog:workspace
+        version: link:../../tools/compat-guards
       '@tools/oxc-emit':
         specifier: catalog:workspace
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: catalog:workspace
+        version: link:../../tools/release-config
+      '@tools/typedoc-plugin-lit-ui-router':
+        specifier: catalog:workspace
+        version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      '@uirouter/core-floor':
+        specifier: catalog:peerFloor
+        version: '@uirouter/core@6.0.8'
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
@@ -2243,9 +2267,27 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.94.0(oxlint-tsgolint@7.0.2007)
-      typescript:
+      release-it:
         specifier: 'catalog:'
-        version: 7.0.2
+        version: 21.1.2(@types/node@24.19.2)(magicast@0.5.5)(supports-color@10.2.2)
+      rimraf:
+        specifier: 'catalog:'
+        version: 6.1.4
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.20(@typescript/typescript6@6.0.2)
+      typedoc-plugin-markdown:
+        specifier: 'catalog:'
+        version: 4.14.1(typedoc@0.28.20(@typescript/typescript6@6.0.2))
+      typedoc-vitepress-theme:
+        specifier: 'catalog:'
+        version: 1.1.4(typedoc-plugin-markdown@4.14.1(typedoc@0.28.20(@typescript/typescript6@6.0.2)))(typedoc@0.28.20(@typescript/typescript6@6.0.2))
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -2808,6 +2850,9 @@ importers:
 
   tools/dts-backtest:
     devDependencies:
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.10.0
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -2877,6 +2922,9 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: catalog:workspace
         version: link:../../packages/navigation-location-plugin
+      ui-router-otel:
+        specifier: catalog:workspace
+        version: link:../../packages/ui-router-otel
       ui-router-registry:
         specifier: catalog:workspace
         version: link:../../packages/ui-router-registry
@@ -4968,6 +5016,10 @@ packages:
 
   '@opentelemetry/api@1.10.0':
     resolution: {integrity: sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
   '@opentelemetry/context-async-hooks@3.1.1':
@@ -11598,6 +11650,8 @@ snapshots:
   '@one-ini/wasm@0.2.1': {}
 
   '@opentelemetry/api@1.10.0': {}
+
+  '@opentelemetry/api@1.9.0': {}
 
   '@opentelemetry/context-async-hooks@3.1.1(@opentelemetry/api@1.10.0)':
     dependencies:

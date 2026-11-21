@@ -7,6 +7,7 @@ import { activateHookSpans } from './hook-context.ts';
 import { activateLazyLoadSpans } from './lazy-load-context.ts';
 import { activateResolveSpans } from './resolve-context.ts';
 
+/** What `OtelPlugin` takes as `router.plugin(OtelPlugin, options)`'s second argument. */
 export interface OtelPluginOptions extends ReportOptions {
   /** The tracer every span starts on; the app owns the provider, processors and exporter. */
   tracer: Tracer;
@@ -34,6 +35,7 @@ export interface OtelPluginOptions extends ReportOptions {
 
 /** Reports the router's transitions as OpenTelemetry spans; `dispose()` ends the open ones and stops. */
 export class OtelPlugin implements UIRouterPlugin {
+  /** The plugin's name in the router's plugin registry. */
   name = 'otel';
   readonly #dispose: () => void;
 

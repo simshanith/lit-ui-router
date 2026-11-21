@@ -128,6 +128,7 @@ const PACKAGE_DIRS = [
   'navigation-location-plugin',
   'ui-router-effect',
   'ui-router-mobx',
+  'ui-router-otel',
   'ui-router-registry',
   'ui-router-server',
   'ui-router-signals',

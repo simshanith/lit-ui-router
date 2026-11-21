@@ -2,7 +2,15 @@
 
 [OpenTelemetry](https://opentelemetry.io) spans for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: one span per transition, with a child span for each phase and, on request, each resolve.
 
-The package is private and unpublished, so it is workspace-only for now. Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
+It runs in production, beside the tracer provider and exporter the app already has.
+
+## Installation
+
+```bash
+npm install ui-router-otel @opentelemetry/api
+```
+
+Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
 
 ## Usage
 

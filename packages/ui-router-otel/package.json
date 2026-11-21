@@ -1,9 +1,8 @@
 {
   "name": "ui-router-otel",
   "version": "0.0.0",
-  "private": true,
   "description": "OpenTelemetry spans for any @uirouter/core router: one span per transition, with its phases and resolves",
-  "homepage": "https://lit-ui-router.dev",
+  "homepage": "https://lit-ui-router.dev/packages/ui-router-otel",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -35,31 +34,57 @@
   "scripts": {
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"ui-router-otel@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "floor-guard && check-bundle-inputs",
+    "codecov:bundle": "upload-entry-bundles",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/ui-router-otel && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
     "lint:oxlint": "oxlint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@opentelemetry/api": "catalog:",
+    "@opentelemetry/api-floor": "catalog:peerFloor",
     "@opentelemetry/context-async-hooks": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",
     "@opentelemetry/sdk-trace": "catalog:",
+    "@release-it/conventional-changelog": "catalog:",
     "@repo/router-events": "catalog:workspace",
+    "@tools/bundle-probe": "catalog:workspace",
+    "@tools/compat-guards": "catalog:workspace",
     "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
+    "@tools/typedoc-plugin-lit-ui-router": "catalog:workspace",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@uirouter/core-floor": "catalog:peerFloor",
     "@vitest/coverage-v8": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "typescript": "catalog:",
+    "release-it": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@opentelemetry/api": "catalog:",
-    "@uirouter/core": "catalog:"
+    "@opentelemetry/api": "catalog:publishedPeer",
+    "@uirouter/core": "catalog:publishedPeer"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "lit",
+        "lit-ui-router"
+      ]
+    }
   }
 }

@@ -133,6 +133,7 @@ const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
     packagePage('ui-router-registry'),
     packagePage('eslint-plugin-lit-ui-router'),
   ],
+  observability: [packagePage('ui-router-otel')],
 };
 
 /** The Packages sidebar groups, labelled and ordered by the catalog's roles. */

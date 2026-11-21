@@ -27,6 +27,7 @@ on:
           - ui-router-effect
           - ui-router-mobx
           - ui-router-registry
+          - ui-router-otel
         default: 'lit-ui-router'
       increment:
         description: 'Increment'
