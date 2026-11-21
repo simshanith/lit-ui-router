@@ -15,6 +15,8 @@ type: package
 types-only registry for typed routes — state names and params — on a
 `@uirouter/core` router, inferred from the app's own `as const` state
 declarations. It emits no JavaScript.
+[Staying on UI-Router](/guides/staying-on-ui-router) shows it running on
+`@uirouter/react` without Lit.
 
 ## Installation
 

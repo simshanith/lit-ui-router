@@ -16,7 +16,9 @@ type: package
 observable store of its current state. It imports only `mobx` and
 `@uirouter/core`, so any MobX reaction can follow route state without Lit.
 [`lit-ui-router-mobx`](/packages/lit-ui-router-mobx) builds its Lit
-controllers on it and re-exports `RouterStore`.
+controllers on it and re-exports `RouterStore`. See
+[Staying on UI-Router](/guides/staying-on-ui-router) for using the
+framework-agnostic packages on another UI-Router adapter without Lit.
 
 ## Installation
 
