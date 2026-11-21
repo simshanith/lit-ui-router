@@ -1,0 +1,1072 @@
+--- a/lib-esm/common/common.js	
++++ b/lib-esm/common/common.js	
+@@ -14,11 +14,11 @@
+  *
+  * @packageDocumentation
+  * @preferred
+  */
+-import { isFunction, isString, isArray, isRegExp, isDate } from './predicates';
+-import { all, any, prop, curry, not } from './hof';
+-import { services } from './coreservices';
++import { isFunction, isString, isArray, isRegExp, isDate } from './predicates.js';
++import { all, any, prop, curry, not } from './hof.js';
++import { services } from './coreservices.js';
+ export var root = (typeof self === 'object' && self.self === self && self) ||
+     (typeof global === 'object' && global.global === global && global) ||
+     this;
+ var angular = root.angular || {};
+--- a/lib-esm/common/index.js	
++++ b/lib-esm/common/index.js	
+@@ -1,9 +1,9 @@
+-export * from './common';
+-export * from './coreservices';
+-export * from './glob';
+-export * from './hof';
+-export * from './predicates';
+-export * from './queue';
+-export * from './strings';
+-export * from './trace';
++export * from './common.js';
++export * from './coreservices.js';
++export * from './glob.js';
++export * from './hof.js';
++export * from './predicates.js';
++export * from './queue.js';
++export * from './strings.js';
++export * from './trace.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/common/predicates.js	
++++ b/lib-esm/common/predicates.js	
+@@ -5,9 +5,9 @@
+  * Although these functions are exported, they are subject to change without notice.
+  *
+  * @packageDocumentation
+  */
+-import { and, not, pipe, prop, or } from './hof';
++import { and, not, pipe, prop, or } from './hof.js';
+ var toStr = Object.prototype.toString;
+ var tis = function (t) { return function (x) { return typeof x === t; }; };
+ export var isUndefined = tis('undefined');
+ export var isDefined = not(isUndefined);
+--- a/lib-esm/common/queue.js	
++++ b/lib-esm/common/queue.js	
+@@ -1,5 +1,5 @@
+-import { pushTo } from './common';
++import { pushTo } from './common.js';
+ var Queue = /** @class */ (function () {
+     function Queue(_items, _limit) {
+         if (_items === void 0) { _items = []; }
+         if (_limit === void 0) { _limit = null; }
+--- a/lib-esm/common/safeConsole.js	
++++ b/lib-esm/common/safeConsole.js	
+@@ -2,9 +2,9 @@
+  * workaround for missing console object in IE9 when dev tools haven't been opened o_O
+  * @packageDocumentation
+  */
+ /* tslint:disable:no-console */
+-import { noop } from './common';
++import { noop } from './common.js';
+ var noopConsoleStub = { log: noop, error: noop, table: noop };
+ function ie9Console(console) {
+     var bound = function (fn) { return Function.prototype.bind.call(fn, console); };
+     return {
+--- a/lib-esm/common/strings.js	
++++ b/lib-esm/common/strings.js	
+@@ -4,12 +4,12 @@
+  * Although these functions are exported, they are subject to change without notice.
+  *
+  * @packageDocumentation
+  */
+-import { isArray, isFunction, isInjectable, isNull, isObject, isPromise, isString, isUndefined } from './predicates';
+-import { Rejection } from '../transition/rejectFactory';
+-import { identity, pushR, tail } from './common';
+-import { pattern, val } from './hof';
++import { isArray, isFunction, isInjectable, isNull, isObject, isPromise, isString, isUndefined } from './predicates.js';
++import { Rejection } from '../transition/rejectFactory.js';
++import { identity, pushR, tail } from './common.js';
++import { pattern, val } from './hof.js';
+ /**
+  * Returns a string shortened to a maximum length
+  *
+  * If the string is already less than the `max` length, return the string.
+--- a/lib-esm/common/trace.js	
++++ b/lib-esm/common/trace.js	
+@@ -31,12 +31,12 @@
+  * ```
+  *
+  * @packageDocumentation
+  */
+-import { parse } from '../common/hof';
+-import { isNumber } from '../common/predicates';
+-import { stringify, functionToString, maxLength, padString } from './strings';
+-import { safeConsole } from './safeConsole';
++import { parse } from '../common/hof.js';
++import { isNumber } from '../common/predicates.js';
++import { stringify, functionToString, maxLength, padString } from './strings.js';
++import { safeConsole } from './safeConsole.js';
+ function uiViewString(uiview) {
+     if (!uiview)
+         return 'ui-view (defunct)';
+     var state = uiview.creationContext ? uiview.creationContext.name || '(root)' : '(none)';
+--- a/lib-esm/globals.js	
++++ b/lib-esm/globals.js	
+@@ -1,6 +1,6 @@
+-import { StateParams } from './params/stateParams';
+-import { Queue } from './common/queue';
++import { StateParams } from './params/stateParams.js';
++import { Queue } from './common/queue.js';
+ /**
+  * Global router state
+  *
+  * This is where we hold the global mutable state such as current state, current
+--- a/lib-esm/hooks/coreResolvables.js	
++++ b/lib-esm/hooks/coreResolvables.js	
+@@ -1,8 +1,8 @@
+-import { Transition } from '../transition/transition';
+-import { UIRouter } from '../router';
+-import { Resolvable } from '../resolve';
+-import { inArray, uniqR, unnestR, values } from '../common';
++import { Transition } from '../transition/transition.js';
++import { UIRouter } from '../router.js';
++import { Resolvable } from '../resolve/index.js';
++import { inArray, uniqR, unnestR, values } from '../common/index.js';
+ function addCoreResolvables(trans) {
+     trans.addResolvable(Resolvable.fromData(UIRouter, trans.router), '');
+     trans.addResolvable(Resolvable.fromData(Transition, trans), '');
+     trans.addResolvable(Resolvable.fromData('$transition$', trans), '');
+--- a/lib-esm/hooks/ignoredTransition.js	
++++ b/lib-esm/hooks/ignoredTransition.js	
+@@ -1,6 +1,6 @@
+-import { trace } from '../common/trace';
+-import { Rejection } from '../transition/rejectFactory';
++import { trace } from '../common/trace.js';
++import { Rejection } from '../transition/rejectFactory.js';
+ /**
+  * A [[TransitionHookFn]] that skips a transition if it should be ignored
+  *
+  * This hook is invoked at the end of the onBefore phase.
+--- a/lib-esm/hooks/lazyLoad.js	
++++ b/lib-esm/hooks/lazyLoad.js	
+@@ -1,5 +1,5 @@
+-import { services } from '../common/coreservices';
++import { services } from '../common/coreservices.js';
+ /**
+  * A [[TransitionHookFn]] that performs lazy loading
+  *
+  * When entering a state "abc" which has a `lazyLoad` function defined:
+--- a/lib-esm/hooks/redirectTo.js	
++++ b/lib-esm/hooks/redirectTo.js	
+@@ -1,7 +1,7 @@
+-import { isString, isFunction } from '../common/predicates';
+-import { services } from '../common/coreservices';
+-import { TargetState } from '../state/targetState';
++import { isString, isFunction } from '../common/predicates.js';
++import { services } from '../common/coreservices.js';
++import { TargetState } from '../state/targetState.js';
+ /**
+  * A [[TransitionHookFn]] that redirects to a different state or params
+  *
+  * Registered using `transitionService.onStart({ to: (state) => !!state.redirectTo }, redirectHook);`
+--- a/lib-esm/hooks/resolve.js	
++++ b/lib-esm/hooks/resolve.js	
+@@ -1,7 +1,7 @@
+-import { noop } from '../common/common';
+-import { ResolveContext } from '../resolve/resolveContext';
+-import { val } from '../common/hof';
++import { noop } from '../common/common.js';
++import { ResolveContext } from '../resolve/resolveContext.js';
++import { val } from '../common/hof.js';
+ export var RESOLVE_HOOK_PRIORITY = 1000;
+ /**
+  * A [[TransitionHookFn]] which resolves all EAGER Resolvables in the To Path
+  *
+--- a/lib-esm/hooks/updateGlobals.js	
++++ b/lib-esm/hooks/updateGlobals.js	
+@@ -1,5 +1,5 @@
+-import { copy } from '../common/common';
++import { copy } from '../common/common.js';
+ /**
+  * A [[TransitionHookFn]] which updates global UI-Router state
+  *
+  * Registered using `transitionService.onBefore({}, updateGlobalState);`
+--- a/lib-esm/hooks/views.js	
++++ b/lib-esm/hooks/views.js	
+@@ -1,6 +1,6 @@
+-import { noop } from '../common/common';
+-import { services } from '../common/coreservices';
++import { noop } from '../common/common.js';
++import { services } from '../common/coreservices.js';
+ /**
+  * A [[TransitionHookFn]] which waits for the views to load
+  *
+  * Registered using `transitionService.onStart({}, loadEnteringViews);`
+--- a/lib-esm/index.js	
++++ b/lib-esm/index.js	
+@@ -1,13 +1,13 @@
+-export * from './common/index';
+-export * from './params/index';
+-export * from './path/index';
+-export * from './resolve/index';
+-export * from './state/index';
+-export * from './transition/index';
+-export * from './url/index';
+-export * from './view/index';
+-export * from './globals';
+-export * from './router';
+-export * from './vanilla';
+-export * from './interface';
++export * from './common/index.js';
++export * from './params/index.js';
++export * from './path/index.js';
++export * from './resolve/index.js';
++export * from './state/index.js';
++export * from './transition/index.js';
++export * from './url/index.js';
++export * from './view/index.js';
++export * from './globals.js';
++export * from './router.js';
++export * from './vanilla.js';
++export * from './interface.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/params/index.js	
++++ b/lib-esm/params/index.js	
+@@ -4,10 +4,10 @@
+  * See [[ParamDeclaration]]
+  *
+  * @packageDocumentation @preferred
+  */
+-export * from './interface';
+-export * from './param';
+-export * from './paramTypes';
+-export * from './stateParams';
+-export * from './paramType';
++export * from './interface.js';
++export * from './param.js';
++export * from './paramTypes.js';
++export * from './stateParams.js';
++export * from './paramType.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/params/param.js	
++++ b/lib-esm/params/param.js	
+@@ -1,9 +1,9 @@
+-import { extend, filter, map, allTrueR, find } from '../common/common';
+-import { prop } from '../common/hof';
+-import { isInjectable, isDefined, isString, isArray, isUndefined } from '../common/predicates';
+-import { services } from '../common/coreservices';
+-import { ParamType } from './paramType';
++import { extend, filter, map, allTrueR, find } from '../common/common.js';
++import { prop } from '../common/hof.js';
++import { isInjectable, isDefined, isString, isArray, isUndefined } from '../common/predicates.js';
++import { services } from '../common/coreservices.js';
++import { ParamType } from './paramType.js';
+ var hasOwn = Object.prototype.hasOwnProperty;
+ var isShorthand = function (cfg) {
+     return ['value', 'type', 'squash', 'array', 'dynamic'].filter(hasOwn.bind(cfg || {})).length === 0;
+ };
+--- a/lib-esm/params/paramType.js	
++++ b/lib-esm/params/paramType.js	
+@@ -1,6 +1,6 @@
+-import { extend, filter, map } from '../common/common';
+-import { isArray, isDefined } from '../common/predicates';
++import { extend, filter, map } from '../common/common.js';
++import { isArray, isDefined } from '../common/predicates.js';
+ /**
+  * An internal class which implements [[ParamTypeDefinition]].
+  *
+  * A [[ParamTypeDefinition]] is a plain javascript object used to register custom parameter types.
+--- a/lib-esm/params/paramTypes.js	
++++ b/lib-esm/params/paramTypes.js	
+@@ -1,9 +1,9 @@
+-import { fromJson, toJson, identity, equals, inherit, map, extend, pick } from '../common/common';
+-import { isDefined, isNullOrUndefined } from '../common/predicates';
+-import { is } from '../common/hof';
+-import { services } from '../common/coreservices';
+-import { ParamType } from './paramType';
++import { fromJson, toJson, identity, equals, inherit, map, extend, pick } from '../common/common.js';
++import { isDefined, isNullOrUndefined } from '../common/predicates.js';
++import { is } from '../common/hof.js';
++import { services } from '../common/coreservices.js';
++import { ParamType } from './paramType.js';
+ /**
+  * A registry for parameter types.
+  *
+  * This registry manages the built-in (and custom) parameter types.
+--- a/lib-esm/params/stateParams.js	
++++ b/lib-esm/params/stateParams.js	
+@@ -1,5 +1,5 @@
+-import { extend, ancestors } from '../common/common';
++import { extend, ancestors } from '../common/common.js';
+ var StateParams = /** @class */ (function () {
+     function StateParams(params) {
+         if (params === void 0) { params = {}; }
+         extend(this, params);
+--- a/lib-esm/path/index.js	
++++ b/lib-esm/path/index.js	
+@@ -1,3 +1,3 @@
+-export * from './pathNode';
+-export * from './pathUtils';
++export * from './pathNode.js';
++export * from './pathUtils.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/path/pathNode.js	
++++ b/lib-esm/path/pathNode.js	
+@@ -1,7 +1,7 @@
+-import { extend, applyPairs, find } from '../common/common';
+-import { propEq } from '../common/hof';
+-import { Param } from '../params/param';
++import { extend, applyPairs, find } from '../common/common.js';
++import { propEq } from '../common/hof.js';
++import { Param } from '../params/param.js';
+ /**
+  * A node in a [[TreeChanges]] path
+  *
+  * For a [[TreeChanges]] path, this class holds the stateful information for a single node in the path.
+--- a/lib-esm/path/pathUtils.js	
++++ b/lib-esm/path/pathUtils.js	
+@@ -1,8 +1,8 @@
+-import { extend, find, pick, omit, tail, mergeR, values, unnestR, inArray, arrayTuples, } from '../common/common';
+-import { prop, propEq } from '../common/hof';
+-import { TargetState } from '../state/targetState';
+-import { PathNode } from './pathNode';
++import { extend, find, pick, omit, tail, mergeR, values, unnestR, inArray, arrayTuples, } from '../common/common.js';
++import { prop, propEq } from '../common/hof.js';
++import { TargetState } from '../state/targetState.js';
++import { PathNode } from './pathNode.js';
+ /**
+  * This class contains functions which convert TargetStates, Nodes and paths from one type to another.
+  */
+ var PathUtils = /** @class */ (function () {
+--- a/lib-esm/resolve/index.js	
++++ b/lib-esm/resolve/index.js	
+@@ -1,4 +1,4 @@
+-export * from './interface';
+-export * from './resolvable';
+-export * from './resolveContext';
++export * from './interface.js';
++export * from './resolvable.js';
++export * from './resolveContext.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/resolve/resolvable.js	
++++ b/lib-esm/resolve/resolvable.js	
+@@ -1,10 +1,10 @@
+-import { extend, identity } from '../common/common';
+-import { services } from '../common/coreservices';
+-import { trace } from '../common/trace';
+-import { stringify } from '../common/strings';
+-import { isFunction, isObject } from '../common/predicates';
+-import { isNullOrUndefined } from '../common/predicates';
++import { extend, identity } from '../common/common.js';
++import { services } from '../common/coreservices.js';
++import { trace } from '../common/trace.js';
++import { stringify } from '../common/strings.js';
++import { isFunction, isObject } from '../common/predicates.js';
++import { isNullOrUndefined } from '../common/predicates.js';
+ // TODO: explicitly make this user configurable
+ export var defaultResolvePolicy = {
+     when: 'LAZY',
+     async: 'WAIT',
+--- a/lib-esm/resolve/resolveContext.js	
++++ b/lib-esm/resolve/resolveContext.js	
+@@ -1,13 +1,13 @@
+-import { find, tail, uniqR, unnestR, inArray } from '../common/common';
+-import { propEq, not } from '../common/hof';
+-import { trace } from '../common/trace';
+-import { services } from '../common/coreservices';
+-import { resolvePolicies } from './interface';
+-import { Resolvable } from './resolvable';
+-import { PathUtils } from '../path/pathUtils';
+-import { stringify } from '../common/strings';
+-import { isUndefined } from '../common';
++import { find, tail, uniqR, unnestR, inArray } from '../common/common.js';
++import { propEq, not } from '../common/hof.js';
++import { trace } from '../common/trace.js';
++import { services } from '../common/coreservices.js';
++import { resolvePolicies } from './interface.js';
++import { Resolvable } from './resolvable.js';
++import { PathUtils } from '../path/pathUtils.js';
++import { stringify } from '../common/strings.js';
++import { isUndefined } from '../common/index.js';
+ var whens = resolvePolicies.when;
+ var ALL_WHENS = [whens.EAGER, whens.LAZY];
+ var EAGER_WHENS = [whens.EAGER];
+ // tslint:disable-next-line:no-inferrable-types
+--- a/lib-esm/router.js	
++++ b/lib-esm/router.js	
+@@ -1,16 +1,16 @@
+-import { UrlMatcherFactory } from './url/urlMatcherFactory';
+-import { UrlRouter } from './url/urlRouter';
+-import { TransitionService } from './transition/transitionService';
+-import { ViewService } from './view/view';
+-import { StateRegistry } from './state/stateRegistry';
+-import { StateService } from './state/stateService';
+-import { UIRouterGlobals } from './globals';
+-import { values, removeFrom } from './common/common';
+-import { isFunction } from './common/predicates';
+-import { UrlService } from './url/urlService';
+-import { trace } from './common/trace';
+-import { makeStub } from './common';
++import { UrlMatcherFactory } from './url/urlMatcherFactory.js';
++import { UrlRouter } from './url/urlRouter.js';
++import { TransitionService } from './transition/transitionService.js';
++import { ViewService } from './view/view.js';
++import { StateRegistry } from './state/stateRegistry.js';
++import { StateService } from './state/stateService.js';
++import { UIRouterGlobals } from './globals.js';
++import { values, removeFrom } from './common/common.js';
++import { isFunction } from './common/predicates.js';
++import { UrlService } from './url/urlService.js';
++import { trace } from './common/trace.js';
++import { makeStub } from './common/index.js';
+ /** @internal */
+ var _routerInstance = 0;
+ /** @internal */
+ var locSvcFns = ['url', 'path', 'search', 'hash', 'onChange'];
+--- a/lib-esm/state/index.js	
++++ b/lib-esm/state/index.js	
+@@ -17,13 +17,13 @@
+  *   - Get notified of state registration/deregistration using [[StateRegistry.onStatesChanged]].
+  *
+  * @packageDocumentation
+  */
+-export * from './interface';
+-export * from './stateBuilder';
+-export * from './stateObject';
+-export * from './stateMatcher';
+-export * from './stateQueueManager';
+-export * from './stateRegistry';
+-export * from './stateService';
+-export * from './targetState';
++export * from './interface.js';
++export * from './stateBuilder.js';
++export * from './stateObject.js';
++export * from './stateMatcher.js';
++export * from './stateQueueManager.js';
++export * from './stateRegistry.js';
++export * from './stateService.js';
++export * from './targetState.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/state/stateBuilder.js	
++++ b/lib-esm/state/stateBuilder.js	
+@@ -1,10 +1,10 @@
+-import { applyPairs, extend, identity, inherit, mapObj, noop, omit, tail, values, copy } from '../common/common';
+-import { isArray, isDefined, isFunction, isString } from '../common/predicates';
+-import { stringify } from '../common/strings';
+-import { is, pattern, pipe, prop, val } from '../common/hof';
+-import { Resolvable } from '../resolve/resolvable';
+-import { services } from '../common/coreservices';
++import { applyPairs, extend, identity, inherit, mapObj, noop, omit, tail, values, copy } from '../common/common.js';
++import { isArray, isDefined, isFunction, isString } from '../common/predicates.js';
++import { stringify } from '../common/strings.js';
++import { is, pattern, pipe, prop, val } from '../common/hof.js';
++import { Resolvable } from '../resolve/resolvable.js';
++import { services } from '../common/coreservices.js';
+ var parseUrl = function (url) {
+     if (!isString(url))
+         return false;
+     var root = url.charAt(0) === '^';
+--- a/lib-esm/state/stateMatcher.js	
++++ b/lib-esm/state/stateMatcher.js	
+@@ -1,7 +1,7 @@
+-import { isString } from '../common/predicates';
+-import { values } from '../common/common';
+-import { safeConsole } from '../common/safeConsole';
++import { isString } from '../common/predicates.js';
++import { values } from '../common/common.js';
++import { safeConsole } from '../common/safeConsole.js';
+ var StateMatcher = /** @class */ (function () {
+     function StateMatcher(_states) {
+         this._states = _states;
+     }
+--- a/lib-esm/state/stateObject.js	
++++ b/lib-esm/state/stateObject.js	
+@@ -1,8 +1,8 @@
+-import { defaults, values, find, inherit } from '../common/common';
+-import { propEq } from '../common/hof';
+-import { Glob } from '../common/glob';
+-import { isObject, isFunction } from '../common/predicates';
++import { defaults, values, find, inherit } from '../common/common.js';
++import { propEq } from '../common/hof.js';
++import { Glob } from '../common/glob.js';
++import { isObject, isFunction } from '../common/predicates.js';
+ /**
+  * Internal representation of a UI-Router state.
+  *
+  * Instances of this class are created when a [[StateDeclaration]] is registered with the [[StateRegistry]].
+--- a/lib-esm/state/stateQueueManager.js	
++++ b/lib-esm/state/stateQueueManager.js	
+@@ -1,6 +1,6 @@
+-import { inArray, isString, prop } from '../common';
+-import { StateObject } from './stateObject';
++import { inArray, isString, prop } from '../common/index.js';
++import { StateObject } from './stateObject.js';
+ var StateQueueManager = /** @class */ (function () {
+     function StateQueueManager(router, states, builder, listeners) {
+         this.router = router;
+         this.states = states;
+--- a/lib-esm/state/stateRegistry.js	
++++ b/lib-esm/state/stateRegistry.js	
+@@ -1,9 +1,9 @@
+-import { StateMatcher } from './stateMatcher';
+-import { StateBuilder } from './stateBuilder';
+-import { StateQueueManager } from './stateQueueManager';
+-import { removeFrom } from '../common/common';
+-import { propEq } from '../common/hof';
++import { StateMatcher } from './stateMatcher.js';
++import { StateBuilder } from './stateBuilder.js';
++import { StateQueueManager } from './stateQueueManager.js';
++import { removeFrom } from '../common/common.js';
++import { propEq } from '../common/hof.js';
+ /**
+  * A registry for all of the application's [[StateDeclaration]]s
+  *
+  * This API is found at `router.stateRegistry` ([[UIRouter.stateRegistry]])
+--- a/lib-esm/state/stateService.js	
++++ b/lib-esm/state/stateService.js	
+@@ -1,18 +1,18 @@
+-import { createProxyFunctions, defaults, extend, inArray, noop, removeFrom, silenceUncaughtInPromise, silentRejection, } from '../common/common';
+-import { isDefined, isObject, isString } from '../common/predicates';
+-import { Queue } from '../common/queue';
+-import { services } from '../common/coreservices';
+-import { PathUtils } from '../path/pathUtils';
+-import { PathNode } from '../path/pathNode';
+-import { defaultTransOpts } from '../transition/transitionService';
+-import { Rejection, RejectType } from '../transition/rejectFactory';
+-import { TargetState } from './targetState';
+-import { Param } from '../params/param';
+-import { Glob } from '../common/glob';
+-import { ResolveContext } from '../resolve/resolveContext';
+-import { lazyLoadState } from '../hooks/lazyLoad';
+-import { not, val } from '../common/hof';
++import { createProxyFunctions, defaults, extend, inArray, noop, removeFrom, silenceUncaughtInPromise, silentRejection, } from '../common/common.js';
++import { isDefined, isObject, isString } from '../common/predicates.js';
++import { Queue } from '../common/queue.js';
++import { services } from '../common/coreservices.js';
++import { PathUtils } from '../path/pathUtils.js';
++import { PathNode } from '../path/pathNode.js';
++import { defaultTransOpts } from '../transition/transitionService.js';
++import { Rejection, RejectType } from '../transition/rejectFactory.js';
++import { TargetState } from './targetState.js';
++import { Param } from '../params/param.js';
++import { Glob } from '../common/glob.js';
++import { ResolveContext } from '../resolve/resolveContext.js';
++import { lazyLoadState } from '../hooks/lazyLoad.js';
++import { not, val } from '../common/hof.js';
+ /**
+  * Provides services related to ui-router states.
+  *
+  * This API is located at `router.stateService` ([[UIRouter.stateService]])
+--- a/lib-esm/state/targetState.js	
++++ b/lib-esm/state/targetState.js	
+@@ -1,7 +1,7 @@
+-import { isObject, isString } from '../common/predicates';
+-import { stringify } from '../common/strings';
+-import { extend } from '../common';
++import { isObject, isString } from '../common/predicates.js';
++import { stringify } from '../common/strings.js';
++import { extend } from '../common/index.js';
+ /**
+  * Encapsulate the target (destination) state/params/options of a [[Transition]].
+  *
+  * This class is frequently used to redirect a transition to a new destination.
+--- a/lib-esm/transition/hookBuilder.js	
++++ b/lib-esm/transition/hookBuilder.js	
+@@ -1,8 +1,8 @@
+-import { extend, assertPredicate, unnestR, identity } from '../common/common';
+-import { isArray } from '../common/predicates';
+-import { TransitionHookPhase, TransitionHookScope, } from './interface';
+-import { TransitionHook } from './transitionHook';
++import { extend, assertPredicate, unnestR, identity } from '../common/common.js';
++import { isArray } from '../common/predicates.js';
++import { TransitionHookPhase, TransitionHookScope, } from './interface.js';
++import { TransitionHook } from './transitionHook.js';
+ /**
+  * This class returns applicable TransitionHooks for a specific Transition instance.
+  *
+  * Hooks ([[RegisteredHook]]) may be registered globally, e.g., $transitions.onEnter(...), or locally, e.g.
+--- a/lib-esm/transition/hookRegistry.js	
++++ b/lib-esm/transition/hookRegistry.js	
+@@ -1,7 +1,7 @@
+-import { isString, isFunction, Glob, extend, removeFrom, tail, values, identity, mapObj } from '../common';
++import { isString, isFunction, Glob, extend, removeFrom, tail, values, identity, mapObj } from '../common/index.js';
+ import { // has or is using
+-TransitionHookScope, } from './interface';
++TransitionHookScope, } from './interface.js';
+ /**
+  * Determines if the given state matches the matchCriteria
+  *
+  * @internal
+--- a/lib-esm/transition/index.js	
++++ b/lib-esm/transition/index.js	
+@@ -9,13 +9,13 @@
+  * - [[HookFn]], [[TransitionHookFn]], [[TransitionStateHookFn]], [[HookMatchCriteria]], [[HookResult]]
+  *
+  * @packageDocumentation @preferred
+  */
+-export * from './interface';
+-export * from './hookBuilder';
+-export * from './hookRegistry';
+-export * from './rejectFactory';
+-export * from './transition';
+-export * from './transitionHook';
+-export * from './transitionEventType';
+-export * from './transitionService';
++export * from './interface.js';
++export * from './hookBuilder.js';
++export * from './hookRegistry.js';
++export * from './rejectFactory.js';
++export * from './transition.js';
++export * from './transitionHook.js';
++export * from './transitionEventType.js';
++export * from './transitionService.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/transition/rejectFactory.js	
++++ b/lib-esm/transition/rejectFactory.js	
+@@ -1,8 +1,8 @@
+ 'use strict';
+-import { extend, silentRejection } from '../common/common';
+-import { stringify } from '../common/strings';
+-import { is } from '../common/hof';
++import { extend, silentRejection } from '../common/common.js';
++import { stringify } from '../common/strings.js';
++import { is } from '../common/hof.js';
+ /** An enum for Transition Rejection reasons */
+ var RejectType;
+ (function (RejectType) {
+     /**
+--- a/lib-esm/transition/transition.js	
++++ b/lib-esm/transition/transition.js	
+@@ -1,20 +1,20 @@
+-import { trace } from '../common/trace';
+-import { services } from '../common/coreservices';
+-import { stringify } from '../common/strings';
+-import { map, find, extend, mergeR, tail, omit, arrayTuples, unnestR, identity, anyTrueR } from '../common/common';
+-import { isObject, isUndefined } from '../common/predicates';
+-import { prop, propEq, val, not, is } from '../common/hof';
+-import { TransitionHookPhase, } from './interface'; // has or is using
+-import { TransitionHook } from './transitionHook';
+-import { matchState, makeEvent } from './hookRegistry';
+-import { HookBuilder } from './hookBuilder';
+-import { PathUtils } from '../path/pathUtils';
+-import { Param } from '../params/param';
+-import { Resolvable } from '../resolve/resolvable';
+-import { ResolveContext } from '../resolve/resolveContext';
+-import { Rejection } from './rejectFactory';
+-import { flattenR, uniqR } from '../common';
++import { trace } from '../common/trace.js';
++import { services } from '../common/coreservices.js';
++import { stringify } from '../common/strings.js';
++import { map, find, extend, mergeR, tail, omit, arrayTuples, unnestR, identity, anyTrueR } from '../common/common.js';
++import { isObject, isUndefined } from '../common/predicates.js';
++import { prop, propEq, val, not, is } from '../common/hof.js';
++import { TransitionHookPhase, } from './interface.js'; // has or is using
++import { TransitionHook } from './transitionHook.js';
++import { matchState, makeEvent } from './hookRegistry.js';
++import { HookBuilder } from './hookBuilder.js';
++import { PathUtils } from '../path/pathUtils.js';
++import { Param } from '../params/param.js';
++import { Resolvable } from '../resolve/resolvable.js';
++import { ResolveContext } from '../resolve/resolveContext.js';
++import { Rejection } from './rejectFactory.js';
++import { flattenR, uniqR } from '../common/index.js';
+ /** @internal */
+ var stateSelf = prop('self');
+ /**
+  * Represents a transition between two states.
+--- a/lib-esm/transition/transitionEventType.js	
++++ b/lib-esm/transition/transitionEventType.js	
+@@ -1,5 +1,5 @@
+-import { TransitionHook } from './transitionHook';
++import { TransitionHook } from './transitionHook.js';
+ /**
+  * This class defines a type of hook, such as `onBefore` or `onEnter`.
+  * Plugins can define custom hook types, such as sticky states does for `onInactive`.
+  */
+--- a/lib-esm/transition/transitionHook.js	
++++ b/lib-esm/transition/transitionHook.js	
+@@ -1,13 +1,13 @@
+-import { TransitionHookPhase } from './interface';
+-import { defaults, noop, silentRejection } from '../common/common';
+-import { fnToString, maxLength } from '../common/strings';
+-import { isPromise } from '../common/predicates';
+-import { is, parse } from '../common/hof';
+-import { trace } from '../common/trace';
+-import { services } from '../common/coreservices';
+-import { Rejection } from './rejectFactory';
+-import { TargetState } from '../state/targetState';
++import { TransitionHookPhase } from './interface.js';
++import { defaults, noop, silentRejection } from '../common/common.js';
++import { fnToString, maxLength } from '../common/strings.js';
++import { isPromise } from '../common/predicates.js';
++import { is, parse } from '../common/hof.js';
++import { trace } from '../common/trace.js';
++import { services } from '../common/coreservices.js';
++import { Rejection } from './rejectFactory.js';
++import { TargetState } from '../state/targetState.js';
+ var defaultOptions = {
+     current: noop,
+     transition: null,
+     traceData: {},
+--- a/lib-esm/transition/transitionService.js	
++++ b/lib-esm/transition/transitionService.js	
+@@ -1,22 +1,22 @@
+-import { TransitionHookScope, TransitionHookPhase, } from './interface';
+-import { Transition } from './transition';
+-import { makeEvent } from './hookRegistry';
+-import { registerAddCoreResolvables, treeChangesCleanup } from '../hooks/coreResolvables';
+-import { registerRedirectToHook } from '../hooks/redirectTo';
+-import { registerOnExitHook, registerOnRetainHook, registerOnEnterHook } from '../hooks/onEnterExitRetain';
+-import { registerEagerResolvePath, registerLazyResolveState, registerResolveRemaining } from '../hooks/resolve';
+-import { registerLoadEnteringViews, registerActivateViews } from '../hooks/views';
+-import { registerUpdateGlobalState } from '../hooks/updateGlobals';
+-import { registerUpdateUrl } from '../hooks/url';
+-import { registerLazyLoadHook } from '../hooks/lazyLoad';
+-import { TransitionEventType } from './transitionEventType';
+-import { TransitionHook } from './transitionHook';
+-import { isDefined } from '../common/predicates';
+-import { removeFrom, values, createProxyFunctions } from '../common/common';
+-import { val } from '../common/hof';
+-import { registerIgnoredTransitionHook } from '../hooks/ignoredTransition';
+-import { registerInvalidTransitionHook } from '../hooks/invalidTransition';
++import { TransitionHookScope, TransitionHookPhase, } from './interface.js';
++import { Transition } from './transition.js';
++import { makeEvent } from './hookRegistry.js';
++import { registerAddCoreResolvables, treeChangesCleanup } from '../hooks/coreResolvables.js';
++import { registerRedirectToHook } from '../hooks/redirectTo.js';
++import { registerOnExitHook, registerOnRetainHook, registerOnEnterHook } from '../hooks/onEnterExitRetain.js';
++import { registerEagerResolvePath, registerLazyResolveState, registerResolveRemaining } from '../hooks/resolve.js';
++import { registerLoadEnteringViews, registerActivateViews } from '../hooks/views.js';
++import { registerUpdateGlobalState } from '../hooks/updateGlobals.js';
++import { registerUpdateUrl } from '../hooks/url.js';
++import { registerLazyLoadHook } from '../hooks/lazyLoad.js';
++import { TransitionEventType } from './transitionEventType.js';
++import { TransitionHook } from './transitionHook.js';
++import { isDefined } from '../common/predicates.js';
++import { removeFrom, values, createProxyFunctions } from '../common/common.js';
++import { val } from '../common/hof.js';
++import { registerIgnoredTransitionHook } from '../hooks/ignoredTransition.js';
++import { registerInvalidTransitionHook } from '../hooks/invalidTransition.js';
+ /**
+  * The default [[Transition]] options.
+  *
+  * Include this object when applying custom defaults:
+--- a/lib-esm/url/index.js	
++++ b/lib-esm/url/index.js	
+@@ -1,9 +1,9 @@
+-export * from './interface';
+-export * from './urlMatcher';
+-export * from './urlMatcherFactory';
+-export * from './urlRouter';
+-export * from './urlRule';
+-export * from './urlService';
+-export { UrlRules } from './urlRules';
+-export { UrlConfig } from './urlConfig';
++export * from './interface.js';
++export * from './urlMatcher.js';
++export * from './urlMatcherFactory.js';
++export * from './urlRouter.js';
++export * from './urlRule.js';
++export * from './urlService.js';
++export { UrlRules } from './urlRules.js';
++export { UrlConfig } from './urlConfig.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/url/urlConfig.js	
++++ b/lib-esm/url/urlConfig.js	
+@@ -1,6 +1,6 @@
+-import { ParamTypes } from '../params';
+-import { isDefined, isString } from '../common';
++import { ParamTypes } from '../params/index.js';
++import { isDefined, isString } from '../common/index.js';
+ /**
+  * An API to customize the URL behavior and retrieve URL configuration
+  *
+  * This API is used to customize the behavior of the URL.
+--- a/lib-esm/url/urlMatcher.js	
++++ b/lib-esm/url/urlMatcher.js	
+@@ -1,10 +1,10 @@
+-import { map, inherit, identity, unnest, tail, find, allTrueR, unnestR, arrayTuples } from '../common/common';
+-import { prop, propEq } from '../common/hof';
+-import { isArray, isString, isDefined } from '../common/predicates';
+-import { Param, DefType } from '../params/param';
+-import { joinNeighborsR, splitOnDelim } from '../common/strings';
+-import { defaults } from '../common';
++import { map, inherit, identity, unnest, tail, find, allTrueR, unnestR, arrayTuples } from '../common/common.js';
++import { prop, propEq } from '../common/hof.js';
++import { isArray, isString, isDefined } from '../common/predicates.js';
++import { Param, DefType } from '../params/param.js';
++import { joinNeighborsR, splitOnDelim } from '../common/strings.js';
++import { defaults } from '../common/index.js';
+ function quoteRegExp(str, param) {
+     var surroundPattern = ['', ''], result = str.replace(/[\\\[\]\^$*+?.()|{}]/g, '\\$&');
+     if (!param)
+         return result;
+--- a/lib-esm/url/urlMatcherFactory.js	
++++ b/lib-esm/url/urlMatcherFactory.js	
+@@ -8,11 +8,11 @@
+         return t;
+     };
+     return __assign.apply(this, arguments);
+ };
+-import { extend, forEach, isDefined, isFunction, isObject } from '../common';
+-import { UrlMatcher } from './urlMatcher';
+-import { DefType, Param } from '../params';
++import { extend, forEach, isDefined, isFunction, isObject } from '../common/index.js';
++import { UrlMatcher } from './urlMatcher.js';
++import { DefType, Param } from '../params/index.js';
+ var ParamFactory = /** @class */ (function () {
+     function ParamFactory(router) {
+         this.router = router;
+     }
+--- a/lib-esm/url/urlRouter.js	
++++ b/lib-esm/url/urlRouter.js	
+@@ -1,6 +1,6 @@
+-import { stripLastPathElement } from '../common';
+-import { UrlRuleFactory } from './urlRule';
++import { stripLastPathElement } from '../common/index.js';
++import { UrlRuleFactory } from './urlRule.js';
+ function appendBasePath(url, isHtml5, absolute, baseHref) {
+     if (baseHref === '/')
+         return url;
+     if (isHtml5)
+--- a/lib-esm/url/urlRule.js	
++++ b/lib-esm/url/urlRule.js	
+@@ -1,9 +1,9 @@
+-import { UrlMatcher } from './urlMatcher';
+-import { isString, isDefined, isFunction } from '../common/predicates';
+-import { identity, extend } from '../common/common';
+-import { is, or, pattern } from '../common/hof';
+-import { StateObject } from '../state/stateObject';
++import { UrlMatcher } from './urlMatcher.js';
++import { isString, isDefined, isFunction } from '../common/predicates.js';
++import { identity, extend } from '../common/common.js';
++import { is, or, pattern } from '../common/hof.js';
++import { StateObject } from '../state/stateObject.js';
+ /**
+  * Creates a [[UrlRule]]
+  *
+  * Creates a [[UrlRule]] from a:
+--- a/lib-esm/url/urlRules.js	
++++ b/lib-esm/url/urlRules.js	
+@@ -1,8 +1,8 @@
+-import { TargetState } from '../state';
+-import { UrlMatcher } from './urlMatcher';
+-import { is, isDefined, isFunction, isString, removeFrom, val } from '../common';
+-import { UrlRuleFactory } from './urlRule';
++import { TargetState } from '../state/index.js';
++import { UrlMatcher } from './urlMatcher.js';
++import { is, isDefined, isFunction, isString, removeFrom, val } from '../common/index.js';
++import { UrlRuleFactory } from './urlRule.js';
+ var prioritySort = function (a, b) { return (b.priority || 0) - (a.priority || 0); };
+ var typeSort = function (a, b) {
+     var weights = { STATE: 4, URLMATCHER: 4, REGEXP: 3, RAW: 2, OTHER: 1 };
+     return (weights[a.type] || 0) - (weights[b.type] || 0);
+--- a/lib-esm/url/urlService.js	
++++ b/lib-esm/url/urlService.js	
+@@ -1,8 +1,8 @@
+-import { extend, is, isString, pattern } from '../common';
+-import { UrlRules } from './urlRules';
+-import { UrlConfig } from './urlConfig';
+-import { TargetState } from '../state';
++import { extend, is, isString, pattern } from '../common/index.js';
++import { UrlRules } from './urlRules.js';
++import { UrlConfig } from './urlConfig.js';
++import { TargetState } from '../state/index.js';
+ /**
+  * API for URL management
+  */
+ var UrlService = /** @class */ (function () {
+--- a/lib-esm/vanilla.js	
++++ b/lib-esm/vanilla.js	
+@@ -1,2 +1,2 @@
+-export * from './vanilla/index';
++export * from './vanilla/index.js';
+ //# sourceMappingURL=vanilla.js.map
+\ No newline at end of file
+--- a/lib-esm/vanilla/baseLocationService.js	
++++ b/lib-esm/vanilla/baseLocationService.js	
+@@ -1,6 +1,6 @@
+-import { deregAll, isDefined, removeFrom, root } from '../common';
+-import { buildUrl, getParams, parseUrl } from './utils';
++import { deregAll, isDefined, removeFrom, root } from '../common/index.js';
++import { buildUrl, getParams, parseUrl } from './utils.js';
+ /** A base `LocationServices` */
+ var BaseLocationServices = /** @class */ (function () {
+     function BaseLocationServices(router, fireAfterUpdate) {
+         var _this = this;
+--- a/lib-esm/vanilla/browserLocationConfig.js	
++++ b/lib-esm/vanilla/browserLocationConfig.js	
+@@ -1,5 +1,5 @@
+-import { isDefined, isUndefined } from '../common/predicates';
++import { isDefined, isUndefined } from '../common/predicates.js';
+ /** A `LocationConfig` that delegates to the browser's `location` object */
+ var BrowserLocationConfig = /** @class */ (function () {
+     function BrowserLocationConfig(router, _isHtml5) {
+         if (_isHtml5 === void 0) { _isHtml5 = false; }
+--- a/lib-esm/vanilla/hashLocationService.js	
++++ b/lib-esm/vanilla/hashLocationService.js	
+@@ -12,10 +12,10 @@
+         function __() { this.constructor = d; }
+         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+     };
+ })();
+-import { root, trimHashVal } from '../common';
+-import { BaseLocationServices } from './baseLocationService';
++import { root, trimHashVal } from '../common/index.js';
++import { BaseLocationServices } from './baseLocationService.js';
+ /** A `LocationServices` that uses the browser hash "#" to get/set the current location */
+ var HashLocationService = /** @class */ (function (_super) {
+     __extends(HashLocationService, _super);
+     function HashLocationService(router) {
+--- a/lib-esm/vanilla/index.js	
++++ b/lib-esm/vanilla/index.js	
+@@ -2,16 +2,16 @@
+  * Naive, pure JS implementation of core ui-router services
+  *
+  * @packageDocumentation
+  */
+-export * from './interface';
+-export * from './q';
+-export * from './injector';
+-export * from './baseLocationService';
+-export * from './hashLocationService';
+-export * from './memoryLocationService';
+-export * from './pushStateLocationService';
+-export * from './memoryLocationConfig';
+-export * from './browserLocationConfig';
+-export * from './utils';
+-export * from './plugins';
++export * from './interface.js';
++export * from './q.js';
++export * from './injector.js';
++export * from './baseLocationService.js';
++export * from './hashLocationService.js';
++export * from './memoryLocationService.js';
++export * from './pushStateLocationService.js';
++export * from './memoryLocationConfig.js';
++export * from './browserLocationConfig.js';
++export * from './utils.js';
++export * from './plugins.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/vanilla/injector.js	
++++ b/lib-esm/vanilla/injector.js	
+@@ -1,5 +1,5 @@
+-import { extend, assertPredicate, isFunction, isArray, isInjectable, } from '../common/index';
++import { extend, assertPredicate, isFunction, isArray, isInjectable, } from '../common/index.js';
+ // globally available injectables
+ var globals = {};
+ var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
+ var ARGUMENT_NAMES = /([^\s,]+)/g;
+--- a/lib-esm/vanilla/memoryLocationConfig.js	
++++ b/lib-esm/vanilla/memoryLocationConfig.js	
+@@ -1,6 +1,6 @@
+-import { isDefined } from '../common/predicates';
+-import { noop } from '../common/common';
++import { isDefined } from '../common/predicates.js';
++import { noop } from '../common/common.js';
+ /** A `LocationConfig` mock that gets/sets all config from an in-memory object */
+ var MemoryLocationConfig = /** @class */ (function () {
+     function MemoryLocationConfig() {
+         var _this = this;
+--- a/lib-esm/vanilla/memoryLocationService.js	
++++ b/lib-esm/vanilla/memoryLocationService.js	
+@@ -12,9 +12,9 @@
+         function __() { this.constructor = d; }
+         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+     };
+ })();
+-import { BaseLocationServices } from './baseLocationService';
++import { BaseLocationServices } from './baseLocationService.js';
+ /** A `LocationServices` that gets/sets the current location from an in-memory object */
+ var MemoryLocationService = /** @class */ (function (_super) {
+     __extends(MemoryLocationService, _super);
+     function MemoryLocationService(router) {
+--- a/lib-esm/vanilla/plugins.js	
++++ b/lib-esm/vanilla/plugins.js	
+@@ -1,13 +1,13 @@
+-import { BrowserLocationConfig } from './browserLocationConfig';
+-import { HashLocationService } from './hashLocationService';
+-import { locationPluginFactory } from './utils';
+-import { PushStateLocationService } from './pushStateLocationService';
+-import { MemoryLocationService } from './memoryLocationService';
+-import { MemoryLocationConfig } from './memoryLocationConfig';
+-import { $injector } from './injector';
+-import { $q } from './q';
+-import { services } from '../common/coreservices';
++import { BrowserLocationConfig } from './browserLocationConfig.js';
++import { HashLocationService } from './hashLocationService.js';
++import { locationPluginFactory } from './utils.js';
++import { PushStateLocationService } from './pushStateLocationService.js';
++import { MemoryLocationService } from './memoryLocationService.js';
++import { MemoryLocationConfig } from './memoryLocationConfig.js';
++import { $injector } from './injector.js';
++import { $q } from './q.js';
++import { services } from '../common/coreservices.js';
+ export function servicesPlugin(router) {
+     services.$injector = $injector;
+     services.$q = $q;
+     return { name: 'vanilla.services', $q: $q, $injector: $injector, dispose: function () { return null; } };
+--- a/lib-esm/vanilla/pushStateLocationService.js	
++++ b/lib-esm/vanilla/pushStateLocationService.js	
+@@ -12,10 +12,10 @@
+         function __() { this.constructor = d; }
+         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+     };
+ })();
+-import { BaseLocationServices } from './baseLocationService';
+-import { root, splitHash, splitQuery, stripLastPathElement } from '../common';
++import { BaseLocationServices } from './baseLocationService.js';
++import { root, splitHash, splitQuery, stripLastPathElement } from '../common/index.js';
+ /**
+  * A `LocationServices` that gets/sets the current location using the browser's `location` and `history` apis
+  *
+  * Uses `history.pushState` and `history.replaceState`
+--- a/lib-esm/vanilla/q.js	
++++ b/lib-esm/vanilla/q.js	
+@@ -1,5 +1,5 @@
+-import { isArray, isObject } from '../common/index';
++import { isArray, isObject } from '../common/index.js';
+ /**
+  * An angular1-like promise api
+  *
+  * This object implements four methods similar to the
+--- a/lib-esm/vanilla/utils.js	
++++ b/lib-esm/vanilla/utils.js	
+@@ -1,5 +1,5 @@
+-import { identity, unnestR, isArray, splitEqual, splitHash, splitQuery, } from '../common';
++import { identity, unnestR, isArray, splitEqual, splitHash, splitQuery, } from '../common/index.js';
+ export var keyValsToObjectR = function (accum, _a) {
+     var key = _a[0], val = _a[1];
+     if (!accum.hasOwnProperty(key)) {
+         accum[key] = val;
+--- a/lib-esm/view/index.js	
++++ b/lib-esm/view/index.js	
+@@ -1,3 +1,3 @@
+-export * from './interface';
+-export * from './view';
++export * from './interface.js';
++export * from './view.js';
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+--- a/lib-esm/view/view.js	
++++ b/lib-esm/view/view.js	
+@@ -1,8 +1,8 @@
+-import { equals, applyPairs, removeFrom, inArray, find } from '../common/common';
+-import { curry, prop } from '../common/hof';
+-import { isString, isArray } from '../common/predicates';
+-import { trace } from '../common/trace';
++import { equals, applyPairs, removeFrom, inArray, find } from '../common/common.js';
++import { curry, prop } from '../common/hof.js';
++import { isString, isArray } from '../common/predicates.js';
++import { trace } from '../common/trace.js';
+ /**
+  * The View service
+  *
+  * This service pairs existing `ui-view` components (which live in the DOM)
