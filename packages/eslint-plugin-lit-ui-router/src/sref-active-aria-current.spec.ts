@@ -12,7 +12,7 @@ const ruleTester = new RuleTester({
 
 const IMPORTS = `
 import { html } from 'lit';
-import { srefAriaCurrent, uiSrefActive } from 'lit-ui-router';
+import { srefAriaCurrent, uiSref, uiSrefActive } from 'lit-ui-router';
 `;
 
 ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
@@ -49,8 +49,42 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       name: "a foreign package's uiSrefActive is not ours",
       code: `import { html } from 'lit';\nimport { uiSrefActive } from 'other-router';\nhtml\`<a href="/home" aria-current="page" \${uiSrefActive({})}>Home</a>\`;`,
     },
+    {
+      name: 'non-link <li>: runtime default never writes aria-current, so no takeover',
+      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ activeClasses: ['on'] })}><a \${uiSref('home')}>Home</a></li>\`;`,
+    },
+    {
+      name: 'a non-link with no argument is never taken over',
+      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive()}></li>\`;`,
+    },
+    {
+      name: 'a role without the link token is not a link',
+      code: `${IMPORTS}html\`<div role="button" aria-current="true" \${uiSrefActive({})}></div>\`;`,
+    },
+    {
+      name: 'a bound role is unknowable, so it stays suppressed',
+      code: `${IMPORTS}html\`<div role=\${role} aria-current="true" \${uiSrefActive({})}></div>\`;`,
+    },
   ],
   invalid: [
+    {
+      name: 'an explicit ariaCurrentValue takes over a non-link too, unfixed',
+      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: 'step' })}></li>\`;`,
+      errors: [{ messageId: 'ariaCurrentTakeover', data: { tag: 'li' } }],
+      output: null,
+    },
+    {
+      name: 'a literal role with the link token is a link',
+      code: `${IMPORTS}html\`<div role="menuitem link" aria-current="page" \${uiSrefActive({})}></div>\`;`,
+      errors: [{ messageId: 'ariaCurrentTakeover', data: { tag: 'div' } }],
+      output: `${IMPORTS}html\`<div role="menuitem link" aria-current="page" \${uiSrefActive({ ariaCurrentValue: false })}></div>\`;`,
+    },
+    {
+      name: '<area> is a native link',
+      code: `${IMPORTS}html\`<area href="/home" aria-current="page" \${uiSrefActive()}>\`;`,
+      errors: [{ messageId: 'ariaCurrentTakeover', data: { tag: 'area' } }],
+      output: `${IMPORTS}html\`<area href="/home" aria-current="page" \${uiSrefActive({ ariaCurrentValue: false })}>\`;`,
+    },
     {
       name: 'an empty params literal gains the opt-out',
       code: `${IMPORTS}html\`<a href="/home" aria-current="page" \${uiSrefActive({})}>Home</a>\`;`,
