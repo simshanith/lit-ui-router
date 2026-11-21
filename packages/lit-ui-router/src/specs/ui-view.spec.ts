@@ -745,6 +745,35 @@ describe('UiView', () => {
 
       expect(nestedView).toBeDefined();
     });
+
+    it('should fill a nested view for the second of two states sharing a template', async () => {
+      const layout = () =>
+        html`<section class="layout"><ui-view></ui-view></section>`;
+
+      const { uiView } = await setupRouter([
+        { name: 'admin', url: '/admin', component: layout },
+        {
+          name: 'admin.users',
+          url: '/users',
+          component: () => html`<p class="users">Users</p>`,
+        },
+        { name: 'settings', url: '/settings', component: layout },
+        {
+          name: 'settings.profile',
+          url: '/profile',
+          component: () => html`<p class="profile">Profile</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'admin.users');
+      await tick(20);
+      expect(uiView.querySelector('.users')).not.toBeNull();
+
+      await routerGo(router, 'settings.profile');
+      await tick(20);
+
+      expect(uiView.querySelector('.profile')).not.toBeNull();
+    });
   });
 
   describe('fallback content', () => {
@@ -1525,6 +1554,75 @@ describe('UiView', () => {
         expect(uiView.routedElement).not.toBe(leaf);
         expect(countsFor('test-retained-leaf').constructed).toBe(2);
       });
+    });
+
+    it('should keep a template component’s nodes when only a dynamic param changes', async () => {
+      const { uiView } = await setupRouter([
+        {
+          ...dynamicStar,
+          component: ({ transition }) =>
+            html`<p class="star">${transition?.params().starId}</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      await waitForUpdate(uiView);
+      const star = uiView.querySelector('.star');
+      expect(star?.textContent).toBe('sun');
+
+      await routerGo(router, 'star', { starId: 'rigel' });
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.star')).toBe(star);
+      expect(star?.textContent).toBe('rigel');
+    });
+
+    it('should keep a template component’s nodes across a re-attach and show the param that changed while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([
+        {
+          ...dynamicStar,
+          component: ({ transition }) =>
+            html`<p class="star">${transition?.params().starId}</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      await waitForUpdate(uiView);
+      const star = uiView.querySelector('.star');
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'rigel' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.star')).toBe(star);
+      expect(star?.textContent).toBe('rigel');
+    });
+
+    it('should keep a retained template parent and its nested view when a child param changes', async () => {
+      const { uiView } = await setupRouter([
+        {
+          name: 'galaxy',
+          url: '/galaxy',
+          component: () => html`<section><ui-view></ui-view></section>`,
+        },
+        {
+          name: 'galaxy.star',
+          url: '/star/:starId',
+          component: TestRetainedLeaf,
+        },
+      ]);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      const section = uiView.querySelector('section');
+      const nestedView = section?.querySelector('ui-view');
+      expect(nestedView).toBeTruthy();
+
+      await routerGo(router, 'galaxy.star', { starId: 'rigel' });
+
+      expect(uiView.querySelector('section')).toBe(section);
+      expect(section?.querySelector('ui-view')).toBe(nestedView);
     });
 
     it('should mint a new element when the state changes', async () => {
