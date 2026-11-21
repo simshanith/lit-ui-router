@@ -12,14 +12,14 @@ An app that stays on [`@uirouter/react`](https://ui-router.github.io/react/docs/
 This guide covers the three packages verified against `@uirouter/react` 1.0.8 on React 19 with no `lit` installed:
 
 - [`ui-router-navigation-location-plugin`](/packages/ui-router-navigation-location-plugin) — URL management through the browser Navigation API.
-- [`ui-router-registry`](/packages/ui-router-registry) — types-only checked state names and params from `as const` state tables.
+- [`ui-router-registry`](/packages/ui-router-registry) — compile-time types for state names and params, read from `as const` state tables.
 - [`ui-router-signals`](/packages/ui-router-signals) — TC39 Signals mirroring the settled route and in-flight transitions.
 
 To switch the renderer to Lit as well, see [Coming from UI-Router](./coming-from-ui-router).
 
 ## Install
 
-Each package takes `@uirouter/core` as a peer dependency. `@uirouter/react` 1.0.8 depends on `@uirouter/core` 6.1.2, so the packages share the copy already installed. `ui-router-signals` also peers on `signal-polyfill`, and `ui-router-registry` emits no JavaScript and belongs in `devDependencies`.
+Each package takes `@uirouter/core` as a peer dependency. `@uirouter/react` already depends on `@uirouter/core` 6, so the packages share that copy. `ui-router-signals` also peers on `signal-polyfill`, and `ui-router-registry` emits no JavaScript and belongs in `devDependencies`.
 
 ```bash
 npm install ui-router-navigation-location-plugin ui-router-signals signal-polyfill
