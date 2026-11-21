@@ -216,6 +216,85 @@ Cloudflare `assets.html_handling` of `force-trailing-slash` maps to `{ pages: 'a
 `drop-trailing-slash` to `{ pages: 'never' }`. See
 [trailing slashes](https://lit-ui-router.dev/packages/ui-router-server#trailing-slashes).
 
+## URLPattern urls
+
+**Experimental:** the three `url-pattern` entries can change in a minor release.
+
+A state can declare its url in [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
+pathname syntax, and the client router and both server strategies then match it with the
+platform's `URLPattern`, so one engine decides on both sides. The work is split over three
+entries, and a bundle carries only the ones it imports:
+
+- `ui-router-server/url-pattern`: `urlPattern(input, { query })` declares a url as plain data and
+  `urlPatternOf(url)` reads it back. No matching code.
+- `ui-router-server/url-pattern/client`: `urlPatternPlugin`, for a `@uirouter/core` router.
+- `ui-router-server/url-pattern/server`: `urlPatternCompiler`, for a mount's `urlPattern` option,
+  `compileRoutes(routes, config, { urlPattern })` and a `RedirectTable`.
+
+```ts check
+// states.ts: data only, shared by the client and the server
+import type { StateDeclaration } from '@uirouter/core';
+import { urlPattern } from 'ui-router-server/url-pattern';
+
+export const states = [
+  { name: 'users', url: urlPattern('/users', { query: ['sort'] }) },
+  {
+    name: 'users.detail',
+    url: urlPattern('/:id'),
+    params: { id: { type: 'int' } },
+  },
+  { name: 'codes', url: urlPattern('/codes/:code([a-z]{3})') },
+] satisfies StateDeclaration[];
+```
+
+```ts check
+// client: the plugin goes on before the states register
+import { UIRouter } from '@uirouter/core';
+import { urlPattern } from 'ui-router-server/url-pattern';
+import { urlPatternPlugin } from 'ui-router-server/url-pattern/client';
+
+const router = new UIRouter();
+router.plugin(urlPatternPlugin);
+router.stateRegistry.register({ name: 'user', url: urlPattern('/users/:id') });
+```
+
+```ts check
+// server: the mount names the compiler, on either strategy
+import { createServerRouter } from 'ui-router-server';
+import { urlPattern } from 'ui-router-server/url-pattern';
+import { urlPatternCompiler } from 'ui-router-server/url-pattern/server';
+
+const server = createServerRouter({
+  mounts: {
+    '/': {
+      routes: [{ name: 'user', url: urlPattern('/users/:id') }],
+      urlPattern: urlPatternCompiler,
+    },
+  },
+});
+```
+
+The subset is what can also be formatted back into a url, since `URLPattern` only matches:
+literal text, `:name` groups and `:name(regexp)` groups, in `pathname` only. `urlPattern()` throws
+for a wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, a literal `.` or `..`
+segment, and any other component. A path the engine would rewrite before matching (dot segments,
+unencoded characters) doesn't match, as it doesn't match a string url. A group takes a regexp or a declared param `type`, not both, and no default or array
+mode. Query params are declared by name and keep core's types, defaults and squash. A child
+`urlPattern()` url joins its parent's pathname; a chain can't mix it with string urls, in either
+direction. `href()` and redirect targets return `null` for values the pattern rejects. Apply the
+plugin before `applyUrlConfig`, so a trailing-slash policy formats these urls too.
+
+A mount that declares a `urlPattern()` url without `urlPattern: urlPatternCompiler` throws at
+construction, and a table of string urls loads no URLPattern code. `execRoute(route, path)` and
+`formatRoute(route, params)` from `ui-router-server/redirects` match and format a compiled route
+of either kind. `routeTrie` expresses a URLPattern route unless a regexp group may match a `/` or
+its literal text holds a character URLPattern percent-encodes.
+
+Node 24, Deno, workerd and current browsers ship `URLPattern`. Node 22 and older browsers need
+[`urlpattern-polyfill`](https://www.npmjs.com/package/urlpattern-polyfill) loaded first; without a
+global `URLPattern`, registering or compiling a URLPattern state throws an error naming it. See
+[URLPattern urls](https://lit-ui-router.dev/packages/ui-router-server#urlpattern-urls).
+
 ## Values beyond plain JSON
 
 `dehydrate` from `ui-router-server/ssr` and `seed` from `ui-router-server/ssr/client` take a

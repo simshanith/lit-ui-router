@@ -145,6 +145,30 @@
       "node": "./dist/development/url-config.js",
       "default": "./dist/url-config.js"
     },
+    "./url-pattern": {
+      "types": "./dist/url-pattern.d.ts",
+      "development": "./dist/development/url-pattern.js",
+      "production": "./dist/url-pattern.js",
+      "deno": "./dist/url-pattern.js",
+      "node": "./dist/development/url-pattern.js",
+      "default": "./dist/url-pattern.js"
+    },
+    "./url-pattern/client": {
+      "types": "./dist/url-pattern-client.d.ts",
+      "development": "./dist/development/url-pattern-client.js",
+      "production": "./dist/url-pattern-client.js",
+      "deno": "./dist/url-pattern-client.js",
+      "node": "./dist/development/url-pattern-client.js",
+      "default": "./dist/url-pattern-client.js"
+    },
+    "./url-pattern/server": {
+      "types": "./dist/url-pattern-server.d.ts",
+      "development": "./dist/development/url-pattern-server.js",
+      "production": "./dist/url-pattern-server.js",
+      "deno": "./dist/url-pattern-server.js",
+      "node": "./dist/development/url-pattern-server.js",
+      "default": "./dist/url-pattern-server.js"
+    },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "development": "./dist/development/vite.js",
@@ -299,6 +323,21 @@
       ]
     },
     "./url-config": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-pattern": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-pattern/client": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./url-pattern/server": {
       "free": [
         "@uirouter/core"
       ]
