@@ -27,8 +27,8 @@
       // uses: the Cypress binary (download + unzip, ~15s) belongs to the e2e suite,
       // and the husky git hooks to a developer checkout. Both mirror what
       // `mise run setup` and the CI workflows already set. BUN_VERSION holds the
-      // image's bun, which cloudflare-build.ts parses the mise config with, at
-      // the version mise pins for the tests (equality checked in the tests).
+      // image's bun, which runs cloudflare-build.ts, at the version mise pins
+      // for the tests (tools/repo-checks/bun-pin.test.ts).
       "production": {
         "build_command": "./tools/workers-builds/cloudflare-build.ts",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main",

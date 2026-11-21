@@ -149,9 +149,8 @@ const workspaces = {
   },
   'tools/shared': { entry: ['src/**/*.test-d.ts'] },
   'tools/workers-builds': {
-    // run by path: from the member's mise.toml, which knip does not read, and
-    // under bun from cloudflare-build.ts
-    entry: ['preview-deployment.ts', 'bun/*.bun.ts'],
+    // run by path from the member's mise.toml, which knip does not read
+    entry: ['preview-deployment.ts'],
   },
   'www/lit-ui-router.dev': {
     // is-server.ts is the wrangler alias target for lit-html/is-server.js

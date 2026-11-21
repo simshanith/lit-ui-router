@@ -124,9 +124,6 @@ catalogs:
     '@testing-library/dom':
       specifier: ^10.4.2
       version: 10.4.2
-    '@types/bun':
-      specifier: 1.4.4
-      version: 1.4.4
     '@types/d3-hierarchy':
       specifier: ^3.1.7
       version: 3.1.7
@@ -3565,9 +3562,6 @@ importers:
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../shared
-      '@types/bun':
-        specifier: 'catalog:'
-        version: 1.4.4
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -6535,9 +6529,6 @@ packages:
   '@types/aria-query@5.0.4':
     resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
 
-  '@types/bun@1.4.4':
-    resolution: {integrity: sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ==}
-
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -7453,9 +7444,6 @@ packages:
   buffer-image-size@0.6.4:
     resolution: {integrity: sha512-nEh+kZOPY1w+gcCMobZ6ETUp9WfibndnosbpwB1iJk/8Gt5ZF2bhS6+B6bPYz424KtwsR6Rflc3tCz1/ghX2dQ==}
     engines: {node: '>=4.0'}
-
-  bun-types@1.4.4:
-    resolution: {integrity: sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -12973,10 +12961,6 @@ snapshots:
 
   '@types/aria-query@5.0.4': {}
 
-  '@types/bun@1.4.4':
-    dependencies:
-      bun-types: 1.4.4
-
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -13788,11 +13772,6 @@ snapshots:
   buffer-image-size@0.6.4:
     dependencies:
       '@types/node': 24.19.2
-
-  bun-types@1.4.4:
-    dependencies:
-      '@types/node': 24.19.2
-      undici-types: 7.24.6
 
   bundle-name@4.1.0:
     dependencies:

@@ -23,7 +23,6 @@ import {
   DEFAULT_SITE,
   type Site,
   buildSteps,
-  misePin,
   resolveSite,
 } from './cloudflare-build.ts';
 import {
@@ -199,8 +198,6 @@ describe('desiredStateFromConfig', () => {
   // (like the deploy script exports its mode map), so the install is read
   // rather than grepped out of the source.
   it('pairs the skipped install with an install in every build command', () => {
-    const npmVersion = misePin(workspaceRoot, 'npm:npm');
-
     for (const worker of workers) {
       for (const kind of ['production', 'preview'] as const) {
         const { path, args } = parseCommand(worker[kind].build_command);
@@ -221,7 +218,7 @@ describe('desiredStateFromConfig', () => {
           workspaceRoot,
           '/nonexistent/bin',
           site,
-          npmVersion,
+          '12.0.0',
         );
 
         assert.ok(
@@ -244,22 +241,6 @@ describe('desiredStateFromConfig', () => {
   // The docs site's dashboard commands predate the site argument and hold
   // still for every open branch, so they must keep naming it by default.
 
-  // cloudflare-build.ts parses the mise config with the image's bun, so the
-  // deploy runs the bun the tests run.
-  it('pins every build to the mise bun', () => {
-    const bunVersion = misePin(workspaceRoot, 'aqua:oven-sh/bun');
-    assert.notEqual(bunVersion, '');
-
-    for (const worker of workers) {
-      for (const kind of ['production', 'preview'] as const) {
-        assert.equal(
-          worker[kind].environment_variables?.BUN_VERSION,
-          bunVersion,
-          `${worker.site} ${kind}: BUN_VERSION`,
-        );
-      }
-    }
-  });
   it('keeps the docs site on the bare dashboard commands', () => {
     assert.equal(flagship.production.build_command, BUILD_SCRIPT);
     assert.equal(flagship.preview.build_command, BUILD_SCRIPT);

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // The Cloudflare Workers Builds build command, in the repo like the deploy
 // command: the dashboard holds one value for every branch, so the steps live
 // here (see www/DEPLOY.md).
@@ -10,6 +10,10 @@
 // @tools/bootstrap is a zero-dependency package, so resolution never consults
 // node_modules. Type imports are erased before execution, so they name the
 // package instead.
+//
+// Runs under bun, which the image ships: bun imports the mise config as TOML,
+// which node cannot before `pnpm install`. Everything else here is plain node
+// API, so the tests import this module under node and stub that one read.
 //
 // The image has node, npm and bun; this script installs npm 12 and pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
@@ -121,22 +125,31 @@ export const pnpmSpec = (root: string): string => {
   return spec;
 };
 
+/** The part of `.config/mise/config.toml` this script reads. */
+export type MiseConfig = {
+  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- mise's own shape: tool name to a version string or an options table
+  readonly tools?: Readonly<Partial<Record<string, string | object>>>;
+};
+
 /**
- * A tool's version pin from `.config/mise/config.toml`, parsed by the build
- * image's bun (mise pins the same version for local runs and the tests): node
- * has no TOML parser, and none can be installed before `pnpm install`. Empty
- * when the tool has no plain version pin.
+ * `.config/mise/config.toml`, through bun's TOML loader: a module whose
+ * named exports are the file's top-level tables. Bun only; node rejects the
+ * extension.
  */
-export const misePin = (root: string, tool: string): string =>
-  execFileSync(
-    'bun',
-    [
-      join(import.meta.dirname, 'bun/mise-pin.bun.ts'),
-      join(root, '.config/mise/config.toml'),
-      tool,
-    ],
-    { encoding: 'utf8' },
-  ).trim();
+export const readMiseConfig = async (root: string): Promise<MiseConfig> => {
+  const config: unknown = await import(join(root, '.config/mise/config.toml'));
+
+  // SAFETY: mise validates its own config; [tools] maps a tool to a version string or a table.
+  return config as MiseConfig;
+};
+
+/** A tool's plain version pin; empty when it has none or pins with a table. */
+export const misePin = (config: MiseConfig, tool: string): string => {
+  const pin = config.tools?.[tool];
+
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- mise's own union: a string is a plain pin, a table carries options
+  return typeof pin === 'string' ? pin : '';
+};
 
 /**
  * The npm to install, from the mise pin that shadows node's bundled npm
@@ -190,7 +203,7 @@ export const buildSteps = (
   ['npx', ['turbo', `${site.packageName}#build`]],
 ];
 
-const main = (argv: readonly string[]): void => {
+const main = async (argv: readonly string[]): Promise<void> => {
   const resolved = siteFromArgs(workspaceRoot, argv);
 
   if (!resolved.ok) {
@@ -201,6 +214,8 @@ const main = (argv: readonly string[]): void => {
 
     return;
   }
+
+  const miseConfig = await readMiseConfig(workspaceRoot);
 
   // Ask npm where it will write: asdf puts its own shims on PATH, so resolving
   // `node` finds ~/.asdf/shims, not the installs/nodejs/<version>/bin that the
@@ -216,10 +231,10 @@ const main = (argv: readonly string[]): void => {
     workspaceRoot,
     `${npmPrefix}/bin`,
     resolved.site,
-    misePin(workspaceRoot, 'npm:npm'),
+    misePin(miseConfig, 'npm:npm'),
   )) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
 };
 
-if (import.meta.main) main(process.argv.slice(2));
+if (import.meta.main) await main(process.argv.slice(2));

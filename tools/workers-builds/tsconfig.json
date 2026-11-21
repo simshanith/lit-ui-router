@@ -10,7 +10,5 @@
     "types": ["node"],
     "lib": ["ES2022"]
   },
-  "include": ["**/*.ts"],
-  // bun's globals stay out of the node program: bun/tsconfig.json checks these
-  "exclude": ["bun", "node_modules"]
+  "include": ["**/*.ts"]
 }

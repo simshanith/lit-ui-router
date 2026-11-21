@@ -1,21 +1,52 @@
-// mise pins the bun that parses the mise config for the Workers Builds
-// bootstrap (tools/workers-builds/bun/), every trigger sets BUN_VERSION to it
-// (workers-builds-triggers.test.ts holds that pair), and @types/bun types the
-// script against the same release. Assert the catalog agrees with mise.
+// mise pins the bun that runs the Workers Builds bootstrap
+// (tools/workers-builds/cloudflare-build.ts), and every trigger pins the image's
+// bun to it with BUN_VERSION, so the tests run the bun the deploy does. Assert
+// the triggers agree with mise.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { parse as parseJsonc } from 'jsonc-parser';
+
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { loadWorkspaceManifest } from '@tools/shared/workspace.ts';
 import { taploGet } from './cli-query.ts';
 
-describe('bun version pins', () => {
-  it('pins @types/bun in the catalog to the mise bun', async () => {
-    const manifest = await loadWorkspaceManifest(workspaceRoot);
+type Trigger = { environment_variables?: { BUN_VERSION?: string } };
 
-    assert.equal(
-      manifest?.catalog?.['@types/bun'],
-      taploGet('.config/mise/config.toml', 'tools."aqua:oven-sh/bun"'),
+type TriggersConfig = {
+  workers: Record<string, { production: Trigger; preview: Trigger }>;
+};
+
+// SAFETY: workers-builds-triggers.ts validates this file's shape before every apply
+const { workers } = parseJsonc(
+  readFileSync(
+    join(
+      workspaceRoot,
+      'tools/workers-builds/workers-builds-triggers.config.jsonc',
+    ),
+    'utf8',
+  ),
+) as TriggersConfig;
+
+describe('bun version pins', () => {
+  it('pins every Workers Builds trigger to the mise bun', () => {
+    const pinned = taploGet(
+      '.config/mise/config.toml',
+      'tools."aqua:oven-sh/bun"',
     );
+
+    for (const [site, { production, preview }] of Object.entries(workers)) {
+      assert.equal(
+        production.environment_variables?.BUN_VERSION,
+        pinned,
+        `${site} production`,
+      );
+      assert.equal(
+        preview.environment_variables?.BUN_VERSION,
+        pinned,
+        `${site} preview`,
+      );
+    }
   });
 });
