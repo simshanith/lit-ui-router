@@ -84,6 +84,14 @@ ruleTester.run('directive-position', directivePosition, {
       name: "an unrelated module's namespace is not a lit namespace",
       code: `${IMPORTS}import * as other from './other.js';\nother.html\`<a href=\${uiSref('home')}>Home</a>\`;`,
     },
+    {
+      name: 'a static-html literal tag hides its element, so its parts go unjudged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'an attribute part on a static-html literal tag goes unjudged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} class="x" href=\${srefHref('home')}>Home</\${tag}>\`;`,
+    },
   ],
   invalid: [
     {
@@ -188,6 +196,11 @@ ruleTester.run('directive-position', directivePosition, {
       name: 'a namespace import still counts',
       code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href=\${lur.uiSref('home')}>Home</a>\`;`,
       errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'child position inside a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}><span>\${uiSref('home')}</span></\${tag}>\`;`,
+      errors: [{ messageId: 'elementPartOnly', line: 4, column: 40 }],
     },
   ],
 });

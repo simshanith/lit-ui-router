@@ -44,6 +44,28 @@ const WHOLE_VALUE: Partial<Record<DirectiveName, true>> = {
 export const RULE_NAME = 'directive-position';
 
 /**
+ * Expression indexes inside an opening or closing tag whose name is itself an
+ * expression (`<${tag} ...>`, from `lit/static-html.js`). The analyzer parses
+ * that tag as text, so it can't say where these expressions land.
+ */
+const staticTagExpressions = (
+  quasis: readonly { value: { raw: string } }[],
+): Set<number> => {
+  const hidden = new Set<number>();
+  let inStaticTag = false;
+
+  quasis.slice(0, -1).forEach(({ value: { raw } }, index) => {
+    if (inStaticTag && raw.includes('>')) inStaticTag = false;
+
+    if (/<\/?$/.test(raw)) inStaticTag = true;
+
+    if (inStaticTag) hidden.add(index);
+  });
+
+  return hidden;
+};
+
+/**
  * Every lit-ui-router directive only where its part type allows.
  *
  * Only expressions of a lit template are considered: a call held in a variable
@@ -85,6 +107,7 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
 
         const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
+        const hidden = staticTagExpressions(node.quasi.quasis);
 
         // Every expression index the parsed template resolved to an element
         // part; anything else is an attribute, child or comment position.
@@ -109,7 +132,7 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
         expressions.forEach((expression, index) => {
           const name = tracker.directiveOf(expression);
 
-          if (name === undefined) return;
+          if (name === undefined || hidden.has(index)) return;
 
           const report = (
             messageId:
