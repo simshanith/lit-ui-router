@@ -24,6 +24,7 @@ const urlStates = [
   { name: 'emptybody', url: '/x/{bad:}/:y' },
   { name: 'openbrace', url: '/x/{a{b}' },
   { name: 'colonquery', url: '/list?:page&size' },
+  { name: 'dotquery', url: '/q?{a.b:int}&{c-d: int}&{e.f}' },
   {
     name: 'long',
     url: '/a/:p0/b/:p1/c/:p2/d/:p3/e/:p4/f/:p5/g/:p6/h/:p7/i/:p8/j/:p9/k/{p10:int}/l/{p11:[0-9]+}/m/:p12.json/n/*p13?q0&q1&{q2:int}',
@@ -107,6 +108,11 @@ accepts<Equal<Keys<'openbrace'>, 'b'>>(true);
 accepts<Equal<Keys<'colonquery'>, 'page' | 'size'>>(true);
 
 void stateService.go('colonquery');
+
+// A query name may hold `.` or `-`.
+accepts<Equal<Keys<'dotquery'>, 'a.b' | 'c-d' | 'e.f'>>(true);
+
+accepts<ResolvedParamsOf<'dotquery'>['c-d']>(1);
 
 // -- a long url ---------------------------------------------------------------
 

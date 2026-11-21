@@ -298,8 +298,10 @@ type Scan<D> = ScanPath<UrlOf<D>>;
 
 type QueryEntry<S extends string> = S extends ''
   ? never
-  : S extends `{${string}}`
-    ? ScanPath<S>[0]
+  : S extends `{${infer Body}}`
+    ? Body extends `${infer Name}:${infer Type}`
+      ? [Name, SkipSpace<Type>]
+      : [Body, 'path']
     : S extends `:${infer Name}`
       ? [Name, 'query']
       : [S, 'query'];
