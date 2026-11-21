@@ -161,24 +161,31 @@ const ourSourcesOf = (
   return (source) => entries.some((entry) => isSubpathOf(source, entry));
 };
 
-/** The definition an identifier resolves to; `undefined` when it is unbound. */
-const definitionOf = (
+/** The variable `name` resolves to from `node`'s scope; `undefined` when it is unbound. */
+const variableAt = (
   context: Rule.RuleContext,
   node: Node,
-): Scope.Definition | undefined => {
-  if (!isIdentifier(node)) return undefined;
-  const { name } = node;
-
+  name: string,
+): Scope.Variable | undefined => {
   let scope: Scope.Scope | null = context.sourceCode.getScope(toEstree(node));
 
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
 
-    if (variable !== undefined) return variable.defs[0];
+    if (variable !== undefined) return variable;
   }
 
   return undefined;
 };
+
+/** The definition an identifier resolves to; `undefined` when it is unbound. */
+const definitionOf = (
+  context: Rule.RuleContext,
+  node: Node,
+): Scope.Definition | undefined =>
+  isIdentifier(node)
+    ? variableAt(context, node, node.name)?.defs[0]
+    : undefined;
 
 /** The import an identifier resolves to, or nothing: a shadowing local wins. */
 const importBindingOf = (context: Rule.RuleContext, node: Node) => {
@@ -375,7 +382,7 @@ export interface SiblingBinding {
 /**
  * Spell `name` the way `callee` reaches lit-ui-router: through the same
  * namespace, an existing specifier, or a specifier added after `callee`'s own.
- * `undefined` when `callee`'s import cannot be found to extend.
+ * `undefined` when `callee`'s import cannot be found to extend, or `name` is taken.
  */
 export const siblingBinding = (
   fixer: Rule.RuleFixer,
@@ -407,7 +414,10 @@ export const siblingBinding = (
     (specifier) => specifier.local.name === callee.name,
   );
 
-  if (anchor === undefined) return undefined;
+  // Another binding already holds the name, so the added specifier would redeclare it.
+  if (anchor === undefined || variableAt(context, callee, name) !== undefined) {
+    return undefined;
+  }
 
   return {
     binding: name,
