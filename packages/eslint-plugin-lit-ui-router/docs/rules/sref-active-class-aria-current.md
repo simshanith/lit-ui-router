@@ -103,7 +103,7 @@ The fix binds `aria-current` after the `class` attribute, copying the `state`, `
 +html`<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })} aria-current=${srefAriaCurrent({ state: 'home' })}>Home</a>`;
 ```
 
-A params argument that is not an object literal, one carrying a spread, and a call with no argument at all have nothing to copy, so they report without a fix — and under their own message, which asks for the shared `state`, `params` and `options` rather than naming a call it cannot spell.
+A params argument that is not an object literal, one carrying a spread, and a call with no argument at all have nothing to copy, so they report without a fix — and under their own message, which asks for the shared `state`, `params` and `options` rather than naming a call it cannot spell. A file that already binds `srefAriaCurrent` to something else also reports without a fix, since the added import would redeclare it.
 
 The insertion point comes from the **last** expression in the `class` value, so `class="nav ${a} ${b}"` lands after the closing quote rather than inside the value.
 
