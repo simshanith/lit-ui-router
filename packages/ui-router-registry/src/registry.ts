@@ -295,11 +295,24 @@ type IsArray<C, K> = C extends { array: infer A }
 
 type ArrayOf<T, A> = A extends true ? T[] : T;
 
+// Core wraps a scalar default and keeps an array one, so either names the element type.
+type DefaultElement<V> = [V] extends [never]
+  ? unknown
+  : Widen<V> extends infer W
+    ? [W] extends [readonly (infer E)[]]
+      ? [E] extends [never]
+        ? unknown
+        : Widen<E>
+      : W
+    : never;
+
 // An untyped non-url param is core's `any`, so only its default's type is known.
 type ConfigType<C, UrlType, K> = C extends { type: infer T extends string }
   ? ArrayOf<BuiltInType<T>, IsArray<C, K>> | NullDefault<C>
   : [UrlType] extends [never]
-    ? Widen<DefaultOf<C>>
+    ? IsArray<C, K> extends true
+      ? DefaultElement<DefaultOf<C>>[] | NullDefault<C>
+      : Widen<DefaultOf<C>>
     : ArrayOf<UrlType, IsArray<C, K>> | NullDefault<C>;
 
 type UrlKeys<D> = PathEntries<D>[0] | QueryEntries<D>[0];

@@ -17,6 +17,15 @@ const arrayStates = [
   },
   { name: 'filters', params: { flags: { type: 'bool', array: true } } },
   {
+    name: 'untyped',
+    params: {
+      tags: { array: true, value: 'all' },
+      ids: { array: true, value: [1, 2] },
+      none: { array: true, value: null },
+      'keys[]': { value: 'k' },
+    },
+  },
+  {
     name: 'defaulted',
     url: '/defaulted?tag',
     params: { tag: { array: true, value: 'all' } },
@@ -75,3 +84,23 @@ accepts<ResolvedParamsOf<'defaulted'>['tag']>(['all']);
 
 // @ts-expect-error a scalar default still reads back an array
 accepts<ResolvedParamsOf<'defaulted'>['tag']>('all');
+
+// -- an untyped non-url param: the element type comes from the default -------
+
+type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+
+type Untyped = ResolvedParamsOf<'untyped'>;
+
+// A scalar default is wrapped, an array default is read as is, and `null` stays `null`.
+accepts<Equal<Untyped['tags'], string[]>>(true);
+
+accepts<Equal<Untyped['ids'], number[]>>(true);
+
+accepts<Equal<Untyped['none'], unknown[] | null>>(true);
+
+accepts<Equal<Untyped['keys[]'], string[]>>(true);
+
+accepts<ParamsOf<'untyped'>>({ tags: ['a'], 'keys[]': ['b'] });
+
+// @ts-expect-error an untyped array param takes an array, not one value
+accepts<ParamsOf<'untyped'>>({ tags: 'a' });
