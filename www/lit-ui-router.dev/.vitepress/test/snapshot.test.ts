@@ -25,9 +25,11 @@ import {
   htmlPath,
   indexProblems,
   lineFiles,
+  listPrefixes,
   markerBody,
   markerKey,
   md5Of,
+  ownsKey,
   readSnapshotManifest,
   snapshotDigest,
   snapshotHeaders,
@@ -465,6 +467,18 @@ describe('the snapshot upload', () => {
       'packages/ui-router-server/v0.html',
       'reference/ui-router-server/v0/index.html',
     ]);
+  });
+
+  it("lists a line's bare-root page and keeps a sibling major out", () => {
+    assert.ok(site && pkg);
+    assert.deepEqual(listPrefixes(site), ['v1']);
+    assert.deepEqual(listPrefixes(pkg), [
+      'packages/ui-router-server/v0',
+      'reference/ui-router-server/v0',
+    ]);
+    assert.ok(ownsKey(pkg, 'packages/ui-router-server/v0.html'));
+    assert.ok(!ownsKey(pkg, 'packages/ui-router-server/v01.html'));
+    assert.ok(!ownsKey(site, 'v10/index.html'));
   });
 
   it('uploads what differs or is missing, and keeps what the build dropped', () => {

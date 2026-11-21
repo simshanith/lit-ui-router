@@ -207,7 +207,6 @@ function lineHeaders({ line, root }: LinePlace, pathname: string): Headers {
 /** The members of an R2 object the route reads; structural, so the bake can import this module without the workers types. */
 export interface StoredObject {
   httpEtag: string;
-  httpMetadata?: { contentType?: string };
 }
 
 /** The R2 bucket reads the route makes: a bodiless object from `get` means its `onlyIf` precondition failed. */
@@ -252,7 +251,8 @@ function objectResponse(
   place: LinePlace,
   headers: Headers,
 ): Response {
-  const type = contentTypeOf(key) ?? object.httpMetadata?.contentType;
+  // By extension only: an upload stores application/octet-stream on a key the binding sends untyped.
+  const type = contentTypeOf(key);
 
   if (type) headers.set('Content-Type', type);
   headers.set('ETag', object.httpEtag);

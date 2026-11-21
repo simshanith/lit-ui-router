@@ -60,7 +60,14 @@ function memoryBucket(objects: Readonly<Record<string, string>> = OBJECTS) {
 
     return body === undefined
       ? null
-      : { body, object: { httpEtag: `"${md5(body)}"`, httpMetadata: {} } };
+      : {
+          body,
+          // What `cf r2 objects put --file` stores without --content-type; the route ignores it.
+          object: {
+            httpEtag: `"${md5(body)}"`,
+            httpMetadata: { contentType: 'application/octet-stream' },
+          },
+        };
   };
 
   const bucket: SnapshotBucket = {
