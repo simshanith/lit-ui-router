@@ -15,10 +15,11 @@ The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute unde
 ## What is exempt
 
 - **No authored `aria-current`** — nothing is taken over.
+- **A non-link element with no literal `ariaCurrentValue`** — the runtime's default `'page'` applies only to `<a>`, `<area>` and a literal `role` with the `link` token, so on an `<li>` or a `<tr>` the directive never writes the attribute. A bound `role` is unknowable, so it stays suppressed too. Tags declared in `settings.linkElements` don't count here: the runtime check doesn't read them.
 - **`ariaCurrentValue: false`** — the opt-out.
-- **A non-literal params argument, a spread, or a non-literal `ariaCurrentValue`** — unknowable statically, so it stays suppressed rather than guessed.
+- **A non-literal params argument, a spread, or a non-literal `ariaCurrentValue`** — unknowable statically, so it stays suppressed rather than guessed. The object form (`{ exact, active }`) is not read either, so it stays suppressed too.
 
-An explicit non-`false` `ariaCurrentValue` still reports — the takeover is real — but carries no fix: rewriting a deliberate choice is not this rule's business.
+An explicit literal string `ariaCurrentValue` still reports on any element — the takeover is real — but carries no fix: rewriting a deliberate choice is not this rule's business.
 
 ## Examples
 
