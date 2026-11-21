@@ -359,23 +359,31 @@ export const markerBody = ({
 export const md5Of = (file: string): string =>
   createHash('md5').update(readFileSync(file)).digest('hex');
 
-/** The files under a built root that a line serves, as bucket keys: those under its roots, and the page at each bare root. */
-export function lineFiles(root: string, line: SnapshotLine): string[] {
-  const owned = (key: string): boolean =>
-    line.roots.some(
-      (prefix) =>
-        `/${key}`.startsWith(prefix) ||
-        `/${key}` === `${prefix.slice(0, -1)}.html`,
-    );
+/** Whether a bucket key is a line's: under one of its roots, or the page at a bare root. */
+export const ownsKey = (line: SnapshotLine, key: string): boolean =>
+  line.roots.some(
+    (prefix) =>
+      `/${key}`.startsWith(prefix) ||
+      `/${key}` === `${prefix.slice(0, -1)}.html`,
+  );
 
+/** The files under a built root that a line serves, as bucket keys. */
+export function lineFiles(root: string, line: SnapshotLine): string[] {
   return globSync('**/*', { cwd: root })
     .flatMap((file) => {
       const key = file.split(sep).join('/');
 
-      return statSync(join(root, file)).isFile() && owned(key) ? [key] : [];
+      return statSync(join(root, file)).isFile() && ownsKey(line, key)
+        ? [key]
+        : [];
     })
     .sort();
 }
+
+/** The list prefixes that cover a line's keys: each root without its slash, so the bare-root page is listed too; filter with `ownsKey`. */
+export const listPrefixes = (line: SnapshotLine): string[] => [
+  ...new Set(line.roots.map((prefix) => prefix.slice(1, -1))),
+];
 
 /** What a publish sends, and what it leaves. */
 export interface UploadPlan {

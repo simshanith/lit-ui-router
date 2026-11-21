@@ -14,10 +14,12 @@ import {
   canonicalOf,
   htmlPath,
   lineFiles,
+  listPrefixes,
   manifestPath,
   markerBody,
   markerKey,
   md5Of,
+  ownsKey,
   readSnapshotManifest,
   snapshotDigest,
   snapshotPackage,
@@ -261,9 +263,10 @@ const main = async (): Promise<void> => {
     const local = new Map(files.map((key) => [key, md5Of(join(root, key))]));
     const remote = new Map<string, string>();
 
-    for (const prefix of line.roots)
-      for (const entry of await listKeys(bucket, prefix.slice(1)))
-        remote.set(...entry);
+    // A bare prefix also lists a sibling (`v1` lists `v10/`), so keep only the line's keys.
+    for (const prefix of listPrefixes(line))
+      for (const [key, etag] of await listKeys(bucket, prefix))
+        if (ownsKey(line, key)) remote.set(key, etag);
 
     const plan = uploadPlan(local, remote);
 
