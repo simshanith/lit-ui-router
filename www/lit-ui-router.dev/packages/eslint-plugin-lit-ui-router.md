@@ -220,6 +220,9 @@ tightening, and pin accordingly.
 
 ## Further reading
 
+- [Linting](/guides/linting) — worked mistakes the plugin catches, how lint
+  sits beside typed routes and development warnings, and pointers for the rest
+  of your Lit code
 - [Releases](/releases/eslint-plugin-lit-ui-router/){target="_self"} — every version, newest first, with its release notes
 - [Design System Links](/guides/design-system-links) — what `uiSref` does to
   an anchor, and why the href only exists at runtime
