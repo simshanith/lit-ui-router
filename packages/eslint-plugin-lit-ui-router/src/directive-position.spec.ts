@@ -89,6 +89,14 @@ ruleTester.run('directive-position', directivePosition, {
       code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}>Home</\${tag}>\`;`,
     },
     {
+      name: 'a quoted > does not close a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="a > b" \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a quote spanning an expression in a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="\${'x'} > y" href=\${srefHref('home')}>Home</\${tag}>\`;`,
+    },
+    {
       name: 'an attribute part on a static-html literal tag goes unjudged',
       code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} class="x" href=\${srefHref('home')}>Home</\${tag}>\`;`,
     },

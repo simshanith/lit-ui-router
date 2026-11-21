@@ -53,11 +53,24 @@ const staticTagExpressions = (
 ): Set<number> => {
   const hidden = new Set<number>();
   let inStaticTag = false;
+  let quote: string | undefined;
 
   quasis.slice(0, -1).forEach(({ value: { raw } }, index) => {
-    if (inStaticTag && raw.includes('>')) inStaticTag = false;
+    for (const char of inStaticTag ? raw : '') {
+      if (quote !== undefined) {
+        if (char === quote) quote = undefined;
+      } else if (char === '"' || char === "'") {
+        quote = char;
+      } else if (char === '>') {
+        inStaticTag = false;
+        break;
+      }
+    }
 
-    if (/<\/?$/.test(raw)) inStaticTag = true;
+    if (/<\/?$/.test(raw)) {
+      inStaticTag = true;
+      quote = undefined;
+    }
 
     if (inStaticTag) hidden.add(index);
   });
