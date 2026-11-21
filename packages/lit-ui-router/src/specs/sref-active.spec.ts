@@ -657,6 +657,44 @@ describe('attribute-part active directives', () => {
     });
   });
 
+  describe('relative to the enclosing view', () => {
+    it('resolves against the state now filling the view when two states share a template', async () => {
+      const layout = () =>
+        html`<a
+          class=${srefActiveClass({ state: '.list', activeClasses: ['on'] })}
+          href=${srefHref('.list')}
+          >List</a
+        >`;
+
+      router = createTestRouter([
+        { name: 'admin', url: '/admin', component: layout },
+        { name: 'admin.list', url: '/list' },
+        { name: 'settings', url: '/settings', component: layout },
+        { name: 'settings.list', url: '/list' },
+      ]);
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      uiRouter.appendChild(document.createElement('ui-view'));
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+      router.start();
+
+      await goTo('admin.list');
+      await tick(20);
+      const link = uiRouter.querySelector('a')!;
+      expect(link.getAttribute('href')).toBe('#/admin/list');
+      expect(link.classList.contains('on')).toBe(true);
+
+      await goTo('settings.list');
+      await tick(20);
+
+      const next = uiRouter.querySelector('a')!;
+      expect(next).not.toBe(link);
+      expect(next.getAttribute('href')).toBe('#/settings/list');
+      expect(next.classList.contains('on')).toBe(true);
+    });
+  });
+
   describe('missing <ui-router> ancestor', () => {
     it('warns once and applies nothing', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

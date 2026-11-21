@@ -6,6 +6,8 @@ import type {
   TemplateResult,
 } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import type { DirectiveResult } from 'lit/directive.js';
+import { keyed } from 'lit/directives/keyed.js';
 import {
   ActiveUIView,
   ResolveContext,
@@ -1010,7 +1012,11 @@ export class UiView extends LitElement {
    * The routed component's template, or nothing while the fallback set stands
    * in the light DOM on its own.
    */
-  render(): TemplateResult | typeof nothing | typeof noChange {
+  render():
+    | TemplateResult
+    | DirectiveResult
+    | typeof nothing
+    | typeof noChange {
     // Inside an element its parent is retiring, so a config routed here is the incoming element's to render.
     if (this.parentView instanceof UiView && this.parentView.retires(this)) {
       return noChange;
@@ -1040,7 +1046,8 @@ export class UiView extends LitElement {
     if (!element) {
       this.dropElements();
 
-      return result;
+      // Two states sharing a template would otherwise reuse its nodes, which read the old state's context at connect.
+      return keyed(this._uiViewData.config, result);
     }
 
     return this.placeElement(element);
