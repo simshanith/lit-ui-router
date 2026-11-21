@@ -36,7 +36,7 @@ createRoot(document.getElementById('root')!).render(
           </Link>
         ))}
       </nav>
-      <div>
+      <div className="view">
         <UIView />
       </div>
     </UIRouter>
