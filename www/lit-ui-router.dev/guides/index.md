@@ -92,6 +92,8 @@ choices to the pages below.
 - [Coming from UI-Router](./coming-from-ui-router) — side-by-side mapping from
   `@uirouter/angular` and `@uirouter/react` to `lit-ui-router`, what stays
   identical in `@uirouter/core`, and what changes in Lit
+- [Staying on UI-Router](./staying-on-ui-router) — the companion packages that
+  run on `@uirouter/react` without Lit <!-- copy: pending -->
 
 ## Companion Packages
 

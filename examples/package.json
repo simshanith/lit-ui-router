@@ -23,6 +23,7 @@
     "example:install:lint-eslint": "npm ci --prefix lint-eslint",
     "example:install:loading-and-error-views": "npm ci --prefix loading-and-error-views",
     "example:install:navigation-api": "npm ci --prefix navigation-api",
+    "example:install:uirouter-react": "npm ci --prefix uirouter-react",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "concurrently --restart-tries 1 \"npm:example:install:*\"",
@@ -45,6 +46,7 @@
     "typecheck:example:lint-eslint": "tsc -p lint-eslint",
     "typecheck:example:loading-and-error-views": "tsc -p loading-and-error-views",
     "typecheck:example:navigation-api": "tsc -p navigation-api",
+    "typecheck:example:uirouter-react": "tsc -p uirouter-react",
     "typecheck:tsc": "concurrently --prefix-colors auto \"npm:typecheck:example:*\""
   },
   "devDependencies": {
