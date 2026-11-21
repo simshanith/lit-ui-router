@@ -194,6 +194,22 @@ describe('serverRouterPlugin', () => {
     );
   });
 
+  it("hands Vite the router's base, and throws for a Vite base that differs", () => {
+    const plugin = serverRouterPlugin(
+      createServerRouter({
+        base: '/solar/',
+        mounts: { '/solar/': { routes: [] } },
+      }),
+    );
+
+    assert.deepEqual(plugin.config({}), { base: '/solar/' });
+    assert.equal(plugin.config({ base: '/solar' }), undefined);
+    assert.throws(
+      () => plugin.config({ base: '/moon/' }),
+      /serverRouterPlugin: Vite's base '\/moon\/' differs from the router's base '\/solar\/'; set one of them/,
+    );
+  });
+
   it('never reports mount diagnostics; construction does', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
 

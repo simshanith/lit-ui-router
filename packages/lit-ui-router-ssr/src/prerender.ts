@@ -1,5 +1,6 @@
 // provideRouter() on a render root for the run, render.ts's lit render inside ui-router-server's prerender loop.
 import type { RenderInfo } from '@lit-labs/ssr';
+import { resetRouter } from '@repo/router-reset';
 import type { TemplateResult } from 'lit';
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
@@ -468,15 +469,11 @@ export async function prerender(
     return landed ? draw(landed, context) : {};
   };
 
-  // A transition this render landed, not one an earlier page left the router on.
   const redirectOf = (
     verdict: ShellVerdict,
-    before: Transition | undefined,
+    landed: Transition,
   ): RenderedRedirect | undefined => {
-    const landed = lastLanded();
-
-    const redirect =
-      landed && landed !== before ? redirectedTo(router, landed) : undefined;
+    const redirect = redirectedTo(router, landed);
 
     if (!redirect) return undefined;
     const { mount } = verdict;
@@ -512,22 +509,19 @@ export async function prerender(
     siteContext: SiteRenderContext,
   ): Promise<string | RenderedRedirect> => {
     const context: RenderContext = { ...siteContext, root };
-    const before = lastLanded();
+    // A fresh load per page: a dynamic param change alone would retain the previous page's resolves.
+    resetRouter(router);
     const body = await renderShell(verdict, context);
     const landed = lastLanded();
 
-    // A path the router already stands on settles on the transition that put it there.
-    if (
-      landed &&
-      (landed !== before || placement(router, base, context.path).at)
-    )
+    if (landed) {
       landing.state = landed.$to().name;
+      const redirect = redirectOf(verdict, landed);
 
-    const redirect = redirectOf(verdict, before);
+      if (redirect) return redirect;
 
-    if (redirect) return redirect;
-
-    if (lastLanded() !== before) checkSettled(router, base, context.path);
+      checkSettled(router, base, context.path);
+    }
 
     const markup = isString(body) ? body : renderTemplate(body, context);
 
@@ -547,6 +541,7 @@ export async function prerender(
         );
 
       landing.state = verdict.state;
+      resetRouter(router);
 
       return responder(router, responses)(
         verdict,

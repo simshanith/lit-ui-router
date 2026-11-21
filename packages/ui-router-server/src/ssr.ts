@@ -127,7 +127,10 @@ const landIgnoredRedirect = (
  * resolves with the transition that brought it there. A redirect that ends
  * where the router already stands resolves with the redirected transition,
  * which becomes the router's last landed one, unless it leaves the url in
- * place (`location: false`).
+ * place (`location: false`). A path that changes only a `dynamic` param of
+ * the state the router stands on keeps that state's resolves, so a loop that
+ * must re-run them builds a router per page, or leaves the loop to
+ * `lit-ui-router-ssr`'s `prerender`, which resets the router before each path.
  *
  * A failed transition still reaches `stateService.defaultErrorHandler`,
  * which logs it unless replaced.
