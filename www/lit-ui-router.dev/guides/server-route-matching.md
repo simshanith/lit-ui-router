@@ -607,6 +607,7 @@ The semantics mirror the client rule they project. The target must be a
 **declared, url-less** state — enforced at construction — for the same
 reason the client's [404 state declares no `url`](./unmatched-urls#the-404-state):
 the unmatched URL stays in the address bar, like a server-rendered 404 page.
+It can't be abstract either, since the client can't enter an abstract state.
 A url-full target would move the client's address bar, and the honest
 projection of _that_ is a redirect, not a shell-404 at the retained path.
 Redirect rules and route matches take precedence, exactly as `otherwise()`

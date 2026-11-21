@@ -122,6 +122,19 @@ describe('compileRouteTrie: expressibility', () => {
 
     assert.deepEqual(trie.match('/home'), { state: 'app.home', params: {} });
   });
+
+  it("skips an abstract state's own url and matches its children", () => {
+    const trie = trieOf([
+      { name: 'mission', url: '/mission', abstract: true },
+      { name: 'mission.log', url: '/log' },
+    ]);
+
+    assert.equal(trie.match('/mission'), null);
+    assert.deepEqual(trie.match('/mission/log'), {
+      state: 'mission.log',
+      params: {},
+    });
+  });
 });
 
 describe('compileRouteTrie: matching', () => {
