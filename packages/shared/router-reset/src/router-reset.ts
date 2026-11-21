@@ -18,7 +18,7 @@ export const resetRouter = (router: UIRouter): void => {
 
   for (const key of Object.keys(globals.params)) delete globals.params[key];
 
-  // A copy: deactivating splices the live list.
+  // `_pluginapi` is core's `@internal` API; a copy, as deactivating splices the live list.
   for (const config of [...viewService._pluginapi._activeViewConfigs()])
     viewService.deactivateViewConfig(config);
   viewService.sync();

@@ -1,4 +1,4 @@
-// The one module that reads core's view service, through `viewService._pluginapi`, which core types `@internal`.
+// Reads core's view service through `viewService._pluginapi`, which core types `@internal`.
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
 import type { ViewFill, ViewInfo, ViewsEvent } from './event-schema.ts';
 
