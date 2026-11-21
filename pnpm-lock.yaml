@@ -595,6 +595,9 @@ catalogs:
     '@tools/oxlint-anti-slop':
       specifier: workspace:*
       version: workspace:*
+    '@tools/postcss-lit-html':
+      specifier: workspace:*
+      version: workspace:*
     '@tools/release-config':
       specifier: workspace:*
       version: workspace:*
@@ -641,9 +644,6 @@ catalogs:
       specifier: workspace:*
       version: workspace:*
     lit-ui-router-ssr:
-      specifier: workspace:*
-      version: workspace:*
-    postcss-lit-html:
       specifier: workspace:*
       version: workspace:*
     sample-app-lit-effect:
@@ -747,6 +747,9 @@ importers:
       '@tools/oxlint-anti-slop':
         specifier: catalog:workspace
         version: link:tools/oxlint-anti-slop
+      '@tools/postcss-lit-html':
+        specifier: catalog:workspace
+        version: link:tools/postcss-lit-html
       '@tools/shared':
         specifier: catalog:workspace
         version: link:tools/shared
@@ -795,9 +798,6 @@ importers:
       postcss-html:
         specifier: 'catalog:'
         version: 2.0.1(postcss@8.5.33)
-      postcss-lit-html:
-        specifier: catalog:workspace
-        version: link:packages/postcss-lit-html
       stylelint:
         specifier: 'catalog:'
         version: 18.0.0
@@ -1870,49 +1870,6 @@ importers:
       typescript-7:
         specifier: 'catalog:'
         version: typescript@7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  packages/postcss-lit-html:
-    dependencies:
-      '@babel/parser':
-        specifier: 'catalog:'
-        version: 7.29.14
-      '@babel/types':
-        specifier: 'catalog:'
-        version: 7.29.14
-      parse5:
-        specifier: 'catalog:'
-        version: 8.1.1
-      postcss-lit:
-        specifier: 'catalog:'
-        version: 1.4.1(jiti@2.7.0)(postcss@8.5.33)(supports-color@10.2.2)(yaml@2.9.1)
-    devDependencies:
-      '@tools/oxc-emit':
-        specifier: catalog:workspace
-        version: link:../../tools/oxc-emit
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.19.2
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 5.1.0(@vitest/browser@5.1.0)(vitest@5.1.0)
-      oxfmt:
-        specifier: 'catalog:'
-        version: 0.78.0
-      oxlint:
-        specifier: 'catalog:'
-        version: 1.94.0(oxlint-tsgolint@7.0.2007)
-      postcss:
-        specifier: 'catalog:'
-        version: 8.5.33
-      stylelint:
-        specifier: 'catalog:'
-        version: 18.0.0
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -3234,6 +3191,43 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+
+  tools/postcss-lit-html:
+    dependencies:
+      '@babel/parser':
+        specifier: 'catalog:'
+        version: 7.29.14
+      '@babel/types':
+        specifier: 'catalog:'
+        version: 7.29.14
+      parse5:
+        specifier: 'catalog:'
+        version: 8.1.1
+      postcss:
+        specifier: 'catalog:'
+        version: 8.5.33
+      postcss-lit:
+        specifier: 'catalog:'
+        version: 1.4.1(jiti@2.7.0)(postcss@8.5.33)(supports-color@10.2.2)(yaml@2.9.1)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.78.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.94.0(oxlint-tsgolint@7.0.2007)
+      stylelint:
+        specifier: 'catalog:'
+        version: 18.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.0)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   tools/release:
     devDependencies:

@@ -14,10 +14,5 @@ export default defineConfig({
       'default',
       ...(process.env.CI ? (['hanging-process'] as const) : []),
     ],
-    coverage: {
-      reporter: ['text', 'json', 'lcov'],
-      reportsDirectory: './coverage',
-      exclude: ['src/specs/**'],
-    },
   },
 });

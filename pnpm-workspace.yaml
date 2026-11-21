@@ -245,6 +245,7 @@ catalogs:
     '@tools/lit-test-env': workspace:*
     '@tools/oxc-emit': workspace:*
     '@tools/oxlint-anti-slop': workspace:*
+    '@tools/postcss-lit-html': workspace:*
     '@tools/release-config': workspace:*
     '@tools/release-ledger': workspace:*
     '@tools/shared': workspace:*
@@ -261,7 +262,6 @@ catalogs:
     lit-ui-router-mobx: workspace:*
     lit-ui-router-signals: workspace:*
     lit-ui-router-ssr: workspace:*
-    postcss-lit-html: workspace:*
     sample-app-lit-effect: workspace:*
     sample-app-lit-mobx: workspace:*
     sample-app-lit-signals: workspace:*
