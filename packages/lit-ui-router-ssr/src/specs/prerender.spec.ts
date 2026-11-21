@@ -1561,3 +1561,59 @@ describe('inputs', () => {
     ).rejects.toThrow(/notFound.probe/);
   });
 });
+
+describe('a state whose url parameter is dynamic', () => {
+  const pageRouter = (): UIRouterLit => {
+    const router = new UIRouterLit();
+    installServerLocation(router, { urlConfig: { strict: false } });
+    router.stateRegistry.register({
+      name: 'page',
+      url: '/page/:n',
+      params: { n: { dynamic: true } },
+      resolve: [
+        {
+          token: 'label',
+          deps: ['$transition$'],
+          resolveFn: (transition: { params(): { n?: string } }) =>
+            `page ${transition.params().n}`,
+        },
+      ],
+    });
+
+    return router;
+  };
+
+  it('draws each page from its own resolves, not the previous page’s', async () => {
+    const router = pageRouter();
+
+    const { files } = await run({
+      mounts: {
+        '/': {
+          routes: [{ name: 'page', url: '/page/:n' }],
+          config: { strict: false },
+        },
+      },
+      router,
+      paths: ['/page/1', '/page/2'],
+      notFound: false,
+      renderShell: undefined,
+      dehydrate: {},
+      template: (r) =>
+        html`<p>
+          ${String(
+            r.globals.successfulTransitions.peekTail().injector().get('label'),
+          )}
+        </p>`,
+    });
+
+    const second = files.get('dist/page/2/index.html')!;
+
+    expect(
+      getByText(parseHtml(second).body, 'page 2', { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(second)).toMatchObject({
+      params: { n: '2' },
+      resolves: { page: { label: 'page 2' } },
+    });
+  });
+});

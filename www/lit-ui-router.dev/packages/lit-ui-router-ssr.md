@@ -215,9 +215,10 @@ redirects its numbered URLs the same way.
   transition rather than redirecting one, so `redirectedTo` reports nothing
   for it. Declare it in the mount's `redirects` and the verdict answers it.
 - `settle` on a path the router already stands on resolves with the
-  transition that brought it there, which may be an earlier path's redirect.
-  `prerender` only reads a transition its hook landed; a live host settles a
-  router built for the request.
+  transition that brought it there, which may be an earlier path's redirect,
+  and a path that changes only a `dynamic` param keeps the earlier path's
+  resolves. `prerender` resets the router before each path, so every page is
+  drawn as a fresh load; a live host settles a router built for the request.
 
 ## Rendering one page per request
 

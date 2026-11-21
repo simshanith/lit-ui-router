@@ -86,6 +86,10 @@ component_management:
       name: router-events
       paths:
         - packages/shared/router-events/src/**
+    - component_id: router-reset
+      name: router-reset
+      paths:
+        - packages/shared/router-reset/src/**
     - component_id: transition-status
       name: transition-status
       paths:
