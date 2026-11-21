@@ -1337,6 +1337,80 @@ describe('UiView', () => {
       expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
     });
 
+    it('should hand a re-attached element the params that changed while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+      await routerGo(router, 'star', { starId: 'rigel' });
+      expect(leaf.starId).toBe('rigel');
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'vega' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await waitForUpdate(leaf);
+
+      expect(uiView.routedElement).toBe(leaf);
+      expect(leaf.starId).toBe('vega');
+      expect(uiView.querySelector('.leaf')?.textContent).toBe('vega');
+    });
+
+    describe('when the state changes while its router is detached', () => {
+      async function detachAcross(
+        go: () => Promise<void>,
+      ): Promise<{ uiView: UiView; leaf: TestRetainedLeaf }> {
+        const { uiRouter, uiView } = await setupRouter([
+          dynamicStar,
+          { name: 'other', url: '/other', component: TestRetainedOther },
+          { name: 'blank', url: '/blank' },
+        ]);
+
+        await routerGo(router, 'star', { starId: 'sun' });
+        // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+        const leaf = uiView.firstElementChild as TestRetainedLeaf;
+
+        uiRouter.remove();
+        await tick();
+        await go();
+        container.appendChild(uiRouter);
+        await waitForUpdate(uiView);
+        await tick();
+
+        return { uiView, leaf };
+      }
+
+      it('should show the fallback when it exits to a state with no view', async () => {
+        const { uiView } = await detachAcross(async () => {
+          await routerGo(router, 'blank');
+        });
+
+        expect(uiView.routedElement).toBeNull();
+      });
+
+      it('should render the new component when it exits to another', async () => {
+        const { uiView, leaf } = await detachAcross(async () => {
+          await routerGo(router, 'other');
+        });
+
+        expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+        expect(leaf.isConnected).toBe(false);
+      });
+
+      it('should build a fresh element when it exits and re-enters the same state', async () => {
+        const { uiView, leaf } = await detachAcross(async () => {
+          await routerGo(router, 'other');
+          await routerGo(router, 'star', { starId: 'sun' });
+        });
+
+        expect(uiView.routedElement).toBeInstanceOf(TestRetainedLeaf);
+        expect(uiView.routedElement).not.toBe(leaf);
+        expect(countsFor('test-retained-leaf').constructed).toBe(2);
+      });
+    });
+
     it('should mint a new element when the state changes', async () => {
       const { uiView } = await setupRouter(nestedStates);
 
