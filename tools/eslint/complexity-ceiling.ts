@@ -10,6 +10,7 @@ export default defineConfig(
     '**/dist/**',
     '**/tmp/**',
     '**/node_modules/**',
+    '**/client_modules/**',
     '**/coverage/**',
     '**/.turbo/**',
     '**/.cache/**',
