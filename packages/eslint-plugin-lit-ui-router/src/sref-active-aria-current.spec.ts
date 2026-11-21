@@ -62,6 +62,11 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       code: `${IMPORTS}html\`<div role="button" aria-current="true" \${uiSrefActive({})}></div>\`;`,
     },
     {
+      name: 'a declared link tag is still a non-link to the runtime default',
+      code: `${IMPORTS}html\`<sp-link aria-current="page" \${uiSrefActive({})}></sp-link>\`;`,
+      settings: { linkElements: ['sp-link'] },
+    },
+    {
       name: 'a bound role is unknowable, so it stays suppressed',
       code: `${IMPORTS}html\`<div role=\${role} aria-current="true" \${uiSrefActive({})}></div>\`;`,
     },
