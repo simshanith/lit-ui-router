@@ -160,6 +160,12 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
       output: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href="/home" class=\${lur.srefActiveClass({ state: 'home' })} aria-current=\${lur.srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
+      name: 'a name the file already binds elsewhere is not imported again, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { srefActiveClass } from 'lit-ui-router';\nimport { srefAriaCurrent } from './my-aria.js';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
       name: 'a non-literal params argument is unknowable, so the report carries no fix',
       code: `${IMPORTS}const params = { state: 'home' };\nhtml\`<a href="/home" class=\${srefActiveClass(params)}>Home</a>\`;`,
       errors: [{ messageId: 'unknownAriaCurrent' }],

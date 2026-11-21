@@ -218,6 +218,13 @@ html\`<a href=\${srefHref('home')}>Home</a>\`;`,
       output: null,
     },
     {
+      name: 'a local already named srefHref keeps the import out, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { uiSref } from 'lit-ui-router';\nconst srefHref = 1;\nhtml\`<a \${uiSref('a')}>A</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
       name: 'a spread in the options reports unfixed',
       code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { ...opt })}>Home</a>\`;`,
       options: SERVED,
