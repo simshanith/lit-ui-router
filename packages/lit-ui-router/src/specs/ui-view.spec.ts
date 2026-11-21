@@ -1315,6 +1315,28 @@ describe('UiView', () => {
       expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
     });
 
+    it('should hand a re-attached element the transition that retained it while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'rigel' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await waitForUpdate(leaf);
+
+      const latest = router.globals.successfulTransitions.peekTail();
+      expect(uiView.routedElement).toBe(leaf);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
+      expect(leaf._uiViewProps?.transition).toBe(latest);
+      expect(leaf._uiViewProps?.resolves.$transition$).toBe(latest);
+      expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
+    });
+
     it('should mint a new element when the state changes', async () => {
       const { uiView } = await setupRouter(nestedStates);
 
