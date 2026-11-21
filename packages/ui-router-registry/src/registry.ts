@@ -204,35 +204,175 @@ type ParentName<D> = D extends { parent: infer P extends string }
 
 // ---- params from the url ---------------------------------------------------
 
-type Split<
-  S extends string,
-  Sep extends string,
-> = S extends `${infer Head}${Sep}${infer Tail}` ? Head | Split<Tail, Sep> : S;
-
 type UrlOf<D> = D extends { url: infer U extends string } ? U : '';
 
-type PathPart<U extends string> = U extends `${infer P}?${string}` ? P : U;
+type WordChars<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? WordChars<R, Acc | C>
+  : Acc;
 
-type QueryPart<U extends string> = U extends `${string}?${infer Q}` ? Q : '';
+// Core's placeholder name characters: `[\w\[\]]`.
+type WordChar =
+  WordChars<'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_[]'>;
 
-// [name, type] for `:name`, `{name}` and `{name:type}`.
-type PlaceholderEntry<S extends string> = S extends `:${infer Name}`
-  ? [Name, 'path']
-  : S extends `{${infer Body}}`
-    ? Body extends `${infer Name}:${infer Type}`
-      ? [Name, Type]
-      : [Body, 'path']
-    : never;
+// JavaScript's `\s`.
+type Space =
+  | ' '
+  | '\t'
+  | '\n'
+  | '\r'
+  | '\f'
+  | '\v'
+  | '\u00a0'
+  | '\u1680'
+  | '\u2000'
+  | '\u2001'
+  | '\u2002'
+  | '\u2003'
+  | '\u2004'
+  | '\u2005'
+  | '\u2006'
+  | '\u2007'
+  | '\u2008'
+  | '\u2009'
+  | '\u200a'
+  | '\u2028'
+  | '\u2029'
+  | '\u202f'
+  | '\u205f'
+  | '\u3000'
+  | '\ufeff';
 
-type QueryEntry<S extends string> = S extends ''
-  ? never
-  : S extends `{${string}}`
-    ? PlaceholderEntry<S>
-    : [S, 'query'];
+// Walks the url as core's `placeholder` regex does: [path entries, query string].
+type ScanPath<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends '?' | ':' | '*' | '{'
+    ? C extends '?'
+      ? [Acc, R]
+      : C extends '{'
+        ? ScanCurly<R, '', Acc, R>
+        : ScanName<R, '', Acc>
+    : ScanPath<R, Acc>
+  : [Acc, ''];
 
-type PathEntries<D> = PlaceholderEntry<Split<PathPart<UrlOf<D>>, '/'>>;
+type ScanName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanPath<S, Acc>
+      : ScanPath<S, Acc | [Name, 'path']>
+  : Name extends ''
+    ? [Acc, '']
+    : [Acc | [Name, 'path'], ''];
 
-type QueryEntries<D> = QueryEntry<Split<QueryPart<UrlOf<D>>, '&'>>;
+// `{name}` or `{name:body}`; anything else leaves the `{` as literal text, resuming at `Resume`.
+type ScanCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanPath<Resume, Acc>
+      : C extends '}'
+        ? ScanPath<R, Acc | [Name, 'path']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume>
+          : ScanPath<Resume, Acc>
+  : ScanPath<Resume, Acc>;
+
+type SkipSpace<S extends string> = S extends `${infer C}${infer R}`
+  ? C extends Space
+    ? SkipSpace<R>
+    : S
+  : S;
+
+// A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
+// `Q` resumes in the query scanner instead of the path scanner.
+type ScanBody<
+  S extends string,
+  Name extends string,
+  Body extends string,
+  Nested extends boolean,
+  Acc,
+  Resume extends string,
+  Q extends boolean = false,
+> = S extends `${infer C}${infer R}`
+  ? C extends '\\'
+    ? R extends `${infer E}${infer T}`
+      ? ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume, Q>
+      : ScanNext<Q, Resume, Acc>
+    : C extends '{'
+      ? Nested extends true
+        ? ScanNext<Q, Resume, Acc>
+        : ScanBody<R, Name, `${Body}${C}`, true, Acc, Resume, Q>
+      : C extends '}'
+        ? Nested extends true
+          ? ScanBody<R, Name, `${Body}${C}`, false, Acc, Resume, Q>
+          : Body extends ''
+            ? ScanNext<Q, Resume, Acc>
+            : ScanNext<Q, R, Acc | [Name, Body]>
+        : ScanBody<R, Name, `${Body}${C}`, Nested, Acc, Resume, Q>
+  : ScanNext<Q, Resume, Acc>;
+
+type ScanNext<Q extends boolean, S extends string, Acc> = Q extends true
+  ? ScanQuery<S, Acc>
+  : ScanPath<S, Acc>;
+
+type Scan<D> = ScanPath<UrlOf<D>>;
+
+// Core's query name characters: `[\w\[\].-]`.
+type QueryChar = WordChar | '.' | '-';
+
+// Walks the query as core's `searchPlaceholder` regex does; other characters only separate names.
+type ScanQuery<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, C, Acc>
+    : C extends ':'
+      ? ScanQueryName<R, '', Acc>
+      : C extends '{'
+        ? ScanQueryCurly<R, '', Acc, R>
+        : ScanQuery<R, Acc>
+  : Acc;
+
+type ScanQueryName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanQuery<S, Acc>
+      : ScanQuery<S, Acc | [Name, 'query']>
+  : Name extends ''
+    ? Acc
+    : Acc | [Name, 'query'];
+
+type ScanQueryCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanQuery<Resume, Acc>
+      : C extends '}'
+        ? ScanQuery<R, Acc | [Name, 'query']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume, true>
+          : ScanQuery<Resume, Acc>
+  : ScanQuery<Resume, Acc>;
+
+type PathEntries<D> = Scan<D>[0];
+
+type QueryEntries<D> = ScanQuery<Scan<D>[1]>;
 
 // Core's built-in param types; a regex placeholder (`{id:[0-9]+}`) or a custom type reads as `string`.
 type BuiltInType<T> = T extends 'int'
