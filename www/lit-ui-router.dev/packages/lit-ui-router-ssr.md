@@ -111,7 +111,8 @@ resolves included.
 package re-exports, sets the url, syncs the router to it, and resolves with the
 transition that landed, so the synchronous render after it reads every resolve.
 A `redirectTo` chain settles on its final state, and a path the router already
-stands on resolves at once.
+stands on resolves at once. A path that changes only a `dynamic` param keeps
+the earlier path's resolves, so `prerender` resets the router before each path.
 [`redirectedTo`](#page-response-state-or-redirect-which-decides-when) reports
 where a redirected transition landed.
 

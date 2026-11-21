@@ -134,7 +134,9 @@ A server render reads the router only once its transition has landed, resolves i
 `settle(router, path)`, the `ui-router-server/ssr` step this package re-exports, sets the url, syncs
 the router to it, and resolves with the transition that landed, so the synchronous render after it
 reads every resolve. A `redirectTo` chain settles on its final state, and a path the router already
-stands on resolves at once. `redirectedTo` reports where a redirected transition landed.
+stands on resolves at once. A path that changes only a `dynamic` param keeps the earlier path's
+resolves, so `prerender` resets the router before each path. `redirectedTo` reports where a
+redirected transition landed.
 
 A page fails to land in four ways, and each rejects rather than hangs:
 

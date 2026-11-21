@@ -845,7 +845,11 @@ A server render reads the router only once its transition has landed.
 `ui-router-server/ssr` sets the url, syncs the router to it, and resolves
 with the transition that landed, resolves included, so a synchronous render
 after it reads every value. A page loop calls it once per path on the same
-router, started or not.
+router, started or not. A path that changes only a `dynamic` param of the
+state the router stands on keeps that state's resolves, so such a loop builds
+a router per page, or leaves the loop to
+[`lit-ui-router-ssr`'s `prerender`](/packages/lit-ui-router-ssr), which resets
+the router before each path.
 
 ```ts
 import { installServerLocation } from 'ui-router-server/location';
