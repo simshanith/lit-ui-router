@@ -3,6 +3,8 @@ import { join, relative } from 'node:path';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import type { MarkdownEnv, MarkdownRenderer } from 'vitepress';
 
+import { REDIRECTS } from '../catalog/redirects.ts';
+import { matchRedirect, redirectLines } from './redirects.ts';
 import { surfaceOf } from './surfaces.ts';
 import { SITE_ORIGIN } from './versions.ts';
 
@@ -20,6 +22,8 @@ const RELATIVE = /^(?![a-z][a-z\d+.-]*:|\/|#)/i;
 
 const includeStacks = new WeakMap<MarkdownEnv, string[]>();
 
+const redirects = redirectLines(REDIRECTS);
+
 /** A site URL as a root path, flagged when VitePress's client router has no page for it. */
 function sitePath(url: string): { path: string; reload: boolean } | undefined {
   if (!url.startsWith(SITE_ORIGIN)) return undefined;
@@ -30,15 +34,27 @@ function sitePath(url: string): { path: string; reload: boolean } | undefined {
   if (rest && !/^[/?#]/.test(rest)) return undefined;
 
   const path = rest.startsWith('/') ? rest : `/${rest}`;
-  const { renderer } = surfaceOf(path.split(/[?#]/)[0] ?? '/');
+  const pathname = path.split(/[?#]/)[0] ?? '/';
+  const { renderer } = surfaceOf(pathname);
 
-  return { path, reload: renderer === 'worker' || renderer === 'static' };
+  // The worker, a static file and a redirect each answer a request, not the client router.
+  const reload =
+    renderer === 'worker' ||
+    renderer === 'static' ||
+    Boolean(matchRedirect(redirects, pathname));
+
+  return { path, reload };
 }
+
+/** True for a relative URL in a file included from outside the site. */
+const leavesSite = (dir: string | undefined, url: string): dir is string =>
+  dir !== undefined &&
+  RELATIVE.test(url) &&
+  relative(SITE, dir).startsWith('..');
 
 /** A relative link out of a file included from outside the site, as that file's URL in the repository. */
 function repoUrl(dir: string | undefined, url: string): string | undefined {
-  if (!dir || !RELATIVE.test(url) || !relative(SITE, dir).startsWith('..'))
-    return undefined;
+  if (!leavesSite(dir, url)) return undefined;
 
   const [, path = '', rest = ''] = /^([^?#]*)(.*)$/.exec(url) ?? [];
 
@@ -47,15 +63,17 @@ function repoUrl(dir: string | undefined, url: string): string | undefined {
 
 /**
  * Makes a README's links work on the page that includes it: a link to this
- * site becomes an in-site link, and a relative link that only resolves in the
- * repository points at the repository.
+ * site becomes an in-site link, a relative link that only resolves in the
+ * repository points at the repository, and a relative image is bundled from
+ * beside the README.
  */
 export function readmeLinks(md: MarkdownRenderer): void {
   const htmlBlock = md.renderer.rules.html_block;
   const linkOpen = md.renderer.rules.link_open;
+  const image = md.renderer.rules.image;
 
-  if (!htmlBlock || !linkOpen)
-    throw new Error('readmeLinks: VitePress registers both rules');
+  if (!htmlBlock || !linkOpen || !image)
+    throw new Error('readmeLinks: VitePress registers these rules');
 
   // Before VitePress's own rule consumes the markers.
   md.renderer.rules.html_block = (tokens, idx, options, env, self) => {
@@ -74,6 +92,23 @@ export function readmeLinks(md: MarkdownRenderer): void {
     }
 
     return htmlBlock(tokens, idx, options, env, self);
+  };
+
+  md.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const src = token?.attrGet('src');
+
+    // VitePress rebases only a `./` or `../` source against the included file.
+    if (
+      token &&
+      src &&
+      !src.startsWith('.') &&
+      // SAFETY: as for html_block
+      leavesSite(includeStacks.get(env as MarkdownEnv)?.at(-1), src)
+    )
+      token.attrSet('src', `./${src}`);
+
+    return image(tokens, idx, options, env, self);
   };
 
   md.renderer.rules.link_open = (tokens, idx, options, env, self) => {

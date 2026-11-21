@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { getAllByRole, getByRole } from '@testing-library/dom';
+import { getAllByRole, getByRole, queryAllByRole } from '@testing-library/dom';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { createMarkdownRenderer } from 'vitepress';
 
 import { readmeLinks, REPO_FILE_URL } from '../readme-links.ts';
+import { SITE_ORIGIN } from '../versions.ts';
 
 const SITE = join(import.meta.dirname, '../..');
 
@@ -59,6 +61,16 @@ describe('readmeLinks', () => {
     assert.equal(releases.getAttribute('target'), '_self');
   });
 
+  it('reloads for a redirect source, which has no page', async () => {
+    const moved = await link(
+      '[Server](https://lit-ui-router.dev/packages/server)',
+      'Server',
+    );
+
+    assert.equal(moved.getAttribute('href'), '/packages/server');
+    assert.equal(moved.getAttribute('target'), '_self');
+  });
+
   it('leaves another origin external', async () => {
     for (const url of [
       'https://atlas.lit-ui-router.dev/bricks/',
@@ -93,6 +105,25 @@ describe('readmeLinks', () => {
     );
   });
 
+  it('resolves a bare relative image in an included README beside the README', async (t) => {
+    const dir = mkdtempSync(join(tmpdir(), 'readme-links-'));
+
+    t.after(() => rmSync(dir, { recursive: true }));
+    writeFileSync(
+      join(dir, 'README.md'),
+      '![bare](shot.png)\n\n![dotted](./shot.png)\n',
+    );
+
+    const beside = relative(join(SITE, 'packages'), dir);
+    const page = await render(`<!--@include: ${beside}/README.md-->`);
+
+    for (const name of ['bare', 'dotted'])
+      assert.equal(
+        getByRole(page, 'img', { name }).getAttribute('src'),
+        `${beside}/shot.png`,
+      );
+  });
+
   it('leaves no included README link relative or on the site origin', async () => {
     for (const dir of readdirSync(join(workspaceRoot, 'packages'))) {
       if (dir === 'shared') continue;
@@ -101,13 +132,13 @@ describe('readmeLinks', () => {
         `<!--@include: ../../../packages/${dir}/README.md-->`,
       );
 
-      const stray = getAllByRole(page, 'link')
+      // A root path or a fragment is in-site; anything else must name another origin.
+      const stray = queryAllByRole(page, 'link')
         .map((anchor) => anchor.getAttribute('href') ?? '')
         .filter(
           (href) =>
-            !/^(?:\/|#|https?:\/\/(?!lit-ui-router\.dev(?:[/?#]|$)))/.test(
-              href,
-            ),
+            !/^[/#]/.test(href) &&
+            (!URL.canParse(href) || new URL(href).origin === SITE_ORIGIN),
         );
 
       assert.deepEqual(stray, [], dir);
