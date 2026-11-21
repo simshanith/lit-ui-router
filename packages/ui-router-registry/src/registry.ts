@@ -286,12 +286,44 @@ type Widen<V> = V extends () => infer R
 // A `value: null` default is a legal value to pass and what an absent param reads back.
 type NullDefault<C> = null extends DefaultOf<C> ? null : never;
 
+// Core's array mode: an explicit `array` wins, then a `name[]` id; `'auto'` stays scalar.
+type IsArray<C, K> = C extends { array: infer A }
+  ? A
+  : K extends `${string}[]`
+    ? true
+    : false;
+
+type ArrayOf<T, A> = A extends true ? T[] : T;
+
+// Only `go` (`inherit: true`) wraps a scalar default on an array param; `transitionTo` reads it back as is.
+type ScalarDefault<C, K> =
+  IsArray<C, K> extends true
+    ? Exclude<Invoked<DefaultOf<C>>, readonly unknown[] | null | undefined>
+    : never;
+
+type Invoked<V> = V extends () => infer R ? R : V;
+
+// A scalar default and an array one both name the element type.
+type DefaultElement<V> = [V] extends [never]
+  ? unknown
+  : Widen<V> extends infer W
+    ? [W] extends [readonly (infer E)[]]
+      ? [E] extends [never]
+        ? unknown
+        : Widen<E>
+      : W
+    : never;
+
 // An untyped non-url param is core's `any`, so only its default's type is known.
-type ConfigType<C, UrlType> = C extends { type: infer T extends string }
-  ? BuiltInType<T> | NullDefault<C>
+type ConfigType<C, UrlType, K> = C extends { type: infer T extends string }
+  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>>, C, K>
   : [UrlType] extends [never]
-    ? Widen<DefaultOf<C>>
-    : UrlType | NullDefault<C>;
+    ? IsArray<C, K> extends true
+      ? WithDefaults<DefaultElement<DefaultOf<C>>[], C, K>
+      : Widen<DefaultOf<C>>
+    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>>, C, K>;
+
+type WithDefaults<T, C, K> = T | NullDefault<C> | ScalarDefault<C, K>;
 
 type UrlKeys<D> = PathEntries<D>[0] | QueryEntries<D>[0];
 
@@ -302,8 +334,12 @@ type UrlType<D, K> = BuiltInType<
 >;
 
 type KeyType<D, K> = K extends keyof ParamsBlock<D>
-  ? ConfigType<ParamsBlock<D>[K], K extends UrlKeys<D> ? UrlType<D, K> : never>
-  : UrlType<D, K>;
+  ? ConfigType<
+      ParamsBlock<D>[K],
+      K extends UrlKeys<D> ? UrlType<D, K> : never,
+      K
+    >
+  : ArrayOf<UrlType<D, K>, IsArray<unknown, K>>;
 
 type IsQuery<D, K> = K extends QueryEntries<D>[0] ? true : false;
 
