@@ -105,16 +105,16 @@ describe('a successful transition', () => {
     expect(span.parentSpanContext).toBeUndefined();
 
     expect(span.attributes).toEqual({
-      'uirouter.transition_id': 0,
-      'uirouter.from': '',
-      'uirouter.to': 'a',
-      'uirouter.source': 'unknown',
-      'uirouter.reload': false,
-      'uirouter.location': 'true',
-      'uirouter.entering': ['a'],
-      'uirouter.exiting': [],
-      'uirouter.retained': [],
-      'uirouter.outcome': 'success',
+      'uirouter.transition.id': 0,
+      'uirouter.transition.from': '',
+      'uirouter.transition.to': 'a',
+      'uirouter.transition.source': 'unknown',
+      'uirouter.transition.reload': false,
+      'uirouter.transition.location': 'true',
+      'uirouter.transition.entering_states': ['a'],
+      'uirouter.transition.exiting_states': [],
+      'uirouter.transition.retained_states': [],
+      'uirouter.transition.outcome': 'success',
     });
 
     expect(childrenOf(spans(), span)).toEqual([
@@ -152,12 +152,12 @@ describe('a successful transition', () => {
     await go('b', {}, { location: 'replace', reload: 'a' });
 
     expect(named(spans(), 'b').attributes).toMatchObject({
-      'uirouter.from': 'a',
-      'uirouter.reload': true,
-      'uirouter.reload_state': 'a',
-      'uirouter.location': 'replace',
-      'uirouter.entering': ['b'],
-      'uirouter.exiting': ['a'],
+      'uirouter.transition.from': 'a',
+      'uirouter.transition.reload': true,
+      'uirouter.transition.reload_state': 'a',
+      'uirouter.transition.location': 'replace',
+      'uirouter.transition.entering_states': ['b'],
+      'uirouter.transition.exiting_states': ['a'],
     });
   });
 });
@@ -178,15 +178,17 @@ describe('a redirect chain', () => {
     const b = named(spans(), 'b');
 
     for (const origin of [r1, r2]) {
-      expect(origin.attributes['uirouter.outcome']).toBe('redirected');
+      expect(origin.attributes['uirouter.transition.outcome']).toBe(
+        'redirected',
+      );
       expect(origin.status.code).toBe(SpanStatusCode.UNSET);
     }
 
     expect(r1.links).toEqual([]);
     expect(r2.links.map((link) => link.context.spanId)).toEqual([idOf(r1)]);
     expect(b.links.map((link) => link.context.spanId)).toEqual([idOf(r2)]);
-    expect(b.attributes['uirouter.source']).toBe('redirect');
-    expect(b.attributes['uirouter.outcome']).toBe('success');
+    expect(b.attributes['uirouter.transition.source']).toBe('redirect');
+    expect(b.attributes['uirouter.transition.outcome']).toBe('success');
   });
 });
 
@@ -210,7 +212,7 @@ describe('a failed transition', () => {
       code: SpanStatusCode.ERROR,
       message: 'boom failed',
     });
-    expect(span.attributes['uirouter.outcome']).toBe('error');
+    expect(span.attributes['uirouter.transition.outcome']).toBe('error');
     expect(span.attributes['error.type']).toBe('Error');
     expect(span.events.map((event) => [event.name, event.attributes])).toEqual([
       ['exception', { 'exception.message': 'boom failed' }],
@@ -247,11 +249,11 @@ describe('a failed transition', () => {
 
     const span = named(spans(), 'n');
     expect(span.attributes).toMatchObject({
-      'uirouter.outcome': 'invalid',
-      'uirouter.invalid_params': ['num'],
+      'uirouter.transition.outcome': 'invalid',
+      'uirouter.transition.invalid_params': ['num'],
       'error.type': 'invalid',
     });
-    expect(span.attributes).not.toHaveProperty('uirouter.param.num');
+    expect(span.attributes).not.toHaveProperty('uirouter.transition.param.num');
     expect(span.status).toEqual({
       code: SpanStatusCode.ERROR,
       message:
@@ -346,7 +348,7 @@ describe('a transition that does not finish', () => {
     await flush();
 
     const slow = named(spans(), 'slow');
-    expect(slow.attributes['uirouter.outcome']).toBe('superseded');
+    expect(slow.attributes['uirouter.transition.outcome']).toBe('superseded');
     expect(slow.status.code).toBe(SpanStatusCode.UNSET);
     expect(slow.links.map((link) => link.context.spanId)).toEqual([
       idOf(named(spans(), 'a')),
@@ -368,7 +370,7 @@ describe('a transition that does not finish', () => {
     await go('a');
 
     const span = named(spans(), 'a');
-    expect(span.attributes['uirouter.outcome']).toBe('aborted');
+    expect(span.attributes['uirouter.transition.outcome']).toBe('aborted');
     expect(span.status.code).toBe(SpanStatusCode.UNSET);
   });
 
@@ -385,7 +387,7 @@ describe('a transition that does not finish', () => {
     await loud.go('a');
     await loud.go('a');
     const [, ignored] = loud.spans().filter((s) => s.name === 'a');
-    expect(ignored?.attributes['uirouter.outcome']).toBe('ignored');
+    expect(ignored?.attributes['uirouter.transition.outcome']).toBe('ignored');
     expect(ignored?.status.code).toBe(SpanStatusCode.UNSET);
     // The before phase never ends: core's ignore check rejects inside it.
     expect(childrenOf(loud.spans(), ignored)).toEqual(['error', 'before']);
@@ -406,9 +408,9 @@ describe('an invalid target', () => {
       message: "No state named 'nope'",
     });
     expect(span.attributes).toEqual({
-      'uirouter.from': '',
-      'uirouter.to': 'nope',
-      'uirouter.outcome': 'invalid',
+      'uirouter.transition.from': '',
+      'uirouter.transition.to': 'nope',
+      'uirouter.transition.outcome': 'invalid',
       'error.type': 'invalid',
     });
   });
@@ -426,7 +428,7 @@ describe('params', () => {
   const paramAttributes = (span: ReadableSpan) =>
     Object.fromEntries(
       Object.entries(span.attributes).filter(([key]) =>
-        key.startsWith('uirouter.param.'),
+        key.startsWith('uirouter.transition.param.'),
       ),
     );
 
@@ -439,7 +441,7 @@ describe('params', () => {
     await listed.go('folder', { folderId: '42', q: 'secret' });
 
     expect(paramAttributes(named(listed.spans(), 'folder'))).toEqual({
-      'uirouter.param.folderId': '42',
+      'uirouter.transition.param.folderId': '42',
     });
 
     const unlisted = setup(states);
@@ -454,8 +456,8 @@ describe('params', () => {
     await all.go('folder', { folderId: '42', tags: ['a', 'b'] });
 
     expect(paramAttributes(named(all.spans(), 'folder'))).toEqual({
-      'uirouter.param.folderId': '42',
-      'uirouter.param.tags': ['a', 'b'],
+      'uirouter.transition.param.folderId': '42',
+      'uirouter.transition.param.tags': ['a', 'b'],
     });
   });
 });
@@ -481,7 +483,7 @@ describe('dispose()', () => {
     await flush();
     const hang = named(spans(), 'hang');
     expect(hang.ended).toBe(true);
-    expect(hang.attributes['uirouter.outcome']).toBeUndefined();
+    expect(hang.attributes['uirouter.transition.outcome']).toBeUndefined();
     // Core fetches resolves lazily on enter by default, so the transition waits there.
     expect(childrenOf(spans(), hang)).toEqual([
       'before',
@@ -553,7 +555,9 @@ describe('retention', () => {
     for (let i = 0; i < 70; i++) await go(i % 2 ? 'b' : 'a');
 
     expect(
-      spans().filter((s) => s.attributes['uirouter.outcome'] === 'success'),
+      spans().filter(
+        (s) => s.attributes['uirouter.transition.outcome'] === 'success',
+      ),
     ).toHaveLength(70);
   });
 });

@@ -150,16 +150,16 @@ describe('OTLP export', () => {
       new Set(['application/json']),
     );
     expect(attributesOf(user)).toEqual({
-      'uirouter.transition_id': { intValue: 1 },
-      'uirouter.from': { stringValue: 'home' },
-      'uirouter.to': { stringValue: 'user' },
-      'uirouter.source': { stringValue: 'unknown' },
-      'uirouter.reload': { boolValue: false },
-      'uirouter.location': { stringValue: 'true' },
-      'uirouter.entering': strings('user'),
-      'uirouter.exiting': strings('home'),
-      'uirouter.retained': strings(),
-      'uirouter.outcome': { stringValue: 'success' },
+      'uirouter.transition.id': { intValue: 1 },
+      'uirouter.transition.from': { stringValue: 'home' },
+      'uirouter.transition.to': { stringValue: 'user' },
+      'uirouter.transition.source': { stringValue: 'unknown' },
+      'uirouter.transition.reload': { boolValue: false },
+      'uirouter.transition.location': { stringValue: 'true' },
+      'uirouter.transition.entering_states': strings('user'),
+      'uirouter.transition.exiting_states': strings('home'),
+      'uirouter.transition.retained_states': strings(),
+      'uirouter.transition.outcome': { stringValue: 'success' },
     });
     expect(user?.status).toEqual({ code: 0 });
     expect(user?.parentSpanId).toBeUndefined();
@@ -218,7 +218,7 @@ describe('OTLP export', () => {
       });
     }
 
-    expect(attributesOf(failed[0])['uirouter.outcome']).toEqual({
+    expect(attributesOf(failed[0])['uirouter.transition.outcome']).toEqual({
       stringValue: 'error',
     });
   });

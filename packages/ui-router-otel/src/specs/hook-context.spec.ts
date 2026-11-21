@@ -316,9 +316,12 @@ describe('activateHookSpans', () => {
     const outcomes = Object.fromEntries(
       (await spans())
         .filter(
-          (span) => span.attributes['uirouter.transition_id'] !== undefined,
+          (span) => span.attributes['uirouter.transition.id'] !== undefined,
         )
-        .map((span) => [span.name, span.attributes['uirouter.outcome']]),
+        .map((span) => [
+          span.name,
+          span.attributes['uirouter.transition.outcome'],
+        ]),
     );
 
     expect(outcomes).toMatchObject({
@@ -428,7 +431,7 @@ describe('activateHookSpans', () => {
     const all = await spans();
 
     const ignored = all.filter(
-      (span) => span.attributes['uirouter.outcome'] === 'ignored',
+      (span) => span.attributes['uirouter.transition.outcome'] === 'ignored',
     );
 
     expect(ignored).toHaveLength(1);
@@ -582,7 +585,7 @@ describe('activateHookSpans', () => {
     const phase = find('enter users');
 
     // The shape the Timeline joins as `child`: a router transition span, a phase span under it, an app span under that.
-    expect(transition?.attributes?.['uirouter.transition_id']).toBe(0);
+    expect(transition?.attributes?.['uirouter.transition.id']).toBe(0);
     expect(phase?.parentSpanId).toBe(transition?.spanId);
     expect(phase?.attributes?.['uirouter.phase']).toBe('enter');
     expect(find('GET users')?.parentSpanId).toBe(phase?.spanId);

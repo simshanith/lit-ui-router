@@ -212,10 +212,10 @@ describe('redactSpan', () => {
     attributes: {
       'url.full': 'https://example.test/users/7?token=x',
       'http.response.status_code': 200,
-      'uirouter.transition_id': 3,
-      'uirouter.to': 'users.user',
-      'uirouter.param.userId': '7',
-      'uirouter.param.q': 'x',
+      'uirouter.transition.id': 3,
+      'uirouter.transition.to': 'users.user',
+      'uirouter.transition.param.userId': '7',
+      'uirouter.transition.param.q': 'x',
     },
   };
 
@@ -225,10 +225,10 @@ describe('redactSpan', () => {
       attributes: {
         'url.full': '[redacted]',
         'http.response.status_code': '[redacted]',
-        'uirouter.transition_id': 3,
-        'uirouter.to': 'users.user',
-        'uirouter.param.userId': '7',
-        'uirouter.param.q': '[redacted]',
+        'uirouter.transition.id': 3,
+        'uirouter.transition.to': 'users.user',
+        'uirouter.transition.param.userId': '7',
+        'uirouter.transition.param.q': '[redacted]',
       },
     });
   });
@@ -260,6 +260,9 @@ describe('redactSpan', () => {
     expect(
       redactSession({ ...session, spans: [span] }, redactionOf()).spans?.[0]
         ?.attributes,
-    ).toMatchObject({ 'url.full': '[redacted]', 'uirouter.to': 'users.user' });
+    ).toMatchObject({
+      'url.full': '[redacted]',
+      'uirouter.transition.to': 'users.user',
+    });
   });
 });

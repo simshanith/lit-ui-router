@@ -232,9 +232,9 @@ const candidatesOf = (
 ): SpanRecord[] =>
   spans.filter(
     ({ attributes, startTime }) =>
-      attributes?.['uirouter.transition_id'] === tx.id &&
-      attributes['uirouter.to'] === tx.to &&
-      attributes['uirouter.from'] === tx.from &&
+      attributes?.['uirouter.transition.id'] === tx.id &&
+      attributes['uirouter.transition.to'] === tx.to &&
+      attributes['uirouter.transition.from'] === tx.from &&
       Math.abs(startTime - timeOrigin - tx.t) <= START_TOLERANCE,
   );
 
