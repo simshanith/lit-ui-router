@@ -11,6 +11,7 @@ import {
   createDirectiveTracker,
   type DirectiveName,
   elementPartIndex,
+  importedAs,
 } from './directives.ts';
 
 /**
@@ -42,6 +43,62 @@ const WHOLE_VALUE: Partial<Record<DirectiveName, true>> = {
 };
 
 export const RULE_NAME = 'directive-position';
+
+/** Modules whose `html` splices static values into the strings before lit parses. */
+const STATIC_HTML_SOURCES = new Set([
+  'lit/static-html.js',
+  'lit-html/static.js',
+]);
+
+/** Where a scan of the template's static text stands after a quasi. */
+interface TagScan {
+  inTag: boolean;
+  isStatic: boolean;
+  quote: string | undefined;
+}
+
+const TAG_OPEN = /^<(?:[a-zA-Z!]|\/[a-zA-Z])/;
+
+const scanQuasi = (scan: TagScan, raw: string): void => {
+  raw.split('').forEach((char, index) => {
+    if (!scan.inTag) {
+      scan.inTag = TAG_OPEN.test(raw.slice(index, index + 3));
+    } else if (scan.quote !== undefined) {
+      if (char === scan.quote) scan.quote = undefined;
+    } else if (char === '"' || char === "'") {
+      scan.quote = char;
+    } else if (char === '>') {
+      scan.inTag = false;
+      scan.isStatic = false;
+    }
+  });
+};
+
+/**
+ * Expression indexes inside an opening or closing tag whose name is itself an
+ * expression (`<${tag} ...>`, from `lit/static-html.js`). The analyzer parses
+ * that tag as text, so it can't say where these expressions land. The tag-name
+ * expression itself stays judged: a directive there is never a static value.
+ */
+const staticTagExpressions = (
+  quasis: readonly { value: { raw: string } }[],
+): Set<number> => {
+  const hidden = new Set<number>();
+  const scan: TagScan = { inTag: false, isStatic: false, quote: undefined };
+
+  quasis.slice(0, -1).forEach(({ value: { raw } }, index) => {
+    scanQuasi(scan, raw);
+
+    if (!scan.inTag && /<\/?$/.test(raw)) {
+      scan.inTag = true;
+      scan.isStatic = true;
+    } else if (scan.isStatic) {
+      hidden.add(index);
+    }
+  });
+
+  return hidden;
+};
 
 /**
  * Every lit-ui-router directive only where its part type allows.
@@ -86,6 +143,12 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
         const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
+        const hidden = importedAs(context, asNode(node.tag), 'html', (source) =>
+          STATIC_HTML_SOURCES.has(source),
+        )
+          ? staticTagExpressions(node.quasi.quasis)
+          : new Set<number>();
+
         // Every expression index the parsed template resolved to an element
         // part; anything else is an attribute, child or comment position.
         const elementParts = new Set<number>();
@@ -109,7 +172,7 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
         expressions.forEach((expression, index) => {
           const name = tracker.directiveOf(expression);
 
-          if (name === undefined) return;
+          if (name === undefined || hidden.has(index)) return;
 
           const report = (
             messageId:

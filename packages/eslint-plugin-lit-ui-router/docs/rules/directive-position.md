@@ -47,6 +47,8 @@ An attribute-part directive anywhere but the attribute it accepts:
 
 A call outside any lit template. `const part = uiSref('home')` says nothing about where the result lands, and guessing there would be false positives rather than coverage — the template expression that consumes it is where this rule looks.
 
+An expression inside a tag whose name is itself an expression, as `html` from `lit/static-html.js` allows — `` html`<${tag} ${uiSref('home')}>` ``. The tag name is spliced in before lit parses the template, so the rule can't see that element; elements nested inside it are still checked.
+
 ## Examples
 
 Incorrect:
