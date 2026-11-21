@@ -216,6 +216,21 @@ ruleTester.run('directive-position', directivePosition, {
       errors: [{ messageId: 'elementPartOnly', line: 4 }],
     },
     {
+      name: 'a quoted < in a static-html template is not a tag name',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p title="1 <\${'x'}">\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'elements after a quoted < in a static-html template stay judged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p title="1 <\${'x'}"></p><a \${srefHref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'attributePartOnly' }],
+    },
+    {
+      name: 'a directive in tag-name position of a static-html template',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p>1 <\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
       name: 'child position inside a static-html literal tag',
       code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}><span>\${uiSref('home')}</span></\${tag}>\`;`,
       errors: [{ messageId: 'elementPartOnly', line: 4, column: 40 }],

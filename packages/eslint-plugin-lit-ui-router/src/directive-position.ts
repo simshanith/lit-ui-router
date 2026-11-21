@@ -50,33 +50,51 @@ const STATIC_HTML_SOURCES = new Set([
   'lit-html/static.js',
 ]);
 
+/** Where a scan of the template's static text stands after a quasi. */
+interface TagScan {
+  inTag: boolean;
+  isStatic: boolean;
+  quote: string | undefined;
+}
+
+const TAG_OPEN = /^<(?:[a-zA-Z!]|\/[a-zA-Z])/;
+
+const scanQuasi = (scan: TagScan, raw: string): void => {
+  raw.split('').forEach((char, index) => {
+    if (!scan.inTag) {
+      scan.inTag = TAG_OPEN.test(raw.slice(index, index + 3));
+    } else if (scan.quote !== undefined) {
+      if (char === scan.quote) scan.quote = undefined;
+    } else if (char === '"' || char === "'") {
+      scan.quote = char;
+    } else if (char === '>') {
+      scan.inTag = false;
+      scan.isStatic = false;
+    }
+  });
+};
+
 /**
  * Expression indexes inside an opening or closing tag whose name is itself an
  * expression (`<${tag} ...>`, from `lit/static-html.js`). The analyzer parses
- * that tag as text, so it can't say where these expressions land.
+ * that tag as text, so it can't say where these expressions land. The tag-name
+ * expression itself stays judged: a directive there is never a static value.
  */
 const staticTagExpressions = (
   quasis: readonly { value: { raw: string } }[],
 ): Set<number> => {
   const hidden = new Set<number>();
-  let inStaticTag = false;
-  let quote: string | undefined;
+  const scan: TagScan = { inTag: false, isStatic: false, quote: undefined };
 
   quasis.slice(0, -1).forEach(({ value: { raw } }, index) => {
-    for (const char of inStaticTag ? raw : '') {
-      if (quote !== undefined) {
-        if (char === quote) quote = undefined;
-      } else if (char === '"' || char === "'") {
-        quote = char;
-      } else if (char === '>') {
-        inStaticTag = false;
-        break;
-      }
+    scanQuasi(scan, raw);
+
+    if (!scan.inTag && /<\/?$/.test(raw)) {
+      scan.inTag = true;
+      scan.isStatic = true;
+    } else if (scan.isStatic) {
+      hidden.add(index);
     }
-
-    if (/<\/?$/.test(raw)) inStaticTag = true;
-
-    if (inStaticTag) hidden.add(index);
   });
 
   return hidden;
