@@ -169,6 +169,45 @@ checksum_source = "mise-versions"
 url = "https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/lycheeverse/lychee/releases/assets/409959491"
 
+[[tools."aqua:oven-sh/bun"]]
+version = "1.2.15"
+backend = "aqua:oven-sh/bun"
+
+[tools."aqua:oven-sh/bun"."platforms.linux-arm64"]
+checksum = "sha256:3c3d006148f37200f967fd8070eefb340468287bacb44524a31cad1ee9d3bb7b"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-linux-aarch64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915561"
+
+[tools."aqua:oven-sh/bun"."platforms.linux-arm64-musl"]
+checksum = "sha256:3c3d006148f37200f967fd8070eefb340468287bacb44524a31cad1ee9d3bb7b"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-linux-aarch64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915561"
+
+[tools."aqua:oven-sh/bun"."platforms.linux-x64"]
+checksum = "sha256:a261626367835bb3754a01ae07f884484ed17b0886b01e417b799591fa4d7901"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-linux-x64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915673"
+
+[tools."aqua:oven-sh/bun"."platforms.linux-x64-musl"]
+checksum = "sha256:a261626367835bb3754a01ae07f884484ed17b0886b01e417b799591fa4d7901"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-linux-x64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915673"
+
+[tools."aqua:oven-sh/bun"."platforms.macos-arm64"]
+checksum = "sha256:ab0cd6fc7fc8d1ee4f8166d99b71086d4793c5aee0d0b5c73fdf9b70fa47ded4"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-darwin-aarch64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915773"
+
+[tools."aqua:oven-sh/bun"."platforms.macos-x64"]
+checksum = "sha256:a4d26f5f3c9e066493d7402d45a201defcde8f8f415cc1b54fb874d02d15940f"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-darwin-x64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915832"
+
+[tools."aqua:oven-sh/bun"."platforms.windows-x64"]
+checksum = "sha256:3cbfc2668aebd86718b9414fd4a4b4b1ec34a21ca544517310833563a937272f"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.2.15/bun-windows-x64.zip"
+url_api = "https://api.github.com/repos/oven-sh/bun/releases/assets/258915877"
+
 [[tools."aqua:pnpm/pnpm"]]
 version = "12.21.0"
 backend = "aqua:pnpm/pnpm"
