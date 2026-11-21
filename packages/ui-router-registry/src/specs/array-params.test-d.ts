@@ -16,6 +16,11 @@ const arrayStates = [
     params: { 'one[]': { array: false } },
   },
   { name: 'filters', params: { flags: { type: 'bool', array: true } } },
+  {
+    name: 'defaulted',
+    url: '/defaulted?tag',
+    params: { tag: { array: true, value: 'all' } },
+  },
 ] as const;
 
 declare module '../index.js' {
@@ -64,3 +69,9 @@ accepts<ResolvedParamsOf<'pages'>['ids']>([1]);
 
 // @ts-expect-error an `array: true` path param reads back an array
 accepts<ResolvedParamsOf<'pages'>['ids']>(1);
+
+// A scalar default reads back wrapped: core runs it through the array type's `$normalize`.
+accepts<ResolvedParamsOf<'defaulted'>['tag']>(['all']);
+
+// @ts-expect-error a scalar default still reads back an array
+accepts<ResolvedParamsOf<'defaulted'>['tag']>('all');
