@@ -51,6 +51,8 @@ describe('the example facets', () => {
     });
     assert.equal(exampleFacets('hellogalaxy-effect').bindings, 'effect');
     assert.equal(exampleFacets('lint-eslint').lint, 'on');
+    assert.equal(exampleFacets('uirouter-react').bindings, 'signals');
+    assert.equal(exampleFacets('uirouter-react').location, 'navigation');
   });
 
   it('refuse sources with no location plugin or with two', () => {

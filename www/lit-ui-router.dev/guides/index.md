@@ -92,6 +92,10 @@ choices to the pages below.
 - [Coming from UI-Router](./coming-from-ui-router) — side-by-side mapping from
   `@uirouter/angular` and `@uirouter/react` to `lit-ui-router`, what stays
   identical in `@uirouter/core`, and what changes in Lit
+- [Staying on UI-Router](./staying-on-ui-router) — using the framework-agnostic
+  companion packages (`ui-router-navigation-location-plugin`, `ui-router-registry`
+  and `ui-router-signals`) on `@uirouter/react` without Lit, plus the status of
+  MobX, Effect and Angular
 
 ## Companion Packages
 

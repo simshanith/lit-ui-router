@@ -29,6 +29,9 @@ framework-agnostic one for `@uirouter/core`, and a Lit one for
 `lit-ui-router`. The [Effect](/packages/effect), [MobX](/packages/mobx) and
 [Signals](/packages/signals) overviews say which to install.
 
+Apps that stay on another `@uirouter/core` adapter can adopt the `agnostic`
+packages without Lit; see [Staying on UI-Router](/guides/staying-on-ui-router).
+
 <!-- package-index -->
 
 <figure class="atlas-thumb">

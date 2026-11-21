@@ -43,9 +43,11 @@ const depsOf = ({ dependencies, devDependencies }: PackageManifest) => ({
 
 const BINDINGS = ['mobx', 'signals', 'effect'] as const;
 
-/** Facets an app's dependencies decide: its Lit bindings, prerendering, the registry and the lint plugin. */
+/** Facets an app's dependencies decide: its reactivity bindings (either half of a pair), prerendering, the registry and the lint plugin. */
 export function dependencyFacets(deps: DependencyMap): ExampleFacets {
-  const bindings = BINDINGS.filter((name) => `lit-ui-router-${name}` in deps);
+  const bindings = BINDINGS.filter(
+    (name) => `lit-ui-router-${name}` in deps || `ui-router-${name}` in deps,
+  );
 
   if (bindings.length > 1)
     throw new Error(`more than one binding: ${bindings.join(', ')}`);
@@ -100,9 +102,9 @@ export function kindOf(packageName = ''): ExampleKind {
 }
 
 const sourcesOf = (dir: string): string[] =>
-  globSync(['src/**/*.{ts,js}', 'public/**/*.js', '*.js'], { cwd: dir }).map(
-    (file) => readFileSync(join(dir, file), 'utf8'),
-  );
+  globSync(['src/**/*.{ts,tsx,js}', 'public/**/*.js', '*.js'], {
+    cwd: dir,
+  }).map((file) => readFileSync(join(dir, file), 'utf8'));
 
 /** Every facet of one example, read from its own folder. */
 export function exampleFacets(name: ExampleName): ExampleFacets {

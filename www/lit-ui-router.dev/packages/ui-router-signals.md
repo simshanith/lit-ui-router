@@ -17,7 +17,8 @@ type: package
 [`signal-polyfill`](https://github.com/proposal-signals/signal-polyfill). It
 imports neither Lit nor `lit-ui-router`, so any signal consumer can track
 route state. [`lit-ui-router-signals`](/packages/lit-ui-router-signals) builds Lit
-controllers on it.
+controllers on it. [Staying on UI-Router](/guides/staying-on-ui-router) shows
+it running on `@uirouter/react` without Lit.
 
 ## Installation
 
