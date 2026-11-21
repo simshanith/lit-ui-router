@@ -56,6 +56,8 @@ let viewIdCounter = 0;
  */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
 
+const FOLLOWING = 4 satisfies Node['DOCUMENT_POSITION_FOLLOWING'];
+
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
  * comment, or a part marker a render wrote under whatever prefix.
@@ -332,7 +334,21 @@ export class UiView extends LitElement {
     // SAFETY: a path entry that is not a node never matches a fallback node
     const child = path[path.indexOf(this) - 1] as ChildNode;
 
-    return this.fallbackNodes.includes(child);
+    return this.fallbackNodes.includes(child) || this.amidFallback(child);
+  }
+
+  /** Whether `child` stands between two fallback nodes, where a part of the parent's template renders after capture. */
+  private amidFallback(child: ChildNode): boolean {
+    const nodes = this.fallbackNodes;
+
+    if (this.fallbackParked || nodes.length < 2) {
+      return false;
+    }
+
+    return (
+      !!(nodes[0].compareDocumentPosition(child) & FOLLOWING) &&
+      !!(child.compareDocumentPosition(nodes[nodes.length - 1]) & FOLLOWING)
+    );
   }
 
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
