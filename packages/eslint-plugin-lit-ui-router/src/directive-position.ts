@@ -11,6 +11,7 @@ import {
   createDirectiveTracker,
   type DirectiveName,
   elementPartIndex,
+  importedAs,
 } from './directives.ts';
 
 /**
@@ -43,6 +44,12 @@ const WHOLE_VALUE: Partial<Record<DirectiveName, true>> = {
 
 export const RULE_NAME = 'directive-position';
 
+/** Modules whose `html` splices static values into the strings before lit parses. */
+const STATIC_HTML_SOURCES = new Set([
+  'lit/static-html.js',
+  'lit-html/static.js',
+]);
+
 /**
  * Expression indexes inside an opening or closing tag whose name is itself an
  * expression (`<${tag} ...>`, from `lit/static-html.js`). The analyzer parses
@@ -67,10 +74,7 @@ const staticTagExpressions = (
       }
     }
 
-    if (/<\/?$/.test(raw)) {
-      inStaticTag = true;
-      quote = undefined;
-    }
+    if (/<\/?$/.test(raw)) inStaticTag = true;
 
     if (inStaticTag) hidden.add(index);
   });
@@ -120,7 +124,12 @@ const directivePosition: RuleFor<typeof RULE_NAME> = {
 
         const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
-        const hidden = staticTagExpressions(node.quasi.quasis);
+
+        const hidden = importedAs(context, asNode(node.tag), 'html', (source) =>
+          STATIC_HTML_SOURCES.has(source),
+        )
+          ? staticTagExpressions(node.quasi.quasis)
+          : new Set<number>();
 
         // Every expression index the parsed template resolved to an element
         // part; anything else is an attribute, child or comment position.

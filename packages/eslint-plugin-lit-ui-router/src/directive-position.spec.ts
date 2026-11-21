@@ -206,6 +206,16 @@ ruleTester.run('directive-position', directivePosition, {
       errors: [{ messageId: 'elementPartOnly' }],
     },
     {
+      name: 'a literal < before an expression in a plain lit template is still judged',
+      code: `${IMPORTS}html\`<p>1 <\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'a quoted < inside a static-html literal tag keeps the quote open',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="a <\${'x'}">\${uiSref('home')}</\${tag}>\`;`,
+      errors: [{ messageId: 'elementPartOnly', line: 4 }],
+    },
+    {
       name: 'child position inside a static-html literal tag',
       code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}><span>\${uiSref('home')}</span></\${tag}>\`;`,
       errors: [{ messageId: 'elementPartOnly', line: 4, column: 40 }],
