@@ -20,7 +20,7 @@ catalog:
   '@cloudflare/config': 1.0.0-rc.1
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.158.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.159.0'
   '@commitlint/cli': ^21.2.4
   '@commitlint/config-conventional': ^21.2.4
   '@commitlint/types': ^21.2.3
@@ -296,10 +296,11 @@ overrides:
   '@pierre/trees>@pierre/theming': ^1.0.2
   '@playwright/cli>playwright': 'catalog:'
   '@playwright/cli>playwright-core': 'catalog:'
+  'cloudflare>@types/node': 'catalog:'
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.17': ^3.4.17
   'get-uri>basic-ftp': ^6.2.1
-  'knip>oxc-parser': 0.158.0
+  'knip>oxc-parser': 0.159.0
   'lit-dialog>lit': ^3.3.3
 
 packageExtensions:
@@ -349,7 +350,6 @@ minimumReleaseAgeExclude:
   - cf@1.0.0-rc.1
   - miniflare@5.20261117.0-beta
   - workerd@1.20261117.1
-  - wrangler@4.164.0
   - eslint-plugin-lit-ui-router*
   - lit-ui-router*
   - ui-router-*
