@@ -106,9 +106,9 @@ const env: Env = {
   // SAFETY: these mounts never reach the release diffs; a call would throw on the missing method.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
   RELEASE_DIFFS: {} as unknown as Env['RELEASE_DIFFS'],
-  // SAFETY: these mounts never reach the snapshot; a call would throw on the missing method.
+  // SAFETY: these mounts never reach the snapshot bucket; a call would throw on the missing method.
   // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- an empty object shares no members with the binding
-  DOCS_V1: {} as unknown as Env['DOCS_V1'],
+  DOCS_SNAPSHOTS: {} as unknown as Env['DOCS_SNAPSHOTS'],
   ASSETS: {
     connect: () => {
       throw new Error('the assets binding has no sockets');
@@ -439,7 +439,34 @@ describe('the security headers', () => {
     assert.deepEqual(carried(await dispatch(path)), SECURITY_HEADERS);
   });
 
-  // The snapshot Worker and the assets binding answer with their own _headers output.
+  it('ride a snapshot page read from the bucket', async () => {
+    const withBucket = {
+      ...env,
+      // SAFETY: the route reads only head and get, and get only for this page.
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a two-method object shares too few members with the binding
+      DOCS_SNAPSHOTS: {
+        head: () => Promise.resolve(null),
+        get: (key: string) =>
+          Promise.resolve(
+            key === 'v1/index.html'
+              ? { httpEtag: '"a"', body: new Response('snapshot').body }
+              : null,
+          ),
+      } as unknown as Env['DOCS_SNAPSHOTS'],
+    };
+
+    const page = await worker.fetch(
+      new Request(`${ORIGIN}/v1/`),
+      withBucket,
+      ctx,
+    );
+
+    assert.equal(page.status, 200);
+    assert.deepEqual(carried(page), SECURITY_HEADERS);
+    assert.equal(await page.text(), 'snapshot');
+  });
+
+  // The assets binding answers with its own _headers output.
   it('fill in only what a passed-through response lacks, never a second value', async () => {
     const own = {
       'Referrer-Policy': 'no-referrer',
@@ -447,43 +474,42 @@ describe('the security headers', () => {
     };
 
     const answers = {
-      '/v1/': new Response('snapshot', { headers: own }),
-      '/v1/assets/app.js': new Response(null, {
+      '/guides/': new Response('page', { headers: own }),
+      '/assets/app.js': new Response(null, {
         status: 304,
         headers: { ...SECURITY_HEADERS, ETag: '"a"' },
       }),
     };
 
-    const snapshot = {
+    const passing = {
       ...env,
-      // SAFETY: the worker calls only fetch on the snapshot binding.
-      // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- a one-method object shares too few members with the binding
-      DOCS_V1: {
-        fetch: (request: Request) =>
+      ASSETS: {
+        ...env.ASSETS,
+        fetch: (input: Request | URL | string) =>
           Promise.resolve(
-            new URL(request.url).pathname === '/v1/'
-              ? answers['/v1/']
-              : answers['/v1/assets/app.js'],
+            pathnameOf(input) === '/guides/'
+              ? answers['/guides/']
+              : answers['/assets/app.js'],
           ),
-      } as unknown as Env['DOCS_V1'],
+      },
     };
 
     const page = await worker.fetch(
-      new Request(`${ORIGIN}/v1/`),
-      snapshot,
+      new Request(`${ORIGIN}/guides/`),
+      passing,
       ctx,
     );
 
     assert.deepEqual(carried(page), { ...SECURITY_HEADERS, ...own });
-    assert.equal(await page.text(), 'snapshot');
+    assert.equal(await page.text(), 'page');
 
     const unchanged = await worker.fetch(
-      new Request(`${ORIGIN}/v1/assets/app.js`),
-      snapshot,
+      new Request(`${ORIGIN}/assets/app.js`),
+      passing,
       ctx,
     );
 
-    assert.equal(unchanged, answers['/v1/assets/app.js']);
+    assert.equal(unchanged, answers['/assets/app.js']);
     assert.equal(unchanged.status, 304);
     assert.equal(unchanged.headers.get('ETag'), '"a"');
   });

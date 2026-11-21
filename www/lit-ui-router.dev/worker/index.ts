@@ -62,7 +62,7 @@ const site = {
     const url = new URL(request.url);
 
     if (isSnapshotPath(url.pathname))
-      return serveSnapshot(request, env.DOCS_V1);
+      return serveSnapshot(request, env.DOCS_SNAPSHOTS);
 
     if (isMainAliasPath(url.pathname)) return redirectMainAlias(url);
 

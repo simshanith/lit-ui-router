@@ -73,7 +73,7 @@ export const SURFACES = [
     deadLinks: 'ignore',
   },
   {
-    // The frozen 1.x docs: the worker hands the whole prefix to their own Worker, with its llms.txt and 404 page.
+    // The 1.x docs: the worker serves the whole prefix from the snapshot bucket, with its llms.txt and 404 page.
     id: 'snapshot-v1',
     paths: ['/v1', '/v1/*'],
     renderer: 'worker',

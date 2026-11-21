@@ -27,7 +27,7 @@ import {
 import { BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
 
 // Builds a frozen docs snapshot: the whole site at a release tag, under its version's base, into
-// the assets directory of that version's Worker package (www/<id>.versions.lit-ui-router.dev/dist/).
+// www/<id>.versions.lit-ui-router.dev/dist/, which docs-snapshot-publish.ts uploads to the bucket.
 // Usage: docs-snapshot.ts [version-id] [--bake-only], default v1. --bake-only skips the tag build
 // and redoes the last step on the snapshot already there: its canonical links, _redirects and
 // _headers. That step reads this checkout's built site, so build it first.

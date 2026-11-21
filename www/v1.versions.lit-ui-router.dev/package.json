@@ -2,7 +2,7 @@
   "name": "@www/v1.versions.lit-ui-router.dev",
   "version": "0.0.0",
   "private": true,
-  "description": "The frozen 1.x docs: an assets-only Worker the docs worker hands /v1/* to, deployed by hand",
+  "description": "The 1.x docs' former assets-only Worker, left to retire; its dist/ holds the baked snapshot before upload",
   "type": "module",
   "scripts": {
     "deploy": "cf deploy",
