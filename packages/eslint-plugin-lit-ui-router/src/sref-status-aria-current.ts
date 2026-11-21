@@ -267,6 +267,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                   fix: (fixer) => {
                     const insert = attributeEnd(
                       source.getText(),
+                      analyzer.source,
                       element,
                       name,
                       expressions,
