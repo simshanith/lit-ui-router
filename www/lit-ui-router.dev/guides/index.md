@@ -86,9 +86,9 @@ choices to the pages below.
 - [Development and Production Builds](./development-builds) — the `development`
   export condition, the warnings the development build carries and the
   production build cannot print, and which packages ship two builds at all
-- [Linting](./linting) — router-aware ESLint rules with
-  `eslint-plugin-lit-ui-router`, Lit template checks with `eslint-plugin-lit`
-  and `lit-analyzer`, and stylelint for component CSS
+- [Linting](./linting) — catch routing mistakes at author time with
+  `eslint-plugin-lit-ui-router`, where lint sits beside typed routes and
+  development warnings, and pointers for the rest of your Lit code
 
 ## Coming from Another Router
 
