@@ -1,5 +1,6 @@
-// Url placeholders read as core 6.1's `UrlMatcher` reads them. `tsc --noEmit`
-// is the assertion; nothing runs this file.
+// Path and query placeholders read as core 6.1's `UrlMatcher` reads them
+// (`placeholder` and `searchPlaceholder`). `tsc --noEmit` is the assertion;
+// nothing runs this file.
 import type {
   ParamsOf,
   ResolvedParamsOf,
@@ -25,6 +26,8 @@ const urlStates = [
   { name: 'openbrace', url: '/x/{a{b}' },
   { name: 'colonquery', url: '/list?:page&size' },
   { name: 'dotquery', url: '/q?{a.b:int}&{c-d: int}&{e.f}&{g:}' },
+  { name: 'regexquery', url: '/q?{q:[a&b]{2}}&{n:int}' },
+  { name: 'tightquery', url: '/q?b=c&{d}{e}&f:int' },
   {
     name: 'long',
     url: '/a/:p0/b/:p1/c/:p2/d/:p3/e/:p4/f/:p5/g/:p6/h/:p7/i/:p8/j/:p9/k/{p10:int}/l/{p11:[0-9]+}/m/:p12.json/n/*p13?q0&q1&{q2:int}',
@@ -113,6 +116,14 @@ void stateService.go('colonquery');
 accepts<Equal<Keys<'dotquery'>, 'a.b' | 'c-d' | 'e.f' | 'g'>>(true);
 
 accepts<ResolvedParamsOf<'dotquery'>['c-d']>(1);
+
+// A `&` inside a regex body doesn't end the entry.
+accepts<Equal<Keys<'regexquery'>, 'q' | 'n'>>(true);
+
+accepts<ResolvedParamsOf<'regexquery'>['n']>(1);
+
+// Core scans the query for names; `=`, `&` and a `:` between names only separate them.
+accepts<Equal<Keys<'tightquery'>, 'b' | 'c' | 'd' | 'e' | 'f' | 'int'>>(true);
 
 // -- a long url ---------------------------------------------------------------
 

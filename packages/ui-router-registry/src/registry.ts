@@ -204,11 +204,6 @@ type ParentName<D> = D extends { parent: infer P extends string }
 
 // ---- params from the url ---------------------------------------------------
 
-type Split<
-  S extends string,
-  Sep extends string,
-> = S extends `${infer Head}${Sep}${infer Tail}` ? Head | Split<Tail, Sep> : S;
-
 type UrlOf<D> = D extends { url: infer U extends string } ? U : '';
 
 type WordChars<S extends string, Acc = never> = S extends `${infer C}${infer R}`
@@ -269,6 +264,7 @@ type SkipSpace<S extends string> = S extends `${Space}${infer R}`
   : S;
 
 // A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
+// `Q` resumes in the query scanner instead of the path scanner.
 type ScanBody<
   S extends string,
   Name extends string,
@@ -276,39 +272,79 @@ type ScanBody<
   Nested extends boolean,
   Acc,
   Resume extends string,
+  Q extends boolean = false,
 > = S extends `${infer C}${infer R}`
   ? C extends '\\'
     ? R extends `${infer E}${infer T}`
-      ? ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume>
-      : ScanPath<Resume, Acc>
+      ? ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume, Q>
+      : ScanNext<Q, Resume, Acc>
     : C extends '{'
       ? Nested extends true
-        ? ScanPath<Resume, Acc>
-        : ScanBody<R, Name, `${Body}${C}`, true, Acc, Resume>
+        ? ScanNext<Q, Resume, Acc>
+        : ScanBody<R, Name, `${Body}${C}`, true, Acc, Resume, Q>
       : C extends '}'
         ? Nested extends true
-          ? ScanBody<R, Name, `${Body}${C}`, false, Acc, Resume>
+          ? ScanBody<R, Name, `${Body}${C}`, false, Acc, Resume, Q>
           : Body extends ''
-            ? ScanPath<Resume, Acc>
-            : ScanPath<R, Acc | [Name, Body]>
-        : ScanBody<R, Name, `${Body}${C}`, Nested, Acc, Resume>
-  : ScanPath<Resume, Acc>;
+            ? ScanNext<Q, Resume, Acc>
+            : ScanNext<Q, R, Acc | [Name, Body]>
+        : ScanBody<R, Name, `${Body}${C}`, Nested, Acc, Resume, Q>
+  : ScanNext<Q, Resume, Acc>;
+
+type ScanNext<Q extends boolean, S extends string, Acc> = Q extends true
+  ? ScanQuery<S, Acc>
+  : ScanPath<S, Acc>;
 
 type Scan<D> = ScanPath<UrlOf<D>>;
 
-type QueryEntry<S extends string> = S extends ''
-  ? never
-  : S extends `{${infer Body}}`
-    ? Body extends `${infer Name}:${infer Type}`
-      ? [Name, SkipSpace<Type>]
-      : [Body, 'path']
-    : S extends `:${infer Name}`
-      ? [Name, 'query']
-      : [S, 'query'];
+// Core's query name characters: `[\w\[\].-]`.
+type QueryChar = WordChar | '.' | '-';
+
+// Walks the query as core's `searchPlaceholder` regex does; other characters only separate names.
+type ScanQuery<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, C, Acc>
+    : C extends ':'
+      ? ScanQueryName<R, '', Acc>
+      : C extends '{'
+        ? ScanQueryCurly<R, '', Acc, R>
+        : ScanQuery<R, Acc>
+  : Acc;
+
+type ScanQueryName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanQuery<S, Acc>
+      : ScanQuery<S, Acc | [Name, 'query']>
+  : Name extends ''
+    ? Acc
+    : Acc | [Name, 'query'];
+
+type ScanQueryCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanQuery<Resume, Acc>
+      : C extends '}'
+        ? ScanQuery<R, Acc | [Name, 'query']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume, true>
+          : ScanQuery<Resume, Acc>
+  : ScanQuery<Resume, Acc>;
 
 type PathEntries<D> = Scan<D>[0];
 
-type QueryEntries<D> = QueryEntry<Split<Scan<D>[1], '&'>>;
+type QueryEntries<D> = ScanQuery<Scan<D>[1]>;
 
 // Core's built-in param types; a regex placeholder (`{id:[0-9]+}`) or a custom type reads as `string`.
 type BuiltInType<T> = T extends 'int'
