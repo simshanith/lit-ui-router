@@ -47,9 +47,11 @@ export default [...litUiRouter.configs.recommended];
 ```
 
 See the [rules table](/packages/eslint-plugin-lit-ui-router#the-rules) for all
-six rules, `eslint-plugin-lit-a11y` ordering, and settings. Every rule is
-syntax-only, so the plugin also runs under [oxlint](https://oxc.rs) as a JS
-plugin (see the [package page](/packages/eslint-plugin-lit-ui-router#the-rules)).
+six rules, and the
+[`eslint-plugin-lit-ui-router` page](/packages/eslint-plugin-lit-ui-router) for
+`eslint-plugin-lit-a11y` ordering and settings. Every rule is syntax-only, so
+the plugin also runs under [oxlint](https://oxc.rs) as a JS plugin (noted under
+[The rules](/packages/eslint-plugin-lit-ui-router#the-rules)).
 
 ## Where lint sits among author-time checks
 
@@ -59,9 +61,9 @@ Each layer catches a different class of mistake:
   misspelled state names and wrong parameter shapes during TypeScript checking.
 - **Lint** (`eslint-plugin-lit-ui-router`) catches misplaced directives, inert
   `href`s, hrefless anchors, and missing or overwritten `aria-current` bindings
-  across every file, including code paths a development run may never visit.
-- **Development warnings**
-  ([Catching the same problems at author time](./development-builds#catching-the-same-problems-at-author-time))
+  across every file, including code paths a development run may never visit (see
+  [Catching the same problems at author time](./development-builds#catching-the-same-problems-at-author-time)).
+- **Development warnings** ([The warnings](./development-builds#the-warnings))
   catch runtime wiring faults such as a missing `<ui-router>` ancestor or
   duplicate copies of `lit` while the app runs in development.
 
