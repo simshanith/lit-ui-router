@@ -36,9 +36,9 @@ createRoot(document.getElementById('root')!).render(
           </Link>
         ))}
       </nav>
-      <main>
+      <div>
         <UIView />
-      </main>
+      </div>
     </UIRouter>
   </StrictMode>,
 );
