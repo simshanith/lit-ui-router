@@ -979,6 +979,26 @@ describe('UiView', () => {
 
       expect(uiView).toEqualDom('<ui-view><p class="hold">hold</p></ui-view>');
     });
+
+    it('should keep its class component element after its router is re-attached', async () => {
+      const { uiRouter, uiView } = await setupRouter([
+        { name: 'leaf', url: '/leaf', component: TestRetainedLeaf },
+      ]);
+
+      await routerGo(router, 'leaf');
+      await waitForUpdate(uiView);
+      const leaf = uiView.routedElement;
+      expect(leaf).toBeInstanceOf(TestRetainedLeaf);
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await tick();
+
+      expect(uiView.routedElement).toBe(leaf);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
+    });
   });
 
   describe('seekParentView static method', () => {
