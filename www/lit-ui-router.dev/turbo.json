@@ -76,10 +76,11 @@
         "docs:release-stubs",
         "types:worker"
       ],
-      // The generated index pages read these manifests, the embeds list and the example sources; the release notes and the llms changelogs read each CHANGELOG.md.
+      // The generated index pages read these manifests, the embeds list and the example sources; the release notes and the llms changelogs read each CHANGELOG.md; a README-sourced package page includes its README.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/*/package.json",
+        "$TURBO_ROOT$/packages/*/README.md",
         "$TURBO_ROOT$/packages/*/CHANGELOG.md",
         "$TURBO_ROOT$/apps/sample-app-lit-*/package.json",
         "$TURBO_ROOT$/examples/embeds.ts",
