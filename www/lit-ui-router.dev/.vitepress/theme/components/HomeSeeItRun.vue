@@ -113,7 +113,7 @@ function onHash(hash: string) {
   padding: var(--gutter);
   position: relative;
   isolation: isolate;
-  /* A scrim over a monochrome texture blended into the logo's gradient, at exactly 2x and smoothly scaled so the filaments read as lines. */
+  /* A scrim over the tessellated Lit flame, blended into the logo's gradient. */
   background:
     linear-gradient(
       color-mix(
@@ -123,7 +123,7 @@ function onHash(hash: string) {
         )
         0 0
     ),
-    var(--site-see-it-run-texture) center / 2816px 1536px no-repeat,
+    var(--site-see-it-run-texture) center / var(--site-see-it-run-tile) repeat,
     var(--site-see-it-run-gradient);
   background-blend-mode: normal, var(--site-see-it-run-blend), normal;
 }
