@@ -17,6 +17,8 @@ const urlStates = [
   { name: 'raw', url: '/raw/{rest:[^/]*}' },
   { name: 'spaced', url: '/spaced/{n: int}' },
   { name: 'trailing', url: '/trailing/{n:int }' },
+  { name: 'nbsp', url: '/nbsp/{n:\u00a0\u3000int}?{q:\ufeffint}' },
+  { name: 'nbspempty', url: '/x/{bad:\u00a0}/:y' },
   { name: 'optional', url: '/opt/{code:[a-z]?}?sort' },
   { name: 'nested', url: '/zip/{zip:[0-9]{5}}' },
   { name: 'escaped', url: '/esc/{tag:\\}x}' },
@@ -80,6 +82,13 @@ void stateService.go('spaced', { n: 1 });
 
 // @ts-expect-error whitespace after the colon is skipped, so `{n: int}` is an int
 void stateService.go('spaced', { n: '1' });
+
+// The skip takes every `\s` character, not only ASCII.
+accepts<ResolvedParamsOf<'nbsp'>['n']>(1);
+
+accepts<ResolvedParamsOf<'nbsp'>['q']>(1);
+
+accepts<Equal<Keys<'nbspempty'>, 'y'>>(true);
 
 // Trailing whitespace stays in the body, so core reads `int ` as a regex.
 accepts<ResolvedParamsOf<'trailing'>['n']>('1');

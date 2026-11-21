@@ -214,7 +214,33 @@ type WordChars<S extends string, Acc = never> = S extends `${infer C}${infer R}`
 type WordChar =
   WordChars<'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_[]'>;
 
-type Space = ' ' | '\t' | '\n' | '\r' | '\f' | '\v';
+// JavaScript's `\s`.
+type Space =
+  | ' '
+  | '\t'
+  | '\n'
+  | '\r'
+  | '\f'
+  | '\v'
+  | '\u00a0'
+  | '\u1680'
+  | '\u2000'
+  | '\u2001'
+  | '\u2002'
+  | '\u2003'
+  | '\u2004'
+  | '\u2005'
+  | '\u2006'
+  | '\u2007'
+  | '\u2008'
+  | '\u2009'
+  | '\u200a'
+  | '\u2028'
+  | '\u2029'
+  | '\u202f'
+  | '\u205f'
+  | '\u3000'
+  | '\ufeff';
 
 // Walks the url as core's `placeholder` regex does: [path entries, query string].
 type ScanPath<S extends string, Acc = never> = S extends `${infer C}${infer R}`
@@ -259,8 +285,10 @@ type ScanCurly<
           : ScanPath<Resume, Acc>
   : ScanPath<Resume, Acc>;
 
-type SkipSpace<S extends string> = S extends `${Space}${infer R}`
-  ? SkipSpace<R>
+type SkipSpace<S extends string> = S extends `${infer C}${infer R}`
+  ? C extends Space
+    ? SkipSpace<R>
+    : S
   : S;
 
 // A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
