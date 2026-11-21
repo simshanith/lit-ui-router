@@ -76,9 +76,10 @@
   --site-color-identity-sweep-start: #0077ad;
   --site-color-identity-sweep-end: #009aa6;
 
-  /* The home diagram's wash, and its section's background: a monochrome filament texture blended into a gradient of the logo's, hero glow's and brand colours, under a scrim. */
+  /* The home diagram's wash, and its section's background: the Lit flame tessellated at varied opacities, blended into a gradient of the hero glow's, icons' and brand colours, under a scrim. */
   --site-color-diagram-wash: rgb(0 152 220 / 0.12);
-  --site-see-it-run-texture: url(/images/see-it-run-texture.avif);
+  --site-see-it-run-texture: url(/images/see-it-run-tile.svg);
+  --site-see-it-run-tile: 96px 24px;
   --site-see-it-run-gradient: linear-gradient(
     120deg,
     #00e8ff,
@@ -117,7 +118,7 @@
     #283198,
     #324fff 35%,
     #0098dc 70%,
-    #00e8ff
+    #17ffff
   );
   --site-see-it-run-blend: hard-light;
   --vp-c-brand-2: #4dbbec;
