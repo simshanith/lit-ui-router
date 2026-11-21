@@ -66,8 +66,8 @@ catalog:
   '@uirouter/visualizer': ^7.2.1
   '@valibot/to-json-schema': ^1.8.0
   '@vitest/browser': ^5.0.5
-  '@vitest/browser-playwright': ^5.1.0
-  '@vitest/coverage-v8': ^5.1.0
+  '@vitest/browser-playwright': ^5.1.1
+  '@vitest/coverage-v8': ^5.1.1
   '@vscode/web-custom-data': ^0.6.4
   '@webref/elements': ^2.9.2
   '@webref/idl': ^3.87.1
@@ -145,7 +145,7 @@ catalog:
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.21
   vitepress-plugin-llms: ^1.15.0
-  vitest: ^5.1.0
+  vitest: ^5.1.1
   vue: ^3.5.46
   vue-tsc: ^3.3.14
   webidl2: ^24.5.0
