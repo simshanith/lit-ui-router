@@ -127,6 +127,18 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
       output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} \${theme}" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
+      name: 'an entity in the static text after the binding still lands past the quote',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} a&amp;b">Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} a&amp;b" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+    },
+    {
+      name: 'a CRLF in the static text after the binding still lands past the quote',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}\r\n  nav">Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}\r\n  nav" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+    },
+    {
       name: 'params and options ride along; the classes stay behind',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home', params: { id: 1 }, options: { relative: true }, exactClasses: ['exact'] })}>Home</a>\`;`,
       errors: [{ messageId: 'missingAriaCurrent' }],

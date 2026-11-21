@@ -212,6 +212,26 @@ ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
       ),
     },
     {
+      name: 'a CRLF in the static text after the read still lands past the quote',
+      code: host(
+        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''}\r\n  nav">Users</a>\``,
+      ),
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: host(
+        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''}\r\n  nav" aria-current=\${this.users.ariaCurrent()}>Users</a>\``,
+      ),
+    },
+    {
+      name: 'an entity in the static text after the read still lands past the quote',
+      code: host(
+        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''} a&amp;b">Users</a>\``,
+      ),
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: host(
+        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''} a&amp;b" aria-current=\${this.users.ariaCurrent()}>Users</a>\``,
+      ),
+    },
+    {
       name: 'the instance handed to a helper still derives the classes',
       code: host(
         `html\`<a href="/users" class=\${paint(this.users)}>Users</a>\``,

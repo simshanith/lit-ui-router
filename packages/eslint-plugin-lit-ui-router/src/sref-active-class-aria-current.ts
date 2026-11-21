@@ -126,6 +126,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
         ): Rule.Fix[] | null => {
           const insert = attributeEnd(
             source.getText(),
+            analyzer.source,
             element,
             'class',
             expressions,
