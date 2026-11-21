@@ -121,13 +121,6 @@ export const pnpmSpec = (root: string): string => {
   return spec;
 };
 
-// Runs in bun: prints the `[tools]` entry when it is a plain version string, else nothing.
-const MISE_PIN_SCRIPT = `
-const tools = Bun.TOML.parse(await Bun.file(process.env.MISE_CONFIG).text()).tools ?? {};
-const pin = tools[process.env.MISE_TOOL];
-typeof pin === 'string' ? pin : '';
-`;
-
 /**
  * A tool's version pin from `.config/mise/config.toml`, parsed by the build
  * image's bun (mise pins the same version for local runs and the tests): node
@@ -135,14 +128,15 @@ typeof pin === 'string' ? pin : '';
  * when the tool has no plain version pin.
  */
 export const misePin = (root: string, tool: string): string =>
-  execFileSync('bun', ['--print', MISE_PIN_SCRIPT], {
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      MISE_CONFIG: join(root, '.config/mise/config.toml'),
-      MISE_TOOL: tool,
-    },
-  }).trim();
+  execFileSync(
+    'bun',
+    [
+      join(import.meta.dirname, 'bun/mise-pin.bun.ts'),
+      join(root, '.config/mise/config.toml'),
+      tool,
+    ],
+    { encoding: 'utf8' },
+  ).trim();
 
 /**
  * The npm to install, from the mise pin that shadows node's bundled npm
