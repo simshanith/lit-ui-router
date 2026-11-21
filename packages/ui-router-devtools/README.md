@@ -2,6 +2,14 @@
 
 Devtools for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: a recorder of versioned, JSON-safe transition events, a Lit panel that shows the state tree and the transition log, and reporters for the browser's Performance panel and console.
 
+## Installation
+
+```bash
+npm install --save-dev ui-router-devtools
+```
+
+## The panel
+
 The outline marks what a declaration says about a state: a box in place of the ring for `abstract`, a dot and arrow for `redirectTo` (drawn on the rail into a default child), a circled H for `dsr` or `deepStateRedirect` from `@uirouter/dsr`, and a box split by a dashed line for `sticky` from `@uirouter/sticky-states`. The inspector names each in words.
 
 The Map tab draws the state tree two ways, chosen in the panel header and remembered per viewer: nested boxes, child states inside their parent, and a node-link tree. The nested layout keeps every box at its natural size, composes them for the panel's shape and steps down a fit ladder when the tree is too large; under 560px of width the tree shows. A layout that still does not fit, or one zoomed with `−` and `+` in the panel header, is panned: by a drag, the wheel, Shift with an arrow key or the minimap that shows while it overflows, and `Fit` returns to the fitted view. Zoom moves between whole type sizes and never scales the drawing. No edge is drawn at rest: selecting a transition draws its edge, and selecting a state draws the traffic it has seen, with a count on a line travelled more than once. The inspector's close button, a click on the Map's empty room, a second click on the selection or `Escape` anywhere in the panel clears the selection or closes the Router card, and on the Map hides the inspector popover. Boxes move to their new places when the layout changes, and edges draw in after them; under reduced motion nothing moves. The Map's code loads on first use of the tab. The rules are in [the nested Map](../../docs/visualizer-proposal/map.md).
@@ -14,7 +22,7 @@ A state has one colour wherever it appears: its box on the Map, its glyph and ra
 
 `observedEdges(session)` folds a recorded session into one edge per ordered pair of states, with its count and outcomes, for exporters as well as the Map.
 
-The package is private and unpublished, so it is workspace-only for now. The design, the screenshots and the open decisions are in the [router visualizer proposal](../../docs/visualizer-proposal/README.md) and its [devtools scope](../../docs/visualizer-proposal/devtools.md).
+The design, the screenshots and the open decisions are in the [router visualizer proposal](../../docs/visualizer-proposal/README.md) and its [devtools scope](../../docs/visualizer-proposal/devtools.md).
 
 ## Timeline
 
@@ -71,7 +79,7 @@ router.plugin(DevtoolsPlugin, { viewLocator: litViewLocator });
 | `./lit-ui-router`       | `litViewLocator(router)`: finds and outlines a `<ui-view>` for the Views                                                                                          |
 | `./session.schema.json` | The session file's JSON Schema                                                                                                                                    |
 
-`lit` and `valibot` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with three exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`); the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`); and the `views` option, which `record` turns on, reads the registered `ui-view`s through `viewService._pluginapi`, also typed `@internal`, after each sync (`views.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
+`lit`, `valibot` and `d3-hierarchy` are dependencies and `@uirouter/core` the only peer; `valibot` reads an imported session file, in a chunk the panel loads on first import. The adapter and its event schema live in private shared source, [`@repo/router-events`](../shared/router-events/), which the build inlines into `dist/shared/`; [`ui-router-otel`](../ui-router-otel/README.md) carries its own copy. The adapter reads only public hooks, with three exceptions, each isolated in its own module: `options().source`, typed `@internal` in core, tells a URL sync from a `go()` (`transition-source.ts`); the opt-in `timeResolves` option wraps each transition's `resolveFn` copies to time resolves (`resolve-timing.ts`); and the `views` option, which `record` turns on, reads the registered `ui-view`s through `viewService._pluginapi`, also typed `@internal`, after each sync (`views.ts`). `timeResolves` is off by default, because core has no resolve notification and the wrapper patches core objects.
 
 ```ts
 import { UIRouter } from '@uirouter/core';

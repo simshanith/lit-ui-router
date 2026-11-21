@@ -131,6 +131,7 @@ const PACKAGE_PAGES: Record<Role, SidebarEntry[]> = {
   server: [packagePage('ui-router-server'), packagePage('lit-ui-router-ssr')],
   dx: [
     packagePage('ui-router-registry'),
+    packagePage('ui-router-devtools'),
     packagePage('eslint-plugin-lit-ui-router'),
   ],
 };

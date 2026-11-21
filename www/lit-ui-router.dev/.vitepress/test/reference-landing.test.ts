@@ -224,6 +224,58 @@ describe('referenceLanding', () => {
     );
   });
 
+  it("features a module's members from a multi-entry package's root, first entry of a name first", () => {
+    const modules = [
+      '# ui-router-devtools',
+      '',
+      '## Modules',
+      '',
+      '- [ui-router-devtools](index/index.md)',
+      '- [define](define/index.md)',
+      '- [plugin](plugin/index.md)',
+    ].join('\n');
+
+    const pages = new Map([
+      [
+        '/site/reference/ui-router-devtools/index/index.md',
+        '- [record](functions/record.md)',
+      ],
+      [
+        '/site/reference/ui-router-devtools/define/index.md',
+        [
+          '- [UIRouterDevtools](interfaces/UIRouterDevtools.md)',
+          '- [UIRouterDevtools](variables/UIRouterDevtools.md)',
+        ].join('\n'),
+      ],
+      [
+        '/site/reference/ui-router-devtools/plugin/index.md',
+        '- [DevtoolsPlugin](classes/DevtoolsPlugin.md)',
+      ],
+    ]);
+
+    const landing = referenceLanding(
+      modules,
+      '/site/reference/ui-router-devtools/index.md',
+      (path) => pages.get(path),
+    );
+
+    assert.equal(
+      landing.slice(
+        landing.indexOf('## Start here'),
+        landing.indexOf('## Modules'),
+      ),
+      [
+        '## Start here',
+        '',
+        '- [DevtoolsPlugin](plugin/classes/DevtoolsPlugin.md)',
+        '- [`<ui-router-devtools>` (UIRouterDevtools)](define/interfaces/UIRouterDevtools.md)',
+        '- [record](index/functions/record.md)',
+        '',
+        '',
+      ].join('\n'),
+    );
+  });
+
   it('gives an index below the root its summaries alone', () => {
     const id = '/site/reference/lit-ui-router/core/index.md';
     const list = '# Core\n\n- [`UIRouterLit`](./UIRouterLit)';
@@ -330,11 +382,11 @@ describe('the generated reference indexes', () => {
 
       it(`${entry.name} documents the <${entry.element}> element`, () => {
         const target = new RegExp(
-          `^- \\[${entry.name}\\]\\((.+)\\)$`,
+          `^- \\[[^\\]]*\\(${entry.name}\\)\\]\\(([^)]+)\\)`,
           'm',
-        ).exec(index);
+        ).exec(landing);
 
-        assert.ok(target, `${entry.name} has no entry in ${id}`);
+        assert.ok(target, `${entry.name} is not featured in ${id}`);
         assert.ok(
           readPage(join(dirname(id), target[1]))?.includes(
             `&lt;${entry.element}&gt;`,

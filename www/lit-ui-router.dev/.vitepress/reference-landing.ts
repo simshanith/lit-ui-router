@@ -170,14 +170,34 @@ export function withSummaries(
 export const packageLine = (name: PackageName): string =>
   `The API reference of the [${code(name)} package](/packages/${name}), whose page covers installation and usage.`;
 
-/** A section of the featured exports the index lists, each linking the page its own entry links; a name the index lacks is left out. */
+/** Each module index a root index links, its entries retargeted from the root, so a multi-entry package can feature a module's member. */
+export function moduleEntries(
+  markdown: string,
+  dir: string,
+  read: ReadPage = readPage,
+): string {
+  return Array.from(markdown.matchAll(ENTRY), ([, , target]) => target)
+    .filter((target) => target.endsWith('/index.md'))
+    .flatMap((target) => {
+      const module = dirname(target);
+
+      return Array.from(
+        read(join(dir, target))?.matchAll(ENTRY) ?? [],
+        ([, name, page]) => `- [${name}](${module}/${page})`,
+      );
+    })
+    .join('\n');
+}
+
+/** A section of the featured exports the index lists, each linking the page its first entry of that name links; a name the index lacks is left out. */
 export function startHere(
   markdown: string,
   featured: readonly FeaturedExport[],
 ): string {
-  const targets = new Map(
-    Array.from(markdown.matchAll(ENTRY), ([, name, target]) => [name, target]),
-  );
+  const targets = new Map<string, string>();
+
+  for (const [, name, target] of markdown.matchAll(ENTRY))
+    if (!targets.has(name)) targets.set(name, target);
 
   const entries = featured.flatMap(({ name, element }) => {
     const target = targets.get(name);
@@ -208,9 +228,12 @@ export function referenceLanding(
 ): string {
   const name = referenceRoot(id);
 
+  const listed = name
+    ? `${markdown}\n${moduleEntries(markdown, dirname(id), read)}`
+    : markdown;
+
   const intro =
-    name &&
-    packageLine(name) + startHere(markdown, featuredExports[name] ?? []);
+    name && packageLine(name) + startHere(listed, featuredExports[name] ?? []);
 
   const page = intro
     ? markdown.replace(/^# .+$/m, (title) => `${title}\n\n${intro}`)

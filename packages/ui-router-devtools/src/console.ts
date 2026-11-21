@@ -80,7 +80,7 @@ const reportTx = (txs: readonly Tx[], tx: Tx) => {
   console.groupEnd();
 };
 
-// One collapsed console group per settled transition; with a recorder it keeps reporting until the returned function is called.
+/** One collapsed console group per settled transition; with a recorder it keeps reporting until the returned function is called. */
 export function reportToConsole(
   source: readonly RouterEvent[] | Recorder,
 ): () => void {

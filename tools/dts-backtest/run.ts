@@ -126,6 +126,7 @@ const PACKAGE_DIRS = [
   'lit-ui-router-signals',
   'lit-ui-router-ssr',
   'navigation-location-plugin',
+  'ui-router-devtools',
   'ui-router-effect',
   'ui-router-mobx',
   'ui-router-registry',
