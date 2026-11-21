@@ -133,3 +133,6 @@ export const PACKAGES = [
 ] as const satisfies readonly PackageEntry[];
 
 export type PackageName = (typeof PACKAGES)[number]['name'];
+
+/** Packages whose page takes its sections from the README's regions; `.vitepress/test/readme-sourced.test.ts` holds each page to them. */
+export const README_SOURCED: readonly PackageName[] = ['ui-router-registry'];

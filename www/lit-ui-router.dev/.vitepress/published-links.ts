@@ -6,7 +6,11 @@ import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { mounts as appMounts } from 'sample-app-routes';
 import { createServerRouter } from 'ui-router-server';
 import * as v from 'valibot';
-import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress';
+import {
+  createMarkdownRenderer,
+  type MarkdownEnv,
+  type MarkdownRenderer,
+} from 'vitepress';
 
 import { PACKAGES } from '../catalog/packages.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
@@ -168,10 +172,18 @@ async function anchors(source: string): Promise<Set<string>> {
 
   renderer ??= createMarkdownRenderer(SITE);
 
-  const tokens = (await renderer).parse(
-    readFileSync(join(SITE, source), 'utf8'),
-    {},
-  );
+  const md = await renderer;
+
+  const env: MarkdownEnv = {
+    path: join(SITE, source),
+    relativePath: source,
+    cleanUrls: true,
+  };
+
+  // Rendering expands the page's includes into env.src: a README-sourced page's headings are in its README.
+  await md.renderAsync(readFileSync(join(SITE, source), 'utf8'), env);
+
+  const tokens = md.parse(env.src ?? '', {});
 
   const ids = new Set(
     tokens.flatMap((token) => {
