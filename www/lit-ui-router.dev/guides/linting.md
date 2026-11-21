@@ -24,7 +24,7 @@ throw at all. Linting catches them across your whole app before you run it.
   Move `uiSref` to an element part (`<a ${uiSref('home')}>`), or switch to
   `href=${srefHref('home')}`.
 - **Active link with no `aria-current` (`lit-ui-router/sref-active-class-aria-current`).**
-  `<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })}>`
+  `<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home', activeClasses: ['active'] })}>`
   paints the active class for CSS, so the page looks right while screen readers
   get no active-page signal. Lint reports:
   `srefActiveClass marks this <a> active for CSS only; bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it so assistive technology gets the same signal.`
@@ -90,11 +90,12 @@ diagnostics and autofixes as you edit.
 
 ## How this site and the sample apps are checked
 
-Alongside the published plugin above, we maintain two internal checks for the
-docs site and sample apps. We built a template type-checker that replaced
-`lit-analyzer`, and a custom stylelint syntax that reads `<style>` elements
-inside `html` and `svg` templates. Both tools are internal and unpublished. Apps
-built with `lit-ui-router` do not need either one and can stay on the published
-plugins above. For contributor setup and tooling details, see
+Alongside the published plugin above, we maintain two internal checks. We built
+a template type-checker that replaced `lit-analyzer` across our packages,
+sample apps, and examples, and a custom stylelint syntax that reads `<style>`
+elements inside `html` and `svg` templates across the site and apps. Both tools
+are internal and unpublished. Apps built with `lit-ui-router` do not need either
+one and can stay on the published plugins above. For contributor setup and
+tooling details, see
 [`docs/CONTRIBUTING.md`](https://github.com/simshanith/lit-ui-router/blob/main/docs/CONTRIBUTING.md)
 on GitHub.
