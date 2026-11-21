@@ -285,9 +285,13 @@ export class UiView extends LitElement {
       return;
     }
 
-    // The "new" viewconfig is already applied, so exit early
+    // The "new" viewconfig is already applied, so keep the element
     if (this.appliedConfig === config) {
-      this._uiViewData.config = config;
+      // A new registration after a re-attach: re-render so the kept element gets the transitions it missed.
+      if (this._uiViewData.config !== config) {
+        this._uiViewData.config = config;
+        this.requestUpdate();
+      }
 
       return;
     }
