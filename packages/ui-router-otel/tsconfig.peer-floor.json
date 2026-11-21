@@ -1,0 +1,14 @@
+{
+  // Typechecks src against the published floors of the @uirouter/core and
+  // @opentelemetry/api peer ranges (the <peer>-floor aliases). Never emits.
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@opentelemetry/api": [
+        "./node_modules/@opentelemetry/api-floor/build/src/index.d.ts"
+      ],
+      "@uirouter/core": ["./node_modules/@uirouter/core-floor/lib/index.d.ts"]
+    }
+  }
+}

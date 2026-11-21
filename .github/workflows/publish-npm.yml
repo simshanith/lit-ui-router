@@ -25,6 +25,7 @@ on:
       - 'ui-router-mobx@*'
       - 'ui-router-registry@*'
       - 'ui-router-devtools@*'
+      - 'ui-router-otel@*'
   workflow_dispatch:
     inputs:
       package:
@@ -45,6 +46,7 @@ on:
           - ui-router-mobx
           - ui-router-registry
           - ui-router-devtools
+          - ui-router-otel
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false

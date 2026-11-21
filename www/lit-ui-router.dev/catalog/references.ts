@@ -17,6 +17,7 @@ export const API_REFERENCES = {
   'ui-router-registry': '/reference/ui-router-registry/',
   'ui-router-devtools': '/reference/ui-router-devtools/',
   'eslint-plugin-lit-ui-router': null,
+  'ui-router-otel': '/reference/ui-router-otel/',
 } as const satisfies Record<PackageName, string | null>;
 
 /** A custom elements page: the page source, and the link a rewrite serves it at inside the package's reference, which docs:api empties. */
