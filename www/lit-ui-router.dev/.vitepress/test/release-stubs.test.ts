@@ -7,7 +7,7 @@ describe('releaseStubs', () => {
   it('writes one stub per published package, in name order', () => {
     const stubs = releaseStubs([
       { name: 'ui-router-server' },
-      { name: 'postcss-lit-html', private: true },
+      { name: '@tools/postcss-lit-html', private: true },
       { name: 'lit-ui-router', private: false },
       {},
     ]);

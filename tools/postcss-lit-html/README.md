@@ -1,21 +1,17 @@
-# postcss-lit-html
+# @tools/postcss-lit-html
 
 [postcss-lit](https://github.com/43081j/postcss-lit) plus the CSS of `<style>` elements in lit `html` and `svg` templates: one PostCSS syntax, so stylelint checks both with the same config.
 
-## Installation
-
-The package is private and unpublished, so it is workspace-only for now: packages in this repo use it as `postcss-lit-html`, resolved from `packages/postcss-lit-html`. Until it is published, it has no npm install.
-
 ## Usage
 
-This repo's [`stylelint.config.mjs`](../../stylelint.config.mjs) uses it in place of `postcss-lit` as stylelint's `customSyntax` for script files:
+This is internal tooling for this repo's `//#lint:css` task. The root `package.json` depends on it through `catalog:workspace`, and stylelint loads `src/index.ts` directly, so there is no build step. [`stylelint.config.mjs`](../../stylelint.config.mjs) uses it in place of `postcss-lit` as stylelint's `customSyntax` for script files:
 
 ```js
 export default {
   overrides: [
     {
       files: ['**/*.{ts,mts,cts,js,mjs,cjs}'],
-      customSyntax: 'postcss-lit-html',
+      customSyntax: '@tools/postcss-lit-html',
     },
   ],
 };
