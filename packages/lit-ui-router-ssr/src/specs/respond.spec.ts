@@ -297,6 +297,47 @@ describe('prerender responses', () => {
     },
   );
 
+  it('answers each path on a dynamic-param response state with its own resolves', async () => {
+    const card = { name: 'card', url: '/card/{n}', response: true } as const;
+
+    const router = installServerLocation(new UIRouterLit(), {
+      urlConfig: { strict: false },
+    });
+
+    router.stateRegistry.register({
+      ...card,
+      params: { n: { dynamic: true } },
+      resolve: {
+        label: [
+          '$transition$',
+          (trans: { params(): { n: string } }) => `card ${trans.params().n}`,
+        ],
+      },
+    });
+    const files = new Map<string, string>();
+
+    await prerender({
+      mounts: { '/': { routes: [card], config: { strict: false } } },
+      router,
+      outDir: 'dist',
+      paths: ['/card/1', '/card/2'],
+      notFound: false,
+      elementRenderers: [],
+      renderShell: () => '',
+      responses: {
+        card: ({ resolves }) => new Response(resolves.label),
+      } satisfies ResponseHandlers<typeof card, { card: { label: string } }>,
+      write: (file, body) => {
+        files.set(file, body);
+      },
+    });
+
+    expect(Object.fromEntries(files)).toEqual({
+      'dist/card/1': 'card 1',
+      'dist/card/2': 'card 2',
+    });
+  });
+
   it('throws for a response state without responses', async () => {
     await expect(
       prerender({
