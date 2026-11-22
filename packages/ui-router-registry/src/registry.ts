@@ -441,7 +441,7 @@ type IsArray<C, K> = C extends { array: infer A }
 // Core wraps a scalar passed to an array param, so input takes either.
 type ArrayOf<T, A, Mode> = A extends true
   ? Mode extends 'input'
-    ? T | T[]
+    ? T | readonly T[]
     : T[]
   : T;
 

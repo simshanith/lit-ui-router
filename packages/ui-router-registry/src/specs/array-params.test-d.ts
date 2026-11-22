@@ -42,6 +42,11 @@ const arrayStates = [
     params: { tag: { array: 'auto' } },
   },
   {
+    name: 'autosuffix',
+    url: '/autosuffix?id[]',
+    params: { 'id[]': { array: 'auto' } },
+  },
+  {
     name: 'emptydefault',
     url: '/emptydefault?tag',
     params: { tag: { array: true, value: '' } },
@@ -116,9 +121,9 @@ accepts<Equal<ResolvedParamsOf<'typeddefault'>['n'], number[] | 3>>(true);
 
 accepts<ParamsOf<'defaulted'>>({ tag: 'other' });
 
-accepts<Equal<ParamsOf<'typeddefault'>['n'], number | number[] | undefined>>(
-  true,
-);
+accepts<
+  Equal<ParamsOf<'typeddefault'>['n'], number | readonly number[] | undefined>
+>(true);
 
 // -- an untyped non-url param: the element type comes from the default -------
 
@@ -153,9 +158,28 @@ void stateService.go('typedsuffix', { 'ids[]': 1 });
 // @ts-expect-error the element keeps its placeholder type
 void stateService.go('typedsuffix', { 'ids[]': ['1'] });
 
+// -- a readonly array is accepted, and reads back mutable -------------------
+
+void stateService.go('tags', { tag: ['a', 'b'] as const });
+
+declare const readonlyTags: readonly string[];
+
+void stateService.go('tags', { tag: readonlyTags });
+
+void stateService.href('pages', { ids: [1, 2] as const });
+
+accepts<Equal<ResolvedParamsOf<'tags'>['tag'], string[] | undefined>>(true);
+
 // -- an explicit `array: 'auto'` stays scalar --------------------------------
 
 accepts<Equal<ResolvedParamsOf<'auto'>['tag'], string | undefined>>(true);
+
+accepts<Equal<ResolvedParamsOf<'autosuffix'>['id[]'], string | undefined>>(
+  true,
+);
+
+// @ts-expect-error an explicit `array: 'auto'` beats the `[]` suffix
+void stateService.go('autosuffix', { 'id[]': ['a', 'b'] });
 
 // -- an empty-string default reads back as is ---------------------------------
 

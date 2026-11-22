@@ -46,7 +46,9 @@ accepts<Equal<Keys<'arraysegment'>, 'ids'>>(true);
 
 accepts<Equal<ResolvedParamsOf<'arraysegment'>['ids'], number[]>>(true);
 
-accepts<Equal<ParamsOf<'arraysegment'>['ids'], number | number[]>>(true);
+accepts<Equal<ParamsOf<'arraysegment'>['ids'], number | readonly number[]>>(
+  true,
+);
 
 void stateService.go('arraysegment', { ids: [1, 2] });
 
