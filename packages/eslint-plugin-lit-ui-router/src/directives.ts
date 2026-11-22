@@ -1,6 +1,9 @@
 // Syntax-only, so the rules also load into oxlint jsPlugins (#676).
 import type { Rule, Scope, SourceCode } from 'eslint';
-import type { Parse5Element } from 'eslint-plugin-lit/lib/util.js';
+import type {
+  AttributeLocation,
+  Parse5Element,
+} from 'eslint-plugin-lit/lib/util.js';
 
 export type { Parse5Element };
 
@@ -280,31 +283,51 @@ export const attributePartsOf = (
  *
  * The last expression, never the matched one, so `class="nav ${a} ${b}"` lands
  * after the quote rather than inside the value.
+ *
+ * `html` is the analyzer's source, which parse5's offsets index. It is the
+ * template's raw text with placeholders, so the static tail measures in raw
+ * characters, entities undecoded. Whether CRLF is folded to LF depends on the
+ * parser.
  */
 export const attributeEnd = (
   text: string,
+  html: string,
   element: Parse5Element,
   attribute: string,
   expressions: readonly Node[],
 ): number | undefined => {
   const value = element.attribs[attribute];
 
-  if (value === undefined) return undefined;
+  // SAFETY: the analyzer parses with sourceCodeLocationInfo, which records attrs
+  const tag = element.sourceCodeLocation as
+    | AttributeLocation
+    | null
+    | undefined;
+
+  const location = tag?.attrs[attribute];
+
+  if (value === undefined || location == null) return undefined;
   const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
 
-  if (last?.index === undefined) return undefined;
+  if (last === undefined) return undefined;
   const range = expressions[Number(last[1])]?.range;
 
   if (range === undefined) return undefined;
   // The expression's own text stops short of the template's `}`.
   const close = text.indexOf('}', range[1]);
+  const placeholder = html.lastIndexOf(last[0], location.endOffset);
 
-  if (close === -1) return undefined;
-  // parse5 keeps the static text around the placeholder, so the raw source
-  // resumes with it, and the value's quote (if any) follows.
-  let end = close + 1 + (value.length - last.index - last[0].length);
+  if (close === -1 || placeholder === -1) return undefined;
+  const tail = html.slice(placeholder + last[0].length, location.endOffset);
+  let end = close + 1;
 
-  if (text[end] === '"' || text[end] === "'") end += 1;
+  // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
+  if (tail === '"' && text[end] !== '"') return end;
+
+  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
+  for (let unit = 0; unit < tail.length; unit += 1) {
+    end += tail[unit] === '\n' && text.startsWith('\r\n', end) ? 2 : 1;
+  }
 
   return end;
 };
