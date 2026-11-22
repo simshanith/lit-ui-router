@@ -291,6 +291,9 @@ type SkipSpace<S extends string> = S extends `${infer C}${infer R}`
     : S
   : S;
 
+// The characters JavaScript's `.` doesn't match.
+type LineTerminator = '\n' | '\r' | '\u2028' | '\u2029';
+
 // A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
 // `Q` resumes in the query scanner instead of the path scanner.
 type ScanBody<
@@ -304,7 +307,9 @@ type ScanBody<
 > = S extends `${infer C}${infer R}`
   ? C extends '\\'
     ? R extends `${infer E}${infer T}`
-      ? ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume, Q>
+      ? E extends LineTerminator
+        ? ScanNext<Q, Resume, Acc>
+        : ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume, Q>
       : ScanNext<Q, Resume, Acc>
     : C extends '{'
       ? Nested extends true

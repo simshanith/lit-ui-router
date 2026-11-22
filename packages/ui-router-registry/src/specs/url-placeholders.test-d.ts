@@ -22,6 +22,7 @@ const urlStates = [
   { name: 'optional', url: '/opt/{code:[a-z]?}?sort' },
   { name: 'nested', url: '/zip/{zip:[0-9]{5}}' },
   { name: 'escaped', url: '/esc/{tag:\\}x}' },
+  { name: 'escapednewline', url: '/esc/{x:a\\\nb}/:y' },
   { name: 'colon', url: '/time/10:-/:slot' },
   { name: 'digits', url: '/time/10:30' },
   { name: 'emptybody', url: '/x/{bad:}/:y' },
@@ -103,6 +104,10 @@ accepts<Equal<Keys<'nested'>, 'zip'>>(true);
 
 // An escaped brace doesn't close the body.
 accepts<Equal<Keys<'escaped'>, 'tag'>>(true);
+
+// A `\` escape doesn't take a line terminator, so the brace is literal text
+// and `:a` inside it is a name.
+accepts<Equal<Keys<'escapednewline'>, 'a' | 'y'>>(true);
 
 // A colon before a non-word character is literal text.
 accepts<Equal<Keys<'colon'>, 'slot'>>(true);
