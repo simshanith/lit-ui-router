@@ -10,7 +10,9 @@
 # whether atlas.lit-ui-router.dev serves it. action_required renders orange =
 # a release, a floor-bump, a dashboard apply, an atlas deploy or a ledger fix
 # is owed; neutral renders grey = the check could not reach a verdict. Never a
-# CI failure — both jobs succeed whatever the signals say.
+# CI failure — both jobs succeed whatever the signals say, with one exception:
+# the post-publish run fails when npm lists a new version but still doesn't
+# serve its tarball after the wait, because the diff can't fetch it.
 name: Release signals
 
 on:
@@ -31,9 +33,10 @@ on:
   # Dispatched by publish-npm.yml after a successful publish: release-it
   # pushes the bump commit before npm `latest` moves, so the push-triggered
   # run sees stale drift; the post-publish run flips the badge green. npm's
-  # dist-tags lag the publish by minutes, so that run's published diff first
-  # waits for them to list the `release` input and every other published
-  # package's version on main.
+  # dist-tags lag the publish by minutes and its tarballs can lag the
+  # dist-tags, so that run's published diff first waits for npm to list and
+  # serve the `release` input and every other published package's version on
+  # main.
   workflow_dispatch:
     inputs:
       packages:
@@ -42,7 +45,7 @@ on:
         default: ''
         type: string
       release:
-        description: 'The <name>@<version> that was just published; the publish workflow sets it. The published diff then waits for npm to list the new version, and the release-ledger check compares its tarball digest with npm. Empty skips both.'
+        description: 'The <name>@<version> that was just published; the publish workflow sets it. The published diff then waits for npm to list the new version and serve its tarball, and the release-ledger check compares its tarball digest with npm. Empty skips both.'
         required: false
         default: ''
         type: string
