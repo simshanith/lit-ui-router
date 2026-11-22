@@ -293,7 +293,12 @@ type IsArray<C, K> = C extends { array: infer A }
     ? true
     : false;
 
-type ArrayOf<T, A> = A extends true ? T[] : T;
+// Core wraps a scalar passed to an array param, so input takes either.
+type ArrayOf<T, A, Mode> = A extends true
+  ? Mode extends 'input'
+    ? T | T[]
+    : T[]
+  : T;
 
 // Only `go` (`inherit: true`) wraps a scalar default on an array param; `transitionTo` reads it back as is.
 type ScalarDefault<C, K> =
@@ -315,13 +320,15 @@ type DefaultElement<V> = [V] extends [never]
     : never;
 
 // An untyped non-url param is core's `any`, so only its default's type is known.
-type ConfigType<C, UrlType, K> = C extends { type: infer T extends string }
-  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>>, C, K>
+type ConfigType<C, UrlType, K, Mode> = C extends {
+  type: infer T extends string;
+}
+  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>, Mode>, C, K>
   : [UrlType] extends [never]
     ? IsArray<C, K> extends true
-      ? WithDefaults<DefaultElement<DefaultOf<C>>[], C, K>
+      ? WithDefaults<ArrayOf<DefaultElement<DefaultOf<C>>, true, Mode>, C, K>
       : Widen<DefaultOf<C>>
-    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>>, C, K>;
+    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>, Mode>, C, K>;
 
 type WithDefaults<T, C, K> = T | NullDefault<C> | ScalarDefault<C, K>;
 
@@ -333,13 +340,14 @@ type UrlType<D, K> = BuiltInType<
   Extract<PathEntries<D> | QueryEntries<D>, [K, string]>[1]
 >;
 
-type KeyType<D, K> = K extends keyof ParamsBlock<D>
+type KeyType<D, K, Mode> = K extends keyof ParamsBlock<D>
   ? ConfigType<
       ParamsBlock<D>[K],
       K extends UrlKeys<D> ? UrlType<D, K> : never,
-      K
+      K,
+      Mode
     >
-  : ArrayOf<UrlType<D, K>, IsArray<unknown, K>>;
+  : ArrayOf<UrlType<D, K>, IsArray<unknown, K>, Mode>;
 
 type IsQuery<D, K> = K extends QueryEntries<D>[0] ? true : false;
 
@@ -367,7 +375,7 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
     ) extends true
       ? never
       : K
-  ]: KeyType<D, K>;
+  ]: KeyType<D, K, Optional>;
 } & {
   [
     K in OwnKeys<D> as (
@@ -375,7 +383,7 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
     ) extends true
       ? K
       : never
-  ]?: KeyType<D, K>;
+  ]?: KeyType<D, K, Optional>;
 };
 
 type LineageParams<N, Optional extends 'input' | 'output'> = [
