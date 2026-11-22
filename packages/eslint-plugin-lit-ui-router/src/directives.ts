@@ -164,24 +164,31 @@ const ourSourcesOf = (
   return (source) => entries.some((entry) => isSubpathOf(source, entry));
 };
 
-/** The definition an identifier resolves to; `undefined` when it is unbound. */
-const definitionOf = (
+/** The variable `name` resolves to from `node`'s scope; `undefined` when it is unbound. */
+const variableAt = (
   context: Rule.RuleContext,
   node: Node,
-): Scope.Definition | undefined => {
-  if (!isIdentifier(node)) return undefined;
-  const { name } = node;
-
+  name: string,
+): Scope.Variable | undefined => {
   let scope: Scope.Scope | null = context.sourceCode.getScope(toEstree(node));
 
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
 
-    if (variable !== undefined) return variable.defs[0];
+    if (variable !== undefined) return variable;
   }
 
   return undefined;
 };
+
+/** The definition an identifier resolves to; `undefined` when it is unbound. */
+const definitionOf = (
+  context: Rule.RuleContext,
+  node: Node,
+): Scope.Definition | undefined =>
+  isIdentifier(node)
+    ? variableAt(context, node, node.name)?.defs[0]
+    : undefined;
 
 /** The import an identifier resolves to, or nothing: a shadowing local wins. */
 const importBindingOf = (context: Rule.RuleContext, node: Node) => {
@@ -373,20 +380,36 @@ export const propertyNamed = (
   return undefined;
 };
 
-/** Named specifiers of every lit-ui-router import in this file. */
+type ImportDeclarationNode = Extract<
+  SourceCode['ast']['body'][number],
+  { type: 'ImportDeclaration' }
+>;
+
+type ImportNode =
+  | ImportDeclarationNode
+  | ImportDeclarationNode['specifiers'][number];
+
+/** typescript-eslint's `import type` marker, which eslint's ESTree types omit. */
+const isTypeOnly = (node: ImportNode): boolean =>
+  'importKind' in node && node.importKind === 'type';
+
+/** Named value specifiers of every lit-ui-router import in this file. */
 const ourSpecifiers = (
   source: SourceCode,
   isOurs: (source: string) => boolean,
 ) =>
   source.ast.body.flatMap((statement) => {
-    if (statement.type !== 'ImportDeclaration') return [];
+    if (statement.type !== 'ImportDeclaration' || isTypeOnly(statement)) {
+      return [];
+    }
+
     const from = statement.source.value;
 
     if (!isString(from) || !isOurs(from)) return [];
 
-    return statement.specifiers.filter(
-      (specifier) => specifier.type === 'ImportSpecifier',
-    );
+    return statement.specifiers
+      .filter((specifier) => specifier.type === 'ImportSpecifier')
+      .filter((specifier) => !isTypeOnly(specifier));
   });
 
 /** How a fix spells a lit-ui-router export, and the import edits it needs. */
@@ -398,7 +421,8 @@ export interface SiblingBinding {
 /**
  * Spell `name` the way `callee` reaches lit-ui-router: through the same
  * namespace, an existing specifier, or a specifier added after `callee`'s own.
- * `undefined` when `callee`'s import cannot be found to extend.
+ * `undefined` when `callee`'s import cannot be found to extend, or `name` is
+ * taken or shadowed at `callee`.
  */
 export const siblingBinding = (
   fixer: Rule.RuleFixer,
@@ -423,14 +447,22 @@ export const siblingBinding = (
   );
 
   if (existing !== undefined) {
-    return { binding: existing.local.name, edits: [] };
+    // A nearer binding of the same name would take the call at the fix site.
+    const reaches =
+      variableAt(context, callee, existing.local.name)?.defs[0]?.node ===
+      existing;
+
+    return reaches ? { binding: existing.local.name, edits: [] } : undefined;
   }
 
   const anchor = specifiers.find(
     (specifier) => specifier.local.name === callee.name,
   );
 
-  if (anchor === undefined) return undefined;
+  // Another binding already holds the name, so the added specifier would redeclare it.
+  if (anchor === undefined || variableAt(context, callee, name) !== undefined) {
+    return undefined;
+  }
 
   return {
     binding: name,
