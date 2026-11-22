@@ -8,6 +8,8 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 
 * **lit-ui-router-ssr:** prerender each page with its own resolves when only a dynamic param changes ([#2356](https://github.com/simshanith/lit-ui-router/issues/2356)) ([454e43f](https://github.com/simshanith/lit-ui-router/commit/454e43fa99332174b8b405906dc015bc8c8aa4ae))
 
+  In this package the router pool's reset now also deactivates active view configs, which is a no-op for its headless routers.
+
 [Release page](https://lit-ui-router.dev/releases/ui-router-server/0.11.2/) · [Diff from 0.11.1](https://lit-ui-router.dev/releases/ui-router-server/diff/0.11.1...0.11.2/)
 
 ## 0.11.1 (2026-11-14)
