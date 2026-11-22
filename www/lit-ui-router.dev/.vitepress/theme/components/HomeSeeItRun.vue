@@ -113,7 +113,8 @@ function onHash(hash: string) {
   padding: var(--gutter);
   position: relative;
   isolation: isolate;
-  /* A scrim over the tessellated Lit flame, blended into the logo's gradient. */
+  overflow: clip;
+  /* The ground: the logo's gradient under a scrim. */
   background:
     linear-gradient(
       color-mix(
@@ -123,9 +124,45 @@ function onHash(hash: string) {
         )
         0 0
     ),
-    var(--site-see-it-run-texture) center / var(--site-see-it-run-tile) repeat,
     var(--site-see-it-run-gradient);
-  background-blend-mode: normal, var(--site-see-it-run-blend), normal;
+}
+
+/* The Lit flames: the same gradient cut to the flame tile, so each flame takes the colour under it, stepped per column. */
+.panels::before {
+  --drift: 0px;
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--drift)) 0;
+  z-index: -1;
+  background:
+    var(--site-see-it-run-steps) left top / var(--site-see-it-run-tile),
+    var(--site-see-it-run-gradient);
+  mask: var(--site-see-it-run-texture) left top / var(--site-see-it-run-tile);
+}
+
+/* The flames trail the page by 72px over the section's pass through the viewport; the layer is that much taller, so no edge shows. */
+@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  @supports (animation-timeline: view()) and (animation-range: entry) {
+    .panels {
+      view-timeline: --see-it-run-panels block;
+    }
+
+    .panels::before {
+      --drift: 36px;
+      animation: see-it-run-drift linear both;
+      animation-timeline: --see-it-run-panels;
+    }
+  }
+}
+
+@keyframes see-it-run-drift {
+  from {
+    translate: 0 calc(-1 * var(--drift));
+  }
+
+  to {
+    translate: 0 var(--drift);
+  }
 }
 
 @media (min-width: 40rem) {
@@ -188,6 +225,10 @@ function onHash(hash: string) {
 @media (forced-colors: active) {
   .panels {
     background: none;
+  }
+
+  .panels::before {
+    content: none;
   }
 
   .panel {
