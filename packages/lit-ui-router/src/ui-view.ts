@@ -271,8 +271,12 @@ export class UiView extends LitElement {
 
   private resolveContext!: ResolveContext;
 
+  // Outlives the per-connect registration, so a re-attached view keeps its routed element.
+  private appliedConfig?: LitViewConfig;
+
   private _viewConfigUpdated(config: ViewConfig) {
     if (!config) {
+      this.appliedConfig = undefined;
       this.component = null;
       this.requestUpdate();
 
@@ -283,8 +287,14 @@ export class UiView extends LitElement {
       return;
     }
 
-    // The "new" viewconfig is already applied, so exit early
-    if (this._uiViewData.config === config) {
+    // The "new" viewconfig is already applied, so keep the element
+    if (this.appliedConfig === config) {
+      // A new registration after a re-attach: the kept element missed the transitions that ran while detached.
+      if (this._uiViewData.config !== config) {
+        this._uiViewData.config = config;
+        this._replayMissedParams();
+      }
+
       return;
     }
 
@@ -293,6 +303,9 @@ export class UiView extends LitElement {
   }
 
   private _applyUpdatedConfig(config: LitViewConfig) {
+    this.appliedConfig = config;
+    // Core's globals hook runs ahead of view activation, so the tail is the transition this element is built in.
+    this.paramsSeenBy = this.uiRouter?.globals.successfulTransitions.peekTail();
     this._uiViewData.config = config;
 
     if (!this.viewAddress && config?.viewDecl?.$context) {
@@ -829,12 +842,35 @@ export class UiView extends LitElement {
     }
   }
 
+  /** The last transition the params hook saw, so a re-attach can diff against it. */
+  private paramsSeenBy?: Transition;
+
+  /** Hands a re-attached element the latest transition, with params diffed against the last one it saw. */
+  private _replayMissedParams() {
+    const latest = this.uiRouter?.globals.successfulTransitions.peekTail();
+    const since = this.paramsSeenBy;
+
+    if (!latest || !since || latest === since) {
+      this.requestUpdate();
+
+      return;
+    }
+
+    this._invokeUiOnParamsChangedHook(latest, since);
+  }
+
   /**
    * For each transition, checks if any param values changed and notify component
+   *
+   * @param since - the transition the element last saw, when it missed the ones in between
    */
-  private _invokeUiOnParamsChangedHook($transition$: Transition) {
+  private _invokeUiOnParamsChangedHook(
+    $transition$: Transition,
+    since?: Transition,
+  ) {
     // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
+    this.paramsSeenBy = $transition$;
 
     const instance: (Partial<UiOnParamsChanged> & Element) | null =
       this.routedElement;
@@ -859,8 +895,6 @@ export class UiView extends LitElement {
 
       const toParams: RawParams = $transition$.params('to');
 
-      const fromParams: RawParams = $transition$.params('from');
-
       const getNodeSchema = (node: PathNode) => node.paramSchema;
 
       const toSchema: Param[] = $transition$
@@ -868,8 +902,12 @@ export class UiView extends LitElement {
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
 
-      const fromSchema: Param[] = $transition$
-        .treeChanges('from')
+      const fromParams: RawParams = since
+        ? since.params('to')
+        : $transition$.params('from');
+
+      const fromSchema: Param[] = (since ?? $transition$)
+        .treeChanges(since ? 'to' : 'from')
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
 
