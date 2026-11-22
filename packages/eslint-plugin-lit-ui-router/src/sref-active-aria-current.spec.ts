@@ -70,6 +70,26 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       name: 'a bound role is unknowable, so it stays suppressed',
       code: `${IMPORTS}html\`<div role=\${role} aria-current="true" \${uiSrefActive({})}></div>\`;`,
     },
+    {
+      name: 'a partly bound role is unknowable even with a literal link token',
+      code: `${IMPORTS}html\`<div role="link \${extra}" aria-current="page" \${uiSrefActive({})}></div>\`;`,
+    },
+    {
+      name: 'an empty ariaCurrentValue never writes, on a link',
+      code: `${IMPORTS}html\`<a href="/" aria-current="page" \${uiSrefActive({ ariaCurrentValue: '' })}>Home</a>\`;`,
+    },
+    {
+      name: 'an empty ariaCurrentValue never writes, on a non-link',
+      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: '' })}></li>\`;`,
+    },
+    {
+      name: 'a null ariaCurrentValue throws before writing, on a link',
+      code: `${IMPORTS}html\`<a href="/" aria-current="page" \${uiSrefActive({ ariaCurrentValue: null })}>Home</a>\`;`,
+    },
+    {
+      name: 'a null ariaCurrentValue throws before writing, on a non-link',
+      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: null })}></li>\`;`,
+    },
   ],
   invalid: [
     {
@@ -109,7 +129,7 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       output: `${IMPORTS}html\`<a href="/home" aria-current="page" \${uiSrefActive({ ariaCurrentValue: false, activeClasses: 'on' })}>Home</a>\`;`,
     },
     {
-      name: 'an explicit non-false ariaCurrentValue still takes over, unfixed',
+      name: 'an explicit string ariaCurrentValue still takes over, unfixed',
       code: `${IMPORTS}html\`<a href="/home" aria-current="page" \${uiSrefActive({ ariaCurrentValue: 'step' })}>Home</a>\`;`,
       errors: [{ messageId: 'ariaCurrentTakeover' }],
       output: null,

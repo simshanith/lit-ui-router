@@ -25,6 +25,9 @@ const OPT_OUT = 'ariaCurrentValue: false';
 // The runtime's default checks the tag and role only, never declared link tags.
 const NO_DECLARED_LINKS: ReadonlySet<string> = new Set();
 
+// `''` resolves to no value and `null` throws before the runtime writes.
+const NEVER_WRITTEN: ReadonlySet<unknown> = new Set([false, '', null]);
+
 export const RULE_NAME = 'sref-active-aria-current';
 
 /**
@@ -96,7 +99,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
       const { value } = property;
 
       // Non-literal is unknowable, so it stays suppressed.
-      if (value.type !== 'Literal' || value.value === false) return;
+      if (value.type !== 'Literal' || NEVER_WRITTEN.has(value.value)) return;
       // An explicit value still takes the attribute over; rewriting
       // someone's deliberate choice is not this rule's business.
       report();
