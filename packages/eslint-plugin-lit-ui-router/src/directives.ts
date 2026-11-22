@@ -286,7 +286,8 @@ export const attributePartsOf = (
  *
  * `html` is the analyzer's source, which parse5's offsets index. It is the
  * template's raw text with placeholders, so the static tail measures in raw
- * characters, entities undecoded, with only CRLF folded to LF.
+ * characters, entities undecoded. Whether CRLF is folded to LF depends on the
+ * parser.
  */
 export const attributeEnd = (
   text: string,
