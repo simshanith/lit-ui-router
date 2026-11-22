@@ -8,7 +8,7 @@ import {
   expectTypeOf,
   vi,
 } from 'vitest';
-import { html } from 'lit';
+import { html, render } from 'lit';
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
@@ -389,6 +389,76 @@ describe('lit-ui-router/context', () => {
       const { view, nested } = await mountNestedViews();
 
       expect(requestContext(nested, parentUiViewContext)).toBe(view);
+    });
+
+    it('leaves a request from its fallback set to the view above', async () => {
+      const view = await mountView();
+      const inner = document.createElement('ui-view');
+      const fallback = document.createElement('div');
+      inner.appendChild(fallback);
+      view.appendChild(inner);
+      await waitForUpdate(inner);
+
+      expect(requestContext(fallback, parentUiViewContext)).toBe(view);
+      expect(UiView.seekParentView(fallback)).toBe(view);
+    });
+
+    it('leaves a request from fallback the parent template renders after capture to the view above', async () => {
+      const view = await mountView();
+      const host = document.createElement('div');
+      view.appendChild(host);
+
+      const template = (late: boolean) =>
+        html`<ui-view
+          >${late ? html`<a>Late</a>` : html`<p>Hint</p>`}<span
+            >Tail</span
+          ></ui-view
+        >`;
+
+      render(template(false), host);
+      const inner = host.querySelector('ui-view')!;
+      await waitForUpdate(inner);
+
+      render(template(true), host);
+      const late = host.querySelector('a')!;
+
+      expect(requestContext(late, parentUiViewContext)).toBe(view);
+      expect(UiView.seekParentView(late)).toBe(view);
+    });
+
+    it('answers a child appended after its fallback set', async () => {
+      const view = await mountView();
+      const inner = document.createElement('ui-view');
+      inner.append(document.createElement('p'), document.createElement('p'));
+      view.appendChild(inner);
+      await waitForUpdate(inner);
+
+      const appended = document.createElement('div');
+      inner.appendChild(appended);
+
+      expect(requestContext(appended, parentUiViewContext)).toBe(inner);
+    });
+
+    it('answers a child appended after the parent template replaces its last fallback node', async () => {
+      const view = await mountView();
+      const host = document.createElement('div');
+      view.appendChild(host);
+
+      const template = (late: boolean) =>
+        html`<ui-view
+          ><p>Hint</p>
+          ${late ? html`<a>Late</a>` : html`<b>Early</b>`}</ui-view
+        >`;
+
+      render(template(false), host);
+      const inner = host.querySelector('ui-view')!;
+      await waitForUpdate(inner);
+
+      render(template(true), host);
+      const appended = document.createElement('div');
+      inner.appendChild(appended);
+
+      expect(requestContext(appended, parentUiViewContext)).toBe(inner);
     });
 
     it('returns undefined with no enclosing view', async () => {
