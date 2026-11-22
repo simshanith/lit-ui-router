@@ -25,9 +25,11 @@ export function revealOnStateLinks(
   landmark: HTMLElement,
   prefix = '',
 ): () => void {
-  const reveal = () => {
-    // The stylesheet decides the rest: scroll-margin-top for a fixed header, scroll-behavior for motion.
-    landmark.scrollIntoView();
+  // The stylesheet decides the rest: scroll-margin-top for a fixed header, scroll-behavior for motion.
+  const reveal = () => landmark.scrollIntoView();
+
+  const follow = () => {
+    reveal();
     // As a followed anchor does, when the landmark is focusable (tabindex="-1").
     landmark.focus({ preventScroll: true });
   };
@@ -49,9 +51,10 @@ export function revealOnStateLinks(
 
     // After the click's own navigation, so the entry being left keeps its scroll position.
     if (sameDocument && stateUrlOf(link.hash, prefix) !== undefined)
-      requestAnimationFrame(reveal);
+      requestAnimationFrame(follow);
   };
 
+  // No focus on load: a page that opens on an anchor has none either, and script focus before any input draws a focus ring.
   if (stateUrlOf(location.hash, prefix) !== undefined) reveal();
   document.addEventListener('click', onClick);
 
