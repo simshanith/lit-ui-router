@@ -92,8 +92,8 @@ const icon = (name: keyof typeof ICONS) =>
 
 type Resolved = { card: Card };
 
-// A slideshow moves in place: each card takes over the history entry, where the location service can replace.
-const IN_PLACE = { location: 'replace' } as const;
+/** A slideshow moves in place: each card takes over the history entry, so Back leaves the tour. */
+export const IN_PLACE = { location: 'replace' } as const;
 
 const cardView = (card: Card) => html`
   <article class="card">

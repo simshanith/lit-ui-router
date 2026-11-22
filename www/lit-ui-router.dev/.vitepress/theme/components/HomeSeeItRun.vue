@@ -84,6 +84,7 @@ onBeforeUnmount(() => {
         opens Views.
       </p>
       <div class="panels">
+        <div class="flames" aria-hidden="true" />
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
           <!-- Announces the card after a link or the pager changes it; the app's own view is not a live region. -->
@@ -239,7 +240,8 @@ onBeforeUnmount(() => {
   padding: var(--gutter);
   position: relative;
   isolation: isolate;
-  /* A scrim over the tessellated Lit flame, blended into the logo's gradient. */
+  overflow: clip;
+  /* The ground: the logo's gradient under a scrim. */
   background:
     linear-gradient(
       color-mix(
@@ -249,9 +251,67 @@ onBeforeUnmount(() => {
         )
         0 0
     ),
-    var(--site-see-it-run-texture) center / var(--site-see-it-run-tile) repeat,
     var(--site-see-it-run-gradient);
-  background-blend-mode: normal, var(--site-see-it-run-blend), normal;
+}
+
+/* The Lit flames: the same gradient cut to the flame tile, so each flame takes the colour under it, stepped per column. */
+.flames,
+.flames::before {
+  position: absolute;
+  inset: 0;
+}
+
+.flames {
+  z-index: -1;
+}
+
+.flames::before {
+  content: '';
+  inset-block: calc(-1 * var(--drift-travel, 0px));
+  background:
+    var(--site-see-it-run-steps) left top / var(--site-see-it-run-tile),
+    var(--site-see-it-run-gradient);
+  /* A longhand with no var(): one in the declaration resolves the image again, and repaints the layer, on every frame the offset moves. */
+  mask-image: url(/images/see-it-run-tile.svg);
+  mask-size: var(--site-see-it-run-tile);
+}
+
+/* Registered so the view timeline can interpolate it; a number, because a minified `0` initial value is no <length> to Firefox. */
+@property --see-it-run-drift {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* The flames trail the page and ease to rest: the timeline moves the offset on the wrapper, and the transition on its layer follows it. The layer is taller by the travel, so no edge shows. */
+@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  @supports (animation-timeline: view()) and (animation-range: entry) {
+    .panels {
+      view-timeline: --see-it-run-panels block;
+    }
+
+    .flames {
+      --drift-travel: 48px;
+      animation: see-it-run-drift linear both;
+      animation-timeline: --see-it-run-panels;
+    }
+
+    .flames::before {
+      translate: 0 calc(var(--see-it-run-drift) * var(--drift-travel));
+      transition: translate 600ms var(--ease-out);
+      will-change: translate;
+    }
+  }
+}
+
+@keyframes see-it-run-drift {
+  from {
+    --see-it-run-drift: -1;
+  }
+
+  to {
+    --see-it-run-drift: 1;
+  }
 }
 
 @media (min-width: 40rem) {
@@ -336,6 +396,10 @@ onBeforeUnmount(() => {
 @media (forced-colors: active) {
   .panels {
     background: none;
+  }
+
+  .flames {
+    display: none;
   }
 
   .panel {

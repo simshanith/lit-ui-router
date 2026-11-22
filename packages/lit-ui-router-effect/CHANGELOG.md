@@ -2,6 +2,12 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/lit-ui-router-effect/).
 
+## 0.7.2 (2026-11-22)
+
+No source changes. This release republishes the package as the current toolchain builds it: the compiled `ref-controller.js` constructs effect 4's `MixedScheduler` inline instead of through a local alias, and behaves the same.
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router-effect/0.7.2/) · [Diff from 0.7.1](https://lit-ui-router.dev/releases/lit-ui-router-effect/diff/0.7.1...0.7.2/)
+
 ## 0.7.1 (2026-11-13)
 
 ### Features

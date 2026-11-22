@@ -6,7 +6,7 @@
   "exports": {
     "./embeds": "./embeds.ts",
     "./features-tour/embed": "./features-tour/src/embed.ts",
-    "./features-tour/shared-hash-location": "./features-tour/src/shared-hash-location.ts",
+    "./features-tour/replace-aware-hash-location": "./features-tour/src/replace-aware-hash-location.ts",
     "./features-tour/state-links": "./features-tour/src/state-links.ts"
   },
   "scripts": {

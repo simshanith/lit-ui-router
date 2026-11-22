@@ -7,29 +7,44 @@ import {
 
 import { stateUrlOf } from './state-links.ts';
 
-export interface SharedHashLocationOptions {
+export interface ReplaceAwareHashLocationOptions {
   /**
    * What a state fragment starts with, ahead of the state's URL. With `tour`,
    * `#tour/views` is the state URL `/views`, and `#tour` alone stays the
    * page's anchor. The default, `''`, owns every `#/…` fragment.
    */
   prefix?: string;
+  /**
+   * How a `{ location: 'replace' }` transition takes over the history entry.
+   * `replaceState`, the default, keeps the entry's `history.state`, which a
+   * host page's own router may use, and dispatches the `hashchange` the
+   * History API does not fire. `location.replace` lets the browser fire it and
+   * drops `history.state`; it suits an app that is the whole document.
+   */
+  replace?: 'replaceState' | 'location.replace';
 }
 
 /**
- * A hash location for an app inside a page that uses the fragment too. It owns
- * the fragments that start with its prefix; any other fragment is the page's
- * own anchor, and the router keeps the state it is in.
+ * A hash location that honours `{ location: 'replace' }`, which core's pushes,
+ * and that can share the fragment with the page around it: it owns the
+ * fragments that start with its prefix, any other fragment is the page's own
+ * anchor, and the router keeps the state it is in.
  */
-export class SharedHashLocationService extends HashLocationService {
+export class ReplaceAwareHashLocationService extends HashLocationService {
   private readonly prefix: string;
+
+  private readonly replace: 'replaceState' | 'location.replace';
 
   // The last state URL the fragment carried: what the router reads while the fragment is the page's.
   private stateUrl = '';
 
-  constructor(router: UIRouter, { prefix = '' }: SharedHashLocationOptions) {
+  constructor(
+    router: UIRouter,
+    { prefix = '', replace = 'replaceState' }: ReplaceAwareHashLocationOptions,
+  ) {
     super(router);
     this.prefix = prefix;
+    this.replace = replace;
   }
 
   _get(): string {
@@ -47,11 +62,16 @@ export class SharedHashLocationService extends HashLocationService {
       return;
     }
 
+    if (this.replace === 'location.replace') {
+      location.replace(hash);
+
+      return;
+    }
+
     const oldURL = location.href;
 
-    // Not location.replace(): that drops history.state, which the host page's own router may keep on the entry.
     history.replaceState(history.state, '', hash);
-    // replaceState fires no hashchange, and the host page follows the fragment by that event.
+    // replaceState fires no hashchange, and a host page follows the fragment by that event.
     window.dispatchEvent(
       new HashChangeEvent('hashchange', { oldURL, newURL: location.href }),
     );
@@ -65,12 +85,12 @@ export class SharedHashLocationService extends HashLocationService {
   }
 }
 
-/** `router.plugin(sharedHashLocationPlugin, { prefix: 'tour' })` */
-export function sharedHashLocationPlugin(
+/** `router.plugin(replaceAwareHashLocationPlugin, { prefix: 'tour' })` */
+export function replaceAwareHashLocationPlugin(
   router: UIRouter,
-  options: SharedHashLocationOptions = {},
+  options: ReplaceAwareHashLocationOptions = {},
 ): LocationPlugin {
-  const service = new SharedHashLocationService(router, options);
+  const service = new ReplaceAwareHashLocationService(router, options);
   const configuration = new BrowserLocationConfig(router, false);
 
   router.locationService = service;
@@ -79,7 +99,7 @@ export function sharedHashLocationPlugin(
   router.urlService.config.hashPrefix(options.prefix ?? '');
 
   return {
-    name: 'sharedHashLocation',
+    name: 'featuresTour.replaceAwareHashLocation',
     service,
     configuration,
     dispose(disposing: UIRouter) {

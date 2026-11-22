@@ -59,8 +59,9 @@ The home page's live example: its three feature cards, paged through one state a
 - **One re-entrant state:** `card` at `/:cardId`. Moving between cards changes the param, so the router exits and re-enters the state, and a `resolve` on `$transition$` hands the component its card
 - **Pagination from `uiSref` links** with `{ cardId }` params: a dot per card between Previous and Next, the current one marked by `uiSrefActive`'s `aria-current="page"`
 - A `redirectTo` that sends an unknown `cardId` to the first card
-- **Two ways to run it.** `src/tour.ts` holds the elements and the state. `src/main.ts` runs them as a page of their own on `hashLocationPlugin`. `src/embed.ts` exports `mountTour(container, { prefix })`, which runs them inside a host page and returns a function that removes the app and stops its router listening
-- **A fragment shared with the host page:** `src/shared-hash-location.ts` owns only the fragments that start `#<prefix>/`, so `#see-it-run/views` is a state and `#see-it-run` stays the page's own anchor. `src/state-links.ts` scrolls the host's section into view when a link outside it names a state
+- **Two ways to run it.** `src/tour.ts` holds the elements and the state. `src/main.ts` runs them as a page of their own. `src/embed.ts` exports `mountTour(container, { prefix })`, which runs them inside a host page and returns a function that removes the app and stops its router listening
+- **One hash location for both:** `src/replace-aware-hash-location.ts` honours `{ location: 'replace' }`, which core's hash location pushes, so the pager moves in place. Its `replace` option picks how: `location.replace` for the standalone page, `history.replaceState` plus a dispatched `hashchange` inside a host page, which keeps the host's `history.state`
+- **A fragment shared with the host page:** with a `prefix`, the location owns only the fragments that start `#<prefix>/`, so `#see-it-run/views` is a state and `#see-it-run` stays the page's own anchor. `src/state-links.ts` scrolls the host's section into view when a link outside it names a state
 
 ### hellosolarsystem
 

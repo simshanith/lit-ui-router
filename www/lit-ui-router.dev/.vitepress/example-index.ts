@@ -54,8 +54,9 @@ export function dependencyFacets(deps: DependencyMap): ExampleFacets {
   };
 }
 
+// replaceAwareHashLocationPlugin is the unmatched-urls guide's HashLocationService subclass: a hash location.
 const LOCATION_PLUGIN =
-  /\.plugin\(\s*(navigation|pushState|hash)LocationPlugin\b/g;
+  /\.plugin\(\s*(navigation|pushState|hash|replaceAwareHash)LocationPlugin\b/g;
 
 /** The one location plugin an example's sources hand the router. */
 export function locationOf(
@@ -63,7 +64,9 @@ export function locationOf(
 ): NonNullable<ExampleFacets['location']> {
   const found = new Set(
     sources.flatMap((source) =>
-      Array.from(source.matchAll(LOCATION_PLUGIN), ([, plugin]) => plugin),
+      Array.from(source.matchAll(LOCATION_PLUGIN), ([, plugin]) =>
+        plugin === 'replaceAwareHash' ? 'hash' : plugin,
+      ),
     ),
   );
 

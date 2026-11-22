@@ -2,9 +2,9 @@ import { html, nothing, render } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
 
 import {
-  sharedHashLocationPlugin,
-  type SharedHashLocationOptions,
-} from './shared-hash-location.ts';
+  replaceAwareHashLocationPlugin,
+  type ReplaceAwareHashLocationOptions,
+} from './replace-aware-hash-location.ts';
 import { cardState, INITIAL_CARD } from './tour.ts';
 
 /**
@@ -16,11 +16,12 @@ import { cardState, INITIAL_CARD } from './tour.ts';
  */
 export function mountTour(
   container: HTMLElement,
-  options: SharedHashLocationOptions = {},
+  options: Pick<ReplaceAwareHashLocationOptions, 'prefix'> = {},
 ): () => void {
   const router = new UIRouterLit();
 
-  router.plugin(sharedHashLocationPlugin, options);
+  // The default replace strategy keeps the host page's history.state on the entry.
+  router.plugin(replaceAwareHashLocationPlugin, options);
 
   router.stateRegistry.register(cardState);
 

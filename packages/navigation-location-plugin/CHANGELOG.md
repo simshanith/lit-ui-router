@@ -2,6 +2,14 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/).
 
+## 1.2.2 (2026-11-22)
+
+### Documentation
+
+* **navigation-location-plugin:** trim CI runner details from README ([#2290](https://github.com/simshanith/lit-ui-router/issues/2290)) ([eccf916](https://github.com/simshanith/lit-ui-router/commit/eccf916c1c6c3928a636fc788073c917b61a461a))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/1.2.2/) · [Diff from 1.2.1](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/diff/1.2.1...1.2.2/)
+
 ## 1.2.1 (2026-11-13)
 
 ### Bug Fixes

@@ -2,6 +2,27 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/lit-ui-router-ssr/).
 
+## 0.11.2 (2026-11-22)
+
+### Bug Fixes
+
+* **lit-ui-router-ssr:** prerender each page with its own resolves when only a dynamic param changes ([#2356](https://github.com/simshanith/lit-ui-router/issues/2356)) ([454e43f](https://github.com/simshanith/lit-ui-router/commit/454e43fa99332174b8b405906dc015bc8c8aa4ae))
+
+  `prerender` now enters every page from the router's root, so ancestor resolves run once per page instead of once per build, as on a client boot. The `baseHref` check also runs on pages it used to skip (those an earlier path had already navigated to), so a router with a wrong `baseHref` that built before can now throw.
+
+### Documentation
+
+* add plain-language opening sentences to package pages and READMEs ([#2315](https://github.com/simshanith/lit-ui-router/issues/2315)) ([7e298d1](https://github.com/simshanith/lit-ui-router/commit/7e298d119ce5acc6678a58bb83bfc49f820964e0))
+
+<details>
+<summary>Also touched this package (1)</summary>
+
+* **lit-ui-router:** resolve a relative sref in a ui-view's fallback content against the parent state ([#2333](https://github.com/simshanith/lit-ui-router/pull/2333))
+
+</details>
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router-ssr/0.11.2/) · [Diff from 0.11.1](https://lit-ui-router.dev/releases/lit-ui-router-ssr/diff/0.11.1...0.11.2/)
+
 ## 0.11.1 (2026-11-14)
 
 ### Bug Fixes

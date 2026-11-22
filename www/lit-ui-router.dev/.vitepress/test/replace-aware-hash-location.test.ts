@@ -25,14 +25,14 @@ describe('a fragment shared with the host page', () => {
   });
 });
 
-describe('the shared hash location', () => {
+describe('the replace-aware hash location', () => {
   type Core = typeof import('@uirouter/core');
 
   type Plugin =
-    typeof import('examples/features-tour/shared-hash-location').sharedHashLocationPlugin;
+    typeof import('examples/features-tour/replace-aware-hash-location').replaceAwareHashLocationPlugin;
 
   let core: Core;
-  let sharedHashLocationPlugin: Plugin;
+  let replaceAwareHashLocationPlugin: Plugin;
   let window: Window;
 
   // @uirouter/core reads the global object as it loads, so the window comes first.
@@ -53,19 +53,19 @@ describe('the shared hash location', () => {
     core = createRequire(
       join(workspaceRoot, 'examples/features-tour/package.json'),
     )('@uirouter/core') as Core;
-    ({ sharedHashLocationPlugin } =
-      await import('examples/features-tour/shared-hash-location'));
+    ({ replaceAwareHashLocationPlugin } =
+      await import('examples/features-tour/replace-aware-hash-location'));
   });
 
   beforeEach(() => {
     window.history.replaceState({ host: 1 }, '', '/page');
   });
 
-  function start(prefix: string) {
+  function start(options: Parameters<Plugin>[1]) {
     const router = new core.UIRouter();
 
     router.plugin(core.servicesPlugin);
-    router.plugin(sharedHashLocationPlugin, { prefix });
+    router.plugin(replaceAwareHashLocationPlugin, options);
     router.stateRegistry.register({ name: 'card', url: '/:cardId' });
     router.urlService.rules.initial({
       state: 'card',
@@ -84,7 +84,7 @@ describe('the shared hash location', () => {
     window.dispatchEvent(new window.HashChangeEvent('hashchange'));
 
   it('opens on the initial state and leaves the URL as it was', async () => {
-    const router = start('tour');
+    const router = start({ prefix: 'tour' });
 
     await settled();
     assert.equal(router.globals.params.cardId, 'states');
@@ -95,7 +95,7 @@ describe('the shared hash location', () => {
   it('activates the state a prefixed fragment names', async () => {
     window.history.replaceState({}, '', '#tour/views');
 
-    const router = start('tour');
+    const router = start({ prefix: 'tour' });
 
     await settled();
     assert.equal(router.globals.params.cardId, 'views');
@@ -105,7 +105,7 @@ describe('the shared hash location', () => {
   it("keeps its state through the page's own anchors", async () => {
     window.history.replaceState({}, '', '#tour/views');
 
-    const router = start('tour');
+    const router = start({ prefix: 'tour' });
 
     await settled();
     window.history.pushState({}, '', '#install');
@@ -127,7 +127,7 @@ describe('the shared hash location', () => {
   });
 
   it('replaces in place, keeps history.state and tells the page', async () => {
-    const router = start('tour');
+    const router = start({ prefix: 'tour' });
 
     await settled();
 
@@ -150,8 +150,39 @@ describe('the shared hash location', () => {
     router.dispose();
   });
 
+  it('pushes an ordinary transition', async () => {
+    const router = start({});
+
+    await settled();
+
+    const entries = window.history.length;
+
+    await router.stateService.go('card', { cardId: 'views' });
+    assert.equal(window.location.hash, '#/views');
+    assert.equal(window.history.length, entries + 1);
+    router.dispose();
+  });
+
+  // happy-dom's location.replace is not the browser's; the standalone example's e2e test covers the history entry.
+  it('hands a replace to location.replace when asked to', async (t) => {
+    const replaced = t.mock.method(window.location, 'replace', () => {});
+    const router = start({ replace: 'location.replace' });
+
+    await settled();
+    await router.stateService.go(
+      'card',
+      { cardId: 'views' },
+      { location: 'replace' },
+    );
+    assert.deepEqual(
+      replaced.mock.calls.map((call) => call.arguments),
+      [['#/views']],
+    );
+    router.dispose();
+  });
+
   it('builds hrefs behind the prefix, as hand-written anchors are', () => {
-    const tour = start('tour');
+    const tour = start({ prefix: 'tour' });
 
     assert.equal(
       tour.stateService.href('card', { cardId: 'views' }),
@@ -159,7 +190,7 @@ describe('the shared hash location', () => {
     );
     tour.dispose();
 
-    const bare = start('');
+    const bare = start({});
 
     assert.equal(
       bare.stateService.href('card', { cardId: 'views' }),
@@ -169,7 +200,7 @@ describe('the shared hash location', () => {
   });
 
   it('stops listening when the router is disposed', async () => {
-    const router = start('tour');
+    const router = start({ prefix: 'tour' });
 
     await settled();
     router.dispose();
