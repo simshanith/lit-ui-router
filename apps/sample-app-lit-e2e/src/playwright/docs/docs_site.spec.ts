@@ -181,6 +181,10 @@ test.describe('docs site', () => {
     const pager = tour.getByRole('navigation', { name: 'Feature cards' });
     const card = tour.getByRole('article');
 
+    const diagram = page
+      .getByRole('figure')
+      .filter({ hasText: 'The features tour registers one state' });
+
     await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
 
     const entries = await page.evaluate(() => history.length);
@@ -195,6 +199,10 @@ test.describe('docs site', () => {
       await expect(
         pager.getByRole('link', { name: new RegExp(`^${title}, card`) }),
       ).toHaveAttribute('aria-current', 'page');
+      // The diagram follows the frame's hashchange, which a replaceState would not fire.
+      await expect(diagram).toContainText(
+        `The active value is ${title.toLowerCase()}.`,
+      );
     }
 
     expect(await page.evaluate(() => history.length)).toBe(entries);
