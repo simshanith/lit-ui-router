@@ -144,7 +144,7 @@ const reentered = computed(() => props.from !== undefined);
 
     <figcaption class="visually-hidden">
       <p>
-        The features tour registers one state,
+        The app registers one state,
         <code>{{ CARD_STATE.name }}</code>, under the router's root state, at
         the URL <code>{{ CARD_STATE.url }}</code>. It renders into the
         <code>&lt;ui-view&gt;</code> in <code>&lt;app-root&gt;</code>. Each card

@@ -467,7 +467,7 @@ html.dark {
 }
 /* === end diagrams === */
 
-/* A feature card's link to its card in the home page tour, on a line of its own under the details. */
+/* A feature card's link to its card in the app below it, on a line of its own under the details. */
 .VPFeature .details a {
   display: block;
   inline-size: fit-content;

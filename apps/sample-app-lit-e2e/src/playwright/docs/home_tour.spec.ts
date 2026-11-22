@@ -42,6 +42,10 @@ async function expectCard(page: Page, title: string, url: string) {
       '[aria-current]',
     ),
   ).toHaveText(title.toLowerCase());
+  // The page announces the card; the app's own view is not a live region.
+  await expect(section(page).getByRole('status')).toHaveText(
+    `The app shows the ${title.toLowerCase()} card.`,
+  );
   await expect(page).toHaveURL(url);
 }
 
@@ -83,11 +87,37 @@ test.describe('home page tour', () => {
 
     const before = await entries(page);
 
-    await page.getByRole('link', { name: 'See views in the tour' }).click();
+    await page
+      .getByRole('link', { name: 'Open views in the app below' })
+      .click();
 
     await expectCard(page, 'Views', '/#see-it-run/views');
     await expect(section(page)).toBeInViewport();
     expect(await entries(page)).toBe(before + 1);
+  });
+
+  test('rings the section when a keyboard user follows a state link, not a pointer user', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await hydrated(page);
+
+    const link = page.getByRole('link', {
+      name: 'Open resolves in the app below',
+    });
+
+    await link.click();
+    await expectCard(page, 'Resolves', '/#see-it-run/resolves');
+    await expect(section(page)).toBeFocused();
+    await expect(section(page)).toHaveCSS('outline-style', 'none');
+
+    await link.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(link).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(section(page)).toBeFocused();
+    await expect(section(page)).toHaveCSS('outline-style', 'solid');
   });
 
   test('moves from links inside the section without scrolling the page', async ({

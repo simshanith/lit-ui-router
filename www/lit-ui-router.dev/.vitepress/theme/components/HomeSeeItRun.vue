@@ -5,7 +5,6 @@ import { revealOnStateLinks } from 'examples/features-tour/state-links';
 import HomeTour from './HomeTour.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
 import {
-  CARD_IDS,
   cardForHash,
   hashForCard,
   INITIAL_CARD,
@@ -14,6 +13,9 @@ import {
 } from './features-tour-states';
 
 const section = useTemplateRef('section');
+
+/** The card the intro's one example link opens. */
+const EXAMPLE_CARD: CardId = 'views';
 
 const card = ref<CardId>(INITIAL_CARD);
 
@@ -68,21 +70,26 @@ onBeforeUnmount(() => {
         >
       </div>
       <p class="lede">
-        The feature cards above as a small lit-ui-router app, running in this
-        page. Each card is the same state with a new parameter, and the diagram
-        follows the router as it re-enters the state.
+        The feature cards above run here as a small lit-ui-router app. Each card
+        re-enters one state with a new parameter, and the diagram follows each
+        transition.
       </p>
       <p class="lede">
         The app shares this page's URL fragment with the page's own anchors, so
-        each card has a link:
-        <template v-for="(id, index) in CARD_IDS" :key="id">
-          <a :href="hashForCard(id)"><code>{{ hashForCard(id) }}</code></a
-          >{{ index < CARD_IDS.length - 1 ? ', ' : '.' }}
-        </template>
+        a link can open a card directly, as the links on the cards above do. For
+        example,
+        <a :href="hashForCard(EXAMPLE_CARD)"
+          ><code>{{ hashForCard(EXAMPLE_CARD) }}</code></a
+        >
+        opens Views.
       </p>
       <div class="panels">
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
+          <!-- Announces the card after a link or the pager changes it; the app's own view is not a live region. -->
+          <p class="visually-hidden" role="status">
+            The app shows the {{ card }} card.
+          </p>
           <HomeTour class="embed" :prefix="TOUR_LANDMARK" />
         </div>
         <div class="panel diagram-panel">
@@ -110,9 +117,15 @@ onBeforeUnmount(() => {
   );
 }
 
-/* Focus lands here only from a followed link; the section is not a control. */
+/* Focus lands here only from a followed link: ringed when that link was followed by keyboard, not by pointer. */
 .see-it-run:focus {
   outline: none;
+}
+
+.see-it-run:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
 }
 
 @media (min-width: 40rem) {
@@ -181,6 +194,25 @@ onBeforeUnmount(() => {
   color: var(--site-color-interaction);
   text-decoration: underline;
   text-underline-offset: 0.125rem;
+  transition: color var(--site-duration-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lede a:hover {
+    color: var(--site-color-interaction-hover);
+  }
+}
+
+.lede a:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+
+/* The link's colour, not the code colour, in every state; the fragment stays on one line. */
+.lede a > code {
+  color: inherit;
+  white-space: nowrap;
 }
 
 .lede code {
