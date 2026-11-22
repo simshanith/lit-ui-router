@@ -165,6 +165,63 @@ test.describe('docs site', () => {
     );
   });
 
+  test("pages the home page tour without adding to the docs page's history", async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await hydrated(page);
+
+    // An iframe has no role; its title is the handle.
+    const tour = page
+      .locator('iframe[title="Features Tour example"]')
+      .contentFrame();
+
+    const pager = tour.getByRole('navigation', { name: 'Feature cards' });
+    const card = tour.getByRole('article');
+
+    await pager.scrollIntoViewIfNeeded();
+    await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
+
+    const entries = await page.evaluate(() => history.length);
+
+    for (const [control, title] of [
+      ['Next card', 'Views'],
+      ['Previous card', 'States'],
+      ['Resolves, card 3 of 3', 'Resolves'],
+    ]) {
+      await pager.getByRole('link', { name: control }).click();
+      await expect(card.getByRole('heading', { name: title })).toBeVisible();
+      await expect(
+        pager.getByRole('link', { name: new RegExp(`^${title}, card`) }),
+      ).toHaveAttribute('aria-current', 'page');
+    }
+
+    expect(await page.evaluate(() => history.length)).toBe(entries);
+  });
+
+  test('replaces the history entry as the features tour moves, opened on its own', async ({
+    page,
+  }) => {
+    await page.goto('/tutorial/helloworld');
+    // The empty hash redirects to the first card in place: Back leaves the example.
+    await page.goto('/examples/features-tour/');
+
+    const card = page.getByRole('article');
+
+    await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
+    await expect(page).toHaveURL('/examples/features-tour/#/states');
+
+    const entries = await page.evaluate(() => history.length);
+
+    await page.getByRole('link', { name: 'Next card' }).click();
+    await expect(card.getByRole('heading', { name: 'Views' })).toBeVisible();
+    await expect(page).toHaveURL('/examples/features-tour/#/views');
+    expect(await page.evaluate(() => history.length)).toBe(entries);
+
+    await page.goBack();
+    await expect(page).toHaveURL('/tutorial/helloworld');
+  });
+
   test('mounts the MobX solar system example on the bindings page', async ({
     page,
   }) => {

@@ -7,7 +7,13 @@ import {
   type SVGTemplateResult,
 } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { hashLocationPlugin, type Transition } from '@uirouter/core';
+import {
+  BrowserLocationConfig,
+  HashLocationService,
+  locationPluginFactory,
+  type Transition,
+  type UIRouter,
+} from '@uirouter/core';
 import {
   TransitionController,
   UIRouterLit,
@@ -296,6 +302,25 @@ const cardState: LitStateDeclaration<Resolved> = {
 
 // Router setup
 const router = new UIRouterLit();
+
+// Replaces the entry on every navigation, so an embedding page's history gains none; location.replace, unlike replaceState, still fires hashchange.
+class ReplacingHashLocationService extends HashLocationService {
+  // locationPluginFactory types the router as optional; the base class requires it.
+  constructor(uiRouter?: UIRouter) {
+    super(uiRouter!);
+  }
+
+  _set(_state: null, _title: string, url: string) {
+    location.replace(`#${url}`);
+  }
+}
+
+const hashLocationPlugin = locationPluginFactory(
+  'featuresTour.replacingHashLocation',
+  false,
+  ReplacingHashLocationService,
+  BrowserLocationConfig,
+);
 
 router.plugin(hashLocationPlugin);
 
