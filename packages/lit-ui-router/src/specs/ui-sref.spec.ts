@@ -1466,7 +1466,7 @@ describe('uiSref directive', () => {
         );
       });
 
-      it('registers a view nested in a fallback under the enclosing state', async () => {
+      it('fills a view nested in a fallback by its dotted address', async () => {
         const { root, router } = await mount(
           () =>
             html`<ui-view
@@ -1478,7 +1478,7 @@ describe('uiSref directive', () => {
           name: 'nested.panel',
           url: '/panel',
           views: {
-            'inner@nested': { component: () => html`<p>Panel</p>` },
+            '$default.inner@nested': { component: () => html`<p>Panel</p>` },
           },
         };
 
@@ -1488,8 +1488,24 @@ describe('uiSref directive', () => {
         await tick(50);
 
         const inner = root.querySelector<UiView>('ui-view[name="inner"]')!;
-        expect(inner.uiViewData?.fqn).toBe('$default.inner');
+        expect(inner.uiViewData?.fqn).toBe('$default.$default.inner');
         expect(inner.textContent?.trim()).toBe('Panel');
+      });
+
+      it('registers a view nested in a fallback under the empty view', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view
+              ><ui-view name="inner"><p>Inner fallback</p></ui-view></ui-view
+            >`,
+        );
+
+        const inner = root.querySelector<UiView>('ui-view[name="inner"]')!;
+
+        expect(inner.uiViewData?.fqn).toBe('$default.$default.inner');
+        expect(inner.uiViewData?.creationContext).toBe(
+          router.stateRegistry.root(),
+        );
       });
 
       it('keeps a routed component resolving against its own state', async () => {

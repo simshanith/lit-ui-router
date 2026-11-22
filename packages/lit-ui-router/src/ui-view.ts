@@ -174,7 +174,9 @@ const noParentViewUnsubscribe = () => {};
  * A view never answers its own request, so a nested
  * <code>&lt;ui-view&gt;</code> gets the view above it. Nor does it answer a
  * request from its fallback set: that markup was authored in the enclosing
- * view's template, so it resolves against the view above as well.
+ * view's template, so it resolves against the view above as well. A
+ * <code>&lt;ui-view&gt;</code> in the fallback set still registers under this
+ * view.
  *
  * @summary
  *
@@ -322,6 +324,7 @@ export class UiView extends LitElement {
   /**
    * Whether this view should leave an enclosing-view request to the view above:
    * its own, or one from its fallback set, which the parent's template authored.
+   * A view in the fallback set seeking its own parent still gets this view.
    */
   private passesOn(event: Event): boolean {
     // `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
@@ -329,6 +332,11 @@ export class UiView extends LitElement {
 
     if (path[0] === this) {
       return true;
+    }
+
+    // a view's registration keeps its parent, even from a fallback set
+    if (path[0] === UiView.registering) {
+      return false;
     }
 
     // SAFETY: a path entry that is not a node never matches a fallback node
@@ -421,8 +429,17 @@ export class UiView extends LitElement {
     return uiViewContextEvent.detail.parentView;
   }
 
+  /** The view seeking its own parent to register; the seek dispatches synchronously. */
+  private static registering?: UiView;
+
   private seekParentView() {
-    this.parentView = this.constructor.seekParentView(this);
+    UiView.registering = this;
+
+    try {
+      this.parentView = this.constructor.seekParentView(this);
+    } finally {
+      UiView.registering = undefined;
+    }
   }
 
   // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
