@@ -17,7 +17,9 @@ type: package
 of its current state. It imports only `effect` and `@uirouter/core`, so any
 Effect program can follow route state without Lit.
 [`lit-ui-router-effect`](/packages/lit-ui-router-effect) builds its Lit
-controllers on it and re-exports `routeRef`.
+controllers on it and re-exports `routeRef`. See
+[Staying on UI-Router](/guides/staying-on-ui-router) for using the
+framework-agnostic packages on another UI-Router adapter without Lit.
 
 ## Installation
 

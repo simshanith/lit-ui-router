@@ -76,6 +76,7 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
   ],
   migration: [
     { text: 'Coming from UI-Router', link: '/guides/coming-from-ui-router' },
+    { text: 'Staying on UI-Router', link: '/guides/staying-on-ui-router' },
   ],
 };
 

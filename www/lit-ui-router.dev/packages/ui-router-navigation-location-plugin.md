@@ -18,7 +18,9 @@ URLs with the modern browser
 instead of the History API — and exposes the router inside navigation events,
 something the classic plugins cannot do.
 
-It works with **any** `@uirouter/core`-based router, not just lit-ui-router.
+It works with **any** `@uirouter/core`-based router, not just `lit-ui-router`;
+[Staying on UI-Router](/guides/staying-on-ui-router) shows it running on
+`@uirouter/react` without Lit.
 
 Tested in Chromium, Firefox, and WebKit.
 

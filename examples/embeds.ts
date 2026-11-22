@@ -126,6 +126,14 @@ export const EXAMPLES = {
     height: '410px',
     file: 'src/main.ts',
   },
+  'uirouter-react': {
+    title: 'UI-Router for React',
+    summary:
+      '`@uirouter/react` with no Lit: `ui-router-navigation-location-plugin`, `ui-router-signals` and `ui-router-registry` on a React router',
+    // check:embeds walks hash links only, so it measures the list; a planet view is no taller.
+    height: '300px',
+    file: 'src/main.tsx',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;

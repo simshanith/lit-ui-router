@@ -18,6 +18,10 @@ The Angular column is `@uirouter/angular` (Angular 2 and later). The
 `@uirouter/core` half of this page applies to `@uirouter/angularjs` as well;
 its directives and setup are spelled differently.
 
+To keep an existing UI-Router adapter instead of moving to Lit, see
+[Staying on UI-Router](./staying-on-ui-router) for the framework-agnostic
+companion packages.
+
 ## API equivalence
 
 | Task                  | `@uirouter/angular`                                                                   | `@uirouter/react`                                                                     | `lit-ui-router`                                                                                                                                                  |
