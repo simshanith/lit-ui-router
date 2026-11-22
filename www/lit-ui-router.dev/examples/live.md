@@ -13,6 +13,6 @@ boots an editable workspace installed from the published npm packages. The
 
 The Features Tour also runs in the home page itself, without a frame, on a
 fragment it shares with the page's anchors:
-<a href="/#see-it-run/views">open it on its Views card</a>.
+<a href="../#see-it-run/views">open it on its Views card</a>.
 
 <!-- live-examples -->
