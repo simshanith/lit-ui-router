@@ -274,6 +274,11 @@ const server = createServerRouter({
 });
 ```
 
+The plugin imports only types from `@uirouter/core`, so it works with any framework built on it.
+Apply it before the first `urlPattern()` state registers, or core rejects that url. Applying it
+again to the same router returns the plugin already applied, so each module that registers such
+states can apply it.
+
 The subset is what can also be formatted back into a url, since `URLPattern` only matches:
 literal text, `:name` groups and `:name(regexp)` groups, in `pathname` only. `urlPattern()` throws
 for a wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, a literal `.` or `..`

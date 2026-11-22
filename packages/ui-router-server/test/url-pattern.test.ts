@@ -402,6 +402,105 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
     assert.deepEqual(coreMatch(router, '/by/a%20b')?.params, { slug: 'a%20b' });
   });
 
+  // As @uirouter/angularjs: $location hands core a decoded path.
+  const decodedRouter = (states: StateDeclaration[] = table()): UIRouter => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    router.plugin(serverLocationPlugin);
+    const { config } = router.urlService;
+    config._decodeParams = false;
+    // SAFETY: core types its type registry's getter as any; 'path' is a built-in ParamType.
+    const pathType = config.type('path') as ParamType;
+    // Ng1LocationServices.monkeyPatchPathParameterType: '/' round-trips as ~2F.
+    pathType.encode = (value: string) =>
+      value.replace(/~|\//g, (m) => (m === '~' ? '~~' : '~2F'));
+    pathType.decode = (value: string) =>
+      value.replace(/~~|~2F/g, (m) => (m === '~~' ? '~' : '/'));
+    router.plugin(urlPatternPlugin);
+    states.forEach((state) => router.stateRegistry.register(state));
+
+    return router;
+  };
+
+  it('matches a decoded path as the same path encoded matches with decoding on', () => {
+    const decoded = decodedRouter();
+    const encoded = routerFor();
+
+    const pairs = [
+      ['/users/42', '/users/42'],
+      ['/users/4x', '/users/4x'],
+      ['/codes/abc', '/codes/abc'],
+      ['/codes/é', '/codes/%C3%A9'],
+      ['/by/café', '/by/caf%C3%A9'],
+      ['/by/100%', '/by/100%25'],
+      ['/by/what?', '/by/what%3F'],
+      ['/by/a#b', '/by/a%23b'],
+      ['/by/a b', '/by/a%20b'],
+      ['/by/a%20b', '/by/a%2520b'],
+      ['/by/:@$&+,;=', '/by/:@$&+,;='],
+      ['/files/d/n.tar gz', '/files/d/n.tar%20gz'],
+      ['/by/../users/42', '/by/../users/42'],
+      ['/by/./x', '/by/./x'],
+    ];
+
+    for (const [path, spelled] of pairs)
+      assert.deepEqual(
+        coreMatch(decoded, path),
+        coreMatch(encoded, spelled),
+        path,
+      );
+
+    assert.deepEqual(coreMatch(decoded, '/by/100%'), {
+      state: 'slug',
+      params: { slug: '100%' },
+    });
+    assert.deepEqual(coreMatch(decoded, '/users/42'), {
+      state: 'users.detail',
+      params: { id: 42, sort: undefined },
+    });
+    assert.equal(coreMatch(decoded, '/codes/é'), null);
+    assert.equal(coreMatch(decoded, '/by/../users/42'), null);
+  });
+
+  it('matches literals the engine keeps as written in a decoded path', () => {
+    const router = decodedRouter([{ name: 'at', url: url('/at/@:name') }]);
+    assert.deepEqual(coreMatch(router, '/at/@a:b+c'), {
+      state: 'at',
+      params: { name: 'a:b+c' },
+    });
+  });
+
+  it('round-trips hrefs through a decoded path, slashes as ~2F', () => {
+    const router = decodedRouter();
+
+    for (const slug of ['café', 'a/b', 'a~b', '100%', 'what?', 'a#b', 'a b']) {
+      const href = router.stateService.href('slug', { slug });
+      // $location.path() decodes each segment.
+      const path = href.split('/').map(decodeURIComponent).join('/');
+      assert.deepEqual(coreMatch(router, path)?.params, { slug }, href);
+    }
+
+    assert.equal(
+      router.stateService.href('slug', { slug: 'a/b' }),
+      '/by/a~2Fb',
+    );
+  });
+
+  it('returns the live plugin when applied twice, a fresh one once disposed', () => {
+    const router = new UIRouter();
+    const first = router.plugin(urlPatternPlugin);
+    assert.equal(router.plugin(urlPatternPlugin), first);
+    first.dispose?.(router);
+    assert.throws(() =>
+      router.stateRegistry.register({ name: 'a', url: url('/a') }),
+    );
+
+    const second = router.plugin(urlPatternPlugin);
+    assert.notEqual(second, first);
+    router.stateRegistry.register({ name: 'b', url: url('/b') });
+    assert.equal(coreMatch(router, '/b')?.state, 'b');
+  });
+
   it('formats raw path groups unencoded, and null for an empty group', () => {
     const { stateService } = rawRouter([
       { name: 'raw', url: url('/raw/:id'), params: { id: { type: 'raw' } } },

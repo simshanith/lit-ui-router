@@ -75,6 +75,18 @@ const applyReplace = (param: Param, value: unknown): unknown => {
   return value;
 };
 
+type Groups = Record<string, string | undefined>;
+
+const escapeChar = (char: string): string => encodeURIComponent(char);
+
+const decodeOrNull = (value: string): string | null => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+};
+
 interface Detail {
   readonly param: Param;
   readonly isValid: boolean;
@@ -196,18 +208,23 @@ export class UrlPatternMatcher {
     return param.value(param.type.decode(decoded as string));
   }
 
-  /** Matches `path` with URLPattern; search params read `search` as core's do. */
+  /**
+   * Matches `path` with URLPattern; search params read `search` as core's do.
+   * With `decodeParams` off (`@uirouter/angularjs`), `path` arrives
+   * decoded: it matches in the engine's encoding and its groups decode back.
+   */
   exec(path: string, search: RawParams = {}, hash?: string): RawParams | null {
-    const match = this.#engine.exec({ pathname: path });
+    const groups = this.#decodeParams
+      ? this.#encodedGroups(path)
+      : this.#decodedGroups(path);
 
-    // The engine rewrites a non-canonical path before matching; a string url never does.
-    if (match === null || match.pathname.input !== path) return null;
+    if (groups === null) return null;
     const values: RawParams = {};
 
     for (const param of this.parameters()) {
       const raw = param.isSearch()
         ? applyReplace(param, search[param.id])
-        : match.pathname.groups[param.id];
+        : groups[param.id];
 
       values[param.id] = this._getDecodedParamValue(raw, param);
     }
@@ -215,6 +232,36 @@ export class UrlPatternMatcher {
     if (hash) values['#'] = hash;
 
     return values;
+  }
+
+  #encodedGroups(path: string): Groups | null {
+    const match = this.#engine.exec({ pathname: path });
+
+    // The engine rewrites a non-canonical path before matching; a string url never does.
+    return match === null || match.pathname.input !== path
+      ? null
+      : match.pathname.groups;
+  }
+
+  #decodedGroups(path: string): Groups | null {
+    const match = this.#engine.exec({
+      pathname: path.replace(/[%?#]/g, escapeChar),
+    });
+
+    // Canonical only if the engine just percent-encoded: decoding its input gives `path` back.
+    if (match === null || decodeOrNull(match.pathname.input) !== path)
+      return null;
+    const groups: Groups = {};
+
+    for (const [id, value] of Object.entries(match.pathname.groups)) {
+      const decoded = value === undefined ? undefined : decodeOrNull(value);
+
+      // A regexp group that ends inside an escape can't spell a decoded value.
+      if (decoded === null) return null;
+      groups[id] = decoded;
+    }
+
+    return groups;
   }
 
   /** This url's params, or with `inherit: false` only the ones its own state declares. */
@@ -379,12 +426,16 @@ const buildMatcher = (
 const builtByCore = (state: StateObject, parent?: BuilderFunction): unknown =>
   parent?.(state);
 
+// Core's getPlugin keeps a disposed plugin; this holds only live ones.
+const applied = new WeakMap<UIRouter, UIRouterPlugin>();
+
 /**
  * Teaches a router's state builder {@link url-pattern!urlPattern | urlPattern} urls: a `url` built by
  * `urlPattern()` becomes a duck-typed `UrlMatcher`, every other `url`
  * goes to core's builder. Apply it before registering states, and before
  * {@link url-config!applyUrlConfig | applyUrlConfig} so a trailing-slash
- * policy formats these urls too. A URLPattern
+ * policy formats these urls too. Applying it again to the same router
+ * returns the plugin already applied. A URLPattern
  * url extends a URLPattern parent's url or the root; a string url can't
  * extend a URLPattern one, nor the reverse.
  *
@@ -403,6 +454,11 @@ const builtByCore = (state: StateObject, parent?: BuilderFunction): unknown =>
  * ```
  */
 export function urlPatternPlugin(router: UIRouter): UIRouterPlugin {
+  const live = applied.get(router);
+
+  // A second decorator would wrap the first; a repeat application hands back the live plugin.
+  if (live) return live;
+
   const builder: BuilderFunction = (state, parent) => {
     const parsed = parsedUrlPattern(state.self.url);
 
@@ -417,10 +473,16 @@ export function urlPatternPlugin(router: UIRouter): UIRouterPlugin {
     builder,
   ) as () => void;
 
-  return {
+  const plugin: UIRouterPlugin = {
     name: 'urlPattern',
     dispose: () => {
       deregister();
+
+      if (applied.get(router) === plugin) applied.delete(router);
     },
   };
+
+  applied.set(router, plugin);
+
+  return plugin;
 }
