@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefStatusAriaCurrent } from './sref-status-aria-current.ts';
@@ -24,6 +25,51 @@ const host = (body: string, field = 'users') =>
 /** A host whose constructor runs `statements`, with an unfixed render reading `this.users`. */
 const constructed = (statements: string) =>
   `${IMPORTS}class Nav {\n  constructor(host) {\n    ${statements}\n  }\n  render() {\n    return html\`<a href="/users" class=\${classMap({ active: this.users.active })}>Users</a>\`;\n  }\n}\n`;
+
+// Line endings around the read, as `before` the attribute and `after` the read.
+const lineEnding = (name: string, before: string, after: string) => ({
+  name,
+  code: host(
+    `html\`<a${before}href="/users" class="\${this.users.active ? 'on' : ''}${after}nav">Users</a>\``,
+  ),
+  errors: [{ messageId: 'missingAriaCurrent' }],
+  output: host(
+    `html\`<a${before}href="/users" class="\${this.users.active ? 'on' : ''}${after}nav" aria-current=\${this.users.ariaCurrent()}>Users</a>\``,
+  ),
+});
+
+// espree folds CRLF to LF in a template's raw text; typescript-eslint keeps it.
+const CRLF = [
+  lineEnding('a CRLF after the read still lands past the quote', ' ', '\r\n  '),
+  lineEnding(
+    'a CRLF before the attribute still lands past the quote',
+    '\r\n  ',
+    ' ',
+  ),
+  lineEnding(
+    'a lone CR after the read still lands past the quote',
+    ' ',
+    '\r  ',
+  ),
+  lineEnding(
+    'mixed line endings still land past the quote',
+    '\r\n',
+    '\r\n\n\r  ',
+  ),
+];
+
+const tsRuleTester = new RuleTester({
+  languageOptions: { parser: tsParser, sourceType: 'module' },
+});
+
+tsRuleTester.run(
+  'sref-status-aria-current (typescript-eslint)',
+  srefStatusAriaCurrent,
+  {
+    valid: [],
+    invalid: CRLF,
+  },
+);
 
 ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
   valid: [
@@ -211,16 +257,7 @@ ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
         `html\`<a href="/users" class="\${this.users.active ? 'on' : ''} \${this.theme}" aria-current=\${this.users.ariaCurrent()}>Users</a>\``,
       ),
     },
-    {
-      name: 'a CRLF in the static text after the read still lands past the quote',
-      code: host(
-        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''}\r\n  nav">Users</a>\``,
-      ),
-      errors: [{ messageId: 'missingAriaCurrent' }],
-      output: host(
-        `html\`<a href="/users" class="\${this.users.active ? 'on' : ''}\r\n  nav" aria-current=\${this.users.ariaCurrent()}>Users</a>\``,
-      ),
-    },
+    ...CRLF,
     {
       name: 'an entity in the static text after the read still lands past the quote',
       code: host(

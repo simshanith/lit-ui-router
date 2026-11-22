@@ -323,9 +323,9 @@ export const attributeEnd = (
   // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
   if (tail === '"' && text[end] !== '"') return end;
 
-  // A template literal's raw text folds CRLF to LF; the file keeps both.
+  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
   for (let unit = 0; unit < tail.length; unit += 1) {
-    end += text.startsWith('\r\n', end) ? 2 : 1;
+    end += tail[unit] === '\n' && text.startsWith('\r\n', end) ? 2 : 1;
   }
 
   return end;

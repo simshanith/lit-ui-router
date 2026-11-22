@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
@@ -21,6 +22,51 @@ const CLASS_ONLY = `
 import { html } from 'lit';
 import { srefActiveClass } from 'lit-ui-router';
 `;
+
+// Line endings around the binding, as `before` the attribute and `after` the read.
+const lineEnding = (name: string, before: string, after: string) => ({
+  name,
+  code: `${IMPORTS}html\`<a${before}href="/home" class="\${srefActiveClass({ state: 'home' })}${after}nav">Home</a>\`;`,
+  errors: [{ messageId: 'missingAriaCurrent' }],
+  output: `${IMPORTS}html\`<a${before}href="/home" class="\${srefActiveClass({ state: 'home' })}${after}nav" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+});
+
+// espree folds CRLF to LF in a template's raw text; typescript-eslint keeps it.
+const CRLF = [
+  lineEnding(
+    'a CRLF after the binding still lands past the quote',
+    ' ',
+    '\r\n  ',
+  ),
+  lineEnding(
+    'a CRLF before the attribute still lands past the quote',
+    '\r\n  ',
+    ' ',
+  ),
+  lineEnding(
+    'a lone CR after the binding still lands past the quote',
+    ' ',
+    '\r  ',
+  ),
+  lineEnding(
+    'mixed line endings still land past the quote',
+    '\r\n',
+    '\r\n\n\r  ',
+  ),
+];
+
+const tsRuleTester = new RuleTester({
+  languageOptions: { parser: tsParser, sourceType: 'module' },
+});
+
+tsRuleTester.run(
+  'sref-active-class-aria-current (typescript-eslint)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [],
+    invalid: CRLF,
+  },
+);
 
 ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
   valid: [
@@ -132,12 +178,7 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
       errors: [{ messageId: 'missingAriaCurrent' }],
       output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} a&amp;b" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
-    {
-      name: 'a CRLF in the static text after the binding still lands past the quote',
-      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}\r\n  nav">Home</a>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent' }],
-      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}\r\n  nav" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
-    },
+    ...CRLF,
     {
       name: 'params and options ride along; the classes stay behind',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home', params: { id: 1 }, options: { relative: true }, exactClasses: ['exact'] })}>Home</a>\`;`,
