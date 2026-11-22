@@ -2,6 +2,21 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/lit-ui-router/).
 
+## 1.20.1 (2026-11-22)
+
+### Bug Fixes
+
+* **lit-ui-router:** keep a re-attached ui-view's routed class element instead of rebuilding it ([#2348](https://github.com/simshanith/lit-ui-router/issues/2348)) ([89a7c10](https://github.com/simshanith/lit-ui-router/commit/89a7c108a1f10766a1765d82cc971ca811f4e624))
+* **lit-ui-router:** resolve a relative sref in a ui-view's fallback content against the parent state ([#2333](https://github.com/simshanith/lit-ui-router/issues/2333)) ([102dc9a](https://github.com/simshanith/lit-ui-router/commit/102dc9abc74613d197989c00a84bd9fcb790b4f9))
+* **lit-ui-router:** resolve a template shared by two states against the state now filling the view ([#2350](https://github.com/simshanith/lit-ui-router/issues/2350)) ([23003bb](https://github.com/simshanith/lit-ui-router/commit/23003bb6411ab44dc9e57a166c252275345b2256))
+
+### Documentation
+
+* **lit-ui-router:** fix the README quick start and the development warning count ([#2287](https://github.com/simshanith/lit-ui-router/issues/2287)) ([bfee1f3](https://github.com/simshanith/lit-ui-router/commit/bfee1f39ef60c57afed31ba90949fb4240fc8c86))
+* **lit-ui-router:** make the viewRendered() focus and View Transition examples safe to copy ([#2330](https://github.com/simshanith/lit-ui-router/issues/2330)) ([7a3284d](https://github.com/simshanith/lit-ui-router/commit/7a3284d1a9a7793ac3d7dd0d8dee153507dac2bd))
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router/1.20.1/) · [Diff from 1.20.0](https://lit-ui-router.dev/releases/lit-ui-router/diff/1.20.0...1.20.1/)
+
 ## 1.20.0 (2026-11-12)
 
 ### Features
