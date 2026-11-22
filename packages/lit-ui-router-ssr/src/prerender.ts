@@ -361,6 +361,10 @@ export interface PrerenderResult extends Omit<SitePrerenderResult, 'pages'> {
  * run one at a time: the scope is a module slot, so there is nothing to
  * parallelise.
  *
+ * Each page starts from the router's root, as a fresh load does, so no resolve
+ * or view carries over from the previous path and ancestor resolves run once
+ * per page.
+ *
  * A rendered page opens on its hydration signature: a JSON data block,
  * `<script type="application/json" data-lit-ui-router-ssr>`, naming this
  * package's version, the state and parameter values the router stood on, and
