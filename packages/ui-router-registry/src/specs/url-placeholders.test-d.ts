@@ -30,6 +30,7 @@ const urlStates = [
   { name: 'colonquery', url: '/list?:page&size' },
   { name: 'dotquery', url: '/q?{a.b:int}&{c-d: int}&{e.f}&{g:}' },
   { name: 'regexquery', url: '/q?{q:[a&b]{2}}&{n:int}' },
+  { name: 'sortquery', url: '/q?sort=asc' },
   { name: 'tightquery', url: '/q?b=c&{d}{e}&f:int' },
   {
     name: 'long',
@@ -135,6 +136,9 @@ accepts<ResolvedParamsOf<'dotquery'>['c-d']>(1);
 accepts<Equal<Keys<'regexquery'>, 'q' | 'n'>>(true);
 
 accepts<ResolvedParamsOf<'regexquery'>['n']>(1);
+
+// `=` separates two names, so a query written with a default value has both.
+accepts<Equal<Keys<'sortquery'>, 'sort' | 'asc'>>(true);
 
 // Core scans the query for names; `=`, `&` and a `:` between names only separate them.
 accepts<Equal<Keys<'tightquery'>, 'b' | 'c' | 'd' | 'e' | 'f' | 'int'>>(true);
