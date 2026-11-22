@@ -12,7 +12,7 @@
     "preview": "serve --no-clipboard dist"
   },
   "dependencies": {
-    "@uirouter/core": "^6.1.2",
+    "@uirouter/core": "6.1.2",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.20.0"
   },
@@ -30,7 +30,7 @@
     "packageManager": {
       "name": "npm",
       "version": ">=12.0.0",
-      "onFail": "warn"
+      "onFail": "error"
     }
   },
   "patchedDependencies": {

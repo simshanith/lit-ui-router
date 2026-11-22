@@ -6,6 +6,7 @@ export default {
   prune: true,
   alias: false,
   ignore: ['**/*.d.ts', '**/*.map'],
+  // Otherwise nudeps maps this package itself to `client_modules/public/main.js`, which does not exist.
   imports: {
     'lit-ui-router-tutorial-helloworld-nudeps': undefined,
   },
