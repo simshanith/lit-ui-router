@@ -462,6 +462,18 @@ describe('urlPatternPlugin in a @uirouter/core router', () => {
     assert.equal(coreMatch(decoded, '/by/../users/42'), null);
   });
 
+  it('rejects a decoded path when a regexp group splits an escape', () => {
+    const router = decodedRouter([
+      { name: 'split', url: url('/r/:a(.{3}):b(.*)') },
+    ]);
+
+    assert.equal(coreMatch(router, '/r/é'), null);
+    assert.deepEqual(coreMatch(router, '/r/abcd')?.params, {
+      a: 'abc',
+      b: 'd',
+    });
+  });
+
   it('matches literals the engine keeps as written in a decoded path', () => {
     const router = decodedRouter([{ name: 'at', url: url('/at/@:name') }]);
     assert.deepEqual(coreMatch(router, '/at/@a:b+c'), {
