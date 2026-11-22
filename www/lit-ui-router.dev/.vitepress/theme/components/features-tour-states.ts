@@ -13,7 +13,7 @@ export type CardId = (typeof CARD_IDS)[number];
 /** The card rules.initial names, shown until the embed reports another. */
 export const INITIAL_CARD: CardId = 'states';
 
-/** The example uses hashLocationPlugin, so the frame's hash is `#/<cardId>`. */
+/** The example routes by hash, so the frame's hash is `#/<cardId>`. */
 export function hashForCard(id: CardId): string {
   return `#/${id}`;
 }
