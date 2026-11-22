@@ -424,6 +424,26 @@ describe('seed', () => {
     ]);
   });
 
+  it('names a class-token resolve by its class in the onSeed report', async () => {
+    const { payload } = await drawn('/app/sheet/7B');
+    const { router } = makeRouter();
+    router.stateRegistry.register({
+      name: 'app.classed',
+      url: '/classed',
+      resolve: [{ token: Sheet, resolveFn: () => new Sheet('8') }],
+    });
+    const reports: SeedReport[] = [];
+    seed(router, roundTrip(payload), {
+      onSeed: (_transition, report) => reports.push(report),
+    });
+
+    await settle(router, '/app/classed');
+
+    assert.deepEqual(reports, [
+      { matched: false, adopted: [], rerun: ['app.user', 'app.classed.Sheet'] },
+    ]);
+  });
+
   it('runs every resolve of a state outside the drawn set, and disarms after boot', async () => {
     const { payload } = await drawn('/app/sheet/7B');
     const { router, calls } = makeRouter();

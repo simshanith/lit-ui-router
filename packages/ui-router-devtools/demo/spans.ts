@@ -48,9 +48,9 @@ export const demoTracing = (router: UIRouter, sink: SpanSink) => {
 
   router.transitionService.onBefore({}, (trans) => {
     const span = begin(trans.to().name ?? '', undefined, {
-      'uirouter.transition_id': trans.$id,
-      'uirouter.from': trans.from().name ?? '',
-      'uirouter.to': trans.to().name ?? '',
+      'uirouter.transition.id': trans.$id,
+      'uirouter.transition.from': trans.from().name ?? '',
+      'uirouter.transition.to': trans.to().name ?? '',
     });
 
     active = span;

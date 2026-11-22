@@ -114,6 +114,7 @@ import { viewRendered } from 'lit-ui-router';
 
 router.transitionService.onStart({}, (trans) => {
   if (!document.startViewTransition) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   let captured!: () => void;
   const oldViewCaptured = new Promise<void>((resolve) => (captured = resolve));
   document.startViewTransition(() => {

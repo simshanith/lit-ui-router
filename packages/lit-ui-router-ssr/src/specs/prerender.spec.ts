@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LitElementRenderer } from '@lit-labs/ssr';
-import { getByRole, getByText } from '@testing-library/dom';
+import { getAllByRole, getByRole, getByText } from '@testing-library/dom';
 import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import {
   element,
@@ -19,6 +19,7 @@ import { property } from 'lit/decorators.js';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
 import { srefHref } from 'lit-ui-router';
+import type { LitStateDeclaration, RoutedLitTemplate } from 'lit-ui-router';
 import { requestRouter } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig } from 'ui-router-server';
@@ -28,7 +29,7 @@ import type { DehydrateOptions, Transporter } from 'ui-router-server/ssr';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
-import { lightSlot } from '../client.js';
+import { lightSlot, uiViewSlot } from '../client.js';
 import { LightDomHydrating } from '../light-dom.js';
 import { prerender } from '../prerender.js';
 import { registerTraceCategory } from '../trace-categories.js';
@@ -1341,7 +1342,7 @@ describe('the TRANSITION trace', () => {
     expect(reported).toEqual([['/old', '/plain']]);
   });
 
-  it('names the state of a path the router already stands on, and no segment for an empty payload', async () => {
+  it('names the state each spelling of one path lands on, and no segment for an empty payload', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     trace.enable('TRANSITION');
 
@@ -1559,5 +1560,114 @@ describe('inputs', () => {
         paths: [],
       }),
     ).rejects.toThrow(/notFound.probe/);
+  });
+});
+
+describe('a <ui-view> shell over two paths', () => {
+  const Titled: RoutedLitTemplate = (props) =>
+    html`<h1>${String(props.resolves.title)}</h1>`;
+
+  const viewRouter = (): UIRouterLit => {
+    const router = new UIRouterLit();
+    installServerLocation(router, { urlConfig: { strict: false } });
+
+    const states: LitStateDeclaration[] = [
+      {
+        name: 'home',
+        url: '/',
+        component: Titled,
+        resolve: { title: () => 'home' },
+      },
+      {
+        name: 'sheet',
+        url: '/sheet/:num',
+        component: Titled,
+        resolve: {
+          title: [
+            '$transition$',
+            (transition: { params(): { num?: string } }) =>
+              `sheet ${transition.params().num}`,
+          ],
+        },
+      },
+    ];
+
+    for (const state of states) router.stateRegistry.register(state);
+
+    return router;
+  };
+
+  it('fills the second page’s view with its own state, not the first page’s', async () => {
+    const { files } = await run({
+      router: viewRouter(),
+      paths: ['/', '/sheet/7B'],
+      notFound: false,
+      renderShell: undefined,
+      template: () => html`<ui-view>${uiViewSlot()}</ui-view>`,
+    });
+
+    const headings = (file: string): (string | null)[] =>
+      getAllByRole(parseHtml(files.get(file)!).body, 'heading').map(
+        (heading) => heading.textContent,
+      );
+
+    expect(headings('dist/index.html')).toEqual(['home']);
+    expect(headings('dist/sheet/7B/index.html')).toEqual(['sheet 7B']);
+  });
+});
+
+describe('a state whose url parameter is dynamic', () => {
+  const pageRouter = (): UIRouterLit => {
+    const router = new UIRouterLit();
+    installServerLocation(router, { urlConfig: { strict: false } });
+    router.stateRegistry.register({
+      name: 'page',
+      url: '/page/:n',
+      params: { n: { dynamic: true } },
+      resolve: [
+        {
+          token: 'label',
+          deps: ['$transition$'],
+          resolveFn: (transition: { params(): { n?: string } }) =>
+            `page ${transition.params().n}`,
+        },
+      ],
+    });
+
+    return router;
+  };
+
+  it('draws each page from its own resolves, not the previous page’s', async () => {
+    const router = pageRouter();
+
+    const { files } = await run({
+      mounts: {
+        '/': {
+          routes: [{ name: 'page', url: '/page/:n' }],
+          config: { strict: false },
+        },
+      },
+      router,
+      paths: ['/page/1', '/page/2'],
+      notFound: false,
+      renderShell: undefined,
+      dehydrate: {},
+      template: (r) =>
+        html`<p>
+          ${String(
+            r.globals.successfulTransitions.peekTail().injector().get('label'),
+          )}
+        </p>`,
+    });
+
+    const second = files.get('dist/page/2/index.html')!;
+
+    expect(
+      getByText(parseHtml(second).body, 'page 2', { selector: 'p' }),
+    ).toBeDefined();
+    expect(signatureIn(second)).toMatchObject({
+      params: { n: '2' },
+      resolves: { page: { label: 'page 2' } },
+    });
   });
 });

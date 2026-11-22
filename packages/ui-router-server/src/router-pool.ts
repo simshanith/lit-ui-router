@@ -7,6 +7,7 @@
  * configs must never load @uirouter/core.
  */
 
+import { resetRouter } from '@repo/router-reset';
 import type { UIRouter } from '@uirouter/core';
 
 /**
@@ -48,17 +49,6 @@ export interface RouterPool {
   warm(build: () => UIRouter, count: number): void;
 }
 
-// Restores the globals the UIRouter constructor leaves: the url-rule handler and transitionTo read them.
-const reset = (router: UIRouter): void => {
-  const { globals, stateRegistry } = router;
-  globals.transitionHistory.clear();
-  globals.successfulTransitions.clear();
-  globals.$current = stateRegistry.root();
-  globals.current = globals.$current.self;
-
-  for (const key of Object.keys(globals.params)) delete globals.params[key];
-};
-
 const pooledRouter = (router: UIRouter, idle: PooledRouter[]): PooledRouter => {
   let settle: ((succeeded: boolean) => void) | null = null;
   let failed = false;
@@ -84,7 +74,7 @@ const pooledRouter = (router: UIRouter, idle: PooledRouter[]): PooledRouter => {
       if (failed || router.globals.transition || idle.length >= POOL_MAX_IDLE)
         return;
 
-      reset(router);
+      resetRouter(router);
       idle.push(pooled);
     },
   };

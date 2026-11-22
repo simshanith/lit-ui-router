@@ -297,7 +297,6 @@
         "lit-ui-router-mobx#build:types",
         "lit-ui-router-signals#build:types",
         "lit-ui-router-ssr#build:types",
-        "postcss-lit-html#build:types",
         "ui-router-devtools#build:types",
         "ui-router-effect#build:types",
         "ui-router-mobx#build:types",

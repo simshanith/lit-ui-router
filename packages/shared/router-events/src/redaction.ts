@@ -81,7 +81,7 @@ export const combineRedaction = (
   messages: first.messages && second.messages,
 });
 
-const PARAM_ATTRIBUTE = 'uirouter.param.';
+const PARAM_ATTRIBUTE = 'uirouter.transition.param.';
 
 // The router's own attributes name states and ids, except its params; any other library's can hold a URL or user data.
 const keepsAttribute = (key: string, keep: Redaction['params']): boolean => {

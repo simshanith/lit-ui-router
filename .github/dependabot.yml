@@ -36,7 +36,7 @@ updates:
       # vite pins rolldown to a tilde range, so a rolldown minor waits for the vite release that adopts it
       - dependency-name: 'rolldown'
         update-types: ['version-update:semver-minor']
-      # postcss-lit hands its babel 7 AST to postcss-lit-html, so babel 8 waits for a postcss-lit release on it
+      # postcss-lit hands its babel 7 AST to @tools/postcss-lit-html, so babel 8 waits for a postcss-lit release on it
       - dependency-name: '@babel/parser'
         update-types: ['version-update:semver-major']
       - dependency-name: '@babel/types'

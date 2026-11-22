@@ -92,7 +92,7 @@ describe('DevtoolsSpanProcessor', () => {
 
     const transition = [...sink.records]
       .reverse()
-      .find((record) => record.attributes?.['uirouter.transition_id'] === 0);
+      .find((record) => record.attributes?.['uirouter.transition.id'] === 0);
 
     const fetches = sink.records.filter(
       (record) => record.name === 'GET /api/users',
@@ -101,7 +101,10 @@ describe('DevtoolsSpanProcessor', () => {
     expect(transition).toMatchObject({
       name: 'users',
       status: 'unset',
-      attributes: { 'uirouter.to': 'users', 'uirouter.from': '' },
+      attributes: {
+        'uirouter.transition.to': 'users',
+        'uirouter.transition.from': '',
+      },
     });
     expect(transition?.endTime).toBeGreaterThan(transition?.startTime ?? 0);
     expect(fetches.map((record) => record.endTime === undefined)).toEqual([

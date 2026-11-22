@@ -80,14 +80,13 @@ describe('a redirectTo function found at settle', () => {
   });
 
   it('prerenders as a rules line and no page at the original path', async () => {
-    const router = pageRouter();
+    const router = pageRouter('/releases/');
     const { files, write } = memoryWriter();
 
     const result = await prerender({
       mounts,
       router,
       outDir: 'dist',
-      // The target follows its redirect, so the router already stands on it.
       paths: ['/releases/diff/2/1', '/releases/diff/1/2'],
       notFound: false,
       write,

@@ -30,7 +30,7 @@ declare const performance: { readonly timeOrigin: number; now(): number };
 export interface ReportOptions {
   /**
    * What reaches a span, in the devtools export's shape: only the params `params` lists (`'all'` for every one)
-   * become `uirouter.param.<key>` attributes, and the rest are omitted rather than redacted; `messages: false` keeps
+   * become `uirouter.transition.param.<key>` attributes, and the rest are omitted rather than redacted; `messages: false` keeps
    * error messages out of span status and exception events. By default no param is kept and messages are.
    */
   redaction?: Partial<Redaction>;
@@ -94,7 +94,7 @@ const paramAttributes = (
 
       return [
         [
-          `uirouter.param.${key}`,
+          `uirouter.transition.param.${key}`,
           Array.isArray(value) ? value.map(String) : value,
         ],
       ];
@@ -114,19 +114,19 @@ const transitionAttributes = (
   }: TransitionEvent,
   keep: Redaction['params'],
 ): Attributes => ({
-  'uirouter.transition_id': id,
-  'uirouter.from': from,
-  'uirouter.to': to,
-  'uirouter.source': options.source,
-  'uirouter.reload': options.reload !== false,
+  'uirouter.transition.id': id,
+  'uirouter.transition.from': from,
+  'uirouter.transition.to': to,
+  'uirouter.transition.source': options.source,
+  'uirouter.transition.reload': options.reload !== false,
   // oxlint-disable-next-line anti-slop/no-runtime-typeof -- the schema's own union: a flag or the reloaded state's name
   ...(typeof options.reload === 'string' && {
-    'uirouter.reload_state': options.reload,
+    'uirouter.transition.reload_state': options.reload,
   }),
-  'uirouter.location': String(options.location),
-  'uirouter.entering': entering,
-  'uirouter.exiting': exiting,
-  'uirouter.retained': retained,
+  'uirouter.transition.location': String(options.location),
+  'uirouter.transition.entering_states': entering,
+  'uirouter.transition.exiting_states': exiting,
+  'uirouter.transition.retained_states': retained,
   ...paramAttributes(toParams, keep),
 });
 
@@ -138,8 +138,8 @@ const resultAttributes = ({
   ResultEvent,
   'outcome' | 'errorName' | 'invalidParams'
 >): Attributes => ({
-  'uirouter.outcome': outcome,
-  ...(invalidParams && { 'uirouter.invalid_params': invalidParams }),
+  'uirouter.transition.outcome': outcome,
+  ...(invalidParams && { 'uirouter.transition.invalid_params': invalidParams }),
   ...(outcome === 'invalid' && { 'error.type': 'invalid' }),
   ...(outcome === 'error' && { 'error.type': errorName ?? OTHER }),
 });
@@ -320,8 +320,8 @@ export const reportToTracer = (
         kind: SpanKind.INTERNAL,
         startTime: at(event.t),
         attributes: {
-          'uirouter.from': event.from,
-          'uirouter.to': event.to,
+          'uirouter.transition.from': event.from,
+          'uirouter.transition.to': event.to,
           ...resultAttributes({ outcome: 'invalid' }),
           ...paramAttributes(event.toParams, params),
         },

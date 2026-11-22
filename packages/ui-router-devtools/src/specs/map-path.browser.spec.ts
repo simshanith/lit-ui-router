@@ -25,6 +25,7 @@ import { DevtoolsPlugin } from '../plugin.ts';
 import { litViewLocator } from '../lit-ui-router.ts';
 import type { DevtoolsPanel } from '../element/panel.ts';
 import type { UIRouterDevtools } from '../ui-router-devtools.ts';
+import { laidOut } from './laid-out.ts';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
@@ -195,8 +196,12 @@ const states = (element: UIRouterDevtools) =>
   getByRole(shadow(element), 'tree', { name: 'State map' });
 
 // The toggle draws before the lazy Map does, so a spec that starts on the Map waits for it.
-const drawnStates = (element: UIRouterDevtools) =>
-  waitFor(() => states(element));
+const drawnStates = async (element: UIRouterDevtools) => {
+  await waitFor(() => expect(panelOf(element)._map).toBeDefined());
+  await laidOut(element);
+
+  return states(element);
+};
 
 const boxOf = (element: HTMLElement) => element.closest<HTMLElement>('.box');
 
@@ -250,7 +255,8 @@ describe('the view path under the Map', () => {
     expect(path.ariaOrientation).toBe('horizontal');
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
-    await waitFor(() => expect(panelOf(element)._max).toBe(true));
+    await laidOut(element);
+    expect(panelOf(element)._max).toBe(true);
     await pathOf(element, 'Views of mail.list');
   });
 
