@@ -7,6 +7,7 @@ import {
   CARD_IDS,
   CARD_STATE,
   cardForHash,
+  hashForCard,
   INITIAL_CARD,
 } from '../theme/components/features-tour-states.ts';
 
@@ -50,5 +51,15 @@ describe('home page diagram state', () => {
     assert.equal(cardForHash('#/resolves'), 'resolves');
     assert.equal(cardForHash('#/nope'), undefined);
     assert.equal(cardForHash(''), undefined);
+  });
+
+  it("links each chip to the hash its card's URL gives the example", () => {
+    for (const id of CARD_IDS) {
+      assert.equal(
+        hashForCard(id),
+        `#${CARD_STATE.url.replace(`:${CARD_STATE.param}`, id)}`,
+      );
+      assert.equal(cardForHash(hashForCard(id)), id);
+    }
   });
 });

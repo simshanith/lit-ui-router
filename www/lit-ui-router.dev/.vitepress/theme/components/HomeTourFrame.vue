@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 
-defineProps<{ src: string; title: string }>();
+const { name = 'tour-frame' } = defineProps<{
+  src: string;
+  title: string;
+  /** The browsing context name a link's `target` reaches this frame by. */
+  name?: string;
+}>();
 
 const emit = defineEmits<{ hash: [hash: string] }>();
 
@@ -67,6 +72,23 @@ function follow() {
   }
 }
 
+/** Moves the frame to `href` in place of its current history entry; false when the frame is unreadable. */
+function replace(href: string): boolean {
+  try {
+    const view = frame.value?.contentWindow;
+
+    if (!view || view.location.origin !== location.origin) return false;
+
+    view.location.replace(href);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+defineExpose({ replace });
+
 // A frame that loaded before hydration fired its load event unheard.
 onMounted(follow);
 
@@ -79,6 +101,7 @@ onBeforeUnmount(() => sized?.disconnect());
     class="tour-frame"
     :src="src"
     :title="title"
+    :name="name"
     :style="fitted ? { blockSize: `${fitted.height}px` } : undefined"
     loading="lazy"
     @load="follow"

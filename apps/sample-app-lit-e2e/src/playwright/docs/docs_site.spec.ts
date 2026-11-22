@@ -57,6 +57,53 @@ test.describe('docs site', () => {
     await expect(page.locator('#app')).not.toBeEmpty();
   });
 
+  test("moves the home page tour from the diagram's cardId links, in place", async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await hydrated(page);
+
+    // An iframe has no role; the diagram's links target it by this name.
+    const tour = page.locator('iframe[name="features-tour"]');
+    const chips = page.getByRole('group', { name: 'cardId values' });
+    const chip = (id: string) => chips.getByRole('link', { name: id });
+    const card = tour.contentFrame().getByRole('article');
+
+    await chips.scrollIntoViewIfNeeded();
+    await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
+    await expect(chip('states')).toHaveAttribute('aria-current', 'true');
+
+    await tour.evaluate((frame: HTMLIFrameElement) => {
+      frame.contentWindow!.embedMarker = 1;
+    });
+
+    const entries = await page.evaluate(() => history.length);
+
+    for (const [id, title] of [
+      ['views', 'Views'],
+      ['resolves', 'Resolves'],
+      ['states', 'States'],
+    ]) {
+      await expect(chip(id)).toHaveAttribute(
+        'href',
+        `/examples/features-tour/#/${id}`,
+      );
+      await chip(id).click();
+      await expect(card.getByRole('heading', { name: title })).toBeVisible();
+      await expect(chip(id)).toHaveAttribute('aria-current', 'true');
+      await expect(chips.locator('[aria-current]')).toHaveCount(1);
+    }
+
+    // The frame was moved, not reloaded, and the docs page gained no history entries.
+    expect(
+      await tour.evaluate(
+        (frame: HTMLIFrameElement) => frame.contentWindow?.embedMarker,
+      ),
+    ).toBe(1);
+    expect(await page.evaluate(() => history.length)).toBe(entries);
+    await expect(page).toHaveURL('/');
+  });
+
   test('navigates without a full page load', async ({ page }) => {
     await page.goto('/tutorial/helloworld');
     await hydrated(page);

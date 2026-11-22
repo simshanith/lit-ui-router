@@ -14,6 +14,10 @@ export type CardId = (typeof CARD_IDS)[number];
 export const INITIAL_CARD: CardId = 'states';
 
 /** The example uses hashLocationPlugin, so the frame's hash is `#/<cardId>`. */
+export function hashForCard(id: CardId): string {
+  return `#/${id}`;
+}
+
 export function cardForHash(hash: string): CardId | undefined {
-  return CARD_IDS.find((id) => hash === `#/${id}`);
+  return CARD_IDS.find((id) => hash === hashForCard(id));
 }

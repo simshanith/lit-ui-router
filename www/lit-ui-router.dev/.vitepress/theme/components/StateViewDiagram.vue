@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { CARD_IDS, CARD_STATE, type CardId } from './features-tour-states';
+import {
+  CARD_IDS,
+  CARD_STATE,
+  hashForCard,
+  type CardId,
+} from './features-tour-states';
 
 const props = defineProps<{
   card: CardId;
@@ -8,6 +13,12 @@ const props = defineProps<{
   from?: CardId;
   /** Counts transitions, so the re-entry mark replays on each. */
   entries: number;
+  /** The running example's URL; each chip links to it at its card. */
+  src: string;
+  /** The name of the frame the example runs in. */
+  target: string;
+  /** Moves that frame to a URL without a new history entry; false leaves the link to the browser. */
+  replace: (href: string) => boolean;
 }>();
 
 // Chips sit on a 4px grid, 8 apart, sized to their mono labels.
@@ -19,6 +30,7 @@ const CHIP_WIDTH: Record<CardId, number> = {
 
 const chips = CARD_IDS.map((id, index) => ({
   id,
+  href: `${props.src}${hashForCard(id)}`,
   width: CHIP_WIDTH[id],
   x:
     100 +
@@ -29,57 +41,114 @@ const chips = CARD_IDS.map((id, index) => ({
 }));
 
 const reentered = computed(() => props.from !== undefined);
+
+// A plain click moves the frame in place; modified and middle clicks stay the browser's, and open the example.
+function onClick(event: MouseEvent, href: string) {
+  if (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  )
+    return;
+
+  if (props.replace(href)) event.preventDefault();
+}
 </script>
 
 <template>
   <figure class="state-diagram" :data-card="card">
-    <svg
-      class="drawing"
-      viewBox="-2 -2 340 306"
-      width="340"
-      height="306"
-      aria-hidden="true"
-    >
-      <text class="region" x="0" y="10">States</text>
-      <rect class="box" x="0" y="24" width="336" height="152" rx="6" />
-      <circle class="glyph ring on" cx="20" cy="44" r="5" />
-      <circle class="glyph dot" cx="20" cy="44" r="2" />
-      <text class="name quiet" x="36" y="48.5">(root)</text>
+    <svg class="drawing" viewBox="-2 -2 340 306" width="340" height="306">
+      <!-- The drawing is decoration beside the caption; only the chips, which are links, are exposed. -->
+      <g aria-hidden="true">
+        <text class="region" x="0" y="10">States</text>
+        <rect class="box" x="0" y="24" width="336" height="152" rx="6" />
+        <circle class="glyph ring on" cx="20" cy="44" r="5" />
+        <circle class="glyph dot" cx="20" cy="44" r="2" />
+        <text class="name quiet" x="36" y="48.5">(root)</text>
 
-      <rect class="box current" x="12" y="64" width="312" height="96" rx="6" />
-      <circle class="glyph disc" cx="30" cy="84" r="5.75" />
-      <text class="name strong" x="44" y="88.5">{{ CARD_STATE.name }}</text>
-      <text class="url end on-wash" x="312" y="88.5">{{ CARD_STATE.url }}</text>
-      <text class="url on-wash" x="44" y="129">{{ CARD_STATE.param }}</text>
-      <g
-        v-for="chip in chips"
-        :key="chip.id"
-        class="chip"
-        :class="{ on: chip.id === card }"
-      >
-        <rect :x="chip.x" y="113" :width="chip.width" height="22" rx="11" />
-        <text :x="chip.x + chip.width / 2" y="128.5">{{ chip.id }}</text>
+        <rect
+          class="box current"
+          x="12"
+          y="64"
+          width="312"
+          height="96"
+          rx="6"
+        />
+        <circle class="glyph disc" cx="30" cy="84" r="5.75" />
+        <text class="name strong" x="44" y="88.5">{{ CARD_STATE.name }}</text>
+        <text class="url end on-wash" x="312" y="88.5">
+          {{ CARD_STATE.url }}
+        </text>
+        <text class="url on-wash" x="44" y="129">{{ CARD_STATE.param }}</text>
       </g>
+      <g role="group" :aria-label="`${CARD_STATE.param} values`">
+        <a
+          v-for="chip in chips"
+          :key="chip.id"
+          class="chip"
+          :class="{ on: chip.id === card }"
+          :href="chip.href"
+          :target="target"
+          :aria-current="chip.id === card ? 'true' : undefined"
+          @click="onClick($event, chip.href)"
+        >
+          <!-- The hit area: 32 tall, so it stays over 24px where the drawing scales down on a phone. -->
+          <rect
+            class="hit"
+            :x="chip.x - 4"
+            y="108"
+            :width="chip.width + 8"
+            height="32"
+          />
+          <rect
+            class="pill"
+            :x="chip.x"
+            y="113"
+            :width="chip.width"
+            height="22"
+            rx="11"
+          />
+          <text :x="chip.x + chip.width / 2" y="128.5">{{ chip.id }}</text>
+          <rect
+            class="ring"
+            :x="chip.x - 3"
+            y="110"
+            :width="chip.width + 6"
+            height="28"
+            rx="14"
+          />
+        </a>
+      </g>
+      <g aria-hidden="true">
+        <path class="edge" d="M60 160V199" />
+        <path class="arrowhead" d="M55 198h10l-5 8z" />
 
-      <path class="edge" d="M60 160V199" />
-      <path class="arrowhead" d="M55 198h10l-5 8z" />
+        <text class="region" x="0" y="196">Views</text>
+        <rect class="box" x="0" y="208" width="336" height="92" rx="6" />
+        <rect class="glyph" x="15" y="223" width="10" height="10" rx="2" />
+        <text class="name" x="36" y="232.5">&lt;ui-view&gt;</text>
+        <text class="url end" x="312" y="232.5">in &lt;app-root&gt;</text>
+        <rect
+          class="box current"
+          x="12"
+          y="248"
+          width="312"
+          height="40"
+          rx="6"
+        />
+        <circle class="glyph disc" cx="30" cy="268" r="5.75" />
+        <text class="name strong" x="44" y="272.5">{{ CARD_STATE.name }}</text>
+        <text class="url end on-wash" x="312" y="272.5">
+          { {{ CARD_STATE.param }}: '{{ card }}' }
+        </text>
 
-      <text class="region" x="0" y="196">Views</text>
-      <rect class="box" x="0" y="208" width="336" height="92" rx="6" />
-      <rect class="glyph" x="15" y="223" width="10" height="10" rx="2" />
-      <text class="name" x="36" y="232.5">&lt;ui-view&gt;</text>
-      <text class="url end" x="312" y="232.5">in &lt;app-root&gt;</text>
-      <rect class="box current" x="12" y="248" width="312" height="40" rx="6" />
-      <circle class="glyph disc" cx="30" cy="268" r="5.75" />
-      <text class="name strong" x="44" y="272.5">{{ CARD_STATE.name }}</text>
-      <text class="url end on-wash" x="312" y="272.5">
-        { {{ CARD_STATE.param }}: '{{ card }}' }
-      </text>
-
-      <!-- Only after a transition, and keyed by its count, so the flash marks each re-entry and not the first render. -->
-      <g v-if="reentered" :key="entries" class="flash">
-        <rect x="12" y="64" width="312" height="96" rx="6" />
-        <rect x="12" y="248" width="312" height="40" rx="6" />
+        <!-- Only after a transition, and keyed by its count, so the flash marks each re-entry and not the first render. -->
+        <g v-if="reentered" :key="entries" class="flash">
+          <rect x="12" y="64" width="312" height="96" rx="6" />
+          <rect x="12" y="248" width="312" height="40" rx="6" />
+        </g>
       </g>
     </svg>
 
@@ -116,6 +185,7 @@ const reentered = computed(() => props.from !== undefined);
   --diagram-current: var(--site-color-identity-ink);
   --diagram-wash: var(--site-color-diagram-wash);
   --diagram-chip-ink: var(--site-color-surface);
+  --diagram-focus: var(--site-color-interaction);
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -215,7 +285,17 @@ text {
   stroke: none;
 }
 
-.chip rect {
+.chip {
+  cursor: pointer;
+  outline: none;
+}
+
+.chip .hit {
+  fill: none;
+  pointer-events: all;
+}
+
+.chip .pill {
   fill: none;
   stroke: var(--diagram-muted);
   stroke-width: 1;
@@ -226,7 +306,7 @@ text {
 }
 
 /* The current value: a filled chip in bold, so it reads without colour. */
-.chip.on rect {
+.chip.on .pill {
   fill: var(--diagram-current);
   stroke: var(--diagram-current);
 }
@@ -234,6 +314,38 @@ text {
 .chip.on text {
   font-weight: 700;
   fill: var(--diagram-chip-ink);
+}
+
+/* Drawn, not an outline: Safari paints no outline on an SVG link. */
+.chip .ring {
+  fill: none;
+  stroke: none;
+  stroke-width: var(--site-focus-ring-width);
+  pointer-events: none;
+}
+
+.chip:focus-visible .ring {
+  stroke: var(--diagram-focus);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip:not(.on):hover .pill {
+    stroke: var(--diagram-ink);
+    stroke-width: 1.5;
+  }
+
+  .chip:not(.on):hover text {
+    fill: var(--diagram-ink);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chip .pill,
+  .chip text {
+    transition:
+      fill var(--site-duration-fast) var(--ease-out),
+      stroke var(--site-duration-fast) var(--ease-out);
+  }
 }
 
 .edge {
@@ -283,6 +395,7 @@ text {
     --diagram-current: Highlight;
     --diagram-wash: Canvas;
     --diagram-chip-ink: HighlightText;
+    --diagram-focus: CanvasText;
   }
 
   .flash {

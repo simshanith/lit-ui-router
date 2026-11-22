@@ -63,7 +63,7 @@ export const ROLES = [
   {
     property: '--site-color-text',
     kind: 'text',
-    use: 'body text, control labels, inline code',
+    use: "body text, control labels, inline code, the home diagram's hovered chips",
     on: [
       ...PAGE_GROUNDS,
       'code',
@@ -88,8 +88,8 @@ export const ROLES = [
   {
     property: '--site-color-interaction',
     kind: 'text',
-    use: 'links, focus rings, hover and active borders',
-    on: PAGE_GROUNDS,
+    use: "links, focus rings, hover and active borders, the focus ring on the home diagram's chips",
+    on: [...PAGE_GROUNDS, 'diagram-wash'],
   },
   {
     property: '--site-color-interaction-hover',

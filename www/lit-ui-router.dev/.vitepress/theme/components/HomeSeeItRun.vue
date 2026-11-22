@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { withBase } from 'vitepress';
 import HomeTourFrame from './HomeTourFrame.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
@@ -7,6 +7,13 @@ import { EXAMPLES, staticSrc } from './examples';
 import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
 
 const example = EXAMPLES['features-tour'];
+
+const src = staticSrc('features-tour');
+
+// The diagram's links reach the frame by this name.
+const FRAME_NAME = 'features-tour';
+
+const frame = useTemplateRef('frame');
 
 const card = ref<CardId>(INITIAL_CARD);
 
@@ -39,8 +46,10 @@ function onHash(hash: string) {
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
           <HomeTourFrame
+            ref="frame"
             class="embed"
-            :src="staticSrc('features-tour')"
+            :src="src"
+            :name="FRAME_NAME"
             :title="`${example.title} example`"
             @hash="onHash"
           />
@@ -48,7 +57,14 @@ function onHash(hash: string) {
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>
           <div class="diagram-ground">
-            <StateViewDiagram :card="card" :from="from" :entries="entries" />
+            <StateViewDiagram
+              :card="card"
+              :from="from"
+              :entries="entries"
+              :src="src"
+              :target="FRAME_NAME"
+              :replace="(href) => frame?.replace(href) ?? false"
+            />
           </div>
         </div>
       </div>
