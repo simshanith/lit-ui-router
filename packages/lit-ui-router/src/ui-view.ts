@@ -347,9 +347,12 @@ export class UiView extends LitElement {
 
   /** Whether `child` stands between two fallback nodes, where a part of the parent's template renders after capture. */
   private amidFallback(child: ChildNode): boolean {
-    const nodes = this.fallbackNodes;
+    // a node the parent's template has since removed sits outside the document order
+    const nodes = this.fallbackParked
+      ? []
+      : this.fallbackNodes.filter((node) => node.parentNode === this);
 
-    if (this.fallbackParked || nodes.length < 2) {
+    if (nodes.length < 2) {
       return false;
     }
 

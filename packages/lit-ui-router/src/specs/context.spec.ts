@@ -439,6 +439,28 @@ describe('lit-ui-router/context', () => {
       expect(requestContext(appended, parentUiViewContext)).toBe(inner);
     });
 
+    it('answers a child appended after the parent template replaces its last fallback node', async () => {
+      const view = await mountView();
+      const host = document.createElement('div');
+      view.appendChild(host);
+
+      const template = (late: boolean) =>
+        html`<ui-view
+          ><p>Hint</p>
+          ${late ? html`<a>Late</a>` : html`<b>Early</b>`}</ui-view
+        >`;
+
+      render(template(false), host);
+      const inner = host.querySelector('ui-view')!;
+      await waitForUpdate(inner);
+
+      render(template(true), host);
+      const appended = document.createElement('div');
+      inner.appendChild(appended);
+
+      expect(requestContext(appended, parentUiViewContext)).toBe(inner);
+    });
+
     it('returns undefined with no enclosing view', async () => {
       await mountView();
       const orphan = document.createElement('div');
