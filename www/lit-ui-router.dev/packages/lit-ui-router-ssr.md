@@ -111,7 +111,10 @@ resolves included.
 package re-exports, sets the url, syncs the router to it, and resolves with the
 transition that landed, so the synchronous render after it reads every resolve.
 A `redirectTo` chain settles on its final state, and a path the router already
-stands on resolves at once.
+stands on resolves at once. A path that changes only a `dynamic` param keeps
+the earlier path's resolves, so `prerender` resets the router before each path.
+Every page is then entered from the root, so ancestor resolves run once per page
+rather than once per build, as on a client boot.
 [`redirectedTo`](#page-response-state-or-redirect-which-decides-when) reports
 where a redirected transition landed.
 
@@ -215,9 +218,10 @@ redirects its numbered URLs the same way.
   transition rather than redirecting one, so `redirectedTo` reports nothing
   for it. Declare it in the mount's `redirects` and the verdict answers it.
 - `settle` on a path the router already stands on resolves with the
-  transition that brought it there, which may be an earlier path's redirect.
-  `prerender` only reads a transition its hook landed; a live host settles a
-  router built for the request.
+  transition that brought it there, which may be an earlier path's redirect,
+  and a path that changes only a `dynamic` param keeps the earlier path's
+  resolves. `prerender` resets the router before each path, so every page is
+  drawn as a fresh load; a live host settles a router built for the request.
 
 ## Rendering one page per request
 

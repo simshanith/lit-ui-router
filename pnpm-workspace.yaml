@@ -224,6 +224,7 @@ catalogs:
     '@repo/dev-gate': workspace:*
     '@repo/route-snapshot': workspace:*
     '@repo/router-events': workspace:*
+    '@repo/router-reset': workspace:*
     '@repo/transition-status': workspace:*
     '@tools/a11y': workspace:*
     '@tools/bootstrap': workspace:*

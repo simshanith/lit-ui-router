@@ -532,6 +532,9 @@ catalogs:
     '@repo/router-events':
       specifier: workspace:*
       version: workspace:*
+    '@repo/router-reset':
+      specifier: workspace:*
+      version: workspace:*
     '@repo/transition-status':
       specifier: workspace:*
       version: workspace:*
@@ -1706,6 +1709,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@repo/router-reset':
+        specifier: catalog:workspace
+        version: link:../shared/router-reset
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -1924,6 +1930,30 @@ importers:
         version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.1)(@vitest/coverage-v8@5.1.1)(@vitest/ui@5.1.1)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/shared/router-events:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.1.1(@vitest/browser@5.1.1)(vitest@5.1.1)
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.79.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.94.0(oxlint-tsgolint@7.0.2007)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(@vitest/browser-playwright@5.1.1)(@vitest/coverage-v8@5.1.1)(@vitest/ui@5.1.1)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/shared/router-reset:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -2344,6 +2374,9 @@ importers:
       '@repo/dev-gate':
         specifier: catalog:workspace
         version: link:../shared/dev-gate
+      '@repo/router-reset':
+        specifier: catalog:workspace
+        version: link:../shared/router-reset
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
