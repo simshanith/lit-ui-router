@@ -6,11 +6,12 @@ import { TestClock } from 'effect/testing';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import {
-  NotListed,
+  NotReady,
   type Retry,
+  type Target,
   WAIT_FOR_LISTING,
   awaitedRelease,
-  pendingTargets,
+  awaitedTargets,
   retryAfterMs,
   retryMessage,
   waitForListings,
@@ -42,20 +43,41 @@ async function onTestClock<A>(
   );
 }
 
-/** Re-reads per package: each call returns the next entry, then repeats the last. */
-function registryOf(rereads: Record<string, Record<string, string>[]>) {
+/** The next entry per call for `key`, then the last one repeated. */
+function nth<T>(seq: readonly T[], seen: number): T | undefined {
+  return seq[Math.min(seen, seq.length - 1)];
+}
+
+/**
+ * Re-reads per package: each call returns the next entry, then repeats the
+ * last. `serves` does the same per spec for tarball probes; a spec absent
+ * from it is served.
+ */
+function registryOf(
+  rereads: Record<string, Record<string, string>[]>,
+  serves: Record<string, boolean[]> = {},
+) {
   const calls: string[] = [];
+  const probes: string[] = [];
 
   return {
     read: (name: string) => {
       const seen = calls.filter((call) => call === name).length;
-      const reads = rereads[name] ?? [{}];
 
       calls.push(name);
 
-      return Promise.resolve(reads[Math.min(seen, reads.length - 1)] ?? {});
+      return Promise.resolve(nth(rereads[name] ?? [{}], seen) ?? {});
+    },
+    served: ({ name, version }: Target) => {
+      const spec = `${name}@${version}`;
+      const seen = probes.filter((probe) => probe === spec).length;
+
+      probes.push(spec);
+
+      return Promise.resolve(nth(serves[spec] ?? [true], seen) ?? true);
     },
     calls,
+    probes,
   };
 }
 
@@ -92,7 +114,7 @@ describe('awaitedRelease', () => {
   });
 });
 
-describe('pendingTargets', () => {
+describe('awaitedTargets', () => {
   const release = { name: 'lit-ui-router-ssr', version: '0.11.1' };
 
   it('waits for nothing when no release is named', () => {
@@ -101,7 +123,7 @@ describe('pendingTargets', () => {
       'lit-ui-router-ssr': { latest: '0.11.0' },
     };
 
-    assert.deepEqual(pendingTargets(undefined, MEMBERS, first), []);
+    assert.deepEqual(awaitedTargets(undefined, MEMBERS, first), []);
   });
 
   it('waits for the release and every published package npm lags on', () => {
@@ -111,20 +133,23 @@ describe('pendingTargets', () => {
       'ui-router-registry': {},
     };
 
-    assert.deepEqual(pendingTargets(release, MEMBERS, first), [
+    assert.deepEqual(awaitedTargets(release, MEMBERS, first), [
       { name: 'lit-ui-router', version: '1.21.0' },
       release,
     ]);
   });
 
-  it('skips a never-published package and one already listed', () => {
+  it('skips a never-published package but keeps one already listed', () => {
     const first = {
       'lit-ui-router': { latest: '1.21.0' },
       'lit-ui-router-ssr': { latest: '0.11.1' },
       'ui-router-registry': {},
     };
 
-    assert.deepEqual(pendingTargets(release, MEMBERS, first), []);
+    assert.deepEqual(awaitedTargets(release, MEMBERS, first), [
+      { name: 'lit-ui-router', version: '1.21.0' },
+      release,
+    ]);
   });
 
   it('waits for the named package at its checked-out version, not the dispatched one', () => {
@@ -136,7 +161,8 @@ describe('pendingTargets', () => {
 
     const older = { name: 'lit-ui-router-ssr', version: '0.11.0' };
 
-    assert.deepEqual(pendingTargets(older, MEMBERS, first), [
+    assert.deepEqual(awaitedTargets(older, MEMBERS, first), [
+      { name: 'lit-ui-router', version: '1.21.0' },
       { name: 'lit-ui-router-ssr', version: '0.11.1' },
     ]);
   });
@@ -149,7 +175,10 @@ describe('pendingTargets', () => {
 
     const named = { name: 'ui-router-registry', version: '0.1.0' };
 
-    assert.deepEqual(pendingTargets(named, MEMBERS, first), [named]);
+    assert.deepEqual(awaitedTargets(named, MEMBERS, first), [
+      { name: 'lit-ui-router', version: '1.21.0' },
+      named,
+    ]);
   });
 });
 
@@ -169,11 +198,16 @@ describe('waitForListings', () => {
     const registry = registryOf({});
 
     const { result, retries } = await onTestClock((onRetry) =>
-      waitForListings(registry.read, [], first, onRetry),
+      waitForListings(registry, [], first, onRetry),
     );
 
-    assert.deepEqual(result, { versions: first, unlisted: [] });
+    assert.deepEqual(result, {
+      versions: first,
+      unlisted: [],
+      unserved: [],
+    });
     assert.deepEqual(registry.calls, []);
+    assert.deepEqual(registry.probes, []);
     assert.deepEqual(retries, []);
   });
 
@@ -184,7 +218,7 @@ describe('waitForListings', () => {
     });
 
     const { result, retries } = await onTestClock((onRetry) =>
-      waitForListings(registry.read, pending, first, onRetry),
+      waitForListings(registry, pending, first, onRetry),
     );
 
     assert.deepEqual(result.unlisted, []);
@@ -211,7 +245,7 @@ describe('waitForListings', () => {
 
     const { result } = await onTestClock((onRetry) =>
       waitForListings(
-        registry.read,
+        registry,
         [{ name: 'lit-ui-router-ssr', version: '0.12.0-rc.0' }],
         first,
         onRetry,
@@ -229,7 +263,7 @@ describe('waitForListings', () => {
     });
 
     const { result, retries, waitedMs } = await onTestClock((onRetry) =>
-      waitForListings(registry.read, pending, first, onRetry),
+      waitForListings(registry, pending, first, onRetry),
     );
 
     const { capMs, budgetMs } = WAIT_FOR_LISTING;
@@ -266,11 +300,95 @@ describe('waitForListings', () => {
 
     await assert.rejects(
       onTestClock((onRetry) =>
-        waitForListings(failing, pending, first, onRetry),
+        waitForListings(
+          { read: failing, served: () => Promise.resolve(true) },
+          pending,
+          first,
+          onRetry,
+        ),
       ),
       /ECONNRESET/,
     );
     assert.ok(calls > 2);
+  });
+
+  it('ends at the first read when every target is listed and served', async () => {
+    const registry = registryOf({});
+
+    const listed: PublishedVersions = {
+      ...first,
+      'lit-ui-router': { latest: '1.21.0' },
+      'lit-ui-router-ssr': { latest: '0.11.1' },
+    };
+
+    const { result, retries } = await onTestClock((onRetry) =>
+      waitForListings(registry, pending, listed, onRetry),
+    );
+
+    assert.deepEqual(result, { versions: listed, unlisted: [], unserved: [] });
+    assert.deepEqual(registry.calls, []);
+    assert.deepEqual(registry.probes, [
+      'lit-ui-router@1.21.0',
+      'lit-ui-router-ssr@0.11.1',
+    ]);
+    assert.deepEqual(retries, []);
+  });
+
+  it('waits for a listed tarball until npm serves it', async () => {
+    const registry = registryOf(
+      { 'lit-ui-router': [{ latest: '1.21.0' }] },
+      { 'lit-ui-router-ssr@0.11.1': [false, false, true] },
+    );
+
+    const listed = { ...first, 'lit-ui-router-ssr': { latest: '0.11.1' } };
+
+    const { result, retries } = await onTestClock((onRetry) =>
+      waitForListings(registry, pending, listed, onRetry),
+    );
+
+    assert.deepEqual(result.unlisted, []);
+    assert.deepEqual(result.unserved, []);
+    assert.deepEqual(registry.calls, ['lit-ui-router']);
+    assert.deepEqual(registry.probes, [
+      'lit-ui-router-ssr@0.11.1',
+      'lit-ui-router@1.21.0',
+      'lit-ui-router-ssr@0.11.1',
+      'lit-ui-router-ssr@0.11.1',
+    ]);
+    assert.ok(retries[0]);
+    assert.match(
+      retryMessage(retries[0]),
+      /^npm doesn't list lit-ui-router@1\.21\.0 yet; npm doesn't serve the tarball of lit-ui-router-ssr@0\.11\.1 yet \(/,
+    );
+  });
+
+  it('gives up on a tarball npm never serves, naming it', async () => {
+    const registry = registryOf({}, { 'lit-ui-router-ssr@0.11.1': [false] });
+
+    const listed = {
+      ...first,
+      'lit-ui-router': { latest: '1.21.0' },
+      'lit-ui-router-ssr': { latest: '0.11.1' },
+    };
+
+    const { result, retries, waitedMs } = await onTestClock((onRetry) =>
+      waitForListings(registry, pending, listed, onRetry),
+    );
+
+    assert.deepEqual(result.unlisted, []);
+    assert.deepEqual(result.unserved, [
+      { name: 'lit-ui-router-ssr', version: '0.11.1' },
+    ]);
+    assert.ok(waitedMs > WAIT_FOR_LISTING.budgetMs);
+    assert.equal(
+      registry.probes.filter((spec) => spec === 'lit-ui-router@1.21.0').length,
+      1,
+    );
+    assert.equal(
+      registry.probes.filter((spec) => spec === 'lit-ui-router-ssr@0.11.1')
+        .length,
+      retries.length + 1,
+    );
   });
 
   it("waits a 429's Retry-After instead of the backoff", async () => {
@@ -291,7 +409,7 @@ describe('waitForListings', () => {
 
     const { result, retries } = await onTestClock((onRetry) =>
       waitForListings(
-        read,
+        { read, served: () => Promise.resolve(true) },
         [{ name: 'lit-ui-router-ssr', version: '0.11.1' }],
         first,
         onRetry,
@@ -328,9 +446,10 @@ describe('retryAfterMs', () => {
 
 describe('retryMessage', () => {
   it('names what is still pending', () => {
-    const cause = new NotListed([
-      { name: 'lit-ui-router-ssr', version: '0.11.1' },
-    ]);
+    const cause = new NotReady(
+      [{ name: 'lit-ui-router-ssr', version: '0.11.1' }],
+      [],
+    );
 
     assert.equal(
       retryMessage({ cause, round: 2, elapsedMs: 6200, delayMs: 7800 }),
@@ -346,7 +465,7 @@ describe('retryMessage', () => {
         elapsedMs: 14_000,
         delayMs: 9000,
       }),
-      'npm dist-tags read failed: HTTP 503 (round 3, 14 s into the wait; next read in 9 s)',
+      'npm registry read failed: HTTP 503 (round 3, 14 s into the wait; next read in 9 s)',
     );
   });
 });

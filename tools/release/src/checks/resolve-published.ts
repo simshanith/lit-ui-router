@@ -13,8 +13,9 @@ import pacote from 'pacote';
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
 import {
+  type Target,
   awaitedRelease,
-  pendingTargets,
+  awaitedTargets,
   retryMessage,
   specsOf,
   waitForListings,
@@ -39,6 +40,27 @@ async function publishedTags(name: string): Promise<Record<string, string>> {
   }
 }
 
+/** Whether npm serves `target`'s tarball yet; throws on anything but 2xx or 404. */
+async function tarballServed({ name, version }: Target): Promise<boolean> {
+  const { dist } = await pacote.manifest(`${name}@${version}`);
+  const response = await fetch(dist.tarball, { method: 'HEAD' });
+
+  if (response.ok) return true;
+
+  if (response.status === 404) return false;
+
+  const retryAfter = response.headers.get('retry-after');
+
+  // The npm-registry-fetch error shape retryAfterMs reads.
+  throw Object.assign(
+    new Error(`HEAD ${dist.tarball}: HTTP ${response.status}`),
+    {
+      statusCode: response.status,
+      headers: { 'retry-after': retryAfter === null ? [] : [retryAfter] },
+    },
+  );
+}
+
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
@@ -59,7 +81,7 @@ async function main() {
 
   for (const { name } of publishable) first[name] = await publishedTags(name);
 
-  const pending = pendingTargets(
+  const awaited = awaitedTargets(
     named,
     publishable.map(({ name, manifest }) => ({
       name,
@@ -68,11 +90,20 @@ async function main() {
     first,
   );
 
-  const { versions, unlisted } = await Effect.runPromise(
-    waitForListings(publishedTags, pending, first, (retry) =>
-      console.log(retryMessage(retry)),
+  const { versions, unlisted, unserved } = await Effect.runPromise(
+    waitForListings(
+      { read: publishedTags, served: tarballServed },
+      awaited,
+      first,
+      (retry) => console.log(retryMessage(retry)),
     ),
   );
+
+  if (unserved.length > 0) {
+    throw new Error(
+      `npm lists ${specsOf(unserved)} but still doesn't serve the tarball after the wait; published-diff can't fetch it`,
+    );
+  }
 
   if (unlisted.length > 0) {
     logWarning(

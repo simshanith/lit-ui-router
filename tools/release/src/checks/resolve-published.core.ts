@@ -12,7 +12,7 @@ type Tags = Record<string, string>;
 export type Target = { name: string; version: string };
 
 /**
- * How long to keep re-reading npm. The wait between reads doubles from
+ * How long to keep re-reading npm, for both the dist-tags and the tarballs. The wait between reads doubles from
  * `baseMs` and stops growing at `capMs`. No new wait starts after `budgetMs`.
  */
 export const WAIT_FOR_LISTING = {
@@ -37,19 +37,18 @@ export function isListed(tags: Tags | undefined, version: string): boolean {
 }
 
 /**
- * The package versions npm must list before the wait ends; empty when
- * nothing was just published. Covers the just-published package and every
- * other package already on npm, each at its checked-out version, and skips
- * those a dist-tag already points at.
+ * The package versions npm must list and serve before the wait ends; empty
+ * when nothing was just published. Covers the just-published package and
+ * every other package already on npm, each at its checked-out version.
  */
-export function pendingTargets(
+export function awaitedTargets(
   release: Target | undefined,
   members: readonly { name: string; version: string | undefined }[],
   first: PublishedVersions,
 ): Target[] {
   if (!release) return [];
 
-  const targets = members.flatMap(({ name, version }): Target[] => {
+  return members.flatMap(({ name, version }): Target[] => {
     // The diff compares against the checked-out manifest, which may be past the dispatched version.
     if (name === release.name) {
       return [{ name, version: version ?? release.version }];
@@ -59,16 +58,17 @@ export function pendingTargets(
 
     return onNpm && version !== undefined ? [{ name, version }] : [];
   });
-
-  return targets.filter(({ name, version }) => !isListed(first[name], version));
 }
 
-export class NotListed extends Error {
-  readonly pending: readonly Target[];
+/** Targets the last round found not yet listed, or listed with no tarball served. */
+export class NotReady extends Error {
+  readonly unlisted: readonly Target[];
+  readonly unserved: readonly Target[];
 
-  constructor(pending: readonly Target[]) {
-    super('versions not on any dist-tag yet');
-    this.pending = pending;
+  constructor(unlisted: readonly Target[], unserved: readonly Target[]) {
+    super('versions not listed or not served yet');
+    this.unlisted = unlisted;
+    this.unserved = unserved;
   }
 }
 
@@ -85,7 +85,19 @@ export type Retry = {
 
 const seconds = (ms: number): string => `${Math.round(ms / 1000)} s`;
 
-/** The log line for a retry: still unlisted, or a failed read. */
+/** What a round still lacks, as one clause. */
+export function lackingMessage({ unlisted, unserved }: NotReady): string {
+  return [
+    unlisted.length > 0 ? `npm doesn't list ${specsOf(unlisted)} yet` : '',
+    unserved.length > 0
+      ? `npm doesn't serve the tarball of ${specsOf(unserved)} yet`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
+}
+
+/** The log line for a retry: still not ready, or a failed read. */
 export function retryMessage({
   cause,
   round,
@@ -94,9 +106,9 @@ export function retryMessage({
 }: Retry): string {
   const when = `round ${round}, ${seconds(elapsedMs)} into the wait; next read in ${seconds(delayMs)}`;
 
-  return cause instanceof NotListed
-    ? `npm doesn't list ${specsOf(cause.pending)} yet (${when})`
-    : `npm dist-tags read failed: ${messageOf(cause)} (${when})`;
+  return cause instanceof NotReady
+    ? `${lackingMessage(cause)} (${when})`
+    : `npm registry read failed: ${messageOf(cause)} (${when})`;
 }
 
 // npm-registry-fetch's HttpErrorGeneral carries `statusCode` and `headers.raw()`.
@@ -156,51 +168,86 @@ export function listingSchedule(onRetry: (retry: Retry) => void) {
   );
 }
 
-type Listings = { versions: PublishedVersions; unlisted: Target[] };
+type Listings = {
+  versions: PublishedVersions;
+  unlisted: Target[];
+  unserved: Target[];
+};
+
+/** Reads that resolve the wait: a package's dist-tags, and whether a version's tarball responds. */
+export type Registry = {
+  read: (name: string) => Promise<Tags>;
+  served: (target: Target) => Promise<boolean>;
+};
+
+const attempt = <A>(io: () => Promise<A>) =>
+  Effect.tryPromise({ try: io, catch: (cause) => cause });
 
 /**
- * Re-reads the pending packages until npm lists each one or the schedule
- * ends; `first` is the read already made. `unlisted` holds whatever npm
- * still lacks. Fails only when the last read itself failed.
+ * Re-reads the awaited packages until npm lists each one and serves its
+ * tarball, or the schedule ends; `first` is the dist-tags read already made.
+ * `unlisted` and `unserved` hold whatever npm still lacks. Fails only when
+ * the last read itself failed.
  */
 export function waitForListings(
-  read: (name: string) => Promise<Tags>,
-  pending: readonly Target[],
+  { read, served }: Registry,
+  awaited: readonly Target[],
   first: PublishedVersions,
   onRetry: (retry: Retry) => void = () => {},
 ): Effect.Effect<Listings, unknown> {
   const versions = { ...first };
-  let left = [...pending];
+
+  const listed = ({ name, version }: Target) =>
+    isListed(versions[name], version);
+
+  let left = [...awaited];
   let reread = false;
 
-  const reads = Effect.tryPromise({
-    try: () => Promise.all(left.map(({ name }) => read(name))),
-    catch: (cause) => cause,
-  });
-
   const check = Effect.gen(function* () {
-    if (reread) {
-      const tags = yield* reads;
+    const unlisted = left.filter((target) => !listed(target));
 
-      left.forEach(({ name }, index) => {
+    if (reread && unlisted.length > 0) {
+      const tags = yield* attempt(() =>
+        Promise.all(unlisted.map(({ name }) => read(name))),
+      );
+
+      unlisted.forEach(({ name }, index) => {
         versions[name] = tags[index] ?? {};
       });
     }
 
     reread = true;
+
+    const ready = left.filter(listed);
+    const responds = yield* attempt(() => Promise.all(ready.map(served)));
+    const unserved = ready.filter((_, index) => !responds[index]);
+
     left = left.filter(
-      ({ name, version }) => !isListed(versions[name], version),
+      (target) => !listed(target) || unserved.includes(target),
     );
 
-    if (left.length > 0) yield* Effect.fail(new NotListed(left));
+    if (left.length > 0) {
+      yield* Effect.fail(
+        new NotReady(
+          left.filter((target) => !listed(target)),
+          unserved,
+        ),
+      );
+    }
+  });
+
+  const remaining = (): Listings => ({
+    versions,
+    unlisted: left.filter((target) => !listed(target)),
+    unserved: left.filter(listed),
   });
 
   return check.pipe(
     Effect.retry({ schedule: listingSchedule(onRetry) }),
-    Effect.as<Listings>({ versions, unlisted: [] }),
+    Effect.map(remaining),
     Effect.catchIf(
-      (cause): cause is NotListed => cause instanceof NotListed,
-      () => Effect.succeed<Listings>({ versions, unlisted: left }),
+      (cause): cause is NotReady => cause instanceof NotReady,
+      () => Effect.succeed(remaining()),
     ),
   );
 }
