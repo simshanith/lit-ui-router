@@ -36,6 +36,7 @@ function onHash(hash: string) {
         it re-enters the state.
       </p>
       <div class="panels">
+        <div class="flames" aria-hidden="true" />
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
           <HomeTourFrame
@@ -128,40 +129,62 @@ function onHash(hash: string) {
 }
 
 /* The Lit flames: the same gradient cut to the flame tile, so each flame takes the colour under it, stepped per column. */
-.panels::before {
-  --drift: 0px;
-  content: '';
+.flames,
+.flames::before {
   position: absolute;
-  inset: calc(-1 * var(--drift)) 0;
+  inset: 0;
+}
+
+.flames {
   z-index: -1;
+}
+
+.flames::before {
+  content: '';
+  inset-block: calc(-1 * var(--drift-travel, 0px));
   background:
     var(--site-see-it-run-steps) left top / var(--site-see-it-run-tile),
     var(--site-see-it-run-gradient);
-  mask: var(--site-see-it-run-texture) left top / var(--site-see-it-run-tile);
+  /* A longhand with no var(): one in the declaration resolves the image again, and repaints the layer, on every frame the offset moves. */
+  mask-image: url(/images/see-it-run-tile.svg);
+  mask-size: var(--site-see-it-run-tile);
 }
 
-/* The flames trail the page by 72px over the section's pass through the viewport; the layer is that much taller, so no edge shows. */
+/* Registered so the view timeline can interpolate it; a number, because a minified `0` initial value is no <length> to Firefox. */
+@property --see-it-run-drift {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* The flames trail the page and ease to rest: the timeline moves the offset on the wrapper, and the transition on its layer follows it. The layer is taller by the travel, so no edge shows. */
 @media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
   @supports (animation-timeline: view()) and (animation-range: entry) {
     .panels {
       view-timeline: --see-it-run-panels block;
     }
 
-    .panels::before {
-      --drift: 36px;
+    .flames {
+      --drift-travel: 48px;
       animation: see-it-run-drift linear both;
       animation-timeline: --see-it-run-panels;
+    }
+
+    .flames::before {
+      translate: 0 calc(var(--see-it-run-drift) * var(--drift-travel));
+      transition: translate 600ms var(--ease-out);
+      will-change: translate;
     }
   }
 }
 
 @keyframes see-it-run-drift {
   from {
-    translate: 0 calc(-1 * var(--drift));
+    --see-it-run-drift: -1;
   }
 
   to {
-    translate: 0 var(--drift);
+    --see-it-run-drift: 1;
   }
 }
 
@@ -227,8 +250,8 @@ function onHash(hash: string) {
     background: none;
   }
 
-  .panels::before {
-    content: none;
+  .flames {
+    display: none;
   }
 
   .panel {
