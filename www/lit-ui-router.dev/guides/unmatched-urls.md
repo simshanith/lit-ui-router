@@ -125,6 +125,11 @@ export const replaceAwareHashLocationPlugin = locationPluginFactory(
 );
 ```
 
+`replaceState` fires no `hashchange`. Where other code listens for `hashchange`,
+such as a page that embeds the app in a frame and follows its hash, replace with
+`location.replace('#' + url)` in that branch instead: it takes over the history
+entry and still fires the event.
+
 Reaching for `history.go(-2)` to hop over the entry instead is a trap of its
 own: neither `popstate` nor `hashchange` tells you which direction you arrived
 from, so it cannot tell Back from Forward or from a fresh load — and if the
