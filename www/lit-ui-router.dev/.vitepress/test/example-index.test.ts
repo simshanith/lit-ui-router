@@ -52,6 +52,15 @@ describe('the example facets', () => {
     assert.equal(exampleFacets('lint-eslint').lint, 'on');
   });
 
+  it('read a replace-aware hash location plugin as the hash location', () => {
+    assert.equal(
+      locationOf(['router.plugin(replaceAwareHashLocationPlugin);']),
+      'hash',
+    );
+    assert.equal(exampleFacets('features-tour').location, 'hash');
+    assert.throws(() => locationOf(['router.plugin(myHashLocationPlugin);']));
+  });
+
   it('refuse sources with no location plugin or with two', () => {
     assert.throws(() => locationOf(['const x = 1;']));
     assert.throws(() =>
