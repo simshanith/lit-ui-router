@@ -1620,6 +1620,7 @@ describe('UiView', () => {
       expect(nestedView).toBeTruthy();
 
       await routerGo(router, 'galaxy.star', { starId: 'rigel' });
+      await waitForUpdate(uiView);
 
       expect(uiView.querySelector('section')).toBe(section);
       expect(section?.querySelector('ui-view')).toBe(nestedView);
@@ -1650,6 +1651,27 @@ describe('UiView', () => {
       expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedShell);
       expect(uiView.firstElementChild).not.toBe(first);
       expect(countsFor('test-retained-shell').constructed).toBe(2);
+    });
+
+    it('should rebuild a template component when a non-dynamic param re-enters its state', async () => {
+      const { uiView } = await setupRouter([
+        {
+          name: 'planet',
+          url: '/planet/:planetId',
+          component: () => html`<p class="planet">planet</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'planet', { planetId: 'earth' });
+      await waitForUpdate(uiView);
+      const first = uiView.querySelector('.planet');
+      expect(first).toBeTruthy();
+
+      await routerGo(router, 'planet', { planetId: 'mars' });
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.planet')).toBeTruthy();
+      expect(uiView.querySelector('.planet')).not.toBe(first);
     });
 
     it('should reuse a sticky instance across exit and re-entry', async () => {
