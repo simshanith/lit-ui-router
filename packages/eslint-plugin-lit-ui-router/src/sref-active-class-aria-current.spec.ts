@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
@@ -162,6 +163,38 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
     {
       name: 'a name the file already binds elsewhere is not imported again, so it reports unfixed',
       code: `import { html } from 'lit';\nimport { srefActiveClass } from 'lit-ui-router';\nimport { srefAriaCurrent } from './my-aria.js';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a nested local named srefAriaCurrent would shadow the added import, so it reports unfixed',
+      code: `${CLASS_ONLY}function row(srefAriaCurrent) {\n  return html\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;\n}`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'srefAriaCurrent bound only in an unrelated function leaves the fix site free',
+      code: `${CLASS_ONLY}function other(srefAriaCurrent) {\n  return srefAriaCurrent;\n}\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `\nimport { html } from 'lit';\nimport { srefActiveClass, srefAriaCurrent } from 'lit-ui-router';\nfunction other(srefAriaCurrent) {\n  return srefAriaCurrent;\n}\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })} aria-current=\${srefAriaCurrent({ state: 'a' })}>A</a>\`;`,
+    },
+    {
+      name: 'an imported srefAriaCurrent shadowed at the fix site is not reused, so it reports unfixed',
+      code: `${IMPORTS}function row(srefAriaCurrent) {\n  return html\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;\n}`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a type-only srefAriaCurrent specifier has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { srefActiveClass, type srefAriaCurrent } from 'lit-ui-router';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a type-only import of srefAriaCurrent has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport type { srefAriaCurrent } from 'lit-ui-router';\nimport { srefActiveClass } from 'lit-ui-router';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
       errors: [{ messageId: 'missingAriaCurrent' }],
       output: null,
     },

@@ -82,7 +82,7 @@ The fix rewrites a lone `uiSref` element part as the `srefHref` attribute part, 
 +html`<a href=${srefHref('home')}>Home</a>`;
 ```
 
-The report stands without a fix when the rewrite is not certain: an options argument that is not an object literal, a spread, a non-literal `assignHref`, more than one `uiSref` on the element, `assignHref: false` or `'auto'` on a declared link element, neither of which wrote an `href`, and a file that already binds `srefHref` to something other than the lit-ui-router export.
+The report stands without a fix when the rewrite is not certain: an options argument that is not an object literal, a spread, a non-literal `assignHref`, more than one `uiSref` on the element, `assignHref: false` or `'auto'` on a declared link element, neither of which wrote an `href`, and a `srefHref` that already means something else where the fix lands: another import, a local, or a type-only import.
 
 ## Options
 
