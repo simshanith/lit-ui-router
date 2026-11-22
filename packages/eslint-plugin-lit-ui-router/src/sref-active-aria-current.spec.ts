@@ -67,11 +67,11 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       settings: { linkElements: ['sp-link'] },
     },
     {
-      name: 'a bound role is unknowable, so it stays suppressed',
+      name: 'a bound role stays suppressed',
       code: `${IMPORTS}html\`<div role=\${role} aria-current="true" \${uiSrefActive({})}></div>\`;`,
     },
     {
-      name: 'a partly bound role is unknowable even with a literal link token',
+      name: 'a partly bound role stays suppressed even with a static link token (conservative gap)',
       code: `${IMPORTS}html\`<div role="link \${extra}" aria-current="page" \${uiSrefActive({})}></div>\`;`,
     },
     {
