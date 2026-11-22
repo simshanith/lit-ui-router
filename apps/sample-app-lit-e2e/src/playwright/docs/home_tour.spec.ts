@@ -58,6 +58,8 @@ test.describe('home page tour', () => {
     await expectCard(page, 'Views', '/#see-it-run/views');
     await expect(section(page)).toBeInViewport();
     await expect(chip(page, 'views')).toHaveAttribute('aria-current', 'true');
+    // A page that opens on an anchor moves no focus; only a followed link does.
+    await expect(section(page)).not.toBeFocused();
   });
 
   test("leaves the page's own anchor alone and opens on the first card", async ({
