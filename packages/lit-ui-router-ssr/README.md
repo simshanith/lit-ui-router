@@ -135,8 +135,9 @@ A server render reads the router only once its transition has landed, resolves i
 the router to it, and resolves with the transition that landed, so the synchronous render after it
 reads every resolve. A `redirectTo` chain settles on its final state, and a path the router already
 stands on resolves at once. A path that changes only a `dynamic` param keeps the earlier path's
-resolves, so `prerender` resets the router before each path. `redirectedTo` reports where a
-redirected transition landed.
+resolves, so `prerender` resets the router before each path. Every page is then entered from the
+root, so ancestor resolves run once per page rather than once per build, as on a client boot.
+`redirectedTo` reports where a redirected transition landed.
 
 A page fails to land in four ways, and each rejects rather than hangs:
 
