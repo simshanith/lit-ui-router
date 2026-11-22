@@ -172,14 +172,15 @@ test.describe('docs site', () => {
     await hydrated(page);
 
     // An iframe has no role; its title is the handle.
-    const tour = page
-      .locator('iframe[title="Features Tour example"]')
-      .contentFrame();
+    const frame = page.locator('iframe[title="Features Tour example"]');
 
+    // The frame is loading="lazy"; scrolling it into view loads it before its contents are queried.
+    await frame.scrollIntoViewIfNeeded();
+
+    const tour = frame.contentFrame();
     const pager = tour.getByRole('navigation', { name: 'Feature cards' });
     const card = tour.getByRole('article');
 
-    await pager.scrollIntoViewIfNeeded();
     await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
 
     const entries = await page.evaluate(() => history.length);
