@@ -10,6 +10,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true
   },
   "include": ["src/**/*", "vite.config.ts"]

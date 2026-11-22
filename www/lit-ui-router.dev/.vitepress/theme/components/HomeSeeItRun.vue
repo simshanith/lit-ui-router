@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { withBase } from 'vitepress';
-import HomeTourFrame from './HomeTourFrame.vue';
+import { revealOnStateLinks } from 'examples/features-tour/state-links';
+import HomeTour from './HomeTour.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
-import { EXAMPLES, staticSrc } from './examples';
-import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
+import {
+  CARD_IDS,
+  cardForHash,
+  hashForCard,
+  INITIAL_CARD,
+  TOUR_LANDMARK,
+  type CardId,
+} from './features-tour-states';
 
-const example = EXAMPLES['features-tour'];
+const section = useTemplateRef('section');
 
 const card = ref<CardId>(INITIAL_CARD);
 
@@ -14,9 +21,9 @@ const from = ref<CardId>();
 
 const entries = ref(0);
 
-// The frame reports its hash on load and on every hashchange; a new card is a re-entry.
-function onHash(hash: string) {
-  const next = cardForHash(hash);
+// The tour's router writes its state to this page's fragment, so the diagram reads the page's own hash; a new card is a re-entry.
+function follow() {
+  const next = cardForHash(location.hash);
 
   if (!next || next === card.value) return;
 
@@ -24,26 +31,59 @@ function onHash(hash: string) {
   card.value = next;
   entries.value += 1;
 }
+
+let stopRevealing: (() => void) | undefined;
+
+onMounted(() => {
+  // The card the page was opened on is where the diagram starts, not a re-entry.
+  card.value = cardForHash(location.hash) ?? INITIAL_CARD;
+  window.addEventListener('hashchange', follow);
+  stopRevealing = revealOnStateLinks(section.value!, TOUR_LANDMARK);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('hashchange', follow);
+  stopRevealing?.();
+});
 </script>
 
 <template>
-  <section class="see-it-run" aria-labelledby="see-it-run-title">
+  <!-- tabindex: a followed state link moves focus here, as a followed anchor does. -->
+  <section
+    :id="TOUR_LANDMARK"
+    ref="section"
+    class="see-it-run"
+    aria-labelledby="see-it-run-title"
+    tabindex="-1"
+  >
     <div class="container">
-      <h2 id="see-it-run-title" class="title">See it run</h2>
+      <!-- The permalink sits beside the heading, not in it, so the section's name stays "See it run". -->
+      <div class="heading">
+        <h2 id="see-it-run-title" class="title">See it run</h2>
+        <a
+          class="permalink"
+          :href="`#${TOUR_LANDMARK}`"
+          aria-label="Permalink to “See it run”"
+          >#</a
+        >
+      </div>
       <p class="lede">
-        The feature cards above as a small lit-ui-router app. Each card is the
-        same state with a new parameter, and the diagram follows the router as
-        it re-enters the state.
+        The feature cards above as a small lit-ui-router app, running in this
+        page. Each card is the same state with a new parameter, and the diagram
+        follows the router as it re-enters the state.
+      </p>
+      <p class="lede">
+        The app shares this page's URL fragment with the page's own anchors, so
+        each card has a link:
+        <template v-for="(id, index) in CARD_IDS" :key="id">
+          <a :href="hashForCard(id)"><code>{{ hashForCard(id) }}</code></a
+          >{{ index < CARD_IDS.length - 1 ? ', ' : '.' }}
+        </template>
       </p>
       <div class="panels">
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
-          <HomeTourFrame
-            class="embed"
-            :src="staticSrc('features-tour')"
-            :title="`${example.title} example`"
-            @hash="onHash"
-          />
+          <HomeTour class="embed" :prefix="TOUR_LANDMARK" />
         </div>
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>
@@ -64,6 +104,15 @@ function onHash(hash: string) {
 .see-it-run {
   padding-inline: 1.5rem;
   margin-block-start: 3rem;
+  /* Clears the fixed nav when a link scrolls here, as the docs headings do. */
+  scroll-margin-top: calc(
+    var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 1.5rem
+  );
+}
+
+/* Focus lands here only from a followed link; the section is not a control. */
+.see-it-run:focus {
+  outline: none;
 }
 
 @media (min-width: 40rem) {
@@ -92,6 +141,51 @@ function onHash(hash: string) {
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--site-color-text);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--site-space-2);
+}
+
+.permalink {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--site-color-interaction);
+  opacity: 0;
+  transition: opacity var(--site-duration-base) var(--ease-out);
+}
+
+.permalink:focus-visible {
+  opacity: 1;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .heading:hover .permalink {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .permalink {
+    opacity: 1;
+  }
+}
+
+.lede a {
+  color: var(--site-color-interaction);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+}
+
+.lede code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875em;
 }
 
 .lede {
@@ -171,10 +265,32 @@ function onHash(hash: string) {
   color: var(--site-color-text);
 }
 
-/* The frame sizes itself to the tour once it loads; this is its height until then. */
+.app-panel {
+  container-type: inline-size;
+}
+
+/* The tour's height until it mounts: its tallest card at each width, measured in three engines. The lead wraps to one more line at each step down. */
 .embed {
-  --tour-frame-height: 426px;
+  --tour-height: 469px;
   margin-block-start: var(--site-space-3);
+}
+
+@container (inline-size >= 311px) {
+  .embed {
+    --tour-height: 445px;
+  }
+}
+
+@container (inline-size >= 367px) {
+  .embed {
+    --tour-height: 421px;
+  }
+}
+
+@container (inline-size >= 547px) {
+  .embed {
+    --tour-height: 397px;
+  }
 }
 
 /* The drawing sits under its heading and the transition log closes the tile. */

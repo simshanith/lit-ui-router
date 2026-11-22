@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./embeds": "./embeds.ts"
+    "./embeds": "./embeds.ts",
+    "./features-tour/embed": "./features-tour/src/embed.ts",
+    "./features-tour/shared-hash-location": "./features-tour/src/shared-hash-location.ts",
+    "./features-tour/state-links": "./features-tour/src/state-links.ts"
   },
   "scripts": {
     "build:embeds": "node build-embeds.ts",

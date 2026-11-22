@@ -29,19 +29,22 @@ features:
       alt: ⚡
       width: 40
       height: 40
-    details: Organize your app with hierarchical states. Define URLs, components, and data requirements declaratively.
+    details: >-
+      Organize your app with hierarchical states. Define URLs, components, and data requirements declaratively. <a href="#see-it-run/states">See states in the tour</a>
   - title: Nested Views
     icon:
       src: /images/lit-standards.svg
       alt: 📋
       width: 40
       height: 40
-    details: Build complex layouts with nested ui-views. Child states render inside parent state components.
+    details: >-
+      Build complex layouts with nested ui-views. Child states render inside parent state components. <a href="#see-it-run/views">See views in the tour</a>
   - title: Data Resolves
     icon:
       src: /images/lit-future.svg
       alt: ✨
       width: 40
       height: 40
-    details: By default, transitions wait for data before activating a state. Components render with data ready, and a failed fetch stops navigation.
+    details: >-
+      By default, transitions wait for data before activating a state. Components render with data ready, and a failed fetch stops navigation. <a href="#see-it-run/resolves">See resolves in the tour</a>
 ---
