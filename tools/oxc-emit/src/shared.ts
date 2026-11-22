@@ -94,7 +94,7 @@ export function emitPlan(): EmitPlan {
 
 // remapping ships CJS function-as-module.exports; typed locally, fetched via require
 interface RawMap {
-  sources?: (string | null)[];
+  sources?: (string | null | undefined)[];
 }
 
 interface ComposedMap {

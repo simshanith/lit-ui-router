@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-server",
   "bugs": {
@@ -181,6 +181,7 @@
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@repo/dev-gate": "catalog:workspace",
+    "@repo/router-reset": "catalog:workspace",
     "@testing-library/dom": "catalog:",
     "@tools/bundle-probe": "catalog:workspace",
     "@tools/compat-guards": "catalog:workspace",

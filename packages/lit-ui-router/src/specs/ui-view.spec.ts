@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement, nothing } from 'lit';
+import { html, LitElement, nothing, render } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { cache } from 'lit/directives/cache.js';
 import { until } from 'lit/directives/until.js';
 import { ActiveUIView, Transition, type RawParams } from '@uirouter/core';
 
@@ -141,6 +142,27 @@ class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   }
 }
 
+/** Mirrors two params, so a replay that diffs against the wrong transition drops one. */
+@customElement('test-pair-leaf')
+class TestPairLeaf extends CountedElement implements UiOnParamsChanged {
+  static tag = 'test-pair-leaf';
+  @state() a?: string;
+  @state() b?: string;
+  readonly reported: string[][] = [];
+
+  uiOnParamsChanged(params: RawParams) {
+    this.reported.push(Object.keys(params));
+
+    if ('a' in params) this.a = params.a;
+
+    if ('b' in params) this.b = params.b;
+  }
+
+  render() {
+    return html`<div class="pair">${this.a}/${this.b}</div>`;
+  }
+}
+
 @customElement('test-retained-other')
 class TestRetainedOther extends CountedElement {
   static tag = 'test-retained-other';
@@ -264,6 +286,7 @@ declare global {
     'test-params-receive-component': TestParamsReceiveComponent;
     'test-retained-shell': TestRetainedShell;
     'test-retained-leaf': TestRetainedLeaf;
+    'test-pair-leaf': TestPairLeaf;
     'test-retained-other': TestRetainedOther;
     'test-sticky-component': TestStickyComponent;
     'test-shadow-shell': TestShadowShell;
@@ -722,6 +745,35 @@ describe('UiView', () => {
 
       expect(nestedView).toBeDefined();
     });
+
+    it('should fill a nested view for the second of two states sharing a template', async () => {
+      const layout = () =>
+        html`<section class="layout"><ui-view></ui-view></section>`;
+
+      const { uiView } = await setupRouter([
+        { name: 'admin', url: '/admin', component: layout },
+        {
+          name: 'admin.users',
+          url: '/users',
+          component: () => html`<p class="users">Users</p>`,
+        },
+        { name: 'settings', url: '/settings', component: layout },
+        {
+          name: 'settings.profile',
+          url: '/profile',
+          component: () => html`<p class="profile">Profile</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'admin.users');
+      await tick(20);
+      expect(uiView.querySelector('.users')).not.toBeNull();
+
+      await routerGo(router, 'settings.profile');
+      await tick(20);
+
+      expect(uiView.querySelector('.profile')).not.toBeNull();
+    });
   });
 
   describe('fallback content', () => {
@@ -978,6 +1030,26 @@ describe('UiView', () => {
       await waitForUpdate(uiView);
 
       expect(uiView).toEqualDom('<ui-view><p class="hold">hold</p></ui-view>');
+    });
+
+    it('should keep its class component element after its router is re-attached', async () => {
+      const { uiRouter, uiView } = await setupRouter([
+        { name: 'leaf', url: '/leaf', component: TestRetainedLeaf },
+      ]);
+
+      await routerGo(router, 'leaf');
+      await waitForUpdate(uiView);
+      const leaf = uiView.routedElement;
+      expect(leaf).toBeInstanceOf(TestRetainedLeaf);
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await tick();
+
+      expect(uiView.routedElement).toBe(leaf);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
     });
   });
 
@@ -1295,6 +1367,265 @@ describe('UiView', () => {
       expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
     });
 
+    it('should hand a re-attached element the transition that retained it while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'rigel' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await waitForUpdate(leaf);
+
+      const latest = router.globals.successfulTransitions.peekTail();
+      expect(uiView.routedElement).toBe(leaf);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
+      expect(leaf._uiViewProps?.transition).toBe(latest);
+      expect(leaf._uiViewProps?.resolves.$transition$).toBe(latest);
+      expect(leaf._uiViewProps?.transition?.params().starId).toBe('rigel');
+    });
+
+    it('should hand a re-attached element the params that changed while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+      await routerGo(router, 'star', { starId: 'rigel' });
+      expect(leaf.starId).toBe('rigel');
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'vega' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+      await waitForUpdate(leaf);
+
+      expect(uiView.routedElement).toBe(leaf);
+      expect(leaf.starId).toBe('vega');
+      expect(uiView.querySelector('.leaf')?.textContent).toBe('vega');
+    });
+
+    it('should keep the element of a cached view and hand it the params it missed while its provider stayed connected', async () => {
+      router = createTestRouter([dynamicStar]);
+      const slot = document.createElement('div');
+      await mountElementInRouter(slot, router, container);
+
+      const view = (show: boolean) =>
+        html`${cache(show ? html`<ui-view></ui-view>` : nothing)}`;
+
+      render(view(true), slot);
+      router.start();
+      await routerGo(router, 'star', { starId: 'sun' });
+      const uiView = slot.querySelector('ui-view')!;
+      // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+      const leaf = uiView.routedElement as TestRetainedLeaf;
+      await routerGo(router, 'star', { starId: 'rigel' });
+      expect(leaf.starId).toBe('rigel');
+
+      render(view(false), slot);
+      await tick();
+      expect(uiView.isConnected).toBe(false);
+      await routerGo(router, 'star', { starId: 'vega' });
+      render(view(true), slot);
+      await waitForUpdate(uiView);
+      await waitForUpdate(leaf);
+
+      expect(slot.querySelector('ui-view')).toBe(uiView);
+      expect(uiView.routedElement).toBe(leaf);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
+      expect(leaf.starId).toBe('vega');
+      expect(uiView.querySelector('.leaf')?.textContent).toBe('vega');
+    });
+
+    it('should hand a re-attached nested element every param that changed across several missed transitions', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'pair', url: '/pair', component: TestRetainedShell },
+        {
+          name: 'pair.child',
+          url: '/:a/:b',
+          params: { a: { dynamic: true }, b: { dynamic: true } },
+          component: TestPairLeaf,
+        },
+      ]);
+
+      await routerGo(router, 'pair.child', { a: '1', b: '1' });
+      // SAFETY: the 'pair' state renders a TestRetainedShell as the view's child
+      const shell = uiView.firstElementChild as TestRetainedShell;
+      await waitForUpdate(shell);
+      const nestedView = shell.querySelector('ui-view')!;
+      // SAFETY: 'pair.child' renders a TestPairLeaf into the nested view
+      const leaf = nestedView.routedElement as TestPairLeaf;
+      expect(leaf).toBeInstanceOf(TestPairLeaf);
+
+      // Registered after the transition that built it, the nested view's onSuccess hook never saw one.
+      const slot = nestedView.parentElement!;
+      nestedView.remove();
+      await tick();
+      await routerGo(router, 'pair.child', { a: '2', b: '1' });
+      await routerGo(router, 'pair.child', { a: '2', b: '2' });
+      slot.appendChild(nestedView);
+      await waitForUpdate(nestedView);
+      await waitForUpdate(leaf);
+
+      expect(nestedView.routedElement).toBe(leaf);
+      expect(countsFor('test-pair-leaf').constructed).toBe(1);
+      expect([leaf.a, leaf.b]).toEqual(['2', '2']);
+    });
+
+    it('should report a param new to the path since the re-attached element last saw one, even when it is empty', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'pair', url: '/pair', component: TestPairLeaf },
+        {
+          name: 'pair.child',
+          url: '/child?a',
+          params: { a: { dynamic: true } },
+        },
+      ]);
+
+      await routerGo(router, 'pair');
+      // SAFETY: the 'pair' state renders a TestPairLeaf as the view's child
+      const leaf = uiView.routedElement as TestPairLeaf;
+      const slot = uiView.parentElement!;
+
+      uiView.remove();
+      await tick();
+      await routerGo(router, 'pair.child');
+      slot.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      expect(uiView.routedElement).toBe(leaf);
+      // The attached path reports it too, as new against the from path.
+      expect(leaf.reported).toEqual([['a']]);
+    });
+
+    describe('when the state changes while its router is detached', () => {
+      async function detachAcross(
+        go: () => Promise<void>,
+      ): Promise<{ uiView: UiView; leaf: TestRetainedLeaf }> {
+        const { uiRouter, uiView } = await setupRouter([
+          dynamicStar,
+          { name: 'other', url: '/other', component: TestRetainedOther },
+          { name: 'blank', url: '/blank' },
+        ]);
+
+        await routerGo(router, 'star', { starId: 'sun' });
+        // SAFETY: the 'star' state renders a TestRetainedLeaf as the view's child
+        const leaf = uiView.firstElementChild as TestRetainedLeaf;
+
+        uiRouter.remove();
+        await tick();
+        await go();
+        container.appendChild(uiRouter);
+        await waitForUpdate(uiView);
+        await tick();
+
+        return { uiView, leaf };
+      }
+
+      it('should show the fallback when it exits to a state with no view', async () => {
+        const { uiView } = await detachAcross(async () => {
+          await routerGo(router, 'blank');
+        });
+
+        expect(uiView.routedElement).toBeNull();
+      });
+
+      it('should render the new component when it exits to another', async () => {
+        const { uiView, leaf } = await detachAcross(async () => {
+          await routerGo(router, 'other');
+        });
+
+        expect(uiView.routedElement).toBeInstanceOf(TestRetainedOther);
+        expect(leaf.isConnected).toBe(false);
+      });
+
+      it('should build a fresh element when it exits and re-enters the same state', async () => {
+        const { uiView, leaf } = await detachAcross(async () => {
+          await routerGo(router, 'other');
+          await routerGo(router, 'star', { starId: 'sun' });
+        });
+
+        expect(uiView.routedElement).toBeInstanceOf(TestRetainedLeaf);
+        expect(uiView.routedElement).not.toBe(leaf);
+        expect(countsFor('test-retained-leaf').constructed).toBe(2);
+      });
+    });
+
+    it('should keep a template component’s nodes when only a dynamic param changes', async () => {
+      const { uiView } = await setupRouter([
+        {
+          ...dynamicStar,
+          component: ({ transition }) =>
+            html`<p class="star">${transition?.params().starId}</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      await waitForUpdate(uiView);
+      const star = uiView.querySelector('.star');
+      expect(star?.textContent).toBe('sun');
+
+      await routerGo(router, 'star', { starId: 'rigel' });
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.star')).toBe(star);
+      expect(star?.textContent).toBe('rigel');
+    });
+
+    it('should keep a template component’s nodes across a re-attach and show the param that changed while detached', async () => {
+      const { uiRouter, uiView } = await setupRouter([
+        {
+          ...dynamicStar,
+          component: ({ transition }) =>
+            html`<p class="star">${transition?.params().starId}</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      await waitForUpdate(uiView);
+      const star = uiView.querySelector('.star');
+
+      uiRouter.remove();
+      await tick();
+      await routerGo(router, 'star', { starId: 'rigel' });
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.star')).toBe(star);
+      expect(star?.textContent).toBe('rigel');
+    });
+
+    it('should keep a retained template parent and its nested view when a child param changes', async () => {
+      const { uiView } = await setupRouter([
+        {
+          name: 'galaxy',
+          url: '/galaxy',
+          component: () => html`<section><ui-view></ui-view></section>`,
+        },
+        {
+          name: 'galaxy.star',
+          url: '/star/:starId',
+          component: TestRetainedLeaf,
+        },
+      ]);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      const section = uiView.querySelector('section');
+      const nestedView = section?.querySelector('ui-view');
+      expect(nestedView).toBeTruthy();
+
+      await routerGo(router, 'galaxy.star', { starId: 'rigel' });
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('section')).toBe(section);
+      expect(section?.querySelector('ui-view')).toBe(nestedView);
+    });
+
     it('should mint a new element when the state changes', async () => {
       const { uiView } = await setupRouter(nestedStates);
 
@@ -1320,6 +1651,27 @@ describe('UiView', () => {
       expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedShell);
       expect(uiView.firstElementChild).not.toBe(first);
       expect(countsFor('test-retained-shell').constructed).toBe(2);
+    });
+
+    it('should rebuild a template component when a non-dynamic param re-enters its state', async () => {
+      const { uiView } = await setupRouter([
+        {
+          name: 'planet',
+          url: '/planet/:planetId',
+          component: () => html`<p class="planet">planet</p>`,
+        },
+      ]);
+
+      await routerGo(router, 'planet', { planetId: 'earth' });
+      await waitForUpdate(uiView);
+      const first = uiView.querySelector('.planet');
+      expect(first).toBeTruthy();
+
+      await routerGo(router, 'planet', { planetId: 'mars' });
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.planet')).toBeTruthy();
+      expect(uiView.querySelector('.planet')).not.toBe(first);
     });
 
     it('should reuse a sticky instance across exit and re-entry', async () => {

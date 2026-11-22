@@ -416,7 +416,7 @@ describe('activateResolveSpans', () => {
     const resolve = find('resolve users');
 
     // The shape the Timeline joins as `child`: a router transition span, a router span under it, an app span under that.
-    expect(transition?.attributes?.['uirouter.transition_id']).toBe(0);
+    expect(transition?.attributes?.['uirouter.transition.id']).toBe(0);
     expect(resolve?.parentSpanId).toBe(transition?.spanId);
     expect(resolve?.attributes?.['uirouter.resolve']).toBe('users');
     expect(find('GET before await')?.parentSpanId).toBe(resolve?.spanId);

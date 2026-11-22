@@ -6,6 +6,8 @@ import type {
   TemplateResult,
 } from 'lit';
 import { property, state } from 'lit/decorators.js';
+import type { DirectiveResult } from 'lit/directive.js';
+import { keyed } from 'lit/directives/keyed.js';
 import {
   ActiveUIView,
   ResolveContext,
@@ -55,6 +57,8 @@ let viewIdCounter = 0;
  * it the platform's value, checked against `Node` without referencing one.
  */
 const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
+
+const FOLLOWING = 4 satisfies Node['DOCUMENT_POSITION_FOLLOWING'];
 
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
@@ -170,7 +174,11 @@ const noParentViewUnsubscribe = () => {};
  * {@link parentUiViewContext} with itself, from the same listener position, so
  * an element built on <code>@lit/context</code> finds its enclosing view too.
  * A view never answers its own request, so a nested
- * <code>&lt;ui-view&gt;</code> gets the view above it.
+ * <code>&lt;ui-view&gt;</code> gets the view above it. Nor does it answer a
+ * request from its fallback set: that markup was authored in the enclosing
+ * view's template, so it resolves against the view above as well. A
+ * <code>&lt;ui-view&gt;</code> in the fallback set still registers under this
+ * view.
  *
  * @summary
  *
@@ -265,8 +273,12 @@ export class UiView extends LitElement {
 
   private resolveContext!: ResolveContext;
 
+  // Outlives the per-connect registration, so a re-attached view keeps its routed element.
+  private appliedConfig?: LitViewConfig;
+
   private _viewConfigUpdated(config: ViewConfig) {
     if (!config) {
+      this.appliedConfig = undefined;
       this.component = null;
       this.requestUpdate();
 
@@ -277,8 +289,14 @@ export class UiView extends LitElement {
       return;
     }
 
-    // The "new" viewconfig is already applied, so exit early
-    if (this._uiViewData.config === config) {
+    // The "new" viewconfig is already applied, so keep the element
+    if (this.appliedConfig === config) {
+      // A new registration after a re-attach: the kept element missed the transitions that ran while detached.
+      if (this._uiViewData.config !== config) {
+        this._uiViewData.config = config;
+        this._replayMissedParams();
+      }
+
       return;
     }
 
@@ -287,6 +305,9 @@ export class UiView extends LitElement {
   }
 
   private _applyUpdatedConfig(config: LitViewConfig) {
+    this.appliedConfig = config;
+    // Core's globals hook runs ahead of view activation, so the tail is the transition this element is built in.
+    this.paramsSeenBy = this.uiRouter?.globals.successfulTransitions.peekTail();
     this._uiViewData.config = config;
 
     if (!this.viewAddress && config?.viewDecl?.$context) {
@@ -315,9 +336,54 @@ export class UiView extends LitElement {
   @state()
   private parentView!: ParentView | null;
 
+  /**
+   * Whether this view should leave an enclosing-view request to the view above:
+   * its own, or one from its fallback set, which the parent's template authored.
+   * A view in the fallback set seeking its own parent still gets this view.
+   */
+  private passesOn(event: Event): boolean {
+    // `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
+    const path = event.composedPath();
+
+    if (path[0] === this) {
+      return true;
+    }
+
+    // a view's registration keeps its parent, even from a fallback set
+    if (path[0] === UiView.registering) {
+      return false;
+    }
+
+    // SAFETY: a path entry that is not a node never matches a fallback node
+    const child = path[path.indexOf(this) - 1] as ChildNode;
+
+    // a served view asleep has not captured yet, but its fallback set already stands ahead of the render it holds
+    const fallbackNodes = this.captured
+      ? this.fallbackNodes
+      : this.authoredPrefix();
+
+    return fallbackNodes.includes(child) || this.amidFallback(child);
+  }
+
+  /** Whether `child` stands between two fallback nodes, where a part of the parent's template renders after capture. */
+  private amidFallback(child: ChildNode): boolean {
+    // a node the parent's template has since removed sits outside the document order
+    const nodes = this.fallbackParked
+      ? []
+      : this.fallbackNodes.filter((node) => node.parentNode === this);
+
+    if (nodes.length < 2) {
+      return false;
+    }
+
+    return (
+      !!(nodes[0].compareDocumentPosition(child) & FOLLOWING) &&
+      !!(child.compareDocumentPosition(nodes[nodes.length - 1]) & FOLLOWING)
+    );
+  }
+
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
-    // can't adopt self; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
-    if (event.composedPath()[0] === this) {
+    if (this.passesOn(event)) {
       return;
     }
 
@@ -333,11 +399,7 @@ export class UiView extends LitElement {
    * view of its descendants for as long as it is connected.
    */
   private readonly onParentViewContextRequest = (event: Event) => {
-    // A view's own request must reach the view above it; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is.
-    if (
-      event.composedPath()[0] === this ||
-      !isContextRequest(event, parentUiViewContext)
-    ) {
+    if (this.passesOn(event) || !isContextRequest(event, parentUiViewContext)) {
       return;
     }
 
@@ -390,8 +452,17 @@ export class UiView extends LitElement {
     return uiViewContextEvent.detail.parentView;
   }
 
+  /** The view seeking its own parent to register; the seek dispatches synchronously. */
+  private static registering?: UiView;
+
   private seekParentView() {
-    this.parentView = this.constructor.seekParentView(this);
+    UiView.registering = this;
+
+    try {
+      this.parentView = this.constructor.seekParentView(this);
+    } finally {
+      UiView.registering = undefined;
+    }
   }
 
   // eslint-disable-next-line typescript/no-deprecated -- the house ui-router-context path stays answered until 2.0 (#874)
@@ -773,12 +844,35 @@ export class UiView extends LitElement {
     }
   }
 
+  /** The last transition the params hook saw, so a re-attach can diff against it. */
+  private paramsSeenBy?: Transition;
+
+  /** Hands a re-attached element the latest transition, with params diffed against the last one it saw. */
+  private _replayMissedParams() {
+    const latest = this.uiRouter?.globals.successfulTransitions.peekTail();
+    const since = this.paramsSeenBy;
+
+    if (!latest || !since || latest === since) {
+      this.requestUpdate();
+
+      return;
+    }
+
+    this._invokeUiOnParamsChangedHook(latest, since);
+  }
+
   /**
    * For each transition, checks if any param values changed and notify component
+   *
+   * @param since - the transition the element last saw, when it missed the ones in between
    */
-  private _invokeUiOnParamsChangedHook($transition$: Transition) {
+  private _invokeUiOnParamsChangedHook(
+    $transition$: Transition,
+    since?: Transition,
+  ) {
     // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
+    this.paramsSeenBy = $transition$;
 
     const instance: (Partial<UiOnParamsChanged> & Element) | null =
       this.routedElement;
@@ -803,8 +897,6 @@ export class UiView extends LitElement {
 
       const toParams: RawParams = $transition$.params('to');
 
-      const fromParams: RawParams = $transition$.params('from');
-
       const getNodeSchema = (node: PathNode) => node.paramSchema;
 
       const toSchema: Param[] = $transition$
@@ -812,8 +904,12 @@ export class UiView extends LitElement {
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
 
-      const fromSchema: Param[] = $transition$
-        .treeChanges('from')
+      const fromParams: RawParams = since
+        ? since.params('to')
+        : $transition$.params('from');
+
+      const fromSchema: Param[] = (since ?? $transition$)
+        .treeChanges(since ? 'to' : 'from')
         .map(getNodeSchema)
         .reduce<Param[]>(unnestR, []);
 
@@ -935,7 +1031,11 @@ export class UiView extends LitElement {
    * The routed component's template, or nothing while the fallback set stands
    * in the light DOM on its own.
    */
-  render(): TemplateResult | typeof nothing | typeof noChange {
+  render():
+    | TemplateResult
+    | DirectiveResult
+    | typeof nothing
+    | typeof noChange {
     // Inside an element its parent is retiring, so a config routed here is the incoming element's to render.
     if (this.parentView instanceof UiView && this.parentView.retires(this)) {
       return noChange;
@@ -965,7 +1065,8 @@ export class UiView extends LitElement {
     if (!element) {
       this.dropElements();
 
-      return result;
+      // Two states sharing a template would otherwise reuse its nodes, which read the old state's context at connect.
+      return keyed(this._uiViewData.config, result);
     }
 
     return this.placeElement(element);

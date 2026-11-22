@@ -26,6 +26,7 @@ import '../define.ts';
 import { DevtoolsPlugin } from '../plugin.ts';
 import type { DevtoolsPanel } from '../element/panel.ts';
 import { UIRouterDevtools } from '../ui-router-devtools.ts';
+import { laidOut } from './laid-out.ts';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
@@ -1025,10 +1026,12 @@ describe('the nested Map', () => {
   };
 
   // The Map is lazy and is laid out from a ResizeObserver entry, which waits on the engine's next rendering update.
-  const tree = (element: UIRouterDevtools) =>
-    waitFor(() => getByRole(shadow(element), 'tree', { name: 'State map' }), {
-      timeout: 5000,
-    });
+  const tree = async (element: UIRouterDevtools) => {
+    await waitFor(() => expect(panelOf(element)._map).toBeDefined());
+    await laidOut(element);
+
+    return getByRole(shadow(element), 'tree', { name: 'State map' });
+  };
 
   beforeAll(() => import('../element/map.ts'));
 
@@ -1227,12 +1230,13 @@ describe('the nested Map', () => {
     pills(24, 208);
 
     getByRole(shadow(element), 'button', { name: 'Maximise devtools' }).click();
-    await waitFor(() => {
-      const scroller = element.renderRoot.querySelector('.map-scroll')!;
-      expect(scroller.clientHeight).toBeGreaterThan(300);
-    });
+    await laidOut(element);
     await finish(element);
     const max = margins(element);
+
+    expect(
+      element.renderRoot.querySelector('.map-scroll')!.clientHeight,
+    ).toBeGreaterThan(300);
 
     expect(Math.abs(max.left - max.right)).toBeLessThanOrEqual(1);
     expect(Math.abs(max.top - max.bottom)).toBeLessThanOrEqual(1);
@@ -2147,12 +2151,13 @@ describe('the nested Map', () => {
     const fitted = margins(element);
 
     await page.viewport(1240, 800);
-    await waitFor(() => expect(margins(element).left).not.toBe(fitted.left));
+    await laidOut(element);
     await finish(element);
 
     const after = margins(element);
 
     expect(placesIn(element)).toEqual(before);
+    expect(after.left).not.toBe(fitted.left);
     expect(Math.abs(after.top - after.bottom)).toBeLessThanOrEqual(1);
     expect(after.right).toBeGreaterThanOrEqual(320);
     expect(element.renderRoot.querySelector('.minimap')).toBeNull();
@@ -2522,14 +2527,13 @@ describe('the nested Map', () => {
       getByRole(shadow(element), 'button', {
         name: 'Maximise devtools',
       }).click();
-      await waitFor(() =>
-        expect(
-          getComputedStyle(element.renderRoot.querySelector('.nested')!)
-            .fontSize,
-        ).not.toBe('12px'),
-      );
+      await laidOut(element);
 
       const placed = margins(element);
+
+      expect(
+        getComputedStyle(element.renderRoot.querySelector('.nested')!).fontSize,
+      ).not.toBe('12px');
 
       expect(moving(element)).toHaveLength(0);
       expect(Math.abs(placed.left - placed.right)).toBeLessThanOrEqual(1);

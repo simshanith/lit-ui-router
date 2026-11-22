@@ -32,7 +32,7 @@ export default {
   overrides: [
     {
       files: ['**/*.{ts,mts,cts,js,mjs,cjs}'],
-      customSyntax: 'postcss-lit-html',
+      customSyntax: '@tools/postcss-lit-html',
     },
     {
       files: ['**/*.vue'],

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { anchorIsValid } from './anchor-is-valid.ts';
 
@@ -213,6 +214,50 @@ html\`<a href=\${srefHref('home')}>Home</a>\`;`,
     {
       name: 'a non-literal options argument is unknowable, so it reports unfixed',
       code: `${IMPORTS}const opt = {};\nhtml\`<a \${uiSref('home', undefined, opt)}>Home</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a local already named srefHref keeps the import out, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { uiSref } from 'lit-ui-router';\nconst srefHref = 1;\nhtml\`<a \${uiSref('a')}>A</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a nested local named srefHref would shadow the added import, so it reports unfixed',
+      code: `${SREF_ONLY}function row(srefHref) {\n  return html\`<a \${uiSref('a')}>A</a>\`;\n}`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'srefHref bound only in an unrelated function leaves the fix site free',
+      code: `${SREF_ONLY}function other(srefHref) {\n  return srefHref;\n}\nhtml\`<a \${uiSref('a')}>A</a>\`;`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: `\nimport { html } from 'lit';\nimport { uiSref, srefHref } from 'lit-ui-router';\nfunction other(srefHref) {\n  return srefHref;\n}\nhtml\`<a href=\${srefHref('a')}>A</a>\`;`,
+    },
+    {
+      name: 'an imported srefHref shadowed at the fix site is not reused, so it reports unfixed',
+      code: `${IMPORTS}function row(srefHref) {\n  return html\`<a \${uiSref('a')}>A</a>\`;\n}`,
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a type-only srefHref specifier has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { type srefHref, uiSref } from 'lit-ui-router';\nhtml\`<a \${uiSref('a')}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
+      options: SERVED,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+      output: null,
+    },
+    {
+      name: 'a type-only import of srefHref has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport type { srefHref } from 'lit-ui-router';\nimport { uiSref } from 'lit-ui-router';\nhtml\`<a \${uiSref('a')}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
       options: SERVED,
       errors: [{ messageId: 'noHrefErrorMessage' }],
       output: null,

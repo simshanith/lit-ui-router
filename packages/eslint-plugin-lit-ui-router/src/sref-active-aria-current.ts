@@ -8,10 +8,13 @@ import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   asNode,
   asNodes,
+  attributePartsOf,
+  type CallNode,
   createDirectiveTracker,
   elementPartIndex,
   hasSpread,
   isCallExpression,
+  isLinkElement,
   isObjectExpression,
   propertyNamed,
   toEstree,
@@ -19,10 +22,19 @@ import {
 
 const OPT_OUT = 'ariaCurrentValue: false';
 
+// The runtime's default checks the tag and role only, never declared link tags.
+const NO_DECLARED_LINKS: ReadonlySet<string> = new Set();
+
+// `''` resolves to no value and `null` throws before the runtime writes.
+const NEVER_WRITTEN: ReadonlySet<unknown> = new Set([false, '', null]);
+
 export const RULE_NAME = 'sref-active-aria-current';
 
 /**
  * An authored `aria-current` next to a `uiSrefActive` element part.
+ *
+ * Off a link element the runtime's default writes nothing, so only an explicit
+ * `ariaCurrentValue` takes the attribute over there.
  *
  * The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute
  * under the app's control. A non-literal params argument is unknowable, so it
@@ -45,6 +57,53 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+    const source = context.sourceCode;
+
+    const check = (call: CallNode, tag: string, link: boolean): void => {
+      const report = (fix?: Rule.ReportFixer): void => {
+        context.report({
+          node: call,
+          messageId: 'ariaCurrentTakeover',
+          data: { tag },
+          fix,
+        });
+      };
+
+      const params = call.arguments[0];
+
+      if (params === undefined) {
+        if (!link) return;
+        const close = source.getLastToken(toEstree(call));
+
+        if (close === null) return;
+        report((fixer) => fixer.insertTextBefore(close, `{ ${OPT_OUT} }`));
+
+        return;
+      }
+
+      if (!isObjectExpression(params) || hasSpread(params)) return;
+      const property = propertyNamed(params, 'ariaCurrentValue');
+
+      if (property === undefined) {
+        if (!link) return;
+        const first = params.properties[0];
+        report((fixer) =>
+          first === undefined
+            ? fixer.replaceText(params, `{ ${OPT_OUT} }`)
+            : fixer.insertTextBefore(first, `${OPT_OUT}, `),
+        );
+
+        return;
+      }
+
+      const { value } = property;
+
+      // Non-literal is unknowable, so it stays suppressed.
+      if (value.type !== 'Literal' || NEVER_WRITTEN.has(value.value)) return;
+      // An explicit value still takes the attribute over; rewriting
+      // someone's deliberate choice is not this rule's business.
+      report();
+    };
 
     return {
       ImportDeclaration(node) {
@@ -56,7 +115,6 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         if (!tracker.isLitTemplate(asNode(node.tag))) return;
 
-        const source = context.sourceCode;
         const expressions = asNodes(node.quasi.expressions);
         const analyzer = TemplateAnalyzer.create(node);
 
@@ -67,6 +125,13 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
             const attributes = Object.keys(element.attribs);
 
             if (!attributes.includes('aria-current')) return;
+
+            // Off a link, only an explicit ariaCurrentValue writes the attribute.
+            const link = isLinkElement(
+              element,
+              attributePartsOf(element),
+              NO_DECLARED_LINKS,
+            );
 
             for (const attribute of attributes) {
               const index = elementPartIndex(attribute);
@@ -81,56 +146,7 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
                 continue;
               }
 
-              const call = expression;
-
-              const report = (fix: Rule.ReportFixer): void => {
-                context.report({
-                  node: call,
-                  messageId: 'ariaCurrentTakeover',
-                  data: { tag: element.name },
-                  fix,
-                });
-              };
-
-              const params = call.arguments[0];
-
-              if (params === undefined) {
-                const close = source.getLastToken(toEstree(call));
-
-                if (close === null) continue;
-                report((fixer) =>
-                  fixer.insertTextBefore(close, `{ ${OPT_OUT} }`),
-                );
-                continue;
-              }
-
-              if (!isObjectExpression(params)) continue;
-              const object = params;
-
-              if (hasSpread(object)) continue;
-              const property = propertyNamed(object, 'ariaCurrentValue');
-
-              if (property === undefined) {
-                const first = object.properties[0];
-                report((fixer) =>
-                  first === undefined
-                    ? fixer.replaceText(object, `{ ${OPT_OUT} }`)
-                    : fixer.insertTextBefore(first, `${OPT_OUT}, `),
-                );
-                continue;
-              }
-
-              const { value } = property;
-
-              // Non-literal is unknowable, so it stays suppressed.
-              if (value.type !== 'Literal' || value.value === false) continue;
-              // An explicit value still takes the attribute over; rewriting
-              // someone's deliberate choice is not this rule's business.
-              context.report({
-                node: call,
-                messageId: 'ariaCurrentTakeover',
-                data: { tag: element.name },
-              });
+              check(expression, element.name, link);
             }
           },
         });

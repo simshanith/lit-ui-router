@@ -138,9 +138,9 @@ describe('activateLazyLoadSpans', () => {
     expect(load.status.code).toBe(0);
     // The transition that ran the load is the one the retry redirected.
     expect(parentOf(load)).toBe(idOf(named(all, 'users.**')));
-    expect(named(all, 'users.**').attributes['uirouter.outcome']).toBe(
-      'redirected',
-    );
+    expect(
+      named(all, 'users.**').attributes['uirouter.transition.outcome'],
+    ).toBe('redirected');
     expect(parentOf(named(all, 'GET before await'))).toBe(idOf(load));
     expect(parentOf(named(all, 'GET after await'))).toBe(idOf(load));
     // A state the load registered has its own hooks covered too.
@@ -382,7 +382,7 @@ describe('activateLazyLoadSpans', () => {
     const load = find('lazy load users.**');
 
     // The shape the Timeline joins as `child`: a router transition span, a router span under it, an app span under that.
-    expect(transition?.attributes?.['uirouter.transition_id']).toBe(0);
+    expect(transition?.attributes?.['uirouter.transition.id']).toBe(0);
     expect(load?.parentSpanId).toBe(transition?.spanId);
     expect(load?.attributes?.['uirouter.state']).toBe('users.**');
     expect(find('GET before await')?.parentSpanId).toBe(load?.spanId);

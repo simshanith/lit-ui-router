@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 
 import { EXAMPLE_NAMES, EXAMPLES, RESERVED_NAMES } from 'examples/embeds';
 
-import { EXAMPLE_FACETS, SAMPLE_APPS } from '../../catalog/examples.ts';
+import { EXAMPLE_FACETS } from '../../catalog/examples.ts';
 import {
   dependencyFacets,
   EMPTY_LIVE_EXAMPLES,
@@ -17,7 +17,6 @@ import {
   LIVE_EXAMPLES,
   liveExamples,
   locationOf,
-  sampleAppFacets,
   unembeddedExamples,
 } from '../example-index.ts';
 
@@ -55,6 +54,15 @@ describe('the example facets', () => {
     assert.equal(exampleFacets('uirouter-react').location, 'navigation');
   });
 
+  it('read a replace-aware hash location plugin as the hash location', () => {
+    assert.equal(
+      locationOf(['router.plugin(replaceAwareHashLocationPlugin);']),
+      'hash',
+    );
+    assert.equal(exampleFacets('features-tour').location, 'hash');
+    assert.throws(() => locationOf(['router.plugin(myHashLocationPlugin);']));
+  });
+
   it('refuse sources with no location plugin or with two', () => {
     assert.throws(() => locationOf(['const x = 1;']));
     assert.throws(() =>
@@ -74,26 +82,14 @@ describe('the example facets', () => {
     );
     assert.throws(() => kindOf('my-app'));
   });
-
-  it('read each sample-app mount from its app package', () => {
-    assert.equal(
-      sampleAppFacets(SAMPLE_APPS['/app-mobx'].app).bindings,
-      'mobx',
-    );
-    assert.equal(sampleAppFacets(SAMPLE_APPS['/app'].app).bindings, 'none');
-    assert.equal(sampleAppFacets(SAMPLE_APPS['/app'].app).registry, 'on');
-  });
 });
 
 describe('the example index', () => {
   const list = exampleIndex();
 
-  it('links every example and sample-app mount', () => {
+  it('links every example', () => {
     for (const name of EXAMPLE_NAMES)
       assert.ok(list.includes(`(/examples/${name}/)`), name);
-
-    for (const mount of Object.keys(SAMPLE_APPS))
-      assert.ok(list.includes(`(${mount})`), mount);
   });
 
   it('links the pages that embed an example', () => {

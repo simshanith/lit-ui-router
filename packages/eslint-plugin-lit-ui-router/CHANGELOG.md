@@ -2,6 +2,21 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/).
 
+## 1.3.2 (2026-11-22)
+
+### Bug Fixes
+
+* **eslint-plugin-lit-ui-router:** drop import autofixes when the name is bound at the fix site ([#2349](https://github.com/simshanith/lit-ui-router/issues/2349)) ([4bc1caa](https://github.com/simshanith/lit-ui-router/commit/4bc1caa33c9f505221f30af4628c4d7c334fbedd))
+* **eslint-plugin-lit-ui-router:** insert aria-current after class text with an entity or CRLF ([#2354](https://github.com/simshanith/lit-ui-router/issues/2354)) ([01a68f0](https://github.com/simshanith/lit-ui-router/commit/01a68f09a1c79b8d27ffdf50e325ade5b2d96654))
+* **eslint-plugin-lit-ui-router:** stop directive-position flagging static-html literal tags ([#2351](https://github.com/simshanith/lit-ui-router/issues/2351)) ([0e62829](https://github.com/simshanith/lit-ui-router/commit/0e62829888317dbe169639270cba85ae44f36b54))
+* **eslint-plugin-lit-ui-router:** stop reporting sref-active-aria-current on non-link elements ([#2352](https://github.com/simshanith/lit-ui-router/issues/2352)) ([70a8d92](https://github.com/simshanith/lit-ui-router/commit/70a8d92b4655abcaee24737d05253dfa07c24223))
+
+### Documentation
+
+* add plain-language opening sentences to package pages and READMEs ([#2315](https://github.com/simshanith/lit-ui-router/issues/2315)) ([7e298d1](https://github.com/simshanith/lit-ui-router/commit/7e298d119ce5acc6678a58bb83bfc49f820964e0))
+
+[Release page](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/1.3.2/) · [Diff from 1.3.1](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/diff/1.3.1...1.3.2/)
+
 ## 1.3.1 (2026-11-13)
 
 ### Build System

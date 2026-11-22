@@ -109,15 +109,16 @@ An imported session joins its router spans the same way.
 
 ### The router's span for a transition
 
-`uirouter.transition_id` is core's `Transition.$id`, unique per router and
+`uirouter.transition.id` is core's `Transition.$id`, unique per router and
 counted from 0. Two routers on a page, or a router created again after a
 session restarted, reuse ids. The panel takes the router's span for a
-transition to be the one whose `uirouter.transition_id`, `uirouter.from` and
-`uirouter.to` match the recorded transition and whose start is within 2ms of
-the recorded start. The recorder and the reporter each read the clock in their
-own `onBefore` hook in the same synchronous pass, so the two starts differ by
-microseconds; another router's transition with the same id between the same
-states inside those 2ms is the one case this cannot tell apart. Then neither
+transition to be the one whose `uirouter.transition.id`,
+`uirouter.transition.from` and `uirouter.transition.to` match the recorded
+transition and whose start is within 2ms of the recorded start. The recorder
+and the reporter each read the clock in their own `onBefore` hook in the same
+synchronous pass, so the two starts differ by microseconds; another router's
+transition with the same id between the same states inside those 2ms is the
+one case this cannot tell apart. Then neither
 span is the transition's, its resolves are not timed from either, and a span
 under either one, or under one of their phase, resolve or lazy load spans, is joined by
 time, as `during`. A span under the router span of another transition in the
@@ -174,8 +175,9 @@ scrubs them by the same `Redaction`:
 
 - With `params: 'all'`, every attribute value is kept.
 - Otherwise the router's own `uirouter.*` attributes, which name states and
-  ids, are kept, a `uirouter.param.<key>` is kept when `params` lists `<key>`,
-  and every other attribute keeps its key with `[redacted]` for its value.
+  ids, are kept, a `uirouter.transition.param.<key>` is kept when `params`
+  lists `<key>`, and every other attribute keeps its key with `[redacted]` for
+  its value.
 - Names, ids, times and the status code are kept. A span carries no status
   message. Span names are kept on the conventions' word that a name holds no
   URL or id; an app that names spans after URLs should export with

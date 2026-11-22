@@ -4,7 +4,8 @@ import { html, noChange, nothing } from 'lit';
 import { memoryLocationPlugin } from '@uirouter/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideContext } from 'lit-ui-router/context';
-import { UIRouterLit } from 'lit-ui-router/pure';
+import { UIRouterLit, uiSref } from 'lit-ui-router/pure';
+import { getByText } from '@testing-library/dom';
 import type { LitElement } from 'lit';
 import type { LitStateDeclaration, UiView } from 'lit-ui-router/pure';
 
@@ -851,6 +852,39 @@ describe('the served <ui-view>', () => {
         expect(warn).toHaveBeenCalledTimes(1);
       } finally {
         warn.mockRestore();
+      }
+    });
+  });
+  describe('a relative link in its fallback', () => {
+    it('resolves against the enclosing state once the view wakes', async () => {
+      const { uiRouterEl } = await setupRouter([
+        {
+          name: 'nested',
+          url: '/nested',
+          component: () =>
+            html`<!-- @ts-expect-error --><ui-view defer-hydration
+                ><a ${uiSref('.child')}>Show the child</a></ui-view
+              >`,
+        },
+        { name: 'nested.child', url: '/child' },
+      ]);
+
+      const uninstall = provideContext(container, adoptUiViewContext, () => {});
+
+      try {
+        await routerGo(router, 'nested');
+        const inner = uiRouterEl.querySelector<View>('ui-view ui-view')!;
+
+        // One macrotask: the link seeks its view before the wake.
+        await tick();
+        inner.removeAttribute('defer-hydration');
+        await waitForUpdate(inner);
+
+        expect(
+          getByText(uiRouterEl, 'Show the child').getAttribute('href'),
+        ).toBe('#/nested/child');
+      } finally {
+        uninstall();
       }
     });
   });

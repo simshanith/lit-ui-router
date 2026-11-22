@@ -1,6 +1,9 @@
 // Syntax-only, so the rules also load into oxlint jsPlugins (#676).
 import type { Rule, Scope, SourceCode } from 'eslint';
-import type { Parse5Element } from 'eslint-plugin-lit/lib/util.js';
+import type {
+  AttributeLocation,
+  Parse5Element,
+} from 'eslint-plugin-lit/lib/util.js';
 
 export type { Parse5Element };
 
@@ -161,24 +164,31 @@ const ourSourcesOf = (
   return (source) => entries.some((entry) => isSubpathOf(source, entry));
 };
 
-/** The definition an identifier resolves to; `undefined` when it is unbound. */
-const definitionOf = (
+/** The variable `name` resolves to from `node`'s scope; `undefined` when it is unbound. */
+const variableAt = (
   context: Rule.RuleContext,
   node: Node,
-): Scope.Definition | undefined => {
-  if (!isIdentifier(node)) return undefined;
-  const { name } = node;
-
+  name: string,
+): Scope.Variable | undefined => {
   let scope: Scope.Scope | null = context.sourceCode.getScope(toEstree(node));
 
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
 
-    if (variable !== undefined) return variable.defs[0];
+    if (variable !== undefined) return variable;
   }
 
   return undefined;
 };
+
+/** The definition an identifier resolves to; `undefined` when it is unbound. */
+const definitionOf = (
+  context: Rule.RuleContext,
+  node: Node,
+): Scope.Definition | undefined =>
+  isIdentifier(node)
+    ? variableAt(context, node, node.name)?.defs[0]
+    : undefined;
 
 /** The import an identifier resolves to, or nothing: a shadowing local wins. */
 const importBindingOf = (context: Rule.RuleContext, node: Node) => {
@@ -193,7 +203,7 @@ const importBindingOf = (context: Rule.RuleContext, node: Node) => {
 };
 
 /** `name` imported from an accepted source, or `ns.name` with `ns` such a namespace. */
-const importedAs = (
+export const importedAs = (
   context: Rule.RuleContext,
   node: Node,
   name: string,
@@ -280,31 +290,51 @@ export const attributePartsOf = (
  *
  * The last expression, never the matched one, so `class="nav ${a} ${b}"` lands
  * after the quote rather than inside the value.
+ *
+ * `html` is the analyzer's source, which parse5's offsets index. It is the
+ * template's raw text with placeholders, so the static tail measures in raw
+ * characters, entities undecoded. Whether CRLF is folded to LF depends on the
+ * parser.
  */
 export const attributeEnd = (
   text: string,
+  html: string,
   element: Parse5Element,
   attribute: string,
   expressions: readonly Node[],
 ): number | undefined => {
   const value = element.attribs[attribute];
 
-  if (value === undefined) return undefined;
+  // SAFETY: the analyzer parses with sourceCodeLocationInfo, which records attrs
+  const tag = element.sourceCodeLocation as
+    | AttributeLocation
+    | null
+    | undefined;
+
+  const location = tag?.attrs[attribute];
+
+  if (value === undefined || location == null) return undefined;
   const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
 
-  if (last?.index === undefined) return undefined;
+  if (last === undefined) return undefined;
   const range = expressions[Number(last[1])]?.range;
 
   if (range === undefined) return undefined;
   // The expression's own text stops short of the template's `}`.
   const close = text.indexOf('}', range[1]);
+  const placeholder = html.lastIndexOf(last[0], location.endOffset);
 
-  if (close === -1) return undefined;
-  // parse5 keeps the static text around the placeholder, so the raw source
-  // resumes with it, and the value's quote (if any) follows.
-  let end = close + 1 + (value.length - last.index - last[0].length);
+  if (close === -1 || placeholder === -1) return undefined;
+  const tail = html.slice(placeholder + last[0].length, location.endOffset);
+  let end = close + 1;
 
-  if (text[end] === '"' || text[end] === "'") end += 1;
+  // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
+  if (tail === '"' && text[end] !== '"') return end;
+
+  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
+  for (let unit = 0; unit < tail.length; unit += 1) {
+    end += tail[unit] === '\n' && text.startsWith('\r\n', end) ? 2 : 1;
+  }
 
   return end;
 };
@@ -350,20 +380,36 @@ export const propertyNamed = (
   return undefined;
 };
 
-/** Named specifiers of every lit-ui-router import in this file. */
+type ImportDeclarationNode = Extract<
+  SourceCode['ast']['body'][number],
+  { type: 'ImportDeclaration' }
+>;
+
+type ImportNode =
+  | ImportDeclarationNode
+  | ImportDeclarationNode['specifiers'][number];
+
+/** typescript-eslint's `import type` marker, which eslint's ESTree types omit. */
+const isTypeOnly = (node: ImportNode): boolean =>
+  'importKind' in node && node.importKind === 'type';
+
+/** Named value specifiers of every lit-ui-router import in this file. */
 const ourSpecifiers = (
   source: SourceCode,
   isOurs: (source: string) => boolean,
 ) =>
   source.ast.body.flatMap((statement) => {
-    if (statement.type !== 'ImportDeclaration') return [];
+    if (statement.type !== 'ImportDeclaration' || isTypeOnly(statement)) {
+      return [];
+    }
+
     const from = statement.source.value;
 
     if (!isString(from) || !isOurs(from)) return [];
 
-    return statement.specifiers.filter(
-      (specifier) => specifier.type === 'ImportSpecifier',
-    );
+    return statement.specifiers
+      .filter((specifier) => specifier.type === 'ImportSpecifier')
+      .filter((specifier) => !isTypeOnly(specifier));
   });
 
 /** How a fix spells a lit-ui-router export, and the import edits it needs. */
@@ -375,7 +421,8 @@ export interface SiblingBinding {
 /**
  * Spell `name` the way `callee` reaches lit-ui-router: through the same
  * namespace, an existing specifier, or a specifier added after `callee`'s own.
- * `undefined` when `callee`'s import cannot be found to extend.
+ * `undefined` when `callee`'s import cannot be found to extend, or `name` is
+ * taken or shadowed at `callee`.
  */
 export const siblingBinding = (
   fixer: Rule.RuleFixer,
@@ -400,14 +447,22 @@ export const siblingBinding = (
   );
 
   if (existing !== undefined) {
-    return { binding: existing.local.name, edits: [] };
+    // A nearer binding of the same name would take the call at the fix site.
+    const reaches =
+      variableAt(context, callee, existing.local.name)?.defs[0]?.node ===
+      existing;
+
+    return reaches ? { binding: existing.local.name, edits: [] } : undefined;
   }
 
   const anchor = specifiers.find(
     (specifier) => specifier.local.name === callee.name,
   );
 
-  if (anchor === undefined) return undefined;
+  // Another binding already holds the name, so the added specifier would redeclare it.
+  if (anchor === undefined || variableAt(context, callee, name) !== undefined) {
+    return undefined;
+  }
 
   return {
     binding: name,

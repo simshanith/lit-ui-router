@@ -204,35 +204,180 @@ type ParentName<D> = D extends { parent: infer P extends string }
 
 // ---- params from the url ---------------------------------------------------
 
-type Split<
-  S extends string,
-  Sep extends string,
-> = S extends `${infer Head}${Sep}${infer Tail}` ? Head | Split<Tail, Sep> : S;
-
 type UrlOf<D> = D extends { url: infer U extends string } ? U : '';
 
-type PathPart<U extends string> = U extends `${infer P}?${string}` ? P : U;
+type WordChars<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? WordChars<R, Acc | C>
+  : Acc;
 
-type QueryPart<U extends string> = U extends `${string}?${infer Q}` ? Q : '';
+// Core's placeholder name characters: `[\w\[\]]`.
+type WordChar =
+  WordChars<'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_[]'>;
 
-// [name, type] for `:name`, `{name}` and `{name:type}`.
-type PlaceholderEntry<S extends string> = S extends `:${infer Name}`
-  ? [Name, 'path']
-  : S extends `{${infer Body}}`
-    ? Body extends `${infer Name}:${infer Type}`
-      ? [Name, Type]
-      : [Body, 'path']
-    : never;
+// JavaScript's `\s`.
+type Space =
+  | ' '
+  | '\t'
+  | '\n'
+  | '\r'
+  | '\f'
+  | '\v'
+  | '\u00a0'
+  | '\u1680'
+  | '\u2000'
+  | '\u2001'
+  | '\u2002'
+  | '\u2003'
+  | '\u2004'
+  | '\u2005'
+  | '\u2006'
+  | '\u2007'
+  | '\u2008'
+  | '\u2009'
+  | '\u200a'
+  | '\u2028'
+  | '\u2029'
+  | '\u202f'
+  | '\u205f'
+  | '\u3000'
+  | '\ufeff';
 
-type QueryEntry<S extends string> = S extends ''
-  ? never
-  : S extends `{${string}}`
-    ? PlaceholderEntry<S>
-    : [S, 'query'];
+// Walks the url as core's `placeholder` regex does: [path entries, query string].
+type ScanPath<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends '?' | ':' | '*' | '{'
+    ? C extends '?'
+      ? [Acc, R]
+      : C extends '{'
+        ? ScanCurly<R, '', Acc, R>
+        : ScanName<R, '', Acc>
+    : ScanPath<R, Acc>
+  : [Acc, ''];
 
-type PathEntries<D> = PlaceholderEntry<Split<PathPart<UrlOf<D>>, '/'>>;
+type ScanName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanPath<S, Acc>
+      : ScanPath<S, Acc | [Name, 'path']>
+  : Name extends ''
+    ? [Acc, '']
+    : [Acc | [Name, 'path'], ''];
 
-type QueryEntries<D> = QueryEntry<Split<QueryPart<UrlOf<D>>, '&'>>;
+// `{name}` or `{name:body}`; anything else leaves the `{` as literal text, resuming at `Resume`.
+type ScanCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends WordChar
+    ? ScanCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanPath<Resume, Acc>
+      : C extends '}'
+        ? ScanPath<R, Acc | [Name, 'path']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume>
+          : ScanPath<Resume, Acc>
+  : ScanPath<Resume, Acc>;
+
+type SkipSpace<S extends string> = S extends `${infer C}${infer R}`
+  ? C extends Space
+    ? SkipSpace<R>
+    : S
+  : S;
+
+// The characters JavaScript's `.` doesn't match.
+type LineTerminator = '\n' | '\r' | '\u2028' | '\u2029';
+
+// A body is one or more of: a non-brace character, a `\` escape, or one level of `{...}`.
+// `Q` resumes in the query scanner instead of the path scanner.
+type ScanBody<
+  S extends string,
+  Name extends string,
+  Body extends string,
+  Nested extends boolean,
+  Acc,
+  Resume extends string,
+  Q extends boolean = false,
+> = S extends `${infer C}${infer R}`
+  ? C extends '\\'
+    ? R extends `${infer E}${infer T}`
+      ? E extends LineTerminator
+        ? ScanNext<Q, Resume, Acc>
+        : ScanBody<T, Name, `${Body}${C}${E}`, Nested, Acc, Resume, Q>
+      : ScanNext<Q, Resume, Acc>
+    : C extends '{'
+      ? Nested extends true
+        ? ScanNext<Q, Resume, Acc>
+        : ScanBody<R, Name, `${Body}${C}`, true, Acc, Resume, Q>
+      : C extends '}'
+        ? Nested extends true
+          ? ScanBody<R, Name, `${Body}${C}`, false, Acc, Resume, Q>
+          : Body extends ''
+            ? ScanNext<Q, Resume, Acc>
+            : ScanNext<Q, R, Acc | [Name, Body]>
+        : ScanBody<R, Name, `${Body}${C}`, Nested, Acc, Resume, Q>
+  : ScanNext<Q, Resume, Acc>;
+
+type ScanNext<Q extends boolean, S extends string, Acc> = Q extends true
+  ? ScanQuery<S, Acc>
+  : ScanPath<S, Acc>;
+
+type Scan<D> = ScanPath<UrlOf<D>>;
+
+// Core's query name characters: `[\w\[\].-]`.
+type QueryChar = WordChar | '.' | '-';
+
+// Walks the query as core's `searchPlaceholder` regex does; other characters only separate names.
+type ScanQuery<S extends string, Acc = never> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, C, Acc>
+    : C extends ':'
+      ? ScanQueryName<R, '', Acc>
+      : C extends '{'
+        ? ScanQueryCurly<R, '', Acc, R>
+        : ScanQuery<R, Acc>
+  : Acc;
+
+type ScanQueryName<
+  S extends string,
+  Name extends string,
+  Acc,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryName<R, `${Name}${C}`, Acc>
+    : Name extends ''
+      ? ScanQuery<S, Acc>
+      : ScanQuery<S, Acc | [Name, 'query']>
+  : Name extends ''
+    ? Acc
+    : Acc | [Name, 'query'];
+
+type ScanQueryCurly<
+  S extends string,
+  Name extends string,
+  Acc,
+  Resume extends string,
+> = S extends `${infer C}${infer R}`
+  ? C extends QueryChar
+    ? ScanQueryCurly<R, `${Name}${C}`, Acc, Resume>
+    : Name extends ''
+      ? ScanQuery<Resume, Acc>
+      : C extends '}'
+        ? ScanQuery<R, Acc | [Name, 'query']>
+        : C extends ':'
+          ? ScanBody<SkipSpace<R>, Name, '', false, Acc, Resume, true>
+          : ScanQuery<Resume, Acc>
+  : ScanQuery<Resume, Acc>;
+
+type PathEntries<D> = Scan<D>[0];
+
+type QueryEntries<D> = ScanQuery<Scan<D>[1]>;
 
 // Core's built-in param types; a regex placeholder (`{id:[0-9]+}`) or a custom type reads as `string`.
 type BuiltInType<T> = T extends 'int'
@@ -286,12 +431,51 @@ type Widen<V> = V extends () => infer R
 // A `value: null` default is a legal value to pass and what an absent param reads back.
 type NullDefault<C> = null extends DefaultOf<C> ? null : never;
 
+// Core's array mode: an explicit `array` wins, then a `name[]` id; `'auto'` stays scalar.
+type IsArray<C, K> = C extends { array: infer A }
+  ? A
+  : K extends `${string}[]`
+    ? true
+    : false;
+
+// Core wraps a scalar passed to an array param, so input takes either.
+type ArrayOf<T, A, Mode> = A extends true
+  ? Mode extends 'input'
+    ? T | readonly T[]
+    : T[]
+  : T;
+
+// Only `go` (`inherit: true`) wraps a scalar default on an array param; `transitionTo` reads it back as is.
+type ScalarDefault<C, K> =
+  IsArray<C, K> extends true
+    ? Exclude<Invoked<DefaultOf<C>>, readonly unknown[] | null | undefined>
+    : never;
+
+type Invoked<V> = V extends () => infer R ? R : V;
+
+// A scalar default and an array one both name the element type.
+type DefaultElement<V> = [V] extends [never]
+  ? unknown
+  : Widen<V> extends infer W
+    ? [W] extends [readonly (infer E)[]]
+      ? [E] extends [never]
+        ? unknown
+        : Widen<E>
+      : W
+    : never;
+
 // An untyped non-url param is core's `any`, so only its default's type is known.
-type ConfigType<C, UrlType> = C extends { type: infer T extends string }
-  ? BuiltInType<T> | NullDefault<C>
+type ConfigType<C, UrlType, K, Mode> = C extends {
+  type: infer T extends string;
+}
+  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>, Mode>, C, K>
   : [UrlType] extends [never]
-    ? Widen<DefaultOf<C>>
-    : UrlType | NullDefault<C>;
+    ? IsArray<C, K> extends true
+      ? WithDefaults<ArrayOf<DefaultElement<DefaultOf<C>>, true, Mode>, C, K>
+      : Widen<DefaultOf<C>>
+    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>, Mode>, C, K>;
+
+type WithDefaults<T, C, K> = T | NullDefault<C> | ScalarDefault<C, K>;
 
 type UrlKeys<D> = PathEntries<D>[0] | QueryEntries<D>[0];
 
@@ -301,9 +485,14 @@ type UrlType<D, K> = BuiltInType<
   Extract<PathEntries<D> | QueryEntries<D>, [K, string]>[1]
 >;
 
-type KeyType<D, K> = K extends keyof ParamsBlock<D>
-  ? ConfigType<ParamsBlock<D>[K], K extends UrlKeys<D> ? UrlType<D, K> : never>
-  : UrlType<D, K>;
+type KeyType<D, K, Mode> = K extends keyof ParamsBlock<D>
+  ? ConfigType<
+      ParamsBlock<D>[K],
+      K extends UrlKeys<D> ? UrlType<D, K> : never,
+      K,
+      Mode
+    >
+  : ArrayOf<UrlType<D, K>, IsArray<unknown, K>, Mode>;
 
 type IsQuery<D, K> = K extends QueryEntries<D>[0] ? true : false;
 
@@ -331,7 +520,7 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
     ) extends true
       ? never
       : K
-  ]: KeyType<D, K>;
+  ]: KeyType<D, K, Optional>;
 } & {
   [
     K in OwnKeys<D> as (
@@ -339,7 +528,7 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
     ) extends true
       ? K
       : never
-  ]?: KeyType<D, K>;
+  ]?: KeyType<D, K, Optional>;
 };
 
 type LineageParams<N, Optional extends 'input' | 'output'> = [

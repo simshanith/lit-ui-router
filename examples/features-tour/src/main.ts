@@ -7,7 +7,13 @@ import {
   type SVGTemplateResult,
 } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { hashLocationPlugin, type Transition } from '@uirouter/core';
+import {
+  BrowserLocationConfig,
+  HashLocationService,
+  locationPluginFactory,
+  type Transition,
+  type UIRouter,
+} from '@uirouter/core';
 import {
   TransitionController,
   UIRouterLit,
@@ -99,6 +105,9 @@ const icon = (name: keyof typeof ICONS) =>
   </svg>`;
 
 type Resolved = { card: Card };
+
+// A slideshow moves in place: each card takes over the history entry, so Back leaves the tour.
+const IN_PLACE = { location: 'replace' } as const;
 
 const cardView = (card: Card) => html`
   <article class="card">
@@ -253,7 +262,7 @@ export class AppRoot extends LitElement {
       <nav class="pager" aria-label="Feature cards">
         <a
           aria-label="Previous card"
-          ${uiSref('card', { cardId: step(this.cardId, -1) })}
+          ${uiSref('card', { cardId: step(this.cardId, -1) }, IN_PLACE)}
           >${icon('previous')}</a
         >
         ${CARDS.map(
@@ -262,12 +271,12 @@ export class AppRoot extends LitElement {
               class="dot"
               aria-label="${card.title}, card ${index + 1} of ${CARDS.length}"
               ${uiSrefActive({ activeClasses: ['active'] })}
-              ${uiSref('card', { cardId: card.id })}
+              ${uiSref('card', { cardId: card.id }, IN_PLACE)}
             ></a>`,
         )}
         <a
           aria-label="Next card"
-          ${uiSref('card', { cardId: step(this.cardId, 1) })}
+          ${uiSref('card', { cardId: step(this.cardId, 1) }, IN_PLACE)}
           >${icon('next')}</a
         >
       </nav>
@@ -297,13 +306,44 @@ const cardState: LitStateDeclaration<Resolved> = {
 // Router setup
 const router = new UIRouterLit();
 
-router.plugin(hashLocationPlugin);
+// Core's hash location pushes even for { location: 'replace' }; this one honours it.
+class ReplaceAwareHashLocationService extends HashLocationService {
+  // locationPluginFactory types the router as optional; the base class requires it.
+  constructor(uiRouter?: UIRouter) {
+    if (!uiRouter) {
+      throw new Error('ReplaceAwareHashLocationService requires a UIRouter');
+    }
+
+    super(uiRouter);
+  }
+
+  _set(state: null, title: string, url: string, replace: boolean) {
+    if (!replace) {
+      super._set(state, title, url, replace);
+
+      return;
+    }
+
+    // location.replace, not history.replaceState: it still fires hashchange, which an embedding page listens for.
+    location.replace(`#${url}`);
+  }
+}
+
+const replaceAwareHashLocationPlugin = locationPluginFactory(
+  'featuresTour.replaceAwareHashLocation',
+  false,
+  ReplaceAwareHashLocationService,
+  BrowserLocationConfig,
+);
+
+router.plugin(replaceAwareHashLocationPlugin);
 
 router.stateRegistry.register(cardState);
 
 router.urlService.rules.initial({
   state: 'card',
   params: { cardId: 'states' },
+  options: IN_PLACE,
 });
 
 router.start();

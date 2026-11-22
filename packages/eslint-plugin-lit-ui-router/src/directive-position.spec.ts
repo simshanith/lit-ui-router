@@ -84,6 +84,34 @@ ruleTester.run('directive-position', directivePosition, {
       name: "an unrelated module's namespace is not a lit namespace",
       code: `${IMPORTS}import * as other from './other.js';\nother.html\`<a href=\${uiSref('home')}>Home</a>\`;`,
     },
+    {
+      name: 'a static-html literal tag hides its element, so its parts go unjudged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a quoted > does not close a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="a > b" \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a quote after = and whitespace opens a value in a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title= 'a > b' \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a quote spanning an expression in a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="\${'x'} > y" href=\${srefHref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'an attribute part on a static-html literal tag goes unjudged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} class="x" href=\${srefHref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a comment with an odd quote count before a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<!-- don't --><\${tag} \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
+    {
+      name: 'a bogus comment with an odd quote count before a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<!doctype don't><\${tag} \${uiSref('home')}>Home</\${tag}>\`;`,
+    },
   ],
   invalid: [
     {
@@ -187,6 +215,41 @@ ruleTester.run('directive-position', directivePosition, {
     {
       name: 'a namespace import still counts',
       code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href=\${lur.uiSref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'a literal < before an expression in a plain lit template is still judged',
+      code: `${IMPORTS}html\`<p>1 <\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'a quoted < inside a static-html literal tag keeps the quote open',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title="a <\${'x'}">\${uiSref('home')}</\${tag}>\`;`,
+      errors: [{ messageId: 'elementPartOnly', line: 4 }],
+    },
+    {
+      name: 'a quoted < in a static-html template is not a tag name',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p title="1 <\${'x'}">\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'elements after a quoted < in a static-html template stay judged',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p title="1 <\${'x'}"></p><a \${srefHref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'attributePartOnly' }],
+    },
+    {
+      name: 'a directive in tag-name position of a static-html template',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<p>1 <\${uiSref('home')}</p>\`;`,
+      errors: [{ messageId: 'elementPartOnly' }],
+    },
+    {
+      name: 'child position inside a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} \${uiSref('home')}><span>\${uiSref('home')}</span></\${tag}>\`;`,
+      errors: [{ messageId: 'elementPartOnly', line: 4, column: 40 }],
+    },
+    {
+      name: 'a quote mid-value does not open a quote in a static-html literal tag',
+      code: `import { html, literal } from 'lit/static-html.js';\nimport { srefHref, uiSref } from 'lit-ui-router';\nconst tag = literal\`a\`;\nhtml\`<\${tag} title=don't><span>\${uiSref('home')}</span></\${tag}>\`;`,
       errors: [{ messageId: 'elementPartOnly' }],
     },
   ],

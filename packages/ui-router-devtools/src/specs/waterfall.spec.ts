@@ -139,9 +139,9 @@ const routerSpan = (tx: Tx, spanId: string, traceId = `trace-${spanId}`) =>
     traceId,
     name: tx.to,
     attributes: {
-      'uirouter.transition_id': tx.id,
-      'uirouter.from': tx.from,
-      'uirouter.to': tx.to,
+      'uirouter.transition.id': tx.id,
+      'uirouter.transition.from': tx.from,
+      'uirouter.transition.to': tx.to,
     },
   });
 

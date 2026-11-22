@@ -2,8 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render, TemplateResult } from 'lit';
 import { RejectType, TargetState, type RawParams } from '@uirouter/core';
 import { PartInfo, PartType } from 'lit/directive.js';
+import { getByRole } from '@testing-library/dom';
 
 import { uiSref, UiSrefDirective } from '../ui-sref.js';
+import { srefHref } from '../sref-href.js';
+import { srefActiveClass } from '../sref-active.js';
 import {
   UiSrefElement,
   UI_SREF_TARGET_EVENT,
@@ -12,6 +15,7 @@ import {
 } from '../sref-internals.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';
+import type { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -1394,6 +1398,166 @@ describe('uiSref directive', () => {
         const anchor = wrapper.querySelector('a')!;
         expect(anchor.getAttribute('href')).toContain('/sibling');
       }
+    });
+
+    describe('in a view fallback', () => {
+      const states = (
+        fallback: () => TemplateResult,
+      ): LitStateDeclaration[] => [
+        { name: 'nested', url: '/nested', component: fallback },
+        {
+          name: 'nested.child',
+          url: '/child',
+          component: () => html`<a ${uiSref('^.other')}>Show the other</a>`,
+        },
+        {
+          name: 'nested.other',
+          url: '/other',
+          component: () => html`<p>Other</p>`,
+        },
+      ];
+
+      async function mount(fallback: () => TemplateResult): Promise<{
+        root: HTMLElement;
+        router: UIRouterLit;
+      }> {
+        router = createTestRouter(states(fallback));
+        const uiRouter = document.createElement('ui-router');
+        uiRouter.uiRouter = router;
+        const uiView = document.createElement('ui-view');
+        uiRouter.appendChild(uiView);
+        container.appendChild(uiRouter);
+        await waitForUpdate(uiRouter);
+        await waitForUpdate(uiView);
+
+        router.start();
+        await routerGo(router, 'nested');
+        await tick(50);
+
+        return { root: uiRouter, router };
+      }
+
+      const link = (root: HTMLElement, name: string): HTMLAnchorElement =>
+        getByRole<HTMLAnchorElement>(root, 'link', { name });
+
+      it('resolves against the enclosing state', async () => {
+        const { root } = await mount(
+          () =>
+            html`<ui-view><a ${uiSref('.child')}>Show the child</a></ui-view>`,
+        );
+
+        expect(link(root, 'Show the child').getAttribute('href')).toBe(
+          '#/nested/child',
+        );
+      });
+
+      it('resolves a fallback nested in a fallback against the enclosing state', async () => {
+        const { root } = await mount(
+          () =>
+            html`<ui-view
+              ><ui-view name="inner"
+                ><a ${uiSref('.child')}>Show the child</a></ui-view
+              ></ui-view
+            >`,
+        );
+
+        expect(link(root, 'Show the child').getAttribute('href')).toBe(
+          '#/nested/child',
+        );
+      });
+
+      it('fills a view nested in a fallback by its dotted address', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view
+              ><ui-view name="inner"><p>Inner fallback</p></ui-view></ui-view
+            >`,
+        );
+
+        const panel: LitStateDeclaration = {
+          name: 'nested.panel',
+          url: '/panel',
+          views: {
+            '$default.inner@nested': { component: () => html`<p>Panel</p>` },
+          },
+        };
+
+        router.stateRegistry.register(panel);
+
+        await routerGo(router, 'nested.panel');
+        await tick(50);
+
+        const inner = root.querySelector<UiView>('ui-view[name="inner"]')!;
+        expect(inner.uiViewData?.fqn).toBe('$default.$default.inner');
+        expect(inner.textContent?.trim()).toBe('Panel');
+      });
+
+      it('registers a view nested in a fallback under the empty view', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view
+              ><ui-view name="inner"><p>Inner fallback</p></ui-view></ui-view
+            >`,
+        );
+
+        const inner = root.querySelector<UiView>('ui-view[name="inner"]')!;
+
+        expect(inner.uiViewData?.fqn).toBe('$default.$default.inner');
+        expect(inner.uiViewData?.creationContext).toBe(
+          router.stateRegistry.root(),
+        );
+      });
+
+      it('keeps a routed component resolving against its own state', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view><a ${uiSref('.child')}>Show the child</a></ui-view>`,
+        );
+
+        await routerGo(router, 'nested.child');
+        await tick(50);
+
+        expect(link(root, 'Show the other').getAttribute('href')).toBe(
+          '#/nested/other',
+        );
+      });
+
+      it('keeps the href when the fallback comes back', async () => {
+        const { root, router } = await mount(
+          () =>
+            html`<ui-view><a ${uiSref('.child')}>Show the child</a></ui-view>`,
+        );
+
+        await routerGo(router, 'nested.child');
+        await tick(50);
+        await routerGo(router, 'nested');
+        await tick(50);
+
+        expect(link(root, 'Show the child').getAttribute('href')).toBe(
+          '#/nested/child',
+        );
+      });
+
+      it('serves srefHref and srefActiveClass the enclosing state', async () => {
+        const { root } = await mount(
+          () =>
+            html`<ui-view
+              ><a
+                href=${srefHref('.child')}
+                class=${srefActiveClass({
+                  state: '^.nested',
+                  activeClasses: ['active'],
+                })}
+                >Show the child</a
+              ></ui-view
+            >`,
+        );
+
+        const anchor = link(root, 'Show the child');
+
+        expect(anchor.getAttribute('href')).toBe('#/nested/child');
+        expect(anchor.classList.contains('active')).toBe(true);
+      });
     });
   });
 

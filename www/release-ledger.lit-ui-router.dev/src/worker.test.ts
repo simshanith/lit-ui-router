@@ -52,7 +52,8 @@ const WranglerConfig = Schema.Struct({
   compatibility_date: Schema.String,
   vars: Schema.Record(
     Schema.String,
-    Schema.Union([Schema.String, Schema.Array(Schema.String)]),
+    // wrangler's InlineConfig vars take mutable Json arrays
+    Schema.Union([Schema.String, Schema.mutable(Schema.Array(Schema.String))]),
   ),
   d1_databases: Schema.Tuple([
     Schema.Struct({

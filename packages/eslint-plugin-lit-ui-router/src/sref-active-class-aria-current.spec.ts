@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
@@ -21,6 +22,51 @@ const CLASS_ONLY = `
 import { html } from 'lit';
 import { srefActiveClass } from 'lit-ui-router';
 `;
+
+// Line endings around the binding, as `before` the attribute and `after` the read.
+const lineEnding = (name: string, before: string, after: string) => ({
+  name,
+  code: `${IMPORTS}html\`<a${before}href="/home" class="\${srefActiveClass({ state: 'home' })}${after}nav">Home</a>\`;`,
+  errors: [{ messageId: 'missingAriaCurrent' }],
+  output: `${IMPORTS}html\`<a${before}href="/home" class="\${srefActiveClass({ state: 'home' })}${after}nav" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+});
+
+// espree folds CRLF to LF in a template's raw text; typescript-eslint keeps it.
+const CRLF = [
+  lineEnding(
+    'a CRLF after the binding still lands past the quote',
+    ' ',
+    '\r\n  ',
+  ),
+  lineEnding(
+    'a CRLF before the attribute still lands past the quote',
+    '\r\n  ',
+    ' ',
+  ),
+  lineEnding(
+    'a lone CR after the binding still lands past the quote',
+    ' ',
+    '\r  ',
+  ),
+  lineEnding(
+    'mixed line endings still land past the quote',
+    '\r\n',
+    '\r\n\n\r  ',
+  ),
+];
+
+const tsRuleTester = new RuleTester({
+  languageOptions: { parser: tsParser, sourceType: 'module' },
+});
+
+tsRuleTester.run(
+  'sref-active-class-aria-current (typescript-eslint)',
+  srefActiveClassAriaCurrent,
+  {
+    valid: [],
+    invalid: CRLF,
+  },
+);
 
 ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
   valid: [
@@ -127,6 +173,13 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
       output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} \${theme}" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
+      name: 'an entity in the static text after the binding still lands past the quote',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} a&amp;b">Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} a&amp;b" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+    },
+    ...CRLF,
+    {
       name: 'params and options ride along; the classes stay behind',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home', params: { id: 1 }, options: { relative: true }, exactClasses: ['exact'] })}>Home</a>\`;`,
       errors: [{ messageId: 'missingAriaCurrent' }],
@@ -158,6 +211,44 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
       code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href="/home" class=\${lur.srefActiveClass({ state: 'home' })}>Home</a>\`;`,
       errors: [{ messageId: 'missingAriaCurrent' }],
       output: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a href="/home" class=\${lur.srefActiveClass({ state: 'home' })} aria-current=\${lur.srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+    },
+    {
+      name: 'a name the file already binds elsewhere is not imported again, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { srefActiveClass } from 'lit-ui-router';\nimport { srefAriaCurrent } from './my-aria.js';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a nested local named srefAriaCurrent would shadow the added import, so it reports unfixed',
+      code: `${CLASS_ONLY}function row(srefAriaCurrent) {\n  return html\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;\n}`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'srefAriaCurrent bound only in an unrelated function leaves the fix site free',
+      code: `${CLASS_ONLY}function other(srefAriaCurrent) {\n  return srefAriaCurrent;\n}\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `\nimport { html } from 'lit';\nimport { srefActiveClass, srefAriaCurrent } from 'lit-ui-router';\nfunction other(srefAriaCurrent) {\n  return srefAriaCurrent;\n}\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })} aria-current=\${srefAriaCurrent({ state: 'a' })}>A</a>\`;`,
+    },
+    {
+      name: 'an imported srefAriaCurrent shadowed at the fix site is not reused, so it reports unfixed',
+      code: `${IMPORTS}function row(srefAriaCurrent) {\n  return html\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;\n}`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a type-only srefAriaCurrent specifier has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport { srefActiveClass, type srefAriaCurrent } from 'lit-ui-router';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'a type-only import of srefAriaCurrent has no value to reuse, so it reports unfixed',
+      code: `import { html } from 'lit';\nimport type { srefAriaCurrent } from 'lit-ui-router';\nimport { srefActiveClass } from 'lit-ui-router';\nhtml\`<a href="/a" class=\${srefActiveClass({ state: 'a' })}>A</a>\`;`,
+      languageOptions: { parser: tsParser },
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: null,
     },
     {
       name: 'a non-literal params argument is unknowable, so the report carries no fix',

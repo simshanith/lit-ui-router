@@ -86,6 +86,10 @@ class StarsContainer extends LitElement {
 }
 ```
 
+A relative link in the fallback, such as `uiSref('.detail')`, resolves against
+the state whose template wrote it, not the empty view, so the prompt can link
+straight to a child state.
+
 <LiveExample name="hellogalaxy" />
 
 That is the

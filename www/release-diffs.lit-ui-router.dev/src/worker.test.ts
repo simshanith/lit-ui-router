@@ -10,7 +10,7 @@ import {
   convertToWranglerConfig,
   loadAndParseConfig,
 } from '@cloudflare/config';
-import { createTestHarness, type Unstable_RawConfig } from 'wrangler';
+import { createTestHarness } from 'wrangler';
 
 import type { DiffIndex } from './diff-index.ts';
 import type { FileFilter } from './file-filter.ts';
@@ -38,10 +38,7 @@ const loaded = await loadAndParseConfig(join(ROOT, 'cloudflare.config.ts'), {
 
 if (!loaded.result.success) throw loaded.result.error;
 
-// SAFETY: @cloudflare/config types this as @cloudflare/workers-utils' RawConfig, which it doesn't ship, so it reads as any.
-const production = convertToWranglerConfig(
-  loaded.result.data,
-) as Unstable_RawConfig;
+const production = convertToWranglerConfig(loaded.result.data);
 
 const server = createTestHarness({
   root: SCRATCH,

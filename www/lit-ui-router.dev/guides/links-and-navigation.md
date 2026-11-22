@@ -133,7 +133,9 @@ inside it.
 
 Inside a component rendered by `<ui-view>`, `uiSref` resolves relative names
 against the view's owning state (the same syntax `@uirouter/core` uses in
-`stateService.go`):
+`stateService.go`). A link in a nested `<ui-view>`'s
+[fallback content](./view-fallback-content) resolves against the state of the
+template that wrote it, as it would just outside that `<ui-view>`:
 
 | Target        | Meaning                                              |
 | ------------- | ---------------------------------------------------- |

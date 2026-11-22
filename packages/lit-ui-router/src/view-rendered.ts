@@ -81,6 +81,7 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * router.transitionService.onSuccess({}, async (trans) => {
  *   await viewRendered(router, trans);
+ *   // The heading needs tabindex="-1" to take focus.
  *   document.querySelector<HTMLElement>('main h1')?.focus();
  * });
  * ```
@@ -98,6 +99,7 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *   if (trans.to().name === 'error') return;
  *   const redirect = router.stateService.go('error');
  *   await viewRendered(router, redirect.transition);
+ *   // The heading needs tabindex="-1" to take focus.
  *   document.querySelector<HTMLElement>('main h1')?.focus();
  * });
  * ```
@@ -110,6 +112,8 @@ function pendingUpdates(router: UIRouter): PromiseLike<unknown>[] {
  *
  * router.transitionService.onStart({}, (trans) => {
  *   if (!document.startViewTransition) return;
+ *   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+ *   // A view transition doesn't move focus; pair it with the focus example.
  *   let captured!: () => void;
  *   const oldViewCaptured = new Promise<void>((resolve) => (captured = resolve));
  *   document.startViewTransition(() => {
