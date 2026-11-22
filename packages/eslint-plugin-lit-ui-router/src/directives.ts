@@ -203,7 +203,7 @@ const importBindingOf = (context: Rule.RuleContext, node: Node) => {
 };
 
 /** `name` imported from an accepted source, or `ns.name` with `ns` such a namespace. */
-const importedAs = (
+export const importedAs = (
   context: Rule.RuleContext,
   node: Node,
   name: string,
