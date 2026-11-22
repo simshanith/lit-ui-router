@@ -112,10 +112,10 @@ per-file and cannot see what a sibling imports — `workers-builds-triggers.core
 has to be a file whose own imports are node builtins all the way down — which for
 `@tools/bootstrap` is its package's own structural guarantee rather than a case-by-case read.
 
-The build image is Ubuntu with node, npm and bun. The script runs under bun, which imports the
-mise config as TOML before anything is installed; it reads the mise npm pin there, installs that
-npm and pnpm, and `pnpm install` provides everything after that. Every trigger sets `BUN_VERSION`
-to the bun that mise pins, so the deploy runs the version the tests run. There is no mise, so none of the repo's mise-managed tools —
+The build image is Ubuntu with node and npm 10; the script installs the npm that mise pins, then
+pnpm, and `pnpm install` provides everything after that. The npm version is restated in the
+script, since node reads no TOML before `pnpm install`, and `npm-pin.test.ts` holds it to the
+mise pin. There is no mise, so none of the repo's mise-managed tools —
 `taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. The build's
 turbo target is `@www/<site>#build`; `build` is defined at the root, so a site with no build
 script of its own (wrangler bundles it at deploy) builds only its dependencies and succeeds.

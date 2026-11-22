@@ -26,9 +26,7 @@
       // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
       // uses: the Cypress binary (download + unzip, ~15s) belongs to the e2e suite,
       // and the husky git hooks to a developer checkout. Both mirror what
-      // `mise run setup` and the CI workflows already set. BUN_VERSION holds the
-      // image's bun, which runs cloudflare-build.ts, at the version mise pins
-      // for the tests (tools/repo-checks/bun-pin.test.ts).
+      // `mise run setup` and the CI workflows already set.
       "production": {
         "build_command": "./tools/workers-builds/cloudflare-build.ts",
         "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main",
@@ -36,7 +34,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
       "preview": {
@@ -46,7 +43,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
     },
@@ -71,7 +67,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
       "preview": {
@@ -87,7 +82,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
     },
@@ -109,7 +103,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
       "preview": {
@@ -124,7 +117,6 @@
           "SKIP_DEPENDENCY_INSTALL": "1",
           "CYPRESS_INSTALL_BINARY": "0",
           "HUSKY": "0",
-          "BUN_VERSION": "1.4.4",
         },
       },
     },
@@ -146,7 +138,6 @@
     //       "SKIP_DEPENDENCY_INSTALL": "1",
     //       "CYPRESS_INSTALL_BINARY": "0",
     //       "HUSKY": "0",
-    //       "BUN_VERSION": "1.4.4",
     //     },
     //   },
     //   "preview": {
@@ -157,7 +148,6 @@
     //       "SKIP_DEPENDENCY_INSTALL": "1",
     //       "CYPRESS_INSTALL_BINARY": "0",
     //       "HUSKY": "0",
-    //       "BUN_VERSION": "1.4.4",
     //     },
     //   },
     // },

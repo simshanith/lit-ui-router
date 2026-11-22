@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 // The Cloudflare Workers Builds build command, in the repo like the deploy
 // command: the dashboard holds one value for every branch, so the steps live
 // here (see www/DEPLOY.md).
@@ -11,11 +11,7 @@
 // node_modules. Type imports are erased before execution, so they name the
 // package instead.
 //
-// Runs under bun, which the image ships: bun imports the mise config as TOML,
-// which node cannot before `pnpm install`. Everything else here is plain node
-// API, so the tests import this module under node and stub that one read.
-//
-// The image has node, npm and bun; this script installs npm 12 and pnpm; everything past that
+// The image has node and npm 10; this script installs npm 12 and pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
 // tools (taplo, shellcheck, rumdl, actionlint, zizmor) exists here — keep them
 // out of anything the turbo target below reaches.
@@ -125,47 +121,15 @@ export const pnpmSpec = (root: string): string => {
   return spec;
 };
 
-/** The part of `.config/mise/config.toml` this script reads. */
-export type MiseConfig = {
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- mise's own shape: tool name to a version string or an options table
-  readonly tools?: Readonly<Partial<Record<string, string | object>>>;
-};
-
 /**
- * `.config/mise/config.toml`, through bun's TOML loader: a module whose
- * named exports are the file's top-level tables. Bun only; node rejects the
- * extension.
+ * The npm to install, restating the mise `npm:npm` pin that shadows node's
+ * bundled npm everywhere else (npm-pin.test.ts holds the two together): an
+ * example's `npm ci` here then runs the npm it runs locally and in CI, where
+ * the image's npm 10 would ignore npm 12 manifest fields such as
+ * `patchedDependencies`. Restated because node reads no TOML before
+ * `pnpm install`.
  */
-export const readMiseConfig = async (root: string): Promise<MiseConfig> => {
-  const config: unknown = await import(join(root, '.config/mise/config.toml'));
-
-  // SAFETY: mise validates its own config; [tools] maps a tool to a version string or a table.
-  return config as MiseConfig;
-};
-
-/** A tool's plain version pin; empty when it has none or pins with a table. */
-export const misePin = (config: MiseConfig, tool: string): string => {
-  const pin = config.tools?.[tool];
-
-  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- mise's own union: a string is a plain pin, a table carries options
-  return typeof pin === 'string' ? pin : '';
-};
-
-/**
- * The npm to install, from the mise pin that shadows node's bundled npm
- * everywhere else, so an example's `npm ci` here runs the npm it runs locally
- * and in CI: the image's npm 10 ignores npm 12 manifest fields such as
- * `patchedDependencies`.
- */
-export const npmSpec = (version: string): string => {
-  if (version === '') {
-    throw new Error(
-      'cloudflare-build: no "npm:npm" version pin in .config/mise/config.toml',
-    );
-  }
-
-  return `npm@${version}`;
-};
+export const NPM_VERSION = '12.2.1';
 
 /**
  * Exported so the trigger test can assert the frozen install is still here —
@@ -176,9 +140,8 @@ export const buildSteps = (
   root: string,
   npmBin: string,
   site: Site,
-  npmVersion: string,
 ): readonly Step[] => [
-  ['npm', ['install', '--global', npmSpec(npmVersion)]],
+  ['npm', ['install', '--global', `npm@${NPM_VERSION}`]],
 
   // npm refuses to overwrite a file it does not own (EEXIST), and its global
   // bin is the same node bin dir corepack's shims sit in, so clear them first
@@ -203,7 +166,7 @@ export const buildSteps = (
   ['npx', ['turbo', `${site.packageName}#build`]],
 ];
 
-const main = async (argv: readonly string[]): Promise<void> => {
+const main = (argv: readonly string[]): void => {
   const resolved = siteFromArgs(workspaceRoot, argv);
 
   if (!resolved.ok) {
@@ -214,8 +177,6 @@ const main = async (argv: readonly string[]): Promise<void> => {
 
     return;
   }
-
-  const miseConfig = await readMiseConfig(workspaceRoot);
 
   // Ask npm where it will write: asdf puts its own shims on PATH, so resolving
   // `node` finds ~/.asdf/shims, not the installs/nodejs/<version>/bin that the
@@ -231,10 +192,9 @@ const main = async (argv: readonly string[]): Promise<void> => {
     workspaceRoot,
     `${npmPrefix}/bin`,
     resolved.site,
-    misePin(miseConfig, 'npm:npm'),
   )) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
 };
 
-if (import.meta.main) await main(process.argv.slice(2));
+if (import.meta.main) main(process.argv.slice(2));

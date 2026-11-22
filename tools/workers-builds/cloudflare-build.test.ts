@@ -19,11 +19,10 @@ import { promisify } from 'node:util';
 
 import {
   DEFAULT_SITE,
+  NPM_VERSION,
   type Site,
   type SiteResult,
   buildSteps,
-  misePin,
-  npmSpec,
   pnpmSpec,
   resolveSite,
   siteFromArgs,
@@ -44,80 +43,6 @@ const rootWith = (packageManager?: string): string => {
 
   return dir;
 };
-
-const rootWithMiseConfig = (toml: string): string => {
-  const dir = mkdtempSync(join(tmpdir(), 'cloudflare-build-'));
-  mkdirSync(join(dir, '.config/mise'), { recursive: true });
-  writeFileSync(join(dir, '.config/mise/config.toml'), toml);
-
-  return dir;
-};
-
-describe('misePin', () => {
-  it('reads a plain version pin from [tools]', () => {
-    assert.equal(
-      misePin({ tools: { 'npm:npm': '12.3.4', node: '24' } }, 'npm:npm'),
-      '12.3.4',
-    );
-  });
-
-  it('is empty for a tool with no pin', () => {
-    assert.equal(misePin({ tools: { node: '24' } }, 'npm:npm'), '');
-  });
-
-  it('is empty for a table-form pin', () => {
-    assert.equal(
-      misePin({ tools: { 'npm:npm': { version: '12.3.4' } } }, 'npm:npm'),
-      '',
-    );
-  });
-
-  it('is empty for a config with no [tools] table', () => {
-    assert.equal(misePin({}, 'npm:npm'), '');
-  });
-});
-
-// readMiseConfig is bun-only, so these run it in the mise-pinned bun: the
-// version every Workers Builds trigger pins with BUN_VERSION.
-const npmPinUnderBun = (root: string): ReturnType<typeof spawnSync> =>
-  spawnSync(
-    'bun',
-    [
-      '--print',
-      `import(${JSON.stringify(join(import.meta.dirname, 'cloudflare-build.ts'))}).then(async (m) => m.misePin(await m.readMiseConfig(${JSON.stringify(root)}), 'npm:npm'))`,
-    ],
-    { encoding: 'utf8' },
-  );
-
-describe('readMiseConfig', () => {
-  it("reads [tools] through bun's TOML loader", () => {
-    const result = npmPinUnderBun(
-      rootWithMiseConfig(
-        '[settings]\nexperimental = true\n\n[tools]\n"npm:npm" = "12.3.4"\n',
-      ),
-    );
-
-    assert.equal(result.status, 0, String(result.stderr));
-    assert.equal(String(result.stdout).trim(), '12.3.4');
-  });
-
-  it('fails on a config that is not TOML', () => {
-    assert.notEqual(
-      npmPinUnderBun(rootWithMiseConfig('version = \n')).status,
-      0,
-    );
-  });
-});
-
-describe('npmSpec', () => {
-  it('pins npm to the mise version', () => {
-    assert.equal(npmSpec('12.3.4'), 'npm@12.3.4');
-  });
-
-  it('rejects a missing mise pin', () => {
-    assert.throws(() => npmSpec(''), /no "npm:npm" version pin/);
-  });
-});
 
 describe('pnpmSpec', () => {
   it('drops the integrity hash npm has no use for', () => {
@@ -175,27 +100,25 @@ describe('resolveSite', () => {
     });
   });
 
-  it('installs the pinned npm before pnpm', () => {
-    assert.deepEqual(
-      buildSteps(
-        root,
-        '/nonexistent/bin',
-        siteOf(resolveSite(root, 'example.test')),
-        '12.3.4',
-      ).at(0),
-      ['npm', ['install', '--global', 'npm@12.3.4']],
-    );
-  });
-
   it('builds the site package through turbo after the install', () => {
     assert.deepEqual(
       buildSteps(
         root,
         '/nonexistent/bin',
         siteOf(resolveSite(root, 'example.test')),
-        '12.3.4',
       ).at(-1),
       ['npx', ['turbo', '@www/example.test#build']],
+    );
+  });
+
+  it('installs the pinned npm before pnpm', () => {
+    assert.deepEqual(
+      buildSteps(
+        root,
+        '/nonexistent/bin',
+        siteOf(resolveSite(root, 'example.test')),
+      ).at(0),
+      ['npm', ['install', '--global', `npm@${NPM_VERSION}`]],
     );
   });
 

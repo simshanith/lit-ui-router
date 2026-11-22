@@ -213,13 +213,7 @@ describe('desiredStateFromConfig', () => {
         assert.equal(key, worker.site, `${worker.site} ${kind} builds ${key}`);
 
         const site = siteAt(workspaceRoot, key);
-
-        const steps = buildSteps(
-          workspaceRoot,
-          '/nonexistent/bin',
-          site,
-          '12.0.0',
-        );
+        const steps = buildSteps(workspaceRoot, '/nonexistent/bin', site);
 
         assert.ok(
           steps.some(
@@ -240,7 +234,6 @@ describe('desiredStateFromConfig', () => {
 
   // The docs site's dashboard commands predate the site argument and hold
   // still for every open branch, so they must keep naming it by default.
-
   it('keeps the docs site on the bare dashboard commands', () => {
     assert.equal(flagship.production.build_command, BUILD_SCRIPT);
     assert.equal(flagship.preview.build_command, BUILD_SCRIPT);
