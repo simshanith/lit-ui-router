@@ -9,6 +9,7 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 * **lit-ui-router:** keep a re-attached ui-view's routed class element instead of rebuilding it ([#2348](https://github.com/simshanith/lit-ui-router/issues/2348)) ([89a7c10](https://github.com/simshanith/lit-ui-router/commit/89a7c108a1f10766a1765d82cc971ca811f4e624))
 
   A re-attached class element is no longer rebuilt, so its constructor and `firstUpdated` do not run again; an app that relied on re-attach to reset the element's state sees a change. `uiOnParamsChanged` now runs on re-attach with the params that changed while the view was detached.
+
 * **lit-ui-router:** resolve a relative sref in a ui-view's fallback content against the parent state ([#2333](https://github.com/simshanith/lit-ui-router/issues/2333)) ([102dc9a](https://github.com/simshanith/lit-ui-router/commit/102dc9abc74613d197989c00a84bd9fcb790b4f9))
 * **lit-ui-router:** resolve a template shared by two states against the state now filling the view ([#2350](https://github.com/simshanith/lit-ui-router/issues/2350)) ([23003bb](https://github.com/simshanith/lit-ui-router/commit/23003bb6411ab44dc9e57a166c252275345b2256))
 
