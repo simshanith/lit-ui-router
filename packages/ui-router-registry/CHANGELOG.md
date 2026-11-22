@@ -2,6 +2,19 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-registry/).
 
+## 0.4.2 (2026-11-22)
+
+### Bug Fixes
+
+* **ui-router-registry:** read url params the way core's UrlMatcher does ([#2361](https://github.com/simshanith/lit-ui-router/issues/2361)) ([d8fad4b](https://github.com/simshanith/lit-ui-router/commit/d8fad4b8967fcf6204b5ecdccedbb46123172022))
+* **ui-router-registry:** type array params as arrays ([#2358](https://github.com/simshanith/lit-ui-router/issues/2358)) ([1ae8af3](https://github.com/simshanith/lit-ui-router/commit/1ae8af33714b9714fbd4c1130cddc7895541c191)), closes [#2361](https://github.com/simshanith/lit-ui-router/issues/2361)
+
+### Documentation
+
+* add plain-language opening sentences to package pages and READMEs ([#2315](https://github.com/simshanith/lit-ui-router/issues/2315)) ([7e298d1](https://github.com/simshanith/lit-ui-router/commit/7e298d119ce5acc6678a58bb83bfc49f820964e0))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-registry/0.4.2/) · [Diff from 0.4.1](https://lit-ui-router.dev/releases/ui-router-registry/diff/0.4.1...0.4.2/)
+
 ## 0.4.1 (2026-11-13)
 
 ### Build System
