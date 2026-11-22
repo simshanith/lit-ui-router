@@ -342,7 +342,12 @@ export class UiView extends LitElement {
     // SAFETY: a path entry that is not a node never matches a fallback node
     const child = path[path.indexOf(this) - 1] as ChildNode;
 
-    return this.fallbackNodes.includes(child) || this.amidFallback(child);
+    // a served view asleep has not captured yet, but its fallback set already stands ahead of the render it holds
+    const fallbackNodes = this.captured
+      ? this.fallbackNodes
+      : this.authoredPrefix();
+
+    return fallbackNodes.includes(child) || this.amidFallback(child);
   }
 
   /** Whether `child` stands between two fallback nodes, where a part of the parent's template renders after capture. */
