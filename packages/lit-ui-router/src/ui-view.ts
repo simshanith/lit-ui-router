@@ -304,7 +304,8 @@ export class UiView extends LitElement {
 
   private _applyUpdatedConfig(config: LitViewConfig) {
     this.appliedConfig = config;
-    this.paramsSeenBy = undefined;
+    // Core's globals hook runs ahead of view activation, so the tail is the transition this element is built in.
+    this.paramsSeenBy = this.uiRouter?.globals.successfulTransitions.peekTail();
     this._uiViewData.config = config;
 
     if (!this.viewAddress && config?.viewDecl?.$context) {
@@ -847,20 +848,15 @@ export class UiView extends LitElement {
   /** Hands a re-attached element the latest transition, with params diffed against the last one it saw. */
   private _replayMissedParams() {
     const latest = this.uiRouter?.globals.successfulTransitions.peekTail();
+    const since = this.paramsSeenBy;
 
-    if (!latest || latest === this.paramsSeenBy) {
+    if (!latest || !since || latest === since) {
       this.requestUpdate();
 
       return;
     }
 
-    // Without a seen transition, the element was built in the one that created the view.
-    // SAFETY: core registers `$transition$` on every view's path
-    const created = new ResolveContext(
-      this._uiViewData.config.path,
-    ).getResolvable('$transition$').data as Transition;
-
-    this._invokeUiOnParamsChangedHook(latest, this.paramsSeenBy ?? created);
+    this._invokeUiOnParamsChangedHook(latest, since);
   }
 
   /**
@@ -910,12 +906,10 @@ export class UiView extends LitElement {
         ? since.params('to')
         : $transition$.params('from');
 
-      const fromSchema: Param[] = since
-        ? toSchema
-        : $transition$
-            .treeChanges('from')
-            .map(getNodeSchema)
-            .reduce<Param[]>(unnestR, []);
+      const fromSchema: Param[] = (since ?? $transition$)
+        .treeChanges(since ? 'to' : 'from')
+        .map(getNodeSchema)
+        .reduce<Param[]>(unnestR, []);
 
       // Find the to params that have different values than the from params
       const changedToParams = toSchema.filter((param: Param) => {
