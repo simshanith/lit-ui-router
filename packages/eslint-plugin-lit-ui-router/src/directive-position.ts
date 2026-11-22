@@ -50,28 +50,102 @@ const STATIC_HTML_SOURCES = new Set([
   'lit-html/static.js',
 ]);
 
-/** Where a scan of the template's static text stands after a quasi. */
+/**
+ * Where the scan of the template's static text stands, after the HTML
+ * tokenizer: a quote opens only at the start of an attribute value, and a
+ * comment or `<!`/`<?` construct is not a tag.
+ */
+type ScanMode =
+  | 'text'
+  | 'tag'
+  | 'value'
+  | 'unquoted'
+  | 'quoted'
+  | 'comment'
+  | 'bogus';
+
 interface TagScan {
-  inTag: boolean;
+  mode: ScanMode;
   isStatic: boolean;
-  quote: string | undefined;
+  quote: string;
 }
 
-const TAG_OPEN = /^<(?:[a-zA-Z!]|\/[a-zA-Z])/;
+const TAG_OPEN = /^<\/?[a-zA-Z]/;
 
-const scanQuasi = (scan: TagScan, raw: string): void => {
-  raw.split('').forEach((char, index) => {
-    if (!scan.inTag) {
-      scan.inTag = TAG_OPEN.test(raw.slice(index, index + 3));
-    } else if (scan.quote !== undefined) {
-      if (char === scan.quote) scan.quote = undefined;
-    } else if (char === '"' || char === "'") {
+const closeTag = (scan: TagScan): void => {
+  scan.mode = 'text';
+  scan.isStatic = false;
+};
+
+/** Each step reads at `index` and returns how far to advance. */
+const STEP: Record<
+  ScanMode,
+  (scan: TagScan, raw: string, index: number) => number
+> = {
+  text(scan, raw, index) {
+    // Two, not four: `<!-->` and `<!--->` close at once, as the tokenizer has it.
+    if (raw.startsWith('<!--', index)) {
+      scan.mode = 'comment';
+
+      return 2;
+    }
+
+    if (/^<[!?]/.test(raw.slice(index, index + 2))) scan.mode = 'bogus';
+    else if (TAG_OPEN.test(raw.slice(index, index + 3))) scan.mode = 'tag';
+
+    return 1;
+  },
+  tag(scan, raw, index) {
+    if (raw[index] === '=') scan.mode = 'value';
+    else if (raw[index] === '>') closeTag(scan);
+
+    return 1;
+  },
+  value(scan, raw, index) {
+    const char = raw[index] ?? '';
+
+    if (char === '"' || char === "'") {
+      scan.mode = 'quoted';
       scan.quote = char;
     } else if (char === '>') {
-      scan.inTag = false;
-      scan.isStatic = false;
+      closeTag(scan);
+    } else if (!/\s/.test(char)) {
+      scan.mode = 'unquoted';
     }
-  });
+
+    return 1;
+  },
+  unquoted(scan, raw, index) {
+    if (raw[index] === '>') closeTag(scan);
+    else if (/\s/.test(raw[index] ?? '')) scan.mode = 'tag';
+
+    return 1;
+  },
+  quoted(scan, raw, index) {
+    if (raw[index] === scan.quote) scan.mode = 'tag';
+
+    return 1;
+  },
+  comment(scan, raw, index) {
+    if (!raw.startsWith('-->', index)) return 1;
+    scan.mode = 'text';
+
+    return 3;
+  },
+  bogus(scan, raw, index) {
+    if (raw[index] === '>') scan.mode = 'text';
+
+    return 1;
+  },
+};
+
+const scanQuasi = (scan: TagScan, raw: string): void => {
+  for (let index = 0; index < raw.length;) {
+    index += STEP[scan.mode](scan, raw, index);
+  }
+
+  // An expression right after `=` is the whole unquoted value.
+  if (scan.mode === 'value') scan.mode = 'unquoted';
 };
 
 /**
@@ -84,13 +158,13 @@ const staticTagExpressions = (
   quasis: readonly { value: { raw: string } }[],
 ): Set<number> => {
   const hidden = new Set<number>();
-  const scan: TagScan = { inTag: false, isStatic: false, quote: undefined };
+  const scan: TagScan = { mode: 'text', isStatic: false, quote: '' };
 
   quasis.slice(0, -1).forEach(({ value: { raw } }, index) => {
     scanQuasi(scan, raw);
 
-    if (!scan.inTag && /<\/?$/.test(raw)) {
-      scan.inTag = true;
+    if (scan.mode === 'text' && /<\/?$/.test(raw)) {
+      scan.mode = 'tag';
       scan.isStatic = true;
     } else if (scan.isStatic) {
       hidden.add(index);
