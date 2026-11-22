@@ -9,7 +9,7 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 * **ui-router-registry:** read url params the way core's UrlMatcher does ([#2361](https://github.com/simshanith/lit-ui-router/issues/2361)) ([d8fad4b](https://github.com/simshanith/lit-ui-router/commit/d8fad4b8967fcf6204b5ecdccedbb46123172022))
 
   `ParamsOf` keys change wherever the old scanner misread a url, so code that compiled against the wrong keys can stop compiling:
-  
+
   - a catch-all `*path` param is now a key, and required in `go()`;
   - params inside a segment (`/item-:itemId`, `/raw/{rest:[^/]*}`) are now keys, and required;
   - `:docId.json` yields `docId` instead of `docId.json`, and `{from}-{to}` yields `from` and `to`;
