@@ -147,14 +147,6 @@ defineProps<{
   overflow: clip;
 }
 
-.plate-incorrect {
-  border-block-start: 3px solid var(--status-not-found);
-}
-
-.plate-correct {
-  border-block-start: 3px solid var(--status-ok);
-}
-
 .plate-head {
   display: flex;
   flex-wrap: wrap;
@@ -295,7 +287,6 @@ defineProps<{
   padding-block: var(--site-space-2);
   padding-inline: var(--site-space-3);
   border-block-start: var(--site-border-width) solid var(--site-color-line);
-  border-inline-start: 3px solid var(--status-not-found);
   background: var(--site-color-surface-soft);
 }
 
