@@ -61,7 +61,10 @@ void stateService.go('arraysegment', { ids: ['1'] });
 
 accepts<Equal<Keys<'arraysuffix'>, 'ids[]'>>(true);
 
-accepts<Equal<ResolvedParamsOf<'arraysuffix'>['ids[]'], string[]>>(true);
+// An empty segment reads back `undefined`.
+accepts<Equal<ResolvedParamsOf<'arraysuffix'>['ids[]'], string[] | undefined>>(
+  true,
+);
 
 void stateService.go('arraysuffix', { 'ids[]': 'a' });
 
@@ -90,7 +93,10 @@ void stateService.go('arraycatchall', { path: ['a', 'b'] });
 
 accepts<Equal<Keys<'arrayrange'>, 'from' | 'to'>>(true);
 
-accepts<Equal<ResolvedParamsOf<'arrayrange'>['from'], string[]>>(true);
+// `/range/-c` leaves `from` empty.
+accepts<Equal<ResolvedParamsOf<'arrayrange'>['from'], string[] | undefined>>(
+  true,
+);
 
 accepts<Equal<ResolvedParamsOf<'arrayrange'>['to'], string>>(true);
 
