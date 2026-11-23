@@ -355,7 +355,7 @@ describe('feature detection', () => {
         'enable-otel': true,
         'enable-visualizer': false,
         'enable-trace': import.meta.env.VITE_TRACE === 'true',
-        'enable-api-docs': true,
+        'enable-api-docs': false,
       });
       expect(readStoredFlags()).toEqual({});
     });
