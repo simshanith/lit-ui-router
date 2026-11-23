@@ -256,4 +256,22 @@ describe('mount construction', () => {
       });
     }
   }
+
+  // A params key on one state that another state's url may declare costs a compile of each url in the chain.
+  it('compiles nothing extra for parent chains whose params stay on their own urls', () => {
+    const routes = [
+      { name: 'crew', url: '/crew/:id', params: { id: '1' } },
+      { name: 'crew.bio', url: '/bio/:tab', params: { tab: 'main' } },
+      { name: 'crew.bio.edit', url: '/edit', params: { draft: true } },
+    ];
+
+    const { patterns } = patternsBuiltBy(() =>
+      createServerRouter({ mounts: { [MOUNT]: { routes } } }),
+    );
+
+    assert.deepEqual(
+      { compiled: patterns.length, recompiled: repeatedSources(patterns) },
+      { compiled: routes.length, recompiled: [] },
+    );
+  });
 });
