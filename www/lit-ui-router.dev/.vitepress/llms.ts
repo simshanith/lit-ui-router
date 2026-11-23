@@ -104,6 +104,11 @@ export function formatLintExamples(markdown: string): string {
   });
 }
 
+/** Runs every docs-side Markdown pre-transform before `vitepress-plugin-llms` reads the page. */
+export function transformMarkdownForLlms(markdown: string, id: string): string {
+  return formatLintExamples(appendExampleSources(markdown, id));
+}
+
 /** Runs before the llms plugin's `pre` transform, which reads the source and strips `<llm-only>` from the HTML. */
 export function liveExampleSourcesPlugin(): Plugin {
   return {
@@ -112,7 +117,7 @@ export function liveExampleSourcesPlugin(): Plugin {
     transform: {
       filter: { id: /\.md$/ },
       handler: (code, id) => {
-        const transformed = formatLintExamples(appendExampleSources(code, id));
+        const transformed = transformMarkdownForLlms(code, id);
 
         return transformed === code ? null : { code: transformed, map: null };
       },
