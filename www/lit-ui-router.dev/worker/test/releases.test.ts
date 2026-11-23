@@ -1187,6 +1187,28 @@ describe('the /releases pages', () => {
       }
     });
 
+    it('links its mark and name home as one link, as the header logo does', async () => {
+      for (const path of PATHS) {
+        const doc = await page(path);
+
+        const brand = within(footerOf(doc)).getByRole('link', {
+          name: 'Lit UI Router',
+        });
+
+        assert.equal(brand.getAttribute('href'), '/', path);
+        assert.equal(
+          brand.getAttribute('href'),
+          hrefOf(getByRole(doc.body, 'banner'), 'Lit UI Router'),
+        );
+        assert.equal(brand.hasAttribute('aria-current'), false);
+        assert.equal(
+          brand.querySelector('svg')?.getAttribute('aria-hidden'),
+          'true',
+        );
+        assert.equal(brand.querySelectorAll('a').length, 0);
+      }
+    });
+
     it("lists the docs footer bar's links, in its order", async () => {
       for (const path of PATHS) {
         assert.deepEqual(
