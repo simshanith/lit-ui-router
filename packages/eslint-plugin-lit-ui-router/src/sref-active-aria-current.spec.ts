@@ -93,6 +93,23 @@ const OBJECT_FORM_INVALID = [
   output: null,
 }));
 
+// A top-level `null` reads as omitted, as each object-form key does.
+const NULL_VALID = [
+  {
+    name: 'a null ariaCurrentValue is omitted, so never writes on a non-link',
+    code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: null })}></li>\`;`,
+  },
+];
+
+const NULL_INVALID = [
+  {
+    name: 'a null ariaCurrentValue is omitted, so a link takes the default and gains the opt-out',
+    code: `${IMPORTS}html\`<a href="/" aria-current="page" \${uiSrefActive({ ariaCurrentValue: null })}>Home</a>\`;`,
+    errors: [{ messageId: 'ariaCurrentTakeover', data: { tag: 'a' } }],
+    output: `${IMPORTS}html\`<a href="/" aria-current="page" \${uiSrefActive({ ariaCurrentValue: false })}>Home</a>\`;`,
+  },
+];
+
 const tsRuleTester = new RuleTester({
   languageOptions: { parser: tsParser, sourceType: 'module' },
 });
@@ -103,19 +120,21 @@ tsRuleTester.run(
   {
     valid: [
       ...OBJECT_FORM_VALID,
+      ...NULL_VALID,
       objectForm(
         'object form: a cast is unknowable',
         'li aria-current="step"',
         "{ exact: 'page' } as AriaCurrentValues",
       ),
     ],
-    invalid: OBJECT_FORM_INVALID,
+    invalid: [...OBJECT_FORM_INVALID, ...NULL_INVALID],
   },
 );
 
 ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
   valid: [
     ...OBJECT_FORM_VALID,
+    ...NULL_VALID,
     {
       name: 'no authored aria-current, so nothing is taken over',
       code: `${IMPORTS}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
@@ -181,17 +200,10 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
       name: 'an empty ariaCurrentValue never writes, on a non-link',
       code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: '' })}></li>\`;`,
     },
-    {
-      name: 'a null ariaCurrentValue throws before writing, on a link',
-      code: `${IMPORTS}html\`<a href="/" aria-current="page" \${uiSrefActive({ ariaCurrentValue: null })}>Home</a>\`;`,
-    },
-    {
-      name: 'a null ariaCurrentValue throws before writing, on a non-link',
-      code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: null })}></li>\`;`,
-    },
   ],
   invalid: [
     ...OBJECT_FORM_INVALID,
+    ...NULL_INVALID,
     {
       name: 'an explicit ariaCurrentValue takes over a non-link too, unfixed',
       code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: 'step' })}></li>\`;`,

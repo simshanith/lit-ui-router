@@ -26,8 +26,8 @@ const OPT_OUT = 'ariaCurrentValue: false';
 // The runtime's default checks the tag and role only, never declared link tags.
 const NO_DECLARED_LINKS: ReadonlySet<string> = new Set();
 
-// `''` resolves to no value and `null` throws before the runtime writes.
-const NEVER_WRITTEN: ReadonlySet<unknown> = new Set([false, '', null]);
+// `''` resolves to no value; `null` is read as omitted, so it takes the default.
+const NEVER_WRITTEN: ReadonlySet<unknown> = new Set([false, '']);
 
 // Whether one `{ exact, active }` key writes; `undefined` when it is unknowable.
 const keyWrites = (
@@ -138,6 +138,13 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
       if (isObjectExpression(value)) {
         if (objectFormWrites(value, link)) report();
+
+        return;
+      }
+
+      // As in the object form, `null` takes the default: 'page' on a link only.
+      if (value.type === 'Literal' && value.value === null) {
+        if (link) report((fixer) => fixer.replaceText(value, 'false'));
 
         return;
       }
