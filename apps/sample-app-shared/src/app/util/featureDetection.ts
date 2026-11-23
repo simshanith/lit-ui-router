@@ -151,7 +151,7 @@ const FLAG_DEFAULTS: FeatureFlagDefinitions = {
   'enable-otel': true,
   'enable-visualizer': false,
   'enable-trace': import.meta.env.VITE_TRACE === 'true',
-  'enable-api-docs': true,
+  'enable-api-docs': false,
 };
 
 const STORAGE_KEY = 'featureFlags';

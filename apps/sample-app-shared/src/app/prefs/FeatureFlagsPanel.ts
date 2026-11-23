@@ -130,7 +130,8 @@ const FLAG_CONFIGS: FlagConfig[] = [
   {
     key: 'enable-api-docs',
     label: 'Enable API Docs',
-    description: 'Enable Custom Elements Manifest API Docs Viewer',
+    description:
+      'Show the Custom Elements Manifest API viewer below the app (requires page reload)',
     type: 'boolean',
   },
 ];

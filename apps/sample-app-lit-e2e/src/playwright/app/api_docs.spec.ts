@@ -21,11 +21,8 @@ test.describe('api docs viewer', () => {
     ).toBeAttached();
   });
 
-  test('never loads the element when the flag is off', async ({
-    page,
-    visit,
-  }) => {
-    await visit('/home', { 'enable-api-docs': 'false' });
+  test('never loads the element by default', async ({ page, visit }) => {
+    await visit('/home');
 
     await expect(page.getByRole('link', { name: 'Contacts' })).toHaveAttribute(
       'href',
