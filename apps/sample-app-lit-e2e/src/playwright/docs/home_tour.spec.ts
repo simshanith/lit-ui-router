@@ -239,8 +239,9 @@ test.describe('home page tour', () => {
   }) => {
     await page.goto('/introduction');
     await hydrated(page);
-    // The site title is the link home.
+    // The site title in the header is the link home; the footer's brand link shares its name.
     await page
+      .getByRole('banner')
       .getByRole('link', { name: 'Lit UI Router', exact: true })
       .click();
     await expect(page).toHaveURL('/');
