@@ -210,8 +210,9 @@ the silent `aria-current` takeover — alongside a rule for the directives'
 element-part-only constructor throw, which is unconditional and fires in both
 builds. Lint reports all three across the whole codebase at author time,
 including for code paths a production build will never warn about and a
-development run may never reach. See [Linting](./linting) for worked examples of what the plugin catches, how to
-add it, and where lint sits beside typed routes and these warnings.
+development run may never reach.
+
+[Linting](./linting) shows what the plugin catches and how to add it.
 
 ## How the split is kept honest
 
