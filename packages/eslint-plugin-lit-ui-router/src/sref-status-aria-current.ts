@@ -8,16 +8,17 @@ import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   asNode,
   asNodes,
-  attributeEnd,
   attributePartsOf,
   createDirectiveTracker,
   hasAriaCurrent,
+  hasBooleanAriaCurrent,
   isLinkElement,
   isMemberExpression,
   isString,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
   type Node,
+  placeAriaCurrent,
   toEstree,
 } from './directives.ts';
 
@@ -128,6 +129,8 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
     messages: {
       missingAriaCurrent:
         "The classes on this <{{tag}}> read {{controller}}'s status, so it is active for CSS only; bind aria-current=${{{controller}}.ariaCurrent()} beside it so assistive technology gets the same signal.",
+      booleanAriaCurrent:
+        "The classes on this <{{tag}}> read {{controller}}'s status, but ?aria-current is a boolean binding, which writes an empty aria-current that assistive technology ignores; bind aria-current=${{{controller}}.ariaCurrent()} in its place.",
     },
     schema: [
       {
@@ -218,6 +221,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         const source = context.sourceCode;
         const expressions = asNodes(node.quasi.expressions);
+        const quasis = asNodes(node.quasi.quasis);
         const analyzer = TemplateAnalyzer.create(node);
         const held = fields.at(-1) ?? new Set<string>();
 
@@ -262,24 +266,20 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                 // second insert would land on the same point.
                 context.report({
                   node: expression,
-                  messageId: 'missingAriaCurrent',
+                  messageId: hasBooleanAriaCurrent(element)
+                    ? 'booleanAriaCurrent'
+                    : 'missingAriaCurrent',
                   data: { tag, controller },
-                  fix: (fixer) => {
-                    const insert = attributeEnd(
+                  fix: (fixer) =>
+                    placeAriaCurrent(
+                      fixer,
                       source.getText(),
                       analyzer.source,
                       element,
                       name,
-                      expressions,
-                    );
-
-                    return insert === undefined
-                      ? null
-                      : fixer.insertTextAfterRange(
-                          [insert, insert],
-                          ` aria-current=\${${controller}.ariaCurrent()}`,
-                        );
-                  },
+                      quasis,
+                      `aria-current=\${${controller}.ariaCurrent()}`,
+                    ) ?? null,
                 });
 
                 return;

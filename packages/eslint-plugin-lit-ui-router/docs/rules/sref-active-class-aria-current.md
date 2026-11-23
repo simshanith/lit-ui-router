@@ -12,13 +12,15 @@
 
 This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes, and, under [`allowElementParts: false`](#prerendered-templates), the one a server render of `uiSrefActive` never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
 
-The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead.
+The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead, in place of a boolean `?aria-current` binding when the link carries one.
 
 ## What is exempt
 
 - **Any `aria-current`** — literal, bound, or bound to something else entirely. Whether its value is right is not this rule's business.
 - **Non-link elements** — an `<li>`, a `<nav>`, a `<div>` with no `role`, an undeclared custom element. `srefActiveClass` on a wrapper is the container idiom, and `aria-current` on a wrapper is rarely what anyone meant; the links inside are each their own element, checked on their own terms.
 - **A bound `role`** — unknowable statically, so it declares nothing.
+
+A boolean binding, `?aria-current=${x}`, is not an `aria-current` here. lit's `?` binding only adds or removes the attribute, so it writes `aria-current=""` whatever `x` is, and WAI-ARIA treats an empty `aria-current` as `false`, which assistive technology never exposes. A link whose only `aria-current` is a boolean binding reports under its own message, and the fix replaces the boolean binding with `aria-current=${srefAriaCurrent(...)}` in place.
 
 A link element is `<a>`, `<area>`, an element whose literal `role` carries the `link` token, and whatever `settings.linkElements` (or this rule's own `linkElements` option) adds.
 
@@ -106,6 +108,13 @@ The fix binds `aria-current` after the `class` attribute, copying the `state`, `
 A params argument that is not an object literal, one carrying a spread, and a call with no argument at all have nothing to copy, so they report without a fix — and under their own message, which asks for the shared `state`, `params` and `options` rather than naming a call it cannot spell. The report also stands without a fix when `srefAriaCurrent` already means something else where the fix lands: another import, a local, or a type-only import.
 
 The insertion point comes from the **last** expression in the `class` value, so `class="nav ${a} ${b}"` lands after the closing quote rather than inside the value.
+
+When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`. The whole attribute goes, however many expressions its value holds, and the fix adds a space wherever the bare binding would otherwise run into the next attribute or a closing `/>`:
+
+```diff
+-html`<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })} ?aria-current=${on}>Home</a>`;
++html`<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })} aria-current=${srefAriaCurrent({ state: 'home' })}>Home</a>`;
+```
 
 ## Or hand the status to the host
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
+import { assertFixedLink } from '../test/fixed-link.ts';
 import { LINK_ELEMENTS_SCHEMA } from './directives.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
 
@@ -55,6 +56,187 @@ const CRLF = [
   ),
 ];
 
+const HOME = `aria-current=\${srefAriaCurrent({ state: 'home' })}`;
+
+const CLASS = `class=\${srefActiveClass({ state: 'home' })}`;
+
+/** How each fixed output parses, attribute by attribute, keyed by output. */
+const FIXED = new Map<string, Record<string, string>>();
+
+/** Register `test`'s output to parse as `attributes`, the fixed link's whole set. */
+const parsesAs = <T extends { output: string }>(
+  test: T,
+  attributes: Record<string, string>,
+): T => {
+  FIXED.set(test.output, attributes);
+
+  return test;
+};
+
+const LINK = { href: '/home', class: '${}', 'aria-current': '${}' };
+
+/** A link whose only aria-current is `bool`, which the fix replaces with `HOME`. */
+const booleanBinding = (name: string, bool: string, imports = IMPORTS) =>
+  parsesAs(
+    {
+      name,
+      code: `${imports}html\`<a href="/home" ${CLASS} ${bool}>Home</a>\`;`,
+      errors: [
+        {
+          messageId: 'booleanAriaCurrent',
+          data: { tag: 'a', params: "{ state: 'home' }" },
+        },
+      ],
+      output: `${IMPORTS}html\`<a href="/home" ${CLASS} ${HOME}>Home</a>\`;`,
+    },
+    LINK,
+  );
+
+/** A boolean binding followed by `after`, with the fix's output followed by `fixed`. */
+const booleanBefore = (
+  name: string,
+  bool: string,
+  after: string,
+  fixed: string,
+  attributes: Record<string, string> = LINK,
+) =>
+  parsesAs(
+    {
+      name,
+      code: `${IMPORTS}html\`<a href="/home" ${CLASS} ${bool}${after}>Home</a>\`;`,
+      errors: [{ messageId: 'booleanAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" ${CLASS} ${HOME}${fixed}>Home</a>\`;`,
+    },
+    attributes,
+  );
+
+const TITLED = { ...LINK, title: 'x' };
+
+// lit's `?` binding writes aria-current="", which ARIA never exposes.
+const BOOLEAN = [
+  booleanBinding('a boolean binding is replaced', '?aria-current=${on}'),
+  booleanBinding(
+    'a boolean binding of a string still writes an empty value',
+    "?aria-current=${'page'}",
+  ),
+  booleanBinding(
+    'a quoted boolean binding is replaced quotes and all',
+    '?aria-current="${on}"',
+  ),
+  booleanBinding(
+    'an upper-case boolean binding is the same binding',
+    '?ARIA-Current=${on}',
+  ),
+  booleanBinding(
+    'the replacement adds the import it needs',
+    '?aria-current=${on}',
+    CLASS_ONLY,
+  ),
+  booleanBinding(
+    'a boolean binding of two expressions is replaced whole',
+    '?aria-current="${on} ${off}"',
+  ),
+  booleanBinding(
+    'a boolean binding of adjacent expressions is replaced whole',
+    '?aria-current="${on}${off}"',
+  ),
+  booleanBinding(
+    'a boolean binding with static text is replaced whole',
+    '?aria-current="x${on}"',
+  ),
+  booleanBinding(
+    'a `${` in a comment does not move the replaced range',
+    '?aria-current=${/* ${ */ on}',
+  ),
+  booleanBinding(
+    'a `}` in a comment does not move the replaced range',
+    '?aria-current=${on /* } */}',
+  ),
+  booleanBefore(
+    'an attribute right after a quoted boolean binding stays its own',
+    '?aria-current="${on}"',
+    'title="x"',
+    ' title="x"',
+    TITLED,
+  ),
+  booleanBefore(
+    'an attribute right after a single-quoted boolean binding stays its own',
+    "?aria-current='${on}'",
+    'title="x"',
+    ' title="x"',
+    TITLED,
+  ),
+  booleanBefore(
+    'a self-closing slash right after a quoted boolean binding stays out of the value',
+    '?aria-current="${on}"',
+    '/',
+    ' /',
+  ),
+  parsesAs(
+    {
+      name: 'a boolean binding before the class, across lines, is replaced in place',
+      code: `${IMPORTS}html\`<a\r\n  ?aria-current=\${on}\r\n  ${CLASS}\r\n>Home</a>\`;`,
+      errors: [{ messageId: 'booleanAriaCurrent' }],
+      output: `${IMPORTS}html\`<a\r\n  ${HOME}\r\n  ${CLASS}\r\n>Home</a>\`;`,
+    },
+    { 'aria-current': '${}', class: '${}' },
+  ),
+  parsesAs(
+    {
+      name: 'a line break inside the boolean binding is replaced with it',
+      code: `${IMPORTS}html\`<a href="/home" ?aria-current=\r\n  "\${on}" ${CLASS}>Home</a>\`;`,
+      errors: [{ messageId: 'booleanAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" ${HOME} ${CLASS}>Home</a>\`;`,
+    },
+    { href: '/home', 'aria-current': '${}', class: '${}' },
+  ),
+];
+
+// The insert path lands after the class value; what follows keeps its own parse.
+const INSERT = [
+  parsesAs(
+    {
+      name: 'a self-closing slash right after the quoted class stays out of the value',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}"/>Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}" ${HOME} />Home</a>\`;`,
+    },
+    LINK,
+  ),
+  parsesAs(
+    {
+      name: 'an attribute right after the quoted class stays its own',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}"title="x">Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })}" ${HOME} title="x">Home</a>\`;`,
+    },
+    TITLED,
+  ),
+  parsesAs(
+    {
+      name: 'a `}` in a comment does not move the insertion point',
+      code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' }) /* } */}>Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' }) /* } */} ${HOME}>Home</a>\`;`,
+    },
+    LINK,
+  ),
+];
+
+// The fixed output is itself clean, so a second --fix pass changes nothing.
+const BOOLEAN_FIXED = [
+  ...new Set([...BOOLEAN, ...INSERT].map(({ output }) => output)),
+].map((code, index) => ({
+  name: `a fixed boolean binding stays fixed (${index + 1})`,
+  code,
+}));
+
+// A real binding is authored; the boolean beside it is the author's to sort out.
+const BOOLEAN_BESIDE_REAL = {
+  name: 'a boolean binding beside a real aria-current binding',
+  code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} ?aria-current=\${on} ${HOME}>Home</a>\`;`,
+};
+
 const tsRuleTester = new RuleTester({
   languageOptions: { parser: tsParser, sourceType: 'module' },
 });
@@ -63,13 +245,16 @@ tsRuleTester.run(
   'sref-active-class-aria-current (typescript-eslint)',
   srefActiveClassAriaCurrent,
   {
-    valid: [],
-    invalid: CRLF,
+    valid: [...BOOLEAN_FIXED, BOOLEAN_BESIDE_REAL],
+    invalid: [...CRLF, ...BOOLEAN, ...INSERT],
   },
 );
 
 ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
   valid: [
+    // The first is the pair below, which the espree run already holds.
+    ...BOOLEAN_FIXED.slice(1),
+    BOOLEAN_BESIDE_REAL,
     {
       name: 'both bindings, which is the pair the fix produces',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
@@ -116,6 +301,8 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
     },
   ],
   invalid: [
+    ...BOOLEAN,
+    ...INSERT,
     {
       name: 'an anchor painted active and silent',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })}>Home</a>\`;`,
@@ -254,6 +441,12 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
       name: 'a non-literal params argument is unknowable, so the report carries no fix',
       code: `${IMPORTS}const params = { state: 'home' };\nhtml\`<a href="/home" class=\${srefActiveClass(params)}>Home</a>\`;`,
       errors: [{ messageId: 'unknownAriaCurrent' }],
+      output: null,
+    },
+    {
+      name: 'unknowable params beside a boolean binding ask for the binding in its place',
+      code: `${IMPORTS}const params = { state: 'home' };\nhtml\`<a href="/home" class=\${srefActiveClass(params)} ?aria-current=\${on}>Home</a>\`;`,
+      errors: [{ messageId: 'unknownBooleanAriaCurrent', data: { tag: 'a' } }],
       output: null,
     },
     {
@@ -485,10 +678,27 @@ void describe('sref-active-class-aria-current meta', () => {
     );
   });
 
+  void it('asks for the replacement, not a second binding, beside a boolean binding', () => {
+    const message =
+      srefActiveClassAriaCurrent.meta?.messages?.unknownBooleanAriaCurrent ??
+      '';
+
+    assert.match(message, /in its place\.$/);
+    assert.doesNotMatch(message, /beside/);
+  });
+
   void it('falls back to naming the params when they are unknowable', () => {
     assert.match(
       srefActiveClassAriaCurrent.meta?.messages?.unknownAriaCurrent ?? '',
       /srefAriaCurrent\(\.\.\.\)} with the same state, params and options/,
     );
   });
+});
+
+void describe('sref-active-class-aria-current fixed output', () => {
+  for (const [output, attributes] of FIXED) {
+    void it(`parses as one link: ${JSON.stringify(attributes)}`, () => {
+      assertFixedLink(output, attributes);
+    });
+  }
 });

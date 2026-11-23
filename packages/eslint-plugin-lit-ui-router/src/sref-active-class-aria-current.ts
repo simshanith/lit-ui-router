@@ -6,7 +6,6 @@ import type { Rule } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
-  attributeEnd,
   allowElementPartsOf,
   attributePartsOf,
   asNode,
@@ -15,6 +14,7 @@ import {
   createDirectiveTracker,
   elementPartIndex,
   hasAriaCurrent,
+  hasBooleanAriaCurrent,
   hasSpread,
   isCallExpression,
   isLinkElement,
@@ -23,6 +23,7 @@ import {
   linkElementsOf,
   type ObjectNode,
   type Parse5Element,
+  placeAriaCurrent,
   propertyNamed,
   siblingBinding,
   toEstree,
@@ -54,8 +55,12 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
     messages: {
       missingAriaCurrent:
         'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent({{params}})} beside it so assistive technology gets the same signal.',
+      booleanAriaCurrent:
+        'srefActiveClass marks this <{{tag}}> active, but ?aria-current is a boolean binding, which writes an empty aria-current that assistive technology ignores; bind aria-current=${srefAriaCurrent({{params}})} in its place.',
       unknownAriaCurrent:
         'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options beside it so assistive technology gets the same signal.',
+      unknownBooleanAriaCurrent:
+        'srefActiveClass marks this <{{tag}}> active, but ?aria-current is a boolean binding, which writes an empty aria-current that assistive technology ignores; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options in its place.',
       elementPartNotServed:
         'uiSrefActive is an element part, which a server render never runs, so this <{{tag}}> is served with neither its active class nor aria-current; bind class=${srefActiveClass(...)} and aria-current=${srefAriaCurrent(...)} instead.',
     },
@@ -100,6 +105,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         const source = context.sourceCode;
         const expressions = asNodes(node.quasi.expressions);
+        const quasis = asNodes(node.quasi.quasis);
         const analyzer = TemplateAnalyzer.create(node);
 
         /** The `state`, `params` and `options` the fix copies, as written. */
@@ -124,16 +130,6 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
           literal: string,
           element: Parse5Element,
         ): Rule.Fix[] | null => {
-          const insert = attributeEnd(
-            source.getText(),
-            analyzer.source,
-            element,
-            'class',
-            expressions,
-          );
-
-          if (insert === undefined) return null;
-
           const sibling = siblingBinding(
             fixer,
             context,
@@ -143,12 +139,19 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
           if (sibling === undefined) return null;
           const { binding, edits } = sibling;
-          edits.push(
-            fixer.insertTextAfterRange(
-              [insert, insert],
-              ` aria-current=\${${binding}(${literal})}`,
-            ),
+
+          const placed = placeAriaCurrent(
+            fixer,
+            source.getText(),
+            analyzer.source,
+            element,
+            'class',
+            quasis,
+            `aria-current=\${${binding}(${literal})}`,
           );
+
+          if (placed === undefined) return null;
+          edits.push(placed);
 
           return edits;
         };
@@ -188,7 +191,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             if (!isLinkElement(element, parts, linkElements)) return;
 
             // Any aria-current at all is the author's, and whether its value is
-            // right is not this rule's business.
+            // right is not this rule's business; a boolean binding is not one.
             if (hasAriaCurrent(element)) return;
 
             reportElementParts(element, tag);
@@ -217,7 +220,9 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
               if (object === undefined) {
                 context.report({
                   node: call,
-                  messageId: 'unknownAriaCurrent',
+                  messageId: hasBooleanAriaCurrent(element)
+                    ? 'unknownBooleanAriaCurrent'
+                    : 'unknownAriaCurrent',
                   data: { tag },
                 });
                 continue;
@@ -226,7 +231,9 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
               const literal = paramsLiteral(object);
               context.report({
                 node: call,
-                messageId: 'missingAriaCurrent',
+                messageId: hasBooleanAriaCurrent(element)
+                  ? 'booleanAriaCurrent'
+                  : 'missingAriaCurrent',
                 data: { tag, params: literal },
                 fix: (fixer) => bind(fixer, call, literal, element),
               });

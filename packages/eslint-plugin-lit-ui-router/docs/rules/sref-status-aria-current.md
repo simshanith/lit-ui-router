@@ -36,6 +36,8 @@ Both spellings of the binding are the same binding: the `class` attribute, and t
 - **A bound `role`** — unknowable statically, so it declares nothing.
 - **Expressions that read no tracked controller** — a class computed from an unknown identifier is statically unknowable, and silence is the only honest answer.
 
+A boolean binding, `?aria-current=${x}`, is not an `aria-current` here. lit's `?` binding only adds or removes the attribute, so it writes `aria-current=""` whatever `x` is, and WAI-ARIA treats an empty `aria-current` as `false`, which assistive technology never exposes. A link whose only `aria-current` is a boolean binding reports under its own message, and the fix replaces the boolean binding with `aria-current=${this.users.ariaCurrent()}` in place.
+
 A link element is `<a>`, `<area>`, an element whose literal `role` carries the `link` token, and whatever `settings.linkElements` (or this rule's own `linkElements` option) adds.
 
 ## Options
@@ -93,5 +95,12 @@ The fix binds `aria-current` immediately after the `class` value, calling `ariaC
 ```
 
 Every report is fixable: the controller is already in scope at the binding, so there is no import to add and nothing to guess.
+
+When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`. The whole attribute goes, however many expressions its value holds, and the fix adds a space wherever the bare binding would otherwise run into the next attribute or a closing `/>`:
+
+```diff
+-html`<a href="/users" class=${classMap({ active: this.users.active })} ?aria-current=${this.users.active}>Users</a>`;
++html`<a href="/users" class=${classMap({ active: this.users.active })} aria-current=${this.users.ariaCurrent()}>Users</a>`;
+```
 
 If the element was never meant to be a link, drop its `role` — or move the class binding to the wrapper, which is the container idiom this rule leaves alone.
