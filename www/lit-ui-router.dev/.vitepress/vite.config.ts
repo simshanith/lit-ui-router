@@ -413,12 +413,24 @@ export default defineConfig({
   ],
 
   resolve: {
-    // VitePress's documented internal-component override; only VPContent imports this path.
+    // VitePress's documented internal-component override; one theme file imports each path.
     alias: [
       {
         find: /^\.\/VPHome\.vue$/,
         replacement: fileURLToPath(
           new URL('./theme/components/VPHomeMain.vue', import.meta.url),
+        ),
+      },
+      {
+        find: /^\.\/components\/VPFooter\.vue$/,
+        replacement: fileURLToPath(
+          new URL('./theme/components/SiteFooter.vue', import.meta.url),
+        ),
+      },
+      {
+        find: /^\.\/VPDocFooter\.vue$/,
+        replacement: fileURLToPath(
+          new URL('./theme/components/VPDocFooterPager.vue', import.meta.url),
         ),
       },
     ],

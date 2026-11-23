@@ -388,3 +388,86 @@ test.describe('docs site', () => {
     );
   });
 });
+
+test.describe('site footer', () => {
+  const footer = (page: Page) => page.getByRole('contentinfo');
+
+  const footerNav = (page: Page) =>
+    footer(page).getByRole('navigation', { name: 'Footer' });
+
+  test('expands on the home page, with its links in named groups', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(footer(page)).toHaveCount(1);
+    await expect(footer(page)).toHaveAttribute('data-mode', 'expanded');
+
+    for (const [group, links] of [
+      ['Project', ['Releases', 'Sample App', 'Atlas', 'Issues']],
+      ['Resources', ['npm', 'How this site runs', 'llms.txt']],
+    ] as const) {
+      await expect(
+        footerNav(page).getByRole('list', { name: group }).getByRole('link'),
+      ).toHaveText([...links]);
+    }
+  });
+
+  for (const [name, path] of [
+    ['a guide', '/guides/route-guards'],
+    ['an API reference page', '/reference/lit-ui-router/'],
+    ['the 404 page', '/definitely-missing'],
+  ] as const) {
+    test(`is the compact bar on ${name}`, async ({ page }) => {
+      await page.goto(path);
+      // The 404 page renders on the client.
+      await expect(footer(page)).toHaveCount(1);
+      await expect(footer(page)).toHaveAttribute('data-mode', 'compact');
+      await expect(footerNav(page).getByRole('link')).toHaveText([
+        'Releases',
+        'Issues',
+        'npm',
+        'How this site runs',
+        'llms.txt',
+      ]);
+    });
+  }
+
+  test('leaves the pager its navigation, without a second contentinfo landmark', async ({
+    page,
+  }) => {
+    await page.goto('/guides/route-guards');
+    await expect(
+      page.getByRole('navigation', { name: 'Pager' }).getByRole('link'),
+    ).toHaveCount(2);
+    await expect(footer(page)).toHaveCount(1);
+  });
+
+  test('links paths the site serves', async ({ page, request }) => {
+    await page.goto('/');
+
+    const paths = await footer(page)
+      .getByRole('link')
+      .evaluateAll((links: HTMLAnchorElement[]) =>
+        links.flatMap((link) =>
+          link.origin === location.origin ? [link.pathname] : [],
+        ),
+      );
+
+    expect(paths).toEqual(['/releases/', '/sample-app', '/site/', '/llms.txt']);
+
+    // The release pages read a ledger this server lacks; the site's footer test holds their route.
+    for (const path of paths.filter((path) => path !== '/releases/'))
+      expect((await request.get(path)).status(), path).toBe(200);
+  });
+
+  test('takes a full navigation to the release pages', async ({ page }) => {
+    await page.goto('/guides/');
+    await hydrated(page);
+    await page.evaluate(() => {
+      window.hydrationProbe = true;
+    });
+    await footerNav(page).getByRole('link', { name: 'Releases' }).click();
+    await expect(page).toHaveURL((url) => url.pathname === '/releases/');
+    expect(await page.evaluate(() => window.hydrationProbe)).toBeUndefined();
+  });
+});

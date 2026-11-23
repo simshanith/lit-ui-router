@@ -165,13 +165,13 @@ run = "mise run rumdl check"
 [tasks.check_links]
 # External URLs only, for the `acceptance (links)` job; settings in lychee.toml.
 # Package changelogs are left out: release-it writes them, full of commit links.
-description = "Check external URLs in READMEs, manifests and docs Markdown with lychee"
+description = "Check external URLs in READMEs, manifests, docs Markdown and the site footer with lychee"
 usage = '''
 flag "--output <path>" help="Also write lychee's Markdown report to this file"
 '''
 # --root-dir resolves the docs pages' root-relative links, which scheme then skips.
 run = '''
-git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' |
+git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' 'www/lit-ui-router.dev/catalog/footer.ts' |
   lychee --root-dir "{{config_root}}/www/lit-ui-router.dev" ${usage_output:+--output "$usage_output"} --files-from -
 '''
 
