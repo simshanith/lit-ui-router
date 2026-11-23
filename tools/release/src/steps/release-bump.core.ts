@@ -65,7 +65,8 @@ function messageLines(
  * trailer naming the commit the notes were generated at. A prerelease has no
  * section, so its message carries the captured notes, as every release's did
  * before. An empty changelog adds a warning for the driver to surface, since
- * it usually means the range pin is wrong rather than that nothing shipped.
+ * the notes always open with at least one line: an empty capture means the
+ * render failed.
  */
 export function releaseCommitMessage(options: {
   version: string;
@@ -91,7 +92,7 @@ export function releaseCommitMessage(options: {
   return {
     message,
     warning:
-      `empty changelog for ${version}${range}: no changelog-worthy ` +
-      'commits under this package since the range start; check the range pin',
+      `empty changelog for ${version}${range}: the notes render returned ` +
+      'nothing, where it always writes at least one line; check the capture',
   };
 }
