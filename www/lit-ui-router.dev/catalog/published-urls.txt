@@ -68,6 +68,7 @@
 /packages/ui-router-server#delegating-states ui-router-server
 /packages/ui-router-server#handing-resolves-to-the-client lit-ui-router-ssr
 /packages/ui-router-server#hosts-without-redirect-rules ui-router-server
+/packages/ui-router-server#matcher-only-routers ui-router-server
 /packages/ui-router-server#response-states lit-ui-router-ssr,ui-router-server
 /packages/ui-router-server#sharing-states-with-the-client ui-router-server
 /packages/ui-router-server#trailing-slashes ui-router-server
