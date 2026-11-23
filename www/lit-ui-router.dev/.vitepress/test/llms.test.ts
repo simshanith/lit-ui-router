@@ -10,16 +10,22 @@ import {
   llmsSidebar,
   transformMarkdownForLlms,
 } from '../llms.ts';
+import { GENERATED_PAGES } from '../page-meta.ts';
 
 const SITE_DIR = join(import.meta.dirname, '../..');
 
 const FENCE_OPEN = /^[ \t]*(`{3,}|~{3,})/;
 
-const VUE_UNCLOSED_OPEN_TAG = /^<(?:[A-Z][\w-]*|template)\b(?![^>]*>)/;
+const VUE_OPEN_TAG = /^[ \t]*<(?:[A-Z][\w-]*|[a-z][a-z0-9]*-[\w-]*|template)\b/;
 
 const LONE_CLOSING_ANGLE = /^[ \t]*>[ \t]*$/;
 
-/** Returns the lines outside fenced code blocks as `[lineNumber, text]` pairs. */
+const stripInlineCode = (line: string) => line.replaceAll(/(`+).*?\1/g, '');
+
+const stripQuotedAttributes = (line: string) =>
+  line.replaceAll(/"[^"]*"|'[^']*'/g, '');
+
+/** Returns the lines outside fenced code blocks as `[lineNumber, text]` pairs (permissive indent covers fences in list items). */
 function linesOutsideFences(markdown: string): Array<[number, string]> {
   const result: Array<[number, string]> = [];
 
@@ -52,20 +58,38 @@ function linesOutsideFences(markdown: string): Array<[number, string]> {
   return result;
 }
 
-/** Finds `<template #...>` slot tags visible to `vitepress-plugin-llms` after pre-transforms and `<llm-exclude>` stripping. */
+/** Finds `<template #...>` slot tags visible to `vitepress-plugin-llms` after pre-transforms and fence-aware `<llm-exclude>` stripping. */
 function leakedSlotTags(markdown: string, id: string): string[] {
-  const withoutExcluded = transformMarkdownForLlms(markdown, id).replaceAll(
-    /<llm-exclude>[\s\S]*?<\/llm-exclude>/g,
-    '',
-  );
+  const transformed = transformMarkdownForLlms(markdown, id);
 
   const leaks: string[] = [];
 
-  for (const [lineNumber, line] of linesOutsideFences(withoutExcluded)) {
-    const withoutInlineCode = line.replaceAll(/`[^`]*`/g, '');
+  let inExclude = false;
 
-    if (/<template\b/.test(withoutInlineCode)) {
-      leaks.push(`line ${lineNumber}: ${line.trim()}`);
+  for (const [lineNumber, line] of linesOutsideFences(transformed)) {
+    let visible = stripInlineCode(line).replaceAll(
+      /<llm-exclude>.*?<\/llm-exclude>/g,
+      '',
+    );
+
+    if (inExclude) {
+      const closeIndex = visible.indexOf('</llm-exclude>');
+
+      if (closeIndex === -1) continue;
+
+      inExclude = false;
+      visible = visible.slice(closeIndex + '</llm-exclude>'.length);
+    }
+
+    const openIndex = visible.indexOf('<llm-exclude>');
+
+    if (openIndex !== -1) {
+      visible = visible.slice(0, openIndex);
+      inExclude = true;
+    }
+
+    if (/<template\b/.test(visible)) {
+      leaks.push(`transformed line ${lineNumber}: ${line.trim()}`);
     }
   }
 
@@ -80,7 +104,8 @@ function loneClosingAngleLines(markdown: string): number[] {
 
   for (const [lineNumber, line] of linesOutsideFences(markdown)) {
     if (!inOpenTag) {
-      if (VUE_UNCLOSED_OPEN_TAG.test(line)) inOpenTag = true;
+      if (VUE_OPEN_TAG.test(line) && !stripQuotedAttributes(line).includes('>'))
+        inOpenTag = true;
 
       continue;
     }
@@ -92,7 +117,7 @@ function loneClosingAngleLines(markdown: string): number[] {
       continue;
     }
 
-    if (line.includes('>')) inOpenTag = false;
+    if (stripQuotedAttributes(line).includes('>')) inOpenTag = false;
   }
 
   return badLines;
@@ -101,8 +126,12 @@ function loneClosingAngleLines(markdown: string): number[] {
 function authoredDocsPages(): string[] {
   return globSync('**/*.md', {
     cwd: SITE_DIR,
-    exclude: (entry) =>
-      ['.vitepress', 'dist', 'node_modules', 'reference'].includes(entry),
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '.vitepress/**',
+      ...GENERATED_PAGES,
+    ],
   }).sort();
 }
 
@@ -308,14 +337,32 @@ describe('LLMS_RELEASES', () => {
 });
 
 describe('authored docs pages: Vue slots and oxfmt tag hygiene', () => {
-  it('flags an unwrapped <template #slot> tag while ignoring fenced code, inline code, and <llm-exclude>', () => {
+  it('flags an unwrapped <template #slot> tag while ignoring fenced code, multi-backtick inline code, and <llm-exclude>', () => {
     const leaky =
       '<CustomBox>\n<template #a>\n\nhi\n\n</template>\n</CustomBox>';
 
-    assert.deepEqual(leakedSlotTags(leaky, ID), ['line 2: <template #a>']);
+    assert.deepEqual(leakedSlotTags(leaky, ID), [
+      'transformed line 2: <template #a>',
+    ]);
+
+    const fencedExcludeThenLeak = [
+      '```md',
+      '<llm-exclude>',
+      '```',
+      '',
+      '<CustomBox><template #a>leak</template></CustomBox>',
+      '',
+      '<llm-exclude>',
+      '<CustomBox><template #b>ok</template></CustomBox>',
+      '</llm-exclude>',
+    ].join('\n');
+
+    assert.deepEqual(leakedSlotTags(fencedExcludeThenLeak, ID), [
+      'transformed line 5: <CustomBox><template #a>leak</template></CustomBox>',
+    ]);
 
     const safe = [
-      'Inline `<template #a>` is fine.',
+      'Inline `<template #a>` and ``<template #b>`` are fine.',
       '',
       '```html',
       '<template #a></template>',
@@ -329,10 +376,12 @@ describe('authored docs pages: Vue slots and oxfmt tag hygiene', () => {
     assert.deepEqual(leakedSlotTags(safe, ID), []);
   });
 
-  it('flags a closing `>` on its own line in a multi-line Vue tag, before and after oxfmt', () => {
+  it('flags a closing `>` on its own line in a multi-line Vue tag, including indented, custom-element, and quoted `>` cases', () => {
     const beforeOxfmt = '<LintExample\n  rule="a"\n  fixable\n>\n';
 
     const afterOxfmt = '<LintExample\nrule="a"\nfixable\n\n>\n';
+
+    const indentedCustomEl = '  <ui-view\n    title="a > b"\n  >\n';
 
     const attachedClose = '<LintExample\n  rule="a"\n  fixable>\n';
 
@@ -342,9 +391,19 @@ describe('authored docs pages: Vue slots and oxfmt tag hygiene', () => {
 
     assert.deepEqual(loneClosingAngleLines(beforeOxfmt), [4]);
     assert.deepEqual(loneClosingAngleLines(afterOxfmt), [5]);
+    assert.deepEqual(loneClosingAngleLines(indentedCustomEl), [3]);
     assert.deepEqual(loneClosingAngleLines(attachedClose), []);
     assert.deepEqual(loneClosingAngleLines(singleLine), []);
     assert.deepEqual(loneClosingAngleLines(fenced), []);
+  });
+
+  it('scans authored reference pages and excludes generated reference and release-stub trees', () => {
+    const pages = authoredDocsPages();
+
+    assert.ok(pages.includes('reference/index.md'));
+    assert.ok(pages.includes('reference/lit-ui-router-elements.md'));
+    assert.ok(!pages.some((page) => page.startsWith('package-releases/')));
+    assert.ok(!pages.some((page) => /^reference\/[^/]+\//.test(page)));
   });
 
   it('leaves no raw <template> slot tags visible to vitepress-plugin-llms on any authored page', () => {
