@@ -64,6 +64,18 @@ deliberately does not register the `lit-a11y` plugin key itself — the host's
 instance owns it. Without lit-a11y installed that `off` line is simply inert,
 so the ordering rule costs nothing either way.
 
+The recommended config sets no `files` or parser, so ESLint applies it only to the `.js`, `.mjs` and `.cjs` files it lints by default and skips `.ts` sources. A TypeScript app spreads a TypeScript parser config such as [`typescript-eslint`](https://typescript-eslint.io/)'s first, as [`examples/lint-eslint`](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint) does:
+
+```js
+import litUiRouter from 'eslint-plugin-lit-ui-router';
+import tseslint from 'typescript-eslint';
+
+export default [
+  ...tseslint.configs.recommended,
+  ...litUiRouter.configs.recommended,
+];
+```
+
 ## The rules
 
 | Rule                                                                                                                                                                        | What it catches                                                                                                                                                                                                            |

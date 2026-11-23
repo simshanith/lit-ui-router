@@ -29,6 +29,18 @@ import litUiRouter from 'eslint-plugin-lit-ui-router';
 export default [...litUiRouter.configs.recommended];
 ```
 
+The recommended config sets no `files` or parser, so ESLint applies it only to the `.js`, `.mjs` and `.cjs` files it lints by default and skips `.ts` sources. A TypeScript app spreads a TypeScript parser config such as [`typescript-eslint`](https://typescript-eslint.io/)'s first, as [`examples/lint-eslint`](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint) does:
+
+```js
+import litUiRouter from 'eslint-plugin-lit-ui-router';
+import tseslint from 'typescript-eslint';
+
+export default [
+  ...tseslint.configs.recommended,
+  ...litUiRouter.configs.recommended,
+];
+```
+
 With lit-a11y alongside, `configs.recommended` must come **after** lit-a11y's config: it turns `lit-a11y/anchor-is-valid` off in favor of ours, which reports the same three messages plus the `uiSref` carve-out.
 
 ```js
