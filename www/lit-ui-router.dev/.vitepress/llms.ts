@@ -19,6 +19,11 @@ import { SITE_ORIGIN } from './versions.ts';
 
 const LIVE_EXAMPLE = /^<LiveExample\s([^>]*?)\/>[ \t]*$/gm;
 
+const LINT_EXAMPLE =
+  /^<LintExample\s([^>]*?)>\n([\s\S]*?)\n<\/LintExample>[ \t]*$/gm;
+
+const LINT_SLOT = /^<template #(\w+)>\n([\s\S]*?)\n<\/template>[ \t]*$/gm;
+
 const ATTRIBUTE = /([\w-]+)="([^"]*)"/g;
 
 function parseLiveExample(tag: string, id: string) {
@@ -56,6 +61,49 @@ export function appendExampleSources(markdown: string, id: string): string {
   });
 }
 
+/** Emits plain Incorrect / Lint error / Correct Markdown for LLMs and hides the Vue slot wrapper from them. */
+export function formatLintExamples(markdown: string): string {
+  return markdown.replace(LINT_EXAMPLE, (block, tag: string, body: string) => {
+    const attributes = new Map(
+      Array.from(tag.matchAll(ATTRIBUTE), ([, key, value]) => [key, value]),
+    );
+
+    const slots = new Map(
+      Array.from(body.matchAll(LINT_SLOT), ([, name, content]) => [
+        name,
+        content.trim(),
+      ]),
+    );
+
+    const rule = attributes.get('rule');
+
+    const sections = [
+      [
+        rule ? `**Incorrect** (\`${rule}\`):` : '**Incorrect**:',
+        slots.get('incorrect'),
+      ],
+      ['Lint error:', slots.get('diagnostic')],
+      ['**Correct**:', slots.get('correct')],
+    ].flatMap(([heading, content]) =>
+      content ? [`${heading}\n\n${content}`] : [],
+    );
+
+    return [
+      '<llm-exclude>',
+      '',
+      block,
+      '',
+      '</llm-exclude>',
+      '',
+      '<llm-only>',
+      '',
+      sections.join('\n\n'),
+      '',
+      '</llm-only>',
+    ].join('\n');
+  });
+}
+
 /** Runs before the llms plugin's `pre` transform, which reads the source and strips `<llm-only>` from the HTML. */
 export function liveExampleSourcesPlugin(): Plugin {
   return {
@@ -64,7 +112,7 @@ export function liveExampleSourcesPlugin(): Plugin {
     transform: {
       filter: { id: /\.md$/ },
       handler: (code, id) => {
-        const transformed = appendExampleSources(code, id);
+        const transformed = formatLintExamples(appendExampleSources(code, id));
 
         return transformed === code ? null : { code: transformed, map: null };
       },

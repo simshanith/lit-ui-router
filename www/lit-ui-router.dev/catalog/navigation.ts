@@ -77,6 +77,7 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
       text: 'Development and Production Builds',
       link: '/guides/development-builds',
     },
+    { text: 'Linting', link: '/guides/linting' },
   ],
   migration: [
     { text: 'Coming from UI-Router', link: '/guides/coming-from-ui-router' },

@@ -9,6 +9,7 @@ import ExampleEmbed from './components/ExampleEmbed.vue';
 import DiagramEmbed from './components/DiagramEmbed.vue';
 import ElementApiViewer from './components/ElementApiViewer.vue';
 import LiveExample from './components/LiveExample.vue';
+import LintExample from './components/LintExample.vue';
 import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
@@ -35,6 +36,7 @@ export default {
     app.component('DiagramEmbed', DiagramEmbed);
     app.component('ElementApiViewer', ElementApiViewer);
     app.component('LiveExample', LiveExample);
+    app.component('LintExample', LintExample);
     app.component('FrameworkSpectrum', FrameworkSpectrum);
     app.component('FrameworkCards', FrameworkCards);
     app.component('ReleaseDiffPicker', ReleaseDiffPicker);
