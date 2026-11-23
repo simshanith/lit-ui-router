@@ -416,6 +416,14 @@ type HasDefault<C> =
       : false
     : true;
 
+// A default that is, or returns, `undefined` leaves the read-back `undefined`.
+type FillsDefault<C> =
+  HasDefault<C> extends true
+    ? undefined extends Invoked<DefaultOf<C>>
+      ? false
+      : true
+    : false;
+
 type Widen<V> = V extends () => infer R
   ? Widen<R>
   : V extends string
@@ -495,23 +503,28 @@ type DeclaredType<D, K, Mode> = K extends keyof ParamsBlock<D>
   : ArrayOf<UrlType<D, K>, IsArray<unknown, K>, Mode>;
 
 // The built-in types whose pattern matches an empty path segment; a regex or custom type stays as declared.
-type EmptyMatching = 'path' | 'string' | 'json' | 'any';
+type EmptyMatching = 'path' | 'string' | 'json' | 'any' | 'query' | 'hash';
 
-type PathTypeName<C, D, K> = C extends { type: infer T extends string }
-  ? T
+// A `ParamType` object maps to a name outside `EmptyMatching`.
+type PathTypeName<C, D, K> = C extends { type: infer T }
+  ? T extends string
+    ? T
+    : 'custom'
   : Extract<PathEntries<D>, [K, string]>[1];
 
 type EmptyArray<C, D, K> =
-  IsArray<C, K> extends true
-    ? PathTypeName<C, D, K> extends EmptyMatching
-      ? undefined
+  true extends IsArray<C, K>
+    ? PathTypeName<C, D, K> extends infer T
+      ? T extends EmptyMatching
+        ? undefined
+        : never
       : never
     : never;
 
 // Core reads an empty array path segment back as `undefined` when no default fills it in.
 type EmptySegment<D, K> = K extends PathEntries<D>[0]
   ? K extends keyof ParamsBlock<D>
-    ? HasDefault<ParamsBlock<D>[K]> extends true
+    ? FillsDefault<ParamsBlock<D>[K]> extends true
       ? never
       : EmptyArray<ParamsBlock<D>[K], D, K>
     : EmptyArray<unknown, D, K>
@@ -534,7 +547,7 @@ type IsOptionalInput<D, K> = K extends keyof ParamsBlock<D>
 type IsOptionalOutput<D, K> =
   IsQuery<D, K> extends true
     ? K extends keyof ParamsBlock<D>
-      ? HasDefault<ParamsBlock<D>[K]> extends true
+      ? FillsDefault<ParamsBlock<D>[K]> extends true
         ? false
         : true
       : true
