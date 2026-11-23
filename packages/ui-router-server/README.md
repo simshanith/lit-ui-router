@@ -27,6 +27,29 @@ without it either installs it as a dev dependency or keeps `skipLibCheck` on.
 Full docs:
 [lit-ui-router.dev/packages/ui-router-server](https://lit-ui-router.dev/packages/ui-router-server).
 
+## Single-file bundles
+
+A router whose mounts are all `'matcher'` never loads `@uirouter/core`, because the root entry
+reaches the simulate tier through a dynamic `import()`. A bundler that emits one file, the usual
+shape of a Lambda or other function zip, inlines that import and hoists the simulate tier's static
+`@uirouter/core` import to the top of the bundle. With `@uirouter/core` external and not installed,
+the bundle throws `ERR_MODULE_NOT_FOUND` when it loads; without it external, the build fails to
+resolve it. Either of these fixes it:
+
+- Keep code splitting and mark `@uirouter/core` external. The simulate tier stays in its own chunk,
+  which a matcher-only router never imports, so ship the output directory rather than one file:
+
+  ```bash
+  esbuild handler.ts --bundle --splitting --format=esm --platform=node \
+    --external:@uirouter/core --outdir=dist
+  ```
+
+  A Vite library build splits by default; list `@uirouter/core` in `external` and leave
+  `inlineDynamicImports` (Vite 7) or `codeSplitting` (Vite 8) unset.
+
+- Install `@uirouter/core`. A single file then builds and loads, carrying the simulate tier and
+  `@uirouter/core` unused.
+
 ## When to use it
 
 Use it when a server has to honour a ui-router state tree that already exists for another reason,
