@@ -194,6 +194,9 @@ const noParentViewUnsubscribe = () => {};
  * view's fallback set: it stands in the document while no component occupies
  * the view, parks while one does, and comes back when none does. Nodes the
  * enclosing template renders into the element later park and come back with
+ * it. A node app code appends stays where it lands until the view next parks:
+ * it stands beside routed content that is showing, and if it lands after a
+ * trailing part of the enclosing template, that part's next re-render removes
  * it.
  *
  * A prerendered page needs the served variant this element is the base of —
