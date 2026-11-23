@@ -107,7 +107,7 @@ The Hello World starter is a Vite + TypeScript app. Copy it, then run \`npm inst
 npx tiged simshanith/lit-ui-router/examples/helloworld my-app
 \`\`\`
 
-[\`helloworld-buildless\`](${githubTreeSrc('helloworld-buildless')}) is the same app in plain JavaScript, served as static files: it runs with an import map and no bundler, fetching \`lit\`, \`@uirouter/core\` and \`lit-ui-router\` from a CDN, and \`checkJs\` still typechecks it against the published types.
+[\`helloworld-buildless\`](${githubTreeSrc('helloworld-buildless')}) is the same app in plain JavaScript, served as static files: it runs with an import map and no bundler, fetching \`lit\`, \`@uirouter/core\` and \`lit-ui-router\` from a CDN, and \`checkJs\` still typechecks it against the published types. [\`helloworld-nudeps\`](${githubTreeSrc('helloworld-nudeps')}) installs the same three packages from npm instead and serves them from the page's own origin through an import map that [nudeps](https://nudeps.dev) generates on install.
 
 For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-plugins.md) guide recommends \`navigationLocationPlugin\` where the browser has the Navigation API and \`pushStateLocationPlugin\` where it doesn't; the tutorial uses hash URLs, which need no host configuration.`;
 

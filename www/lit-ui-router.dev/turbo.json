@@ -86,7 +86,8 @@
         "$TURBO_ROOT$/examples/*/package.json",
         "$TURBO_ROOT$/examples/*/*.js",
         "$TURBO_ROOT$/examples/*/src/**",
-        "$TURBO_ROOT$/examples/*/public/**"
+        "$TURBO_ROOT$/examples/*/public/**",
+        "!$TURBO_ROOT$/examples/*/public/client_modules/**"
       ],
       "outputs": ["dist/**"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
@@ -154,7 +155,8 @@
         "$TURBO_ROOT$/examples/*/package.json",
         "$TURBO_ROOT$/examples/*/*.js",
         "$TURBO_ROOT$/examples/*/src/**",
-        "$TURBO_ROOT$/examples/*/public/**"
+        "$TURBO_ROOT$/examples/*/public/**",
+        "!$TURBO_ROOT$/examples/*/public/client_modules/**"
       ]
     },
     "typecheck:worker": {

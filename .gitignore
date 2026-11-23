@@ -6,6 +6,8 @@ tmp
 
 # dependencies
 node_modules
+# nudeps: the copied packages and the import map it writes beside them
+client_modules
 
 # IDEs and editors
 /.idea

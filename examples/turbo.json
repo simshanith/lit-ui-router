@@ -36,6 +36,7 @@
         "*/package.json",
         "*/package-lock.json",
         "*/public/**",
+        "!*/public/client_modules/**",
         "*/src/**",
         "*/tsconfig.json",
         "*/vite.config.ts"

@@ -31,6 +31,7 @@ export default defineConfig(
     'tools/release/.cache/**',
     '**/coverage/**',
     '**/node_modules/**',
+    '**/client_modules/**',
     '**/.vitepress/cache/**',
     '**/.claude/**',
     // this example ships its own eslint.config.js, which ESLint resolves ahead

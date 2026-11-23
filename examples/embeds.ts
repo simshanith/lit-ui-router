@@ -29,6 +29,13 @@ export const EXAMPLES = {
     height: '190px',
     file: 'public/main.js',
   },
+  'helloworld-nudeps': {
+    title: 'Hello World (nudeps)',
+    summary:
+      'The same starter with `nudeps`: npm packages self-hosted through a generated import map, no CDN and no build step',
+    height: '190px',
+    file: 'public/main.js',
+  },
   'features-tour': {
     title: 'Features Tour',
     summary:
