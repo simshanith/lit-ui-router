@@ -366,6 +366,68 @@ export const isLinkElement = (
 export const hasAriaCurrent = (element: Parse5Element): boolean =>
   Object.keys(element.attribs).some((key) => ARIA_CURRENT.has(key));
 
+/** lit's boolean binding, which writes `aria-current=""`: ARIA's `false`, never exposed. */
+const BOOLEAN_ARIA_CURRENT = '?aria-current';
+
+/** Whether the element carries a bound `?aria-current`. */
+export const hasBooleanAriaCurrent = (element: Parse5Element): boolean =>
+  attributePartIndex(element.attribs[BOOLEAN_ARIA_CURRENT] ?? '') !== undefined;
+
+/**
+ * The raw source range of a `?aria-current=${x}` attribute, name to closing
+ * quote, for a fix to replace; `undefined` when its value is not an expression.
+ */
+const booleanAriaCurrentRange = (
+  text: string,
+  html: string,
+  element: Parse5Element,
+  expressions: readonly Node[],
+): [number, number] | undefined => {
+  const end = attributeEnd(
+    text,
+    html,
+    element,
+    BOOLEAN_ARIA_CURRENT,
+    expressions,
+  );
+
+  // SAFETY: the analyzer parses with sourceCodeLocationInfo, which records attrs
+  const tag = element.sourceCodeLocation as
+    | AttributeLocation
+    | null
+    | undefined;
+
+  const location = tag?.attrs[BOOLEAN_ARIA_CURRENT];
+  const value = element.attribs[BOOLEAN_ARIA_CURRENT] ?? '';
+  const first = [...value.matchAll(ATTRIBUTE_PART)][0];
+
+  if (end === undefined || location == null || first === undefined) {
+    return undefined;
+  }
+
+  const range = expressions[Number(first[1])]?.range;
+  const placeholder = html.indexOf(first[0], location.startOffset);
+
+  if (range === undefined || placeholder === -1) return undefined;
+  let start = text.lastIndexOf('${', range[0]);
+  let head = html.slice(location.startOffset, placeholder);
+
+  // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
+  if (head.endsWith('"') && text[start - 1] !== '"') head = head.slice(0, -1);
+
+  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
+  for (let unit = head.length - 1; unit >= 0; unit -= 1) {
+    const folded =
+      head[unit] === '\n' &&
+      head[unit - 1] !== '\r' &&
+      text.startsWith('\r\n', start - 2);
+
+    start -= folded ? 2 : 1;
+  }
+
+  return [start, end];
+};
+
 /** Own (non-computed) `Property` nodes of an object literal, keyed by name. */
 export const propertyNamed = (
   object: ObjectNode,
@@ -618,4 +680,32 @@ export const createDirectiveTracker = (
       return init != null && isControllerNew(asNode(init));
     },
   };
+};
+
+/**
+ * The fix edit for an `aria-current` binding: in place of a boolean binding
+ * when there is one, else right after `attribute`'s value.
+ */
+export const placeAriaCurrent = (
+  fixer: Rule.RuleFixer,
+  text: string,
+  html: string,
+  element: Parse5Element,
+  attribute: string,
+  expressions: readonly Node[],
+  binding: string,
+): Rule.Fix | undefined => {
+  if (hasBooleanAriaCurrent(element)) {
+    const range = booleanAriaCurrentRange(text, html, element, expressions);
+
+    return range === undefined
+      ? undefined
+      : fixer.replaceTextRange(range, binding);
+  }
+
+  const insert = attributeEnd(text, html, element, attribute, expressions);
+
+  return insert === undefined
+    ? undefined
+    : fixer.insertTextAfterRange([insert, insert], ` ${binding}`);
 };

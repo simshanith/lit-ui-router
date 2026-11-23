@@ -58,6 +58,75 @@ const CRLF = [
   ),
 ];
 
+const USERS = `aria-current=\${this.users.ariaCurrent()}`;
+
+const CLASSES = `class=\${classMap({ active: this.users.active })}`;
+
+/** A link whose only aria-current is `bool`, which the fix replaces with `USERS`. */
+const booleanBinding = (name: string, bool: string) => ({
+  name,
+  code: host(`html\`<a href="/users" ${CLASSES} ${bool}>Users</a>\``),
+  errors: [
+    {
+      messageId: 'booleanAriaCurrent',
+      data: { tag: 'a', controller: 'this.users' },
+    },
+  ],
+  output: host(`html\`<a href="/users" ${CLASSES} ${USERS}>Users</a>\``),
+});
+
+// lit's `?` binding writes aria-current="", which ARIA never exposes.
+const BOOLEAN = [
+  booleanBinding(
+    'a boolean binding is replaced',
+    '?aria-current=${this.users.active}',
+  ),
+  booleanBinding(
+    'a boolean binding of a string still writes an empty value',
+    "?aria-current=${this.users.active ? 'page' : ''}",
+  ),
+  booleanBinding(
+    'a quoted boolean binding is replaced quotes and all',
+    '?aria-current="${this.users.active}"',
+  ),
+  booleanBinding(
+    'an upper-case boolean binding is the same binding',
+    '?ARIA-Current=${this.users.active}',
+  ),
+  {
+    name: 'a boolean binding before the class, across lines, is replaced in place',
+    code: host(
+      `html\`<a\r\n  ?aria-current=\${this.users.active}\r\n  ${CLASSES}\r\n>Users</a>\``,
+    ),
+    errors: [{ messageId: 'booleanAriaCurrent' }],
+    output: host(`html\`<a\r\n  ${USERS}\r\n  ${CLASSES}\r\n>Users</a>\``),
+  },
+  {
+    name: 'a line break inside the boolean binding is replaced with it',
+    code: host(
+      `html\`<a href="/users" ?aria-current=\r\n  "\${this.users.active}" ${CLASSES}>Users</a>\``,
+    ),
+    errors: [{ messageId: 'booleanAriaCurrent' }],
+    output: host(`html\`<a href="/users" ${USERS} ${CLASSES}>Users</a>\``),
+  },
+];
+
+// The fixed output is itself clean, so a second --fix pass changes nothing.
+const BOOLEAN_FIXED = [...new Set(BOOLEAN.map(({ output }) => output))].map(
+  (code, index) => ({
+    name: `a fixed boolean binding stays fixed (${index + 1})`,
+    code,
+  }),
+);
+
+// A real binding is authored; the boolean beside it is the author's to sort out.
+const BOOLEAN_BESIDE_REAL = {
+  name: 'a boolean binding beside a real aria-current binding',
+  code: host(
+    `html\`<a href="/users" ${CLASSES} ?aria-current=\${this.users.active} ${USERS}>Users</a>\``,
+  ),
+};
+
 const tsRuleTester = new RuleTester({
   languageOptions: { parser: tsParser, sourceType: 'module' },
 });
@@ -66,13 +135,16 @@ tsRuleTester.run(
   'sref-status-aria-current (typescript-eslint)',
   srefStatusAriaCurrent,
   {
-    valid: [],
-    invalid: CRLF,
+    valid: [...BOOLEAN_FIXED, BOOLEAN_BESIDE_REAL],
+    invalid: [...CRLF, ...BOOLEAN],
   },
 );
 
 ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
   valid: [
+    // The first is the pair below.
+    ...BOOLEAN_FIXED.slice(1),
+    BOOLEAN_BESIDE_REAL,
     {
       name: 'the pair the fix produces',
       code: host(
@@ -173,6 +245,7 @@ ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
     },
   ],
   invalid: [
+    ...BOOLEAN,
     {
       name: 'a field read through classMap',
       code: host(
