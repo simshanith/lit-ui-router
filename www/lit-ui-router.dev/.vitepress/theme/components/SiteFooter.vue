@@ -10,6 +10,7 @@ import {
   FOOTER_GROUPS,
   FOOTER_REFERENCES,
 } from '../../../catalog/footer.ts';
+import { FLAMES_MARK } from '../../../catalog/mark.ts';
 import type { NavLink } from '../../../catalog/navigation.ts';
 
 const { frontmatter } = useData();
@@ -40,14 +41,11 @@ const external = { target: '_blank', rel: 'noopener' };
           <svg
             class="mark"
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="125 107 551 587"
+            :viewBox="FLAMES_MARK.viewBox"
             aria-hidden="true"
             focusable="false"
           >
-            <path
-              fill="currentColor"
-              d="M400 107l-63 63v126l63-63v-126zm0 126v126l63-63v-126l-63 63zm63 63v126l63-63v-126l-63 63zm-126 0-63-63v126l63 63v-126zM200 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76zM400 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76zM600 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76z"
-            />
+            <path fill="currentColor" :d="FLAMES_MARK.path" />
           </svg>
           <span v-if="expanded" class="mark gradient-mark" aria-hidden="true">
             <span class="sheen" />

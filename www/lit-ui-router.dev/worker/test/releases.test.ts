@@ -19,6 +19,12 @@ import { UIRouterLit } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
+import {
+  COPYRIGHT,
+  FOOTER_BAR,
+  FOOTER_REFERENCES,
+} from '../../catalog/footer.ts';
+import { FLAMES_MARK } from '../../catalog/mark.ts';
 import { NAV } from '../../catalog/navigation.ts';
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
@@ -1154,6 +1160,138 @@ describe('the /releases pages', () => {
       assert.deepEqual(await current('/releases/', DOWN), [
         ['Releases', 'true'],
       ]);
+    });
+  });
+
+  describe('the footer', () => {
+    const PATHS = [
+      '/releases/',
+      '/releases/lit-ui-router/',
+      '/releases/lit-ui-router/1.10.0/',
+      '/releases/no-such-package/',
+    ];
+
+    const footerOf = (doc: Document) => getByRole(doc.body, 'contentinfo');
+
+    const barLinks = (doc: Document) =>
+      within(
+        within(footerOf(doc)).getByRole('navigation', { name: 'Footer' }),
+      ).getAllByRole('link');
+
+    it("is the page's one contentinfo landmark, with the site's name", async () => {
+      for (const path of PATHS) {
+        const doc = await page(path);
+
+        assert.equal(getAllByRole(doc.body, 'contentinfo').length, 1, path);
+        within(footerOf(doc)).getByText('Lit UI Router');
+      }
+    });
+
+    it("lists the docs footer bar's links, in its order", async () => {
+      for (const path of PATHS) {
+        assert.deepEqual(
+          barLinks(await page(path)).map((link) => [
+            link.textContent,
+            link.getAttribute('href'),
+          ]),
+          FOOTER_BAR.map(({ text, link }) => [text, link]),
+          path,
+        );
+      }
+    });
+
+    it('opens another site in a new tab, as the docs footer does', async () => {
+      const doc = await page('/releases/');
+
+      for (const link of within(footerOf(doc)).getAllByRole('link')) {
+        const external = !link.getAttribute('href')?.startsWith('/');
+
+        assert.equal(
+          link.getAttribute('target'),
+          external ? '_blank' : null,
+          link.textContent,
+        );
+        assert.equal(link.getAttribute('rel'), external ? 'noopener' : null);
+      }
+    });
+
+    it('marks Releases as the header does: the current page on the index, the current section below it', async () => {
+      const current = async (path: string, ledger = fixtureLedger) =>
+        barLinks(await page(path, ledger))
+          .filter((link) => link.hasAttribute('aria-current'))
+          .map((link) => [link.textContent, link.getAttribute('aria-current')]);
+
+      assert.deepEqual(await current('/releases/'), [['Releases', 'page']]);
+      assert.deepEqual(await current('/releases/lit-ui-router/'), [
+        ['Releases', 'true'],
+      ]);
+      assert.deepEqual(await current('/releases/lit-ui-router/1.10.0/'), [
+        ['Releases', 'true'],
+      ]);
+      assert.deepEqual(await current('/releases/', DOWN), [
+        ['Releases', 'true'],
+      ]);
+      // A page after another form's: each form of the footer is rendered once and kept.
+      assert.deepEqual(await current('/releases/'), [['Releases', 'page']]);
+    });
+
+    it("says what the site is and names LICENSE's copyright line", async () => {
+      const footer = within(footerOf(await page('/releases/')));
+
+      for (const [name, href] of [
+        ['UI-Router', FOOTER_REFERENCES.uiRouter],
+        ['Lit', FOOTER_REFERENCES.lit],
+        ['MIT License', FOOTER_REFERENCES.license],
+      ] as const)
+        assert.equal(
+          footer.getByRole('link', { name }).getAttribute('href'),
+          href,
+        );
+
+      footer.getByText(
+        (_, element) =>
+          element?.tagName === 'P' &&
+          element.textContent === 'UI-Router for Lit web components.',
+      );
+      footer.getByText(
+        (_, element) =>
+          element?.tagName === 'P' &&
+          element.textContent ===
+            `MIT License \u00b7 Copyright \u00a9 ${COPYRIGHT}.`,
+      );
+    });
+
+    it('draws the flames mark as a decorative inline svg', async () => {
+      const mark = footerOf(await page('/releases/')).querySelector('svg');
+
+      assert.equal(mark?.getAttribute('viewBox'), FLAMES_MARK.viewBox);
+      assert.equal(mark?.getAttribute('aria-hidden'), 'true');
+      assert.equal(
+        mark?.querySelector('path')?.getAttribute('d'),
+        FLAMES_MARK.path,
+      );
+      assert.equal(
+        mark?.querySelector('path')?.getAttribute('fill'),
+        'currentColor',
+      );
+    });
+
+    it('leaves where the pages are read from to the end of main', async () => {
+      for (const path of PATHS) {
+        const doc = await page(path);
+
+        const note = within(getByRole(doc.body, 'main')).getByText(
+          /^Read from the/,
+        );
+
+        assert.equal(
+          hrefOf(note, 'release ledger'),
+          '/site/#the-release-ledger',
+        );
+        assert.equal(hrefOf(note, 'GitHub'), `${REPOSITORY}/releases`);
+        assert.equal(note.nextElementSibling, null, path);
+        assert.equal(within(footerOf(doc)).queryByText(/^Read from the/), null);
+      }
     });
   });
 

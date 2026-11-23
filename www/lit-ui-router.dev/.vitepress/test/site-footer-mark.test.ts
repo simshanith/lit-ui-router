@@ -7,6 +7,7 @@ import { describe, it } from 'node:test';
 import postcss, { parse, type Declaration } from 'postcss';
 import postcssHtml from 'postcss-html';
 
+import { FLAMES_MARK } from '../../catalog/mark.ts';
 import { contrast } from './color.ts';
 
 const FILE = 'SiteFooter.vue';
@@ -106,8 +107,8 @@ describe('the home footer mark', () => {
   });
 
   it('cuts the gradient to the flames the inline mark draws', () => {
-    for (const name of ['viewBox', 'd'])
-      assert.equal(attribute(mask, name), attribute(component, name), name);
+    assert.equal(attribute(mask, 'viewBox'), FLAMES_MARK.viewBox);
+    assert.equal(attribute(mask, 'd'), FLAMES_MARK.path);
 
     const [, , width, height] = attribute(mask, 'viewBox')?.split(' ') ?? [];
 
