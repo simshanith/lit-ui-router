@@ -125,9 +125,11 @@ img {
     var(--site-color-interaction) 40%
   );
 }
+/* The provenance note sits at the foot of main, above the footer, however short the page. */
 main {
   flex: 1;
-  padding-block: 1.5rem 3rem;
+  grid-template-rows: 1fr auto;
+  padding-block: 1.5rem;
 }
 .crumbs {
   list-style: none;
@@ -784,12 +786,103 @@ body:has(.npm-diff) > .content-grid {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-footer {
-  border-block-start: var(--site-border-width) solid var(--site-color-line);
-  background: var(--site-color-surface-soft);
+.provenance {
+  margin-block: 3rem 0;
+  font-size: var(--site-text-sm);
   color: var(--site-color-text-muted);
-  font-size: 0.875rem;
-  padding-block: 1rem;
+}
+/* The docs site's compact footer, as SiteFooter.vue styles it, on this page's content grid. */
+.site-footer {
+  border-block-start: var(--site-border-width) solid var(--site-color-line);
+  background: var(--site-color-surface);
+  color: var(--site-color-text-muted);
+  font-size: var(--site-text-sm);
+  line-height: 1.5;
+}
+.site-footer .inner {
+  display: grid;
+  gap: var(--site-space-3);
+  padding-block: var(--site-space-5);
+}
+.site-footer .top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--site-space-3) var(--site-space-6);
+}
+.site-footer .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--site-space-2);
+}
+.site-footer .mark {
+  flex: none;
+  block-size: var(--site-icon-md);
+  color: var(--site-color-identity-ink);
+}
+.site-footer .name {
+  margin: 0;
+  font-weight: 600;
+  color: var(--site-color-text);
+}
+.site-footer .list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--site-space-1) var(--site-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-footer a {
+  color: inherit;
+  transition:
+    color var(--site-duration-fast) var(--ease-out),
+    text-decoration-color var(--site-duration-fast) var(--ease-out);
+}
+.site-footer .list a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 28px;
+  text-decoration: none;
+}
+/* Weight as well as colour marks the section the page is in. */
+.site-footer .list a[aria-current] {
+  font-weight: 600;
+  color: var(--site-color-text);
+}
+.site-footer .colophon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--site-space-1) var(--site-space-6);
+  font-size: var(--site-text-xs);
+}
+.site-footer .colophon p {
+  margin: 0;
+  line-height: 1.8;
+}
+/* A link in a sentence: underlined, and padded to a 24px target without moving its line. */
+.site-footer .colophon a {
+  display: inline-block;
+  padding-block: 3px;
+  margin-block: -3px;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+}
+.site-footer a:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+@media (forced-colors: active) {
+  .site-footer {
+    border-color: CanvasText;
+  }
+  .site-footer .mark {
+    color: CanvasText;
+  }
 }
 ui-router,
 ui-view {
@@ -802,6 +895,11 @@ ui-view {
   }
   a:hover {
     text-decoration-thickness: 2px;
+  }
+  .site-footer a:hover {
+    color: var(--site-color-interaction);
+    text-decoration-color: currentColor;
+    text-decoration-thickness: auto;
   }
   .pager a:hover {
     text-decoration: underline;

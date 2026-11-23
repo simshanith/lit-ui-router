@@ -460,6 +460,47 @@ test.describe('site footer', () => {
       expect((await request.get(path)).status(), path).toBe(200);
   });
 
+  // The worker renders the release pages' footer from the same data; with no ledger here the page answers 503, footer included.
+  test('reads the same on a release page as on a docs page', async ({
+    page,
+  }) => {
+    const read = async (path: string) => {
+      await page.goto(path);
+      await expect(footer(page)).toHaveCount(1);
+
+      return {
+        links: await footer(page)
+          .getByRole('link')
+          .evaluateAll((links: HTMLAnchorElement[]) =>
+            links.map((link) => [
+              link.textContent?.trim(),
+              link.getAttribute('href'),
+              link.target,
+              link.rel,
+            ]),
+          ),
+        copy: await footer(page)
+          .locator('p')
+          .evaluateAll((lines) =>
+            lines.map((line) => line.textContent?.replace(/\s+/g, ' ').trim()),
+          ),
+      };
+    };
+
+    const docs = await read('/guides/route-guards');
+
+    // VitePress's router needs the target the worker's pages have no use for.
+    expect(await read('/releases/')).toEqual({
+      ...docs,
+      links: docs.links.map(([text, href, target, rel]) => [
+        text,
+        href,
+        target === '_self' ? '' : target,
+        rel,
+      ]),
+    });
+  });
+
   test('takes a full navigation to the release pages', async ({ page }) => {
     await page.goto('/guides/');
     await hydrated(page);
