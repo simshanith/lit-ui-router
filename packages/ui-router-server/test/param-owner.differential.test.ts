@@ -137,6 +137,18 @@ const cases: OwnerCase[] = [
     ],
   },
   {
+    label: "a descendant url declares a url-less ancestor's param",
+    routes: [
+      { name: 'a', params: { x: '1' } },
+      { name: 'a.b', url: '/b/:x' },
+    ],
+    urls: ['/b', '/b/2'],
+    formats: [
+      ['a.b', {}],
+      ['a.b', { x: '2' }],
+    ],
+  },
+  {
     label:
       'a descendant url declares and configures a param its ancestor also names',
     routes: [

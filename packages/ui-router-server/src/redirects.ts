@@ -189,15 +189,10 @@ const ownedParams = (
   namesOf: (route: RouteDeclaration) => readonly string[],
 ): RouteParams => {
   const params: RouteParams = {};
-  const owned = new Set<string>();
 
-  for (let depth = chain.length - 1; depth >= 0; depth--) {
-    const state = chain[depth];
-
+  // A name two urls declare never gets here to matter: the full pattern throws.
+  for (const state of chain) {
     for (const name of namesOf(state)) {
-      if (owned.has(name)) continue;
-      owned.add(name);
-
       if (state.params && Object.hasOwn(state.params, name))
         params[name] = state.params[name];
     }
