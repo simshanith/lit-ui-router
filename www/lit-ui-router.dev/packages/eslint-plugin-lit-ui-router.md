@@ -64,6 +64,18 @@ deliberately does not register the `lit-a11y` plugin key itself — the host's
 instance owns it. Without lit-a11y installed that `off` line is simply inert,
 so the ordering rule costs nothing either way.
 
+The recommended config sets no `files`, so ESLint applies it only to the `.js`, `.mjs` and `.cjs` files it lints by default and skips `.ts` sources without a message. A TypeScript app needs a config entry whose `files` glob covers `.ts` and that sets a TypeScript parser. [`typescript-eslint`](https://typescript-eslint.io/)'s `recommended` does both; its `base` config or a bare `languageOptions.parser` sets no `files` and still lints nothing. Spread it first, as [`examples/lint-eslint`](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint) does:
+
+```js
+import litUiRouter from 'eslint-plugin-lit-ui-router';
+import tseslint from 'typescript-eslint';
+
+export default [
+  ...tseslint.configs.recommended,
+  ...litUiRouter.configs.recommended,
+];
+```
+
 ## The rules
 
 | Rule                                                                                                                                                                        | What it catches                                                                                                                                                                                                            |
@@ -220,6 +232,9 @@ tightening, and pin accordingly.
 
 ## Further reading
 
+- [Linting](/guides/linting) — worked mistakes the plugin catches, how lint
+  sits beside typed routes and development warnings, and pointers for the rest
+  of your Lit code
 - [Releases](/releases/eslint-plugin-lit-ui-router/){target="_self"} — every version, newest first, with its release notes
 - [Design System Links](/guides/design-system-links) — what `uiSref` does to
   an anchor, and why the href only exists at runtime

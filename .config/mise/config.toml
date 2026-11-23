@@ -83,7 +83,8 @@ idiomatic_version_file_enable_tools = ["node"]
 # `pnpm` package is a placeholder whose `preinstall` hardlinks the real binary
 # from an optional platform dep, which mise's aube installer does not run.
 "aqua:pnpm/pnpm" = "12.21.0"
-# shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
+# shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1.
+# tools/workers-builds/cloudflare-build.ts restates it (npm-pin.test.ts).
 "npm:npm" = "12.2.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
@@ -164,13 +165,13 @@ run = "mise run rumdl check"
 [tasks.check_links]
 # External URLs only, for the `acceptance (links)` job; settings in lychee.toml.
 # Package changelogs are left out: release-it writes them, full of commit links.
-description = "Check external URLs in READMEs, manifests and docs Markdown with lychee"
+description = "Check external URLs in READMEs, manifests, docs Markdown and the site footer with lychee"
 usage = '''
 flag "--output <path>" help="Also write lychee's Markdown report to this file"
 '''
 # --root-dir resolves the docs pages' root-relative links, which scheme then skips.
 run = '''
-git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' |
+git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' 'www/lit-ui-router.dev/catalog/footer.ts' |
   lychee --root-dir "{{config_root}}/www/lit-ui-router.dev" ${usage_output:+--output "$usage_output"} --files-from -
 '''
 

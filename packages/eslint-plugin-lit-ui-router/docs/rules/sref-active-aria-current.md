@@ -18,9 +18,10 @@ The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute unde
 - **A non-link element with no literal `ariaCurrentValue`** — the runtime's default `'page'` applies only to `<a>`, `<area>` and a literal `role` with the `link` token, so on an `<li>` or a `<tr>` the directive never writes the attribute. The rule stays quiet for any `role` with a binding, even one whose static text has the `link` token (`role="link ${extra}"`): a deliberate conservative gap that can miss a report but never makes a false one. Tags declared in `settings.linkElements` don't count here: the runtime check doesn't read them.
 - **`ariaCurrentValue: false`** — the opt-out.
 - **`ariaCurrentValue: ''` or `ariaCurrentValue: null`** — neither ever writes the attribute: the empty string resolves to no value, and `null` (outside the declared type) throws before anything is written.
-- **A non-literal params argument, a spread, or a non-literal `ariaCurrentValue`** — unknowable statically, so it stays suppressed rather than guessed. The object form (`{ exact, active }`) is not read either, so it stays suppressed too.
+- **A non-literal params argument, a spread, or a non-literal `ariaCurrentValue`** — unknowable statically, so it stays suppressed rather than guessed.
+- **An object form (`{ exact, active }`) that never writes** — both keys `false` or `''`, or an absent or `null` `exact` off a link (an absent or `null` `active` defaults to nothing). A spread or computed key in the object, or a non-literal key with no literal key that writes, stays suppressed.
 
-An explicit non-empty literal string `ariaCurrentValue` still reports on any element — the takeover is real — but carries no fix: rewriting a deliberate choice is not this rule's business.
+An explicit non-empty literal string `ariaCurrentValue` still reports on any element — the takeover is real — but carries no fix: rewriting a deliberate choice is not this rule's business. So does an object form with a non-empty literal string key, or with an absent or `null` `exact` on a link, which takes the runtime's `'page'` default.
 
 ## Examples
 

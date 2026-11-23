@@ -35,6 +35,12 @@ each transition. Append `?feature-enable-visualizer=true` to any mount's URL to
 also load [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) (add
 `&feature-enable-devtools=false` to run the visualizer on its own).
 
+### API viewer
+
+Append `?feature-enable-api-docs=true` to show an API viewer below the app. It
+reads `lit-ui-router/custom-elements.json` and lists the properties, attributes
+and events of the elements `lit-ui-router` defines. It is off by default.
+
 ## Live mounts
 
 The same routing table is deployed in four client-state variants (all behind the

@@ -1,0 +1,39 @@
+{
+  "name": "lit-ui-router-tutorial-helloworld-nudeps",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./public/main.js",
+  "scripts": {
+    "build": "node --eval \"fs.cpSync('public', 'dist', { recursive: true })\" --",
+    "dependencies": "nudeps",
+    "dev": "serve --no-clipboard public",
+    "prepare": "nudeps",
+    "preview": "serve --no-clipboard dist"
+  },
+  "dependencies": {
+    "@uirouter/core": "6.1.2",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.20.0"
+  },
+  "devDependencies": {
+    "nudeps": "^0.4.4",
+    "serve": "^14.2.6",
+    "typescript": "^7.0.2"
+  },
+  "overrides": {
+    "serve": {
+      "compression": "^1.8.2"
+    }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=12.0.0",
+      "onFail": "error"
+    }
+  },
+  "patchedDependencies": {
+    "@uirouter/core@6.1.2": "patches/@uirouter/core@6.1.2.patch"
+  }
+}

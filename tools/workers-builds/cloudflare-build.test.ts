@@ -19,6 +19,7 @@ import { promisify } from 'node:util';
 
 import {
   DEFAULT_SITE,
+  NPM_VERSION,
   type Site,
   type SiteResult,
   buildSteps,
@@ -107,6 +108,17 @@ describe('resolveSite', () => {
         siteOf(resolveSite(root, 'example.test')),
       ).at(-1),
       ['npx', ['turbo', '@www/example.test#build']],
+    );
+  });
+
+  it('installs the pinned npm before pnpm', () => {
+    assert.deepEqual(
+      buildSteps(
+        root,
+        '/nonexistent/bin',
+        siteOf(resolveSite(root, 'example.test')),
+      ).at(0),
+      ['npm', ['install', '--global', `npm@${NPM_VERSION}`]],
     );
   });
 

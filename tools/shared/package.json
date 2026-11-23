@@ -14,6 +14,7 @@
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
     "./resolution.ts": "./src/resolution.ts",
+    "./taplo.ts": "./src/taplo.ts",
     "./test-reporter.ts": "./src/test-reporter.ts",
     "./turbo-log.ts": "./src/turbo-log.ts",
     "./workspace.ts": "./src/workspace.ts"

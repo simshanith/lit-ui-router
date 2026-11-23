@@ -212,6 +212,8 @@ builds. Lint reports all three across the whole codebase at author time,
 including for code paths a production build will never warn about and a
 development run may never reach.
 
+[Linting](./linting) shows what the plugin catches and how to add it.
+
 ## How the split is kept honest
 
 Every published package with two builds is verified at build time in both

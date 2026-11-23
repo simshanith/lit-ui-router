@@ -1,7 +1,11 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
 import { SAMPLE_APPS } from './examples.ts';
 import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
-import { API_REFERENCES } from './references.ts';
+import {
+  API_REFERENCES,
+  ELEMENT_REFERENCES,
+  type ElementReference,
+} from './references.ts';
 
 /** A page link, in VitePress's shape. */
 export interface NavLink {
@@ -73,6 +77,7 @@ const GUIDES: Record<GuideTopic, NavLink[]> = {
       text: 'Development and Production Builds',
       link: '/guides/development-builds',
     },
+    { text: 'Linting', link: '/guides/linting' },
   ],
   migration: [
     { text: 'Coming from UI-Router', link: '/guides/coming-from-ui-router' },
@@ -141,6 +146,16 @@ export const packageGroups = ROLES.map(({ id, label }) => ({
   text: label,
   items: PACKAGE_PAGES[id],
 }));
+
+const elementReferences: Partial<Record<PackageName, ElementReference>> =
+  ELEMENT_REFERENCES;
+
+/** The hand-written pages inside a package's API reference, ahead of its generated members. */
+const referencePages = (name: PackageName): SidebarEntry[] => {
+  const elements = elementReferences[name];
+
+  return elements ? [{ text: 'Elements', link: elements.link }] : [];
+};
 
 // The top nav and the sidebar both list these.
 const sampleAppOverview: NavLink = { text: 'Overview', link: '/sample-app' };
@@ -218,7 +233,16 @@ export const SIDEBAR: SidebarEntry[] = [
         items: PACKAGES.flatMap(({ name, role }) => {
           const link = role === id ? API_REFERENCES[name] : null;
 
-          return link ? [{ text: name, link, collapsed: true }] : [];
+          return link
+            ? [
+                {
+                  text: name,
+                  link,
+                  collapsed: true,
+                  items: referencePages(name),
+                },
+              ]
+            : [];
         }),
       })),
     ],

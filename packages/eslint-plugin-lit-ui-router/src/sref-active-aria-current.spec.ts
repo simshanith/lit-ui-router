@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import tsParser from '@tools/eslint-ts-parser';
 import { RuleTester } from 'eslint';
 import { srefActiveAriaCurrent } from './sref-active-aria-current.ts';
 
@@ -15,8 +16,106 @@ import { html } from 'lit';
 import { srefAriaCurrent, uiSref, uiSrefActive } from 'lit-ui-router';
 `;
 
+/** A case for `element` (tag plus attributes) with uiSrefActive given `value` as its `ariaCurrentValue`. */
+const objectForm = (name: string, element: string, value: string) => ({
+  name,
+  code: `${IMPORTS}html\`<${element} \${uiSrefActive({ ariaCurrentValue: ${value} })}></${element.split(' ')[0]}>\`;`,
+});
+
+// The object form, read the way the runtime resolves `{ exact, active }`.
+const OBJECT_FORM_VALID = [
+  objectForm(
+    'object form: false on both keys never writes',
+    'a href="/" aria-current="page"',
+    '{ exact: false, active: false }',
+  ),
+  objectForm(
+    'object form: an empty exact never writes, and active defaults off',
+    'a href="/" aria-current="page"',
+    "{ exact: '' }",
+  ),
+  objectForm(
+    'object form: no keys off a link writes nothing',
+    'li aria-current="step"',
+    '{}',
+  ),
+  objectForm(
+    'object form: a null exact falls back to no default off a link',
+    'li aria-current="step"',
+    '{ exact: null, active: null }',
+  ),
+  objectForm(
+    'object form: a non-literal key is unknowable',
+    'a href="/" aria-current="page"',
+    '{ exact: choice, active: false }',
+  ),
+  objectForm(
+    'object form: a spread could carry any key, so it stays suppressed',
+    'a href="/" aria-current="page"',
+    '{ ...values }',
+  ),
+  objectForm(
+    'object form: a computed key could be either key, so it stays suppressed',
+    'a href="/" aria-current="page"',
+    '{ [key]: false }',
+  ),
+];
+
+const OBJECT_FORM_INVALID = [
+  objectForm(
+    'object form: a literal exact takes over a non-link',
+    'li aria-current="step"',
+    "{ exact: 'page' }",
+  ),
+  objectForm(
+    'object form: a literal active takes over a non-link',
+    'li aria-current="step"',
+    "{ exact: false, active: 'location' }",
+  ),
+  objectForm(
+    "object form: an absent exact keeps the link's page default",
+    'a href="/home" aria-current="page"',
+    "{ active: 'location' }",
+  ),
+  objectForm(
+    "object form: a null exact keeps the link's page default",
+    'a href="/home" aria-current="page"',
+    '{ exact: null }',
+  ),
+  objectForm(
+    'object form: a literal key takes over beside an unknowable one',
+    'li aria-current="step"',
+    "{ exact: choice, active: 'location' }",
+  ),
+].map((test) => ({
+  ...test,
+  errors: [{ messageId: 'ariaCurrentTakeover' }],
+  output: null,
+}));
+
+const tsRuleTester = new RuleTester({
+  languageOptions: { parser: tsParser, sourceType: 'module' },
+});
+
+tsRuleTester.run(
+  'sref-active-aria-current (typescript-eslint)',
+  srefActiveAriaCurrent,
+  {
+    valid: [
+      ...OBJECT_FORM_VALID,
+      objectForm(
+        'object form: a cast is unknowable',
+        'li aria-current="step"',
+        "{ exact: 'page' } as AriaCurrentValues",
+      ),
+    ],
+    invalid: OBJECT_FORM_INVALID,
+  },
+);
+
 ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
   valid: [
+    ...OBJECT_FORM_VALID,
     {
       name: 'no authored aria-current, so nothing is taken over',
       code: `${IMPORTS}html\`<a href="/home" \${uiSrefActive({})}>Home</a>\`;`,
@@ -92,6 +191,7 @@ ruleTester.run('sref-active-aria-current', srefActiveAriaCurrent, {
     },
   ],
   invalid: [
+    ...OBJECT_FORM_INVALID,
     {
       name: 'an explicit ariaCurrentValue takes over a non-link too, unfixed',
       code: `${IMPORTS}html\`<li aria-current="step" \${uiSrefActive({ ariaCurrentValue: 'step' })}></li>\`;`,

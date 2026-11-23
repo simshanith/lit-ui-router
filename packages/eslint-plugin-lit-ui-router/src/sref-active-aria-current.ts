@@ -16,6 +16,7 @@ import {
   isCallExpression,
   isLinkElement,
   isObjectExpression,
+  type ObjectNode,
   propertyNamed,
   toEstree,
 } from './directives.ts';
@@ -28,6 +29,43 @@ const NO_DECLARED_LINKS: ReadonlySet<string> = new Set();
 // `''` resolves to no value and `null` throws before the runtime writes.
 const NEVER_WRITTEN: ReadonlySet<unknown> = new Set([false, '', null]);
 
+// Whether one `{ exact, active }` key writes; `undefined` when it is unknowable.
+const keyWrites = (
+  values: ObjectNode,
+  key: 'exact' | 'active',
+  fallback: boolean,
+): boolean | undefined => {
+  const property = propertyNamed(values, key);
+
+  if (property === undefined) return fallback;
+  const { value } = property;
+
+  if (value.type !== 'Literal') return undefined;
+
+  // The runtime reads each key through `??`, so `null` takes the key's default.
+  if (value.value === null) return fallback;
+
+  return !NEVER_WRITTEN.has(value.value);
+};
+
+/**
+ * Whether the object form writes `aria-current`: `exact` defaults to `'page'`
+ * on a link, `active` to nothing. An unknowable key adds no write of its own.
+ */
+const objectFormWrites = (values: ObjectNode, link: boolean): boolean => {
+  if (
+    hasSpread(values) ||
+    values.properties.some((property) => property.computed === true)
+  ) {
+    return false;
+  }
+
+  return (
+    keyWrites(values, 'exact', link) === true ||
+    keyWrites(values, 'active', false) === true
+  );
+};
+
 export const RULE_NAME = 'sref-active-aria-current';
 
 /**
@@ -38,7 +76,7 @@ export const RULE_NAME = 'sref-active-aria-current';
  *
  * The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute
  * under the app's control. A non-literal params argument is unknowable, so it
- * stays suppressed rather than guessed.
+ * stays suppressed rather than guessed. The object form reports unfixed.
  */
 const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
   meta: {
@@ -97,6 +135,12 @@ const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
       }
 
       const { value } = property;
+
+      if (isObjectExpression(value)) {
+        if (objectFormWrites(value, link)) report();
+
+        return;
+      }
 
       // Non-literal is unknowable, so it stays suppressed.
       if (value.type !== 'Literal' || NEVER_WRITTEN.has(value.value)) return;

@@ -18,6 +18,20 @@ export const API_REFERENCES = {
   'eslint-plugin-lit-ui-router': null,
 } as const satisfies Record<PackageName, string | null>;
 
+/** A custom elements page: the page source, and the link a rewrite serves it at inside the package's reference, which docs:api empties. */
+export interface ElementReference {
+  source: string;
+  link: string;
+}
+
+/** The packages with a custom elements page, read from the Custom Elements Manifest each one ships. */
+export const ELEMENT_REFERENCES = {
+  'lit-ui-router': {
+    source: 'reference/lit-ui-router-elements.md',
+    link: '/reference/lit-ui-router/elements',
+  },
+} as const satisfies Partial<Record<PackageName, ElementReference>>;
+
 /** An export a package's reference index leads with; `element` is the custom element tag its class defines. */
 export interface FeaturedExport {
   name: string;

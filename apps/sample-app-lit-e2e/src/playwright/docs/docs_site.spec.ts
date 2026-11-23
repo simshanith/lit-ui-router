@@ -75,6 +75,30 @@ test.describe('docs site', () => {
     expect(await page.evaluate(() => window.hydrationProbe)).toBe(true);
   });
 
+  test('shows the custom elements viewer inside the lit-ui-router reference', async ({
+    page,
+  }) => {
+    await page.goto('/reference/lit-ui-router/elements');
+    const main = page.getByRole('main');
+
+    // The static list is in the served HTML; the viewer upgrades after its definition loads.
+    await expect(
+      main.getByRole('link', { name: 'UiView', exact: true }),
+    ).toHaveAttribute('href', '/reference/lit-ui-router/components/UiView');
+
+    const viewer = main.locator('api-docs');
+
+    await expect(viewer.getByRole('tab', { name: 'Properties' })).toBeVisible();
+    // <ui-view>, shown first, has no public method, and the viewer hides an empty section's tab.
+    await expect(
+      viewer.getByRole('tab', { name: 'Methods', includeHidden: true }),
+    ).toBeHidden();
+    await viewer
+      .getByRole('combobox', { name: 'Custom element' })
+      .selectOption('ui-router');
+    await expect(viewer.getByRole('tab', { name: 'Methods' })).toBeVisible();
+  });
+
   test('renders the generated api reference', async ({ page }) => {
     await page.goto('/reference/');
     await expect(page).toHaveTitle(/^API \| /);
@@ -319,5 +343,154 @@ test.describe('docs site', () => {
     await expect(page).toHaveURL(
       (url) => url.pathname === '/not-found-spa/definitely-not-a-route',
     );
+  });
+});
+
+test.describe('site footer', () => {
+  const footer = (page: Page) => page.getByRole('contentinfo');
+
+  const footerNav = (page: Page) =>
+    footer(page).getByRole('navigation', { name: 'Footer' });
+
+  test('expands on the home page, with its links in named groups', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(footer(page)).toHaveCount(1);
+    await expect(footer(page)).toHaveAttribute('data-mode', 'expanded');
+
+    for (const [group, links] of [
+      ['Project', ['Releases', 'Sample App', 'Atlas', 'Issues']],
+      ['Resources', ['npm', 'How this site runs', 'llms.txt']],
+    ] as const) {
+      await expect(
+        footerNav(page).getByRole('list', { name: group }).getByRole('link'),
+      ).toHaveText([...links]);
+    }
+  });
+
+  for (const [name, path] of [
+    ['a guide', '/guides/route-guards'],
+    ['an API reference page', '/reference/lit-ui-router/'],
+    ['the 404 page', '/definitely-missing'],
+  ] as const) {
+    test(`is the compact bar on ${name}`, async ({ page }) => {
+      await page.goto(path);
+      // The 404 page renders on the client.
+      await expect(footer(page)).toHaveCount(1);
+      await expect(footer(page)).toHaveAttribute('data-mode', 'compact');
+      await expect(footerNav(page).getByRole('link')).toHaveText([
+        'Releases',
+        'Issues',
+        'npm',
+        'How this site runs',
+        'llms.txt',
+      ]);
+    });
+  }
+
+  for (const [name, path] of [
+    ['a guide', '/guides/route-guards'],
+    ['the 404 page', '/definitely-missing'],
+  ] as const) {
+    test(`links its mark and name home on ${name}`, async ({ page }) => {
+      await page.goto(path);
+
+      const brand = footer(page).getByRole('link', { name: 'Lit UI Router' });
+
+      await expect(brand).toHaveCount(1);
+      await expect(brand).toHaveAttribute('href', '/');
+      await brand.click();
+      await expect(page).toHaveURL((url) => url.pathname === '/');
+      // The home page's footer names the site without linking to itself.
+      await expect(footer(page)).toHaveAttribute('data-mode', 'expanded');
+      await expect(footer(page).getByText('Lit UI Router')).toBeVisible();
+      await expect(
+        footer(page).getByRole('link', { name: 'Lit UI Router' }),
+      ).toHaveCount(0);
+    });
+  }
+
+  test('leaves the pager its navigation, without a second contentinfo landmark', async ({
+    page,
+  }) => {
+    await page.goto('/guides/route-guards');
+    await expect(
+      page.getByRole('navigation', { name: 'Pager' }).getByRole('link'),
+    ).toHaveCount(2);
+    await expect(footer(page)).toHaveCount(1);
+  });
+
+  test('links paths the site serves', async ({ page, request }) => {
+    await page.goto('/');
+
+    const paths = await footer(page)
+      .getByRole('link')
+      .evaluateAll((links: HTMLAnchorElement[]) =>
+        links.flatMap((link) =>
+          link.origin === location.origin ? [link.pathname] : [],
+        ),
+      );
+
+    expect(paths).toEqual(['/releases/', '/sample-app', '/site/', '/llms.txt']);
+
+    // The release pages read a ledger this server lacks; the site's footer test holds their route.
+    for (const path of paths.filter((path) => path !== '/releases/'))
+      expect((await request.get(path)).status(), path).toBe(200);
+  });
+
+  // The worker renders the release pages' footer from the same data; with no ledger here the page answers 503, footer included.
+  test('reads the same on a release page as on a docs page', async ({
+    page,
+  }) => {
+    const read = async (path: string) => {
+      await page.goto(path);
+      await expect(footer(page)).toHaveCount(1);
+
+      return {
+        links: await footer(page)
+          .getByRole('link')
+          .evaluateAll((links: HTMLAnchorElement[]) =>
+            links.map((link) => [
+              link.textContent?.trim(),
+              link.getAttribute('href'),
+              link.target,
+              link.rel,
+            ]),
+          ),
+        copy: await footer(page)
+          .locator('p')
+          .evaluateAll((lines) =>
+            lines.map((line) => line.textContent?.replace(/\s+/g, ' ').trim()),
+          ),
+      };
+    };
+
+    const docs = await read('/guides/route-guards');
+
+    // The mark and name, one link home.
+    expect(docs.links[0]).toEqual(['Lit UI Router', '/', '', '']);
+
+    // VitePress's router needs the target the worker's pages have no use for.
+    expect(await read('/releases/')).toEqual({
+      ...docs,
+      links: docs.links.map(([text, href, target, rel]) => [
+        text,
+        href,
+        target === '_self' ? '' : target,
+        rel,
+      ]),
+    });
+  });
+
+  test('takes a full navigation to the release pages', async ({ page }) => {
+    await page.goto('/guides/');
+    await hydrated(page);
+    await page.evaluate(() => {
+      window.hydrationProbe = true;
+    });
+    await footerNav(page).getByRole('link', { name: 'Releases' }).click();
+    await expect(page).toHaveURL((url) => url.pathname === '/releases/');
+    expect(await page.evaluate(() => window.hydrationProbe)).toBeUndefined();
   });
 });

@@ -11,12 +11,18 @@ import {
 } from './theme/components/examples.ts';
 import { SIDEBAR } from '../catalog/navigation.ts';
 import { PACKAGES } from '../catalog/packages.ts';
+import { ELEMENT_REFERENCES } from '../catalog/references.ts';
 import { changelogMarkdownPath } from './changelog.ts';
 import { RELEASES_PATH } from './release-stubs.ts';
 import { pageGlobs, surfaceOf } from './surfaces.ts';
 import { SITE_ORIGIN } from './versions.ts';
 
 const LIVE_EXAMPLE = /^<LiveExample\s([^>]*?)\/>[ \t]*$/gm;
+
+const LINT_EXAMPLE =
+  /^<LintExample\s([^>]*?)>\n([\s\S]*?)\n<\/LintExample>[ \t]*$/gm;
+
+const LINT_SLOT = /^<template #(\w+)>\n([\s\S]*?)\n<\/template>[ \t]*$/gm;
 
 const ATTRIBUTE = /([\w-]+)="([^"]*)"/g;
 
@@ -55,6 +61,54 @@ export function appendExampleSources(markdown: string, id: string): string {
   });
 }
 
+/** Emits plain Incorrect / Lint error / Correct Markdown for LLMs and hides the Vue slot wrapper from them. */
+export function formatLintExamples(markdown: string): string {
+  return markdown.replace(LINT_EXAMPLE, (block, tag: string, body: string) => {
+    const attributes = new Map(
+      Array.from(tag.matchAll(ATTRIBUTE), ([, key, value]) => [key, value]),
+    );
+
+    const slots = new Map(
+      Array.from(body.matchAll(LINT_SLOT), ([, name, content]) => [
+        name,
+        content.trim(),
+      ]),
+    );
+
+    const rule = attributes.get('rule');
+
+    const sections = [
+      [
+        rule ? `**Incorrect** (\`${rule}\`):` : '**Incorrect**:',
+        slots.get('incorrect'),
+      ],
+      ['Lint error:', slots.get('diagnostic')],
+      ['**Correct**:', slots.get('correct')],
+    ].flatMap(([heading, content]) =>
+      content ? [`${heading}\n\n${content}`] : [],
+    );
+
+    return [
+      '<llm-exclude>',
+      '',
+      block,
+      '',
+      '</llm-exclude>',
+      '',
+      '<llm-only>',
+      '',
+      sections.join('\n\n'),
+      '',
+      '</llm-only>',
+    ].join('\n');
+  });
+}
+
+/** Runs every docs-side Markdown pre-transform before `vitepress-plugin-llms` reads the page. */
+export function transformMarkdownForLlms(markdown: string, id: string): string {
+  return formatLintExamples(appendExampleSources(markdown, id));
+}
+
 /** Runs before the llms plugin's `pre` transform, which reads the source and strips `<llm-only>` from the HTML. */
 export function liveExampleSourcesPlugin(): Plugin {
   return {
@@ -63,7 +117,7 @@ export function liveExampleSourcesPlugin(): Plugin {
     transform: {
       filter: { id: /\.md$/ },
       handler: (code, id) => {
-        const transformed = appendExampleSources(code, id);
+        const transformed = transformMarkdownForLlms(code, id);
 
         return transformed === code ? null : { code: transformed, map: null };
       },
@@ -84,14 +138,27 @@ export function llmsSidebar(
 
     if (llms !== 'pages' && llms !== 'index') return [];
 
-    if (llms === 'index' || !children) return [item];
+    if (!children) return [item];
+
+    if (llms === 'index') {
+      // An index row lists its own page, and a hand-written page inside it.
+      const pages = children.filter(({ link }) => llmsOf(link) === 'pages');
+
+      return [pages.length > 0 ? { ...item, items: pages } : item];
+    }
 
     return [{ ...item, items: llmsSidebar(children) }];
   });
 }
 
 /** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`reference/<pkg>/index.md`), which matches the same sidebar link as the package index (`reference/<pkg>.md`). */
-export const LLMS_TXT_IGNORE = pageGlobs(({ llms }) => llms === 'index');
+export const LLMS_TXT_IGNORE = [
+  ...pageGlobs(({ llms }) => llms === 'index'),
+  // A hand-written page inside a reference is listed.
+  ...Object.values(ELEMENT_REFERENCES).map(
+    ({ link }) => `!${link.slice(1)}.md`,
+  ),
+];
 
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.
 
@@ -107,7 +174,7 @@ The Hello World starter is a Vite + TypeScript app. Copy it, then run \`npm inst
 npx tiged simshanith/lit-ui-router/examples/helloworld my-app
 \`\`\`
 
-[\`helloworld-buildless\`](${githubTreeSrc('helloworld-buildless')}) is the same app in plain JavaScript, served as static files: it runs with an import map and no bundler, fetching \`lit\`, \`@uirouter/core\` and \`lit-ui-router\` from a CDN, and \`checkJs\` still typechecks it against the published types.
+[\`helloworld-buildless\`](${githubTreeSrc('helloworld-buildless')}) is the same app in plain JavaScript, served as static files: it runs with an import map and no bundler, fetching \`lit\`, \`@uirouter/core\` and \`lit-ui-router\` from a CDN, and \`checkJs\` still typechecks it against the published types. [\`helloworld-nudeps\`](${githubTreeSrc('helloworld-nudeps')}) installs the same three packages from npm instead and serves them from the page's own origin through an import map that [nudeps](https://nudeps.dev) generates on install.
 
 For a new SPA, the [Location Plugins](https://lit-ui-router.dev/guides/location-plugins.md) guide recommends \`navigationLocationPlugin\` where the browser has the Navigation API and \`pushStateLocationPlugin\` where it doesn't; the tutorial uses hash URLs, which need no host configuration.`;
 

@@ -11,6 +11,12 @@ page covers the entry points, link directives and active-link markup.
 
 <!-- reference-index -->
 
+## Custom elements
+
+[Custom elements](/reference/lit-ui-router/elements) lists `<ui-router>` and
+`<ui-view>` with the properties, attributes, events and slots that
+`lit-ui-router/custom-elements.json` records.
+
 ## Attribute-part forms
 
 `srefHref`, `srefActiveClass` and `srefAriaCurrent` are covered under

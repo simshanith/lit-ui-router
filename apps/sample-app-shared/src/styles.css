@@ -320,9 +320,9 @@ api-docs {
   color: white;
 }
 
-/* the subject link stretches over its row, so the whole row stays the hit target */
+/* the subject link stretches over its row; a transform makes the row its containing block, since Safari computes a relative row as static */
 .messagelist tbody tr {
-  position: relative;
+  transform: translate(0);
 }
 .messagelist tbody tr a {
   color: inherit;

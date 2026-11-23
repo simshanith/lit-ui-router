@@ -15,10 +15,11 @@
       // cannot name the package — and that source has to be in the hash. An
       // explicit input is not gitignore-pruned, so the glob names src/ rather
       // than the package root, which would hash its node_modules.
-      // The tests also read each worker config under www/.
+      // The tests also read each worker config under www/, and the mise npm pin.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/tools/bootstrap/src/**",
+        "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/www/*/wrangler.jsonc",
         "$TURBO_ROOT$/www/*/cloudflare.config.ts"
       ]
