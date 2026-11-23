@@ -218,13 +218,17 @@ export class NavigationLocationService extends BaseLocationServices {
     this._navigation().addEventListener(NAVIGATE_EVENT, this._intercept);
   }
 
-  // Firefox repeats currententrychange, from the entry it is already on, after an intercepted traversal in an iframe (#1192).
+  // An entry change that keeps the URL never fires popstate, so it leaves the router alone; traversals always sync.
   private readonly _onCurrentEntryChange = (
     event: NavigationCurrentEntryChangeEvent,
   ): void => {
+    const current = this._navigation().currentEntry;
+
+    // Firefox repeats currententrychange, from the entry it is already on, after an intercepted traversal in an iframe (#1192).
     if (
-      event.navigationType === 'traverse' &&
-      event.from === this._navigation().currentEntry
+      event.navigationType === 'traverse'
+        ? event.from === current
+        : event.from.url === current?.url
     ) {
       return;
     }

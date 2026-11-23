@@ -499,4 +499,64 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     await push;
     expect(window.location.pathname).toBe('/traverse-a');
   });
+
+  describe('an entry change that keeps the URL', () => {
+    const touches = [
+      ['history.replaceState', () => history.replaceState({ draft: 1 }, '')],
+      [
+        'navigation.updateCurrentEntry',
+        () => window.navigation.updateCurrentEntry({ state: { draft: 1 } }),
+      ],
+    ] as const;
+
+    it.each(touches)(
+      'keeps a state entered with location: false when other code calls %s',
+      async (_, touch) => {
+        startRouter({});
+        await go('a');
+        await router.stateService.go('b', {}, { location: false });
+        const started: (string | undefined)[] = [];
+        router.transitionService.onStart({}, (transition) => {
+          started.push(transition.to().name);
+        });
+
+        touch();
+        await new Promise((resolve) => setTimeout(resolve, 150));
+
+        expect(started).toEqual([]);
+        expect(router.globals.current.name).toBe('b');
+      },
+    );
+
+    it.each(touches)(
+      'keeps a state without a url when other code calls %s',
+      async (_, touch) => {
+        startRouter({});
+        router.stateRegistry.register({ name: 'dialog' });
+        await go('a');
+        await router.stateService.go('dialog');
+
+        touch();
+        await new Promise((resolve) => setTimeout(resolve, 150));
+
+        expect(router.globals.current.name).toBe('dialog');
+      },
+    );
+
+    it('does not restart the transition a traversal started', async () => {
+      startRouter({});
+      await go('a');
+      await go('b');
+      const created: (string | undefined)[] = [];
+      router.transitionService.onCreate({}, (transition) => {
+        created.push(transition.to().name);
+      });
+
+      await window.navigation.back().committed;
+      window.navigation.updateCurrentEntry({ state: { draft: 1 } });
+      await vi.waitFor(() => expect(router.globals.current.name).toBe('a'));
+
+      expect(created).toEqual(['a']);
+    });
+  });
 });
