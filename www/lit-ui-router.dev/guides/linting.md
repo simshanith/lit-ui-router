@@ -137,12 +137,15 @@ Install [`eslint-plugin-lit-ui-router`](/packages/eslint-plugin-lit-ui-router):
 npm install --save-dev eslint-plugin-lit-ui-router
 ```
 
-`configs.recommended` sets no `files` and no parser, so ESLint 9 and 10 lint
-only `.js`, `.mjs`, and `.cjs` unless your config already parses TypeScript.
-Spread `...litUiRouter.configs.recommended` into your existing flat config after
-your TypeScript parser setup (such as `typescript-eslint`) and after
-`eslint-plugin-lit-a11y` (the Lit accessibility plugin, whose `anchor-is-valid`
-rule ours replaces):
+`configs.recommended` sets no `files`, so ESLint 9 and 10 apply it only to the
+`.js`, `.mjs`, and `.cjs` files they lint by default and skip `.ts` files
+without a message. A TypeScript app needs a config entry whose `files` glob
+covers `.ts` and that sets a TypeScript parser. `typescript-eslint`'s
+`configs.recommended` does both; its `configs.base` or a bare
+`languageOptions.parser` sets no `files` and still lints nothing. Spread
+`...litUiRouter.configs.recommended` into your existing flat config after that
+TypeScript entry and after `eslint-plugin-lit-a11y` (the Lit accessibility
+plugin, whose `anchor-is-valid` rule ours replaces):
 
 ```js
 import litA11y from 'eslint-plugin-lit-a11y';
@@ -182,9 +185,10 @@ Each layer catches a different class of mistake:
   catch runtime wiring faults such as a missing `<ui-router>` ancestor or
   duplicate copies of `lit` while the app runs in development.
 
-Once ESLint is configured to parse your TypeScript files, every recommended rule
-defaults to `error`, so `npx eslint .` fails in CI on violations and editor
-ESLint integrations surface the same diagnostics and autofixes as you edit.
+Once ESLint is configured to match and parse your TypeScript files, every
+recommended rule defaults to `error`, so `npx eslint .` fails in CI on
+violations and editor ESLint integrations surface the same diagnostics and
+autofixes as you edit.
 
 ## The rest of your Lit code
 
