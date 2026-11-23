@@ -105,6 +105,30 @@ describe('llmsSidebar', () => {
       ],
     );
   });
+
+  it('keeps a hand-written page inside an API index', () => {
+    assert.deepEqual(
+      llmsSidebar([
+        {
+          text: 'lit-ui-router',
+          link: '/reference/lit-ui-router/',
+          items: [
+            { text: 'Elements', link: '/reference/lit-ui-router/elements' },
+            { text: 'Core', link: '/reference/lit-ui-router/core/' },
+          ],
+        },
+      ]),
+      [
+        {
+          text: 'lit-ui-router',
+          link: '/reference/lit-ui-router/',
+          items: [
+            { text: 'Elements', link: '/reference/lit-ui-router/elements' },
+          ],
+        },
+      ],
+    );
+  });
 });
 
 describe('LLMS_RELEASES', () => {

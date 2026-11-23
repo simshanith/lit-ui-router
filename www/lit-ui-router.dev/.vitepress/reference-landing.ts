@@ -6,6 +6,8 @@ import type { Plugin } from 'vite';
 
 import {
   API_REFERENCES,
+  ELEMENT_REFERENCES,
+  type ElementReference,
   FEATURED_EXPORTS,
   type FeaturedExport,
 } from '../catalog/references.ts';
@@ -166,9 +168,22 @@ export function withSummaries(
   });
 }
 
-/** The line a package's reference index opens with: the way back to its package page. */
-export const packageLine = (name: PackageName): string =>
-  `The API reference of the [${code(name)} package](/packages/${name}), whose page covers installation and usage.`;
+const elementReferences: Partial<Record<PackageName, ElementReference>> =
+  ELEMENT_REFERENCES;
+
+/** The line a package's reference index opens with: the way back to its package page, and to its custom elements page when it has one. */
+export function packageLine(name: PackageName): string {
+  const elements = elementReferences[name];
+
+  return [
+    `The API reference of the [${code(name)} package](/packages/${name}), whose page covers installation and usage.`,
+    ...(elements
+      ? [
+          `[Custom elements](${elements.link}) lists the elements it defines, as its manifest records them.`,
+        ]
+      : []),
+  ].join(' ');
+}
 
 /** A section of the featured exports the index lists, each linking the page its own entry links; a name the index lacks is left out. */
 export function startHere(

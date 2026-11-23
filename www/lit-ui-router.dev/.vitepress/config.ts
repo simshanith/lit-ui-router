@@ -10,7 +10,7 @@ import {
 import { analyticsHead } from './analytics.ts';
 import { NAV, SIDEBAR, type SidebarEntry } from '../catalog/navigation.ts';
 import type { PackageName } from '../catalog/packages.ts';
-import { API_REFERENCES } from '../catalog/references.ts';
+import { API_REFERENCES, ELEMENT_REFERENCES } from '../catalog/references.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { withPackageLabels } from './package-label.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
@@ -167,12 +167,13 @@ const referenceItems = new Map<string, DefaultTheme.SidebarItem[]>(
   Object.entries(REFERENCE_ITEMS),
 );
 
-/** The catalog sidebar, each API reference entry given its generated members. */
+/** The catalog sidebar, each API reference entry given its generated members after the pages the catalog lists in it. */
 function withReferences(entries: SidebarEntry[]): DefaultTheme.SidebarItem[] {
   return entries.map((entry) => {
     const reference = entry.link && referenceItems.get(entry.link);
 
-    if (reference) return { ...entry, items: reference };
+    if (reference)
+      return { ...entry, items: [...(entry.items ?? []), ...reference] };
 
     return entry.items
       ? { ...entry, items: withReferences(entry.items) }
@@ -195,6 +196,12 @@ const config = {
   description:
     "State-based routing for Lit web components, built on UI-Router's core.",
   cleanUrls: true,
+  rewrites: Object.fromEntries(
+    Object.values(ELEMENT_REFERENCES).map(({ source, link }) => [
+      source,
+      `${link.slice(1)}.md`,
+    ]),
+  ),
   // After the sitemap and the llms copies, so the check sees every emitted file.
   buildEnd: async ({ outDir }: SiteConfig) => {
     await writeSitemapIndex(outDir, baseUrl);

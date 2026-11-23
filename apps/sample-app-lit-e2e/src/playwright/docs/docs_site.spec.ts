@@ -75,6 +75,26 @@ test.describe('docs site', () => {
     expect(await page.evaluate(() => window.hydrationProbe)).toBe(true);
   });
 
+  test('shows the custom elements viewer inside the lit-ui-router reference', async ({
+    page,
+  }) => {
+    await page.goto('/reference/lit-ui-router/elements');
+    const main = page.getByRole('main');
+
+    // The static list is in the served HTML; the viewer upgrades after its definition loads.
+    await expect(
+      main.getByRole('link', { name: 'UiView', exact: true }),
+    ).toHaveAttribute('href', '/reference/lit-ui-router/components/UiView');
+
+    const viewer = main.locator('api-docs');
+
+    await expect(viewer.getByRole('tab', { name: 'Properties' })).toBeVisible();
+    await viewer
+      .getByRole('combobox', { name: 'Custom element' })
+      .selectOption('ui-router');
+    await expect(viewer.getByRole('tab', { name: 'Methods' })).toBeVisible();
+  });
+
   test('renders the generated api reference', async ({ page }) => {
     await page.goto('/reference/');
     await expect(page).toHaveTitle(/^API \| /);

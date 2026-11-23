@@ -376,6 +376,7 @@ reads from them.
 ## Further reading
 
 - [API reference](/reference/lit-ui-router/)
+- [Custom elements](/reference/lit-ui-router/elements) — `<ui-router>` and `<ui-view>` as `lit-ui-router/custom-elements.json` records them
 - [Releases](/releases/lit-ui-router/){target="_self"} — every version, newest first, with its release notes
 - [Tutorial](/tutorial/helloworld)
 - [Location Plugins](/guides/location-plugins) — hash, pushState and Navigation API URLs

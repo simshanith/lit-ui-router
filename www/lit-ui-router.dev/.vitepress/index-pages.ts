@@ -1,5 +1,6 @@
 import type { Plugin } from 'vite';
 
+import { elementIndex } from './element-index.ts';
 import { exampleIndex, liveExamples } from './example-index.ts';
 import { packageIndex } from './package-index.ts';
 import { referenceIndex } from './reference-index.ts';
@@ -10,6 +11,7 @@ export const INDEX_MARKERS = {
   '<!-- package-index -->': packageIndex,
   '<!-- example-index -->': exampleIndex,
   '<!-- live-examples -->': liveExamples,
+  '<!-- element-index -->': elementIndex,
 } as const;
 
 export type IndexMarker = keyof typeof INDEX_MARKERS;

@@ -29,6 +29,7 @@
     "wrangler:dev": "node ./scripts/wrangler-dev.ts"
   },
   "dependencies": {
+    "@api-viewer/docs": "catalog:",
     "@lit-labs/ssr": "catalog:",
     "@lit-labs/ssr-client": "catalog:",
     "@lit-labs/ssr-dom-shim": "catalog:",
