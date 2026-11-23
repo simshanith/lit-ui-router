@@ -29,8 +29,8 @@ export const SITE_URL = 'https://lit-ui-router.dev';
 
 export const NO_CODE_CHANGES = "No changes to this package's published code.";
 
-export const NO_SOURCE_CHANGES =
-  'No source changes to list. This release republishes the package as the current toolchain builds it.';
+export const NO_LISTED_COMMITS =
+  'No commits to list for this package in this release.';
 
 const BREAKING = 'BREAKING CHANGES';
 
@@ -427,7 +427,7 @@ export function finalizeContext(
     ? undefined
     : touched.length > 0
       ? NO_CODE_CHANGES
-      : NO_SOURCE_CHANGES;
+      : NO_LISTED_COMMITS;
   context.releaseLinks =
     context.releaseVersion === undefined
       ? undefined

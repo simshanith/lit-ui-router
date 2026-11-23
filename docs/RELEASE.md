@@ -717,12 +717,13 @@ The writer's `finalizeContext` and `footerPartial`
   `Also touched this package (N)` list, each revert pair annotated. When
   nothing else remains, the body opens with `No changes to this package's
   published code.`
-- A range with no commits to list (none under the package's paths, as when
-  only built output drifted, or only types the notes leave out) opens with
-  `No source changes to list. This release republishes the package as the
-  current toolchain builds it.` The notes never render empty, since
-  release-it would fall back to an unfiltered repo-wide `git log`. Name the
-  drift on the release branch when the published diff shows one.
+- A range with no commits to list (none the notes' path filter keeps, as
+  when only built output drifted, or only types the notes leave out) opens
+  with `No commits to list for this package in this release.` The notes never
+  render empty, since release-it would fall back to an unfiltered repo-wide
+  `git log`. The generator can't tell why the release is owed, and a hidden
+  type such as a `chore(deps)` bump can still change what ships, so name the
+  cause on the release branch from the published diff.
 - Peer changes come from the manifests (`peer-changes.ts`): the previous
   release tag's manifest and the manifest about to publish, each with its
   `catalog:` specs resolved through that revision's catalogs. A narrowed

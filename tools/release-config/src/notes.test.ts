@@ -9,7 +9,7 @@ import { stringify } from 'yaml';
 import {
   literalText,
   NO_CODE_CHANGES,
-  NO_SOURCE_CHANGES,
+  NO_LISTED_COMMITS,
   releaseLinks,
   trimNoteText,
 } from './notes.ts';
@@ -491,7 +491,7 @@ describe('a release with no commits to list', () => {
   it('says so and links the release, when the only commit edits the changelog', async () => {
     assert.equal(
       await render({ releaseVersion: '1.0.1', previousVersion: '1.0.0' }),
-      `${NO_SOURCE_CHANGES}\n\n${links}`,
+      `${NO_LISTED_COMMITS}\n\n${links}`,
     );
   });
 
@@ -504,11 +504,11 @@ describe('a release with no commits to list', () => {
 
     assert.equal(
       await render({ releaseVersion: '1.0.1', previousVersion: '1.0.0' }),
-      `${NO_SOURCE_CHANGES}\n\n${links}`,
+      `${NO_LISTED_COMMITS}\n\n${links}`,
     );
   });
 
   it('renders the line without links in a preview', async () => {
-    assert.equal(await render(), NO_SOURCE_CHANGES);
+    assert.equal(await render(), NO_LISTED_COMMITS);
   });
 });
