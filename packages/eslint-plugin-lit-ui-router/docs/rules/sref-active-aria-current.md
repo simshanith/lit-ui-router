@@ -17,7 +17,8 @@ The fix is the runtime's own: `ariaCurrentValue: false` keeps the attribute unde
 - **No authored `aria-current`** — nothing is taken over.
 - **A non-link element with no literal `ariaCurrentValue`** — the runtime's default `'page'` applies only to `<a>`, `<area>` and a literal `role` with the `link` token, so on an `<li>` or a `<tr>` the directive never writes the attribute. The rule stays quiet for any `role` with a binding, even one whose static text has the `link` token (`role="link ${extra}"`): a deliberate conservative gap that can miss a report but never makes a false one. Tags declared in `settings.linkElements` don't count here: the runtime check doesn't read them.
 - **`ariaCurrentValue: false`** — the opt-out.
-- **`ariaCurrentValue: ''` or `ariaCurrentValue: null`** — neither ever writes the attribute: the empty string resolves to no value, and `null` (outside the declared type) throws before anything is written.
+- **`ariaCurrentValue: ''`** — the empty string resolves to no value, so it never writes the attribute.
+- **`ariaCurrentValue: null` on a non-link element** — the runtime reads `null` (outside the declared type) as omitted, so the non-link exemption above applies. On a link it takes the default `'page'`, and the rule reports it and fixes it to `false`, as it does an omitted value.
 - **A non-literal params argument, a spread, or a non-literal `ariaCurrentValue`** — unknowable statically, so it stays suppressed rather than guessed.
 - **An object form (`{ exact, active }`) that never writes** — both keys `false` or `''`, or an absent or `null` `exact` off a link (an absent or `null` `active` defaults to nothing). A spread or computed key in the object, or a non-literal key with no literal key that writes, stays suppressed.
 
