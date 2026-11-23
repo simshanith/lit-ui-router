@@ -12,7 +12,7 @@
 
 This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes, and, under [`allowElementParts: false`](#prerendered-templates), the one a server render of `uiSrefActive` never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
 
-The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead.
+The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead, in place of a boolean `?aria-current` binding when the link carries one.
 
 ## What is exempt
 
@@ -109,7 +109,7 @@ A params argument that is not an object literal, one carrying a spread, and a ca
 
 The insertion point comes from the **last** expression in the `class` value, so `class="nav ${a} ${b}"` lands after the closing quote rather than inside the value.
 
-When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`:
+When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`. The whole attribute goes, however many expressions its value holds, and the fix adds a space wherever the bare binding would otherwise run into the next attribute or a closing `/>`:
 
 ```diff
 -html`<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })} ?aria-current=${on}>Home</a>`;

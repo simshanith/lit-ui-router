@@ -59,6 +59,8 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
         'srefActiveClass marks this <{{tag}}> active, but ?aria-current is a boolean binding, which writes an empty aria-current that assistive technology ignores; bind aria-current=${srefAriaCurrent({{params}})} in its place.',
       unknownAriaCurrent:
         'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options beside it so assistive technology gets the same signal.',
+      unknownBooleanAriaCurrent:
+        'srefActiveClass marks this <{{tag}}> active, but ?aria-current is a boolean binding, which writes an empty aria-current that assistive technology ignores; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options in its place.',
       elementPartNotServed:
         'uiSrefActive is an element part, which a server render never runs, so this <{{tag}}> is served with neither its active class nor aria-current; bind class=${srefActiveClass(...)} and aria-current=${srefAriaCurrent(...)} instead.',
     },
@@ -103,6 +105,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         const source = context.sourceCode;
         const expressions = asNodes(node.quasi.expressions);
+        const quasis = asNodes(node.quasi.quasis);
         const analyzer = TemplateAnalyzer.create(node);
 
         /** The `state`, `params` and `options` the fix copies, as written. */
@@ -143,7 +146,7 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             analyzer.source,
             element,
             'class',
-            expressions,
+            quasis,
             `aria-current=\${${binding}(${literal})}`,
           );
 
@@ -217,7 +220,9 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
               if (object === undefined) {
                 context.report({
                   node: call,
-                  messageId: 'unknownAriaCurrent',
+                  messageId: hasBooleanAriaCurrent(element)
+                    ? 'unknownBooleanAriaCurrent'
+                    : 'unknownAriaCurrent',
                   data: { tag },
                 });
                 continue;

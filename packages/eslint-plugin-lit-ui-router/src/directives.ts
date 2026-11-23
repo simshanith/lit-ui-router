@@ -23,6 +23,9 @@ const ELEMENT_PART = /^\{\{__q:(\d+)__\}\}$/i;
 // expressions is counted rather than only matched.
 const ATTRIBUTE_PART = /\{\{__q:(\d+)__\}\}/gi;
 
+// Any placeholder at all, without the global flag's `lastIndex` state.
+const HAS_ATTRIBUTE_PART = /\{\{__q:\d+__\}\}/i;
+
 // lit's other bindings reach parse5 as attributes too, but a property, event or
 // boolean part is not an attribute part and throws the same way.
 const BINDING_PREFIX = /^[.?@]/;
@@ -295,13 +298,16 @@ export const attributePartsOf = (
  * template's raw text with placeholders, so the static tail measures in raw
  * characters, entities undecoded. Whether CRLF is folded to LF depends on the
  * parser.
+ *
+ * `quasis` are the template's own, whose ranges span their `}` and `${`
+ * delimiters under espree, typescript-eslint and oxlint alike.
  */
 export const attributeEnd = (
   text: string,
   html: string,
   element: Parse5Element,
   attribute: string,
-  expressions: readonly Node[],
+  quasis: readonly Node[],
 ): number | undefined => {
   const value = element.attribs[attribute];
 
@@ -317,14 +323,11 @@ export const attributeEnd = (
   const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
 
   if (last === undefined) return undefined;
-  const range = expressions[Number(last[1])]?.range;
-
-  if (range === undefined) return undefined;
-  // The expression's own text stops short of the template's `}`.
-  const close = text.indexOf('}', range[1]);
+  // The next quasi opens on the `}` that closes the expression.
+  const close = quasis[Number(last[1]) + 1]?.range?.[0];
   const placeholder = html.lastIndexOf(last[0], location.endOffset);
 
-  if (close === -1 || placeholder === -1) return undefined;
+  if (close === undefined || placeholder === -1) return undefined;
   const tail = html.slice(placeholder + last[0].length, location.endOffset);
   let end = close + 1;
 
@@ -369,27 +372,47 @@ export const hasAriaCurrent = (element: Parse5Element): boolean =>
 /** lit's boolean binding, which writes `aria-current=""`: ARIA's `false`, never exposed. */
 const BOOLEAN_ARIA_CURRENT = '?aria-current';
 
-/** Whether the element carries a bound `?aria-current`. */
+/** Whether the element carries a `?aria-current` bound to any expression. */
 export const hasBooleanAriaCurrent = (element: Parse5Element): boolean =>
-  attributePartIndex(element.attribs[BOOLEAN_ARIA_CURRENT] ?? '') !== undefined;
+  HAS_ATTRIBUTE_PART.test(element.attribs[BOOLEAN_ARIA_CURRENT] ?? '');
 
 /**
- * The raw source range of a `?aria-current=${x}` attribute, name to closing
- * quote, for a fix to replace; `undefined` when its value is not an expression.
+ * Where `head`, the analyzer's text of an attribute up to its first
+ * placeholder, starts in the raw source, given the raw `${` that ends it.
+ */
+const rawStart = (text: string, head: string, open: number): number => {
+  let start = open;
+  let prefix = head;
+
+  // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
+  if (prefix.endsWith('"') && text[start - 1] !== '"') {
+    prefix = prefix.slice(0, -1);
+  }
+
+  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
+  for (let unit = prefix.length - 1; unit >= 0; unit -= 1) {
+    const folded =
+      prefix[unit] === '\n' &&
+      prefix[unit - 1] !== '\r' &&
+      text.startsWith('\r\n', start - 2);
+
+    start -= folded ? 2 : 1;
+  }
+
+  return start;
+};
+
+/**
+ * The raw source range of a bound `?aria-current` attribute, name to closing
+ * quote, for a fix to replace; `undefined` when its value holds no expression.
  */
 const booleanAriaCurrentRange = (
   text: string,
   html: string,
   element: Parse5Element,
-  expressions: readonly Node[],
+  quasis: readonly Node[],
 ): [number, number] | undefined => {
-  const end = attributeEnd(
-    text,
-    html,
-    element,
-    BOOLEAN_ARIA_CURRENT,
-    expressions,
-  );
+  const end = attributeEnd(text, html, element, BOOLEAN_ARIA_CURRENT, quasis);
 
   // SAFETY: the analyzer parses with sourceCodeLocationInfo, which records attrs
   const tag = element.sourceCodeLocation as
@@ -405,27 +428,16 @@ const booleanAriaCurrentRange = (
     return undefined;
   }
 
-  const range = expressions[Number(first[1])]?.range;
+  // The quasi before the expression closes on its `${`.
+  const open = quasis[Number(first[1])]?.range?.[1];
   const placeholder = html.indexOf(first[0], location.startOffset);
 
-  if (range === undefined || placeholder === -1) return undefined;
-  let start = text.lastIndexOf('${', range[0]);
-  let head = html.slice(location.startOffset, placeholder);
+  if (open === undefined || placeholder === -1) return undefined;
 
-  // eslint-plugin-lit quotes a bare `name=${x}` placeholder itself.
-  if (head.endsWith('"') && text[start - 1] !== '"') head = head.slice(0, -1);
-
-  // Raw text keeps CRLF under typescript-eslint; espree and oxc fold it to LF.
-  for (let unit = head.length - 1; unit >= 0; unit -= 1) {
-    const folded =
-      head[unit] === '\n' &&
-      head[unit - 1] !== '\r' &&
-      text.startsWith('\r\n', start - 2);
-
-    start -= folded ? 2 : 1;
-  }
-
-  return [start, end];
+  return [
+    rawStart(text, html.slice(location.startOffset, placeholder), open - 2),
+    end,
+  ];
 };
 
 /** Own (non-computed) `Property` nodes of an object literal, keyed by name. */
@@ -682,9 +694,15 @@ export const createDirectiveTracker = (
   };
 };
 
+/** Whether `text[at]` ends an attribute: whitespace, `>` or the template's end. */
+const endsAttribute = (text: string, at: number): boolean =>
+  /^[\s>`]?$/.test(text.charAt(at));
+
 /**
  * The fix edit for an `aria-current` binding: in place of a boolean binding
- * when there is one, else right after `attribute`'s value.
+ * when there is one, else right after `attribute`'s value. The binding is
+ * emitted bare, so a space follows it unless the next character already
+ * ends an unquoted value.
  */
 export const placeAriaCurrent = (
   fixer: Rule.RuleFixer,
@@ -692,20 +710,24 @@ export const placeAriaCurrent = (
   html: string,
   element: Parse5Element,
   attribute: string,
-  expressions: readonly Node[],
+  quasis: readonly Node[],
   binding: string,
 ): Rule.Fix | undefined => {
   if (hasBooleanAriaCurrent(element)) {
-    const range = booleanAriaCurrentRange(text, html, element, expressions);
+    const range = booleanAriaCurrentRange(text, html, element, quasis);
 
-    return range === undefined
-      ? undefined
-      : fixer.replaceTextRange(range, binding);
+    if (range === undefined) return undefined;
+    const [start, end] = range;
+    const before = /\s/.test(text.charAt(start - 1)) ? '' : ' ';
+    const after = endsAttribute(text, end) ? '' : ' ';
+
+    return fixer.replaceTextRange(range, `${before}${binding}${after}`);
   }
 
-  const insert = attributeEnd(text, html, element, attribute, expressions);
+  const insert = attributeEnd(text, html, element, attribute, quasis);
 
-  return insert === undefined
-    ? undefined
-    : fixer.insertTextAfterRange([insert, insert], ` ${binding}`);
+  if (insert === undefined) return undefined;
+  const after = endsAttribute(text, insert) ? '' : ' ';
+
+  return fixer.insertTextAfterRange([insert, insert], ` ${binding}${after}`);
 };

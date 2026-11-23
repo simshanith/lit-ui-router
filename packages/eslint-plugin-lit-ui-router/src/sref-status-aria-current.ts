@@ -221,6 +221,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
 
         const source = context.sourceCode;
         const expressions = asNodes(node.quasi.expressions);
+        const quasis = asNodes(node.quasi.quasis);
         const analyzer = TemplateAnalyzer.create(node);
         const held = fields.at(-1) ?? new Set<string>();
 
@@ -276,7 +277,7 @@ const srefStatusAriaCurrent: RuleFor<typeof RULE_NAME> = {
                       analyzer.source,
                       element,
                       name,
-                      expressions,
+                      quasis,
                       `aria-current=\${${controller}.ariaCurrent()}`,
                     ) ?? null,
                 });

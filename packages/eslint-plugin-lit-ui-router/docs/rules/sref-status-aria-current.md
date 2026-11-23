@@ -96,7 +96,7 @@ The fix binds `aria-current` immediately after the `class` value, calling `ariaC
 
 Every report is fixable: the controller is already in scope at the binding, so there is no import to add and nothing to guess.
 
-When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`:
+When the link carries a boolean `?aria-current` binding, the fix replaces that binding where it stands instead of adding a second one, so the element ends with exactly one `aria-current`. The whole attribute goes, however many expressions its value holds, and the fix adds a space wherever the bare binding would otherwise run into the next attribute or a closing `/>`:
 
 ```diff
 -html`<a href="/users" class=${classMap({ active: this.users.active })} ?aria-current=${this.users.active}>Users</a>`;
