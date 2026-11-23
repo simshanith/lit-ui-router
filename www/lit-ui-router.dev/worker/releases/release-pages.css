@@ -847,8 +847,8 @@ body:has(.npm-diff) > .content-grid {
   min-block-size: 28px;
   text-decoration: none;
 }
-/* Weight as well as colour marks the section the page is in. */
-.site-footer .list a[aria-current] {
+/* Weight as well as colour marks the section the page is in; :where() leaves the hover colour above it. */
+.site-footer .list :where(a[aria-current]) {
   font-weight: 600;
   color: var(--site-color-text);
 }
