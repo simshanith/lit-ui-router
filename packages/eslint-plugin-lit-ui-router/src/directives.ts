@@ -53,7 +53,12 @@ const STATUS_CONTROLLER = 'SrefStatusController';
 const NATIVE_LINKS = new Set(['a', 'area']);
 
 /** Every `aria-current` spelling lit binds, as parse5 lowercases attribute keys. */
-const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
+const ARIA_CURRENT = new Set([
+  'aria-current',
+  '?aria-current',
+  '.aria-current',
+  '.ariacurrent',
+]);
 
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = 'lit-ui-router';
