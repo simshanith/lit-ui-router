@@ -55,6 +55,16 @@ export const SURFACES = [
     deadLinks: 'check',
   },
   {
+    // Hand-written pages inside a typedoc reference; catalog/references.ts lists them.
+    id: 'element-references',
+    paths: ['/reference/lit-ui-router/elements'],
+    renderer: 'vitepress',
+    sitemap: true,
+    llms: 'pages',
+    search: true,
+    deadLinks: 'check',
+  },
+  {
     id: 'release-stubs',
     paths: ['/package-releases/*'],
     renderer: 'vitepress',

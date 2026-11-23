@@ -38,6 +38,10 @@ describe('LLMS_TXT_IGNORE', () => {
     }
   });
 
+  it('keeps a custom elements page inside a reference', () => {
+    assert.equal(ignored('reference/lit-ui-router/elements.md'), false);
+  });
+
   it('drops member pages', () => {
     for (const pagePath of [
       'reference/ui-router-server/connect.md',

@@ -16,6 +16,7 @@ const PAGES = {
   '<!-- package-index -->': 'packages/index.md',
   '<!-- example-index -->': 'examples/index.md',
   '<!-- live-examples -->': 'examples/live.md',
+  '<!-- element-index -->': 'reference/lit-ui-router-elements.md',
 } as const satisfies Record<keyof typeof INDEX_MARKERS, string>;
 
 describe('the generated index pages', () => {

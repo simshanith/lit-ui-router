@@ -12,6 +12,7 @@ test('samplePages keeps every page outside the API reference', () => {
 test('samplePages keeps the first API reference page of each kind', () => {
   const paths = [
     '/reference/lit-ui-router/types/B',
+    '/reference/lit-ui-router/elements',
     '/reference/lit-ui-router/types/A',
     '/reference/ui-router-server/matcher/interfaces/Y',
     '/reference/lit-ui-router/interfaces/X',
@@ -25,6 +26,7 @@ test('samplePages keeps the first API reference page of each kind', () => {
   assert.deepEqual(samplePages(paths), [
     '/reference/',
     '/reference/lit-ui-router/',
+    '/reference/lit-ui-router/elements',
     '/reference/lit-ui-router/interfaces/X',
     '/reference/lit-ui-router/types/A',
     '/reference/ui-router-server/connect/',

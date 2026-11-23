@@ -11,6 +11,7 @@ import {
 } from './theme/components/examples.ts';
 import { SIDEBAR } from '../catalog/navigation.ts';
 import { PACKAGES } from '../catalog/packages.ts';
+import { ELEMENT_REFERENCES } from '../catalog/references.ts';
 import { changelogMarkdownPath } from './changelog.ts';
 import { RELEASES_PATH } from './release-stubs.ts';
 import { pageGlobs, surfaceOf } from './surfaces.ts';
@@ -84,14 +85,27 @@ export function llmsSidebar(
 
     if (llms !== 'pages' && llms !== 'index') return [];
 
-    if (llms === 'index' || !children) return [item];
+    if (!children) return [item];
+
+    if (llms === 'index') {
+      // An index row lists its own page, and a hand-written page inside it.
+      const pages = children.filter(({ link }) => llmsOf(link) === 'pages');
+
+      return [pages.length > 0 ? { ...item, items: pages } : item];
+    }
 
     return [{ ...item, items: llmsSidebar(children) }];
   });
 }
 
 /** Page paths llms.txt leaves out: the members of each `index` row, including a multi-entry reference's root module (`reference/<pkg>/index.md`), which matches the same sidebar link as the package index (`reference/<pkg>.md`). */
-export const LLMS_TXT_IGNORE = pageGlobs(({ llms }) => llms === 'index');
+export const LLMS_TXT_IGNORE = [
+  ...pageGlobs(({ llms }) => llms === 'index'),
+  // A hand-written page inside a reference is listed.
+  ...Object.values(ELEMENT_REFERENCES).map(
+    ({ link }) => `!${link.slice(1)}.md`,
+  ),
+];
 
 export const LLMS_DETAILS = `lit-ui-router is a client-side routing framework for Lit web components. It is an implementation of UI-Router built on the framework-agnostic \`@uirouter/core\`.
 
