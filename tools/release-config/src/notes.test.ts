@@ -9,6 +9,7 @@ import { stringify } from 'yaml';
 import {
   literalText,
   NO_CODE_CHANGES,
+  NO_SOURCE_CHANGES,
   releaseLinks,
   trimNoteText,
 } from './notes.ts';
@@ -440,5 +441,74 @@ describe('a peer change a breaking note already states', () => {
     assert.deepEqual(section(spanned, '⚠ BREAKING CHANGES'), [
       '* **a:** the x peer is now `>=0.3.0 <0.4.0`.',
     ]);
+  });
+});
+
+describe('a release with no commits to list', () => {
+  let repo: string;
+  let packageA: string;
+
+  const links =
+    '[Release page](https://lit-ui-router.dev/releases/a/1.0.1/) · ' +
+    '[Diff from 1.0.0](https://lit-ui-router.dev/releases/a/diff/1.0.0...1.0.1/)';
+
+  const render = (context?: {
+    releaseVersion: string;
+    previousVersion: string;
+  }) => renderNotes(packageA, { from: 'a@1.0.0', context });
+
+  before(() => {
+    repo = fs.mkdtempSync(path.join(os.tmpdir(), 'release-config-empty-'));
+    packageA = path.join(repo, 'packages/a');
+    git(repo, 'init', '-q');
+    commitFiles(
+      repo,
+      {
+        'pnpm-workspace.yaml': workspaceYaml('^0.2.0'),
+        'packages/a/package.json': manifest('a'),
+        'packages/a/CHANGELOG.md': '# Changelog',
+        'packages/b/src/index.ts': 'export {};',
+      },
+      'chore: scaffold',
+    );
+    git(repo, 'tag', 'a@1.0.0');
+    commitFiles(
+      repo,
+      { 'packages/a/CHANGELOG.md': '# Changelog\n\nOn the site.' },
+      'feat(www): show release notes on the release pages (#50)',
+    );
+    commitFiles(
+      repo,
+      { 'packages/b/src/index.ts': 'export const b = 1;' },
+      'fix(b): elsewhere (#51)',
+    );
+  });
+
+  after(() => {
+    fs.rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('says so and links the release, when the only commit edits the changelog', async () => {
+    assert.equal(
+      await render({ releaseVersion: '1.0.1', previousVersion: '1.0.0' }),
+      `${NO_SOURCE_CHANGES}\n\n${links}`,
+    );
+  });
+
+  it('says so when every commit is of a type the notes leave out', async () => {
+    commitFiles(
+      repo,
+      { 'packages/a/src/index.ts': 'export {};' },
+      'chore(a): tidy (#52)',
+    );
+
+    assert.equal(
+      await render({ releaseVersion: '1.0.1', previousVersion: '1.0.0' }),
+      `${NO_SOURCE_CHANGES}\n\n${links}`,
+    );
+  });
+
+  it('renders the line without links in a preview', async () => {
+    assert.equal(await render(), NO_SOURCE_CHANGES);
   });
 });
