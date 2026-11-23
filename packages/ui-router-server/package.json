@@ -96,6 +96,14 @@
       "node": "./dist/development/url-matcher.js",
       "default": "./dist/url-matcher.js"
     },
+    "./matcher-router": {
+      "types": "./dist/matcher-router.d.ts",
+      "development": "./dist/development/matcher-router.js",
+      "production": "./dist/matcher-router.js",
+      "deno": "./dist/matcher-router.js",
+      "node": "./dist/development/matcher-router.js",
+      "default": "./dist/matcher-router.js"
+    },
     "./package.json": "./package.json",
     "./prerender": {
       "types": "./dist/prerender.d.ts",
@@ -258,6 +266,11 @@
       ]
     },
     "./matcher": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./matcher-router": {
       "free": [
         "@uirouter/core"
       ]

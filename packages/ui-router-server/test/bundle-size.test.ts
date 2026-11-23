@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-import { bundleEntry, bundlers } from '@tools/bundle-probe';
+import { bundleEntry, bundlers, DEVELOPMENT_DEFINE } from '@tools/bundle-probe';
 import { readPackageProbe } from '@tools/bundle-probe/entries';
 
 // Entries derive from the exports map — new exports join the report without
@@ -73,6 +73,25 @@ for (const bundler of bundlers) {
       );
 
       assert.deepEqual(loop, [], 'ssr pulled in the prerender loop');
+    });
+
+    // A single-file bundler inlines every import(), so the entry must have none that reaches core.
+    it('bundles matcher-router into one chunk that never imports @uirouter/core', async () => {
+      const router = entries.find((entry) => entry.label === 'matcher-router');
+      assert.ok(router, 'expected a matcher-router export');
+
+      const { chunks } = await bundleEntry(router.file, bundler, {
+        external: declared,
+        annotations: false,
+        define: DEVELOPMENT_DEFINE,
+      });
+
+      assert.deepEqual(
+        chunks.map((chunk) => chunk.name),
+        ['matcher-router.js'],
+      );
+      assert.deepEqual(chunks[0]?.externalImports, []);
+      assert.doesNotMatch(chunks[0]?.code ?? '', /@uirouter\/core/);
     });
 
     it('reports the remaining entry sizes (visibility, not a gate)', async (t) => {

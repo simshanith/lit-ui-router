@@ -120,6 +120,33 @@ Each route keeps only the fields a mount reads, and a function or `TargetState` 
 abstract state with a url, throws at the call. See
 [sharing states with the client](https://lit-ui-router.dev/packages/ui-router-server#sharing-states-with-the-client).
 
+## Matcher-only routers
+
+`ui-router-server/matcher-router` exports the root entry's `createServerRouter`, types and helpers
+without the simulate tier. Nothing it imports reaches `@uirouter/core`, not even through a dynamic
+`import()`, so a bundler that emits one file, the usual shape of a Lambda or other function zip,
+bundles it without the optional peer. A mount with `strategy: 'simulate'` throws at construction;
+take `createServerRouter` from the root entry for one. Its routers work with every adapter and with
+`diagnoseMounts`.
+
+```ts
+import {
+  createServerRouter,
+  routesFromStates,
+} from 'ui-router-server/matcher-router';
+
+import { states } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': { routes: routesFromStates(states), otherwise: { state: 'notFound' } },
+  },
+});
+```
+
+See
+[matcher-only routers](https://lit-ui-router.dev/packages/ui-router-server#matcher-only-routers).
+
 ## After `vite build`
 
 `serverRouterPlugin` prerenders the built app after `vite build`, through a prerender script whose
