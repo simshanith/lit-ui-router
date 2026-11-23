@@ -391,6 +391,51 @@ describe.skipIf(!hasNavigationAPI)('traversal interception', () => {
     await restoreUrl(originalHref);
   });
 
+  it('leaves a navigation an earlier listener cancelled alone', async () => {
+    const problems: string[] = [];
+
+    const onError = (event: ErrorEvent): void => {
+      const { error } = event;
+
+      problems.push(`error: ${error instanceof Error ? error.name : 'other'}`);
+      event.preventDefault();
+    };
+
+    const onRejection = (event: PromiseRejectionEvent): void => {
+      const { reason } = event;
+
+      problems.push(
+        `unhandledrejection: ${reason instanceof Error ? reason.name : 'other'}`,
+      );
+      event.preventDefault();
+    };
+
+    const cancel = (event: NavigateEvent): void => {
+      if (event.destination.url.endsWith('/traverse-b')) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    // Registered before the plugin's own listener.
+    window.navigation.addEventListener('navigate', cancel);
+
+    try {
+      startRouter({});
+      await go('a');
+      await router.stateService.go('b');
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(window.location.pathname).toBe('/traverse-a');
+      expect(problems).toEqual([]);
+    } finally {
+      window.navigation.removeEventListener('navigate', cancel);
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    }
+  });
+
   it('runs the option handler once the transition the traversal started has settled', async () => {
     const handlerSaw: (string | undefined)[] = [];
     startRouter({
