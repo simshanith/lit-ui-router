@@ -89,6 +89,10 @@ test.describe('docs site', () => {
     const viewer = main.locator('api-docs');
 
     await expect(viewer.getByRole('tab', { name: 'Properties' })).toBeVisible();
+    // <ui-view>, shown first, has no public method, and the viewer hides an empty section's tab.
+    await expect(
+      viewer.getByRole('tab', { name: 'Methods', includeHidden: true }),
+    ).toBeHidden();
     await viewer
       .getByRole('combobox', { name: 'Custom element' })
       .selectOption('ui-router');
