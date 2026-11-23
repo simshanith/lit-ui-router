@@ -185,7 +185,7 @@ describe('compileRoutes: parent', () => {
       { name: 'app.docs', url: '/docs', params: { lang: 'fr' } },
     ]);
 
-    assert.equal(matchRoute([child], '/docs'), null);
+    assert.equal(format(child.matcher, {}), null);
     assert.equal(format(child.matcher, { lang: 'de' }), '/de/docs');
   });
 
@@ -195,7 +195,7 @@ describe('compileRoutes: parent', () => {
       { name: 'a.b', url: '/b/:x' },
     ]);
 
-    assert.equal(matchRoute([child], '/a/b'), null);
+    assert.equal(format(child.matcher, {}), null);
     assert.deepEqual(matchRoute([child], '/a/b/2'), {
       state: 'a.b',
       params: { x: '2' },
