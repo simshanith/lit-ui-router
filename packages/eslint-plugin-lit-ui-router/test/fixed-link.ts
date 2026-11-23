@@ -3,7 +3,7 @@
 // runs into the next attribute.
 import assert from 'node:assert/strict';
 import tsParser from '@tools/eslint-ts-parser';
-import { parseFragment } from 'parse5';
+import { ErrorCodes, parseFragment } from 'parse5';
 
 interface AstNode {
   type: string;
@@ -67,9 +67,16 @@ export const assertFixedLink = (
     )
     .join('');
 
-  const element = parseFragment(html).childNodes.find(
-    (child) => 'attrs' in child,
-  );
+  // parse5 drops a repeated attribute silently, so the parse error is the check.
+  const duplicates: string[] = [];
+
+  const element = parseFragment(html, {
+    onParseError: ({ code: error }) => {
+      if (error === ErrorCodes.duplicateAttribute) duplicates.push(error);
+    },
+  }).childNodes.find((child) => 'attrs' in child);
+
+  assert.deepEqual(duplicates, [], html);
 
   assert.ok(element !== undefined && 'attrs' in element, html);
 
