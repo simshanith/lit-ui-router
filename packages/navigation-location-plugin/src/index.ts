@@ -405,8 +405,11 @@ export class NavigationLocationService extends BaseLocationServices {
       history: replace ? 'replace' : 'push',
     });
 
-    // A navigation cancelled or superseded before it commits rejects committed, which nothing else awaits.
-    void committed?.catch(() => undefined);
+    // A navigation cancelled or superseded before it commits rejects committed with an AbortError, which nothing else awaits.
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a rejection reason is untyped; only its name is read
+    void committed?.catch((error: unknown) => {
+      if (!(error instanceof Error && error.name === 'AbortError')) throw error;
+    });
   }
 
   /**
