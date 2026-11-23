@@ -35,19 +35,19 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Holds the height of the first element's Properties tab, so the page below stays put when the viewer upgrades. */
+/* Holds the least height of the first element's Properties tab at each layout, so the page below barely moves when the viewer upgrades. */
 .element-api-viewer {
   margin-block: var(--site-space-4);
 }
 
 .element-api-viewer:not(.used) {
-  min-block-size: 43rem;
+  min-block-size: 39.5rem;
 }
 
-/* The viewer stacks its tabs and columns under 600px. */
-@media (width <= 600px) {
+/* The viewer stacks its header and columns at 480px and under. */
+@media (width <= 480px) {
   .element-api-viewer:not(.used) {
-    min-block-size: 64rem;
+    min-block-size: 59.5rem;
   }
 }
 
