@@ -33,6 +33,7 @@ const external = { target: '_blank', rel: 'noopener' };
     :class="{ expanded, 'has-sidebar': hasSidebar }"
     :data-mode="expanded ? 'expanded' : 'compact'"
   >
+    <div v-if="expanded" class="edge" aria-hidden="true" />
     <div class="inner">
       <div class="top">
         <div class="brand">
@@ -48,6 +49,9 @@ const external = { target: '_blank', rel: 'noopener' };
               d="M400 107l-63 63v126l63-63v-126zm0 126v126l63-63v-126l-63 63zm63 63v126l63-63v-126l-63 63zm-126 0-63-63v126l63 63v-126zM200 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76zM400 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76zM600 505l-38 38v75l38-38v-75zm0 75v76l38-38v-76l-38 38zm38 38v75l38-38v-75l-38 38zm-76 0-37-38v76l37 38v-76z"
             />
           </svg>
+          <span v-if="expanded" class="mark gradient-mark" aria-hidden="true">
+            <span class="sheen" />
+          </span>
           <div class="brand-copy">
             <p class="name">Lit UI Router</p>
             <p v-if="expanded" class="tagline">
@@ -346,7 +350,103 @@ const external = { target: '_blank', rel: 'noopener' };
   border-radius: var(--site-radius-control-inner);
 }
 
+/* The home footer's mark: the same flames cut from a gradient. The mask sits on a box that never moves or animates. */
+.gradient-mark {
+  position: relative;
+  overflow: clip;
+  aspect-ratio: 551 / 587;
+  background: var(--site-footer-mark-gradient);
+  /* A longhand with no var(), as HomeSeeItRun's tile is: the highlight inside moves every frame. */
+  mask-image: url(/images/lit-ui-router-flames.svg);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+
+@media (forced-colors: none) {
+  .expanded svg.mark {
+    display: none;
+  }
+}
+
+.sheen {
+  position: absolute;
+  inset: 0;
+}
+
+.edge {
+  display: none;
+  position: absolute;
+  inset-block-start: calc(-1 * var(--site-border-width));
+  inset-inline: 0;
+  block-size: 2px;
+  overflow: clip;
+  pointer-events: none;
+}
+
+/* Registered so the view timeline can interpolate it; a number, as HomeSeeItRun's drift is. */
+@property --site-footer-entry {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* As the home footer enters the viewport, a highlight crosses the mark and a glint runs along the top edge, once each: the timeline moves the number on each wrapper, and the transition on its layer eases to rest. */
+@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  @supports (animation-timeline: view()) and (animation-range: entry) {
+    .site-footer.expanded {
+      view-timeline: --site-footer block;
+    }
+
+    .sheen,
+    .edge {
+      animation: site-footer-entry linear both;
+      animation-timeline: --site-footer;
+      animation-range: entry;
+    }
+
+    .edge {
+      display: block;
+    }
+
+    :is(.sheen, .edge)::before {
+      content: '';
+      position: absolute;
+      will-change: translate;
+    }
+
+    .sheen::before {
+      inset: -20%;
+      background: var(--site-footer-mark-sheen);
+      translate: calc((var(--site-footer-entry) * 2.2 - 1.1) * 100%) 0;
+      transition: translate 520ms var(--ease-out);
+    }
+
+    .edge::before {
+      inset-block: 0;
+      inset-inline-start: 0;
+      inline-size: 56%;
+      background: var(--site-footer-edge-glint);
+      translate: calc((var(--site-footer-entry) * 1.5 - 0.35) * 100%) 0;
+      transition: translate 550ms var(--ease-out);
+    }
+  }
+}
+
+@keyframes site-footer-entry {
+  from {
+    --site-footer-entry: 0;
+  }
+
+  to {
+    --site-footer-entry: 1;
+  }
+}
+
 @media (forced-colors: active) {
+  .gradient-mark {
+    display: none;
+  }
+
   .site-footer,
   .expanded .colophon {
     border-color: CanvasText;

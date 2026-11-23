@@ -95,6 +95,32 @@
   );
   --site-see-it-run-scrim: 40%;
 
+  /* The home footer's mark: the ink between two neighbours that hold a mark's contrast on the soft surface, under a highlight that crosses it once, and the glint on the footer's top edge. test/site-footer-mark.test.ts holds the highlight's peak to 3:1. */
+  --site-color-footer-mark-start: #00577f;
+  --site-color-footer-mark-end: #007b8a;
+  --site-footer-mark-gradient: linear-gradient(
+    135deg,
+    var(--site-color-footer-mark-start),
+    var(--site-color-identity-ink) 52%,
+    var(--site-color-footer-mark-end)
+  );
+  --site-footer-mark-sheen: linear-gradient(
+    115deg,
+    transparent 24%,
+    rgb(255 255 255 / 0.18) 46%,
+    rgb(255 255 255 / 0.22) 50%,
+    rgb(255 255 255 / 0.14) 56%,
+    transparent 76%
+  );
+  --site-footer-edge-glint: linear-gradient(
+    90deg,
+    transparent,
+    rgb(0 106 154 / 0.45) 35%,
+    rgb(0 152 220 / 0.85) 50%,
+    rgb(0 154 166 / 0.45) 65%,
+    transparent
+  );
+
   /* One accent: the brand scale is the identity ink. */
   --vp-c-brand-1: var(--site-color-identity-ink);
   --vp-c-brand-2: #00577f;
@@ -133,6 +159,24 @@
     transparent 0
   );
   --site-see-it-run-scrim: 65%;
+  --site-color-footer-mark-start: #1f9ad6;
+  --site-color-footer-mark-end: #50ffff;
+  --site-footer-mark-sheen: linear-gradient(
+    115deg,
+    transparent 24%,
+    rgb(255 255 255 / 0.34) 46%,
+    rgb(255 255 255 / 0.52) 50%,
+    rgb(255 255 255 / 0.24) 56%,
+    transparent 76%
+  );
+  --site-footer-edge-glint: linear-gradient(
+    90deg,
+    transparent,
+    rgb(41 171 230 / 0.4) 32%,
+    rgb(80 255 255 / 0.92) 50%,
+    rgb(41 171 230 / 0.4) 68%,
+    transparent
+  );
   --vp-c-brand-2: #4dbbec;
   --vp-c-brand-3: #006a9a;
   --vp-c-brand-soft: rgb(0 152 220 / 0.16);
