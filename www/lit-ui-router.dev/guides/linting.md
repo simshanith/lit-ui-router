@@ -18,15 +18,30 @@ catches both kinds before you run the app.
 Under the 1.x default (`assignHref: true`), `uiSref` writes an inert `href` onto
 a `<button>` and prints a development warning:
 
+<LintExample rule="lit-ui-router/sref-assign-href" label="Incorrect and correct usage of uiSref on a button" fixable>
+
+<template #incorrect>
+
 ```ts
 html`<button ${uiSref('home')}>Home</button>`;
 ```
 
-Lint reports:
+</template>
+<template #diagnostic>
 
 ```text
 uiSref writes an href to <button>, which has no href in HTML. Pass { assignHref: 'auto' } to write it only to links; 'auto' becomes the default in 2.0.
 ```
+
+</template>
+<template #correct>
+
+```ts
+html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>`;
+```
+
+</template>
+</LintExample>
 
 `lit-ui-router/sref-assign-href` catches this and `--fix` rewrites the call to
 `uiSref('home', {}, { assignHref: 'auto' })` (see
@@ -38,24 +53,47 @@ and custom elements).
 Binding `uiSref` as an attribute value throws in the directive constructor on
 first render (``The `uiSref` directive must be used as an element``):
 
+<LintExample rule="lit-ui-router/directive-position" label="Incorrect and correct template position for uiSref">
+
+<template #incorrect>
+
 ```ts
 html`<a href=${uiSref('home')}>Home</a>`;
 ```
 
-Lint reports:
+</template>
+<template #diagnostic>
 
 ```text
 `uiSref` must be used as an element part (`<a ${uiSref(...)}>`); it throws in attribute or child position.
 ```
 
+</template>
+<template #correct>
+
+```ts
+// Element part: uiSref manages href and click navigation
+html`<a ${uiSref('home')}>Home</a>`;
+
+// Attribute part: srefHref computes the href string
+html`<a href=${srefHref('home')}>Home</a>`;
+```
+
+</template>
+</LintExample>
+
 `lit-ui-router/directive-position` flags misplaced directives with no autofix;
-move `uiSref` to an [element part](./links-and-navigation)
-(`<a ${uiSref('home')}>`) or switch to `href=${srefHref('home')}`.
+move `uiSref` to an [element part](./links-and-navigation) or switch to
+`srefHref`.
 
 ### An active link with no `aria-current`
 
 `srefActiveClass` paints CSS classes only, so an active link looks right while
 screen readers receive no active-page signal:
+
+<LintExample rule="lit-ui-router/sref-active-class-aria-current" label="Incorrect and correct aria-current pairing with srefActiveClass" fixable>
+
+<template #incorrect>
 
 ```ts
 html`<a
@@ -65,11 +103,27 @@ html`<a
 >`;
 ```
 
-Lint reports:
+</template>
+<template #diagnostic>
 
 ```text
 srefActiveClass marks this <a> active for CSS only; bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it so assistive technology gets the same signal.
 ```
+
+</template>
+<template #correct>
+
+```ts
+html`<a
+  href=${srefHref('home')}
+  class=${srefActiveClass({ state: 'home', activeClasses: ['active'] })}
+  aria-current=${srefAriaCurrent({ state: 'home' })}
+  >Home</a
+>`;
+```
+
+</template>
+</LintExample>
 
 `lit-ui-router/sref-active-class-aria-current` reports the missing attribute and
 `--fix` binds `aria-current=${srefAriaCurrent({ state: 'home' })}` beside

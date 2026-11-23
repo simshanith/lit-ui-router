@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { appendExampleSources, LLMS_RELEASES, llmsSidebar } from '../llms.ts';
+import {
+  appendExampleSources,
+  formatLintExamples,
+  LLMS_RELEASES,
+  llmsSidebar,
+} from '../llms.ts';
 
 const ID = '/docs/tutorial/helloworld.md';
 
@@ -49,6 +54,64 @@ describe('appendExampleSources', () => {
       () => appendExampleSources('<LiveExample name="nope" />\n', ID),
       /tutorial\/helloworld\.md: <LiveExample name="nope"> names no entry/,
     );
+  });
+});
+
+describe('formatLintExamples', () => {
+  it('replaces a <LintExample> for LLMs with labelled Incorrect, Lint error, and Correct fences', () => {
+    const markdown = [
+      '<LintExample rule="lit-ui-router/sref-assign-href" label="Button" fixable>',
+      '<template #incorrect>',
+      '',
+      '```ts',
+      "html`<button ${uiSref('home')}>Home</button>`;",
+      '```',
+      '',
+      '</template>',
+      '<template #diagnostic>',
+      '',
+      '```text',
+      'uiSref writes an href to <button>.',
+      '```',
+      '',
+      '</template>',
+      '<template #correct>',
+      '',
+      '```ts',
+      "html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>`;",
+      '```',
+      '',
+      '</template>',
+      '</LintExample>',
+    ].join('\n');
+
+    const out = formatLintExamples(markdown);
+
+    assert.ok(out.startsWith('<llm-exclude>\n\n<LintExample '));
+    assert.ok(
+      out.includes('</LintExample>\n\n</llm-exclude>\n\n<llm-only>\n\n'),
+    );
+    assert.ok(
+      out.includes(
+        "**Incorrect** (`lit-ui-router/sref-assign-href`):\n\n```ts\nhtml`<button ${uiSref('home')}>Home</button>`;\n```",
+      ),
+    );
+    assert.ok(
+      out.includes(
+        'Lint error:\n\n```text\nuiSref writes an href to <button>.\n```',
+      ),
+    );
+    assert.ok(
+      out.includes(
+        "**Correct**:\n\n```ts\nhtml`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>`;\n```",
+      ),
+    );
+  });
+
+  it('leaves a page without <LintExample> untouched', () => {
+    const markdown = '# Linting\n\nPlain prose.\n';
+
+    assert.equal(formatLintExamples(markdown), markdown);
   });
 });
 
