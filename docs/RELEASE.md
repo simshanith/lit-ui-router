@@ -639,10 +639,10 @@ A package's range is the commits that touched its directory, plus commits to
 (`tools/release-config/src/catalog-commits.ts`).
 
 The changelog lists its commit types explicitly, with the `conventionalcommits`
-preset's section names. A package range made only of unlisted types renders
-empty, and release-it silently falls back to a flat repo-wide git log; a range
-mixing listed and unlisted types silently omits the unlisted commits. Preview
-with `pnpm --silent changelog` before a bump.
+preset's section names. A package range made only of unlisted types opens
+with the no-commits line described under [Release notes](#release-notes); a
+range mixing listed and unlisted types silently omits the unlisted commits.
+Preview with `pnpm --silent changelog` before a bump.
 
 It is code rather than JSON because `conventional-changelog-writer` 9 takes
 template partials as functions.
@@ -717,9 +717,9 @@ The writer's `finalizeContext` and `footerPartial`
   `Also touched this package (N)` list, each revert pair annotated. When
   nothing else remains, the body opens with `No changes to this package's
   published code.`
-- A range with no commits to list (none the notes' path filter keeps, as
-  when only built output drifted, or only types the notes leave out) opens
-  with `No commits to list for this package in this release.` The notes never
+- A range with no commits to list (none left after the path and type
+  filters, as when only built output drifted, or only types the notes leave
+  out) opens with `No commits to list for this package in this release.` The notes never
   render empty, since release-it would fall back to an unfiltered repo-wide
   `git log`. The generator can't tell why the release is owed, and a hidden
   type such as a `chore(deps)` bump can still change what ships, so name the
