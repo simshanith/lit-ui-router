@@ -11,7 +11,7 @@
 // node_modules. Type imports are erased before execution, so they name the
 // package instead.
 //
-// The image has node and npm; this script installs pnpm; everything past that
+// The image has node and npm 10; this script installs npm 12 and pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
 // tools (taplo, shellcheck, rumdl, actionlint, zizmor) exists here — keep them
 // out of anything the turbo target below reaches.
@@ -122,6 +122,16 @@ export const pnpmSpec = (root: string): string => {
 };
 
 /**
+ * The npm to install, restating the mise `npm:npm` pin that shadows node's
+ * bundled npm everywhere else (npm-pin.test.ts holds the two together): an
+ * example's `npm ci` here then runs the npm it runs locally and in CI, where
+ * the image's npm 10 would ignore npm 12 manifest fields such as
+ * `patchedDependencies`. Restated because node reads no TOML before
+ * `pnpm install`.
+ */
+export const NPM_VERSION = '12.2.1';
+
+/**
  * Exported so the trigger test can assert the frozen install is still here —
  * SKIP_DEPENDENCY_INSTALL=1 is only safe while this script installs, and the
  * steps are read rather than grepped out of this file's source.
@@ -131,6 +141,8 @@ export const buildSteps = (
   npmBin: string,
   site: Site,
 ): readonly Step[] => [
+  ['npm', ['install', '--global', `npm@${NPM_VERSION}`]],
+
   // npm refuses to overwrite a file it does not own (EEXIST), and its global
   // bin is the same node bin dir corepack's shims sit in, so clear them first
   // rather than reaching for --force.

@@ -83,7 +83,8 @@ idiomatic_version_file_enable_tools = ["node"]
 # `pnpm` package is a placeholder whose `preinstall` hardlinks the real binary
 # from an optional platform dep, which mise's aube installer does not run.
 "aqua:pnpm/pnpm" = "12.21.0"
-# shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
+# shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1.
+# tools/workers-builds/cloudflare-build.ts restates it (npm-pin.test.ts).
 "npm:npm" = "12.2.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.

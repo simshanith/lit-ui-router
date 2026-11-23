@@ -17,7 +17,7 @@ import { describe, it } from 'node:test';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import type { Json } from '@tools/bootstrap/types.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
-import { taploGet } from './cli-query.ts';
+import { taploGet } from '@tools/shared/taplo.ts';
 
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
 // ahead of it is what the other files have to match.
@@ -26,7 +26,7 @@ const packageManager = requireManifest(workspaceRoot).packageManager ?? '';
 const pinned = /^pnpm@([^+]+)\+sha512\./.exec(packageManager)?.[1];
 
 // The mise files are TOML, so query them instead of matching their text (see
-// cli-query.ts). `aqua:pnpm/pnpm` needs quoting — it carries a `:` and a `/`.
+// @tools/shared/taplo.ts). `aqua:pnpm/pnpm` needs quoting — it carries a `:` and a `/`.
 const MISE_TOOL = 'tools."aqua:pnpm/pnpm"';
 
 // One locked tool: the requested version, plus a per-platform table each of
