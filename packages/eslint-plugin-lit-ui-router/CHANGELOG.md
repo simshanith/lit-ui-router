@@ -2,6 +2,21 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/).
 
+## 1.3.3 (2026-11-23)
+
+### Bug Fixes
+
+* **eslint-plugin-lit-ui-router:** replace a boolean aria-current binding instead of adding another ([#2417](https://github.com/simshanith/lit-ui-router/issues/2417)) ([03b47e4](https://github.com/simshanith/lit-ui-router/commit/03b47e41200b0f0ab4284af23048f493244fdd3c))
+* **eslint-plugin-lit-ui-router:** report a null ariaCurrentValue on a link ([#2426](https://github.com/simshanith/lit-ui-router/issues/2426)) ([9b54a8a](https://github.com/simshanith/lit-ui-router/commit/9b54a8abfeb9bbea5a0292e788233cdd48d602e5))
+* **eslint-plugin-lit-ui-router:** report aria-current takeovers by the object ariaCurrentValue ([#2416](https://github.com/simshanith/lit-ui-router/issues/2416)) ([5d934f1](https://github.com/simshanith/lit-ui-router/commit/5d934f17a03b9f001d07e978606a29459e0ece3d))
+
+### Documentation
+
+* **eslint-plugin-lit-ui-router:** name files, not the parser, as what makes ESLint lint .ts ([#2434](https://github.com/simshanith/lit-ui-router/issues/2434)) ([a51b0d2](https://github.com/simshanith/lit-ui-router/commit/a51b0d23d5209e580627280d082cb327623aaf3a)), references [#2408](https://github.com/simshanith/lit-ui-router/issues/2408)
+* **eslint-plugin-lit-ui-router:** note that TypeScript apps need a parser config ([#2408](https://github.com/simshanith/lit-ui-router/issues/2408)) ([096c116](https://github.com/simshanith/lit-ui-router/commit/096c1164931817e57f60dc8b90dc8b48f0b9c3ce))
+
+[Release page](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/1.3.3/) · [Diff from 1.3.2](https://lit-ui-router.dev/releases/eslint-plugin-lit-ui-router/diff/1.3.2...1.3.3/)
+
 ## 1.3.2 (2026-11-22)
 
 ### Bug Fixes
