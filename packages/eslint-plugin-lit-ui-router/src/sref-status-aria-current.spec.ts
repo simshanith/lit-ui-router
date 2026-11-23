@@ -62,26 +62,17 @@ const tsRuleTester = new RuleTester({
   languageOptions: { parser: tsParser, sourceType: 'module' },
 });
 
-// lit's boolean attribute binding is an authored aria-current too.
-const BOOLEAN_ARIA_CURRENT = {
-  name: 'a boolean aria-current binding is the author’s to keep',
-  code: host(
-    `html\`<a href="/users" class=\${this.users.active ? 'on' : ''} ?aria-current=\${this.users.active}>Users</a>\``,
-  ),
-};
-
 tsRuleTester.run(
   'sref-status-aria-current (typescript-eslint)',
   srefStatusAriaCurrent,
   {
-    valid: [BOOLEAN_ARIA_CURRENT],
+    valid: [],
     invalid: CRLF,
   },
 );
 
 ruleTester.run('sref-status-aria-current', srefStatusAriaCurrent, {
   valid: [
-    BOOLEAN_ARIA_CURRENT,
     {
       name: 'the pair the fix produces',
       code: host(

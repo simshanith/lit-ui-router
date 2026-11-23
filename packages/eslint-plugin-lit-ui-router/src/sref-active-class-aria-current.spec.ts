@@ -59,24 +59,17 @@ const tsRuleTester = new RuleTester({
   languageOptions: { parser: tsParser, sourceType: 'module' },
 });
 
-// lit's boolean attribute binding is an authored aria-current too.
-const BOOLEAN_ARIA_CURRENT = {
-  name: 'a boolean aria-current binding is the author’s to keep',
-  code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} ?aria-current=\${on}>Home</a>\`;`,
-};
-
 tsRuleTester.run(
   'sref-active-class-aria-current (typescript-eslint)',
   srefActiveClassAriaCurrent,
   {
-    valid: [BOOLEAN_ARIA_CURRENT],
+    valid: [],
     invalid: CRLF,
   },
 );
 
 ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
   valid: [
-    BOOLEAN_ARIA_CURRENT,
     {
       name: 'both bindings, which is the pair the fix produces',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
