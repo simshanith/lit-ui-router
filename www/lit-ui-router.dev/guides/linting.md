@@ -22,6 +22,8 @@ a `<button>` and prints a development warning:
 html`<button ${uiSref('home')}>Home</button>`;
 ```
 
+Lint reports:
+
 ```text
 uiSref writes an href to <button>, which has no href in HTML. Pass { assignHref: 'auto' } to write it only to links; 'auto' becomes the default in 2.0.
 ```
@@ -39,6 +41,8 @@ first render (``The `uiSref` directive must be used as an element``):
 ```ts
 html`<a href=${uiSref('home')}>Home</a>`;
 ```
+
+Lint reports:
 
 ```text
 `uiSref` must be used as an element part (`<a ${uiSref(...)}>`); it throws in attribute or child position.
@@ -60,6 +64,8 @@ html`<a
   >Home</a
 >`;
 ```
+
+Lint reports:
 
 ```text
 srefActiveClass marks this <a> active for CSS only; bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it so assistive technology gets the same signal.
