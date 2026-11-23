@@ -552,6 +552,19 @@ describe('SrefStatusController', () => {
       ).toBe('location');
       expect(controller.ariaCurrent('step')).toBe(nothing);
     });
+
+    it('treats null from an untyped caller as omitted', async () => {
+      const host = await mountHost({ state: 'users' });
+      const controller = host.controller!;
+
+      await goTo('users');
+      // @ts-expect-error outside the type, but untyped callers can pass it
+      expect(controller.ariaCurrent(null)).toBe('page');
+
+      await goTo('users.detail', { userId: 1 });
+      // @ts-expect-error outside the type, but untyped callers can pass it
+      expect(controller.ariaCurrent(null)).toBe(nothing);
+    });
   });
 
   describe('host updates', () => {

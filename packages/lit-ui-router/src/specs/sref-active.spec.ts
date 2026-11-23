@@ -9,6 +9,7 @@ import {
   SrefActiveClassDirective,
   srefAriaCurrent,
   SrefAriaCurrentDirective,
+  type SrefAriaCurrentParams,
 } from '../sref-active.js';
 import { srefHref } from '../sref-href.js';
 import '../ui-view.register.js';
@@ -341,6 +342,26 @@ describe('attribute-part active directives', () => {
 
       await goTo('users.detail', { userId: 1 });
       expect(anchor.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('treats a null value from an untyped caller as omitted', async () => {
+      const params: SrefAriaCurrentParams = {
+        state: 'users',
+        // @ts-expect-error outside the type, but untyped callers can pass it
+        value: null,
+      };
+
+      const wrapper = await mount(
+        html`<a aria-current=${srefAriaCurrent(params)}>Users</a>`,
+      );
+
+      const anchor = wrapper.querySelector('a')!;
+
+      await goTo('users');
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+
+      await goTo('users.detail', { userId: 1 });
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
     });
 
     it('watches the srefHref links inside it when no state is named', async () => {
