@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import {
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+} from 'vue';
 import { withBase } from 'vitepress';
 import { revealOnStateLinks } from 'examples/features-tour/state-links';
 import HomeTour from './HomeTour.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
 import {
+  CARD_IDS,
   cardForHash,
   hashForCard,
   INITIAL_CARD,
@@ -17,36 +24,53 @@ const section = useTemplateRef('section');
 /** The card the intro's one example link opens. */
 const EXAMPLE_CARD: CardId = 'views';
 
+// While the site's root is still mounting, this is the page the document opened on; after that, a page arrived at by a followed link.
+const followed = getCurrentInstance()?.root.isMounted ?? false;
+
 const card = ref<CardId>(INITIAL_CARD);
 
 const from = ref<CardId>();
 
 const entries = ref(0);
 
-// The tour's router writes its state to this page's fragment, so the diagram reads the page's own hash; a new card is a re-entry.
-function follow() {
-  const next = cardForHash(location.hash);
+// Empty until the card changes after load: a status that changes while the page opens is read out as news.
+const announcement = ref('');
 
-  if (!next || next === card.value) return;
+let entered = false;
+
+// The app's router is the one source of the card; the fragment is only its address.
+function onCard({ id, title }: { id: string; title: string }) {
+  const next = CARD_IDS.find((known) => known === id);
+
+  if (!next) return;
+
+  if (!entered) {
+    // The card the app opens on is where the diagram starts, not a re-entry.
+    entered = true;
+    card.value = next;
+
+    return;
+  }
+
+  if (next === card.value) return;
 
   from.value = card.value;
   card.value = next;
   entries.value += 1;
+  announcement.value = `The app shows the ${title} card.`;
 }
 
 let stopRevealing: (() => void) | undefined;
 
 onMounted(() => {
-  // The card the page was opened on is where the diagram starts, not a re-entry.
+  // A first guess from the fragment, so the diagram need not wait for the app; the router's own answer replaces it.
   card.value = cardForHash(location.hash) ?? INITIAL_CARD;
-  window.addEventListener('hashchange', follow);
-  stopRevealing = revealOnStateLinks(section.value!, TOUR_LANDMARK);
+  stopRevealing = revealOnStateLinks(section.value!, TOUR_LANDMARK, {
+    followed,
+  });
 });
 
-onBeforeUnmount(() => {
-  window.removeEventListener('hashchange', follow);
-  stopRevealing?.();
-});
+onBeforeUnmount(() => stopRevealing?.());
 </script>
 
 <template>
@@ -88,10 +112,14 @@ onBeforeUnmount(() => {
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
           <!-- Announces the card after a link or the pager changes it; the app's own view is not a live region. -->
-          <p class="visually-hidden" role="status">
-            The app shows the {{ card }} card.
-          </p>
-          <HomeTour class="embed" :prefix="TOUR_LANDMARK" />
+          <p class="visually-hidden" role="status">{{ announcement }}</p>
+          <!-- Level 4: the card's heading sits under this panel's <h3>. -->
+          <HomeTour
+            class="embed"
+            :prefix="TOUR_LANDMARK"
+            :heading-level="4"
+            @card="onCard"
+          />
         </div>
         <div class="panel diagram-panel">
           <h3 class="panel-title">Its state and view</h3>

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { before, beforeEach, describe, it } from 'node:test';
+import { after as t_after, before, beforeEach, describe, it } from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
@@ -66,7 +66,17 @@ describe('the replace-aware hash location', () => {
 
     router.plugin(core.servicesPlugin);
     router.plugin(replaceAwareHashLocationPlugin, options);
-    router.stateRegistry.register({ name: 'card', url: '/:cardId' });
+    router.stateRegistry.register({
+      name: 'card',
+      url: '/:cardId',
+      // As the tour does: an unknown card redirects to the first.
+      redirectTo: (transition) =>
+        ['states', 'views', 'resolves'].includes(
+          String(transition.params().cardId),
+        )
+          ? undefined
+          : { state: 'card', params: { cardId: 'states' } },
+    });
     router.urlService.rules.initial({
       state: 'card',
       params: { cardId: 'states' },
@@ -176,8 +186,84 @@ describe('the replace-aware hash location', () => {
     );
     assert.deepEqual(
       replaced.mock.calls.map((call) => call.arguments),
-      [['#/views']],
+      [['/page#/views']],
     );
+    router.dispose();
+  });
+
+  it('handles its own dispatched hashchange once: one transition per replace', async () => {
+    const router = start({ prefix: 'tour' });
+
+    await settled();
+
+    let started = 0;
+
+    router.transitionService.onStart({}, () => {
+      started += 1;
+    });
+    await router.stateService.go(
+      'card',
+      { cardId: 'views' },
+      { location: 'replace' },
+    );
+    await settled();
+    assert.equal(started, 1);
+    assert.equal(router.globals.params.cardId, 'views');
+    router.dispose();
+  });
+
+  it("keeps the page's path and query under a <base href>", async () => {
+    window.history.replaceState({ host: 1 }, '', '/docs/page?q=1');
+
+    const base = window.document.createElement('base');
+
+    base.setAttribute('href', '/app/');
+    window.document.head.append(base);
+    t_after(() => base.remove());
+
+    const router = start({ prefix: 'tour' });
+
+    await settled();
+    await router.stateService.go(
+      'card',
+      { cardId: 'views' },
+      { location: 'replace' },
+    );
+    assert.equal(
+      window.location.href,
+      'https://host.test/docs/page?q=1#tour/views',
+    );
+    router.dispose();
+  });
+
+  it('restores the state URL, not the bare prefix, when a transition is rolled back', async () => {
+    const router = start({ prefix: 'tour' });
+
+    await settled();
+    // The default card wrote nothing.
+    assert.equal(window.location.hash, '');
+
+    window.history.pushState({}, '', '#tour/nope');
+    hashchange();
+    await settled();
+    assert.equal(router.globals.params.cardId, 'states');
+    assert.equal(window.location.hash, '#tour/states');
+
+    // The bare state prefix with a slash is the app's root: the same card, the same URL.
+    window.history.pushState({}, '', '#tour/');
+    hashchange();
+    await settled();
+    assert.equal(window.location.hash, '#tour/states');
+    router.dispose();
+  });
+
+  it('writes nothing for an empty URL before it has entered a state', () => {
+    const router = new core.UIRouter();
+
+    router.plugin(core.servicesPlugin);
+    router.plugin(replaceAwareHashLocationPlugin, { prefix: 'tour' });
+    router.urlService.url('', true);
+    assert.equal(window.location.hash, '');
     router.dispose();
   });
 

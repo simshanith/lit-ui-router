@@ -13,6 +13,16 @@ export function stateUrlOf(hash: string, prefix = ''): string | undefined {
     : undefined;
 }
 
+export interface RevealOptions {
+  /**
+   * True when the visitor reached this page by following a link inside the
+   * host's own client-side navigation, false when the document itself opened
+   * on it. A followed link moves focus to the landmark; a page that opens on
+   * a fragment moves none, as one that opens on an anchor does.
+   */
+  followed?: boolean;
+}
+
 /**
  * Brings `landmark` into view when the page opens on a state fragment, and
  * when a link outside the landmark is followed to one. A fragment such as
@@ -24,6 +34,7 @@ export function stateUrlOf(hash: string, prefix = ''): string | undefined {
 export function revealOnStateLinks(
   landmark: HTMLElement,
   prefix = '',
+  { followed = false }: RevealOptions = {},
 ): () => void {
   // The stylesheet decides the rest: scroll-margin-top for a fixed header, scroll-behavior for motion.
   const reveal = () => landmark.scrollIntoView();
@@ -35,14 +46,27 @@ export function revealOnStateLinks(
   };
 
   const onClick = (event: MouseEvent) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey)
+    // A modified click opens the link elsewhere; this page stays where it is.
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
       return;
 
     const path = event.composedPath();
 
     const link = path.find((node) => node instanceof HTMLAnchorElement);
 
-    if (!link || link.target || path.includes(landmark)) return;
+    if (
+      !link ||
+      link.target ||
+      link.hasAttribute('download') ||
+      path.includes(landmark)
+    )
+      return;
 
     const sameDocument =
       link.origin === location.origin &&
@@ -54,8 +78,12 @@ export function revealOnStateLinks(
       requestAnimationFrame(follow);
   };
 
-  // No focus on load: a page that opens on an anchor has none either, and script focus before any input draws a focus ring.
-  if (stateUrlOf(location.hash, prefix) !== undefined) reveal();
+  if (stateUrlOf(location.hash, prefix) !== undefined) {
+    // No focus when the document opens here: script focus before any input draws a focus ring.
+    if (followed) follow();
+    else reveal();
+  }
+
   document.addEventListener('click', onClick);
 
   return () => document.removeEventListener('click', onClick);

@@ -2,9 +2,16 @@
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 import { stateUrlOf } from 'examples/features-tour/state-links';
 
-const { prefix } = defineProps<{
+const { prefix, headingLevel } = defineProps<{
   /** What the tour's state fragments start with: `#<prefix>/views`. */
   prefix: string;
+  /** The card heading's level under the heading this sits beneath. */
+  headingLevel: number;
+}>();
+
+const emit = defineEmits<{
+  /** Each card the app's router enters, the first included. */
+  card: [card: { id: string; title: string }];
 }>();
 
 const host = useTemplateRef('host');
@@ -24,7 +31,11 @@ async function mount() {
   // The page can be navigated away from while the chunk loads.
   if (gone || !host.value) return;
 
-  unmount = mountTour(host.value, { prefix });
+  unmount = mountTour(host.value, {
+    prefix,
+    headingLevel,
+    onCard: (card) => emit('card', card),
+  });
 }
 
 onMounted(() => {

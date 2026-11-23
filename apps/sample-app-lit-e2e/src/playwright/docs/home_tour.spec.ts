@@ -29,11 +29,15 @@ const chip = (page: Page, id: string) =>
 const permalink = (page: Page) =>
   section(page).getByRole('link', { name: 'Permalink to “See it run”' });
 
+// Empty until the card changes after load; then it names the card as the pager does.
+const status = (page: Page) => section(page).getByRole('status');
+
 const entries = (page: Page) => page.evaluate(() => history.length);
 
 const scrollTop = (page: Page) => page.evaluate(() => Math.round(scrollY));
 
 /** The tour shows `title`, the diagram marks its chip, and the address bar holds `url`. */
+// The diagram follows the app's router, so the two agreeing is the claim.
 async function expectCard(page: Page, title: string, url: string) {
   await expect(card(page)).toHaveText(title);
   await expect(
@@ -42,10 +46,6 @@ async function expectCard(page: Page, title: string, url: string) {
       '[aria-current]',
     ),
   ).toHaveText(title.toLowerCase());
-  // The page announces the card; the app's own view is not a live region.
-  await expect(section(page).getByRole('status')).toHaveText(
-    `The app shows the ${title.toLowerCase()} card.`,
-  );
   await expect(page).toHaveURL(url);
 }
 
@@ -60,6 +60,37 @@ test.describe('home page tour', () => {
     await expect(chip(page, 'views')).toHaveAttribute('aria-current', 'true');
     // A page that opens on an anchor moves no focus; only a followed link does.
     await expect(section(page)).not.toBeFocused();
+    // Nor is the card it opened on announced as a change.
+    await expect(status(page)).toBeEmpty();
+    // The card's heading sits under the panel's <h3>. The attribute is asserted: Playwright's role engine reads an <h2>'s level from its tag, where browsers honour aria-level.
+    await expect(card(page)).toHaveAttribute('aria-level', '4');
+  });
+
+  for (const fragment of ['#see-it-run/views?x=1', '#see-it-run/%76iews']) {
+    test(`draws the card the router entered for ${fragment}`, async ({
+      page,
+    }) => {
+      await page.goto(`/${fragment}`);
+
+      await expectCard(page, 'Views', `/${fragment}`);
+      await expect(status(page)).toBeEmpty();
+    });
+  }
+
+  test('sends an unknown card set on the open page to the first card, not to the bare anchor', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await hydrated(page);
+    await section(page).scrollIntoViewIfNeeded();
+    await expect(card(page)).toHaveText('States');
+
+    for (const fragment of ['#see-it-run/nope', '#see-it-run/']) {
+      await page.evaluate((hash) => {
+        location.hash = hash;
+      }, fragment);
+      await expectCard(page, 'States', '/#see-it-run/states');
+    }
   });
 
   test("leaves the page's own anchor alone and opens on the first card", async ({
@@ -155,6 +186,8 @@ test.describe('home page tour', () => {
     // The first card is the default, not a state the page was asked for.
     await expect(page).toHaveURL('/');
 
+    await expect(status(page)).toBeEmpty();
+
     const top = await scrollTop(page);
     const before = await entries(page);
 
@@ -166,6 +199,7 @@ test.describe('home page tour', () => {
     ]) {
       await pager(page).getByRole('link', { name: control }).click();
       await expectCard(page, title, `/#see-it-run/${title.toLowerCase()}`);
+      await expect(status(page)).toHaveText(`The app shows the ${title} card.`);
     }
 
     expect(await entries(page)).toBe(before);
@@ -232,6 +266,12 @@ test.describe('home page tour', () => {
 
     await expectCard(page, 'Views', '/#see-it-run/views');
     await expect(section(page)).toBeInViewport();
+    // A followed link moves focus to the section, as a followed anchor does, and announces nothing.
+    await expect(section(page)).toBeFocused();
+    await expect(status(page)).toBeEmpty();
+
+    await pager(page).getByRole('link', { name: 'Next card' }).click();
+    await expect(status(page)).toHaveText('The app shows the Resolves card.');
   });
 
   test('stops with the page and resumes from the URL on the way back', async ({

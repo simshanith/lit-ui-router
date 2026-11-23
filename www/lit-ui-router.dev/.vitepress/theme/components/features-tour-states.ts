@@ -21,7 +21,7 @@ export function hashForCard(id: CardId): string {
   return `#${TOUR_LANDMARK}${CARD_STATE.url.replace(`:${CARD_STATE.param}`, id)}`;
 }
 
-/** The card a fragment names, if it is one of the tour's. */
+/** The card a fragment names in its plain form; the diagram's first guess, before the app's router reports the card it entered. */
 export function cardForHash(hash: string): CardId | undefined {
   return CARD_IDS.find((id) => hash === hashForCard(id));
 }

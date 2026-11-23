@@ -1,4 +1,11 @@
-import { css, html, LitElement, svg, type SVGTemplateResult } from 'lit';
+import {
+  css,
+  html,
+  LitElement,
+  nothing,
+  svg,
+  type SVGTemplateResult,
+} from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { Transition } from '@uirouter/core';
 import {
@@ -57,7 +64,7 @@ const CARDS = [
   },
 ] as const;
 
-type Card = (typeof CARDS)[number];
+export type Card = (typeof CARDS)[number];
 
 const cardFor = (id: string): Card | undefined =>
   CARDS.find((card) => card.id === id);
@@ -90,17 +97,18 @@ const icon = (name: keyof typeof ICONS) =>
     ${ICONS[name]}
   </svg>`;
 
-type Resolved = { card: Card };
+type Resolved = { card: Card; headingLevel?: number };
 
 /** A slideshow moves in place: each card takes over the history entry, so Back leaves the tour. */
 export const IN_PLACE = { location: 'replace' } as const;
 
-const cardView = (card: Card) => html`
+// headingLevel: where the card's heading sits in a host page's outline; unset, it is the <h2> it is written as.
+const cardView = (card: Card, headingLevel?: number) => html`
   <article class="card">
     <div class="icon">
       <img src=${card.icon} alt="" width="40" height="40" />
     </div>
-    <h2>${card.title}</h2>
+    <h2 aria-level=${headingLevel ?? nothing}>${card.title}</h2>
     <p class="details">${card.lead}</p>
     <ul class="details">
       ${card.links.map(
@@ -113,8 +121,10 @@ const cardView = (card: Card) => html`
   </article>
 `;
 
-const CardPage: RoutedLitTemplate<Resolved> = ({ resolves: { card } }) =>
-  cardView(card);
+// headingLevel is a resolve only a host page adds, as it registers the state.
+const CardPage: RoutedLitTemplate<Resolved> = ({
+  resolves: { card, headingLevel },
+}) => cardView(card, headingLevel);
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
@@ -270,19 +280,22 @@ export class AppRoot extends LitElement {
   }
 }
 
+/** What the routed card is given; a host page appends its own. */
+export const cardResolves = [
+  {
+    token: 'card',
+    deps: ['$transition$'],
+    resolveFn: (transition: Transition) =>
+      cardFor(String(transition.params().cardId)) ?? CARDS[0],
+  },
+];
+
 /** The tour's one state; moving between cards re-enters it with a new cardId. */
 export const cardState: LitStateDeclaration<Resolved> = {
   name: 'card',
   url: '/:cardId',
   component: CardPage,
-  resolve: [
-    {
-      token: 'card',
-      deps: ['$transition$'],
-      resolveFn: (transition: Transition) =>
-        cardFor(String(transition.params().cardId)) ?? CARDS[0],
-    },
-  ],
+  resolve: cardResolves,
   redirectTo: (transition) =>
     cardFor(String(transition.params().cardId))
       ? undefined

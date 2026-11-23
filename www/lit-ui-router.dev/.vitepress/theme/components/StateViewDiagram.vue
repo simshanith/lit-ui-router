@@ -39,7 +39,14 @@ const reentered = computed(() => props.from !== undefined);
 
 <template>
   <figure class="state-diagram" :data-card="card">
-    <svg class="drawing" viewBox="-2 -2 340 306" width="340" height="306">
+    <!-- role="group": an <svg> maps to img, whose children are presentational, and the chips inside are links. -->
+    <svg
+      class="drawing"
+      role="group"
+      viewBox="-2 -2 340 306"
+      width="340"
+      height="306"
+    >
       <!-- The drawing is decoration beside the caption; only the chips, which are links to the app's states, are exposed. -->
       <g aria-hidden="true">
         <text class="region" x="0" y="10">States</text>
