@@ -110,7 +110,7 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state",
+    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state, the footer mark",
     on: ['surface', 'surface-soft', 'diagram-wash'],
   },
   {
@@ -130,6 +130,18 @@ export const ROLES = [
     kind: 'large-text',
     use: 'the end of the hero name gradient',
     on: ['surface'],
+  },
+  {
+    property: '--site-color-footer-mark-start',
+    kind: 'mark',
+    use: "the start of the home footer mark's gradient",
+    on: ['surface-soft'],
+  },
+  {
+    property: '--site-color-footer-mark-end',
+    kind: 'mark',
+    use: "the end of the home footer mark's gradient",
+    on: ['surface-soft'],
   },
   {
     property: '--site-color-identity-start',
