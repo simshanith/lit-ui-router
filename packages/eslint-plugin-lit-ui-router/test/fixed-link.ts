@@ -3,43 +3,32 @@
 // runs into the next attribute.
 import assert from 'node:assert/strict';
 import tsParser from '@tools/eslint-ts-parser';
+import { Linter, type Rule } from 'eslint';
 import { ErrorCodes, parseFragment } from 'parse5';
 
-interface AstNode {
-  type: string;
-  // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- a walk over untyped AST children
-  [key: string]: unknown;
-}
+const linter = new Linter();
 
-interface Quasi {
-  value: { raw: string };
-}
+/** The raw quasis of the first tagged template in `code`. */
+const firstTemplate = (code: string): string[] | undefined => {
+  let quasis: string[] | undefined;
 
-const isAstNode = (value: unknown): value is AstNode =>
-  typeof value === 'object' &&
-  value !== null &&
-  'type' in value &&
-  typeof value.type === 'string';
+  const capture: Rule.RuleModule = {
+    create: () => ({
+      TaggedTemplateExpression(node) {
+        quasis ??= node.quasi.quasis.map(({ value }) => value.raw);
+      },
+    }),
+  };
 
-/** The quasis of the first tagged template in `node`, depth first. */
-const firstTemplate = (node: AstNode): Quasi[] | undefined => {
-  if (node.type === 'TaggedTemplateExpression') {
-    // SAFETY: a TaggedTemplateExpression always carries a TemplateLiteral quasi
-    return (node.quasi as { quasis: Quasi[] }).quasis;
-  }
+  const messages = linter.verify(code, {
+    languageOptions: { parser: tsParser, sourceType: 'module' },
+    plugins: { test: { rules: { capture } } },
+    rules: { 'test/capture': 'error' },
+  });
 
-  for (const [key, child] of Object.entries(node)) {
-    if (key === 'parent') continue;
+  assert.deepEqual(messages, [], code);
 
-    for (const item of Array.isArray(child) ? child : [child]) {
-      if (!isAstNode(item)) continue;
-      const found = firstTemplate(item);
-
-      if (found !== undefined) return found;
-    }
-  }
-
-  return undefined;
+  return quasis;
 };
 
 /** Each expression's spot in an attribute value, as `attributes` spells it. */
@@ -54,17 +43,12 @@ export const assertFixedLink = (
   code: string,
   attributes: Record<string, string>,
 ): void => {
-  const program: unknown = tsParser.parse(code, { sourceType: 'module' });
-
-  assert.ok(isAstNode(program));
-  const quasis = firstTemplate(program);
+  const quasis = firstTemplate(code);
 
   assert.ok(quasis, 'no tagged template in the fixed output');
 
   const html = quasis
-    .map(({ value }, index) =>
-      index === 0 ? value.raw : `__expr${index - 1}__${value.raw}`,
-    )
+    .map((raw, index) => (index === 0 ? raw : `__expr${index - 1}__${raw}`))
     .join('');
 
   // parse5 drops a repeated attribute silently, so the parse error is the check.
