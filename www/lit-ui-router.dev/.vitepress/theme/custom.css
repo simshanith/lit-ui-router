@@ -330,9 +330,17 @@ html:has(.site-expand:modal) {
   background-position: center;
 }
 
-/* The home page has no footer to clear; VitePress's 6–8rem bottom margin only adds scroll. */
+/* The site footer follows every page at one gap, in place of VitePress's 6–10.5rem clearances. */
 .VPHome.VPHome {
-  margin-block-end: var(--site-space-6);
+  margin-block-end: 4rem;
+}
+
+:is(.VPDoc.VPDoc, .NotFound.NotFound) {
+  padding-block-end: 4rem;
+}
+
+.VPDoc > .container > .content {
+  padding-block-end: 0;
 }
 
 @media (min-width: 768px) {

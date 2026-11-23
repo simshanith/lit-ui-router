@@ -128,7 +128,8 @@
       // sources resolve directly (no build), but the root task's src/**
       // inputs would miss worker/**, so over-approximate. The index-page tests
       // read the same files the build does. The published-link test reads the
-      // generated API reference and what each package ships.
+      // generated API reference and what each package ships. The footer test
+      // reads the root LICENSE.
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",
@@ -145,6 +146,7 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/LICENSE",
         "$TURBO_ROOT$/packages/*/package.json",
         "$TURBO_ROOT$/packages/*/README.md",
         "$TURBO_ROOT$/packages/*/CHANGELOG.md",
