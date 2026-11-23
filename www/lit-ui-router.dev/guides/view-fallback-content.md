@@ -42,10 +42,10 @@ _moved_ between that fragment and the light DOM: they stand in the element
 while no component is active, and go back to the fragment while one is.
 Three consequences are worth knowing:
 
-- **Captured on connect.** Children appended to a `<ui-view>` _after_ it
-  connects are not part of the fallback set, so they never come back once a
-  routed component has replaced them. Write the fallback into the markup or
-  template that declares the view. A prerendered view, which the document parser can fill
+- **Captured on connect.** The fallback set is what the element holds when it
+  connects. Nodes that arrive after it, such as a template the enclosing
+  `${...}` part swaps in, park and come back with it. Write the fallback into
+  the markup or template that declares the view. A prerendered view, which the document parser can fill
   after connecting it, captures at its wake instead — see below.
 - **The same nodes every time.** The fallback is moved, never copied, so the
   nodes on screen are the authored ones and they keep their identity across
@@ -58,8 +58,10 @@ Three consequences are worth knowing:
   selectors. The one place a `<slot>` appears is a server render without
   [`lit-ui-router-ssr`](/packages/lit-ui-router-ssr); see below.
 
-The fallback set stands ahead of the render marker `<ui-view>` writes for
-its own output, so routed content and fallback content never interleave.
+A `<ui-view>` the client creates writes its own output ahead of the fallback
+set, behind a marker of its own, so routed content and fallback content never
+interleave, and a part of the enclosing template that ends the view's children
+cannot clear the routed content when it re-renders.
 
 ## List/detail
 

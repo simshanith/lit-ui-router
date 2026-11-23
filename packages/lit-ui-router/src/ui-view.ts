@@ -192,7 +192,9 @@ const noParentViewUnsubscribe = () => {};
  *
  * Whatever the author wrote inside the element, ahead of any render, is this
  * view's fallback set: it stands in the document while no component occupies
- * the view, parks while one does, and comes back when none does.
+ * the view, parks while one does, and comes back when none does. Nodes the
+ * enclosing template renders into the element later park and come back with
+ * it.
  *
  * A prerendered page needs the served variant this element is the base of —
  * <code>lit-ui-router-ssr/register</code> defines <code>ui-view</code> with it.
@@ -230,6 +232,13 @@ export class UiView extends LitElement {
 
   /** Whether those nodes sit in the fragment rather than in the light DOM. */
   private fallbackParked = true;
+
+  /**
+   * Ends this view's render ahead of the fallback set, so a part of the
+   * parent's template trailing in the view clears up to the element's end
+   * without reaching the render. Made by the connect-time capture.
+   */
+  private renderEnd?: Comment;
 
   /** The element a class component rendered; a template component leaves it unset. */
   private classElement?: Element;
@@ -655,6 +664,19 @@ export class UiView extends LitElement {
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = this.authoredPrefix();
     this.fallback.append(...this.fallbackNodes);
+    this.renderEnd = document.createComment('');
+  }
+
+  /** Opens the first render ahead of everything, ending at {@link renderEnd}. */
+  private placeRenderEnd(): void {
+    const end = this.renderEnd;
+
+    if (!end) {
+      return;
+    }
+
+    this.prepend(end);
+    this.renderOptions.renderBefore = end;
   }
 
   /**
@@ -694,9 +716,11 @@ export class UiView extends LitElement {
   /**
    * Moves the fallback set between the light DOM and the fragment.
    *
-   * It goes in ahead of everything else, and lit appends its own render marker
-   * at the end of the element, so the two never interleave and the component's
-   * nodes stay the only ones lit owns.
+   * Captured at connect, it goes in past the render's end, and parking takes
+   * every node there, including any the parent's template rendered since the
+   * capture. Captured in place, it goes in ahead of everything else, and lit
+   * appends its own render marker at the end of the element. Either way the two
+   * never interleave and the component's nodes stay the only ones lit owns.
    */
   private placeFallback(): void {
     const fallback = this.fallback;
@@ -708,11 +732,23 @@ export class UiView extends LitElement {
 
     this.fallbackParked = park;
 
+    const end = this.renderEnd;
+
     if (park) {
-      fallback.append(...this.fallbackNodes);
+      fallback.append(...(end ? this.nodesAfter(end) : this.fallbackNodes));
     } else {
-      this.insertBefore(fallback, this.firstChild);
+      this.insertBefore(fallback, end ? end.nextSibling : this.firstChild);
     }
+  }
+
+  private nodesAfter(node: ChildNode): ChildNode[] {
+    const nodes: ChildNode[] = [];
+
+    for (let next = node.nextSibling; next; next = next.nextSibling) {
+      nodes.push(next);
+    }
+
+    return nodes;
   }
 
   private readonly disconnectedHandlers: deregisterFn[] = [];
@@ -968,6 +1004,8 @@ export class UiView extends LitElement {
 
     if (!this.hasUpdated) {
       this.adoptProvidedRouter();
+      // Placed here rather than at capture: children replaced before the first update would take it.
+      this.placeRenderEnd();
     }
 
     this.placeFallback();
