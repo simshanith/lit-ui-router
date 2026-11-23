@@ -815,6 +815,8 @@ body:has(.npm-diff) > .content-grid {
   display: flex;
   align-items: center;
   gap: var(--site-space-2);
+  min-block-size: var(--site-icon-md);
+  text-decoration: none;
 }
 .site-footer .mark {
   flex: none;
@@ -825,6 +827,7 @@ body:has(.npm-diff) > .content-grid {
   margin: 0;
   font-weight: 600;
   color: var(--site-color-text);
+  transition: color var(--site-duration-fast) var(--ease-out);
 }
 .site-footer .list {
   display: flex;
@@ -900,6 +903,9 @@ ui-view {
     color: var(--site-color-interaction);
     text-decoration-color: currentColor;
     text-decoration-thickness: auto;
+  }
+  .site-footer .brand:hover .name {
+    color: var(--site-color-interaction);
   }
   .pager a:hover {
     text-decoration: underline;

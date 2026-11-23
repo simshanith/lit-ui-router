@@ -26,6 +26,9 @@ const anchor = ({ link, target }: NavLink) =>
     : { href: link, target: '_blank', rel: 'noopener' };
 
 const external = { target: '_blank', rel: 'noopener' };
+
+// The header logo's destination: this build's own home, under its base.
+const home = withBase('/');
 </script>
 
 <template>
@@ -37,7 +40,11 @@ const external = { target: '_blank', rel: 'noopener' };
     <div v-if="expanded" class="edge" aria-hidden="true" />
     <div class="inner">
       <div class="top">
-        <div class="brand">
+        <component
+          :is="expanded ? 'div' : 'a'"
+          class="brand"
+          :href="expanded ? undefined : home"
+        >
           <svg
             class="mark"
             xmlns="http://www.w3.org/2000/svg"
@@ -59,7 +66,7 @@ const external = { target: '_blank', rel: 'noopener' };
               >.
             </p>
           </div>
-        </div>
+        </component>
 
         <nav class="links" aria-label="Footer">
           <template v-if="expanded">
@@ -196,6 +203,14 @@ const external = { target: '_blank', rel: 'noopener' };
   gap: var(--site-space-2);
 }
 
+/* The compact bar's brand is one link home; at rest it looks as the plain block does. */
+a.brand {
+  min-block-size: var(--site-icon-md);
+  color: inherit;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
 .expanded .brand {
   gap: var(--site-space-4);
   max-inline-size: 22rem;
@@ -233,6 +248,7 @@ const external = { target: '_blank', rel: 'noopener' };
   margin: 0;
   font-weight: 600;
   color: var(--site-color-text);
+  transition: color var(--site-duration-fast) var(--ease-out);
 }
 
 .expanded .name {
@@ -339,6 +355,10 @@ const external = { target: '_blank', rel: 'noopener' };
   .site-footer a:hover {
     color: var(--site-color-interaction);
     text-decoration-color: currentColor;
+  }
+
+  a.brand:hover .name {
+    color: var(--site-color-interaction);
   }
 }
 

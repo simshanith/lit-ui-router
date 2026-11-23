@@ -432,6 +432,28 @@ test.describe('site footer', () => {
     });
   }
 
+  for (const [name, path] of [
+    ['a guide', '/guides/route-guards'],
+    ['the 404 page', '/definitely-missing'],
+  ] as const) {
+    test(`links its mark and name home on ${name}`, async ({ page }) => {
+      await page.goto(path);
+
+      const brand = footer(page).getByRole('link', { name: 'Lit UI Router' });
+
+      await expect(brand).toHaveCount(1);
+      await expect(brand).toHaveAttribute('href', '/');
+      await brand.click();
+      await expect(page).toHaveURL((url) => url.pathname === '/');
+      // The home page's footer names the site without linking to itself.
+      await expect(footer(page)).toHaveAttribute('data-mode', 'expanded');
+      await expect(footer(page).getByText('Lit UI Router')).toBeVisible();
+      await expect(
+        footer(page).getByRole('link', { name: 'Lit UI Router' }),
+      ).toHaveCount(0);
+    });
+  }
+
   test('leaves the pager its navigation, without a second contentinfo landmark', async ({
     page,
   }) => {
@@ -488,6 +510,9 @@ test.describe('site footer', () => {
     };
 
     const docs = await read('/guides/route-guards');
+
+    // The mark and name, one link home.
+    expect(docs.links[0]).toEqual(['Lit UI Router', '/', '', '']);
 
     // VitePress's router needs the target the worker's pages have no use for.
     expect(await read('/releases/')).toEqual({

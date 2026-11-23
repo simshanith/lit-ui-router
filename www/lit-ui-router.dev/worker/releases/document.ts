@@ -111,10 +111,10 @@ const closing = (current: string) => html`</div>
 </main>
 <footer class="site-footer content-grid"><div class="inner">
 <div class="top">
-<div class="brand">
+<a class="brand" href=${HOME}>
 <svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox=${FLAMES_MARK.viewBox} aria-hidden="true" focusable="false"><path fill="currentColor" d=${FLAMES_MARK.path} /></svg>
 <p class="name">Lit UI Router</p>
-</div>
+</a>
 <nav class="links" aria-label="Footer"><ul class="list">${FOOTER_BAR.map((link) => html`<li>${footerLink(link, current)}</li>`)}</ul></nav>
 </div>
 <div class="colophon">
