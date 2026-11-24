@@ -10,7 +10,7 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 * **ui-router-devtools:** settle the v1 event schema and session file ([#2117](https://github.com/simshanith/lit-ui-router/issues/2117)) ([2942626](https://github.com/simshanith/lit-ui-router/commit/2942626418d22e47ae11dc59d9dd3f2a6a82f794))
 * **ui-router-otel:** add a private package that reports transitions as OpenTelemetry spans ([#2104](https://github.com/simshanith/lit-ui-router/issues/2104)) ([574cbd0](https://github.com/simshanith/lit-ui-router/commit/574cbd0478cd0c765a5f590368eea58e41a76543))
 * **ui-router-otel:** make transition hooks and lazy loads active spans ([#2206](https://github.com/simshanith/lit-ui-router/issues/2206)) ([d8b74ac](https://github.com/simshanith/lit-ui-router/commit/d8b74ac59e4b59f1fd6a32ebd7bb954ca85f8860))
-* **ui-router-otel:** wire the package into the release pipeline ([#2357](https://github.com/simshanith/lit-ui-router/issues/2357))
+* **ui-router-otel:** wire the package into the release pipeline ([#2357](https://github.com/simshanith/lit-ui-router/issues/2357)) ([4015ea8](https://github.com/simshanith/lit-ui-router/commit/4015ea8b21ab581ae8f71fd9380f0b90196ffc08))
 
 ### Code Refactoring
 
