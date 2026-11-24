@@ -77,8 +77,8 @@ What upstream users asked for, from the visualizer's issue tracker:
 | CSP-safe styling                                                     | 12, 15                    |
 | Hooks for sticky and deep-state-redirect labels                      | 281                       |
 
-Accessibility and dark mode were never asked for upstream. Our examples patch
-both.
+Accessibility and dark mode were never asked for upstream. Our patch and the
+examples' text-colour fix added both.
 
 ## Options compared
 
@@ -165,7 +165,7 @@ import 'ui-router-devtools/define';
 html`<ui-router-devtools .router=${router}></ui-router-devtools>`;
 
 // 3. Opt-in loading, so examples pay nothing by default.
-if (new URLSearchParams(location.search).has('visualizer')) {
+if (new URLSearchParams(location.search).has('devtools')) {
   const { DevtoolsPlugin } = await import('ui-router-devtools/plugin');
   router.plugin(DevtoolsPlugin);
 }
@@ -244,8 +244,9 @@ Stage 1 is what replaces the plugin in the five examples.
 | Router config card; session export and import                                            |                                                                   |
 | Console and Performance-panel reporters; a test recorder                                 |                                                                   |
 
-Stage 1 removes the patch, the `d3-color` override, the hiding CSS and the
-text-colour fix from the five examples, and closes #1902.
+Stage 1 removed the patch, the `d3-color` override, the hiding CSS and the
+text-colour fix from the five examples. #1902 closes once the sample apps stop
+loading the visualizer too.
 
 Later stages:
 
