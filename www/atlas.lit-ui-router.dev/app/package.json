@@ -39,7 +39,7 @@
     "lit-ui-router-ssr": "^0.11.2",
     "oxlint": "1.94.0",
     "tinybench": "^6.2.4",
-    "tsrs": "7.1.0-beta.tsrs4",
+    "tsrs": "7.1.0-beta.tsrs5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "ui-router-registry": "^0.4.2",
     "vite": "^8.3.8",
