@@ -6,6 +6,7 @@ import {
   type FloorAlias,
   type ListedDep,
   type ListedProject,
+  type PublishedRanges,
   atOrAbove,
   classify,
   floorAliases,
@@ -29,6 +30,13 @@ catalogs:
     eslint-floor:
       specifier: npm:eslint@9.0.0
       version: 9.0.0
+  panel-floor:
+    valibot-floor:
+      specifier: npm:valibot@1.0.0
+      version: 1.0.0
+    zod-floor:
+      specifier: npm:zod@3.0.0
+      version: 3.0.0
 
 importers:
 
@@ -46,6 +54,15 @@ importers:
       eslint-floor:
         specifier: catalog:peerFloorPlugin
         version: eslint@9.0.0
+
+  packages/panel:
+    devDependencies:
+      valibot-floor:
+        specifier: catalog:panel-floor
+        version: valibot@1.0.0
+      zod-floor:
+        specifier: catalog:panel-floor
+        version: zod@3.0.0
 `);
 
 const catalogs = {
@@ -53,12 +70,16 @@ const catalogs = {
   publishedPeer: { hono: '^4.0.0', eslint: '^9.0.0 || ^10.0.0' },
 };
 
-const peers = new Map<string, Record<string, string>>([
-  ['packages/server', { hono: 'catalog:publishedPeer' }],
-  ['packages/plugin', { eslint: '^9.0.0' }],
+const manifests = new Map<string, PublishedRanges>([
+  ['packages/server', { peerDependencies: { hono: 'catalog:publishedPeer' } }],
+  ['packages/plugin', { peerDependencies: { eslint: '^9.0.0' } }],
+  // zod is no published dependency, so zod-floor floors nothing
+  ['packages/panel', { dependencies: { valibot: '^1.0.0' } }],
 ]);
 
-const floors = floorAliases(lock, catalogs, (importer) => peers.get(importer));
+const floors = floorAliases(lock, catalogs, (importer) =>
+  manifests.get(importer),
+);
 
 const dep = (
   from: string,
@@ -108,14 +129,14 @@ const advisory = (
 });
 
 describe('floorAliases', () => {
-  it('reads peerFloor* catalogs and resolves each importer peer range', () => {
+  it('resolves peer floors and dependency floors against their published range', () => {
     assert.deepEqual(
-      floors.map(({ importer, alias, catalog, name, version, peerRange }) => [
+      floors.map(({ importer, alias, catalog, name, version, range }) => [
         importer,
         alias,
         catalog,
         `${name}@${version}`,
-        peerRange,
+        range,
       ]),
       [
         ['packages/server', 'hono-floor', 'peerFloor', 'hono@4.0.0', '^4.0.0'],
@@ -125,6 +146,13 @@ describe('floorAliases', () => {
           'peerFloorPlugin',
           'eslint@9.0.0',
           '^9.0.0',
+        ],
+        [
+          'packages/panel',
+          'valibot-floor',
+          'panel-floor',
+          'valibot@1.0.0',
+          '^1.0.0',
         ],
       ],
     );
@@ -181,7 +209,7 @@ describe('classify', () => {
   const run = (...advisories: Advisory[]) =>
     classify(advisories, split, floors);
 
-  it('accepts a floor-only finding fixed inside the peer range', () => {
+  it('accepts a floor-only finding fixed inside the published range', () => {
     const verdict = run(advisory('hono', '4.0.0', '>=4.12.4'));
 
     assert.equal(verdict.real.length, 0);
@@ -192,7 +220,7 @@ describe('classify', () => {
     assert.equal(verdict.unfixedInRange.length, 0);
   });
 
-  it('flags a floor-only finding with no patched version in the peer range', () => {
+  it('flags a floor-only finding with no patched version in the published range', () => {
     const verdict = run(
       advisory('hono', '4.0.0', '>=5.0.0'),
       advisory('hono', '4.0.0', '<0.0.0', 'low'),
@@ -204,7 +232,7 @@ describe('classify', () => {
         ({ advisory: { patched_versions }, floor }) => [
           patched_versions,
           floor.importer,
-          floor.peerRange,
+          floor.range,
         ],
       ),
       [
