@@ -2,11 +2,13 @@ import type { ViewFill, ViewInfo } from './schema.ts';
 
 /** A `ui-view` in the nesting `fqn` describes, with the views registered inside it. */
 export interface ViewNode {
+  /** The view as the snapshot records it. */
   view: ViewInfo;
   /** The enclosing view's id; null for a view at the top. */
   parent: number | null;
   /** From 1 at the top. */
   depth: number;
+  /** The views registered inside this one. */
   children: ViewNode[];
 }
 

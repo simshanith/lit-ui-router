@@ -7,6 +7,7 @@ reference/lit-ui-router-mobx
 reference/lit-ui-router-signals
 reference/lit-ui-router-ssr
 reference/ui-router-navigation-location-plugin
+reference/ui-router-devtools
 reference/ui-router-effect
 reference/ui-router-mobx
 reference/ui-router-registry

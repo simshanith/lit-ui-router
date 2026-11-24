@@ -35,6 +35,7 @@ import navigationSidebarItemsJson from '../reference/ui-router-navigation-locati
 import serverSidebarItemsJson from '../reference/ui-router-server/typedoc-sidebar.json' with { type: 'json' };
 import signalsSidebarItemsJson from '../reference/lit-ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 import ssrSidebarItemsJson from '../reference/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterDevtoolsSidebarItemsJson from '../reference/ui-router-devtools/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterEffectSidebarItemsJson from '../reference/ui-router-effect/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterMobxSidebarItemsJson from '../reference/ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterRegistrySidebarItemsJson from '../reference/ui-router-registry/typedoc-sidebar.json' with { type: 'json' };
@@ -75,6 +76,10 @@ const signalsSidebarItemsRaw =
 
 // SAFETY: as for typedocSidebarItems
 const ssrSidebarItemsRaw = ssrSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
+const uiRouterDevtoolsSidebarItemsRaw =
+  uiRouterDevtoolsSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 // SAFETY: as for typedocSidebarItems
 const uiRouterEffectSidebarItemsRaw =
@@ -144,6 +149,11 @@ const uiRouterRegistrySidebarItems = entrySidebar(
   uiRouterRegistrySidebarItemsRaw,
 );
 
+const uiRouterDevtoolsSidebarItems = entrySidebar(
+  'ui-router-devtools',
+  uiRouterDevtoolsSidebarItemsRaw,
+);
+
 const baseUrl = SITE_ORIGIN;
 
 type ReferenceLink = NonNullable<(typeof API_REFERENCES)[PackageName]>;
@@ -161,6 +171,7 @@ const REFERENCE_ITEMS: Record<ReferenceLink, DefaultTheme.SidebarItem[]> = {
   '/reference/ui-router-server/': serverSidebarItems,
   '/reference/lit-ui-router-ssr/': ssrSidebarItems,
   '/reference/ui-router-registry/': uiRouterRegistrySidebarItems,
+  '/reference/ui-router-devtools/': uiRouterDevtoolsSidebarItems,
 };
 
 const referenceItems = new Map<string, DefaultTheme.SidebarItem[]>(

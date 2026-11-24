@@ -6,7 +6,7 @@ import type { Recorder } from './recorder.ts';
 import type { Redaction, Session, SpanRecord } from './schema.ts';
 import type { ViewLocator } from './views.ts';
 
-/** `<ui-router-devtools>`: a pill that opens a panel of the router's states, transitions and config. */
+/** <code>&lt;ui-router-devtools&gt;</code>: a pill that opens a panel of the router's states, transitions and config. */
 export interface UIRouterDevtools extends LitElement {
   /** The router to record. */
   router: UIRouter | undefined;
@@ -32,6 +32,8 @@ export interface UIRouterDevtools extends LitElement {
 
 /** The `<ui-router-devtools>` class; `ui-router-devtools/define` registers it. */
 export const UIRouterDevtools: {
+  /** Creates an element; `document.createElement('ui-router-devtools')` does too once it is registered. */
   new (): UIRouterDevtools;
+  /** The prototype every `<ui-router-devtools>` shares. */
   readonly prototype: UIRouterDevtools;
 } = DevtoolsPanel;
