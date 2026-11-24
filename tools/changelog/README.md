@@ -8,9 +8,10 @@ of each published package.
   carries the breaking-change heading, merge sections newest first by semver,
   and render the file with its fixed preamble.
 - [`src/write-section.ts`](./src/write-section.ts): adds one version's
-  section, every other byte kept; the bump runs it from release-it's
+  section, opened by its notes-through marker, every other byte kept; the bump runs it from release-it's
   `after:bump` hook ([Release notes](../../docs/RELEASE.md#release-notes)).
-- [`src/extract.ts`](./src/extract.ts): prints one version's section body, or
+- [`src/extract.ts`](./src/extract.ts): prints one version's section body
+  without its marker, or
   fails when there is none; the publish runs it as release-it's
   `github.releaseNotes`.
 - [`src/drift.ts`](./src/drift.ts): compares each file with the GitHub
@@ -31,13 +32,20 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 
 ## <version> (<YYYY-MM-DD>)
 
+<!-- notes-through: <sha> -->
+
 <body>
 ```
 
 One section per stable GitHub release, newest first; a version published to npm
 with no GitHub release, such as `lit-ui-router@0.0.1`, has none. The heading's first token is the
 version; the date is the bump day in UTC, or the publish day for a backfilled
-section. Everything before the first `##` heading is the preamble: the backfill
+section. A section the bump writes opens with the marker, naming the full sha
+the notes were rendered at for the
+[Notes-Through check](../../docs/RELEASE.md#notes-through-check); backfilled
+sections and those bumped before it have none. Parsing lifts the marker out of
+the body, so `extract` and the drift check never see it, and rendering puts
+it back. Everything before the first `##` heading is the preamble: the backfill
 and a missing file write the fixed text, and `write-section` keeps what is there.
 `<pkg>` is the package name through `encodeURIComponent`, the docs site's
 [releases page](../../www/lit-ui-router.dev/worker/releases/routes.ts) for it,

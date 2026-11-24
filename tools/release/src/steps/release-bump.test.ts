@@ -26,23 +26,19 @@ describe('branchPrefix', () => {
 });
 
 describe('releaseCommitMessage', () => {
-  const sha = 'a'.repeat(40);
-
   const stable = {
     version: '1.8.0',
     changelog: '\n### Bug Fixes\n\n* fix: things\n\n',
     section: {
       changelogPath: 'packages/lit-ui-router/CHANGELOG.md',
-      notesThrough: sha,
     },
   };
 
-  it('names the section and ends with the Notes-Through trailer, not the notes', () => {
+  it('names the section, not the notes', () => {
     assert.deepEqual(releaseCommitMessage(stable), {
       message:
         'Release 1.8.0\n\n' +
-        'Release notes: the 1.8.0 section of packages/lit-ui-router/CHANGELOG.md.\n\n' +
-        `Notes-Through: ${sha}`,
+        'Release notes: the 1.8.0 section of packages/lit-ui-router/CHANGELOG.md.',
     });
   });
 
@@ -56,7 +52,7 @@ describe('releaseCommitMessage', () => {
     );
   });
 
-  it('warns on an empty changelog and keeps the section line and trailer', () => {
+  it('warns on an empty changelog and keeps the section line', () => {
     const { message, warning } = releaseCommitMessage({
       ...stable,
       version: '1.0.0',
@@ -64,8 +60,7 @@ describe('releaseCommitMessage', () => {
       from: 'abc',
     });
 
-    assert.match(message, /^Release 1\.0\.0\n\nRelease notes: /);
-    assert.match(message, /\n\nNotes-Through: a{40}$/);
+    assert.match(message, /^Release 1\.0\.0\n\nRelease notes: [^\n]*$/);
     assert.match(warning ?? '', /empty changelog for 1\.0\.0 \(abc\.\.HEAD\)/);
   });
 
@@ -83,17 +78,6 @@ describe('releaseCommitMessage', () => {
     assert.throws(
       () => releaseCommitMessage({ ...stable, version: ' ' }),
       /version/,
-    );
-  });
-
-  it('rejects an abbreviated or symbolic Notes-Through', () => {
-    assert.throws(
-      () =>
-        releaseCommitMessage({
-          ...stable,
-          section: { ...stable.section, notesThrough: 'HEAD' },
-        }),
-      /not a full commit sha/,
     );
   });
 });

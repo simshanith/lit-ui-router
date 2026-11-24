@@ -46,8 +46,22 @@ function commit(files: Record<string, string>, message: string): string {
 const workspace = (foo: string, bar: string) =>
   `packages:\n  - packages/*\ncatalog:\n  foo: ${foo}\n  bar: ${bar}\n`;
 
+// `at` is the trailer range's end, as both callers pass it.
 const check = (trailerRange: string, tip: string) =>
-  checkNotesThrough({ packageName: 'a', cwd: pkg, trailerRange, tip });
+  checkNotesThrough({
+    packageName: 'a',
+    cwd: pkg,
+    version: '1.1.0',
+    at: trailerRange.split('..')[1] ?? '',
+    trailerRange,
+    tip,
+  });
+
+const marked = (sha: string, body: string) =>
+  `# Changelog\n\n## 1.1.0 (2026-11-24)\n\n<!-- notes-through: ${sha} -->\n\n${body}\n`;
+
+const manifest = (version: string) =>
+  JSON.stringify({ name: 'a', version, dependencies: { foo: 'catalog:' } });
 
 let cut = '';
 
@@ -151,14 +165,92 @@ describe('checkNotesThrough', () => {
     const result = check(`${cut}..HEAD`, 'HEAD');
 
     assert.deepEqual(result.stale, []);
+    assert.equal(result.source, 'trailer');
     assert.equal(result.notesThrough, cut);
     git('switch', '-q', 'main');
   });
 
-  it('fails when no commit carries a trailer', () => {
+  it('fails when the section has no marker and no commit carries a trailer', () => {
     const result = check(`${cut}..main`, 'main');
 
+    assert.match(
+      result.problem ?? '',
+      /no 1\.1\.0 section with a notes-through marker/,
+    );
     assert.match(result.problem ?? '', /carries a Notes-Through trailer/);
+  });
+});
+
+describe('checkNotesThrough with a marker', () => {
+  let release = '';
+
+  before(() => {
+    git('switch', '-q', '-c', 'marked', cut);
+    commit({ 'packages/a/src/index.spec.ts': 'test\n' }, 'test(a): a spec');
+    // A listed header and no trailer, as a squash merge whose body was dropped.
+    release = commit(
+      {
+        'packages/a/package.json': manifest('1.1.0'),
+        'packages/a/CHANGELOG.md': marked(cut, '* one'),
+      },
+      'docs(a): release 1.1.0 (#10)',
+    );
+  });
+
+  after(() => git('switch', '-q', 'main'));
+
+  it('reads the sha from the section and leaves the commit that wrote the marker out', () => {
+    const result = check(`${cut}..HEAD`, 'HEAD');
+
+    assert.equal(result.problem, undefined);
+    assert.equal(result.source, 'marker');
+    assert.equal(result.notesThrough, cut);
+    assert.equal(result.notesCommit, release);
+    assert.deepEqual(result.stale, []);
+  });
+
+  it('still leaves the marker commit out after a later edit to the section body', () => {
+    const edit = commit(
+      {
+        'packages/a/CHANGELOG.md': marked(cut, '* one\n* two'),
+        'packages/a/src/index.ts': 'export const edited = 1;\n',
+      },
+      'fix(a): a fix that also edits the notes',
+    );
+
+    const result = check(`${cut}..HEAD`, 'HEAD');
+
+    assert.equal(result.notesCommit, release);
+    assert.deepEqual(
+      result.stale.map(({ hash }) => hash),
+      [edit],
+    );
+  });
+
+  it('prefers the marker to a trailer', () => {
+    git('switch', '-q', '-c', 'both', cut);
+
+    const fix = commit(
+      { 'packages/a/src/index.ts': 'export const both = 1;\n' },
+      'fix(a): after the trailer, before the marker',
+    );
+
+    commit(
+      {
+        'packages/a/package.json': manifest('1.1.0'),
+        'packages/a/CHANGELOG.md': marked(cut, '* one'),
+      },
+      `Release 1.1.0\n\nNotes-Through: ${fix}`,
+    );
+
+    const result = check(`${cut}..HEAD`, 'HEAD');
+
+    assert.equal(result.source, 'marker');
+    assert.deepEqual(
+      result.stale.map(({ hash }) => hash),
+      [fix],
+    );
+    git('switch', '-q', 'marked');
   });
 });
 

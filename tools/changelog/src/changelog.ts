@@ -8,8 +8,10 @@ export interface Section {
   readonly version: string;
   /** The heading text after `## `, version included. */
   readonly heading: string;
-  /** Everything under the heading up to the next `## `, without surrounding blank lines. */
+  /** Everything under the heading up to the next `## `, without the marker or surrounding blank lines. */
   readonly body: string;
+  /** The full sha the section's notes-through marker names, when it has one. */
+  readonly notesThrough?: string;
 }
 
 /** A changelog split at its `## ` headings. */
@@ -72,12 +74,42 @@ function trimBlankLines(text: string): string {
   return text.replace(/^(?:[ \t]*\n)+/, '').replace(/(?:\n[ \t]*)+$/, '');
 }
 
+const NOTES_THROUGH = /^<!-- notes-through: ([0-9a-f]{40}) -->[ \t]*(?:\n|$)/;
+
+/** The line a section opens with to name the commit its notes were generated at. */
+export function notesThroughMarker(sha: string): string {
+  if (!/^[0-9a-f]{40}$/.test(sha)) {
+    throw new Error(`${JSON.stringify(sha)} is not a full commit sha`);
+  }
+
+  return `<!-- notes-through: ${sha} -->`;
+}
+
 function toSection(heading: string, lines: readonly string[]): Section {
+  const text = trimBlankLines(lines.join('\n'));
+  const marker = NOTES_THROUGH.exec(text);
+
+  const version = heading.split(/\s/, 1)[0] ?? '';
+
+  if (marker === null) return { version, heading, body: text };
+
   return {
-    version: heading.split(/\s/, 1)[0] ?? '',
+    version,
     heading,
-    body: trimBlankLines(lines.join('\n')),
+    body: trimBlankLines(text.slice(marker[0].length)),
+    notesThrough: marker[1],
   };
+}
+
+/** A section's text: its heading, then its marker and body, each block apart. */
+function renderSection(section: Section): string {
+  return [
+    `## ${section.heading}`,
+    ...(section.notesThrough === undefined
+      ? []
+      : [notesThroughMarker(section.notesThrough)]),
+    ...(section.body === '' ? [] : [section.body]),
+  ].join('\n\n');
 }
 
 /** Splits a changelog at its `## ` headings; a `## ` inside a code fence is body text. */
@@ -103,14 +135,22 @@ export function parseChangelog(text: string): Changelog {
   return { preamble: trimBlankLines(preambleLines.join('\n')), sections };
 }
 
-/** One version's section body, or `undefined` when the changelog has no section for it. */
+/** One version's section, or `undefined` when the changelog has none. */
+export function findSection(
+  text: string,
+  version: string,
+): Section | undefined {
+  return parseChangelog(text).sections.find(
+    (section) => section.version === version,
+  );
+}
+
+/** One version's section body without its marker, or `undefined` when the changelog has no section for it. */
 export function extractSection(
   text: string,
   version: string,
 ): string | undefined {
-  return parseChangelog(text).sections.find(
-    (section) => section.version === version,
-  )?.body;
+  return findSection(text, version)?.body;
 }
 
 /** The heading the release tooling writes above a version's breaking changes. */
@@ -172,14 +212,7 @@ export function renderChangelog(
   packageName: string,
   sections: readonly Section[],
 ): string {
-  const blocks = [
-    preamble(packageName),
-    ...sections.map((section) =>
-      section.body === ''
-        ? `## ${section.heading}`
-        : `## ${section.heading}\n\n${section.body}`,
-    ),
-  ];
+  const blocks = [preamble(packageName), ...sections.map(renderSection)];
 
   return `${blocks.join('\n\n')}\n`;
 }
@@ -208,8 +241,9 @@ function insertionLine(text: string, version: string): number | undefined {
 
 /**
  * `text` with `version`'s section added and every other byte kept; a missing
- * file (`undefined`) becomes the fixed preamble and the section. Throws when
- * `version` already has a section or is not a version.
+ * file (`undefined`) becomes the fixed preamble and the section. A
+ * `notesThrough` sha opens the section with its marker. Throws when `version`
+ * already has a section or is not a version.
  */
 export function insertSection(
   packageName: string,
@@ -218,23 +252,27 @@ export function insertSection(
     readonly version: string;
     readonly date: string;
     readonly body: string;
+    readonly notesThrough?: string;
   },
 ): string {
-  const { version, date, body } = section;
+  const { version, date, body, notesThrough } = section;
 
   if (semver.valid(version) === null) {
     throw new Error(`${JSON.stringify(version)} is not a version`);
   }
 
-  const heading = sectionHeading(version, date);
-  const trimmed = trimBlankLines(body.replace(/\r\n/g, '\n'));
+  const unmarked: Section = {
+    version,
+    heading: sectionHeading(version, date),
+    body: trimBlankLines(body.replace(/\r\n/g, '\n')),
+  };
 
-  if (text === undefined) {
-    return renderChangelog(packageName, [{ version, heading, body: trimmed }]);
-  }
+  const added: Section =
+    notesThrough === undefined ? unmarked : { ...unmarked, notesThrough };
 
-  const block =
-    trimmed === '' ? `## ${heading}` : `## ${heading}\n\n${trimmed}`;
+  if (text === undefined) return renderChangelog(packageName, [added]);
+
+  const block = renderSection(added);
 
   const normalised = text.replace(/\r\n/g, '\n');
   const at = insertionLine(normalised, version);

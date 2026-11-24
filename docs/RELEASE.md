@@ -598,6 +598,9 @@ which refuses a manifest that disagrees with its lock.
   would list reached `main` after the notes were rendered and before the
   release commit, and the release PR's check last ran before it landed. The
   version is tagged and unpublished; the maintainer decides how to recover.
+  `no <version> section with a notes-through marker`: the marker line under
+  the version's heading was removed or edited. Restore it from the release
+  commit.
 
 ### Fork PRs not running CI
 
@@ -654,13 +657,15 @@ A stable release's notes live in its package's `CHANGELOG.md`, one
 ([file contract](../tools/changelog/README.md#file-contract)). The bump
 renders them and writes the section, dated the bump day in UTC, from
 release-it's `after:bump` hook, so it lands in the release commit (`bumpArgs`
-in `tools/release/src/steps/release-it.core.ts`). The release commit and PR
-body name that section and end with a `Notes-Through: <sha>` trailer: the
-commit the release branch was cut from, where the notes were rendered. The
-publish passes `--github.releaseNotes` a command that prints the section
-(`tools/changelog/src/extract.ts`), so the GitHub release body is the section
-as merged. To change the notes, edit the section on the release branch before
-merging.
+in `tools/release/src/steps/release-it.core.ts`). The section opens with a
+`<!-- notes-through: <sha> -->` marker naming the commit the release branch
+was cut from, where the notes were rendered; the release commit and PR body
+name the section. The marker rides in the file rather than the commit message
+because a squash merge from some clients drops the commit body. The publish
+passes `--github.releaseNotes` a command that prints the section without its
+marker (`tools/changelog/src/extract.ts`), so the GitHub release body is the
+section as merged. To change the notes, edit the section on the release branch
+before merging, leaving the marker line in place.
 
 #### Correcting published notes
 
@@ -751,14 +756,18 @@ too. Without `releaseVersion`, the links are left out.
 
 A commit that lands on `main` after the bump rendered the notes and before
 the release PR merges would ship in the tarball without appearing in any
-notes. `tools/release/src/checks/check-notes-through.ts` fails when
-`<Notes-Through>..<tip>` holds a commit the notes would list: one in the
+notes. `tools/release/src/checks/check-notes-through.ts` reads the sha from
+the version's section marker at the commit being checked and fails when
+`<sha>..<tip>` holds a commit the notes would list: one in the
 notes' path (`gitRawCommitsOpts.path`), of a listed type, breaking, a git
 revert or carrying a `release-as:` line, and not skipped as an unconsumed
 catalog change. Scopes are not consulted, since the notes list a foreign-scope
 commit too, in `Also touched this package`. A test, chore or CI commit that is
-none of those never trips it, and since it reads only commits, hand edits to
-the section never do either. It runs twice:
+none of those never trips it, and since `CHANGELOG.md` is outside the notes'
+path, hand edits to the section never do either. The commit that wrote the
+marker line, found by `git log -S`, is left out of the range, so a release
+commit with a listed header (a squash title, say) does not trip it. It runs
+twice:
 
 - On release PRs (the `release` label), as the last step of
   `build_and_test / run`, against the base branch's tip
@@ -766,7 +775,10 @@ the section never do either. It runs twice:
 - In the publish driver, against the tagged commit, before anything is
   published.
 
-A stable release commit without the trailer fails it. On a release PR, the
+A section bumped before the marker existed has none; the check then falls
+back to the newest commit that changed `CHANGELOG.md` and carries a
+`Notes-Through: <sha>` trailer, the form those bumps wrote into the release
+commit. A stable section with neither fails it. On a release PR, the
 remedy is to close the PR, delete its branch and run the bump again, which
 renders the notes through the new tip; carry over any hand edits to the
 section.

@@ -2,6 +2,7 @@
 // (check-notes-through.ts) and the publish driver's backstop.
 import { execFileSync } from 'node:child_process';
 
+import { findSection, notesThroughMarker } from '@tools/changelog';
 import releaseItConfig from '@tools/release-config';
 import { messageOf } from '@tools/shared/errors.ts';
 import { createCatalogCommitSkip } from '@tools/release-config/catalog-commits.ts';
@@ -52,66 +53,132 @@ function logCommits(
     });
 }
 
+/** Where the notes' sha came from and the commit that put it there, or why neither was found. */
+type NotesSource =
+  | { source: 'marker' | 'trailer'; hash: string; sha: string }
+  | { source: 'none'; problem: string };
+
+/** `version`'s section in the package's CHANGELOG.md at `at`, or `undefined` when the file or section is missing. */
+function sectionAt(cwd: string, at: string, version: string) {
+  let text: string;
+
+  try {
+    text = git(cwd, ['show', `${at}:./CHANGELOG.md`]);
+  } catch {
+    // no CHANGELOG.md at `at`
+    return undefined;
+  }
+
+  return findSection(text, version);
+}
+
+/** The newest commit in `range` that added or changed the marker line naming `sha`. */
+function markerCommit(
+  cwd: string,
+  range: string,
+  sha: string,
+): string | undefined {
+  const hash = git(cwd, [
+    'log',
+    '-1',
+    '--format=%H',
+    '-S',
+    notesThroughMarker(sha),
+    range,
+    '--',
+    'CHANGELOG.md',
+  ]).trim();
+
+  return hash === '' ? undefined : hash;
+}
+
+/** The newest commit in `range` that changed CHANGELOG.md and carries a `Notes-Through:` trailer. */
+function trailerSource(cwd: string, range: string): NotesSource | undefined {
+  return logCommits(cwd, range, ['CHANGELOG.md']).flatMap(
+    ({ hash, message }): NotesSource[] => {
+      const sha = parseNotesThrough(message);
+
+      return sha === undefined ? [] : [{ source: 'trailer', hash, sha }];
+    },
+  )[0];
+}
+
+function notesSource(options: {
+  cwd: string;
+  version: string;
+  at: string;
+  trailerRange: string;
+}): NotesSource {
+  const { cwd, version, at, trailerRange } = options;
+  const sha = sectionAt(cwd, at, version)?.notesThrough;
+
+  if (sha === undefined) {
+    return (
+      trailerSource(cwd, trailerRange) ?? {
+        source: 'none',
+        problem: `CHANGELOG.md at ${at} has no ${version} section with a notes-through marker, and no commit in ${trailerRange} that changed it carries a Notes-Through trailer`,
+      }
+    );
+  }
+
+  const hash = markerCommit(cwd, `${sha}..${at}`, sha);
+
+  return hash === undefined
+    ? {
+        source: 'none',
+        problem: `no commit in ${sha}..${at} wrote the ${version} section's notes-through marker`,
+      }
+    : { source: 'marker', hash, sha };
+}
+
 /**
- * Checks one package. `cwd` is its directory; `trailerRange` is the revision
- * range searched, newest first, for the commit that changed its CHANGELOG.md
- * and carries a `Notes-Through:` trailer; `tip` is the range end the notes
- * must cover. A commit in `<Notes-Through>..<tip>` the notes would list,
- * other than the trailer commit itself, makes it stale.
+ * Checks one package's `version`. `cwd` is its directory. The sha the notes
+ * were generated at comes from the marker opening the version's section in
+ * CHANGELOG.md at `at`; a section without one falls back to the newest commit
+ * in `trailerRange` that changed CHANGELOG.md and carries a `Notes-Through:`
+ * trailer. `tip` is the range end the notes must cover. A commit in
+ * `<sha>..<tip>` the notes would list, other than the one that wrote the
+ * marker or carries the trailer, makes it stale.
  */
 export function checkNotesThrough(options: {
   packageName: string;
   cwd: string;
+  version: string;
+  at: string;
   trailerRange: string;
   tip: string;
 }): NotesThroughResult {
-  const { packageName, cwd, trailerRange, tip } = options;
+  const { packageName, cwd, tip } = options;
+  const found = notesSource(options);
 
-  const trailer = logCommits(cwd, trailerRange, ['CHANGELOG.md']).flatMap(
-    ({ hash, message }) => {
-      const sha = parseNotesThrough(message);
-
-      return sha === undefined ? [] : [{ hash, sha }];
-    },
-  )[0];
-
-  if (trailer === undefined) {
-    return {
-      packageName,
-      stale: [],
-      problem: `no commit in ${trailerRange} that changed CHANGELOG.md carries a Notes-Through trailer`,
-    };
+  if (found.source === 'none') {
+    return { packageName, stale: [], problem: found.problem };
   }
 
+  const { source, hash: notesCommit, sha: notesThrough } = found;
+  const verdict = { packageName, source, notesCommit, notesThrough };
   const skip = createCatalogCommitSkip(cwd);
   let logged: LoggedCommit[];
 
   try {
-    logged = logCommits(cwd, `${trailer.sha}..${tip}`, NOTES_PATHS);
+    logged = logCommits(cwd, `${notesThrough}..${tip}`, NOTES_PATHS);
   } catch (error) {
     return {
-      packageName,
-      trailerCommit: trailer.hash,
-      notesThrough: trailer.sha,
+      ...verdict,
       stale: [],
-      problem: `cannot read ${trailer.sha}..${tip}: ${messageOf(error)}`,
+      problem: `cannot read ${notesThrough}..${tip}: ${messageOf(error)}`,
     };
   }
 
   const stale: StaleCommit[] = logged.flatMap(({ hash, message }) =>
-    hash !== trailer.hash &&
+    hash !== notesCommit &&
     isListedMessage(message, LISTED_TYPES) &&
     !skip({ hash })
       ? [{ hash, subject: message.split('\n', 1)[0] ?? '' }]
       : [],
   );
 
-  return {
-    packageName,
-    trailerCommit: trailer.hash,
-    notesThrough: trailer.sha,
-    stale,
-  };
+  return { ...verdict, stale };
 }
 
 function versionAt(root: string, rev: string, dir: string): string | undefined {
