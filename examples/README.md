@@ -71,7 +71,7 @@ The home page's live example: its three feature cards, paged through one state a
 - A `redirectTo` that sends an unknown `cardId` to the first card
 - **Two ways to run it.** `src/tour.ts` holds the elements and the state. `src/main.ts` runs them as a page of their own. `src/embed.ts` exports `mountTour(container, { prefix })`, which runs them inside a host page and returns a function that removes the app and stops its router listening
 - **One hash location for both:** `src/replace-aware-hash-location.ts` does two jobs: it replaces history entries when a transition asks, and, given a prefix, it shares the fragment with the page around the app. It honours `{ location: 'replace' }`, which core's hash location pushes, so the pager moves in place. Its `replace` option picks how: `location.replace` for the standalone page, `history.replaceState` plus a dispatched `hashchange` inside a host page, which keeps the host's `history.state`
-- **A fragment shared with the host page:** with a `prefix`, the location owns only the fragments that start `#<prefix>/`, so `#see-it-run/views` is a state and `#see-it-run` stays the page's own anchor. `src/state-links.ts` scrolls the host's section into view when a link outside it names a state
+- **A fragment shared with the host page:** with a `prefix`, the location owns only the fragments that start `#<prefix>/`, so `#see-it-run/views` is a state and `#see-it-run` stays the page's own anchor. `src/state-links.ts` is the host's side of that: a link outside the section that names a state scrolls the section into view, and one inside it moves the app in place, replacing the history entry as the pager does
 
 ### hellosolarsystem
 

@@ -153,9 +153,10 @@ test.describe('home page tour', () => {
     await expect(section(page)).toHaveCSS('outline-style', 'solid');
   });
 
-  test('moves from links inside the section without scrolling the page', async ({
+  test('moves from links inside the section in place: no scroll, no focus move, no history entry', async ({
     page,
   }) => {
+    await page.goto('/introduction');
     await page.goto('/#see-it-run');
     await hydrated(page);
     await expectCard(page, 'States', '/#see-it-run');
@@ -163,17 +164,79 @@ test.describe('home page tour', () => {
     const top = await scrollTop(page);
     const before = await entries(page);
 
+    const example = section(page).getByRole('link', {
+      name: '#see-it-run/views',
+      exact: true,
+    });
+
     await chip(page, 'resolves').click();
     await expectCard(page, 'Resolves', '/#see-it-run/resolves');
+    await expect(status(page)).toHaveText('The app shows the Resolves card.');
 
-    await section(page)
-      .getByRole('link', { name: '#see-it-run/views', exact: true })
-      .click();
+    await example.click();
     await expectCard(page, 'Views', '/#see-it-run/views');
+    await expect(example).toBeFocused();
 
-    // Links push, as any fragment link does.
-    expect(await entries(page)).toBe(before + 2);
+    await chip(page, 'states').focus();
+    await page.keyboard.press('Enter');
+    await expectCard(page, 'States', '/#see-it-run/states');
+    await expect(chip(page, 'states')).toBeFocused();
+
+    // Each link took over the entry the page was on, as the pager does.
+    expect(await entries(page)).toBe(before);
     expect(await scrollTop(page)).toBe(top);
+
+    // So Back leaves the page, not the card.
+    await page.goBack();
+    await expect(page).toHaveURL('/introduction');
+  });
+
+  test('moves from a link inside the section before the app has loaded', async ({
+    page,
+  }) => {
+    // The tour is its own chunk; held back, the page is the one a slow connection shows.
+    let release = () => {};
+
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+
+    let asked = 0;
+
+    await page.route(/\/embed\.[^/]*\.js$/, async (route) => {
+      asked += 1;
+      await held;
+      await route.continue();
+    });
+    await page.goto('/#see-it-run');
+    await hydrated(page);
+    await expect.poll(() => asked).toBe(1);
+
+    const before = await entries(page);
+
+    await chip(page, 'views').click();
+    await expect(page).toHaveURL('/#see-it-run/views');
+    expect(await entries(page)).toBe(before);
+    await expect(card(page)).toHaveCount(0);
+
+    release();
+    await expectCard(page, 'Views', '/#see-it-run/views');
+    expect(await entries(page)).toBe(before);
+  });
+
+  test('opens a modified click on a link inside the section elsewhere', async ({
+    page,
+    context,
+  }) => {
+    await page.goto('/#see-it-run');
+    await hydrated(page);
+    await expectCard(page, 'States', '/#see-it-run');
+
+    const opened = context.waitForEvent('page');
+
+    await chip(page, 'views').click({ modifiers: ['ControlOrMeta'] });
+    await expect(await opened).toHaveURL('/#see-it-run/views');
+    await expectCard(page, 'States', '/#see-it-run');
   });
 
   test('pages in place: the address bar follows and history does not grow', async ({
@@ -222,10 +285,12 @@ test.describe('home page tour', () => {
     await section(page).scrollIntoViewIfNeeded();
     await expect(card(page)).toHaveText('States');
 
-    // anchor → state → anchor
+    // anchor → state → anchor; the state is a link from outside the section, which adds an entry.
     await permalink(page).click();
     await expectCard(page, 'States', '/#see-it-run');
-    await chip(page, 'views').click();
+    await page
+      .getByRole('link', { name: 'Open views in the app below' })
+      .click();
     await expectCard(page, 'Views', '/#see-it-run/views');
     await permalink(page).click();
     await expectCard(page, 'Views', '/#see-it-run');
