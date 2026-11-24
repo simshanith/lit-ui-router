@@ -1,4 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+import { expect, test } from './fixtures.ts';
 
 // A browser smoke of the deployed docs site. The worker's HTTP contract
 // (statuses, redirects, noindex, shell aliasing, 404-page policy) lives in

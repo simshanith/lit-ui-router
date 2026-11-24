@@ -1,4 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+import { expect, test } from './fixtures.ts';
 
 // The home page runs the features tour inside the page, on a fragment it shares with the page's anchors:
 // `#see-it-run` is the section, `#see-it-run/views` the section showing a card.
