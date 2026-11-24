@@ -6,7 +6,7 @@ type: tutorial
 
 # Hello Galaxy
 
-Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces **nested states** and **nested ui-views**. We'll zoom out to the Milky Way and build a star catalog — ten real stars with spectral class, constellation, distance, and magnitude — in a master-detail layout where the list stays visible. And since we're out here anyway, a sibling state renders a 3D astronaut.
+Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces **nested states** and **nested ui-views**. We'll zoom out to the Milky Way and build a star catalog — ten real stars with spectral class, constellation, distance, and magnitude — in a list/detail layout where the list stays visible. And since we're out here anyway, a sibling state renders a 3D astronaut.
 
 ## Live Demo
 
@@ -23,7 +23,7 @@ npx tiged simshanith/lit-ui-router/examples/hellogalaxy my-app
 A three-level state tree:
 
 - `galaxy` — a parent shell with section navigation and its own nested `<ui-view>`
-- `galaxy.stars` — a master-detail star list; the catalog loads via an async resolve
+- `galaxy.stars` — a list/detail star list; the catalog loads via an async resolve
 - `galaxy.stars.star` — a detail panel for the selected star, at `/:starId`, rendered in a second nested `<ui-view>`
 - `galaxy.astronaut` — a sibling of `galaxy.stars` that renders the Smithsonian's 3D scan of Neil Armstrong's spacesuit with [`@google/model-viewer`](https://modelviewer.dev/)
 
@@ -263,7 +263,7 @@ Like Hello Solar System's `:planetId`, the `:starId` parameter is a string slug 
 
 ## A Sibling State: the Astronaut
 
-Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of `galaxy.stars`: activating it swaps the entire stars UI out of the shell's `<ui-view>` and renders a 3D model instead — the Smithsonian's high-resolution scan of Neil Armstrong's Apollo 11 spacesuit, displayed with the `<model-viewer>` web component:
+Nested views aren't just for list/detail layouts. `galaxy.astronaut` is a _sibling_ of `galaxy.stars`: activating it swaps the entire stars UI out of the shell's `<ui-view>` and renders a 3D model instead — the Smithsonian's high-resolution scan of Neil Armstrong's Apollo 11 spacesuit, displayed with the `<model-viewer>` web component:
 
 ```typescript
 @customElement('astronaut-detail')

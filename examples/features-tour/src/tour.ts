@@ -43,7 +43,10 @@ const CARDS = [
     icon: new URL('./icons/lit-standards.svg', import.meta.url).href,
     lead: 'Each parent component can hold a ui-view for its children, keeping the outer layout mounted while inner states swap.',
     links: [
-      ['Shells, master/detail, and tabs', `${DOCS}/tutorial/hellogalaxy`],
+      [
+        'Nested views (tutorial)',
+        `${DOCS}/tutorial/hellogalaxy#the-parent-shell`,
+      ],
       ['Named views', `${DOCS}/guides/named-views`],
       ['Fallback content', `${DOCS}/guides/view-fallback-content`],
     ],
@@ -55,7 +58,7 @@ const CARDS = [
     lead: "By default, a transition waits for a state's resolves before activating it, so the component renders with its data ready instead of starting empty.",
     links: [
       [
-        'Dependent and inherited resolves',
+        'Inherited resolves (tutorial)',
         `${DOCS}/tutorial/hellogalaxy#resolve-inheritance`,
       ],
       ['Component inputs', `${DOCS}/guides/routed-components`],

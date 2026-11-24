@@ -43,7 +43,7 @@ client deployed across every point on the server-support spectrum.
   `name@state`, relative `^` anchors and absolute `!` paths
 - [View Fallback Content](./view-fallback-content) — what a `<ui-view>`
   renders when no routed component is active: the capture rules, the
-  master/detail idiom, and what a prerendered shell emits
+  list/detail idiom, and what a prerendered shell emits
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
 - [Links and Navigation](./links-and-navigation) — declarative links with
