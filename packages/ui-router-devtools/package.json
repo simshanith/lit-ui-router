@@ -1,6 +1,6 @@
 {
   "name": "ui-router-devtools",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Devtools for any @uirouter/core router: a transition recorder, a Lit panel, a router plugin and Performance and console reporters",
   "homepage": "https://lit-ui-router.dev/packages/ui-router-devtools",
   "bugs": {
