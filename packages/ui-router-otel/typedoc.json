@@ -1,0 +1,36 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "tsconfig": "tsconfig.src.json",
+  "out": "../../www/lit-ui-router.dev/reference/ui-router-otel",
+  "docsRoot": "../../www/lit-ui-router.dev",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "treatWarningsAsErrors": true,
+  "validation": { "notDocumented": true },
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "UIRouterPlugin": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html"
+    }
+  },
+  "sidebar": {
+    "pretty": true
+  }
+}

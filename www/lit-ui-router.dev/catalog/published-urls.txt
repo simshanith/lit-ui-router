@@ -60,6 +60,7 @@
 /packages/ui-router-navigation-location-plugin ui-router-navigation-location-plugin
 /packages/ui-router-navigation-location-plugin#reaching-past-the-router ui-router-navigation-location-plugin
 /packages/ui-router-navigation-location-plugin#what-else-observes-navigation ui-router-navigation-location-plugin
+/packages/ui-router-otel ui-router-otel
 /packages/ui-router-registry ui-router-registry
 /packages/ui-router-server lit-ui-router-ssr,ui-router-server
 /packages/ui-router-server#delegating-states ui-router-server

@@ -38,6 +38,7 @@ import ssrSidebarItemsJson from '../reference/lit-ui-router-ssr/typedoc-sidebar.
 import uiRouterDevtoolsSidebarItemsJson from '../reference/ui-router-devtools/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterEffectSidebarItemsJson from '../reference/ui-router-effect/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterMobxSidebarItemsJson from '../reference/ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
+import uiRouterOtelSidebarItemsJson from '../reference/ui-router-otel/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterRegistrySidebarItemsJson from '../reference/ui-router-registry/typedoc-sidebar.json' with { type: 'json' };
 import uiRouterSignalsSidebarItemsJson from '../reference/ui-router-signals/typedoc-sidebar.json' with { type: 'json' };
 
@@ -90,6 +91,10 @@ const uiRouterMobxSidebarItemsRaw =
   uiRouterMobxSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 // SAFETY: as for typedocSidebarItems
+const uiRouterOtelSidebarItemsRaw =
+  uiRouterOtelSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// SAFETY: as for typedocSidebarItems
 const uiRouterRegistrySidebarItemsRaw =
   uiRouterRegistrySidebarItemsJson as DefaultTheme.SidebarItem[];
 
@@ -108,6 +113,8 @@ const signalsSidebarItems = flattenGroups(signalsSidebarItemsRaw);
 const uiRouterEffectSidebarItems = flattenGroups(uiRouterEffectSidebarItemsRaw);
 
 const uiRouterMobxSidebarItems = flattenGroups(uiRouterMobxSidebarItemsRaw);
+
+const uiRouterOtelSidebarItems = flattenGroups(uiRouterOtelSidebarItemsRaw);
 
 const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
@@ -172,6 +179,7 @@ const REFERENCE_ITEMS: Record<ReferenceLink, DefaultTheme.SidebarItem[]> = {
   '/reference/lit-ui-router-ssr/': ssrSidebarItems,
   '/reference/ui-router-registry/': uiRouterRegistrySidebarItems,
   '/reference/ui-router-devtools/': uiRouterDevtoolsSidebarItems,
+  '/reference/ui-router-otel/': uiRouterOtelSidebarItems,
 };
 
 const referenceItems = new Map<string, DefaultTheme.SidebarItem[]>(

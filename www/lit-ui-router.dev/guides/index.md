@@ -100,5 +100,5 @@ choices to the pages below.
 
 The [companion packages](/packages/) — Effect, MobX and Signals bindings, the
 Navigation API location plugin, typed state names, server-side routing
-verdicts, static prerendering, development tooling and ESLint rules — are optional and
+verdicts, static prerendering, development tooling, ESLint rules and OpenTelemetry spans — are optional and
 independently versioned, each with its own guide and API reference.

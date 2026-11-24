@@ -27,6 +27,7 @@ import type {
 // Every target runtime has it; declared here so the module compiles without DOM or node types.
 declare const performance: { readonly timeOrigin: number; now(): number };
 
+/** What reaches a span, and which transitions are reported; `OtelPluginOptions` extends it. */
 export interface ReportOptions {
   /**
    * What reaches a span, in the devtools export's shape: only the params `params` lists (`'all'` for every one)

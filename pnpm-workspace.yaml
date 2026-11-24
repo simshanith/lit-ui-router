@@ -166,6 +166,7 @@ catalogs:
   oxc-compat:
     '@oxc-project/runtime-floor': npm:@oxc-project/runtime@0.50.0
   peerFloor:
+    '@opentelemetry/api-floor': npm:@opentelemetry/api@1.9.0
     '@uirouter/core-floor': npm:@uirouter/core@6.0.8
     effect-floor: npm:effect@3.22.0
     hono-floor: npm:hono@4.0.0
@@ -195,6 +196,7 @@ catalogs:
     lit: ^3.0.0
     valibot: ^1.0.0
   publishedPeer:
+    '@opentelemetry/api': ^1.9.0
     '@uirouter/core': ^6.0.8
     effect: '^3.22.0 || ^4.0.2'
     eslint: '^9.0.0 || ^10.0.0'

@@ -129,6 +129,7 @@ const PACKAGE_DIRS = [
   'ui-router-devtools',
   'ui-router-effect',
   'ui-router-mobx',
+  'ui-router-otel',
   'ui-router-registry',
   'ui-router-server',
   'ui-router-signals',

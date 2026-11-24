@@ -1,6 +1,6 @@
 ---
 title: Packages
-description: Every package in the lit-ui-router family, grouped by role — the renderer, Effect, MobX and Signals bindings, the Navigation API location plugin, server-side routing verdicts and static prerendering, typed state names and params, development tooling with a transition recorder and panel, and directive-aware ESLint rules — with each package's facets, entry points, API reference and releases
+description: Every package in the lit-ui-router family, grouped by role — the renderer, Effect, MobX and Signals bindings, the Navigation API location plugin, server-side routing verdicts and static prerendering, typed state names and params, development tooling with a transition recorder and panel, directive-aware ESLint rules, and OpenTelemetry spans for transitions — with each package's facets, entry points, API reference and releases
 type: index
 ---
 
