@@ -11,8 +11,14 @@ npm run build          # vite build, which runs prerender.ts after the client bu
 npm run build:artifact # vite build --mode artifact + node artifact.ts
 npm run preview
 npm run typecheck
+npm run typecheck:tsrs # the same program on tsrs
 npm run lint           # oxlint, then eslint
 ```
+
+`typecheck:tsrs` is a trial of [`tsrs`](https://npmx.dev/package/tsrs), the Rust port of the
+TypeScript 7 compiler, pinned to an exact prerelease. It checks the same `tsconfig.json` as
+`tsc --noEmit`, and the ship `app` step runs both, so a diagnostic one reports and the other does not
+stops the run.
 
 Lint is the split `eslint-plugin-lit-ui-router`'s README recommends for running both linters:
 `.oxlintrc.json` loads the published plugin as an oxlint JS plugin and owns its six rules, and

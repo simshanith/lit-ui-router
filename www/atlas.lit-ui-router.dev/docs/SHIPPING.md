@@ -41,7 +41,7 @@ are done by hand between the steps.
    ([README.md](../README.md), "Build and host"). A new plate needs the picture pass first
    (build → app → `thumbs.mjs` → build → app; `build.mjs` refuses a manifest whose card has no
    picture).
-2. **`app`** typechecks and runs the vite build and prerender. The build log carries
+2. **`app`** typechecks on `tsc` and on `tsrs` ([app/README.md](../app/README.md)) and runs the vite build and prerender. The build log carries
    `prerendered N pages + 1 × 404.html · M redirects` and
    `scoped router at construction: N/N renders match router.globals`; the step stops on a
    scoped-router mismatch, and on a page count below the last run's, recorded in
