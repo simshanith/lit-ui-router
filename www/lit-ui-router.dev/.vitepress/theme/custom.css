@@ -474,3 +474,26 @@ html.dark {
   padding: 12px;
 }
 /* === end diagrams === */
+
+/* A feature card's link to its card in the app below it, on a line of its own under the details. */
+.VPFeature .details a {
+  display: block;
+  inline-size: fit-content;
+  margin-block-start: var(--site-space-2);
+  color: var(--site-color-interaction);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  transition: color var(--site-duration-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .VPFeature .details a:hover {
+    color: var(--site-color-interaction-hover);
+  }
+}
+
+.VPFeature .details a:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}

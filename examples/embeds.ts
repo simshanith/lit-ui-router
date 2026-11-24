@@ -39,10 +39,10 @@ export const EXAMPLES = {
   'features-tour': {
     title: 'Features Tour',
     summary:
-      'The home page tour: one state with a `cardId` param, re-entered as its pager steps through the feature cards',
+      "The home page tour: one state with a `cardId` param, re-entered as its pager steps through the feature cards. Runs on its own, or inside a host page on a fragment shared with the page's anchors",
     // Reserves the tallest card at a phone's column (546px at 320-375), so the live page never scrolls inside; wider columns get slack below.
     height: '560px',
-    file: 'src/main.ts',
+    file: 'src/tour.ts',
   },
   hellosolarsystem: {
     title: 'Hello Solar System',

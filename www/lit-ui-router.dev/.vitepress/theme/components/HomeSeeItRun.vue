@@ -1,12 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import {
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useTemplateRef,
+} from 'vue';
 import { withBase } from 'vitepress';
-import HomeTourFrame from './HomeTourFrame.vue';
+import { revealOnStateLinks } from 'examples/features-tour/state-links';
+import HomeTour from './HomeTour.vue';
 import StateViewDiagram from './StateViewDiagram.vue';
-import { EXAMPLES, staticSrc } from './examples';
-import { cardForHash, INITIAL_CARD, type CardId } from './features-tour-states';
+import {
+  CARD_IDS,
+  cardForHash,
+  hashForCard,
+  INITIAL_CARD,
+  TOUR_LANDMARK,
+  type CardId,
+} from './features-tour-states';
 
-const example = EXAMPLES['features-tour'];
+const section = useTemplateRef('section');
+
+/** The card the intro's one example link opens. */
+const EXAMPLE_CARD: CardId = 'views';
+
+// While the site's root is still mounting, this is the page the document opened on; after that, a page arrived at by a followed link.
+const followed = getCurrentInstance()?.root.isMounted ?? false;
 
 const card = ref<CardId>(INITIAL_CARD);
 
@@ -14,36 +33,92 @@ const from = ref<CardId>();
 
 const entries = ref(0);
 
-// The frame reports its hash on load and on every hashchange; a new card is a re-entry.
-function onHash(hash: string) {
-  const next = cardForHash(hash);
+// Empty until the card changes after load: a status that changes while the page opens is read out as news.
+const announcement = ref('');
 
-  if (!next || next === card.value) return;
+let entered = false;
+
+// The app's router is the one source of the card; the fragment is only its address.
+function onCard({ id, title }: { id: string; title: string }) {
+  const next = CARD_IDS.find((known) => known === id);
+
+  if (!next) return;
+
+  if (!entered) {
+    // The card the app opens on is where the diagram starts, not a re-entry.
+    entered = true;
+    card.value = next;
+
+    return;
+  }
+
+  if (next === card.value) return;
 
   from.value = card.value;
   card.value = next;
   entries.value += 1;
+  announcement.value = `The app shows the ${title} card.`;
 }
+
+let stopRevealing: (() => void) | undefined;
+
+onMounted(() => {
+  // A first guess from the fragment, so the diagram need not wait for the app; the router's own answer replaces it.
+  card.value = cardForHash(location.hash) ?? INITIAL_CARD;
+  stopRevealing = revealOnStateLinks(section.value!, TOUR_LANDMARK, {
+    followed,
+  });
+});
+
+onBeforeUnmount(() => stopRevealing?.());
 </script>
 
 <template>
-  <section class="see-it-run" aria-labelledby="see-it-run-title">
+  <!-- tabindex: a followed state link moves focus here, as a followed anchor does. -->
+  <section
+    :id="TOUR_LANDMARK"
+    ref="section"
+    class="see-it-run"
+    aria-labelledby="see-it-run-title"
+    tabindex="-1"
+  >
     <div class="container">
-      <h2 id="see-it-run-title" class="title">See it run</h2>
+      <!-- The permalink sits beside the heading, not in it, so the section's name stays "See it run". -->
+      <div class="heading">
+        <h2 id="see-it-run-title" class="title">See it run</h2>
+        <a
+          class="permalink"
+          :href="`#${TOUR_LANDMARK}`"
+          aria-label="Permalink to “See it run”"
+          >#</a
+        >
+      </div>
       <p class="lede">
-        The feature cards above as a small lit-ui-router app. Each card is the
-        same state with a new parameter, and the diagram follows the router as
-        it re-enters the state.
+        The feature cards above run here as a small lit-ui-router app. Each card
+        re-enters one state with a new parameter, and the diagram follows each
+        transition.
+      </p>
+      <p class="lede">
+        The app shares this page's URL fragment with the page's own anchors, so
+        a link can open a card directly, as the links on the cards above do. For
+        example,
+        <a :href="hashForCard(EXAMPLE_CARD)"
+          ><code>{{ hashForCard(EXAMPLE_CARD) }}</code></a
+        >
+        opens Views.
       </p>
       <div class="panels">
         <div class="flames" aria-hidden="true" />
         <div class="panel app-panel">
           <h3 class="panel-title">The app</h3>
-          <HomeTourFrame
+          <!-- Announces the card after a link or the pager changes it; the app's own view is not a live region. -->
+          <p class="visually-hidden" role="status">{{ announcement }}</p>
+          <!-- Level 4: the card's heading sits under this panel's <h3>. -->
+          <HomeTour
             class="embed"
-            :src="staticSrc('features-tour')"
-            :title="`${example.title} example`"
-            @hash="onHash"
+            :prefix="TOUR_LANDMARK"
+            :heading-level="4"
+            @card="onCard"
           />
         </div>
         <div class="panel diagram-panel">
@@ -65,6 +140,21 @@ function onHash(hash: string) {
 .see-it-run {
   padding-inline: 1.5rem;
   margin-block-start: 3rem;
+  /* Clears the fixed nav when a link scrolls here, as the docs headings do. */
+  scroll-margin-top: calc(
+    var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 1.5rem
+  );
+}
+
+/* Focus lands here only from a followed link: ringed when that link was followed by keyboard, not by pointer. */
+.see-it-run:focus {
+  outline: none;
+}
+
+.see-it-run:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
 }
 
 @media (min-width: 40rem) {
@@ -93,6 +183,70 @@ function onHash(hash: string) {
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--site-color-text);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--site-space-2);
+}
+
+.permalink {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--site-color-interaction);
+  opacity: 0;
+  transition: opacity var(--site-duration-base) var(--ease-out);
+}
+
+.permalink:focus-visible {
+  opacity: 1;
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .heading:hover .permalink {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .permalink {
+    opacity: 1;
+  }
+}
+
+.lede a {
+  color: var(--site-color-interaction);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  transition: color var(--site-duration-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lede a:hover {
+    color: var(--site-color-interaction-hover);
+  }
+}
+
+.lede a:focus-visible {
+  outline: var(--site-focus-ring-width) solid var(--site-color-interaction);
+  outline-offset: var(--site-focus-ring-offset);
+  border-radius: var(--site-radius-control-inner);
+}
+
+/* The link's colour, not the code colour, in every state; the fragment stays on one line. */
+.lede a > code {
+  color: inherit;
+  white-space: nowrap;
+}
+
+.lede code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875em;
 }
 
 .lede {
@@ -231,10 +385,32 @@ function onHash(hash: string) {
   color: var(--site-color-text);
 }
 
-/* The frame sizes itself to the tour once it loads; this is its height until then. */
+.app-panel {
+  container-type: inline-size;
+}
+
+/* The tour's height until it mounts: its tallest card at each width, measured in three engines. The lead wraps to one more line at each step down. */
 .embed {
-  --tour-frame-height: 426px;
+  --tour-height: 469px;
   margin-block-start: var(--site-space-3);
+}
+
+@container (inline-size >= 311px) {
+  .embed {
+    --tour-height: 445px;
+  }
+}
+
+@container (inline-size >= 367px) {
+  .embed {
+    --tour-height: 421px;
+  }
+}
+
+@container (inline-size >= 547px) {
+  .embed {
+    --tour-height: 397px;
+  }
 }
 
 /* The drawing sits under its heading and the transition log closes the tile. */

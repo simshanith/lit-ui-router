@@ -189,49 +189,6 @@ test.describe('docs site', () => {
     );
   });
 
-  test("pages the home page tour without adding to the docs page's history", async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await hydrated(page);
-
-    // An iframe has no role; its title is the handle.
-    const frame = page.locator('iframe[title="Features Tour example"]');
-
-    // The frame is loading="lazy"; scrolling it into view loads it before its contents are queried.
-    await frame.scrollIntoViewIfNeeded();
-
-    const tour = frame.contentFrame();
-    const pager = tour.getByRole('navigation', { name: 'Feature cards' });
-    const card = tour.getByRole('article');
-
-    const diagram = page
-      .getByRole('figure')
-      .filter({ hasText: 'The features tour registers one state' });
-
-    await expect(card.getByRole('heading', { name: 'States' })).toBeVisible();
-
-    const entries = await page.evaluate(() => history.length);
-
-    for (const [control, title] of [
-      ['Next card', 'Views'],
-      ['Previous card', 'States'],
-      ['Resolves, card 3 of 3', 'Resolves'],
-    ]) {
-      await pager.getByRole('link', { name: control }).click();
-      await expect(card.getByRole('heading', { name: title })).toBeVisible();
-      await expect(
-        pager.getByRole('link', { name: new RegExp(`^${title}, card`) }),
-      ).toHaveAttribute('aria-current', 'page');
-      // The diagram follows the frame's hashchange, which a replaceState would not fire.
-      await expect(diagram).toContainText(
-        `The active value is ${title.toLowerCase()}.`,
-      );
-    }
-
-    expect(await page.evaluate(() => history.length)).toBe(entries);
-  });
-
   test('replaces the history entry as the features tour moves, opened on its own', async ({
     page,
   }) => {

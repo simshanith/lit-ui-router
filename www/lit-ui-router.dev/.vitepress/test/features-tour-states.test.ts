@@ -7,12 +7,14 @@ import {
   CARD_IDS,
   CARD_STATE,
   cardForHash,
+  hashForCard,
   INITIAL_CARD,
+  TOUR_LANDMARK,
 } from '../theme/components/features-tour-states.ts';
 
-// main.ts starts a router on import, so its literals are read as text.
+// tour.ts defines a custom element on import, so its literals are read as text.
 const source = readFileSync(
-  join(import.meta.dirname, '../../../../examples/features-tour/src/main.ts'),
+  join(import.meta.dirname, '../../../../examples/features-tour/src/tour.ts'),
   'utf8',
 );
 
@@ -40,15 +42,27 @@ describe('home page diagram state', () => {
     assert.match(
       source,
       new RegExp(
-        `rules\\.initial\\(\\{\\s+state: '${CARD_STATE.name}',\\s+params: \\{ ${CARD_STATE.param}: '${INITIAL_CARD}' \\},`,
+        `INITIAL_CARD = \\{\\s+state: '${CARD_STATE.name}',\\s+params: \\{ ${CARD_STATE.param}: '${INITIAL_CARD}' \\},`,
       ),
     );
   });
 
-  it('reads the active card from the embed hash', () => {
-    assert.equal(cardForHash('#/views'), 'views');
-    assert.equal(cardForHash('#/resolves'), 'resolves');
-    assert.equal(cardForHash('#/nope'), undefined);
+  it("links each card by the section's id and the card's URL", () => {
+    for (const id of CARD_IDS) {
+      assert.equal(
+        hashForCard(id),
+        `#${TOUR_LANDMARK}${CARD_STATE.url.replace(`:${CARD_STATE.param}`, id)}`,
+      );
+      assert.equal(cardForHash(hashForCard(id)), id);
+    }
+  });
+
+  it("reads the active card from the page's hash, and none from its own anchors", () => {
+    assert.equal(cardForHash('#see-it-run/views'), 'views');
+    assert.equal(cardForHash('#see-it-run/resolves'), 'resolves');
+    assert.equal(cardForHash('#see-it-run/nope'), undefined);
+    assert.equal(cardForHash('#see-it-run'), undefined);
+    assert.equal(cardForHash('#/views'), undefined);
     assert.equal(cardForHash(''), undefined);
   });
 });
