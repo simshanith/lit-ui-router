@@ -194,8 +194,9 @@ test.describe('home page listing', () => {
       await expect(section(page).getByRole('heading', { level: 3 })).toHaveText(
         LABELS.map((label, index) => `${index + 1} ${label}`),
       );
-      // Tabs that cannot choose are not offered.
+      // Controls that cannot choose are not offered: no tabs, and no toggle in a card.
       await expect(section(page).getByRole('tab')).toHaveCount(0);
+      await expect(toggle(page, 'Views')).toHaveCount(0);
       expect(await pageOverflow(page)).toBe(0);
 
       await context.close();

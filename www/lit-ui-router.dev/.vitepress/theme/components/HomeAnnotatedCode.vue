@@ -40,6 +40,12 @@ const code = useTemplateRef('code');
 /** One explanation at a time under a tab list, where the side rail does not fit; the stylesheet decides, and `update` reads its answer. */
 const narrow = ref(false);
 
+/** False in the prerendered page and until this one mounts: a card's toggle is offered only once it can choose. */
+const mounted = ref(false);
+
+/** A card's heading holds a toggle beside the code; under the tabs the tab is the control. */
+const toggles = computed(() => mounted.value && !narrow.value);
+
 /** The region a click or a tab chose; none until one does. */
 const selected = ref<number>();
 
@@ -295,6 +301,7 @@ onMounted(() => {
   for (const element of [root.value, listing.value, ...(notes.value ?? [])])
     if (element) observer.observe(element);
   document.fonts.addEventListener('loadingdone', schedule);
+  mounted.value = true;
   update();
   mark();
 });
@@ -390,12 +397,11 @@ onBeforeUnmount(() => {
           >
             <div class="note-head">
               <h3 class="note-title">
-                <!-- A toggle beside the code; under the tabs the tab is the control, and this is the panel's heading. -->
                 <component
-                  :is="narrow ? 'span' : 'button'"
+                  :is="toggles ? 'button' : 'span'"
                   class="note-toggle"
                   v-bind="
-                    narrow
+                    !toggles
                       ? {}
                       : {
                           type: 'button',
@@ -404,7 +410,7 @@ onBeforeUnmount(() => {
                         }
                   "
                   v-on="
-                    narrow
+                    !toggles
                       ? {}
                       : {
                           click: () => choose(index),
