@@ -1,6 +1,6 @@
 ---
 title: View Fallback Content
-description: What <ui-view> renders when no routed component is active — the capture rules, the master/detail idiom, and prerendered shells
+description: What <ui-view> renders when no routed component is active — the capture rules, the list/detail idiom, and prerendered shells
 type: guide
 topic: views
 ---
@@ -27,7 +27,7 @@ view, and it is replaced the moment one does.
 | The active state declares no view for this view name | A parent state is active with no child yet |
 | After navigating away to a state without a view here | The previous component was torn down       |
 
-The third row is the interesting one: it is the master/detail case, and it
+The third row is the interesting one: it is the list/detail case, and it
 is the reason fallback content exists at all.
 
 Fallback content swaps in the same update as the routed content it replaces
@@ -61,7 +61,7 @@ Three consequences are worth knowing:
 The fallback set stands ahead of the render marker `<ui-view>` writes for
 its own output, so routed content and fallback content never interleave.
 
-## Master/detail
+## List/detail
 
 The idiom is a list beside a detail pane, where the detail pane is a nested
 `<ui-view>` filled by a grandchild state. Until the user picks something,

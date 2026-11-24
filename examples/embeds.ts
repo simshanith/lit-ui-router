@@ -47,7 +47,7 @@ export const EXAMPLES = {
   hellosolarsystem: {
     title: 'Hello Solar System',
     summary:
-      'Solar System tour: route parameters and async `resolve` data with a master/detail flow',
+      'Solar System tour: route parameters and async `resolve` data with a list/detail flow',
     height: '800px',
     file: 'src/main.ts',
   },
