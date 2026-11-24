@@ -5,7 +5,7 @@ import {
   type UIRouter,
 } from '@uirouter/core';
 
-import { stateUrlOf } from './state-links.ts';
+import { replaceFragment, stateUrlOf } from './state-links.ts';
 
 export interface ReplaceAwareHashLocationOptions {
   /**
@@ -18,7 +18,7 @@ export interface ReplaceAwareHashLocationOptions {
    * How a `{ location: 'replace' }` transition takes over the history entry.
    * `replaceState`, the default, keeps the entry's `history.state`, which a
    * host page's own router may use, and dispatches the `hashchange` the
-   * History API does not fire. `location.replace` lets the browser fire it and
+   * History API does not fire, as a link inside a host's landmark does. `location.replace` lets the browser fire it and
    * drops `history.state`; it suits an app that is the whole document.
    */
   replace?: 'replaceState' | 'location.replace';
@@ -77,27 +77,17 @@ export class ReplaceAwareHashLocationService extends HashLocationService {
       return;
     }
 
-    // SAFETY: core types it as the few members it reads; it is the window's own location.
-    const location = this._location as Location;
-    // SAFETY: as the location, the window's own history.
-    const history = this._history as History;
-
-    // The path and query are spelled out: a bare `#…` resolves against a <base href>, not the page's URL.
-    const target = `${location.pathname}${location.search}${hash}`;
-
     if (this.replace === 'location.replace') {
-      location.replace(target);
+      // SAFETY: core types it as the few members it reads; it is the window's own location.
+      const location = this._location as Location;
+
+      // The path and query are spelled out: a bare `#…` resolves against a <base href>, not the page's URL.
+      location.replace(`${location.pathname}${location.search}${hash}`);
 
       return;
     }
 
-    const oldURL = location.href;
-
-    history.replaceState(history.state, '', target);
-    // replaceState fires no hashchange, and a host page follows the fragment by that event.
-    window.dispatchEvent(
-      new HashChangeEvent('hashchange', { oldURL, newURL: location.href }),
-    );
+    replaceFragment(hash);
   }
 
   // The router syncs only on a fragment of its own; the page's anchors pass it by.

@@ -71,10 +71,11 @@ const reentered = computed(() => props.from !== undefined);
         <text class="url on-wash" x="44" y="129">{{ CARD_STATE.param }}</text>
       </g>
       <g role="group" :aria-label="`${CARD_STATE.param} values`">
+        <!-- vp-raw: the site's router leaves the click, so the section's own listener moves the app in place. -->
         <a
           v-for="chip in chips"
           :key="chip.id"
-          class="chip"
+          class="chip vp-raw"
           :class="{ on: chip.id === card }"
           :href="chip.href"
           :aria-current="chip.id === card ? 'true' : undefined"

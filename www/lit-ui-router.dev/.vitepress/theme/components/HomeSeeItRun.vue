@@ -102,7 +102,8 @@ onBeforeUnmount(() => stopRevealing?.());
         The app shares this page's URL fragment with the page's own anchors, so
         a link can open a card directly, as the links on the cards above do. For
         example,
-        <a :href="hashForCard(EXAMPLE_CARD)"
+        <!-- vp-raw: as the diagram's chips, left to the section's own listener. -->
+        <a class="vp-raw" :href="hashForCard(EXAMPLE_CARD)"
           ><code>{{ hashForCard(EXAMPLE_CARD) }}</code></a
         >
         opens Views.

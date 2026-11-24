@@ -1,13 +1,23 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { after as t_after, before, beforeEach, describe, it } from 'node:test';
+import {
+  after as t_after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+} from 'node:test';
 
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import { Window } from 'happy-dom';
 
-import { stateUrlOf } from 'examples/features-tour/state-links';
+import {
+  revealOnStateLinks,
+  stateUrlOf,
+} from 'examples/features-tour/state-links';
 
 describe('a fragment shared with the host page', () => {
   it('carries a state URL only behind the prefix', () => {
@@ -45,6 +55,9 @@ describe('the replace-aware hash location', () => {
       location: window.location,
       history: window.history,
       HashChangeEvent: window.HashChangeEvent,
+      Element: window.Element,
+      MouseEvent: window.MouseEvent,
+      requestAnimationFrame: window.requestAnimationFrame.bind(window),
     });
     window.addEventListener = window.addEventListener.bind(window);
     window.removeEventListener = window.removeEventListener.bind(window);
@@ -294,5 +307,138 @@ describe('the replace-aware hash location', () => {
     hashchange();
     await settled();
     assert.equal(router.globals.params.cardId, 'states');
+  });
+
+  describe('a state link inside the landmark', () => {
+    const SVG = 'http://www.w3.org/2000/svg';
+
+    let landmark: HTMLElement;
+    let stop: () => void;
+    let heard: string[];
+
+    const hear = () => heard.push(window.location.hash);
+
+    function link(href: string, parent = landmark) {
+      const anchor = document.createElement('a');
+
+      anchor.setAttribute('href', href);
+      parent.append(anchor);
+
+      return anchor;
+    }
+
+    /** Clicks `target` and reports whether the listener took the click. */
+    function click(target: Element, init: MouseEventInit = {}) {
+      const event = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        button: 0,
+        ...init,
+      });
+
+      // The browser's own navigation is not under test: a click nothing took is cancelled at the window.
+      window.addEventListener('click', swallow);
+      target.dispatchEvent(event);
+      window.removeEventListener('click', swallow);
+
+      return taken;
+    }
+
+    let taken = false;
+
+    function swallow(event: {
+      defaultPrevented: boolean;
+      preventDefault(): void;
+    }) {
+      taken = event.defaultPrevented;
+      event.preventDefault();
+    }
+
+    beforeEach(() => {
+      heard = [];
+      landmark = document.createElement('section');
+      document.body.append(landmark);
+      stop = revealOnStateLinks(landmark, 'tour');
+      window.addEventListener('hashchange', hear);
+    });
+
+    afterEach(() => {
+      stop();
+      landmark.remove();
+      window.removeEventListener('hashchange', hear);
+    });
+
+    it('takes over the history entry, keeps history.state and tells the page', () => {
+      const entries = window.history.length;
+
+      assert.equal(click(link('#tour/views')), true);
+      assert.equal(window.location.href, 'https://host.test/page#tour/views');
+      assert.equal(window.history.length, entries);
+      assert.deepEqual(window.history.state, { host: 1 });
+      assert.deepEqual(heard, ['#tour/views']);
+    });
+
+    it('takes an SVG link as it does an HTML one', () => {
+      const svg = document.createElementNS(SVG, 'svg');
+      const anchor = document.createElementNS(SVG, 'a');
+      const label = document.createElementNS(SVG, 'text');
+
+      anchor.setAttribute('href', '#tour/resolves');
+      anchor.append(label);
+      svg.append(anchor);
+      landmark.append(svg);
+
+      assert.equal(click(label), true);
+      assert.equal(window.location.hash, '#tour/resolves');
+    });
+
+    it('fires no hashchange for the fragment the page is on', () => {
+      window.history.replaceState({ host: 1 }, '', '#tour/views');
+
+      assert.equal(click(link('#tour/views')), true);
+      assert.deepEqual(heard, []);
+    });
+
+    it('leaves a click that opens elsewhere to the browser', () => {
+      assert.equal(click(link('#tour/views'), { metaKey: true }), false);
+      assert.equal(click(link('#tour/views'), { button: 1 }), false);
+
+      const targeted = link('#tour/views');
+
+      targeted.setAttribute('target', '_blank');
+      assert.equal(click(targeted), false);
+
+      const download = link('#tour/views');
+
+      download.setAttribute('download', '');
+      assert.equal(click(download), false);
+      assert.equal(window.location.hash, '');
+    });
+
+    it("leaves the page's anchors and other documents to the browser", () => {
+      assert.equal(click(link('#tour')), false);
+      assert.equal(click(link('#install')), false);
+      assert.equal(click(link('/other#tour/views')), false);
+      assert.equal(click(link('?q=1#tour/views')), false);
+      assert.equal(window.location.hash, '');
+    });
+
+    it('leaves a click something else has handled', () => {
+      const handled = link('#tour/views');
+
+      handled.addEventListener('click', (event) => event.preventDefault());
+      click(handled);
+      assert.equal(window.location.hash, '');
+      assert.deepEqual(heard, []);
+    });
+
+    it('leaves the history entry to a link outside the landmark', () => {
+      const outside = link('#tour/views', document.body);
+
+      assert.equal(click(outside), false);
+      assert.equal(window.location.hash, '');
+      outside.remove();
+    });
   });
 });
