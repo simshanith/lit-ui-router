@@ -16,8 +16,8 @@ export interface UIRouterDevtools extends LitElement {
   timeResolves: boolean;
   /** What Export scrubs unless the panel's toggles say otherwise: param keys without their values and messages kept by default. */
   redaction: Redaction;
-  /** The recorder behind the panel, for reporters that should share it. */
-  readonly recorder: Recorder | undefined;
+  /** The recorder behind the panel, for reporters that should share it. Set it, with `router`, to a recorder of that router to replay what it recorded before the panel loaded and then follow it; the panel never stops a recorder it was given. Unset, the panel records `router` itself. */
+  recorder: Recorder | undefined;
   /** The session the panel shows, live or imported, scrubbed by `redaction`, which defaults to the element's. */
   session(redaction?: Partial<Redaction>): Session | undefined;
   /** Shows `session` instead of the live router until the panel's Live button is pressed. */

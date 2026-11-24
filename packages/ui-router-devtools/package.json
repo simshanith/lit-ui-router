@@ -41,6 +41,10 @@
       "default": "./dist/define.js"
     },
     "./dist/*": "./dist/*",
+    "./lazy": {
+      "types": "./dist/lazy.d.ts",
+      "default": "./dist/lazy.js"
+    },
     "./lit-ui-router": {
       "types": "./dist/lit-ui-router.d.ts",
       "default": "./dist/lit-ui-router.js"
@@ -143,6 +147,13 @@
     },
     "./define": {
       "free": [
+        "d3-hierarchy",
+        "valibot"
+      ]
+    },
+    "./lazy": {
+      "free": [
+        "lit",
         "d3-hierarchy",
         "valibot"
       ]
