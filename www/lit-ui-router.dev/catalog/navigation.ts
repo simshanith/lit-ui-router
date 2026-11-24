@@ -272,5 +272,4 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
     ],
   },
   { text: 'Sample App', items: [sampleAppOverview, ...sampleAppMounts] },
-  { text: 'Atlas', link: 'https://atlas.lit-ui-router.dev' },
 ];

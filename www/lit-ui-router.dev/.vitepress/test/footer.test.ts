@@ -63,7 +63,7 @@ describe('the site footer links', () => {
 
     assert.deepEqual(
       shared.map(({ text }) => text),
-      ['Releases', 'How this site runs', 'Sample App', 'Atlas'],
+      ['Releases', 'How this site runs', 'Sample App'],
     );
 
     for (const { text, link, target } of shared) {
