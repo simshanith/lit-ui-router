@@ -169,10 +169,14 @@ description = "Check external URLs in READMEs, manifests, docs Markdown and the 
 usage = '''
 flag "--output <path>" help="Also write lychee's Markdown report to this file"
 '''
-# --root-dir resolves the docs pages' root-relative links, which scheme then skips.
+# --root-dir resolves the docs pages' root-relative links, which lychee.toml then skips.
+# --remap checks this repo's own blob and tree links in the checkout; its query marks
+# them for lychee.toml's `include`. The checkout path must hold no whitespace.
 run = '''
 git ls-files -- 'README.md' 'docs/*.md' 'packages/*/README.md' 'packages/*/package.json' 'www/lit-ui-router.dev/**.md' 'www/lit-ui-router.dev/catalog/footer.ts' |
-  lychee --root-dir "{{config_root}}/www/lit-ui-router.dev" ${usage_output:+--output "$usage_output"} --files-from -
+  lychee --root-dir "{{config_root}}/www/lit-ui-router.dev" \
+    --remap '^https://github\.com/simshanith/lit-ui-router/(blob|tree)/main/([^?#]+).*$ file://{{config_root}}/$2?own-repo-link' \
+    ${usage_output:+--output "$usage_output"} --files-from -
 '''
 
 [tasks.lint_workflows]
