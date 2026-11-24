@@ -156,6 +156,33 @@ test.describe('home page listing', () => {
     await expect(toggle(page, 'Views')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('carries a choice into the tabs as the page narrows, and scrolls the code to it', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await hydrated(page);
+
+    await toggle(page, 'State links').click();
+    await expect(activeRegion(page)).toContainText('uiSref');
+
+    await page.setViewportSize(PHONE);
+
+    await expect(tab(page, 'State links')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(panel(page)).toHaveAccessibleName('5 State links');
+    // The region is wider than the code beside its gutter on a phone until the code scrolls.
+    await expect
+      .poll(async () => {
+        const region = await activeRegion(page).boundingBox();
+
+        return region!.x + region!.width <= PHONE.width;
+      })
+      .toBe(true);
+    expect(await pageOverflow(page)).toBe(0);
+  });
+
   test('opens the tour card an explanation links to', async ({ page }) => {
     await page.goto('/');
     await hydrated(page);

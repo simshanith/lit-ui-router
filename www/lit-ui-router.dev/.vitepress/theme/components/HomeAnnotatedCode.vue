@@ -259,6 +259,11 @@ watch(current, (index) => {
   if (narrow.value) reveal(index);
 });
 
+// A region chosen beside the code stays chosen as the layout narrows to the tabs, so the code moves to it then.
+watch(narrow, (isNarrow) => {
+  if (isNarrow) reveal(current.value);
+});
+
 const copied = ref<'done' | 'failed'>();
 
 const copyMessage = ref('');
