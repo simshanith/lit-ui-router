@@ -444,11 +444,7 @@ onBeforeUnmount(() => {
             <span class="copy">
               <!-- Outside the button: a live region inside one is not read out. -->
               <span class="tip" role="status">{{ copyMessage }}</span>
-              <button
-                class="copy-button"
-                type="button"
-                @click="copy"
-              >
+              <button class="copy-button" type="button" @click="copy">
                 <VPIcon
                   v-show="copied !== 'done'"
                   icon="lucide:copy"
