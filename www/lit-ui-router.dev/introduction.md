@@ -154,9 +154,10 @@ app</a> uses [`@uirouter/sticky-states`](https://github.com/ui-router/sticky-sta
 its own devtools panel, which shows the state tree and each transition (see the
 [Sample App overview](./sample-app) for the
 [`@uirouter/visualizer`](https://github.com/ui-router/visualizer) query flag).
-The Hello Solar System and Hello Galaxy examples load the visualizer when
-the page url has `?visualizer`, as in
-<a href="/examples/hellogalaxy/?visualizer" target="_self">Hello Galaxy</a>.
+The Hello Solar System and Hello Galaxy examples load the
+[`ui-router-devtools`](./packages/ui-router-devtools) panel when the page url
+has `?devtools`, as in
+<a href="/examples/hellogalaxy/?devtools" target="_self">Hello Galaxy</a>.
 
 ## How these docs are organized
 

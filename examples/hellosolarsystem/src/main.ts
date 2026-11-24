@@ -454,10 +454,16 @@ router.plugin(hashLocationPlugin);
 // Logs each transition to the console.
 router.trace.enable('TRANSITION');
 
-// The state visualizer is opt-in: add ?visualizer to the page url, before the #.
-if (new URLSearchParams(location.search).has('visualizer')) {
-  void import('@uirouter/visualizer').then(({ Visualizer }) =>
-    router.plugin(Visualizer),
+// The devtools panel is opt-in: add ?devtools to the page url, before the #.
+if (new URLSearchParams(location.search).has('devtools')) {
+  void Promise.all([
+    import('ui-router-devtools/plugin'),
+    import('ui-router-devtools/lit-ui-router'),
+  ]).then(([{ DevtoolsPlugin }, { litViewLocator }]) =>
+    router.plugin(DevtoolsPlugin, {
+      timeResolves: true,
+      viewLocator: litViewLocator,
+    }),
   );
 }
 

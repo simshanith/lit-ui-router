@@ -51,19 +51,21 @@ npm is a metadata change. Upstream moved the package into its monorepo unchanged
 and the 2026 work there is build modernisation, not features. It still has about
 32,000 weekly downloads.
 
-Five examples load it, and each one carries:
+The sample apps load it, and the workspace carries for it:
 
 - a patch that makes the transition-history scroller focusable and labelled, to
   clear two axe rules (#1902);
-- a `d3-color` override for an advisory reached through `d3-interpolate =1.4.0`;
-- CSS that hides both overlays below 600px or 640px;
-- a text-colour fix, because the panels set a light background and no text colour.
+- a `d3-color` override for an advisory reached through `d3-interpolate =1.4.0`.
+
+Five examples loaded it too, each with its own copy of the patch and override,
+CSS that hid both overlays below 600px or 640px and a text-colour fix, because
+the panels set a light background and no text colour. They load
+`ui-router-devtools` instead.
 
 It also installs a body-wide `mousemove` listener, opens details only on hover,
 has no `aria` or `role` attributes of its own, injects its CSS at runtime, and
 reads core internals (`$$state()`, `PathNode.resolvables`,
-`globals.successfulTransitions`). `examples/hellosolarsystem-mobx/index.html`
-still carries the hiding CSS although it no longer loads the plugin.
+`globals.successfulTransitions`).
 
 What upstream users asked for, from the visualizer's issue tracker:
 

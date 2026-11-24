@@ -289,15 +289,21 @@ On a server or a prerendered site, the same function becomes an HTTP redirect. S
 
 ## Router Setup
 
-The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [UI-Router visualizer](https://github.com/ui-router/visualizer), a diagram of the state tree and its transitions, loaded only when the page url has `?visualizer`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?visualizer" target="_self">running example</a>.
+The router configuration is the same as Hello World, transition trace included: open the browser console to see each transition as you click around. It adds the [`ui-router-devtools`](/packages/ui-router-devtools) panel, which shows the state tree, each transition and its resolves, loaded only when the page url has `?devtools`, before the `#`. Try it on the <a href="/examples/hellosolarsystem/?devtools" target="_self">running example</a>.
 
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 router.trace.enable('TRANSITION');
-if (new URLSearchParams(location.search).has('visualizer')) {
-  void import('@uirouter/visualizer').then(({ Visualizer }) =>
-    router.plugin(Visualizer),
+if (new URLSearchParams(location.search).has('devtools')) {
+  void Promise.all([
+    import('ui-router-devtools/plugin'),
+    import('ui-router-devtools/lit-ui-router'),
+  ]).then(([{ DevtoolsPlugin }, { litViewLocator }]) =>
+    router.plugin(DevtoolsPlugin, {
+      timeResolves: true,
+      viewLocator: litViewLocator,
+    }),
   );
 }
 router.stateRegistry.register(planetsState);

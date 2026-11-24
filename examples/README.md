@@ -220,7 +220,7 @@ npm install
 npm run dev
 ```
 
-Every example logs each transition to the browser console with `router.trace.enable('TRANSITION')`, called right after the location plugin. **hellosolarsystem**, **hellosolarsystem-signals**, **hellogalaxy**, **hellogalaxy-effect** and **hellogalaxy-signals** also load the [UI Router visualizer](https://github.com/ui-router/visualizer) when the page url has `?visualizer` before the `#`, as in `http://localhost:5173/?visualizer#/galaxy/stars`.
+Every example logs each transition to the browser console with `router.trace.enable('TRANSITION')`, called right after the location plugin. **hellosolarsystem**, **hellosolarsystem-signals**, **hellogalaxy**, **hellogalaxy-effect** and **hellogalaxy-signals** also load the [`ui-router-devtools`](https://lit-ui-router.dev/packages/ui-router-devtools) panel when the page url has `?devtools` before the `#`, as in `http://localhost:5173/?devtools#/galaxy/stars`.
 
 The lint example runs the same way; `npm run lint` gives you the same report in the terminal, and `npm run lint:watch` re-lints on save without a browser.
 
