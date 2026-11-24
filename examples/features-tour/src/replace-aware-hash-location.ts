@@ -18,8 +18,9 @@ export interface ReplaceAwareHashLocationOptions {
    * How a `{ location: 'replace' }` transition takes over the history entry.
    * `replaceState`, the default, keeps the entry's `history.state`, which a
    * host page's own router may use, and dispatches the `hashchange` the
-   * History API does not fire, as a link inside a host's landmark does. `location.replace` lets the browser fire it and
-   * drops `history.state`; it suits an app that is the whole document.
+   * History API does not fire, as a link inside a host's landmark does.
+   * `location.replace` lets the browser fire it and drops `history.state`; it
+   * suits an app that is the whole document.
    */
   replace?: 'replaceState' | 'location.replace';
 }

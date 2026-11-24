@@ -47,6 +47,7 @@ function followedUrl(path: EventTarget[]): URL | undefined {
     (node): node is Element =>
       node instanceof Element && node.localName === 'a',
   );
+
   const href = link?.getAttribute('href');
 
   if (
