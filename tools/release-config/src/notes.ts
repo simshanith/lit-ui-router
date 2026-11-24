@@ -29,6 +29,9 @@ export const SITE_URL = 'https://lit-ui-router.dev';
 
 export const NO_CODE_CHANGES = "No changes to this package's published code.";
 
+export const NO_LISTED_COMMITS =
+  'No commits to list for this package in this release.';
+
 const BREAKING = 'BREAKING CHANGES';
 
 const PEER_SECTION = 'Peer Dependencies';
@@ -419,11 +422,16 @@ export function finalizeContext(
   const main = context.commitGroups.length + context.noteGroups.length > 0;
 
   context.alsoTouched = touched;
-  context.preamble = !main && touched.length > 0 ? NO_CODE_CHANGES : undefined;
+  // An empty render makes release-it fall back to an unfiltered repo-wide git log.
+  context.preamble = main
+    ? undefined
+    : touched.length > 0
+      ? NO_CODE_CHANGES
+      : NO_LISTED_COMMITS;
   context.releaseLinks =
-    context.releaseVersion !== undefined && (main || touched.length > 0)
-      ? releaseLinks(state.name, context.releaseVersion, previousVersion)
-      : undefined;
+    context.releaseVersion === undefined
+      ? undefined
+      : releaseLinks(state.name, context.releaseVersion, previousVersion);
 
   return context;
 }

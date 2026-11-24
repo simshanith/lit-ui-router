@@ -222,8 +222,8 @@ export function publishArgs(options: {
  * The bump driver's notes capture, which becomes a stable version's
  * CHANGELOG.md section — what the packages' `changelog` script runs, plus the
  * range pin and notes context. The
- * package's own tag glob keeps release-it's latest-tag context (and its
- * flat-log fallback, #423) off other packages' tags; the pin is what sets
+ * package's own tag glob keeps release-it's latest-tag context off other
+ * packages' tags; the pin is what sets
  * the range, since that glob still matches the package's prerelease tags.
  */
 export function changelogArgs(options: {
