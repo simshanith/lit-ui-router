@@ -23,7 +23,7 @@ tracer provider and exporter.
 npm install ui-router-otel @opentelemetry/api
 ```
 
-Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-devtools/README.md), private shared source ([`@repo/router-events`](https://github.com/simshanith/lit-ui-router/tree/main/packages/shared/router-events)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
+Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](/packages/ui-router-devtools), private shared source ([`@repo/router-events`](https://github.com/simshanith/lit-ui-router/tree/main/packages/shared/router-events)) that the build inlines into `dist/shared/`, so neither package depends on the other. The devtools are for looking at the router while you develop; this package reports what the router does for your users. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
 
 ## Usage
 
@@ -59,7 +59,7 @@ otel.dispose();
 | `activateLazyLoadSpans` | `false`                          | Runs each state's `lazyLoad` with a `lazy load <state>` span active, so a span the app starts there is that span's child; see [Active spans](#active-spans) |
 | `includeIgnored`        | `false`                          | Reports transitions core ignores (same state and params, no `reload`)                                                                                       |
 
-`redaction` has the two parts of a [`ui-router-devtools`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-devtools/README.md#session-files-and-redaction) export:
+`redaction` has the two parts of a [`ui-router-devtools`](/packages/ui-router-devtools#session-files-and-redaction) export:
 
 - `params`: the param keys that become `uirouter.transition.param.<key>` attributes, or `'all'`. A param not listed gets no attribute, and by default no param does. A list param's value is a string array.
 - `messages`: whether error messages reach a span's status description and its `exception` event. Messages are free text from the app's hooks and resolves, so they can carry user data such as ids, emails or server responses; set `messages: false` when your traces leave the browser. `error.type` and `uirouter.transition.invalid_params` stay either way.
@@ -146,7 +146,7 @@ The plugin wraps the function on each state as a transition enters it. `dispose(
 
 ## The devtools Timeline
 
-`DevtoolsSpanProcessor` sends every span a tracer provider starts and ends to the [`ui-router-devtools`](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-devtools/README.md#timeline) panel, whose Timeline nests the app's spans, such as a fetch, under the transition they ran during. Add it to the provider the plugin's tracer comes from: the router's own spans are how the panel joins a span to a transition.
+`DevtoolsSpanProcessor` sends every span a tracer provider starts and ends to the [`ui-router-devtools`](/packages/ui-router-devtools#timeline) panel, whose Timeline nests the app's spans, such as a fetch, under the transition they ran during. Add it to the provider the plugin's tracer comes from: the router's own spans are how the panel joins a span to a transition.
 
 ```ts
 import { TracerProvider } from '@opentelemetry/sdk-trace';
@@ -172,7 +172,7 @@ router.plugin(OtelPlugin, { tracer: provider.getTracer('my-app') });
 
 The argument is asked for the panel on each span, so the panel may be created after the provider; a span with no panel to take it is dropped. `{ started: false }` sends spans only when they end. The processor reads spans structurally, through `ProcessedSpan`, typed from `@opentelemetry/api` alone: it fits the `SpanProcessor` of `@opentelemetry/sdk-trace-base` 1.x and 2.x and of `@opentelemetry/sdk-trace` 3.x without a peer on either, and reads the parent from `parentSpanContext` or, on 1.x, `parentSpanId`. An attribute value that is not a scalar or an array of scalars is sent as JSON text.
 
-The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](https://github.com/simshanith/lit-ui-router/blob/main/packages/ui-router-devtools/README.md#session-files-and-redaction). How a span is joined, and why a fetch in a resolve, a hook or a lazy load is joined as `during` unless the matching option is on, is in [the Timeline](https://github.com/simshanith/lit-ui-router/blob/main/docs/visualizer-proposal/timeline.md#joining-a-span).
+The panel sees spans as they are; only its session export scrubs them, by the [devtools redaction](/packages/ui-router-devtools#session-files-and-redaction). How a span is joined, and why a fetch in a resolve, a hook or a lazy load is joined as `during` unless the matching option is on, is in [the Timeline](https://github.com/simshanith/lit-ui-router/blob/main/docs/visualizer-proposal/timeline.md#joining-a-span).
 
 ## Other trace viewers
 

@@ -10,7 +10,7 @@ It runs in production, beside the tracer provider and exporter the app already h
 npm install ui-router-otel @opentelemetry/api
 ```
 
-Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
+Its peers are `@uirouter/core` and `@opentelemetry/api`; it has no other runtime dependency and adds no exporter. `DevtoolsSpanProcessor` sends spans to the devtools panel's Timeline. It reads the router through the same adapter as [`ui-router-devtools`](../ui-router-devtools/README.md), private shared source ([`@repo/router-events`](../shared/router-events/)) that the build inlines into `dist/shared/`, so neither package depends on the other. The devtools are for looking at the router while you develop; this package reports what the router does for your users. Nothing in it reads `window` or `document`, so it attaches to a headless router as well as a browser one.
 
 ## Usage
 
