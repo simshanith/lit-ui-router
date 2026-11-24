@@ -19,5 +19,6 @@ Prereleases and canaries are not listed here; see [all releases](https://lit-ui-
 ### Documentation
 
 * **ui-router-otel:** say how to send spans to other trace viewers ([#2217](https://github.com/simshanith/lit-ui-router/issues/2217)) ([667e630](https://github.com/simshanith/lit-ui-router/commit/667e63044dfa910c243b3b77f4657ee4532c7566)), references [#2223](https://github.com/simshanith/lit-ui-router/issues/2223)
+* **ui-router-otel:** link the release commit in the 0.1.0 notes ([#2452](https://github.com/simshanith/lit-ui-router/issues/2452)) ([c78a51d](https://github.com/simshanith/lit-ui-router/commit/c78a51d925c3bb88ef07d285227e3b2de52f5003))
 
 [Release page](https://lit-ui-router.dev/releases/ui-router-otel/0.1.0/)
