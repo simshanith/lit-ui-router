@@ -6,8 +6,11 @@ type: index
 
 # Guides
 
-Task-oriented pages for the concepts real apps hit after the
-[tutorial](/tutorial/helloworld). Each guide is grounded in the
+New to the router? Start with [What is Lit UI Router?](/introduction), then
+the [tutorial](/tutorial/helloworld).
+
+Task-oriented pages for the concepts real apps hit after the tutorial. Each
+guide is grounded in the
 [sample app](/sample-app)'s working implementation — a webmail + contacts
 client deployed across every point on the server-support spectrum.
 

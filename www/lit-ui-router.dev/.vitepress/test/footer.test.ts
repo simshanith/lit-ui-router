@@ -10,6 +10,7 @@ import {
   FOOTER_BAR,
   FOOTER_GROUPS,
   FOOTER_REFERENCES,
+  PROJECT_LINKS,
 } from '../../catalog/footer.ts';
 import {
   NAV,
@@ -63,7 +64,7 @@ describe('the site footer links', () => {
 
     assert.deepEqual(
       shared.map(({ text }) => text),
-      ['Releases', 'How this site runs', 'Sample App'],
+      ['Releases', 'How this site runs', 'Sample App', 'Atlas'],
     );
 
     for (const { text, link, target } of shared) {
@@ -77,6 +78,20 @@ describe('the site footer links', () => {
         `${link} is not "${text}" with target ${target} in navigation.ts`,
       );
     }
+  });
+
+  it("share the Project group's links with the top nav's Project menu, in one order", () => {
+    const shared: readonly NavLink[] = Object.values(PROJECT_LINKS);
+    const inShared = (link: NavLink) => shared.includes(link);
+
+    const menu = NAV.flatMap((entry) =>
+      'items' in entry && entry.text === 'Project' ? entry.items : [],
+    );
+
+    const group = FOOTER_GROUPS.find(({ id }) => id === 'project');
+
+    assert.deepEqual(menu.filter(inShared), shared);
+    assert.deepEqual(group?.links.filter(inShared), shared);
   });
 
   it('take a full navigation to each path VitePress has no page for', () => {

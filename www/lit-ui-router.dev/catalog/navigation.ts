@@ -1,5 +1,6 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
 import { SAMPLE_APPS } from './examples.ts';
+import { PROJECT_LINKS } from './footer.ts';
 import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
 import {
   API_REFERENCES,
@@ -12,6 +13,8 @@ export interface NavLink {
   text: string;
   link: string;
   target?: string;
+  /** A pattern over the page path that marks the link current; without one only its own page does. */
+  activeMatch?: string;
 }
 
 /** A sidebar entry, in VitePress's shape. */
@@ -159,7 +162,6 @@ const referencePages = (name: PackageName): SidebarEntry[] => {
   return elements ? [{ text: 'Elements', link: elements.link }] : [];
 };
 
-// The top nav and the sidebar both list these.
 const sampleAppOverview: NavLink = { text: 'Overview', link: '/sample-app' };
 
 const sampleAppMounts: NavLink[] = Object.entries(SAMPLE_APPS).map(
@@ -256,20 +258,24 @@ export const SIDEBAR: SidebarEntry[] = [
   },
 ];
 
-/** The top nav: links, and menus of links. */
+/** The top nav: links, and menus of links. The site title links home. */
 export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
-  { text: 'Home', link: '/' },
   {
-    text: 'Docs',
+    // The introduction and the tutorial are the guides' first pages.
+    text: 'Guides',
+    link: '/guides/',
+    activeMatch: '^/(?:introduction$|tutorial/|guides/)',
+  },
+  { text: 'API', link: '/reference/', activeMatch: '^/reference/' },
+  {
+    // Named for the footer's Project group, whose links it shares; Packages and Examples are the menu's alone.
+    text: 'Project',
     items: [
-      { text: 'Introduction', link: '/introduction' },
-      { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guides', link: '/guides/' },
-      { text: 'Examples', link: '/examples/' },
-      { text: 'Releases', link: '/releases/', target: '_self' },
-      { text: 'Packages', link: '/packages/' },
-      { text: 'API', link: '/reference/' },
+      { text: 'Packages', link: '/packages/', activeMatch: '^/packages/' },
+      PROJECT_LINKS.releases,
+      { text: 'Examples', link: '/examples/', activeMatch: '^/examples/' },
+      PROJECT_LINKS.sampleApp,
+      PROJECT_LINKS.atlas,
     ],
   },
-  { text: 'Sample App', items: [sampleAppOverview, ...sampleAppMounts] },
 ];

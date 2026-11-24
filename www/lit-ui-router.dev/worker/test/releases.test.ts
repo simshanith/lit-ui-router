@@ -1107,10 +1107,9 @@ describe('the /releases pages', () => {
       );
 
     it("links the docs navigation's destinations, in its order, then GitHub", async () => {
-      // The logo links home; the menu that lists the releases is spread out, any other is its first page.
+      // The menu that lists the releases is spread out; any other is its first page.
       const destinations = NAV.flatMap((entry) => {
-        if (!('items' in entry))
-          return entry.link === '/' ? [] : [[entry.text, entry.link]];
+        if (!('items' in entry)) return [[entry.text, entry.link]];
 
         return entry.items.some(({ link }) => link === '/releases/')
           ? entry.items.map(({ text, link }) => [text, link])
