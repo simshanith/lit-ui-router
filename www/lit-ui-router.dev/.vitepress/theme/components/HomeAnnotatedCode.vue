@@ -447,7 +447,6 @@ onBeforeUnmount(() => {
               <button
                 class="copy-button"
                 type="button"
-                :data-copied="copied"
                 @click="copy"
               >
                 <VPIcon
@@ -485,7 +484,7 @@ onBeforeUnmount(() => {
                 <span class="number">{{ row.line }}</span>
               </span>
             </div>
-            <!-- eslint-disable-next-line vue/no-v-html -- the site's own highlighter output, built from catalog/home-sample/app.ts -->
+            <!-- The site's own highlighter output, built from catalog/home-sample/app.ts. -->
             <div ref="code" class="code" v-html="data.html" />
           </div>
         </div>

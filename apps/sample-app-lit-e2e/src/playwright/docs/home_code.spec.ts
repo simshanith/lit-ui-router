@@ -298,20 +298,23 @@ test.describe('home page listing on a narrow screen', () => {
     const before = await number.boundingBox();
 
     // Choosing a region the screen cuts off scrolls the code to it, and only the code.
+    const region = section(page).locator('mark', { hasText: 'uiSref' });
+
     const edges = async () => {
-      const region = await activeRegion(page).boundingBox();
+      const marked = await region.boundingBox();
       const pinned = await number.boundingBox();
 
       return {
-        clearOfGutter: region!.x >= pinned!.x + pinned!.width,
-        insideScreen: region!.x + region!.width <= PHONE.width,
+        clearOfGutter: marked!.x >= pinned!.x + pinned!.width,
+        insideScreen: marked!.x + marked!.width <= PHONE.width,
       };
     };
 
+    // Measured before the choice: the scroll starts with it.
+    expect((await edges()).insideScreen).toBe(false);
+
     await tab(page, 'State links').click();
     await expect(activeRegion(page)).toContainText('uiSref');
-    // It did not fit where the code stood.
-    expect((await edges()).insideScreen).toBe(false);
     await expect
       .poll(edges)
       .toEqual({ clearOfGutter: true, insideScreen: true });
