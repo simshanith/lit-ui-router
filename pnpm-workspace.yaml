@@ -20,7 +20,7 @@ catalog:
   '@cloudflare/config': 1.0.0-rc.1
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.159.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.160.0'
   '@commitlint/cli': ^21.2.4
   '@commitlint/config-conventional': ^21.2.4
   '@commitlint/types': ^21.2.3
@@ -308,7 +308,7 @@ overrides:
   'd3-color@<3.1.0': ^3.1.0
   'dompurify@<3.4.17': ^3.4.17
   'get-uri>basic-ftp': ^6.2.1
-  'knip>oxc-parser': 0.159.0
+  'knip>oxc-parser': 0.160.0
   'lit-dialog>lit': ^3.3.3
 
 packageExtensions:
