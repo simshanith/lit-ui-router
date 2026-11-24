@@ -13,6 +13,7 @@ import LintExample from './components/LintExample.vue';
 import FrameworkSpectrum from './components/FrameworkSpectrum.vue';
 import FrameworkCards from './components/FrameworkCards.vue';
 import HeroInstall from './components/HeroInstall.vue';
+import HomeAnnotatedCode from './components/HomeAnnotatedCode.vue';
 import HomePositioning from './components/HomePositioning.vue';
 import HomeSeeItRun from './components/HomeSeeItRun.vue';
 import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
@@ -28,7 +29,7 @@ export default {
       'not-found': () => h('main', h(NotFound)),
       'home-hero-actions-before-actions': () => h(HeroInstall),
       'home-features-before': () => h(HomePositioning),
-      'home-features-after': () => h(HomeSeeItRun),
+      'home-features-after': () => [h(HomeAnnotatedCode), h(HomeSeeItRun)],
     }),
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);

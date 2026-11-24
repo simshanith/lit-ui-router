@@ -154,7 +154,12 @@ const workspaces = {
   },
   'www/lit-ui-router.dev': {
     // is-server.ts is the wrangler alias target for lit-html/is-server.js
-    entry: ['.vitepress/vite.config.ts', 'worker/is-server.ts'],
+    // home-sample/app.ts is the home page's listing: read as text, and type-checked by typecheck:tsc
+    entry: [
+      '.vitepress/vite.config.ts',
+      'worker/is-server.ts',
+      'catalog/home-sample/app.ts',
+    ],
     // copied out of node_modules/<name>/dist by path in the vite config
     ignoreDependencies: [
       'sample-app-lit-vanilla',
