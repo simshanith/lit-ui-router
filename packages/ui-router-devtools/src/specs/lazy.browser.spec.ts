@@ -3,6 +3,7 @@ import { getByRole, waitFor } from '@testing-library/dom';
 import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import { LazyDevtoolsPlugin } from '../lazy.ts';
+import { record } from '../recorder.ts';
 import type { DevtoolsPanel } from '../element/panel.ts';
 import type { UIRouterDevtools } from '../ui-router-devtools.ts';
 
@@ -95,4 +96,35 @@ it('does not append the element when disposed before activate() settles', async 
 
   await expect(activating).rejects.toThrow('disposed');
   expect(document.querySelector('ui-router-devtools')).toBeNull();
+});
+
+it('follows a recorder set on an attached panel, and records itself once it is cleared', async () => {
+  const router = makeRouter();
+
+  const first = router.plugin(LazyDevtoolsPlugin);
+  const element = await first.activate();
+  const panel = panelOf(element);
+
+  await router.stateService.go('home');
+  await element.updateComplete;
+  expect(panel._model.txs.map((tx) => tx.to)).toEqual(['home']);
+
+  const second = record(router);
+
+  await router.stateService.go('about');
+  element.recorder = second;
+  await element.updateComplete;
+  expect(element.recorder).toBe(second);
+  expect(panel._model.txs.map((tx) => tx.to)).toEqual(['about']);
+
+  element.recorder = undefined;
+  await element.updateComplete;
+  expect(element.recorder).not.toBe(second);
+  expect(element.recorder).not.toBe(first.recorder);
+  expect(panel._model.txs).toEqual([]);
+
+  // A panel lets go of a recorder it was given without stopping it.
+  await router.stateService.go('home');
+  expect(second.events.at(-1)?.type).toBe('result');
+  second.stop();
 });

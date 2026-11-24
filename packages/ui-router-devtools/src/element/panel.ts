@@ -297,7 +297,6 @@ export class DevtoolsPanel extends LitElement {
     timeResolves: { type: Boolean, attribute: 'time-resolves' },
     redaction: { attribute: false },
     viewLocator: { attribute: false },
-    recorder: { attribute: false, noAccessor: true },
     _live: { state: true },
     _imported: { state: true },
     _tab: { state: true },
@@ -439,6 +438,7 @@ export class DevtoolsPanel extends LitElement {
   // A recorder set from outside, which the panel uses for `router` and never stops.
   #given: Recorder | undefined;
   #owned = false;
+  #givenChanged = false;
   #attached: UIRouter | undefined;
   #unsubscribe: (() => void) | undefined;
   #ticker: ReturnType<typeof setInterval> | undefined;
@@ -483,10 +483,12 @@ export class DevtoolsPanel extends LitElement {
     return this.#recorder ?? this.#given;
   }
 
+  // The getter prefers the attached recorder, so a change is flagged here rather than through Lit's old-value comparison.
   set recorder(recorder: Recorder | undefined) {
-    const old = this.recorder;
+    if (recorder === this.#given) return;
     this.#given = recorder;
-    this.requestUpdate('recorder', old);
+    this.#givenChanged = true;
+    this.requestUpdate();
   }
 
   /** Spans from a tracer, for the Timeline; setting it replaces them all. */
@@ -566,7 +568,10 @@ export class DevtoolsPanel extends LitElement {
       this._keepMessages = this.redaction.messages;
     }
 
-    if ((changed.has('router') || changed.has('recorder')) && this.#stale()) {
+    const given = this.#givenChanged;
+    this.#givenChanged = false;
+
+    if ((changed.has('router') || given) && this.#stale()) {
       this.#detach();
       this._live = emptyModel();
       this.#resetSelection();
