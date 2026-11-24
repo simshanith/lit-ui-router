@@ -131,6 +131,8 @@ const notes = {
   script: '/w/tools/changelog/src/write-section.ts',
 };
 
+const sha = 'a'.repeat(40);
+
 describe('writeSectionCommand', () => {
   it('runs the write-section CLI on absolute paths, each a quoted word', () => {
     assert.equal(
@@ -139,8 +141,23 @@ describe('writeSectionCommand', () => {
         packageName: 'lit-ui-router',
         version: '1.8.0',
         notesPath: '/tmp/release-notes-x/notes.md',
+        notesThrough: sha,
       }),
-      "node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/release-notes-x/notes.md'",
+      `node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/release-notes-x/notes.md' --notes-through ${sha}`,
+    );
+  });
+
+  it('rejects an abbreviated or symbolic notes-through', () => {
+    assert.throws(
+      () =>
+        writeSectionCommand({
+          notes,
+          packageName: 'lit-ui-router',
+          version: '1.8.0',
+          notesPath: '/tmp/n.md',
+          notesThrough: 'HEAD',
+        }),
+      /not a full commit sha/,
     );
   });
 });
@@ -151,7 +168,7 @@ describe('bumpArgs with a section', () => {
       packageName: 'lit-ui-router',
       version: '1.8.0',
       commitMessage: 'Release 1.8.0',
-      section: { notes, notesPath: '/tmp/n.md' },
+      section: { notes, notesPath: '/tmp/n.md', notesThrough: sha },
       dryRun: false,
     });
 
@@ -159,7 +176,7 @@ describe('bumpArgs with a section', () => {
       args.at(-1),
       'pnpm install --lockfile-only --fix-lockfile && ' +
         "mise run //tools/release:dependent_floor_gate --package 'lit-ui-router' && " +
-        "node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/n.md' && " +
+        `node '/w/tools/changelog/src/write-section.ts' --file '/w/packages/lit-ui-router/CHANGELOG.md' --package 'lit-ui-router' --version '1.8.0' --notes '/tmp/n.md' --notes-through ${sha} && ` +
         `git add ":(top)pnpm-lock.yaml" '/w/packages/lit-ui-router/CHANGELOG.md'`,
     );
   });

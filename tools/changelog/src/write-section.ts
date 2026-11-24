@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-// Adds one version's section to a package's CHANGELOG.md; the bump runs it from release-it's after:bump hook.
+// Adds one version's section to a package's CHANGELOG.md, opened by its notes-through marker when
+// --notes-through is given; the bump runs it from release-it's after:bump hook.
 //
-// Usage: write-section.ts --file <CHANGELOG.md> --package <name> --version <version> --notes <file> [--date <iso>]
+// Usage: write-section.ts --file <CHANGELOG.md> --package <name> --version <version> --notes <file> [--notes-through <sha>] [--date <iso>]
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 import { insertSection } from './changelog.ts';
 
 const USAGE =
-  'usage: write-section.ts --file <CHANGELOG.md> --package <name> --version <version> --notes <file> [--date <iso>]';
+  'usage: write-section.ts --file <CHANGELOG.md> --package <name> --version <version> --notes <file> [--notes-through <sha>] [--date <iso>]';
 
 function main(argv: readonly string[]): void {
   const { values } = parseArgs({
@@ -19,6 +20,7 @@ function main(argv: readonly string[]): void {
       version: { type: 'string' },
       notes: { type: 'string' },
       date: { type: 'string' },
+      'notes-through': { type: 'string' },
     },
   });
 
@@ -41,6 +43,7 @@ function main(argv: readonly string[]): void {
       version,
       date: values.date ?? new Date().toISOString(),
       body: readFileSync(notes, 'utf8'),
+      notesThrough: values['notes-through'],
     }),
   );
 

@@ -88,10 +88,12 @@ async function main(argv: readonly string[]): Promise<void> {
     return;
   }
 
-  const results: NotesThroughResult[] = stable.map(({ dir }) =>
+  const results: NotesThroughResult[] = stable.map(({ dir, version }) =>
     checkNotesThrough({
       packageName: publishable.find((m) => m.dir === dir)?.name ?? dir,
       cwd: join(workspaceRoot, dir),
+      version,
+      at: head,
       trailerRange: `${base}..${head}`,
       tip: base,
     }),

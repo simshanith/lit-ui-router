@@ -49,14 +49,21 @@ export interface NotesFile {
   script: string;
 }
 
-/** The after:bump command that adds `version`'s section, its body read from `notesPath`. */
+/** The after:bump command that adds `version`'s section, its body read from `notesPath` and opened by the `notesThrough` marker. */
 export function writeSectionCommand(options: {
   notes: NotesFile;
   packageName: string;
   version: string;
   notesPath: string;
+  notesThrough: string;
 }): string {
-  const { notes, packageName, version, notesPath } = options;
+  const { notes, packageName, version, notesPath, notesThrough } = options;
+
+  if (!/^[0-9a-f]{40}$/.test(notesThrough)) {
+    throw new Error(
+      `notesThrough ${JSON.stringify(notesThrough)} is not a full commit sha`,
+    );
+  }
 
   return [
     'node',
@@ -69,6 +76,8 @@ export function writeSectionCommand(options: {
     shellWord(version),
     '--notes',
     shellWord(notesPath),
+    '--notes-through',
+    notesThrough,
   ].join(' ');
 }
 
@@ -118,7 +127,7 @@ export function bumpArgs(options: {
   packageName: string;
   version: string;
   commitMessage: string;
-  section?: { notes: NotesFile; notesPath: string };
+  section?: { notes: NotesFile; notesPath: string; notesThrough: string };
   dryRun: boolean;
 }): string[] {
   const { packageName, version, commitMessage, section, dryRun } = options;

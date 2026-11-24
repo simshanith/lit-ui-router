@@ -25,7 +25,7 @@ function run(script: string, args: readonly string[]) {
 }
 
 describe('write-section and extract', () => {
-  it('writes a section the extract CLI prints back verbatim', () => {
+  it('writes a marked section the extract CLI prints back verbatim, marker aside', () => {
     writeFileSync(
       file,
       `${preamble('lit-ui-router')}\n\n## 1.0.0 (2026-01-01)\n\n* first\n`,
@@ -43,10 +43,15 @@ describe('write-section and extract', () => {
       notes,
       '--date',
       '2026-11-12T23:59:59Z',
+      '--notes-through',
+      'a'.repeat(40),
     ]);
 
     assert.equal(write.status, 0, write.stderr);
-    assert.match(readFileSync(file, 'utf8'), /^## 1\.1\.0 \(2026-11-12\)$/m);
+    assert.match(
+      readFileSync(file, 'utf8'),
+      /^## 1\.1\.0 \(2026-11-12\)\n\n<!-- notes-through: a{40} -->\n\n### Features$/m,
+    );
 
     const extract = run('./extract.ts', ['--file', file, '--version', '1.1.0']);
 

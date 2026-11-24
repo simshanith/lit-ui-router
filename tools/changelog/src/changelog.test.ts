@@ -3,14 +3,33 @@ import { describe, it } from 'node:test';
 
 import {
   extractSection,
+  findSection,
   hasBreakingChanges,
   insertSection,
   mergeSections,
   parseChangelog,
   preamble,
+  notesThroughMarker,
   renderChangelog,
   sectionHeading,
 } from './changelog.ts';
+
+const SHA = 'a'.repeat(40);
+
+const MARKED = `${preamble('lit-ui-router')}
+
+## 1.21.0 (2026-11-13)
+
+<!-- notes-through: ${SHA} -->
+
+### Bug Fixes
+
+* two
+
+## 1.20.0 (2026-11-12)
+
+<!-- notes-through: ${SHA} -->
+`;
 
 const FILE = `${preamble('lit-ui-router')}
 
@@ -186,6 +205,43 @@ describe('mergeSections', () => {
   });
 });
 
+describe('the notes-through marker', () => {
+  it('lifts the marker opening a section out of its body', () => {
+    assert.deepEqual(
+      parseChangelog(MARKED).sections.map(({ body, notesThrough }) => [
+        body,
+        notesThrough,
+      ]),
+      [
+        ['### Bug Fixes\n\n* two', SHA],
+        ['', SHA],
+      ],
+    );
+  });
+
+  it('leaves the marker out of the extracted body', () => {
+    assert.equal(extractSection(MARKED, '1.21.0'), '### Bug Fixes\n\n* two');
+    assert.equal(findSection(MARKED, '1.21.0')?.notesThrough, SHA);
+  });
+
+  it('reads a marker below the body’s first line as body text', () => {
+    const text = FILE.replace('* one', `* one\n\n${notesThroughMarker(SHA)}`);
+
+    assert.equal(findSection(text, '1.20.0')?.notesThrough, undefined);
+  });
+
+  it('round-trips through renderChangelog', () => {
+    assert.equal(
+      renderChangelog('lit-ui-router', parseChangelog(MARKED).sections),
+      MARKED,
+    );
+  });
+
+  it('refuses a sha that is not a full commit sha', () => {
+    assert.throws(() => notesThroughMarker('HEAD'), /not a full commit sha/);
+  });
+});
+
 describe('renderChangelog', () => {
   it('writes the fixed preamble alone when there are no sections', () => {
     assert.equal(
@@ -236,6 +292,21 @@ describe('insertSection', () => {
     assert.ok(
       next.endsWith(
         '## 1.2.0 (2026-06-01)\n\n## 1.0.0 (2026-11-13)\n\n### Bug Fixes\n\n* two\n',
+      ),
+    );
+  });
+
+  it('opens the section with the marker when given a notes-through sha', () => {
+    const next = insertSection('lit-ui-router', FILE, {
+      ...section,
+      notesThrough: SHA,
+    });
+
+    assert.equal(
+      next,
+      FILE.replace(
+        '## 1.20.0',
+        `## 1.21.0 (2026-11-13)\n\n<!-- notes-through: ${SHA} -->\n\n### Bug Fixes\n\n* two\n\n## 1.20.0`,
       ),
     );
   });

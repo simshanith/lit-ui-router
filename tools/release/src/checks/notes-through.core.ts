@@ -1,7 +1,7 @@
 // Pure rules for the Notes-Through staleness check; the git reads live in notes-through.ts.
-import { NOTES_THROUGH } from '../steps/release-bump.core.ts';
 
-const TRAILER = new RegExp(`^${NOTES_THROUGH}: ([0-9a-f]{40})[ \\t]*$`, 'gm');
+// Bumps before the CHANGELOG.md marker put the sha in this release commit trailer instead.
+const TRAILER = /^Notes-Through: ([0-9a-f]{40})[ \t]*$/gm;
 
 // The conventionalcommits preset's header pattern, with the breaking `!` captured.
 const HEADER = /^(\w*)(?:\((.*)\))?(!?): (.*)$/;
@@ -14,7 +14,7 @@ const RELEASE_AS =
   /release-as:\s*\w*@?([0-9]+\.[0-9]+\.[0-9a-z]+(-[0-9a-z.]+)?)\s*/i;
 
 /**
- * The sha a message's last `Notes-Through:` line names, wherever it sits: a
+ * The sha a message's last `Notes-Through:` trailer line names, wherever it sits: a
  * squash merge appends its own trailers after a blank line, so git's
  * trailer parser would not see it there.
  */
@@ -61,9 +61,11 @@ export interface StaleCommit {
 /** One package's verdict. */
 export interface NotesThroughResult {
   packageName: string;
-  /** The commit carrying the trailer. */
-  trailerCommit?: string;
-  /** The sha the trailer names. */
+  /** Where the sha came from: the section's marker, or a pre-marker release commit's trailer. */
+  source?: 'marker' | 'trailer';
+  /** The commit that wrote the marker, or that carries the trailer; the range check skips it. */
+  notesCommit?: string;
+  /** The commit the notes were generated at. */
   notesThrough?: string;
   stale: StaleCommit[];
   /** Why the check could not run; set means it failed. */

@@ -10,7 +10,7 @@
 // release-prev-tag.ts), and the whole publish argv is built by publishArgs.
 // A stable release's GitHub release body is its CHANGELOG.md section, which
 // must exist before anything publishes; a commit the notes would list that
-// landed after their Notes-Through commit fails the run too (a warning on dry
+// landed after the commit their notes-through marker names fails the run too (a warning on dry
 // runs). A prerelease has no section, so release-it renders its body from the
 // pinned range. release-it >= 20.1 handles the immutable draft→assets→publish release natively in that single
 // invocation. Not retried in-tool: the engine's writes are non-idempotent
@@ -43,7 +43,7 @@ import { changelogRange } from './release-prev-tag.ts';
 
 /**
  * A stable release's `github.releaseNotes` command, after proving its
- * CHANGELOG.md section exists and its Notes-Through commit is current.
+ * CHANGELOG.md section exists and its notes-through commit is current.
  */
 async function stableReleaseNotes(options: {
   packageName: string;
@@ -73,6 +73,8 @@ async function stableReleaseNotes(options: {
     const result = checkNotesThrough({
       packageName,
       cwd: join(workspaceRoot, notes.dir),
+      version: releaseVersion,
+      at: 'HEAD',
       trailerRange: `${from}..HEAD`,
       tip: 'HEAD',
     });

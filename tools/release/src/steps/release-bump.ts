@@ -12,10 +12,10 @@
 //      tag in this lane or the repo root (#302, release-prev-tag.ts); then
 //      release-it re-resolves the lockfile, runs the dependent floor gate
 //      (release-dependent-floor-gate.ts), adds the notes as the version's
-//      CHANGELOG.md section, and commits and pushes. The message names the
-//      section and carries a Notes-Through trailer: the commit the branch was
-//      cut from, which check-notes-through.ts compares the base against. A
-//      prerelease writes no section and its message carries the notes
+//      CHANGELOG.md section, opened by a notes-through marker naming the
+//      commit the branch was cut from, which check-notes-through.ts compares
+//      the base against; then commits and pushes. The message names the
+//      section. A prerelease writes no section and its message carries the notes
 //   4. create the release PR via gh (skipped on dry runs; in-tool retry)
 //   5. with AUTO_MERGE, enable squash auto-merge on it (dry runs only report
 //      it); a refusal fails the run with the PR left open
@@ -113,9 +113,7 @@ runMain(async () => {
     const { message, warning } = releaseCommitMessage({
       version,
       changelog: captured,
-      section: stable
-        ? { changelogPath: notes.changelogPath, notesThrough }
-        : undefined,
+      section: stable ? { changelogPath: notes.changelogPath } : undefined,
       from,
     });
 
@@ -147,6 +145,7 @@ runMain(async () => {
                   script: changelogScript('write-section.ts'),
                 },
                 notesPath,
+                notesThrough,
               }
             : undefined,
           dryRun,

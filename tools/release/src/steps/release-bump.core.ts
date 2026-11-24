@@ -28,13 +28,9 @@ export interface ReleaseCommitMessage {
   warning?: string;
 }
 
-/** The trailer naming the commit a release's notes were generated at. */
-export const NOTES_THROUGH = 'Notes-Through';
-
-/** Where a stable release's notes went: its CHANGELOG.md section, generated at `notesThrough`. */
+/** Where a stable release's notes went: its CHANGELOG.md section. */
 export interface NotesSection {
   changelogPath: string;
-  notesThrough: string;
 }
 
 function messageLines(
@@ -44,25 +40,14 @@ function messageLines(
 ): string[] {
   if (section === undefined) return body === '' ? [] : [body];
 
-  const { changelogPath, notesThrough } = section;
-
-  if (!/^[0-9a-f]{40}$/.test(notesThrough)) {
-    throw new Error(
-      `notesThrough ${JSON.stringify(notesThrough)} is not a full commit sha`,
-    );
-  }
-
-  return [
-    `Release notes: the ${version} section of ${changelogPath}.`,
-    `${NOTES_THROUGH}: ${notesThrough}`,
-  ];
+  return [`Release notes: the ${version} section of ${section.changelogPath}.`];
 }
 
 /**
  * The release commit message, which is also the release PR's title and body.
  * A stable release's (`section` set) is `Release <version>`, a line naming the
- * CHANGELOG.md section that holds the notes, and a `Notes-Through: <sha>`
- * trailer naming the commit the notes were generated at. A prerelease has no
+ * CHANGELOG.md section that holds the notes; the section's own marker names
+ * the commit the notes were generated at. A prerelease has no
  * section, so its message carries the captured notes, as every release's did
  * before. An empty changelog adds a warning for the driver to surface, since
  * the notes always open with at least one line: an empty capture means the
