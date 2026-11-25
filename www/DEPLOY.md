@@ -270,6 +270,12 @@ reactivity hubs and the package and reference indexes, the site page and the rel
 was baked after it, as far as its own menu reads the manifest: the published `/v1/` snapshot
 predates package lines and lists the site-wide versions only, until it is rebuilt.
 
+The version menu is off by default. `WWW_VERSION_MENU=1` in the build's environment appends it to
+the top nav (`.vitepress/version-menu.ts`); the site's `build` and `docs` tasks declare the variable
+in `turbo.json`, and `docs:snapshot` passes it to the snapshot's build. The version banner is not
+behind the switch: it renders only on a build that is not the current version, where it names the
+version and links the same page in the current docs.
+
 To produce, deploy or replace the snapshot (mise and git required; `cf` logged in to the account):
 
 1. Build this checkout's site: `mise exec -- turbo run build --filter=@www/lit-ui-router.dev`.

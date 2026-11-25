@@ -92,7 +92,7 @@
         "!$TURBO_ROOT$/examples/*/public/client_modules/**"
       ],
       "outputs": ["dist/**"],
-      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID", "WWW_VERSION_MENU"]
     },
     // restates the root umbrella's list, plus this package's own leaves
     "typecheck": {
@@ -213,8 +213,8 @@
       ],
       "cache": false,
       "persistent": true,
-      // dev-server browser open toggle (vite.config.ts server.open)
-      "env": ["E2E_TEST"]
+      // dev-server browser open toggle (vite.config.ts server.open); the version menu switch
+      "env": ["E2E_TEST", "WWW_VERSION_MENU"]
     },
     "typecheck:vue": {
       "dependsOn": ["^build:types"],

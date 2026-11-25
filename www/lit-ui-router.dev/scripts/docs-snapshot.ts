@@ -36,9 +36,10 @@ const SITE = 'www/lit-ui-router.dev';
 
 const PACKAGE = join(import.meta.dirname, '..');
 
-/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner and menu. */
+/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner, and the menu when WWW_VERSION_MENU is on. */
 const VERSION_FILES = [
   '.vitepress/versions.ts',
+  '.vitepress/version-menu.ts',
   '.vitepress/lines.ts',
   '.vitepress/theme/use-versions.ts',
   '.vitepress/theme/components/VersionBanner.vue',
@@ -70,7 +71,12 @@ const VERSION_EDITS: readonly (readonly [
   [
     '.vitepress/config.ts',
     '    nav: NAV,\n',
-    "    nav: [...NAV, { component: 'VersionMenu' }],\n",
+    '    nav: withVersionMenu(NAV, process.env),\n',
+  ],
+  [
+    '.vitepress/config.ts',
+    "import { analyticsHead } from './analytics.ts';\n",
+    "import { analyticsHead } from './analytics.ts';\nimport { withVersionMenu } from './version-menu.ts';\n",
   ],
 ];
 
