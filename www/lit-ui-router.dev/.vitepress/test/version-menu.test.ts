@@ -10,28 +10,29 @@ import {
 } from '../version-menu.ts';
 
 describe('the version menu switch', () => {
-  it('is off when unset, empty, 0 or false', () => {
+  it('is off when unset, empty or 0', () => {
     for (const env of [
       {},
       { [VERSION_MENU_FLAG]: '' },
       { [VERSION_MENU_FLAG]: '0' },
-      { [VERSION_MENU_FLAG]: 'false' },
     ]) {
       assert.equal(versionMenuEnabled(env), false);
     }
   });
 
-  it('is on for 1 or true', () => {
-    for (const raw of ['1', 'true', ' TRUE ']) {
+  it('is on for 1', () => {
+    for (const raw of ['1', ' 1 ']) {
       assert.equal(versionMenuEnabled({ [VERSION_MENU_FLAG]: raw }), true);
     }
   });
 
   it('throws for any other value', () => {
-    assert.throws(
-      () => versionMenuEnabled({ [VERSION_MENU_FLAG]: 'yes' }),
-      /WWW_VERSION_MENU must be 1 or 0, not yes/,
-    );
+    for (const raw of ['true', 'yes']) {
+      assert.throws(
+        () => versionMenuEnabled({ [VERSION_MENU_FLAG]: raw }),
+        new RegExp(`WWW_VERSION_MENU must be 1 or 0, not ${raw}`),
+      );
+    }
   });
 });
 

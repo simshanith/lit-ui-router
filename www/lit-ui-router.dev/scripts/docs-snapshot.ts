@@ -56,7 +56,7 @@ const VERSION_EDITS: readonly (readonly [
   [
     '.vitepress/theme/index.ts',
     "import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';\n",
-    "import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';\nimport VersionBanner from './components/VersionBanner.vue';\nimport VersionMenu from './components/VersionMenu.vue';\n",
+    "import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';\nimport VersionBanner from './components/VersionBanner.vue';\nimport VersionMenu from './components/VersionMenu.vue';\nimport { VERSION_MENU } from '../version-menu.ts';\n",
   ],
   [
     '.vitepress/theme/index.ts',
@@ -66,7 +66,7 @@ const VERSION_EDITS: readonly (readonly [
   [
     '.vitepress/theme/index.ts',
     "    app.component('ReleaseDiffPicker', ReleaseDiffPicker);\n",
-    "    app.component('ReleaseDiffPicker', ReleaseDiffPicker);\n    app.component('VersionMenu', VersionMenu);\n",
+    "    app.component('ReleaseDiffPicker', ReleaseDiffPicker);\n    app.component(VERSION_MENU, VersionMenu);\n",
   ],
   [
     '.vitepress/config.ts',
