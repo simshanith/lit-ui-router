@@ -24,6 +24,10 @@ updates:
       # cf pins @cloudflare/config exactly; bumped apart they split and fail check:single-version, so bump both manually
       - dependency-name: 'cf'
       - dependency-name: '@cloudflare/config'
+      # the knip>oxc-parser override and the oxc-project-runtime alias move with these, and dependabot edits neither, so bump all five manually
+      - dependency-name: 'oxc-parser'
+      - dependency-name: 'oxc-minify'
+      - dependency-name: 'oxc-transform'
       # each release pins a Playwright minor, so it moves with playwright (repo-checks playwright-cli-pin.test.ts)
       - dependency-name: '@playwright/cli'
       # a Playwright minor needs the @playwright/cli release built against it, so minors move by hand; patches stay in range
