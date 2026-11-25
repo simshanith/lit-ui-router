@@ -75,16 +75,16 @@ export class LazyDevtoolsPlugin implements UIRouterPlugin {
       throw new Error('The devtools panel is already mounted');
 
     this.#state = 'mounting';
-    const { signal } = (this.#mounting = new AbortController());
+    const mounting = (this.#mounting = new AbortController());
 
     try {
       await import('./define.ts');
-    } catch (error) {
-      if (!signal.aborted) this.#state = 'unmounted';
-      throw error;
+    } finally {
+      // A failed import leaves the plugin unmounted; a later mount() owns the state once this one is cancelled.
+      if (this.#mounting === mounting) this.#state = 'unmounted';
     }
 
-    if (signal.aborted) return;
+    if (mounting.signal.aborted) return;
 
     const element = (this.#element ??= this.#create());
 

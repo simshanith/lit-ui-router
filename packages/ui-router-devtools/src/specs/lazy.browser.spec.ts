@@ -132,6 +132,21 @@ it('keeps recording across unmount(), and a later mount() replays the buffer', a
   await expect(devtools.mount(target)).rejects.toThrow('disposed');
 });
 
+it('mounts once when unmount() and mount() run while the first mount() loads', async () => {
+  const router = makeRouter();
+  const devtools = router.plugin(LazyDevtoolsPlugin);
+  const first = container();
+  const second = container();
+
+  const cancelled = devtools.mount(first);
+  devtools.unmount();
+  await Promise.all([cancelled, devtools.mount(second)]);
+
+  expect(first.children).toHaveLength(0);
+  expect(devtools.element?.parentElement).toBe(second);
+  expect(document.querySelectorAll('ui-router-devtools')).toHaveLength(1);
+});
+
 it('appends nothing when unmounted or disposed before mount() settles', async () => {
   const router = makeRouter();
   const devtools = router.plugin(LazyDevtoolsPlugin);
