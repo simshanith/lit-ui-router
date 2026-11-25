@@ -117,7 +117,11 @@ let shown = false;
 addEventListener('keydown', (event) => {
   if (!event.altKey || event.key !== 'd') return;
   shown = !shown;
-  if (shown) void devtools.mount(container);
+  if (shown)
+    devtools.mount(container).catch((error: unknown) => {
+      shown = false;
+      console.error(error);
+    });
   else devtools.unmount();
 });
 ```
