@@ -147,6 +147,22 @@ it('mounts once when unmount() and mount() run while the first mount() loads', a
   expect(document.querySelectorAll('ui-router-devtools')).toHaveLength(1);
 });
 
+it('stays unmounted when the append fails, so mount() can try again', async () => {
+  const router = makeRouter();
+  const devtools = router.plugin(LazyDevtoolsPlugin);
+  const element = await mountInto(devtools, container());
+
+  devtools.unmount();
+  // An element cannot be appended to itself.
+  await expect(devtools.mount(element)).rejects.toThrow();
+  expect(() => devtools.unmount()).toThrow('not mounted');
+
+  const target = container();
+
+  await mountInto(devtools, target);
+  expect(devtools.element?.parentElement).toBe(target);
+});
+
 it('appends nothing when unmounted or disposed before mount() settles', async () => {
   const router = makeRouter();
   const devtools = router.plugin(LazyDevtoolsPlugin);

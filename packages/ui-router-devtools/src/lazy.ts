@@ -66,7 +66,8 @@ export class LazyDevtoolsPlugin implements UIRouterPlugin {
   /**
    * Loads `<ui-router-devtools>`, hands it the recorder and appends it to `target`; the panel shows everything recorded
    * since registration. Resolves once the element is in the DOM, or without appending it when `unmount()` or `dispose()`
-   * comes first. Rejects while the plugin is mounted or mounting, and once it is disposed.
+   * comes first. Rejects while the plugin is mounted or mounting, once it is disposed, and when loading or appending
+   * fails, which leaves it unmounted.
    */
   async mount(target: Element): Promise<void> {
     if (this.#disposed) throw new Error('The devtools plugin was disposed');
@@ -79,17 +80,18 @@ export class LazyDevtoolsPlugin implements UIRouterPlugin {
 
     try {
       await import('./define.ts');
+
+      if (mounting.signal.aborted) return;
+
+      const element = (this.#element ??= this.#create());
+
+      target.append(element);
+      this.#state = 'mounted';
     } finally {
-      // A failed import leaves the plugin unmounted; a later mount() owns the state once this one is cancelled.
-      if (this.#mounting === mounting) this.#state = 'unmounted';
+      // A failure leaves the plugin unmounted; a later mount() owns the state once this one is cancelled.
+      if (this.#mounting === mounting && this.#state === 'mounting')
+        this.#state = 'unmounted';
     }
-
-    if (mounting.signal.aborted) return;
-
-    const element = (this.#element ??= this.#create());
-
-    target.append(element);
-    this.#state = 'mounted';
   }
 
   /** Removes the element and keeps the recorder running, so the next `mount()` replays it; cancels a `mount()` still loading. */
