@@ -33,7 +33,29 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-it('shows the transitions recorded before activate(), then follows the router', async () => {
+// Mounts into `target` and returns the element mount() appended.
+const mountInto = async (
+  devtools: LazyDevtoolsPlugin,
+  target: Element,
+): Promise<UIRouterDevtools> => {
+  await devtools.mount(target);
+
+  const { element } = devtools;
+
+  if (!element) throw new Error('mount() resolved without an element');
+  await element.updateComplete;
+
+  return element;
+};
+
+const container = (): HTMLElement => {
+  const target = document.createElement('section');
+  document.body.append(target);
+
+  return target;
+};
+
+it('shows the transitions recorded before mount(), then follows the router', async () => {
   const router = makeRouter();
 
   const devtools = router.plugin(LazyDevtoolsPlugin, {
@@ -46,10 +68,10 @@ it('shows the transitions recorded before activate(), then follows the router', 
   expect(document.querySelector('ui-router-devtools')).toBeNull();
   expect(devtools.element).toBeUndefined();
 
-  const element = await devtools.activate();
-  await element.updateComplete;
+  const target = container();
+  const element = await mountInto(devtools, target);
 
-  expect(await devtools.activate()).toBe(element);
+  expect(element.parentElement).toBe(target);
   expect(element.recorder).toBe(devtools.recorder);
   expect(element.timeResolves).toBe(true);
   expect(element.redaction.params).toEqual(['id']);
@@ -65,44 +87,74 @@ it('shows the transitions recorded before activate(), then follows the router', 
   );
 });
 
-it('leaves the recorder running when the element is removed, and stops it on dispose', async () => {
+it('rejects a second mount() while mounting or mounted, and an unmount() while unmounted', async () => {
   const router = makeRouter();
   const devtools = router.plugin(LazyDevtoolsPlugin);
-  const element = await devtools.activate();
+  const target = container();
 
-  element.remove();
-  await router.stateService.go('home');
-  expect(
-    devtools.recorder.events.some((event) => event.type === 'result'),
-  ).toBe(true);
+  expect(() => devtools.unmount()).toThrow('not mounted');
 
-  document.body.append(element);
-  await element.updateComplete;
-  expect(panelOf(element)._model.txs.map((tx) => tx.to)).toEqual(['home']);
-
-  router.dispose(devtools);
-  expect(document.body.contains(element)).toBe(false);
-
-  const recorded = devtools.recorder.events.length;
-  await router.stateService.go('about');
-  expect(devtools.recorder.events).toHaveLength(recorded);
+  const mounting = devtools.mount(target);
+  await expect(devtools.mount(target)).rejects.toThrow('already mounted');
+  await mounting;
+  await expect(devtools.mount(container())).rejects.toThrow('already mounted');
+  expect(document.querySelectorAll('ui-router-devtools')).toHaveLength(1);
+  expect(devtools.element?.parentElement).toBe(target);
 });
 
-it('does not append the element when disposed before activate() settles', async () => {
+it('keeps recording across unmount(), and a later mount() replays the buffer', async () => {
   const router = makeRouter();
   const devtools = router.plugin(LazyDevtoolsPlugin);
-  const activating = devtools.activate();
-  router.dispose(devtools);
 
-  await expect(activating).rejects.toThrow('disposed');
+  await devtools.mount(container());
+  await router.stateService.go('home');
+  devtools.unmount();
+  expect(devtools.element).toBeUndefined();
   expect(document.querySelector('ui-router-devtools')).toBeNull();
+
+  await router.stateService.go('about');
+
+  const target = container();
+  const element = await mountInto(devtools, target);
+
+  expect(element.parentElement).toBe(target);
+  expect(panelOf(element)._model.txs.map((tx) => tx.to)).toEqual([
+    'home',
+    'about',
+  ]);
+
+  router.dispose(devtools);
+  expect(document.querySelector('ui-router-devtools')).toBeNull();
+
+  const recorded = devtools.recorder.events.length;
+  await router.stateService.go('home');
+  expect(devtools.recorder.events).toHaveLength(recorded);
+  await expect(devtools.mount(target)).rejects.toThrow('disposed');
+});
+
+it('appends nothing when unmounted or disposed before mount() settles', async () => {
+  const router = makeRouter();
+  const devtools = router.plugin(LazyDevtoolsPlugin);
+  const target = container();
+
+  const unmounted = devtools.mount(target);
+  devtools.unmount();
+  await unmounted;
+  expect(target.children).toHaveLength(0);
+  expect(devtools.element).toBeUndefined();
+
+  const disposed = devtools.mount(target);
+  router.dispose(devtools);
+  await disposed;
+  expect(target.children).toHaveLength(0);
+  expect(devtools.element).toBeUndefined();
 });
 
 it('follows a recorder set on an attached panel, and records itself once it is cleared', async () => {
   const router = makeRouter();
 
   const first = router.plugin(LazyDevtoolsPlugin);
-  const element = await first.activate();
+  const element = await mountInto(first, container());
   const panel = panelOf(element);
 
   await router.stateService.go('home');

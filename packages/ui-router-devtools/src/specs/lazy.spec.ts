@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 
 const src = fileURLToPath(new URL('..', import.meta.url));
 
-it('keeps the element, lit and d3 out of the lazy entry until activate()', async () => {
+it('keeps the element, lit and d3 out of the lazy entry until mount()', async () => {
   const bundle = await rolldown({
     input: fileURLToPath(new URL('../lazy.ts', import.meta.url)),
     external: (id) => id.startsWith('@uirouter/core'),

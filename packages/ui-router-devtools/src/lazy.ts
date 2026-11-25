@@ -1,6 +1,6 @@
 /**
  * `LazyDevtoolsPlugin`, for `router.plugin(LazyDevtoolsPlugin)` before `router.start()`: it records from registration
- * and loads `<ui-router-devtools>` only on `activate()`, which replays what was recorded and then follows the router.
+ * and loads `<ui-router-devtools>` only on `mount(target)`, which replays what was recorded and then follows the router.
  *
  * @module
  */
@@ -20,8 +20,9 @@ export interface LazyDevtoolsPluginOptions extends DevtoolsPluginOptions {
 }
 
 /**
- * Records the router from registration; `activate()` loads `<ui-router-devtools>`, hands it the recorder and appends
- * it to `document.body`. Only the recorder loads with the plugin: lit, d3 and the element load on `activate()`.
+ * Records the router from registration; `mount(target)` loads `<ui-router-devtools>`, hands it the recorder and appends
+ * it to `target`, and `unmount()` removes it while the recorder keeps running. Only the recorder loads with the plugin:
+ * lit, d3 and the element load on the first `mount()`.
  *
  * @example
  * ```ts
@@ -34,18 +35,19 @@ export interface LazyDevtoolsPluginOptions extends DevtoolsPluginOptions {
  * const devtools = router.plugin(LazyDevtoolsPlugin, { timeResolves: true });
  *
  * // Later, from a key binding or a button: the panel shows every transition since registration.
- * void devtools.activate();
+ * await devtools.mount(document.body);
  * ```
  */
 export class LazyDevtoolsPlugin implements UIRouterPlugin {
-  /** The plugin's name in the router's plugin registry. */
+  /** The plugin's name in the router's plugin registry, shared with `DevtoolsPlugin`. */
   name = 'devtools';
   /** The recorder the plugin started; the panel follows it, and reporters can share it. */
   readonly recorder: Recorder;
   readonly #router: UIRouter;
   readonly #options: LazyDevtoolsPluginOptions;
   #element: UIRouterDevtools | undefined;
-  #activating: Promise<UIRouterDevtools> | undefined;
+  #state: 'unmounted' | 'mounting' | 'mounted' = 'unmounted';
+  #mounting: AbortController | undefined;
   #disposed = false;
 
   constructor(router: UIRouter, options: LazyDevtoolsPluginOptions = {}) {
@@ -56,21 +58,51 @@ export class LazyDevtoolsPlugin implements UIRouterPlugin {
     this.recorder = record(router, { limit: history * 40, timeResolves });
   }
 
-  /** The `<ui-router-devtools>` that `activate()` appended, once it has. */
+  /** The `<ui-router-devtools>` in the DOM while the plugin is mounted. */
   get element(): UIRouterDevtools | undefined {
-    return this.#element;
+    return this.#state === 'mounted' ? this.#element : undefined;
   }
 
-  /** Loads and appends `<ui-router-devtools>` once, showing everything recorded since registration; later calls return the same element. */
-  activate(): Promise<UIRouterDevtools> {
-    this.#activating ??= import('./define.ts').then(() => this.#mount());
-
-    return this.#activating;
-  }
-
-  #mount(): UIRouterDevtools {
+  /**
+   * Loads `<ui-router-devtools>`, hands it the recorder and appends it to `target`; the panel shows everything recorded
+   * since registration. Resolves once the element is in the DOM, or without appending it when `unmount()` or `dispose()`
+   * comes first. Rejects while the plugin is mounted or mounting, and once it is disposed.
+   */
+  async mount(target: Element): Promise<void> {
     if (this.#disposed) throw new Error('The devtools plugin was disposed');
 
+    if (this.#state !== 'unmounted')
+      throw new Error('The devtools panel is already mounted');
+
+    this.#state = 'mounting';
+    const { signal } = (this.#mounting = new AbortController());
+
+    try {
+      await import('./define.ts');
+    } catch (error) {
+      if (!signal.aborted) this.#state = 'unmounted';
+      throw error;
+    }
+
+    if (signal.aborted) return;
+
+    const element = (this.#element ??= this.#create());
+
+    target.append(element);
+    this.#state = 'mounted';
+  }
+
+  /** Removes the element and keeps the recorder running, so the next `mount()` replays it; cancels a `mount()` still loading. */
+  unmount(): void {
+    if (this.#state === 'unmounted')
+      throw new Error('The devtools panel is not mounted');
+
+    this.#mounting?.abort();
+    this.#element?.remove();
+    this.#state = 'unmounted';
+  }
+
+  #create(): UIRouterDevtools {
     const {
       history = 500,
       timeResolves = false,
@@ -86,16 +118,15 @@ export class LazyDevtoolsPlugin implements UIRouterPlugin {
     element.viewLocator = viewLocator?.(this.#router);
     element.recorder = this.recorder;
     element.router = this.#router;
-    document.body.append(element);
-    this.#element = element;
 
     return element;
   }
 
-  /** Stops the recorder and removes the element. */
+  /** Stops the recorder and unmounts the element. */
   dispose(): void {
     this.#disposed = true;
     this.recorder.stop();
-    this.#element?.remove();
+
+    if (this.#state !== 'unmounted') this.unmount();
   }
 }
