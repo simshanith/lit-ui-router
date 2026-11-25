@@ -123,22 +123,20 @@ describe('the sidebar', () => {
     );
   });
 
-  it("lists the Project menu's sections in the menu's order", () => {
-    const menu = NAV.flatMap((entry) =>
-      'items' in entry && entry.text === 'Project'
-        ? entry.items.map(({ text }) => text)
-        : [],
+  it("lists the top nav's sections in the nav's order", () => {
+    const nav = NAV.flatMap((entry) =>
+      'items' in entry ? entry.items.map(({ text }) => text) : [entry.text],
     );
 
     const sections = SIDEBAR.map(({ text }) => text);
 
     assert.deepEqual(
-      sections.filter((text) => menu.includes(text)),
-      menu.filter((text) => sections.includes(text)),
+      sections.filter((text) => nav.includes(text)),
+      nav.filter((text) => sections.includes(text)),
     );
     assert.deepEqual(
-      menu.filter((text) => sections.includes(text)),
-      ['Packages', 'Releases', 'Examples', 'Sample App'],
+      nav.filter((text) => sections.includes(text)),
+      ['Guides', 'Packages', 'Releases', 'Examples', 'Sample App', 'API'],
     );
   });
 });

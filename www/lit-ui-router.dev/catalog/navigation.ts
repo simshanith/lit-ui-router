@@ -258,7 +258,7 @@ export const SIDEBAR: SidebarEntry[] = [
   },
 ];
 
-/** The top nav: links, and menus of links. The site title links home. */
+/** The top nav: links, and menus of links, in the sidebar's order. The site title links home. */
 export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
   {
     // The introduction and the tutorial are the guides' first pages.
@@ -266,7 +266,6 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
     link: '/guides/',
     activeMatch: '^/(?:introduction$|tutorial/|guides/)',
   },
-  { text: 'API', link: '/reference/', activeMatch: '^/reference/' },
   {
     // Named for the footer's Project group, whose links it shares; Packages and Examples are the menu's alone.
     text: 'Project',
@@ -278,4 +277,5 @@ export const NAV: (NavLink | { text: string; items: NavLink[] })[] = [
       PROJECT_LINKS.atlas,
     ],
   },
+  { text: 'API', link: '/reference/', activeMatch: '^/reference/' },
 ];
