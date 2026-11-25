@@ -168,7 +168,7 @@ const sampleAppMounts: NavLink[] = Object.entries(SAMPLE_APPS).map(
   ([link, { label: text }]) => ({ text, link, target: '_self' }),
 );
 
-/** The sidebar sections, in order; each API reference entry gets its generated members in config.ts. An Overview entry names its section in the pager. */
+/** The sidebar sections, in order, with the Project menu's sections in the menu's order; each API reference entry gets its generated members in config.ts. An Overview entry names its section in the pager. */
 export const SIDEBAR: SidebarEntry[] = [
   {
     text: 'Introduction',
@@ -198,15 +198,6 @@ export const SIDEBAR: SidebarEntry[] = [
     ],
   },
   {
-    text: 'Examples',
-    collapsed: true,
-    items: [
-      { text: 'Overview', link: '/examples/', docFooterText: 'Examples' },
-      { text: 'Live examples', link: '/examples/live' },
-    ],
-  },
-  { text: 'Releases', link: '/releases/', target: '_self', items: [] },
-  {
     text: 'Packages',
     collapsed: true,
     items: [
@@ -216,6 +207,15 @@ export const SIDEBAR: SidebarEntry[] = [
         collapsed: false,
         items,
       })),
+    ],
+  },
+  { text: 'Releases', link: '/releases/', target: '_self', items: [] },
+  {
+    text: 'Examples',
+    collapsed: true,
+    items: [
+      { text: 'Overview', link: '/examples/', docFooterText: 'Examples' },
+      { text: 'Live examples', link: '/examples/live' },
     ],
   },
   {
