@@ -39,7 +39,7 @@ catalog:
   '@opentelemetry/exporter-trace-otlp-http': ^0.301.2
   '@opentelemetry/resources': ^3.1.1
   '@opentelemetry/sdk-trace': ^3.1.1
-  '@oxlint/plugins': 1.94.0
+  '@oxlint/plugins': 1.95.0
   '@pierre/diffs': 1.6.4
   '@pierre/trees': ^1.0.0
   '@playwright/cli': 0.1.23
@@ -57,7 +57,7 @@ catalog:
   '@types/markdown-it': ^14.2.0
   '@types/node': ^24.19.2
   '@types/pacote': ^11.1.8
-  '@typescript-eslint/parser': ^8.73.0
+  '@typescript-eslint/parser': ^8.74.0
   '@types/semver': ^7.8.0
   '@types/webidl2': ^24.4.4
   '@uirouter/core': ^6.1.2
@@ -86,7 +86,7 @@ catalog:
   eslint-plugin-eslint-plugin: ^7.6.2
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.3
-  eslint-plugin-oxlint: 1.94.0
+  eslint-plugin-oxlint: 1.95.0
   eslint-plugin-package-json: ^1.14.0
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.13
@@ -108,8 +108,8 @@ catalog:
   oxc-minify: 0.160.0
   oxc-parser: 0.160.0
   oxc-transform: 0.160.0
-  oxfmt: 0.79.0
-  oxlint: 1.94.0
+  oxfmt: 0.80.0
+  oxlint: 1.95.0
   oxlint-tsgolint: 7.0.2008
   pacote: ^22.0.1
   parse5: ^8.1.1
