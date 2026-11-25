@@ -48,16 +48,20 @@ for (const entry of entries) {
 
   const chunks = output.filter((chunk) => chunk.type === 'chunk');
   const byFile = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+  const main = chunks.find((chunk) => chunk.isEntry);
+
+  if (!main) throw new Error(`No entry chunk for ${entry}`);
+
   // `with` chunks are the entry's static imports, which load with it; the rest load on demand, such as the Map on first use.
-  const eager = new Set([chunks[0].fileName]);
+  const eager = new Set([main.fileName]);
 
   for (const file of eager)
     for (const imported of byFile.get(file)?.imports ?? []) eager.add(imported);
 
-  for (const [index, chunk] of chunks.entries()) {
+  for (const chunk of chunks) {
     const code = Buffer.from(chunk.code);
     const kind = eager.has(chunk.fileName) ? 'with' : 'lazy';
-    const name = index ? `  ${kind} ${chunk.name}` : entry;
+    const name = chunk === main ? entry : `  ${kind} ${chunk.name}`;
 
     console.log(
       `${name.padEnd(12)} ${kb(code.length)} kB min  ${kb(gzipSync(code, { level: 9 }).length)} kB gzip`,

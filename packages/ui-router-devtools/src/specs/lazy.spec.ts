@@ -13,7 +13,11 @@ it('keeps the element, lit and d3 out of the lazy entry until mount()', async ()
   const { output } = await bundle.generate({ format: 'es' });
   const chunks = output.filter((chunk) => chunk.type === 'chunk');
   const byFile = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
-  const eager = new Set([chunks[0].fileName]);
+  const main = chunks.find((chunk) => chunk.isEntry);
+
+  expect(main).toBeDefined();
+
+  const eager = new Set([main?.fileName ?? '']);
 
   for (const file of eager)
     for (const imported of byFile.get(file)?.imports ?? []) eager.add(imported);
