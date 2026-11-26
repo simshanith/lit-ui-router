@@ -4,6 +4,7 @@ import {
   defineConfig,
   HeadConfig,
   type DefaultTheme,
+  type MarkdownRenderer,
   type SiteConfig,
   type UserConfig,
 } from 'vitepress';
@@ -14,6 +15,7 @@ import { API_REFERENCES, ELEMENT_REFERENCES } from '../catalog/references.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { withPackageLabels } from './package-label.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
+import { readmeLinks } from './readme-links.ts';
 import { redirectLines, writeRedirects } from './redirects.ts';
 import { renderForSearch } from './search-render.ts';
 import { writeSitemapIndex } from './sitemap.ts';
@@ -252,7 +254,10 @@ const config = {
   ignoreDeadLinks: deadLinkIgnores(),
   // ignoreDeadLinks: true,
   markdown: {
-    config: stripInlineSvgStyles,
+    config: (md: MarkdownRenderer) => {
+      stripInlineSvgStyles(md);
+      readmeLinks(md);
+    },
   },
   vite: {
     configFile: './.vitepress/vite.config.ts',
