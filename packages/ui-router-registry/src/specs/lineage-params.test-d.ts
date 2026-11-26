@@ -72,6 +72,47 @@ const lineageStates = [
   { name: 'l6.b.c.d', url: '/4?id&d', params: { id: { array: 'auto' } } },
   { name: 'l6.b.c.d.e', url: '/5?{id:any}&e' },
   { name: 'l6.b.c.d.e.f', url: '/6?id&f', params: { id: { value: 'six' } } },
+  { name: 'passq', url: '/passq?id' },
+  { name: 'passq.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passq.sq', url: '/sq', params: { id: { squash: true } } },
+  { name: 'passq.vu', url: '/vu', params: { id: { value: undefined } } },
+  { name: 'passq.vf', url: '/vf', params: { id: { value: () => undefined } } },
+  { name: 'passq.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passq.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passq.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passp', url: '/passp/:id' },
+  { name: 'passp.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passp.vu', url: '/vu', params: { id: { value: undefined } } },
+  { name: 'passp.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passp.vd.q', url: '/q?id' },
+  { name: 'passp.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passp.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passp.qu', url: '/qu?id', params: { id: { value: undefined } } },
+  { name: 'passa', url: '/passa?id', params: { id: { array: 'auto' } } },
+  { name: 'passa.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passa.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passt', url: '/passt?id', params: { id: { array: true } } },
+  { name: 'passt.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passt.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passi', url: '/passi?{id:int}' },
+  { name: 'passi.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passi.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passi.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passi.qd', url: '/qd?id', params: { id: 'd' } },
+  { name: 'passe', url: '/passe/:id', params: { id: { array: true } } },
+  { name: 'passe.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passe.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passe.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passg', url: '/passg?id' },
+  { name: 'passg.p', url: '/p', params: { id: { dynamic: true } } },
+  { name: 'passg.p.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passm', url: '/passm?{id:int}' },
+  { name: 'passm.p', url: '/p', params: { id: { dynamic: true } } },
+  { name: 'passm.p.c', url: '/c?id' },
+  { name: 'passn', url: '/passn', params: { id: { dynamic: true } } },
+  { name: 'passn.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passn5', url: '/passn5', params: { id: 5 } },
+  { name: 'passn5.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const;
 
 declare module '../index.js' {
@@ -169,9 +210,17 @@ accepts<
   Same<ResolvedParamsOf<'lcfg.url'>, { id?: string; '#'?: string | null }>
 >(true);
 
+// The config-only parent is core's `any` too, so the child takes and reads back its type.
 accepts<
-  Same<ResolvedParamsOf<'lcfg.config'>, { id: string; '#'?: string | null }>
+  Same<
+    ResolvedParamsOf<'lcfg.config'>,
+    { id: string | number; '#'?: string | null }
+  >
 >(true);
+
+accepts<Same<ParamsOf<'lcfg.config'>, { id?: number; '#'?: string | null }>>(
+  true,
+);
 
 // -- an untyped non-url child is core's `any`, so it passes an ancestor's url value through
 
@@ -323,3 +372,321 @@ if (snapshot.includes('lauto.plain')) {
 if (snapshot.includes('lpath')) {
   accepts<Same<typeof snapshot.params.id, string | string[] | undefined>>(true);
 }
+
+// -- a pass-through without a default reads what its ancestors leave it -------
+
+accepts<
+  Same<ResolvedParamsOf<'passq.dyn'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.dyn'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.sq'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.sq'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.vu'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.vu'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.vf'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.vf'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.vd'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.vd'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.sh'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.sh'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passq.vn'>, { id: unknown; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passq.vn'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passp.dyn'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passp.dyn'>, { id: string; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passp.vu'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passp.vu'>, { id: string; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passp.vd'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passp.vd'>, { id?: string; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passp.sh'>, { id: string; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passp.sh'>, { id?: string; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passp.vn'>, { id: unknown; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passp.vn'>, { id: string; '#'?: string | null }>>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passa.dyn'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passa.dyn'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passa.vd'>,
+    { id: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passa.vd'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passt.dyn'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passt.dyn'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passt.sh'>,
+    { id: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passt.sh'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passi.dyn'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passi.dyn'>,
+    { id?: number | readonly number[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passi.vd'>,
+    { id: string | number; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passi.vd'>,
+    { id: number | readonly number[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passi.vn'>, { id: unknown; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passi.vn'>,
+    { id?: number | readonly number[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passe.dyn'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passe.dyn'>,
+    { id: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'passe.vd'>,
+    { id: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passe.vd'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passe.vn'>, { id: unknown; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passe.vn'>,
+    { id: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passg.p.c'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passg.p.c'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passg.p'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passg.p'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passm.p.c'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passm.p.c'>, { id?: never; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passm.p'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'passm.p'>,
+    { id?: number | readonly number[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<Same<ResolvedParamsOf<'passn.c'>, { id?: never; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ParamsOf<'passn.c'>, { id?: never; '#'?: string | null }>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'passn5.c'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<Same<ParamsOf<'passn5.c'>, { id?: number; '#'?: string | null }>>(true);
+
+// -- only the nearest default fills the key, and every declaration checks it --
+
+accepts<Same<ParamsOf<'passp.vd.q'>, { id: string; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ParamsOf<'passp.qu'>, { id: string; '#'?: string | null }>>(true);
+
+accepts<Same<ParamsOf<'passi.qd'>, { id: never; '#'?: string | null }>>(true);
+
+declare const passed: ResolvedParamsOf<'passq.dyn'>;
+
+// @ts-expect-error core reads `undefined` for `go('passq.dyn', {})`
+void passed.id.length;
+
+void stateService.go('passq.dyn', {});
+
+void stateService.go('passq.dyn', { id: 'x' });
+
+void stateService.go('passi.vd', { id: 5 });
+
+// @ts-expect-error the `int` parent rejects the child's `'d'` default
+void stateService.go('passi.vd', {});
+
+// @ts-expect-error the path parent rejects the child's `null` default
+void stateService.go('passp.vn', {});

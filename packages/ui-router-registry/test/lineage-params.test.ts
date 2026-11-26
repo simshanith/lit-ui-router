@@ -59,6 +59,47 @@ const states = [
   { name: 'l6.b.c.d', url: '/4?id', params: { id: { array: 'auto' } } },
   { name: 'l6.b.c.d.e', url: '/5?{id:any}' },
   { name: 'l6.b.c.d.e.f', url: '/6?id', params: { id: { value: 'six' } } },
+  { name: 'passq', url: '/passq?id' },
+  { name: 'passq.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passq.sq', url: '/sq', params: { id: { squash: true } } },
+  { name: 'passq.vu', url: '/vu', params: { id: { value: undefined } } },
+  { name: 'passq.vf', url: '/vf', params: { id: { value: () => undefined } } },
+  { name: 'passq.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passq.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passq.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passp', url: '/passp/:id' },
+  { name: 'passp.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passp.vu', url: '/vu', params: { id: { value: undefined } } },
+  { name: 'passp.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passp.vd.q', url: '/q?id' },
+  { name: 'passp.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passp.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passp.qu', url: '/qu?id', params: { id: { value: undefined } } },
+  { name: 'passa', url: '/passa?id', params: { id: { array: 'auto' } } },
+  { name: 'passa.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passa.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passt', url: '/passt?id', params: { id: { array: true } } },
+  { name: 'passt.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passt.sh', url: '/sh', params: { id: 'd' } },
+  { name: 'passi', url: '/passi?{id:int}' },
+  { name: 'passi.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passi.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passi.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passi.qd', url: '/qd?id', params: { id: 'd' } },
+  { name: 'passe', url: '/passe/:id', params: { id: { array: true } } },
+  { name: 'passe.dyn', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passe.vd', url: '/vd', params: { id: { value: 'd' } } },
+  { name: 'passe.vn', url: '/vn', params: { id: { value: null } } },
+  { name: 'passg', url: '/passg?id' },
+  { name: 'passg.p', url: '/p', params: { id: { dynamic: true } } },
+  { name: 'passg.p.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passm', url: '/passm?{id:int}' },
+  { name: 'passm.p', url: '/p', params: { id: { dynamic: true } } },
+  { name: 'passm.p.c', url: '/c?id' },
+  { name: 'passn', url: '/passn', params: { id: { dynamic: true } } },
+  { name: 'passn.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'passn5', url: '/passn5', params: { id: 5 } },
+  { name: 'passn5.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const satisfies readonly StateDeclaration[];
 
 const createRouter = () => {
@@ -248,5 +289,90 @@ describe('a param a child redeclares', () => {
 
     assert.equal(url, '/lplain/c?id=a&id=a');
     assert.deepEqual((await fromUrl(url)).read, { id: ['a', 'a'] });
+  });
+});
+
+describe('a pass-through redeclaration, core `any`', () => {
+  const reads = async (
+    cases: readonly (readonly [string, RawParams, unknown])[],
+  ) => {
+    for (const [name, params, id] of cases) {
+      assert.deepEqual((await go(name, params)).read, { id }, name);
+    }
+  };
+
+  it('reads `undefined` when every declaration lets the key go unset', async () => {
+    await reads([
+      ['passq.dyn', {}, undefined],
+      ['passq.sq', {}, undefined],
+      ['passq.vu', {}, undefined],
+      ['passq.vf', {}, undefined],
+      ['passa.dyn', {}, undefined],
+      ['passt.dyn', {}, undefined],
+      ['passi.dyn', {}, undefined],
+      ['passe.dyn', {}, undefined],
+      ['passg.p.c', {}, undefined],
+      ['passm.p.c', {}, undefined],
+      ['passn.c', {}, undefined],
+      ['passn5.c', {}, undefined],
+    ]);
+    assert.deepEqual(await fromUrl('/passq/c'), {
+      state: 'passq.dyn',
+      read: { id: undefined },
+    });
+    assert.deepEqual((await fromUrl('/passe//c')).read, { id: undefined });
+  });
+
+  it('or its own default', async () => {
+    await reads([
+      ['passq.vd', {}, 'd'],
+      ['passq.sh', {}, 'd'],
+      ['passq.vn', {}, null],
+      ['passp.vd', {}, 'd'],
+      ['passp.sh', {}, 'd'],
+      ['passa.vd', {}, 'd'],
+      ['passt.sh', {}, 'd'],
+      ['passi.vn', {}, null],
+      ['passe.vd', {}, 'd'],
+    ]);
+  });
+
+  it('takes and reads back what its ancestors take', async () => {
+    await reads([
+      ['passq.dyn', { id: 'x' }, 'x'],
+      ['passp.dyn', { id: 'x' }, 'x'],
+      ['passp.vu', { id: 'x' }, 'x'],
+      ['passa.dyn', { id: ['a', 'b'] }, ['a', 'b']],
+      ['passt.dyn', { id: 'x' }, 'x'],
+      ['passt.dyn', { id: ['a', 'b'] }, ['a', 'b']],
+      ['passi.dyn', { id: 5 }, 5],
+      ['passi.vd', { id: 5 }, 5],
+      ['passe.dyn', { id: ['a', 'b'] }, ['a', 'b']],
+      ['passg.p.c', { id: 'x' }, 'x'],
+      ['passm.p.c', { id: 5 }, '5'],
+      ['passn.c', { id: 'x' }, 'x'],
+      ['passn5.c', { id: 5 }, 5],
+      ['lcfg.config', { id: 5 }, 5],
+    ]);
+    assert.deepEqual((await fromUrl('/passt/c?id=a')).read, { id: ['a'] });
+    assert.deepEqual((await fromUrl('/passg/p/c?id=a')).read, { id: 'a' });
+  });
+
+  it("rejects what an ancestor rejects, the child's default included", async () => {
+    for (const name of [
+      'passp.dyn',
+      'passp.vu',
+      'passp.vn',
+      'passp.vd.q',
+      'passp.qu',
+      'passi.vd',
+      'passi.qd',
+      'passe.vn',
+    ]) {
+      await rejects(name, {});
+    }
+
+    await rejects('passi.dyn', { id: 'x' });
+    await rejects('passm.p.c', { id: 'x' });
   });
 });

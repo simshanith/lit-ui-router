@@ -621,34 +621,48 @@ type Narrow<C, A> = C extends unknown
     : Extract<A, C>
   : never;
 
+// A pass-through is core's `any`, so it takes whatever its ancestors take.
 type RedeclaredValue<D, Inherited, K> = Narrow<
-  KeyType<D, K, 'input'>,
+  [PassKeys<D, K>] extends [never] ? KeyType<D, K, 'input'> : unknown,
   Exclude<Inherited[K & keyof Inherited], undefined>
 >;
 
-// A default of the nearest declaration fills the key in before core checks the ancestors'.
-type IsOptionalRedeclared<D, Inherited, K> =
-  IsOptionalInput<D, K> extends true
-    ? (
-        K extends keyof ParamsBlock<D> ? HasDefault<ParamsBlock<D>[K]> : false
-      ) extends true
-      ? true
-      : Record<never, never> extends Pick<Inherited, K & keyof Inherited>
-        ? true
-        : false
+type FillsOwn<D, K> = K extends keyof ParamsBlock<D>
+  ? FillsDefault<ParamsBlock<D>[K]>
+  : false;
+
+// Only the nearest declaration's default fills the key, and core checks it against every declaration.
+type IsOptionalRedeclared<D, K> =
+  FillsOwn<D, K> extends true
+    ? LineageAccepts<
+        Invoked<DefaultOf<ParamsBlock<D>[K & keyof ParamsBlock<D>]>>,
+        DeclarationOf<ParentName<D>>,
+        K
+      >
+    : LineageAccepts<undefined, D, K>;
+
+type LineageAccepts<V, D, K> = [D] extends [never]
+  ? true
+  : (K extends OwnKeys<D> ? Accepts<V, D, K> : true) extends true
+    ? LineageAccepts<V, DeclarationOf<ParentName<D>>, K>
     : false;
+
+// `any` takes every value; an optional declaration also takes an absent or `null` one.
+type Accepts<V, D, K> = [PassKeys<D, K>] extends [never]
+  ? [V] extends [null | undefined]
+    ? IsOptionalInput<D, K>
+    : [V] extends [KeyType<D, K, 'input'>]
+      ? true
+      : false
+  : true;
 
 type RedeclaredInput<D, Inherited, S> = {
   [
-    K in S & string as IsOptionalRedeclared<D, Inherited, K> extends true
-      ? never
-      : K
+    K in S & string as IsOptionalRedeclared<D, K> extends true ? never : K
   ]: RedeclaredValue<D, Inherited, K>;
 } & {
   [
-    K in S & string as IsOptionalRedeclared<D, Inherited, K> extends true
-      ? K
-      : never
+    K in S & string as IsOptionalRedeclared<D, K> extends true ? K : never
   ]?: RedeclaredValue<D, Inherited, K>;
 };
 
@@ -665,13 +679,31 @@ type PassKeys<D, S> =
 type PassedOutput<D, P> = [P] extends [never]
   ? unknown
   : {
-      [K in P & string]:
-        | KeyType<D, K, 'output'>
-        | Wrapped<
-            UrlRead<ParentName<D>, K>,
-            IsArray<ParamsBlock<D>[K & keyof ParamsBlock<D>], K>
-          >;
+      [
+        K in P & string as MayBeAbsent<D, K> extends true ? never : K
+      ]: PassedValue<D, K>;
+    } & {
+      [
+        K in P & string as MayBeAbsent<D, K> extends true ? K : never
+      ]?: PassedValue<D, K>;
     };
+
+type PassedValue<D, K> =
+  | (FillsOwn<D, K> extends true ? KeyType<D, K, 'output'> : never)
+  | Wrapped<
+      Exclude<UrlRead<ParentName<D>, K>, undefined>,
+      IsArray<ParamsBlock<D>[K & keyof ParamsBlock<D>], K>
+    >;
+
+// Without its own default, a pass-through reads `undefined` when every declaration lets the key go unset.
+type MayBeAbsent<D, K> =
+  FillsOwn<D, K> extends true
+    ? false
+    : LineageAccepts<undefined, D, K> extends true
+      ? true
+      : undefined extends UrlRead<ParentName<D>, K>
+        ? true
+        : false;
 
 type Wrapped<V, A> = A extends true
   ? V extends readonly unknown[]
@@ -679,16 +711,27 @@ type Wrapped<V, A> = A extends true
     : V[]
   : V;
 
-// The value the nearest url declaring `K` reads, through any `any` params between.
+// What the nearest typed declaration of `K` reads or takes, through any `any` params between.
 type UrlRead<N, K> = [DeclarationOf<N>] extends [never]
   ? never
   : K extends OwnKeys<DeclarationOf<N>>
-    ? K extends UrlKeys<DeclarationOf<N>>
-      ? Exclude<KeyType<DeclarationOf<N>, K, 'output'>, undefined>
-      : [PassKeys<DeclarationOf<N>, K>] extends [never]
-        ? never
-        : UrlRead<ParentName<DeclarationOf<N>>, K>
+    ? [PassKeys<DeclarationOf<N>, K>] extends [never]
+      ? Taken<DeclarationOf<N>, K>
+      : | (FillsOwn<DeclarationOf<N>, K> extends true
+            ? KeyType<DeclarationOf<N>, K, 'output'>
+            : never)
+        | UrlRead<ParentName<DeclarationOf<N>>, K>
     : UrlRead<ParentName<DeclarationOf<N>>, K>;
+
+// An array param reads a scalar back unwrapped once an `any` param took it.
+type Taken<D, K> =
+  | KeyType<D, K, 'output'>
+  | (IsArray<
+      K extends keyof ParamsBlock<D> ? ParamsBlock<D>[K] : unknown,
+      K
+    > extends true
+      ? Extract<KeyType<D, K, 'output'>, readonly unknown[]>[number]
+      : never);
 
 type Simplify<T> = { [K in keyof T]: T[K] };
 
