@@ -2,6 +2,17 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/lit-ui-router/).
 
+## 1.20.2 (2026-11-26)
+
+<!-- notes-through: 164c9fe8ea7593cb9d5baad507d02affc262cc9e -->
+
+### Bug Fixes
+
+* **lit-ui-router:** keep routing into a ui-view after a trailing parent part swaps its fallback ([#2423](https://github.com/simshanith/lit-ui-router/issues/2423)) ([e2247fe](https://github.com/simshanith/lit-ui-router/commit/e2247fea8fe811dcf1b57939eda02f533ceb7356))
+* **lit-ui-router:** read a null ariaCurrentValue as omitted instead of throwing ([#2422](https://github.com/simshanith/lit-ui-router/issues/2422)) ([31181b8](https://github.com/simshanith/lit-ui-router/commit/31181b81e60d6623ec03a37f68d350dfa58300cd))
+
+[Release page](https://lit-ui-router.dev/releases/lit-ui-router/1.20.2/) · [Diff from 1.20.1](https://lit-ui-router.dev/releases/lit-ui-router/diff/1.20.1...1.20.2/)
+
 ## 1.20.1 (2026-11-22)
 
 ### Bug Fixes
