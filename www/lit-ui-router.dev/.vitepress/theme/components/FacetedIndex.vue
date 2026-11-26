@@ -190,8 +190,7 @@ function revealHashTarget(): void {
 
   if (!entry || matchesFilter(entry, filter.value)) return;
 
-  filter.value = clearConflictingFilters(entry, filter.value);
-  syncUrl();
+  setFilter(clearConflictingFilters(entry, filter.value));
   void nextTick(() => {
     document.getElementById(slug)?.scrollIntoView();
   });

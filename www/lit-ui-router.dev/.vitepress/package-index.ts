@@ -17,11 +17,12 @@ import {
   SUBJECTS,
 } from '../catalog/packages.ts';
 import { headingSlug } from './example-index.ts';
-import { code, selfLink } from './index-markdown.ts';
+import { code, markdownLink } from './index-markdown.ts';
 import { releasesPath } from './release-stubs.ts';
 import type {
   FacetDefinition,
   FacetIndexData,
+  FacetLink,
 } from './theme/components/faceted-index.ts';
 
 /** Every manifest under packages/, keyed by package name. */
@@ -69,13 +70,22 @@ export function entryPoints({ name, exports = {} }: PackageManifest): string[] {
 
 const sentence = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`);
 
+function packageLinks(name: PackageName): FacetLink[] {
+  const reference = API_REFERENCES[name];
+
+  return [
+    { text: 'Package page', href: packagePagePath(name) },
+    ...(reference ? [{ text: 'API reference', href: reference }] : []),
+    { text: 'Releases', href: releasesPath(name), self: true },
+  ];
+}
+
 /** One package's index entry: its description, facets, entry points and links. */
 export function packageEntry(
   { name, subject, runtime, ...entry }: (typeof PACKAGES)[number],
   manifest: PackageManifest,
 ): string[] {
   const layer = 'layer' in entry ? entry.layer : undefined;
-  const reference = API_REFERENCES[name];
 
   const facets = [
     `subject ${code(subject)}`,
@@ -83,11 +93,7 @@ export function packageEntry(
     `runtime ${runtime.map(code).join(', ')}`,
   ];
 
-  const links = [
-    `[Package page](${packagePagePath(name)})`,
-    ...(reference ? [`[API reference](${reference})`] : []),
-    selfLink('Releases', releasesPath(name)),
-  ];
+  const links = packageLinks(name).map(markdownLink);
 
   return [
     `### ${name}`,
@@ -152,7 +158,6 @@ export function packageIndexData(
     entries: PACKAGES.map((entry) => {
       const manifest = manifestOf(manifests, entry.name);
       const layer = 'layer' in entry ? entry.layer : undefined;
-      const reference = API_REFERENCES[entry.name];
 
       return {
         id: entry.name,
@@ -169,11 +174,7 @@ export function packageIndexData(
           role: [entry.role],
           runtime: entry.runtime,
         },
-        links: [
-          { text: 'Package page', href: packagePagePath(entry.name) },
-          ...(reference ? [{ text: 'API reference', href: reference }] : []),
-          { text: 'Releases', href: releasesPath(entry.name), self: true },
-        ],
+        links: packageLinks(entry.name),
         entryPoints: entryPoints(manifest),
       };
     }),

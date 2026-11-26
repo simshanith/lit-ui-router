@@ -13,7 +13,7 @@ import {
   type ExampleFacets,
   type ExampleKind,
 } from '../catalog/examples.ts';
-import { code, selfLink } from './index-markdown.ts';
+import { code, markdownLink } from './index-markdown.ts';
 import { pageUrl } from './surfaces.ts';
 import {
   EXAMPLES,
@@ -24,6 +24,7 @@ import {
 import type {
   FacetDefinition,
   FacetIndexData,
+  FacetLink,
 } from './theme/components/faceted-index.ts';
 
 const SITE = join(import.meta.dirname, '..');
@@ -226,18 +227,21 @@ export function liveExamples(
 
 const pageLink = ({ title, url }: PageLink): string => `[${title}](${url})`;
 
+function exampleLinks(name: ExampleName): FacetLink[] {
+  return [
+    { text: 'Run it', href: staticSrc(name), self: true },
+    { text: 'StackBlitz', href: stackblitzOpenSrc(name), external: true },
+    { text: 'Source', href: githubTreeSrc(name), external: true },
+  ];
+}
+
 function exampleEntry(
   name: ExampleName,
   facets: ExampleFacets,
   pages: readonly PageLink[],
 ): string[] {
   const { title, summary } = EXAMPLES[name];
-
-  const links = [
-    selfLink('Run it', staticSrc(name)),
-    `[Open in StackBlitz](${stackblitzOpenSrc(name)})`,
-    `[Source](${githubTreeSrc(name)})`,
-  ];
+  const links = exampleLinks(name).map(markdownLink);
 
   return [
     `### ${title}`,
@@ -353,15 +357,7 @@ export function exampleIndexData(): FacetIndexData {
         facets: Object.fromEntries(
           Object.entries(facets).flatMap(([k, v]) => (v ? [[k, [v]]] : [])),
         ),
-        links: [
-          { text: 'Run it', href: staticSrc(name), self: true },
-          {
-            text: 'StackBlitz',
-            href: stackblitzOpenSrc(name),
-            external: true,
-          },
-          { text: 'Source', href: githubTreeSrc(name), external: true },
-        ],
+        links: exampleLinks(name),
         embeddedIn:
           embedded.length > 0
             ? embedded.map(({ title: text, url: href }) => ({ text, href }))
