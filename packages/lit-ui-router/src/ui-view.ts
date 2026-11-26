@@ -60,20 +60,23 @@ const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
 
 const FOLLOWING = 4 satisfies Node['DOCUMENT_POSITION_FOLLOWING'];
 
+/** The text of `node` when it is a comment. */
+const commentData = (node: ChildNode | null): string | undefined =>
+  // SAFETY: `nodeType` COMMENT_NODE is a Comment
+  node?.nodeType === COMMENT_NODE ? (node as Comment).data : undefined;
+
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
  * comment, or a part marker a render wrote under whatever prefix.
  */
 const isRenderMarker = (node: ChildNode | null): boolean => {
-  if (!node || node.nodeType !== COMMENT_NODE) {
-    return false;
-  }
+  const data = commentData(node);
 
-  // SAFETY: `nodeType` COMMENT_NODE is a Comment
-  const { data } = node as Comment;
-
-  return data === '' || data.includes('lit-part');
+  return data === '' || !!data?.includes('lit-part');
 };
+
+/** The text of the comment ending a view's render ahead of its fallback set. */
+const RENDER_END = 'ui-view-end';
 
 /** Whether `node` sits inside `host`, across shadow roots. */
 const composedContains = (host: Node, node: Node): boolean => {
@@ -637,9 +640,14 @@ export class UiView extends LitElement {
    */
   private authoredPrefix(): ChildNode[] {
     const authored: ChildNode[] = [];
+    let inPart = false;
 
     for (const child of this.childNodes) {
-      if (isRenderMarker(child)) break;
+      const data = commentData(child);
+
+      // past a part marker of the enclosing template, an empty comment bounds one of that part's items
+      if (isRenderMarker(child) && !(inPart && data === '')) break;
+      inPart ||= !!data?.startsWith('?lit$');
       authored.push(child);
     }
 
@@ -655,19 +663,38 @@ export class UiView extends LitElement {
    * stands them back up when no component occupies the view.
    *
    * A view whose first child is a render marker holds a render's output from
-   * the first child down, so it captures nothing and the nodes stay where they
-   * stand: they are lit's own on a re-attached view, and never ours to move.
+   * the first child down, so the nodes stay where they stand: they are lit's
+   * own on a re-attached view, and never ours to move. A clone of a view that
+   * showed its fallback set captures the nodes past that render's end.
    */
   protected captureContent(): void {
-    if (this.captured || isRenderMarker(this.firstChild)) {
+    const cloned = isRenderMarker(this.firstChild);
+
+    const end = cloned
+      ? this.clonedRenderEnd()
+      : document.createComment(RENDER_END);
+
+    if (this.captured || !end) {
       return;
     }
 
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
-    this.fallbackNodes = this.authoredPrefix();
+    this.fallbackNodes = cloned ? this.nodesAfter(end) : this.authoredPrefix();
     this.fallback.append(...this.fallbackNodes);
-    this.renderEnd = document.createComment('');
+    this.renderEnd = end;
+  }
+
+  /** The render end a clone carries with fallback nodes past it; a clone of a routed view carries none. */
+  private clonedRenderEnd(): Comment | undefined {
+    for (const child of this.childNodes) {
+      if (commentData(child) === RENDER_END) {
+        // SAFETY: a node with comment data is a Comment
+        return child.nextSibling ? (child as Comment) : undefined;
+      }
+    }
+
+    return undefined;
   }
 
   /** Opens the first render ahead of everything, ending at {@link renderEnd}. */
@@ -678,7 +705,11 @@ export class UiView extends LitElement {
       return;
     }
 
-    this.prepend(end);
+    // a clone's end stays behind the stale render it carries
+    if (end.parentNode !== this) {
+      this.prepend(end);
+    }
+
     this.renderOptions.renderBefore = end;
   }
 
