@@ -1,5 +1,11 @@
 # ui-router-otel
 
+[![npm version](https://img.shields.io/npm/v/ui-router-otel.svg)](https://npmx.dev/package/ui-router-otel)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-otel@*)](https://lit-ui-router.dev/gh/releases/ui-router-otel/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/ui-router-otel)
+[![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-otel)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-otel)
+
 [OpenTelemetry](https://opentelemetry.io) spans for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: one span per transition, with a child span for each phase and, on request, each resolve.
 
 It runs in production, beside the tracer provider and exporter the app already has.
