@@ -4,6 +4,7 @@
     "src/index.ts",
     "src/define.ts",
     "src/plugin.ts",
+    "src/lazy.ts",
     "src/performance.ts",
     "src/console.ts",
     "src/lit-ui-router.ts",

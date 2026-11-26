@@ -435,6 +435,10 @@ export class DevtoolsPanel extends LitElement {
   #resize: ResizeObserver | undefined;
   #observed: Element | null = null;
   #recorder: Recorder | undefined;
+  // A recorder set from outside, which the panel uses for `router` and never stops.
+  #given: Recorder | undefined;
+  #owned = false;
+  #givenChanged = false;
   #attached: UIRouter | undefined;
   #unsubscribe: (() => void) | undefined;
   #ticker: ReturnType<typeof setInterval> | undefined;
@@ -474,9 +478,17 @@ export class DevtoolsPanel extends LitElement {
     this._viewsFailed = false;
   }
 
-  // The recorder behind the panel, for reporters that should share it.
+  // The recorder behind the panel, for reporters that should share it; one set here is replayed, then followed.
   get recorder(): Recorder | undefined {
-    return this.#recorder;
+    return this.#recorder ?? this.#given;
+  }
+
+  // The getter prefers the attached recorder, so a change is flagged here rather than through Lit's old-value comparison.
+  set recorder(recorder: Recorder | undefined) {
+    if (recorder === this.#given) return;
+    this.#given = recorder;
+    this.#givenChanged = true;
+    this.requestUpdate();
   }
 
   /** Spans from a tracer, for the Timeline; setting it replaces them all. */
@@ -556,7 +568,10 @@ export class DevtoolsPanel extends LitElement {
       this._keepMessages = this.redaction.messages;
     }
 
-    if (changed.has('router') && this.#attached !== this.router) {
+    const given = this.#givenChanged;
+    this.#givenChanged = false;
+
+    if ((changed.has('router') || given) && this.#stale()) {
       this.#detach();
       this._live = emptyModel();
       this.#resetSelection();
@@ -1173,32 +1188,49 @@ export class DevtoolsPanel extends LitElement {
     if (this._inspect !== 'router') this._inspect = 'none';
   }
 
+  // Attached to another router than `router`, or to another recorder than the one given.
+  #stale(): boolean {
+    return (
+      this.#attached !== this.router ||
+      (this.#attached !== undefined &&
+        (this.#given ? this.#recorder !== this.#given : !this.#owned))
+    );
+  }
+
   #attach(router: UIRouter) {
     this.#attached = router;
 
-    const recorder = record(router, {
-      limit: this.history * 40,
-      timeResolves: this.timeResolves,
-    });
+    const recorder =
+      this.#given ??
+      record(router, {
+        limit: this.history * 40,
+        timeResolves: this.timeResolves,
+      });
 
     this.#recorder = recorder;
-    this._live = fold(recorder.session({ params: 'all' }).events);
+    this.#owned = recorder !== this.#given;
+    this._live = this.#kept(fold(recorder.session({ params: 'all' }).events));
     this.#unsubscribe = recorder.subscribe((event) => {
-      const next = apply(this._live, event);
-      this._live =
-        next.txs.length > this.history
-          ? { ...next, txs: next.txs.slice(-this.history) }
-          : next;
+      this._live = this.#kept(apply(this._live, event));
 
       if (event.type === 'result' || event.type === 'invalid')
         this.#announce(event.type === 'result' ? event.id : -event.seq);
     });
   }
 
+  // The latest `history` transitions of the model.
+  #kept(model: Model): Model {
+    return model.txs.length > this.history
+      ? { ...model, txs: model.txs.slice(-this.history) }
+      : model;
+  }
+
   #detach() {
     this.#unsubscribe?.();
-    this.#recorder?.stop();
+
+    if (this.#owned) this.#recorder?.stop();
     this.#recorder = undefined;
+    this.#owned = false;
     this.#attached = undefined;
     this.#unsubscribe = undefined;
     clearInterval(this.#ticker);

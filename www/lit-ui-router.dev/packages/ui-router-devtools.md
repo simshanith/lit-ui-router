@@ -87,6 +87,7 @@ router.plugin(DevtoolsPlugin, { viewLocator: litViewLocator });
 | `.`                     | `observe` (the adapter), `record` (a ring-buffered recorder), `observedEdges`, `viewTree`, `SCHEMA_VERSION`, the event, session and span types, and `ViewLocator` |
 | `./define`              | Registers `<ui-router-devtools>`; set its `router` property                                                                                                       |
 | `./plugin`              | `DevtoolsPlugin`, for `router.plugin(DevtoolsPlugin)`; it appends the element to `document.body`                                                                  |
+| `./lazy`                | `LazyDevtoolsPlugin`: records from registration and loads the element on `mount(target)`, without lit, d3 or the element in the startup chunk                     |
 | `./performance`         | `reportToPerformance(events \| recorder)`: User Timing track entries for the Performance panel                                                                    |
 | `./console`             | `reportToConsole(events \| recorder)`: one collapsed group per settled transition                                                                                 |
 | `./testing`             | `transitions(session \| recorder)`, a snapshot-stable log, and `settled(recorder)`                                                                                |
@@ -105,6 +106,41 @@ declare const router: UIRouter;
 const { element } = router.plugin(DevtoolsPlugin, { timeResolves: true });
 if (element.recorder) reportToPerformance(element.recorder);
 ```
+
+## Loading the panel on demand
+
+`DevtoolsPlugin` loads the element, lit and d3 with the app. `LazyDevtoolsPlugin` from `ui-router-devtools/lazy` loads only the recorder: registered before the router starts, it records the first transition and everything after it, and `mount(target)` loads `<ui-router-devtools>`, hands it that recorder and appends it to `target`. The panel replays what was recorded, then follows the router. It takes `DevtoolsPlugin`'s options, plus `history`, and its `recorder` is there for the reporters from the start.
+
+```ts
+import { UIRouter } from '@uirouter/core';
+import { LazyDevtoolsPlugin } from 'ui-router-devtools/lazy';
+import { litViewLocator } from 'ui-router-devtools/lit-ui-router';
+
+declare const router: UIRouter;
+
+const devtools = router.plugin(LazyDevtoolsPlugin, {
+  timeResolves: true,
+  viewLocator: litViewLocator,
+});
+
+const container = document.createElement('aside');
+document.body.append(container);
+
+let shown = false;
+
+addEventListener('keydown', (event) => {
+  if (!event.altKey || event.key !== 'd') return;
+  shown = !shown;
+  if (shown)
+    devtools.mount(container).catch((error: unknown) => {
+      shown = false;
+      console.error(error);
+    });
+  else devtools.unmount();
+});
+```
+
+`mount()` resolves once the element is in the DOM, as `devtools.element`; it shows the pill, which opens the panel when clicked. `unmount()` removes the element and keeps recording, so the next `mount()` replays everything since registration; called while `mount()` is still loading, it cancels the append. `mount()` rejects while the plugin is mounted or mounting, and `unmount()` throws while it is not. Disposing the plugin stops the recorder and unmounts the element. `DevtoolsPlugin` and `LazyDevtoolsPlugin` share the plugin name `devtools`, so register one or the other. The element's `recorder` property takes any recorder of its `router` the same way, and the panel leaves a recorder it was given running when it is removed.
 
 ## Session files and redaction
 
