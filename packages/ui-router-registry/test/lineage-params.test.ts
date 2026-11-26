@@ -100,6 +100,47 @@ const states = [
   { name: 'passn.c', url: '/c', params: { id: { dynamic: true } } },
   { name: 'passn5', url: '/passn5', params: { id: 5 } },
   { name: 'passn5.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'b1u', url: '/b1u', params: { id: { value: undefined } } },
+  { name: 'b1u.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1u.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1f', url: '/b1f', params: { id: { value: () => undefined } } },
+  { name: 'b1f.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1f.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1a', url: '/b1a', params: { id: { array: true } } },
+  { name: 'b1a.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1a.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1as', url: '/b1as', params: { id: { array: true, value: 'd' } } },
+  { name: 'b1as.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b2c', url: '/b2c', params: { id: 'pd' } },
+  {
+    name: 'b2c.fn',
+    url: '/fn',
+    params: { id: { value: (): number | undefined => 5 } },
+  },
+  { name: 'b2d', url: '/b2d', params: { id: { dynamic: true } } },
+  {
+    name: 'b2d.fn',
+    url: '/fn',
+    params: { id: { value: (): string | undefined => 'd' } },
+  },
+  { name: 'b2q', url: '/b2q?{id:int}' },
+  {
+    name: 'b2q.fn',
+    url: '/fn',
+    params: { id: { value: (): string | undefined => 'd' } },
+  },
+  { name: 'b2n', url: '/b2n?id' },
+  {
+    name: 'b2n.fn',
+    url: '/fn',
+    params: { id: { value: (): string | null => 'd' } },
+  },
+  { name: 'b3', url: '/b3?id', params: { id: { array: true } } },
+  { name: 'b3.m', url: '/m', params: { id: { type: 'int' } } },
+  { name: 'b3.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'b3p', url: '/b3p/:id', params: { id: { array: true } } },
+  { name: 'b3p.m', url: '/m', params: { id: { type: 'int' } } },
+  { name: 'b3p.m.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const satisfies readonly StateDeclaration[];
 
 const createRouter = () => {
@@ -374,5 +415,42 @@ describe('a pass-through redeclaration, core `any`', () => {
 
     await rejects('passi.dyn', { id: 'x' });
     await rejects('passm.p.c', { id: 'x' });
+  });
+});
+
+describe('a pass-through below an `any`, typed non-url or defaulted ancestor', () => {
+  it('reads whatever an `any` ancestor took', async () => {
+    for (const parent of ['b1u', 'b1f', 'b1a'] as const) {
+      for (const id of ['x', 42, ['a', 'b']]) {
+        assert.deepEqual((await go(`${parent}.dyn`, { id })).read, { id });
+      }
+
+      assert.deepEqual((await go(`${parent}.str`, { id: 42 })).read, {
+        id: 42,
+      });
+    }
+
+    assert.deepEqual((await go('b1as.dyn', { id: 'x' })).read, { id: 'x' });
+  });
+
+  it('reads its own default where the default may return `undefined`', async () => {
+    assert.deepEqual((await go('b2c.fn', {})).read, { id: 5 });
+    assert.deepEqual((await go('b2d.fn', {})).read, { id: 'd' });
+  });
+
+  it('reads what a url ancestor above a typed non-url one decoded', async () => {
+    assert.deepEqual(await fromUrl('/b3/m/c?id=5'), {
+      state: 'b3.m.c',
+      read: { id: ['5'] },
+    });
+    assert.deepEqual(await fromUrl('/b3p/5/m/c'), {
+      state: 'b3p.m.c',
+      read: { id: ['5'] },
+    });
+  });
+
+  it('checks every member a default may return', async () => {
+    await rejects('b2q.fn', {});
+    assert.deepEqual((await go('b2n.fn', {})).read, { id: 'd' });
   });
 });

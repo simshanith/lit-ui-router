@@ -113,6 +113,47 @@ const lineageStates = [
   { name: 'passn.c', url: '/c', params: { id: { dynamic: true } } },
   { name: 'passn5', url: '/passn5', params: { id: 5 } },
   { name: 'passn5.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'b1u', url: '/b1u', params: { id: { value: undefined } } },
+  { name: 'b1u.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1u.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1f', url: '/b1f', params: { id: { value: () => undefined } } },
+  { name: 'b1f.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1f.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1a', url: '/b1a', params: { id: { array: true } } },
+  { name: 'b1a.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b1a.str', url: '/str', params: { id: 'cd' } },
+  { name: 'b1as', url: '/b1as', params: { id: { array: true, value: 'd' } } },
+  { name: 'b1as.dyn', url: '/dyn', params: { id: { dynamic: true } } },
+  { name: 'b2c', url: '/b2c', params: { id: 'pd' } },
+  {
+    name: 'b2c.fn',
+    url: '/fn',
+    params: { id: { value: (): number | undefined => 5 } },
+  },
+  { name: 'b2d', url: '/b2d', params: { id: { dynamic: true } } },
+  {
+    name: 'b2d.fn',
+    url: '/fn',
+    params: { id: { value: (): string | undefined => 'd' } },
+  },
+  { name: 'b2q', url: '/b2q?{id:int}' },
+  {
+    name: 'b2q.fn',
+    url: '/fn',
+    params: { id: { value: (): string | undefined => 'd' } },
+  },
+  { name: 'b2n', url: '/b2n?id' },
+  {
+    name: 'b2n.fn',
+    url: '/fn',
+    params: { id: { value: (): string | null => 'd' } },
+  },
+  { name: 'b3', url: '/b3?id', params: { id: { array: true } } },
+  { name: 'b3.m', url: '/m', params: { id: { type: 'int' } } },
+  { name: 'b3.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'b3p', url: '/b3p/:id', params: { id: { array: true } } },
+  { name: 'b3p.m', url: '/m', params: { id: { type: 'int' } } },
+  { name: 'b3p.m.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const;
 
 declare module '../index.js' {
@@ -690,3 +731,79 @@ void stateService.go('passi.vd', {});
 
 // @ts-expect-error the path parent rejects the child's `null` default
 void stateService.go('passp.vn', {});
+
+// -- an `any` ancestor, a typed non-url one, or a union default --------------
+
+accepts<
+  Same<ResolvedParamsOf<'b1u.dyn'>, { id?: unknown; '#'?: string | null }>
+>(true);
+
+accepts<Same<ResolvedParamsOf<'b1u.str'>['id'], unknown>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'b1f.dyn'>, { id?: unknown; '#'?: string | null }>
+>(true);
+
+accepts<Same<ResolvedParamsOf<'b1f.str'>['id'], unknown>>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'b1a.dyn'>, { id?: unknown; '#'?: string | null }>
+>(true);
+
+accepts<Same<ResolvedParamsOf<'b1a.str'>['id'], unknown>>(true);
+
+declare const fromAny: ResolvedParamsOf<'b1u.str'>;
+
+// @ts-expect-error core reads `42` for `go('b1u.str', { id: 42 })`
+void (fromAny.id satisfies string);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'b1as.dyn'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'b2c.fn'>,
+    { id?: string | number; '#'?: string | null }
+  >
+>(true);
+
+accepts<Same<ResolvedParamsOf<'b2d.fn'>, { id?: string; '#'?: string | null }>>(
+  true,
+);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'b3.m.c'>,
+    { id?: string | number | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'b3p.m.c'>,
+    { id?: string | number | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<
+    ParamsOf<'b2q.fn'>,
+    { id: number | readonly number[]; '#'?: string | null }
+  >
+>(true);
+
+// @ts-expect-error the `int` parent rejects the `'d'` the child's default returns
+void stateService.go('b2q.fn', {});
+
+accepts<
+  Same<
+    ParamsOf<'b2n.fn'>,
+    { id?: string | readonly string[]; '#'?: string | null }
+  >
+>(true);
+
+void stateService.go('b2n.fn');
