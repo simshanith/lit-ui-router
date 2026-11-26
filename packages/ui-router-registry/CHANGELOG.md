@@ -2,6 +2,23 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-registry/).
 
+## 0.4.3 (2026-11-26)
+
+<!-- notes-through: 164c9fe8ea7593cb9d5baad507d02affc262cc9e -->
+
+### Bug Fixes
+
+* **ui-router-registry:** type an empty array path param as undefined on read-back ([#2421](https://github.com/simshanith/lit-ui-router/issues/2421)) ([4e5a730](https://github.com/simshanith/lit-ui-router/commit/4e5a7309d46322591edf15076da8eae9cd807f8d))
+
+<details>
+<summary>Also touched this package (1)</summary>
+
+* **www:** build the ui-router-registry page from its README ([#2374](https://github.com/simshanith/lit-ui-router/pull/2374))
+
+</details>
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-registry/0.4.3/) · [Diff from 0.4.2](https://lit-ui-router.dev/releases/ui-router-registry/diff/0.4.2...0.4.3/)
+
 ## 0.4.2 (2026-11-22)
 
 ### Bug Fixes
