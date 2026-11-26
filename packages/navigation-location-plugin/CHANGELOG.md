@@ -2,6 +2,17 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/).
 
+## 1.2.3 (2026-11-26)
+
+<!-- notes-through: 164c9fe8ea7593cb9d5baad507d02affc262cc9e -->
+
+### Bug Fixes
+
+* **navigation-location-plugin:** leave the router alone when an entry change keeps the URL ([#2413](https://github.com/simshanith/lit-ui-router/issues/2413)) ([e9f3cae](https://github.com/simshanith/lit-ui-router/commit/e9f3caec9ada1d4bff4c5d4f9bffaedb624b3283))
+* **navigation-location-plugin:** stop throwing when a navigate listener cancels a router navigation ([#2418](https://github.com/simshanith/lit-ui-router/issues/2418)) ([24efa67](https://github.com/simshanith/lit-ui-router/commit/24efa6739f67decfa81ba152eca40025689858f5))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/1.2.3/) · [Diff from 1.2.2](https://lit-ui-router.dev/releases/ui-router-navigation-location-plugin/diff/1.2.2...1.2.3/)
+
 ## 1.2.2 (2026-11-22)
 
 ### Documentation
