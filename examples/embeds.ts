@@ -2,8 +2,8 @@
 // them: build-embeds.ts builds these, EMBEDDED_EXAMPLES used to repeat them,
 // and the docs theme re-exports this for <LiveExample>. embeds.test.ts holds
 // the directories on disk to these keys; embeds.test-d.ts holds the
-// per-example npm scripts to them. `summary` is the example's line on the
-// docs site's /examples/ index.
+// per-example npm scripts to them. `summary` is the example's Markdown line
+// on the docs site's /examples/ index.
 //
 // `height` reserves the embed's space before its iframe loads, so the page
 // doesn't shift when the example paints — a static number by design. It is not
@@ -32,7 +32,7 @@ export const EXAMPLES = {
   'helloworld-nudeps': {
     title: 'Hello World (nudeps)',
     summary:
-      'The same starter with `nudeps`: npm packages self-hosted through a generated import map, no CDN and no build step',
+      'The same starter with [`nudeps`](https://nudeps.dev): npm packages self-hosted through a generated import map, no CDN and no build step',
     height: '190px',
     file: 'public/main.js',
   },
