@@ -604,7 +604,8 @@ export type ParamsOf<N extends StateName> = IsRegistered extends true
 /**
  * The params a state reads back once active: defaults filled in. A query param
  * reads back as one value unless it declares `array: 'auto'` or `array: true`,
- * though core also reads an unset `array` back as an array of two or more.
+ * or is a `name[]` id, though core also reads an unset `array` back as an array
+ * of two or more.
  */
 export type ResolvedParamsOf<N extends StateName> = IsRegistered extends true
   ? Simplify<LineageParams<N, 'output'> & HashParam>
