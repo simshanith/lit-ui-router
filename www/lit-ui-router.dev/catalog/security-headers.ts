@@ -20,6 +20,12 @@ export const DENIED_FEATURES = [
   'xr-spatial-tracking',
 ] as const;
 
+/** Cross-origin isolation, which the WebContainer embeds need: public/_headers sets it on the static pages, and the worker on the snapshot pages it serves. */
+export const ISOLATION_HEADERS = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'credentialless',
+} as const satisfies Record<string, string>;
+
 /** The security headers every response carries, by name. */
 export const SECURITY_HEADERS = {
   // One day, apex only: sibling sites live on subdomains.

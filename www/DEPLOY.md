@@ -250,7 +250,9 @@ fails until it is. The route answers the way the assets binding answered for the
 `auto-trailing-slash` HTML handling (`307` to the canonical URL, query kept), the nearest
 `404.html` up to the line's root at status 404, content types by extension, the object's ETag
 with a `304` on a match, and `public, max-age=0, must-revalidate` except a line's hashed
-`assets/`, which are immutable. A site-wide line also gets the main site's `Link` header moved
+`assets/`, which are immutable. Every response carries the cross-origin isolation headers that
+`public/_headers` sets on the main site (`ISOLATION_HEADERS` in `catalog/security-headers.ts`),
+which the WebContainer embeds need. A site-wide line also gets the main site's `Link` header moved
 under its base and a `301` from `/v1/<mount>` to the unversioned mount for every worker row in
 `catalog/surfaces.ts`, since the VitePress client renders some nav links with the `/v1/` base,
 such as the mobile menu. A missing binding or a failed read answers a plain 503, never a main-site

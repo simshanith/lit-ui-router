@@ -7,6 +7,7 @@ import { describe, it } from 'node:test';
 import { parse } from 'jsonc-parser';
 import * as v from 'valibot';
 
+import { ISOLATION_HEADERS } from '../../catalog/security-headers.ts';
 import worker from '../index.ts';
 import {
   candidates,
@@ -226,6 +227,21 @@ describe('serveSnapshot', () => {
     assert.equal(response.headers.get('Content-Type'), 'text/javascript');
     assert.equal(response.headers.get('Cache-Control'), IMMUTABLE);
     assert.equal(response.headers.get('Link'), null);
+  });
+
+  it('keeps every page, asset and miss cross-origin isolated, as public/_headers keeps the main site', async () => {
+    for (const path of [
+      '/v1/',
+      '/v1/assets/app.abc123.js',
+      '/v1/nope',
+      '/v1/guides',
+      '/packages/ui-router-server/v0',
+    ]) {
+      const response = await serve(path);
+
+      for (const [name, value] of Object.entries(ISOLATION_HEADERS))
+        assert.equal(response.headers.get(name), value, `${path} ${name}`);
+    }
   });
 
   it('sends a file of no known type without a Content-Type', async () => {

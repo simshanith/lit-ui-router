@@ -1,4 +1,5 @@
 // Node-free: the docs worker serves the snapshots from it, and the bake and the publish script read its table.
+import { ISOLATION_HEADERS } from '../catalog/security-headers.ts';
 import { SURFACES } from '../catalog/surfaces.ts';
 import manifest from '../public/versions.json' with { type: 'json' };
 
@@ -192,7 +193,7 @@ export function mountTarget(
 
 /** The headers every response under a line carries, before the object's own. */
 function lineHeaders({ line, root }: LinePlace, pathname: string): Headers {
-  const headers = new Headers();
+  const headers = new Headers(ISOLATION_HEADERS);
 
   if (
     line.site &&
