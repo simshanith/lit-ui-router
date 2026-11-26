@@ -2201,6 +2201,29 @@ describe('UiView', () => {
       expect(clone.render()).toMatchObject({ strings: ['<slot></slot>'] });
     });
 
+    it('should capture nothing on a clone of a routed clone', async () => {
+      const { uiRouter, uiView } = await setupRouter(holdStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
+      const first = uiView.cloneNode(true) as UiView;
+      uiRouter.appendChild(first);
+      await waitForUpdate(first);
+
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
+      const second = first.cloneNode(true) as UiView;
+      uiRouter.appendChild(second);
+      await waitForUpdate(second);
+
+      expect(second['fallback']).toBeUndefined();
+    });
+
     it('should capture the fallback a clone carries from a view showing it', async () => {
       const { uiRouter, uiView } = await setupRouter(holdStates, {
         configure: (el) => {

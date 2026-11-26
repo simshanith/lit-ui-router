@@ -668,13 +668,17 @@ export class UiView extends LitElement {
    * showed its fallback set captures the nodes past that render's end.
    */
   protected captureContent(): void {
+    if (this.captured) {
+      return;
+    }
+
     const cloned = isRenderMarker(this.firstChild);
 
     const end = cloned
       ? this.clonedRenderEnd()
       : document.createComment(RENDER_END);
 
-    if (this.captured || !end) {
+    if (!end) {
       return;
     }
 
@@ -689,8 +693,11 @@ export class UiView extends LitElement {
   private clonedRenderEnd(): Comment | undefined {
     for (const child of this.childNodes) {
       if (commentData(child) === RENDER_END) {
+        const next = child.nextSibling;
+
+        // A render marker past the end is a routed clone's own render, never fallback.
         // SAFETY: a node with comment data is a Comment
-        return child.nextSibling ? (child as Comment) : undefined;
+        return next && !isRenderMarker(next) ? (child as Comment) : undefined;
       }
     }
 
