@@ -147,7 +147,10 @@ accepts<ParamsOf<'untyped'>>({ ids: 'a' });
 
 // -- a `name[]` path placeholder ---------------------------------------------
 
-accepts<Equal<ResolvedParamsOf<'pathsuffix'>['ids[]'], string[]>>(true);
+// An empty segment reads back `undefined`.
+accepts<Equal<ResolvedParamsOf<'pathsuffix'>['ids[]'], string[] | undefined>>(
+  true,
+);
 
 accepts<Equal<ResolvedParamsOf<'typedsuffix'>['ids[]'], number[]>>(true);
 
