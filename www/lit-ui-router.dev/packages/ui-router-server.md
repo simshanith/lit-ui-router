@@ -118,7 +118,7 @@ package's own esbuild probe:
 | `ui-router-server/matcher`        | no                                    | ~2.9 KiB gzip            | does this pathname match this pattern, with which params — and the inverse, `format()` |
 | `ui-router-server/redirects`      | no                                    | ~3.6 KiB gzip            | given routes and a redirect table, where does this pathname go                         |
 | `ui-router-server` (root)         | only for a `simulate` mount           | ~4.7 KiB gzip            | mounts in, verdicts out                                                                |
-| `ui-router-server/matcher-router` | no; a `simulate` mount throws         | ~0.4 KiB gzip under root | mounts in, verdicts out, in one file with no `@uirouter/core`                          |
+| `ui-router-server/router/matcher` | no; a `simulate` mount throws         | ~0.4 KiB gzip under root | mounts in, verdicts out, in one file with no `@uirouter/core`                          |
 | `ui-router-server/simulate`       | yes (optional peer)                   | +~27.4 KiB, lazy         | what would the real router do                                                          |
 | `ui-router-server/location`       | yes (optional peer)                   | ~0.3 KiB gzip            | a path-shaped in-memory location for a server-side router                              |
 | `ui-router-server/url-config`     | no; it configures the router you pass | ~0.4 KiB gzip            | one url config for the client router, the mounts, and a server render                  |
@@ -141,7 +141,7 @@ Picking one:
   over a route table (`compileRoutes`, `matchRoute`, `compileRedirects`,
   `evaluateRedirects`), without mount bookkeeping. Synchronous, dependency-free.
 - **root** — the default: `createServerRouter({ mounts })`, verdicts out.
-- **`/matcher-router`** — the root entry without the simulate tier, for a
+- **`/router/matcher`** — the root entry without the simulate tier, for a
   bundle that must be one file without `@uirouter/core`.
   [Matcher-only routers](#matcher-only-routers).
 - **`/simulate`** (or `strategy: 'simulate'` on a mount) — replay the URL
@@ -175,7 +175,7 @@ Picking one:
 
 ### Matcher-only routers
 
-`ui-router-server/matcher-router` exports the root entry's
+`ui-router-server/router/matcher` exports the root entry's
 `createServerRouter`, types and helpers without the simulate tier. Nothing it
 imports reaches `@uirouter/core`, not even through a dynamic `import()`, so a
 bundler that emits one file, the usual shape of a Lambda or other function
@@ -188,7 +188,7 @@ the root entry for one. Its routers work with every adapter and with
 import {
   createServerRouter,
   routesFromStates,
-} from 'ui-router-server/matcher-router';
+} from 'ui-router-server/router/matcher';
 
 import { states } from './src/states.ts';
 

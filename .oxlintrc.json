@@ -548,9 +548,9 @@
       }
     },
     {
-      // Mirrors bundleProbe["./matcher-router"].free; a single-file bundle inlines even a lazy import() of the simulate tier.
+      // Mirrors bundleProbe["./router/matcher"].free; a single-file bundle inlines even a lazy import() of the simulate tier.
       "files": [
-        "packages/ui-router-server/src/matcher-router.ts",
+        "packages/ui-router-server/src/router-matcher.ts",
         "packages/ui-router-server/src/server-router.ts"
       ],
       "rules": {
@@ -561,13 +561,13 @@
               {
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
-                "message": "ui-router-server/matcher-router bundles into one file without @uirouter/core; use `import type`. The simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
+                "message": "ui-router-server/router/matcher bundles into one file without @uirouter/core; use `import type`. The simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
               }
             ],
             "patterns": [
               {
                 "group": ["./simulate*", "./location*", "@uirouter/core/**"],
-                "message": "ui-router-server/matcher-router bundles into one file without @uirouter/core; the simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
+                "message": "ui-router-server/router/matcher bundles into one file without @uirouter/core; the simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
               }
             ]
           }

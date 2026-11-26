@@ -833,7 +833,7 @@ const rejectSimulateMounts = (mounts: Record<string, MountConfig>): void => {
   for (const [base, config] of Object.entries(mounts)) {
     if (config.strategy === 'simulate')
       throw new Error(
-        `Mount '${base}': the 'simulate' strategy needs createServerRouter from 'ui-router-server'; 'ui-router-server/matcher-router' builds 'matcher' mounts only`,
+        `Mount '${base}': the 'simulate' strategy needs createServerRouter from 'ui-router-server'; 'ui-router-server/router/matcher' builds 'matcher' mounts only`,
       );
   }
 };

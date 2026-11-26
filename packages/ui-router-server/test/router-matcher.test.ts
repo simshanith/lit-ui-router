@@ -7,8 +7,8 @@ import {
   createServerRouter,
   diagnoseMounts,
   routeTrie,
-} from '../src/matcher-router.ts';
-import type { MountConfig } from '../src/matcher-router.ts';
+} from '../src/router-matcher.ts';
+import type { MountConfig } from '../src/router-matcher.ts';
 import { config, hitPaths, MISS, REDIRECTS } from './route-tables.ts';
 
 const app: MountConfig = {
@@ -64,7 +64,7 @@ const probes = [
   '/elsewhere',
 ];
 
-describe('matcher-router createServerRouter', () => {
+describe('router/matcher createServerRouter', () => {
   it('answers every probe as the root entry does', async () => {
     const root = createRootRouter({ mounts });
     const matcher = createServerRouter({ mounts });
@@ -115,7 +115,7 @@ describe('matcher-router createServerRouter', () => {
         }),
       {
         message:
-          "Mount '/sim': the 'simulate' strategy needs createServerRouter from 'ui-router-server'; 'ui-router-server/matcher-router' builds 'matcher' mounts only",
+          "Mount '/sim': the 'simulate' strategy needs createServerRouter from 'ui-router-server'; 'ui-router-server/router/matcher' builds 'matcher' mounts only",
       },
     );
   });

@@ -7,7 +7,7 @@
  * from the root entry for one. Routers from either entry work with every
  * adapter and with {@link diagnoseMounts}.
  *
- * @module matcher-router
+ * @module router/matcher
  */
 
 import type { RouteDeclaration } from './redirects.ts';
@@ -56,7 +56,7 @@ export type { TrailingSlash, TrailingSlashPolicy } from './trailing-slash.ts';
  *
  * @example
  * ```ts
- * import { createServerRouter } from 'ui-router-server/matcher-router';
+ * import { createServerRouter } from 'ui-router-server/router/matcher';
  *
  * const router = createServerRouter({
  *   mounts: {

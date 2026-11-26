@@ -96,14 +96,6 @@
       "node": "./dist/development/url-matcher.js",
       "default": "./dist/url-matcher.js"
     },
-    "./matcher-router": {
-      "types": "./dist/matcher-router.d.ts",
-      "development": "./dist/development/matcher-router.js",
-      "production": "./dist/matcher-router.js",
-      "deno": "./dist/matcher-router.js",
-      "node": "./dist/development/matcher-router.js",
-      "default": "./dist/matcher-router.js"
-    },
     "./package.json": "./package.json",
     "./prerender": {
       "types": "./dist/prerender.d.ts",
@@ -120,6 +112,14 @@
       "deno": "./dist/redirects.js",
       "node": "./dist/development/redirects.js",
       "default": "./dist/redirects.js"
+    },
+    "./router/matcher": {
+      "types": "./dist/router-matcher.d.ts",
+      "development": "./dist/development/router-matcher.js",
+      "production": "./dist/router-matcher.js",
+      "deno": "./dist/router-matcher.js",
+      "node": "./dist/development/router-matcher.js",
+      "default": "./dist/router-matcher.js"
     },
     "./simulate": {
       "types": "./dist/simulate.d.ts",
@@ -270,11 +270,6 @@
         "@uirouter/core"
       ]
     },
-    "./matcher-router": {
-      "free": [
-        "@uirouter/core"
-      ]
-    },
     "./prerender": {
       "free": [
         "@uirouter/core",
@@ -288,6 +283,11 @@
       ]
     },
     "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./router/matcher": {
       "free": [
         "@uirouter/core"
       ]

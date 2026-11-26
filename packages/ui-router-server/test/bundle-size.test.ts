@@ -76,9 +76,9 @@ for (const bundler of bundlers) {
     });
 
     // A single-file bundler inlines every import(), so the entry must have none that reaches core.
-    it('bundles matcher-router into one chunk that never imports @uirouter/core', async () => {
-      const router = entries.find((entry) => entry.label === 'matcher-router');
-      assert.ok(router, 'expected a matcher-router export');
+    it('bundles router/matcher into one chunk that never imports @uirouter/core', async () => {
+      const router = entries.find((entry) => entry.label === 'router/matcher');
+      assert.ok(router, 'expected a router/matcher export');
 
       const { chunks } = await bundleEntry(router.file, bundler, {
         external: declared,
@@ -88,7 +88,7 @@ for (const bundler of bundlers) {
 
       assert.deepEqual(
         chunks.map((chunk) => chunk.name),
-        ['matcher-router.js'],
+        ['router-matcher.js'],
       );
       assert.deepEqual(chunks[0]?.externalImports, []);
       assert.doesNotMatch(chunks[0]?.code ?? '', /@uirouter\/core/);
