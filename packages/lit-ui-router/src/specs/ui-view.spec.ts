@@ -799,7 +799,7 @@ describe('UiView', () => {
       });
 
       // Taken as the fallback set: the authored <p> stands in the light DOM as
-      // itself, ahead of lit's marker, and the hold render adds nothing over it.
+      // itself, past the render's markers, and the hold render adds nothing over it.
       expect(uiView.render()).toBe(nothing);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
       expect(uiView.firstElementChild!.className).toBe('hold');
@@ -2201,6 +2201,52 @@ describe('UiView', () => {
       expect(clone.render()).toMatchObject({ strings: ['<slot></slot>'] });
     });
 
+    it('should capture nothing on a clone of a routed clone', async () => {
+      const { uiRouter, uiView } = await setupRouter(holdStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
+      const first = uiView.cloneNode(true) as UiView;
+      uiRouter.appendChild(first);
+      await waitForUpdate(first);
+
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
+      const second = first.cloneNode(true) as UiView;
+      uiRouter.appendChild(second);
+      await waitForUpdate(second);
+
+      expect(second['fallback']).toBeUndefined();
+    });
+
+    it('should capture the fallback a clone carries from a view showing it', async () => {
+      const { uiRouter, uiView } = await setupRouter(holdStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+
+      // SAFETY: a clone of a <ui-view> upgrades to a UiView
+      const clone = uiView.cloneNode(true) as UiView;
+      uiRouter.appendChild(clone);
+      await waitForUpdate(clone);
+      expect(clone.querySelectorAll('p.hold')).toHaveLength(1);
+
+      await routerGo(router, 'home');
+      await waitForUpdate(clone);
+
+      expect(clone.querySelector('.home-content')).not.toBeNull();
+      expect(clone.querySelector('p.hold')).toBeNull();
+    });
+
     it('should capture at most once across a re-attach before its first update', async () => {
       router = createTestRouter(holdStates);
       const uiRouterEl = document.createElement('ui-router');
@@ -2326,23 +2372,24 @@ describe('UiView', () => {
       expect(uiView.querySelector('p.hold')).toBe(hold);
     });
 
-    it('should stand ahead of lit’s marker without doubling', async () => {
+    it('should stand past lit’s markers without doubling', async () => {
       const uiView = await mountAuthoredFallback();
 
+      // A parent part trailing in the view clears to the element's end, so the render's markers stand ahead of the fallback.
       const markerAt = () =>
-        [...uiView.childNodes].findIndex((node) => node.nodeType === 8);
+        [...uiView.childNodes].map((node) => node.nodeType).lastIndexOf(8);
 
       const holdAt = () =>
         [...uiView.childNodes].indexOf(uiView.querySelector('p.hold')!);
 
       expect(markerAt()).toBeGreaterThan(-1);
-      expect(holdAt()).toBeLessThan(markerAt());
+      expect(holdAt()).toBeGreaterThan(markerAt());
 
       await cycle(uiView);
       await cycle(uiView);
 
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
-      expect(holdAt()).toBeLessThan(markerAt());
+      expect(holdAt()).toBeGreaterThan(markerAt());
     });
   });
 

@@ -60,20 +60,23 @@ const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
 
 const FOLLOWING = 4 satisfies Node['DOCUMENT_POSITION_FOLLOWING'];
 
+/** The text of `node` when it is a comment. */
+const commentData = (node: ChildNode | null): string | undefined =>
+  // SAFETY: `nodeType` COMMENT_NODE is a Comment
+  node?.nodeType === COMMENT_NODE ? (node as Comment).data : undefined;
+
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
  * comment, or a part marker a render wrote under whatever prefix.
  */
 const isRenderMarker = (node: ChildNode | null): boolean => {
-  if (!node || node.nodeType !== COMMENT_NODE) {
-    return false;
-  }
+  const data = commentData(node);
 
-  // SAFETY: `nodeType` COMMENT_NODE is a Comment
-  const { data } = node as Comment;
-
-  return data === '' || data.includes('lit-part');
+  return data === '' || !!data?.includes('lit-part');
 };
+
+/** The text of the comment ending a view's render ahead of its fallback set. */
+const RENDER_END = 'ui-view-end';
 
 /** Whether `node` sits inside `host`, across shadow roots. */
 const composedContains = (host: Node, node: Node): boolean => {
@@ -192,7 +195,12 @@ const noParentViewUnsubscribe = () => {};
  *
  * Whatever the author wrote inside the element, ahead of any render, is this
  * view's fallback set: it stands in the document while no component occupies
- * the view, parks while one does, and comes back when none does.
+ * the view, parks while one does, and comes back when none does. Nodes the
+ * enclosing template renders into the element later park and come back with
+ * it. A node app code appends stays where it lands until the view next parks:
+ * it stands beside routed content that is showing, and if it lands after a
+ * trailing part of the enclosing template, that part's next re-render removes
+ * it.
  *
  * A prerendered page needs the served variant this element is the base of —
  * <code>lit-ui-router-ssr/register</code> defines <code>ui-view</code> with it.
@@ -230,6 +238,13 @@ export class UiView extends LitElement {
 
   /** Whether those nodes sit in the fragment rather than in the light DOM. */
   private fallbackParked = true;
+
+  /**
+   * Ends this view's render ahead of the fallback set, so a part of the
+   * parent's template trailing in the view clears up to the element's end
+   * without reaching the render. Made by the connect-time capture.
+   */
+  private renderEnd?: Comment;
 
   /** The element a class component rendered; a template component leaves it unset. */
   private classElement?: Element;
@@ -625,9 +640,14 @@ export class UiView extends LitElement {
    */
   private authoredPrefix(): ChildNode[] {
     const authored: ChildNode[] = [];
+    let inPart = false;
 
     for (const child of this.childNodes) {
-      if (isRenderMarker(child)) break;
+      const data = commentData(child);
+
+      // past a part marker of the enclosing template, an empty comment bounds one of that part's items
+      if (isRenderMarker(child) && !(inPart && data === '')) break;
+      inPart ||= !!data?.startsWith('?lit$');
       authored.push(child);
     }
 
@@ -643,18 +663,61 @@ export class UiView extends LitElement {
    * stands them back up when no component occupies the view.
    *
    * A view whose first child is a render marker holds a render's output from
-   * the first child down, so it captures nothing and the nodes stay where they
-   * stand: they are lit's own on a re-attached view, and never ours to move.
+   * the first child down, so the nodes stay where they stand: they are lit's
+   * own on a re-attached view, and never ours to move. A clone of a view that
+   * showed its fallback set captures the nodes past that render's end.
    */
   protected captureContent(): void {
-    if (this.captured || isRenderMarker(this.firstChild)) {
+    if (this.captured) {
+      return;
+    }
+
+    const cloned = isRenderMarker(this.firstChild);
+
+    const end = cloned
+      ? this.clonedRenderEnd()
+      : document.createComment(RENDER_END);
+
+    if (!end) {
       return;
     }
 
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
-    this.fallbackNodes = this.authoredPrefix();
+    this.fallbackNodes = cloned ? this.nodesAfter(end) : this.authoredPrefix();
     this.fallback.append(...this.fallbackNodes);
+    this.renderEnd = end;
+  }
+
+  /** The render end a clone carries with fallback nodes past it; a clone of a routed view carries none. */
+  private clonedRenderEnd(): Comment | undefined {
+    for (const child of this.childNodes) {
+      if (commentData(child) === RENDER_END) {
+        const next = child.nextSibling;
+
+        // A render marker past the end is a routed clone's own render, never fallback.
+        // SAFETY: a node with comment data is a Comment
+        return next && !isRenderMarker(next) ? (child as Comment) : undefined;
+      }
+    }
+
+    return undefined;
+  }
+
+  /** Opens the first render ahead of everything, ending at {@link renderEnd}. */
+  private placeRenderEnd(): void {
+    const end = this.renderEnd;
+
+    if (!end) {
+      return;
+    }
+
+    // a clone's end stays behind the stale render it carries
+    if (end.parentNode !== this) {
+      this.prepend(end);
+    }
+
+    this.renderOptions.renderBefore = end;
   }
 
   /**
@@ -694,9 +757,11 @@ export class UiView extends LitElement {
   /**
    * Moves the fallback set between the light DOM and the fragment.
    *
-   * It goes in ahead of everything else, and lit appends its own render marker
-   * at the end of the element, so the two never interleave and the component's
-   * nodes stay the only ones lit owns.
+   * Captured at connect, it goes in past the render's end, and parking takes
+   * every node there, including any the parent's template rendered since the
+   * capture. Captured in place, it goes in ahead of everything else, and lit
+   * appends its own render marker at the end of the element. Either way the two
+   * never interleave and the component's nodes stay the only ones lit owns.
    */
   private placeFallback(): void {
     const fallback = this.fallback;
@@ -708,11 +773,23 @@ export class UiView extends LitElement {
 
     this.fallbackParked = park;
 
+    const end = this.renderEnd;
+
     if (park) {
-      fallback.append(...this.fallbackNodes);
+      fallback.append(...(end ? this.nodesAfter(end) : this.fallbackNodes));
     } else {
-      this.insertBefore(fallback, this.firstChild);
+      this.insertBefore(fallback, end ? end.nextSibling : this.firstChild);
     }
+  }
+
+  private nodesAfter(node: ChildNode): ChildNode[] {
+    const nodes: ChildNode[] = [];
+
+    for (let next = node.nextSibling; next; next = next.nextSibling) {
+      nodes.push(next);
+    }
+
+    return nodes;
   }
 
   private readonly disconnectedHandlers: deregisterFn[] = [];
@@ -968,6 +1045,8 @@ export class UiView extends LitElement {
 
     if (!this.hasUpdated) {
       this.adoptProvidedRouter();
+      // Placed here rather than at capture: children replaced before the first update would take it.
+      this.placeRenderEnd();
     }
 
     this.placeFallback();
