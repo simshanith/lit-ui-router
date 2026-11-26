@@ -7,14 +7,22 @@ import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
 import { API_REFERENCES } from '../catalog/references.ts';
 import {
+  LAYERS,
   type Layer,
   PACKAGES,
   type PackageName,
   packagePagePath,
   ROLES,
+  RUNTIMES,
+  SUBJECTS,
 } from '../catalog/packages.ts';
+import { headingSlug } from './example-index.ts';
 import { code, selfLink } from './index-markdown.ts';
 import { releasesPath } from './release-stubs.ts';
+import type {
+  FacetDefinition,
+  FacetIndexData,
+} from './theme/components/faceted-index.ts';
 
 /** Every manifest under packages/, keyed by package name. */
 export function packageManifests(): Map<string, PackageManifest> {
@@ -90,6 +98,78 @@ export function packageEntry(
     `- ${links.join(' · ')}`,
     '',
   ];
+}
+
+const PACKAGE_FACET_DEFINITIONS: readonly FacetDefinition[] = [
+  {
+    key: 'subject',
+    hint: 'router / lit',
+    values: SUBJECTS,
+    defaultValue: 'router',
+    showOnRow: false,
+  },
+  {
+    key: 'layer',
+    hint: 'agnostic / lit',
+    values: LAYERS,
+    defaultValue: 'lit',
+  },
+  {
+    key: 'role',
+    hint: 'package category',
+    values: ROLES.map(({ id }) => id),
+    showOnRow: false,
+  },
+  {
+    key: 'runtime',
+    hint: 'where code runs',
+    values: RUNTIMES,
+    defaultValue: 'browser',
+  },
+];
+
+const PACKAGE_PICKER_ORDER = ['layer', 'runtime', 'role', 'subject'] as const;
+
+/** Structured catalog data for the interactive /packages/ faceted index. */
+export function packageIndexData(
+  manifests = packageManifests(),
+): FacetIndexData {
+  return {
+    itemSingular: 'package',
+    itemPlural: 'packages',
+    defaultFacet: 'layer',
+    pickerOrder: PACKAGE_PICKER_ORDER,
+    facets: PACKAGE_FACET_DEFINITIONS,
+    groups: ROLES.map(({ id, label }) => ({ id, label })),
+    entries: PACKAGES.map((entry) => {
+      const manifest = manifestOf(manifests, entry.name);
+      const layer = 'layer' in entry ? entry.layer : undefined;
+      const reference = API_REFERENCES[entry.name];
+
+      return {
+        id: entry.name,
+        slug: headingSlug(entry.name),
+        title: entry.name,
+        monoTitle: true,
+        summary: manifest.description
+          ? sentence(manifest.description)
+          : undefined,
+        group: entry.role,
+        facets: {
+          subject: [entry.subject],
+          layer: layer ? [layer] : [],
+          role: [entry.role],
+          runtime: entry.runtime,
+        },
+        links: [
+          { text: 'Package page', href: packagePagePath(entry.name) },
+          ...(reference ? [{ text: 'API reference', href: reference }] : []),
+          { text: 'Releases', href: releasesPath(entry.name), self: true },
+        ],
+        entryPoints: entryPoints(manifest),
+      };
+    }),
+  };
 }
 
 /** One section per role, in catalog order, each package with its facets and links. */

@@ -8,3 +8,9 @@ export const selfLink = (text: string, href: string): string =>
 /** Drops the Markdown-only halves, for renderers that never meet the llms plugin. */
 export const stripLlmOnly = (markdown: string): string =>
   markdown.replace(/<llm-only>[\s\S]*?<\/llm-only>/g, '');
+
+/** Keeps only the plain Markdown half of `selfLink`, so output can sit inside an outer `<llm-only>` block without nesting. */
+export const plainLlmMarkdown = (markdown: string): string =>
+  markdown
+    .replace(/<llm-exclude>[\s\S]*?<\/llm-exclude>/g, '')
+    .replace(/<\/?llm-only>/g, '');

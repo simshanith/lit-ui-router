@@ -21,6 +21,10 @@ import {
   stackblitzOpenSrc,
   staticSrc,
 } from './theme/components/examples.ts';
+import type {
+  FacetDefinition,
+  FacetIndexData,
+} from './theme/components/faceted-index.ts';
 
 const SITE = join(import.meta.dirname, '..');
 
@@ -252,6 +256,110 @@ function exampleEntry(
     }`,
     '',
   ];
+}
+
+const EXAMPLE_FACET_DEFINITIONS: readonly FacetDefinition[] = [
+  {
+    key: 'kind',
+    hint: 'tutorial / example',
+    values: EXAMPLE_FACETS.kind,
+    showOnRow: false,
+  },
+  {
+    key: 'lang',
+    hint: 'ts / js',
+    values: EXAMPLE_FACETS.lang,
+    defaultValue: 'ts',
+  },
+  {
+    key: 'location',
+    hint: 'URL plugin',
+    values: EXAMPLE_FACETS.location,
+    defaultValue: 'hash',
+  },
+  {
+    key: 'bindings',
+    hint: 'reactivity adapter',
+    values: EXAMPLE_FACETS.bindings,
+    defaultValue: 'none',
+  },
+  {
+    key: 'render',
+    hint: 'client / prerender',
+    values: EXAMPLE_FACETS.render,
+    defaultValue: 'client',
+  },
+  {
+    key: 'registry',
+    hint: 'typed routes',
+    values: EXAMPLE_FACETS.registry,
+    defaultValue: 'off',
+  },
+  {
+    key: 'lint',
+    hint: 'own ESLint config',
+    values: EXAMPLE_FACETS.lint,
+    defaultValue: 'off',
+  },
+];
+
+const EXAMPLE_PICKER_ORDER = [
+  'bindings',
+  'render',
+  'location',
+  'kind',
+  'lang',
+  'registry',
+  'lint',
+] as const;
+
+/** Structured catalog data for the interactive /examples/ faceted index. */
+export function exampleIndexData(): FacetIndexData {
+  const pages = embeddingPages();
+
+  return {
+    itemSingular: 'example',
+    itemPlural: 'examples',
+    defaultFacet: 'bindings',
+    pickerOrder: EXAMPLE_PICKER_ORDER,
+    facets: EXAMPLE_FACET_DEFINITIONS,
+    groups: EXAMPLE_KINDS.map(({ id, label }) => ({ id, label })),
+    entries: EXAMPLE_NAMES.map((name) => {
+      const { title, summary } = EXAMPLES[name];
+      const facets = exampleFacets(name);
+      const embedded = pages.get(name) ?? [];
+      const slug = headingSlug(title);
+
+      return {
+        id: name,
+        slug,
+        title,
+        summary: `${summary}.`,
+        group: facets.kind ?? 'example',
+        facets: Object.fromEntries(
+          Object.entries(facets).flatMap(([k, v]) => (v ? [[k, [v]]] : [])),
+        ),
+        links: [
+          { text: 'Run it', href: staticSrc(name), self: true },
+          {
+            text: 'StackBlitz',
+            href: stackblitzOpenSrc(name),
+            external: true,
+          },
+          { text: 'Source', href: githubTreeSrc(name), external: true },
+        ],
+        embeddedIn:
+          embedded.length > 0
+            ? embedded.map(({ title: text, url: href }) => ({ text, href }))
+            : [
+                {
+                  text: LIVE_EXAMPLES.title,
+                  href: `${LIVE_EXAMPLES.url}#${slug}`,
+                },
+              ],
+      };
+    }),
+  };
 }
 
 /** One section per kind, in vocabulary order. */
