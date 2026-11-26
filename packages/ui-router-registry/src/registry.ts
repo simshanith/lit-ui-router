@@ -583,34 +583,64 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
   ]?: KeyType<D, K, Optional>;
 };
 
-type LineageParams<N, Optional extends 'input' | 'output'> = [
+type LineageParams<N, Optional extends 'input' | 'output'> =
+  Redeclares<N> extends true
+    ? Collect<N, Optional, never, unknown>
+    : Plain<N, Optional>;
+
+// Without a redeclared key, each level adds its own params, and siblings share the ancestors' type.
+type Plain<N, Optional extends 'input' | 'output'> = [
   DeclarationOf<N>,
 ] extends [never]
   ? unknown
-  : WithAncestors<
-      DeclarationOf<N>,
-      LineageParams<ParentName<DeclarationOf<N>>, Optional>,
-      Extract<
-        OwnKeys<DeclarationOf<N>>,
-        LineageKeys<ParentName<DeclarationOf<N>>>
-      >,
-      Optional
+  : OwnParams<DeclarationOf<N>, Optional> &
+      Plain<ParentName<DeclarationOf<N>>, Optional>;
+
+type Redeclares<N> = [DeclarationOf<N>] extends [never]
+  ? false
+  : [
+        Extract<
+          OwnKeys<DeclarationOf<N>>,
+          LineageKeys<ParentName<DeclarationOf<N>>>
+        >,
+      ] extends [never]
+    ? Redeclares<ParentName<DeclarationOf<N>>>
+    : true;
+
+// Walks up from the target, so each level types only the keys no nearer declaration took.
+type Collect<N, Optional extends 'input' | 'output', Below, Acc> = [
+  DeclarationOf<N>,
+] extends [never]
+  ? Acc
+  : Collect<
+      ParentName<DeclarationOf<N>>,
+      Optional,
+      Below | OwnKeys<DeclarationOf<N>>,
+      Acc &
+        LevelParams<
+          DeclarationOf<N>,
+          Optional,
+          Extract<OwnKeys<DeclarationOf<N>>, Below>,
+          Extract<
+            Exclude<OwnKeys<DeclarationOf<N>>, Below>,
+            LineageKeys<ParentName<DeclarationOf<N>>>
+          >
+        >
     >;
 
-type LineageKeys<N> = [DeclarationOf<N>] extends [never]
-  ? never
-  : OwnKeys<DeclarationOf<N>> | LineageKeys<ParentName<DeclarationOf<N>>>;
+type LineageKeys<N, Acc = never> = [DeclarationOf<N>] extends [never]
+  ? Acc
+  : LineageKeys<ParentName<DeclarationOf<N>>, Acc | OwnKeys<DeclarationOf<N>>>;
 
 // Core reads back the nearest declaration of a key but checks the value it takes against every one.
-type WithAncestors<D, Inherited, S, Optional extends 'input' | 'output'> = [
-  S,
+type LevelParams<D, Optional extends 'input' | 'output', Hidden, S> = [
+  Hidden | S,
 ] extends [never]
-  ? OwnParams<D, Optional> & Inherited
-  : Without<Inherited, S> &
-      (Optional extends 'input'
-        ? Without<OwnParams<D, 'input'>, S> & RedeclaredInput<D, Inherited, S>
-        : Without<OwnParams<D, 'output'>, PassKeys<D, S>> &
-            PassedOutput<D, PassKeys<D, S>>);
+  ? OwnParams<D, Optional>
+  : Optional extends 'input'
+    ? Without<OwnParams<D, 'input'>, Hidden | S> & RedeclaredInput<D, S>
+    : Without<OwnParams<D, 'output'>, Hidden | PassKeys<D, S>> &
+        PassedOutput<D, PassKeys<D, S>>;
 
 type Without<T, S> = { [K in keyof T as K extends S ? never : K]: T[K] };
 
@@ -621,10 +651,38 @@ type Narrow<C, A> = C extends unknown
     : Extract<A, C>
   : never;
 
+// Root first, so each declaration narrows what the ones above it take.
+type Ancestry<N, Acc extends readonly unknown[] = []> = [
+  DeclarationOf<N>,
+] extends [never]
+  ? Acc
+  : Ancestry<ParentName<DeclarationOf<N>>, [DeclarationOf<N>, ...Acc]>;
+
+// The first declaration takes its own type; a later pass-through takes what the ones above it take.
+type Taking<L, K, Acc = never, First = true> = L extends readonly [
+  infer D,
+  ...infer R,
+]
+  ? K extends OwnKeys<D>
+    ? Taking<
+        R,
+        K,
+        First extends true
+          ? KeyType<D, K, 'input'>
+          : Narrow<DeclaredInput<D, K>, Exclude<Acc, undefined>>,
+        false
+      >
+    : Taking<R, K, Acc, First>
+  : Acc;
+
 // A pass-through is core's `any`, so it takes whatever its ancestors take.
-type RedeclaredValue<D, Inherited, K> = Narrow<
-  [PassKeys<D, K>] extends [never] ? KeyType<D, K, 'input'> : unknown,
-  Exclude<Inherited[K & keyof Inherited], undefined>
+type DeclaredInput<D, K> = [PassKeys<D, K>] extends [never]
+  ? KeyType<D, K, 'input'>
+  : unknown;
+
+type RedeclaredValue<D, K> = Narrow<
+  DeclaredInput<D, K>,
+  Exclude<Taking<Ancestry<ParentName<D>>, K>, undefined>
 >;
 
 type FillsOwn<D, K> = K extends keyof ParamsBlock<D>
@@ -660,14 +718,14 @@ type Accepts<V, D, K> = [PassKeys<D, K>] extends [never]
       : false
   : true;
 
-type RedeclaredInput<D, Inherited, S> = {
+type RedeclaredInput<D, S> = {
   [
     K in S & string as IsOptionalRedeclared<D, K> extends true ? never : K
-  ]: RedeclaredValue<D, Inherited, K>;
+  ]: RedeclaredValue<D, K>;
 } & {
   [
     K in S & string as IsOptionalRedeclared<D, K> extends true ? K : never
-  ]?: RedeclaredValue<D, Inherited, K>;
+  ]?: RedeclaredValue<D, K>;
 };
 
 // An untyped non-url param is core's `any`, so it keeps the value an ancestor's url decoded.
@@ -726,14 +784,17 @@ type Wrapped<V, A> = A extends true
   : V;
 
 // What the declarations above a pass-through read or take: a url one ends the walk, another adds its value.
-type UrlRead<N, K> = [DeclarationOf<N>] extends [never]
-  ? never
+type UrlRead<N, K, Acc = never> = [DeclarationOf<N>] extends [never]
+  ? Acc
   : K extends OwnKeys<DeclarationOf<N>>
     ? K extends UrlKeys<DeclarationOf<N>>
-      ? Taken<DeclarationOf<N>, K>
-      : | AncestorValue<DeclarationOf<N>, K>
-        | UrlRead<ParentName<DeclarationOf<N>>, K>
-    : UrlRead<ParentName<DeclarationOf<N>>, K>;
+      ? Acc | Taken<DeclarationOf<N>, K>
+      : UrlRead<
+          ParentName<DeclarationOf<N>>,
+          K,
+          Acc | AncestorValue<DeclarationOf<N>, K>
+        >
+    : UrlRead<ParentName<DeclarationOf<N>>, K, Acc>;
 
 // A typed non-url ancestor holds what it took; an `any` one, whatever it takes.
 type AncestorValue<D, K> = [PassKeys<D, K>] extends [never]
