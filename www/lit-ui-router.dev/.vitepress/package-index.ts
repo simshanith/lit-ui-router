@@ -10,6 +10,7 @@ import {
   type Layer,
   PACKAGES,
   type PackageName,
+  packagePagePath,
   ROLES,
 } from '../catalog/packages.ts';
 import { code, selfLink } from './index-markdown.ts';
@@ -75,7 +76,7 @@ export function packageEntry(
   ];
 
   const links = [
-    `[Package page](/packages/${name})`,
+    `[Package page](${packagePagePath(name)})`,
     ...(reference ? [`[API reference](${reference})`] : []),
     selfLink('Releases', releasesPath(name)),
   ];

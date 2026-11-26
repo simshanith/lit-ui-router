@@ -15,7 +15,7 @@ import {
   SIDEBAR,
   type SidebarEntry,
 } from '../../catalog/navigation.ts';
-import { PACKAGES } from '../../catalog/packages.ts';
+import { PACKAGES, packagePagePath } from '../../catalog/packages.ts';
 
 const site = join(import.meta.dirname, '../..');
 
@@ -77,6 +77,11 @@ describe('the package catalog', () => {
         role,
       );
     }
+  });
+
+  it("finds each package's page at its path", () => {
+    for (const { name } of PACKAGES)
+      assert.deepEqual(packageOf(packagePagePath(name)), [name]);
   });
 
   it('gives each package page one name: its npm name as sidebar label, title and heading', () => {

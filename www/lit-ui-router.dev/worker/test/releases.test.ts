@@ -26,6 +26,7 @@ import {
 } from '../../catalog/footer.ts';
 import { FLAMES_MARK } from '../../catalog/mark.ts';
 import { NAV } from '../../catalog/navigation.ts';
+import { PACKAGES } from '../../catalog/packages.ts';
 import '../dom-shim.ts';
 import type { ReleaseDiffs } from '../releases/diff-data.ts';
 import type { NotesReader } from '../releases/notes.ts';
@@ -1096,7 +1097,7 @@ describe('the /releases pages', () => {
 
     getByText(
       getByRole(doc.body, 'main'),
-      'The ten most recent stable releases, then the latest stable release of each package, grouped by role. Each package page lists every version, with notes for each stable release.',
+      "The ten most recent stable releases, then the latest stable release of each package, grouped by role. Each package's releases page lists every version, with notes for each stable release.",
     );
   });
 
@@ -2454,8 +2455,11 @@ describe('the version page navigation', () => {
       note.textContent?.replace(/\s+/g, ' ').trim(),
     );
 
-  // Rows of a package the catalog lacks, with no `latest` tag.
-  const uncataloged = (versions: readonly string[]): LedgerReader => {
+  // Rows of one package, with no `latest` tag.
+  const ledgerOf = (
+    name: string,
+    versions: readonly string[],
+  ): LedgerReader => {
     const [base] = FIXTURE_ROWS;
     assert.ok(base);
 
@@ -2464,14 +2468,14 @@ describe('the version page navigation', () => {
       tagged: () => Promise.resolve(null),
       versions: () =>
         Promise.resolve(
-          versions.map((version) => ({
-            ...base,
-            name: 'a-new-package',
-            version,
-          })),
+          versions.map((version) => ({ ...base, name, version })),
         ),
     };
   };
+
+  // Rows of a package the catalog lacks.
+  const uncataloged = (versions: readonly string[]): LedgerReader =>
+    ledgerOf('a-new-package', versions);
 
   it('links both neighbours of a stable version in the middle, and the latest', async () => {
     const doc = await page('/releases/lit-ui-router/1.9.0/');
@@ -2600,6 +2604,54 @@ describe('the version page navigation', () => {
     assert.deepEqual(pagerLinks(doc), [
       ['Previous 0.1.0', '/releases/a-new-package/0.1.0/'],
     ]);
+  });
+
+  const hrefOf = (container: HTMLElement, name: string) =>
+    getByRole(container, 'link', { name }).getAttribute('href');
+
+  // A paragraph has no accessible name, so its link finds it.
+  const sentenceOf = (link: HTMLElement) =>
+    link.parentElement?.textContent?.replace(/\s+/g, ' ').trim();
+
+  it("links a package's docs page from its releases page, beside its npm page", async () => {
+    const doc = await page('/releases/lit-ui-router/');
+
+    const link = getByRole(getByRole(doc.body, 'main'), 'link', {
+      name: 'lit-ui-router package page',
+    });
+
+    assert.equal(link.getAttribute('href'), '/packages/lit-ui-router');
+    assert.equal(
+      sentenceOf(link),
+      'Its docs start at the lit-ui-router package page, and its npm page is lit-ui-router on npm.',
+    );
+  });
+
+  it('links only the npm page from the releases page of a package the catalog lacks', async () => {
+    const doc = await page('/releases/a-new-package/', uncataloged(['0.2.0']));
+    const main = getByRole(doc.body, 'main');
+
+    getByRole(main, 'heading', { level: 1, name: 'a-new-package' });
+    assert.equal(queryByRole(main, 'link', { name: /package page$/i }), null);
+    assert.equal(
+      sentenceOf(getByRole(main, 'link', { name: 'a-new-package on npm' })),
+      'Its npm page is a-new-package on npm.',
+    );
+  });
+
+  it('links a docs page that exists, for every package the catalog lists', async () => {
+    const site = join(import.meta.dirname, '../..');
+
+    for (const { name } of PACKAGES) {
+      const ledger = ledgerOf(name, ['1.0.0']);
+      const releases = await page(`/releases/${name}/`, ledger);
+      const version = await page(`/releases/${name}/1.0.0/`, ledger);
+
+      const href = hrefOf(releases.body, `${name} package page`);
+
+      assert.ok(href && existsSync(join(site, `${href}.md`)), name);
+      assert.equal(hrefOf(version.body, 'Package page'), href);
+    }
   });
 
   it('gives each fact a stable id, unique on the page', async () => {

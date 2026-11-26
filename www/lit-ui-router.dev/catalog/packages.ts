@@ -151,3 +151,11 @@ export type PackageName = (typeof PACKAGES)[number]['name'];
 
 /** Packages whose page takes its sections from the README's regions; `.vitepress/test/readme-sourced.test.ts` holds each page to them. */
 export const README_SOURCED: readonly PackageName[] = ['ui-router-registry'];
+
+/** Narrows a name to a package the catalog lists. */
+export const isPackageName = (name: string): name is PackageName =>
+  PACKAGES.some((entry) => entry.name === name);
+
+/** A package's docs page; `.vitepress/test/catalog.test.ts` holds each to its source file. */
+export const packagePagePath = (name: PackageName): string =>
+  `/packages/${name}`;
