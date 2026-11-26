@@ -1,5 +1,11 @@
 # ui-router-devtools
 
+[![npm version](https://img.shields.io/npm/v/ui-router-devtools.svg)](https://npmx.dev/package/ui-router-devtools)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-devtools@*)](https://lit-ui-router.dev/gh/releases/ui-router-devtools/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/ui-router-devtools)
+[![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=ui-router-devtools)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=ui-router-devtools)
+
 Devtools for any [UI-Router](https://ui-router.github.io) `@uirouter/core` router: a recorder of versioned, JSON-safe transition events, a Lit panel that shows the state tree and the transition log, and reporters for the browser's Performance panel and console.
 
 ## Installation
