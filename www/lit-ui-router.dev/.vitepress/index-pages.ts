@@ -1,10 +1,18 @@
 import type { Plugin } from 'vite';
 
 import { elementIndex } from './element-index.ts';
-import { exampleIndex, liveExamples } from './example-index.ts';
+import {
+  exampleIndex,
+  exampleIndexData,
+  liveExamples,
+} from './example-index.ts';
 import { plainLlmMarkdown } from './index-markdown.ts';
-import { packageIndex } from './package-index.ts';
+import { packageIndex, packageIndexData } from './package-index.ts';
 import { referenceIndex } from './reference-index.ts';
+import {
+  facetGlossaryMarkdown,
+  type FacetIndexData,
+} from './theme/components/faceted-index.ts';
 
 /** Each generated list, keyed by the line a page writes where it goes. */
 export const INDEX_MARKERS = {
@@ -23,12 +31,15 @@ const markers = Object.keys(INDEX_MARKERS) as IndexMarker[];
 // The markers are plain text: no RegExp metacharacters to escape.
 const MARKER = new RegExp(`^(?:${markers.join('|')})$`, 'm');
 
+interface FacetedIndexEntry {
+  index: 'examples' | 'packages';
+  data: () => FacetIndexData;
+}
+
 /** Interactive faceted index markers: HTML renders the Vue component, while LLMs and local search receive the Markdown list. */
-const FACETED_COMPONENTS: Partial<
-  Record<IndexMarker, 'examples' | 'packages'>
-> = {
-  '<!-- example-index -->': 'examples',
-  '<!-- package-index -->': 'packages',
+const FACETED_COMPONENTS: Partial<Record<IndexMarker, FacetedIndexEntry>> = {
+  '<!-- example-index -->': { index: 'examples', data: exampleIndexData },
+  '<!-- package-index -->': { index: 'packages', data: packageIndexData },
 };
 
 /** Replaces each marker line with its generated Markdown list (used by local search and tests). */
@@ -47,21 +58,25 @@ export function expandIndexPages(markdown: string): string {
   return markers.reduce((page, marker) => {
     if (!page.includes(marker)) return page;
 
-    const index = FACETED_COMPONENTS[marker];
+    const faceted = FACETED_COMPONENTS[marker];
 
     return page.replace(marker, () => {
       const generated = INDEX_MARKERS[marker]();
 
-      if (!index) return generated;
+      if (!faceted) return generated;
+
+      const glossary = facetGlossaryMarkdown(faceted.data().facets);
 
       return [
         '<llm-exclude>',
         '',
-        `<FacetedIndex index="${index}" />`,
+        `<FacetedIndex index="${faceted.index}" />`,
         '',
         '</llm-exclude>',
         '',
         '<llm-only>',
+        '',
+        glossary,
         '',
         plainLlmMarkdown(generated),
         '',

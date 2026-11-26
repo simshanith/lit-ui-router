@@ -11,7 +11,9 @@ import {
   activeFacetsOf,
   addFacetRow,
   clearConflictingFilters,
+  decodeHashSlug,
   facetCounts,
+  facetGlossaryMarkdown,
   initialVisibleFacets,
   matchesFilter,
   orderedPickerFacets,
@@ -195,6 +197,20 @@ describe('faceted-index pure logic', () => {
       { text: '.', code: false },
     ]);
   });
+
+  it('decodes hash fragments safely without throwing on malformed percent-encoding', () => {
+    assert.equal(decodeHashSlug('#hello-world'), 'hello-world');
+    assert.equal(decodeHashSlug('#hello%20world'), 'hello world');
+    assert.equal(decodeHashSlug('#50%'), '50%');
+    assert.equal(decodeHashSlug(''), '');
+  });
+
+  it('formats facet glossaries as plain Markdown lists', () => {
+    const md = facetGlossaryMarkdown(packages.facets);
+
+    assert.ok(md.includes('- **layer:** '));
+    assert.ok(md.includes('- **runtime:** '));
+  });
 });
 
 describe('catalog datasets and index-pages expansion', () => {
@@ -222,7 +238,7 @@ describe('catalog datasets and index-pages expansion', () => {
     }
   });
 
-  it('emits <FacetedIndex> for HTML and keeps Markdown in <llm-only> and expandIndexes', () => {
+  it('emits <FacetedIndex> for HTML and keeps glossary + Markdown in <llm-only> and expandIndexes', () => {
     const exPage = expandIndexPages('<!-- example-index -->');
     const pkgPage = expandIndexPages('<!-- package-index -->');
 
@@ -231,11 +247,13 @@ describe('catalog datasets and index-pages expansion', () => {
     assert.ok(exPage.includes('<llm-only>'));
     assert.equal(exPage.match(/<llm-only>/g)?.length, 1);
     assert.equal(exPage.match(/<\/llm-only>/g)?.length, 1);
+    assert.ok(exPage.includes('- **location:** '));
     assert.ok(exPage.includes('### Hello World'));
 
     assert.ok(pkgPage.includes('<FacetedIndex index="packages" />'));
     assert.equal(pkgPage.match(/<llm-only>/g)?.length, 1);
     assert.equal(pkgPage.match(/<\/llm-only>/g)?.length, 1);
+    assert.ok(pkgPage.includes('- **layer:** '));
     assert.ok(pkgPage.includes('### lit-ui-router'));
 
     const searchMarkdown = expandIndexes('<!-- example-index -->');

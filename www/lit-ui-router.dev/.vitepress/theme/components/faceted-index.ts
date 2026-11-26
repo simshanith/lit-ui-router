@@ -302,3 +302,23 @@ export function clearConflictingFilters(
 
   return next;
 }
+
+/** Decodes a URL hash fragment to its heading slug, falling back to the raw fragment on malformed percent-encoding. */
+export function decodeHashSlug(hash: string): string {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/** Formats facet definitions as a Markdown bullet list for `.md` / `llms.txt` copies. */
+export function facetGlossaryMarkdown(
+  facets: readonly FacetDefinition[],
+): string {
+  return facets
+    .map((facet) => `- **${facet.key}:** ${facet.description}`)
+    .join('\n');
+}

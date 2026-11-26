@@ -7,6 +7,7 @@ import {
   activeFacetsOf,
   addFacetRow,
   clearConflictingFilters,
+  decodeHashSlug,
   facetCounts,
   facetValuesOf,
   initialVisibleFacets,
@@ -184,7 +185,7 @@ function linkHref(link: FacetLink): string {
 function revealHashTarget(): void {
   if (typeof window === 'undefined' || !window.location.hash) return;
 
-  const slug = decodeURIComponent(window.location.hash.slice(1));
+  const slug = decodeHashSlug(window.location.hash);
   const entry = dataset.value.entries.find((item) => item.slug === slug);
 
   if (!entry || matchesFilter(entry, filter.value)) return;
@@ -430,7 +431,7 @@ onBeforeUnmount(() => {
           </p>
 
           <div class="entry-meta">
-            <div class="row-facets" aria-label="Facets">
+            <div class="row-facets" role="group" aria-label="Facets">
               <button
                 v-for="pill in rowPillsFor(entry)"
                 :key="`${pill.key}-${pill.value}`"
