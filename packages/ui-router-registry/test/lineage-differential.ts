@@ -85,6 +85,12 @@ const DECLARED = {
     config: { value: (): string | null => 'd' },
     source: "{ value: (): string | null => 'd' }",
   },
+  pbad: { path: '{id:int}', config: 'bad', source: "'bad'" },
+  qbad: { query: '{id:int}', config: 'bad', source: "'bad'" },
+  cbad: {
+    config: { type: 'int', value: 'bad' },
+    source: "{ type: 'int', value: 'bad' }",
+  },
 } as const satisfies Record<string, Declared>;
 
 type Code = keyof typeof DECLARED;
@@ -93,6 +99,11 @@ type Code = keyof typeof DECLARED;
 const CODES = Object.keys(DECLARED) as Code[];
 
 const declared = (code: Code): Declared => DECLARED[code];
+
+// A default its own declaration rejects; alone it hits the single-state gap, so it is only ever a redeclaring child.
+const BAD_DEFAULT: ReadonlySet<Code> = new Set(['pbad', 'qbad', 'cbad']);
+
+const TYPED_CONFIG: ReadonlySet<Code> = new Set(['cint', 'cbad']);
 
 // Depth 3: an ancestor, then a declaration the walk must look through, then the target.
 const TOPS: readonly Code[] = [
@@ -133,25 +144,18 @@ const LEAVES: readonly Code[] = [
   'cun',
 ];
 
-const QUERY_TOPS: readonly Code[] = ['q', 'qtrue', 'qint'];
+const QUERY_TOPS: readonly Code[] = ['q', 'qtrue', 'qint', 'qbool'];
 
-// Depth 4: a query above a path, then a silent state or a second pass-through.
+// Depth 4: a query above a path, then a second pass-through; a silent state there reads as depth 3.
 const DEEP: readonly (readonly Code[])[] = QUERY_TOPS.flatMap((top) =>
   (['p', 'pint', 'pbool'] as const).flatMap((path) =>
-    (['none', 'cdyn'] as const).flatMap((between) =>
-      (['cdyn', 'cd', 'cvf'] as const).map((leaf) => [
-        top,
-        path,
-        between,
-        leaf,
-      ]),
-    ),
+    (['cdyn', 'cd', 'cvf'] as const).map((leaf) => [top, path, 'cdyn', leaf]),
   ),
 );
 
 // Children that name their parent with `parent:`.
 const BY_PARENT: readonly (readonly Code[])[] = QUERY_TOPS.flatMap((top) =>
-  (['p', 'pint', 'cvf'] as const).flatMap((middle) =>
+  (['p', 'pint', 'parr', 'cvf'] as const).flatMap((middle) =>
     (['cdyn', 'cd'] as const).map((leaf) => [top, middle, leaf]),
   ),
 );
@@ -160,7 +164,11 @@ type Lineage = { readonly chain: readonly Code[]; readonly byParent: boolean };
 
 const LINEAGES: readonly Lineage[] = [
   ...[
-    ...CODES.flatMap((parent) => CODES.map((child) => [parent, child])),
+    ...CODES.filter((parent) => !BAD_DEFAULT.has(parent)).flatMap((parent) =>
+      CODES.filter(
+        (child) => !(BAD_DEFAULT.has(child) && parent === 'none'),
+      ).map((child) => [parent, child]),
+    ),
     ...TOPS.flatMap((top) =>
       MIDDLES.flatMap((middle) => LEAVES.map((leaf) => [top, middle, leaf])),
     ),
@@ -210,7 +218,7 @@ const declarations = (lineage: Lineage): StateDeclaration[] => {
 };
 
 // What each input or default holds, so the model of `ParamsOf` needs no runtime check.
-type Kind = 'absent' | 'string' | 'number' | 'strings' | 'null';
+type Kind = 'absent' | 'string' | 'number' | 'boolean' | 'strings' | 'null';
 
 type Input = { readonly params: RawParams; readonly kind: Kind };
 
@@ -218,6 +226,7 @@ const INPUTS: readonly Input[] = [
   { params: {}, kind: 'absent' },
   { params: { id: 'x' }, kind: 'string' },
   { params: { id: 5 }, kind: 'number' },
+  { params: { id: true }, kind: 'boolean' },
   { params: { id: ['a', 'b'] }, kind: 'strings' },
   { params: { id: null }, kind: 'null' },
 ];
@@ -266,6 +275,10 @@ const read = (router: UIRouter): RawParams => {
   return params;
 };
 
+// Core throws, rather than rejects, when it reaches a default its own type rejects.
+const BAD_DEFAULT_ERROR =
+  /^Default value \(.*\) for parameter 'id' is not an instance of ParamType/;
+
 const navigate = async (
   lineage: Lineage,
   input: RawParams,
@@ -277,8 +290,9 @@ const navigate = async (
     await router.stateService[method](target(lineage), input);
   } catch (error) {
     if (
-      error instanceof Rejection &&
-      error.toString().includes('parameter values are not valid')
+      (error instanceof Rejection &&
+        error.toString().includes('parameter values are not valid')) ||
+      (error instanceof Error && BAD_DEFAULT_ERROR.test(error.message))
     ) {
       return undefined;
     }
@@ -293,7 +307,7 @@ type Entered =
   | { readonly outcome: 'read'; readonly read: RawParams }
   | { readonly outcome: 'no match' | 'not entered' };
 
-const enter = async (lineage: Lineage, url: string): Promise<Entered> => {
+const entered = async (lineage: Lineage, url: string): Promise<Entered> => {
   const router = createRouter(lineage);
   router.urlService.url(url);
 
@@ -311,6 +325,18 @@ const enter = async (lineage: Lineage, url: string): Promise<Entered> => {
   return (await settled) && router.globals.current.name === target(lineage)
     ? { outcome: 'read', read: read(router) }
     : { outcome: 'not entered' };
+};
+
+const enter = async (lineage: Lineage, url: string): Promise<Entered> => {
+  try {
+    return await entered(lineage, url);
+  } catch (error) {
+    if (error instanceof Error && BAD_DEFAULT_ERROR.test(error.message)) {
+      return { outcome: 'not entered' };
+    }
+
+    throw error;
+  }
 };
 
 // Core returns strings, numbers, booleans, arrays of them, `null` or `undefined` here; each is its own type literal.
@@ -353,10 +379,10 @@ const ownMode = (code: Code): string | undefined => {
 
   if (path) return 'path';
 
-  return code === 'cint' ? 'typed' : undefined;
+  return TYPED_CONFIG.has(code) ? 'typed' : undefined;
 };
 
-// A pass-through reads the nearest query declaration's decoding, or an array a path one below it took.
+// A pass-through reads the nearest query declaration's decoding, or an array a path one below it took when that query takes an array.
 const nearestMode = (chain: readonly Code[]): string | undefined => {
   const own = ownMode(chain[chain.length - 1]);
 
@@ -367,7 +393,9 @@ const nearestMode = (chain: readonly Code[]): string | undefined => {
   for (const code of chain.slice(0, -1).reverse()) {
     const mode = ownMode(code);
 
-    if (declared(code).query) return path === 'array' ? path : mode;
+    if (declared(code).query) {
+      return path === 'array' && TAKES[code].has('strings') ? path : mode;
+    }
 
     if (declared(code).path) path ??= mode;
   }
@@ -412,7 +440,15 @@ const STRINGS: ReadonlySet<Kind> = new Set(['string', 'strings']);
 
 const NUMBER: ReadonlySet<Kind> = new Set(['number']);
 
-const ANY: ReadonlySet<Kind> = new Set(['string', 'number', 'strings', 'null']);
+const BOOLEAN: ReadonlySet<Kind> = new Set(['boolean']);
+
+const ANY: ReadonlySet<Kind> = new Set([
+  'string',
+  'number',
+  'boolean',
+  'strings',
+  'null',
+]);
 
 const NONE: ReadonlySet<Kind> = new Set();
 
@@ -425,10 +461,10 @@ const TAKES: Readonly<Record<Code, ReadonlySet<Kind>>> = {
   qtrue: STRINGS,
   qfalse: STRING,
   qint: NUMBER,
-  qbool: NONE,
+  qbool: BOOLEAN,
   p: STRING,
   pint: NUMBER,
-  pbool: NONE,
+  pbool: BOOLEAN,
   parr: STRINGS,
   cnone: NONE,
   cd: STRING,
@@ -442,6 +478,9 @@ const TAKES: Readonly<Record<Code, ReadonlySet<Kind>>> = {
   cun: ANY,
   cunn: ANY,
   cnul: ANY,
+  pbad: NUMBER,
+  qbad: NUMBER,
+  cbad: NUMBER,
 };
 
 // What each default can return.
@@ -455,12 +494,15 @@ const DEFAULTS: Partial<Record<Code, readonly Kind[]>> = {
   cun: ['string', 'absent'],
   cunn: ['number', 'absent'],
   cnul: ['string', 'null'],
+  pbad: ['string'],
+  qbad: ['string'],
+  cbad: ['string'],
 };
 
 const isPassThrough = (code: Code): boolean => {
   const { path, query } = declared(code);
 
-  return !path && !query && code !== 'cint';
+  return !path && !query && !TYPED_CONFIG.has(code);
 };
 
 const optionalAlone = (code: Code): boolean =>
@@ -512,12 +554,26 @@ type OverStrict = {
   readonly matches: (testCase: GoCase) => boolean;
 };
 
+// The declarations that reject an input: for an absent one, those that reject a value the nearest default can return.
+const rejecting = ({ lineage, input }: GoCase): Code[] => {
+  if (input.kind !== 'absent') return failing(lineage.chain, input.kind);
+
+  const levels = declaring(lineage.chain);
+  const nearest = levels[levels.length - 1];
+
+  if (levels.length === 1) return optionalAlone(nearest) ? [] : [nearest];
+
+  const kinds = DEFAULTS[nearest] ?? ['absent'];
+
+  return levels.filter((code) =>
+    kinds.some((kind) => !acceptsDefault(code, kind)),
+  );
+};
+
 const fails = (testCase: GoCase, codes: ReadonlySet<Code>): boolean =>
-  testCase.input.kind !== 'absent'
-    ? failing(testCase.lineage.chain, testCase.input.kind).some((code) =>
-        codes.has(code),
-      )
-    : testCase.lineage.chain.some((code) => codes.has(code));
+  rejecting(testCase).some((code) => codes.has(code));
+
+const EMPTY_ARRAY: ReadonlySet<Code> = new Set(['parr', 'carr']);
 
 // Inputs core takes that `ParamsOf` rejects, each for a stated reason; the first that matches names it.
 const OVER_STRICT: readonly OverStrict[] = [
@@ -548,15 +604,15 @@ const OVER_STRICT: readonly OverStrict[] = [
   {
     tag: 'coercion',
     reason:
-      'core coerces before it validates (a string param takes a number or an array, an int one a numeric string); the registry types no coercion',
+      'core coerces before it validates (a string param takes a number, a boolean or an array, an int one a numeric string); the registry types no coercion',
     matches: ({ input }) => input.kind !== 'absent',
   },
   {
     tag: 'empty-array',
     reason:
       'an array path param that matches an empty segment, or a config-only `array: true` one, takes an absent value in core; the registry requires it',
-    matches: ({ lineage }) =>
-      lineage.chain.includes('parr') || declaring(lineage.chain)[0] === 'carr',
+    matches: (testCase) =>
+      testCase.input.kind === 'absent' && fails(testCase, EMPTY_ARRAY),
   },
   {
     tag: 'default-union',
@@ -616,6 +672,27 @@ const assertion = (testCase: Case): string => {
     : `accepts<${check}>(true);`;
 };
 
+// An untyped root with no literal default reads back unknown even alone; under any other root the read-back is known.
+const UNCONSTRAINED: ReadonlySet<Code> = new Set([
+  'cnone',
+  'cdyn',
+  'cvu',
+  'cvf',
+  'cnull',
+  'carr',
+  'cun',
+  'cunn',
+  'cnul',
+]);
+
+const known = (lineage: Lineage): string[] => {
+  const root = declaring(lineage.chain)[0];
+
+  return root === undefined || UNCONSTRAINED.has(root)
+    ? []
+    : [`accepts<Known<'${target(lineage)}'>>(true);`];
+};
+
 type Tally = { urls: number; noMatch: number; notEntered: number };
 
 const programmatic = async (lineage: Lineage): Promise<Case[]> =>
@@ -656,7 +733,7 @@ const casesOf = async (lineage: Lineage, tally: Tally): Promise<Case[]> => {
 };
 
 const HEADER = `// Generated by test/lineage-differential.ts from what core returns; \`pnpm generate:lineage-differential\` rewrites it.
-// \`tsc --noEmit\` is the assertion: \`ParamsOf\` takes every input core takes, and \`ResolvedParamsOf\` admits what core reads back, unless an allowlisted entry says why not.
+// \`tsc --noEmit\` is the assertion: \`ParamsOf\` takes every input core takes, and \`ResolvedParamsOf\` admits what core reads back, as a known type under a root that constrains it, unless an allowlisted entry says why not.
 import type {
   ParamsOf,
   ResolvedParamsOf,
@@ -678,6 +755,13 @@ type Go<N extends StateName, I, O> =
   Takes<N, I> extends true ? Reads<N, O> : 'not taken';
 
 type Rejects<N extends StateName, I> = Takes<N, I> extends true ? false : true;
+
+type Known<N extends StateName> =
+  ResolvedParamsOf<N> extends { id?: infer V }
+    ? unknown extends V
+      ? false
+      : true
+    : true;
 
 declare function accepts<T>(value: T): T;
 `;
@@ -708,7 +792,7 @@ const summary = (
 ): string =>
   [
     `// ${LINEAGES.length} lineages, ${states} states; ${tally.urls} urls tried, ${tally.noMatch} unmatched, ${tally.notEntered} ending elsewhere or in an error.`,
-    `// ${assertions.length} assertions: ${count(assertions, 'accepts<Go<')} go, ${count(assertions, 'accepts<Reads<')} url, ${count(assertions, 'accepts<Rejects<')} rejections, ${count(assertions, 'accepts<Takes<')} over-strict inputs, ${count(assertions, '>(false); //') - count(assertions, 'accepts<Takes<')} allowlisted read-backs.`,
+    `// ${assertions.length} assertions: ${count(assertions, 'accepts<Go<')} go, ${count(assertions, 'accepts<Reads<')} url, ${count(assertions, 'accepts<Rejects<')} rejections, ${count(assertions, 'accepts<Takes<')} over-strict inputs, ${count(assertions, 'accepts<Known<')} known read-backs, ${count(assertions, '>(false); //') - count(assertions, 'accepts<Takes<')} allowlisted read-backs.`,
     ...[...OVER_STRICT, ...DIVERGENCES].map(
       (entry) =>
         `//   ${entry.tag} (${count(assertions, `>(false); // ${entry.tag}`)}): ${entry.reason}`,
@@ -746,7 +830,9 @@ export async function generate(): Promise<string> {
     );
   }
 
-  const assertions = [...new Set(cases.map(assertion))];
+  const assertions = [
+    ...new Set([...cases.map(assertion), ...LINEAGES.flatMap(known)]),
+  ];
 
   const text = `${HEADER}
 ${summary(states.size, tally, assertions)}
