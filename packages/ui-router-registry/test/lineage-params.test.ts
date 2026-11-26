@@ -141,6 +141,36 @@ const states = [
   { name: 'b3p', url: '/b3p/:id', params: { id: { array: true } } },
   { name: 'b3p.m', url: '/m', params: { id: { type: 'int' } } },
   { name: 'b3p.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1q', url: '/r1q?id' },
+  { name: 'r1q.n', url: '/n/{id:int}' },
+  { name: 'r1q.n.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1t', url: '/r1t?id', params: { id: { array: true } } },
+  { name: 'r1t.n', url: '/n/{id:int}' },
+  { name: 'r1t.n.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1i', url: '/r1i?{id:int}' },
+  { name: 'r1i.s', url: '/s/:id' },
+  { name: 'r1i.s.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1i.s.d', url: '/d', params: { id: 'd' } },
+  { name: 'r1i.s.m', url: '/m' },
+  { name: 'r1i.s.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r2b', url: '/r2b?{id:bool}' },
+  { name: 'r2b.b', url: '/b/{id:bool}' },
+  { name: 'r2q', url: '/r2q?id' },
+  { name: 'r2q.b', url: '/b/{id:bool}' },
+  { name: 'r2q.n', url: '/n/{id:int}' },
+  { name: 'r2q.bad', url: '/bad/{id:int}', params: { id: 'bad' } },
+  { name: 'r4q', url: '/r4q?{id:int}' },
+  { name: 'r4q.u', url: '/u', params: { id: { value: undefined } } },
+  { name: 'r4q.u.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r4p', url: '/r4p/{id:int}' },
+  { name: 'r4p.f', url: '/f', params: { id: { value: () => undefined } } },
+  { name: 'r4p.f.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r4s', url: '/r4s/:id' },
+  { name: 'r4s.u', url: '/u', params: { id: { value: undefined } } },
+  { name: 'r4s.u.d', url: '/d', params: { id: 'd' } },
+  { name: 'r4a', url: '/r4a?id', params: { id: { array: 'auto' } } },
+  { name: 'r4a.f', url: '/f', params: { id: { value: () => undefined } } },
+  { name: 'r4a.f.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const satisfies readonly StateDeclaration[];
 
 const createRouter = () => {
@@ -452,5 +482,48 @@ describe('a pass-through below an `any`, typed non-url or defaulted ancestor', (
   it('checks every member a default may return', async () => {
     await rejects('b2q.fn', {});
     assert.deepEqual((await go('b2n.fn', {})).read, { id: 'd' });
+  });
+});
+
+describe('a url query decoding above a path param', () => {
+  it('overwrites the path value a pass-through below reads', async () => {
+    assert.deepEqual(await fromUrl('/r1q/n/5/c?id=5'), {
+      state: 'r1q.n.c',
+      read: { id: '5' },
+    });
+    assert.deepEqual((await fromUrl('/r1t/n/5/c?id=5')).read, { id: ['5'] });
+    assert.deepEqual((await fromUrl('/r1i/s/5/c?id=5')).read, { id: 5 });
+    assert.deepEqual((await fromUrl('/r1i/s/5/d?id=5')).read, { id: 5 });
+    assert.deepEqual((await fromUrl('/r1i/s/5/m/c?id=5')).read, { id: 5 });
+  });
+
+  it('reads `undefined` from a `bool` path param when the query is absent', async () => {
+    assert.deepEqual(await fromUrl('/r2b/b/1'), {
+      state: 'r2b.b',
+      read: { id: undefined },
+    });
+    assert.deepEqual((await fromUrl('/r2q/b/1')).read, { id: undefined });
+    assert.deepEqual((await fromUrl('/r2q/n/5?id=7')).read, { id: 7 });
+  });
+
+  it('throws for a default its own declaration rejects', () => {
+    assert.throws(
+      () => createRouter().stateService.go('r2q.bad', {}),
+      /Default value \(bad\) for parameter 'id' is not an instance of ParamType \(int\)/,
+    );
+  });
+});
+
+describe('an untyped middle state', () => {
+  it('passes only what the declarations above it take', async () => {
+    assert.deepEqual((await go('r4q.u.c', { id: 5 })).read, { id: 5 });
+    assert.deepEqual((await go('r4q.u.c', {})).read, { id: undefined });
+    await rejects('r4q.u.c', { id: 'x' });
+    assert.deepEqual((await go('r4p.f.c', { id: 5 })).read, { id: 5 });
+    await rejects('r4p.f.c', {});
+    assert.deepEqual((await go('r4s.u.d', {})).read, { id: 'd' });
+    assert.deepEqual((await go('r4a.f.c', { id: ['a', 'b'] })).read, {
+      id: ['a', 'b'],
+    });
   });
 });

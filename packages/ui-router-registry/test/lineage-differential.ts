@@ -53,8 +53,10 @@ const DECLARED = {
     source: '{ array: false }',
   },
   qint: { query: '{id:int}' },
+  qbool: { query: '{id:bool}' },
   p: { path: ':id' },
   pint: { path: '{id:int}' },
+  pbool: { path: '{id:bool}' },
   parr: { path: ':id', config: { array: true }, source: '{ array: true }' },
   cnone: { config: { squash: true }, source: '{ squash: true }' },
   cd: { config: 'd', source: "'d'" },
@@ -92,68 +94,114 @@ const CODES = Object.keys(DECLARED) as Code[];
 
 const declared = (code: Code): Declared => DECLARED[code];
 
-// Depth 3: a url ancestor, then a declaration the walk must look through, then the target.
+// Depth 3: an ancestor, then a declaration the walk must look through, then the target.
 const TOPS: readonly Code[] = [
   'q',
   'qtrue',
+  'qauto',
   'qint',
   'p',
   'parr',
   'cd',
   'cnone',
+  'cvu',
 ];
 
 const MIDDLES: readonly Code[] = [
   'none',
   'q',
+  'p',
+  'pint',
+  'pbool',
+  'parr',
   'cd',
   'cvu',
+  'cvf',
   'cdyn',
   'carr',
   'carrd',
   'cint',
 ];
 
-const LEAVES: readonly Code[] = ['q', 'qauto', 'cd', 'cvu', 'cdyn', 'cun'];
-
-const LINEAGES: readonly (readonly Code[])[] = [
-  ...CODES.flatMap((parent) => CODES.map((child) => [parent, child])),
-  ...TOPS.flatMap((top) =>
-    MIDDLES.flatMap((middle) => LEAVES.map((leaf) => [top, middle, leaf])),
-  ),
+const LEAVES: readonly Code[] = [
+  'q',
+  'qauto',
+  'cd',
+  'cvu',
+  'cvf',
+  'cdyn',
+  'cun',
 ];
 
-const SEGMENTS = ['p', 'c', 'g'] as const;
+const QUERY_TOPS: readonly Code[] = ['q', 'qtrue', 'qint'];
 
-const segment = (code: Code, level: number): string =>
-  `${SEGMENTS[level]}_${code}`;
+// Depth 4: a query above a path, then a silent state or a second pass-through.
+const DEEP: readonly (readonly Code[])[] = QUERY_TOPS.flatMap((top) =>
+  (['p', 'pint', 'pbool'] as const).flatMap((path) =>
+    (['none', 'cdyn'] as const).flatMap((between) =>
+      (['cdyn', 'cd', 'cvf'] as const).map((leaf) => [
+        top,
+        path,
+        between,
+        leaf,
+      ]),
+    ),
+  ),
+);
 
-const names = (chain: readonly Code[]): string[] =>
-  chain.map((_, depth) =>
-    chain
-      .slice(0, depth + 1)
-      .map((code, level) => segment(code, level))
-      .join('.'),
-  );
+// Children that name their parent with `parent:`.
+const BY_PARENT: readonly (readonly Code[])[] = QUERY_TOPS.flatMap((top) =>
+  (['p', 'pint', 'cvf'] as const).flatMap((middle) =>
+    (['cdyn', 'cd'] as const).map((leaf) => [top, middle, leaf]),
+  ),
+);
 
-const target = (chain: readonly Code[]): string => names(chain).at(-1) ?? '';
+type Lineage = { readonly chain: readonly Code[]; readonly byParent: boolean };
 
-const urlOf = (code: Code, level: number): string => {
+const LINEAGES: readonly Lineage[] = [
+  ...[
+    ...CODES.flatMap((parent) => CODES.map((child) => [parent, child])),
+    ...TOPS.flatMap((top) =>
+      MIDDLES.flatMap((middle) => LEAVES.map((leaf) => [top, middle, leaf])),
+    ),
+    ...DEEP,
+  ].map((chain) => ({ chain, byParent: false })),
+  ...BY_PARENT.map((chain) => ({ chain, byParent: true })),
+];
+
+// Siblings differ in code, so a code alone names each level and its url segment.
+const segment = (code: Code): string => code;
+
+// A `parent:` lineage spells each state's whole path without a dot.
+const names = ({ chain, byParent }: Lineage): string[] =>
+  chain.map((_, depth) => {
+    const path = chain.slice(0, depth + 1).map((code) => segment(code));
+
+    return byParent ? `r_${path.join('_')}` : path.join('.');
+  });
+
+const target = (lineage: Lineage): string => names(lineage).at(-1) ?? '';
+
+const urlOf = (code: Code): string => {
   const { path, query } = declared(code);
 
-  return `/${segment(code, level)}${path ? `/${path}` : ''}${query ? `?${query}` : ''}`;
+  return `/${segment(code)}${path ? `/${path}` : ''}${query ? `?${query}` : ''}`;
 };
 
-const declarations = (chain: readonly Code[]): StateDeclaration[] => {
-  const stateNames = names(chain);
+const declarations = (lineage: Lineage): StateDeclaration[] => {
+  const stateNames = names(lineage);
 
-  return chain.map((code, level) => {
+  return lineage.chain.map((code, level) => {
     const { config } = declared(code);
 
     const declaration: StateDeclaration = {
       name: stateNames[level],
-      url: urlOf(code, level),
+      url: urlOf(code),
     };
+
+    if (lineage.byParent && level > 0) {
+      declaration.parent = stateNames[level - 1];
+    }
 
     if (config !== undefined) declaration.params = { id: config };
 
@@ -161,17 +209,25 @@ const declarations = (chain: readonly Code[]): StateDeclaration[] => {
   });
 };
 
-const INPUTS: readonly RawParams[] = [
-  {},
-  { id: 'x' },
-  { id: 5 },
-  { id: ['a', 'b'] },
-  { id: null },
+// What each input or default holds, so the model of `ParamsOf` needs no runtime check.
+type Kind = 'absent' | 'string' | 'number' | 'strings' | 'null';
+
+type Input = { readonly params: RawParams; readonly kind: Kind };
+
+const INPUTS: readonly Input[] = [
+  { params: {}, kind: 'absent' },
+  { params: { id: 'x' }, kind: 'string' },
+  { params: { id: 5 }, kind: 'number' },
+  { params: { id: ['a', 'b'] }, kind: 'strings' },
+  { params: { id: null }, kind: 'null' },
 ];
 
-const PATH_VALUES = ['x', '5', ''] as const;
+// `transitionTo` doesn't wrap a scalar default on an array param, as `go` does.
+const METHODS = ['go', 'transitionTo'] as const;
 
-const QUERY_VALUES = [undefined, 'id=x', 'id=5', 'id=a&id=b'] as const;
+const PATH_VALUES = ['x', '5', '1', ''] as const;
+
+const QUERY_VALUES = [undefined, 'id=x', 'id=5', 'id=0', 'id=a&id=b'] as const;
 
 const entryUrls = (chain: readonly Code[]): string[] => {
   const hasPath = chain.some((code) => declared(code).path);
@@ -181,8 +237,8 @@ const entryUrls = (chain: readonly Code[]): string[] => {
     (hasQuery ? QUERY_VALUES : [undefined]).map((query) => {
       const path = chain
         .map(
-          (code, level) =>
-            `/${segment(code, level)}${declared(code).path ? `/${pathValue}` : ''}`,
+          (code) =>
+            `/${segment(code)}${declared(code).path ? `/${pathValue}` : ''}`,
         )
         .join('');
 
@@ -191,13 +247,13 @@ const entryUrls = (chain: readonly Code[]): string[] => {
   );
 };
 
-const createRouter = (chain: readonly Code[]): UIRouter => {
+const createRouter = (lineage: Lineage): UIRouter => {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(memoryLocationPlugin);
   router.stateService.defaultErrorHandler(() => undefined);
 
-  for (const declaration of declarations(chain)) {
+  for (const declaration of declarations(lineage)) {
     router.stateRegistry.register(declaration);
   }
 
@@ -210,14 +266,15 @@ const read = (router: UIRouter): RawParams => {
   return params;
 };
 
-const go = async (
-  chain: readonly Code[],
+const navigate = async (
+  lineage: Lineage,
   input: RawParams,
+  method: (typeof METHODS)[number],
 ): Promise<RawParams | undefined> => {
-  const router = createRouter(chain);
+  const router = createRouter(lineage);
 
   try {
-    await router.stateService.go(target(chain), input);
+    await router.stateService[method](target(lineage), input);
   } catch (error) {
     if (
       error instanceof Rejection &&
@@ -232,14 +289,17 @@ const go = async (
   return read(router);
 };
 
-const enter = async (
-  chain: readonly Code[],
-  url: string,
-): Promise<RawParams | undefined> => {
-  const router = createRouter(chain);
+type Entered =
+  | { readonly outcome: 'read'; readonly read: RawParams }
+  | { readonly outcome: 'no match' | 'not entered' };
+
+const enter = async (lineage: Lineage, url: string): Promise<Entered> => {
+  const router = createRouter(lineage);
   router.urlService.url(url);
 
-  if (!router.urlService.match(router.urlService.parts())) return undefined;
+  if (!router.urlService.match(router.urlService.parts())) {
+    return { outcome: 'no match' };
+  }
 
   const settled = new Promise<boolean>((resolve) => {
     router.transitionService.onSuccess({}, () => resolve(true));
@@ -248,12 +308,12 @@ const enter = async (
 
   router.urlService.sync();
 
-  return (await settled) && router.globals.current.name === target(chain)
-    ? read(router)
-    : undefined;
+  return (await settled) && router.globals.current.name === target(lineage)
+    ? { outcome: 'read', read: read(router) }
+    : { outcome: 'not entered' };
 };
 
-// Core returns strings, numbers, arrays of them, `null` or `undefined` here; each is its own type literal.
+// Core returns strings, numbers, booleans, arrays of them, `null` or `undefined` here; each is its own type literal.
 const objectType = (params: RawParams): string =>
   Object.keys(params).length === 0
     ? 'Record<never, never>'
@@ -265,9 +325,9 @@ const objectType = (params: RawParams): string =>
         .join('; ')} }`;
 
 type Case =
-  | { kind: 'go'; chain: readonly Code[]; input: RawParams; read: RawParams }
-  | { kind: 'rejects'; chain: readonly Code[]; input: RawParams }
-  | { kind: 'url'; chain: readonly Code[]; url: string; read: RawParams };
+  | { kind: 'go'; lineage: Lineage; input: Input; read: RawParams }
+  | { kind: 'rejects'; lineage: Lineage; input: Input }
+  | { kind: 'url'; lineage: Lineage; url: string; read: RawParams };
 
 const declaring = (chain: readonly Code[]): Code[] =>
   chain.filter((code) => code !== 'none');
@@ -283,39 +343,40 @@ const ARRAY_CONFIG: ReadonlySet<Code> = new Set([
 
 const NO_DEFAULT: ReadonlySet<Code> = new Set(['cnone', 'cdyn', 'carr']);
 
-// `any` declarations whose input, or a default whose read-back, the registry types as `unknown`.
-const WIDE_INPUT: ReadonlySet<Code> = new Set([
-  'cvu',
-  'cvf',
-  'cun',
-  'cunn',
-  'cnull',
-  'cnul',
-]);
+// The target's own declaration decides its read-back unless it is untyped and non-url.
+const ownMode = (code: Code): string | undefined => {
+  const { path, query } = declared(code);
 
-const WIDE_READ: ReadonlySet<Code> = new Set(['cnull', 'cnul']);
+  if (ARRAY_CONFIG.has(code)) return 'array';
 
-// The array mode of the declaration that decides the read-back, looking through untyped non-url ones.
+  if (query) return 'plain query';
+
+  if (path) return 'path';
+
+  return code === 'cint' ? 'typed' : undefined;
+};
+
+// A pass-through reads the nearest query declaration's decoding, or an array a path one below it took.
 const nearestMode = (chain: readonly Code[]): string | undefined => {
-  for (let level = chain.length - 1; level >= 0; level -= 1) {
-    const code = chain[level];
-    const { path, query } = declared(code);
+  const own = ownMode(chain[chain.length - 1]);
 
-    if (ARRAY_CONFIG.has(code)) return 'array';
+  if (own) return own;
 
-    if (query) return 'plain query';
+  let path: string | undefined;
 
-    if (path) return 'path';
+  for (const code of chain.slice(0, -1).reverse()) {
+    const mode = ownMode(code);
 
-    if ((level < chain.length - 1 ? WIDE_INPUT : WIDE_READ).has(code)) {
-      return 'unknown';
-    }
+    if (declared(code).query) return path === 'array' ? path : mode;
+
+    if (declared(code).path) path ??= mode;
   }
 
-  return undefined;
+  return path;
 };
 
 type Divergence = {
+  readonly tag: string;
   readonly reason: string;
   readonly matches: (testCase: Case) => boolean;
 };
@@ -323,76 +384,279 @@ type Divergence = {
 // Each entry is a known divergence from core; the probe fails if one stops diverging.
 const DIVERGENCES: readonly Divergence[] = [
   {
+    tag: 'plain-query',
     reason:
       'a query param with no array mode reads back one value, though core reads an array for an array input or a repeated key (#2472)',
     matches: (testCase) =>
       testCase.kind !== 'rejects' &&
       Array.isArray(testCase.read.id) &&
-      nearestMode(testCase.chain) === 'plain query',
+      nearestMode(testCase.lineage.chain) === 'plain query',
   },
   {
+    tag: 'config-only',
     reason:
       'a single config-only declaration with no default types as never or an array, though core reads undefined; not a redeclaration',
     matches: (testCase) =>
       testCase.kind !== 'rejects' &&
       testCase.read.id === undefined &&
-      declaring(testCase.chain).length === 1 &&
-      NO_DEFAULT.has(declaring(testCase.chain)[0]),
+      declaring(testCase.lineage.chain).length === 1 &&
+      NO_DEFAULT.has(declaring(testCase.lineage.chain)[0]),
   },
 ];
+
+type GoCase = Extract<Case, { kind: 'go' }>;
+
+const STRING: ReadonlySet<Kind> = new Set(['string']);
+
+const STRINGS: ReadonlySet<Kind> = new Set(['string', 'strings']);
+
+const NUMBER: ReadonlySet<Kind> = new Set(['number']);
+
+const ANY: ReadonlySet<Kind> = new Set(['string', 'number', 'strings', 'null']);
+
+const NONE: ReadonlySet<Kind> = new Set();
+
+// What `ParamsOf` takes for each declaration: its own type, or its default's widened one when untyped and non-url.
+const TAKES: Readonly<Record<Code, ReadonlySet<Kind>>> = {
+  none: ANY,
+  q: STRINGS,
+  qd: STRINGS,
+  qauto: STRINGS,
+  qtrue: STRINGS,
+  qfalse: STRING,
+  qint: NUMBER,
+  qbool: NONE,
+  p: STRING,
+  pint: NUMBER,
+  pbool: NONE,
+  parr: STRINGS,
+  cnone: NONE,
+  cd: STRING,
+  cnull: ANY,
+  cvu: ANY,
+  cvf: ANY,
+  cdyn: NONE,
+  carr: ANY,
+  carrd: STRINGS,
+  cint: NUMBER,
+  cun: ANY,
+  cunn: ANY,
+  cnul: ANY,
+};
+
+// What each default can return.
+const DEFAULTS: Partial<Record<Code, readonly Kind[]>> = {
+  qd: ['string'],
+  cd: ['string'],
+  cnull: ['null'],
+  cvu: ['absent'],
+  cvf: ['absent'],
+  carrd: ['string'],
+  cun: ['string', 'absent'],
+  cunn: ['number', 'absent'],
+  cnul: ['string', 'null'],
+};
+
+const isPassThrough = (code: Code): boolean => {
+  const { path, query } = declared(code);
+
+  return !path && !query && code !== 'cint';
+};
+
+const optionalAlone = (code: Code): boolean =>
+  DEFAULTS[code] !== undefined || Boolean(declared(code).query);
+
+// A pass-through takes any value; another declaration takes an absent or `null` one only when optional alone.
+const acceptsDefault = (code: Code, kind: Kind): boolean =>
+  isPassThrough(code) ||
+  (kind === 'absent' || kind === 'null'
+    ? optionalAlone(code)
+    : TAKES[code].has(kind));
+
+// Only the nearest declaration's default fills the key, and every declaration checks each value it can return.
+const optional = (chain: readonly Code[]): boolean => {
+  const levels = declaring(chain);
+  const nearest = levels[levels.length - 1];
+
+  if (levels.length === 1) return optionalAlone(nearest);
+
+  return (DEFAULTS[nearest] ?? ['absent']).every((kind) =>
+    levels.every((code) => acceptsDefault(code, kind)),
+  );
+};
+
+// The first declaration takes its own type; a later pass-through takes whatever the ones above it take.
+const failing = (chain: readonly Code[], kind: Kind): Code[] =>
+  declaring(chain).filter(
+    (code, index) =>
+      !(index > 0 && isPassThrough(code)) && !TAKES[code].has(kind),
+  );
+
+// An undeclared key is an excess property.
+const typesTake = ({ lineage, input }: GoCase): boolean => {
+  if (input.kind === 'absent') return optional(lineage.chain);
+
+  return (
+    declaring(lineage.chain).length > 0 &&
+    failing(lineage.chain, input.kind).length === 0
+  );
+};
+
+const BOOL: ReadonlySet<Code> = new Set(['qbool', 'pbool']);
+
+const NEVER: ReadonlySet<Code> = new Set(['cnone', 'cdyn']);
+
+type OverStrict = {
+  readonly tag: string;
+  readonly reason: string;
+  readonly matches: (testCase: GoCase) => boolean;
+};
+
+const fails = (testCase: GoCase, codes: ReadonlySet<Code>): boolean =>
+  testCase.input.kind !== 'absent'
+    ? failing(testCase.lineage.chain, testCase.input.kind).some((code) =>
+        codes.has(code),
+      )
+    : testCase.lineage.chain.some((code) => codes.has(code));
+
+// Inputs core takes that `ParamsOf` rejects, each for a stated reason; the first that matches names it.
+const OVER_STRICT: readonly OverStrict[] = [
+  {
+    tag: 'undeclared',
+    reason:
+      'core ignores a param no state declares; `ParamsOf` rejects it as an excess property',
+    matches: ({ lineage }) => declaring(lineage.chain).length === 0,
+  },
+  {
+    tag: 'bool',
+    reason:
+      "core's bool type decodes any value, and validates an absent one on a path param; the registry takes a boolean",
+    matches: (testCase) => fails(testCase, BOOL),
+  },
+  {
+    tag: 'no-default',
+    reason:
+      'a config-only declaration with no default types as never on input, though core takes a value or none (single-state type)',
+    matches: (testCase) => fails(testCase, NEVER),
+  },
+  {
+    tag: 'null',
+    reason:
+      'core takes null for an optional or string param; the registry types null only as a `value: null` default',
+    matches: ({ input }) => input.kind === 'null',
+  },
+  {
+    tag: 'coercion',
+    reason:
+      'core coerces before it validates (a string param takes a number or an array, an int one a numeric string); the registry types no coercion',
+    matches: ({ input }) => input.kind !== 'absent',
+  },
+  {
+    tag: 'empty-array',
+    reason:
+      'an array path param that matches an empty segment, or a config-only `array: true` one, takes an absent value in core; the registry requires it',
+    matches: ({ lineage }) =>
+      lineage.chain.includes('parr') || declaring(lineage.chain)[0] === 'carr',
+  },
+  {
+    tag: 'default-union',
+    reason:
+      'a default function typed to return undefined or null, or a number under a string parent, fills the key in core; the registry checks every member of its declared type',
+    matches: ({ lineage }) =>
+      ['cun', 'cunn', 'cnul'].includes(declaring(lineage.chain).at(-1) ?? ''),
+  },
+];
+
+const reasonFor = (testCase: GoCase): OverStrict => {
+  const entry = OVER_STRICT.find((candidate) => candidate.matches(testCase));
+
+  if (!entry) {
+    throw new Error(
+      `no over-strict reason for ${target(testCase.lineage)} ${JSON.stringify(testCase.input.params)}`,
+    );
+  }
+
+  return entry;
+};
 
 const allowed = (testCase: Case): Divergence | undefined =>
   DIVERGENCES.find((divergence) => divergence.matches(testCase));
 
+const overStrict = (testCase: Case): OverStrict | undefined =>
+  testCase.kind === 'go' && !typesTake(testCase)
+    ? reasonFor(testCase)
+    : undefined;
+
+const takeCheck = (name: string, testCase: GoCase, entry: OverStrict): string =>
+  `accepts<Takes<${name}, ${objectType(testCase.input.params)}>>(false); // ${entry.tag}`;
+
 // A known divergence asserts the mismatch itself, so it fails once the types agree.
 const assertion = (testCase: Case): string => {
-  const name = `'${target(testCase.chain)}'`;
-  const divergence = allowed(testCase);
+  const name = `'${target(testCase.lineage)}'`;
 
   if (testCase.kind === 'rejects') {
-    const check = `Rejects<${name}, ${objectType(testCase.input)}>`;
-
-    return divergence
-      ? `// ${divergence.reason}\naccepts<${check}>(false);`
-      : `accepts<${check}>(true);`;
+    return `accepts<Rejects<${name}, ${objectType(testCase.input.params)}>>(true);`;
   }
 
-  if (divergence) {
-    return `// ${divergence.reason}\naccepts<Reads<${name}, ${objectType(testCase.read)}>>(false);`;
+  const strict = overStrict(testCase);
+
+  if (strict && testCase.kind === 'go') {
+    return takeCheck(name, testCase, strict);
   }
 
   const check =
     testCase.kind === 'go'
-      ? `Go<${name}, ${objectType(testCase.input)}, ${objectType(testCase.read)}>`
+      ? `Go<${name}, ${objectType(testCase.input.params)}, ${objectType(testCase.read)}>`
       : `Reads<${name}, ${objectType(testCase.read)}>`;
 
-  return `accepts<${check}>(true);`;
+  const divergence = allowed(testCase);
+
+  return divergence
+    ? `accepts<${check}>(false); // ${divergence.tag}`
+    : `accepts<${check}>(true);`;
 };
 
-const casesOf = async (chain: readonly Code[]): Promise<Case[]> => {
-  const programmatic = await Promise.all(
-    INPUTS.map(async (input): Promise<Case> => {
-      const params = await go(chain, input);
+type Tally = { urls: number; noMatch: number; notEntered: number };
 
-      return params
-        ? { kind: 'go', chain, input, read: params }
-        : { kind: 'rejects', chain, input };
-    }),
-  );
+const programmatic = async (lineage: Lineage): Promise<Case[]> =>
+  (
+    await Promise.all(
+      INPUTS.flatMap((input) =>
+        METHODS.map(async (method): Promise<Case> => {
+          const params = await navigate(lineage, input.params, method);
 
-  const entered = await Promise.all(
-    entryUrls(chain).map(async (url): Promise<Case[]> => {
-      const params = await enter(chain, url);
+          return params
+            ? { kind: 'go', lineage, input, read: params }
+            : { kind: 'rejects', lineage, input };
+        }),
+      ),
+    )
+  ).flat();
 
-      return params ? [{ kind: 'url', chain, url, read: params }] : [];
-    }),
-  );
+const casesOf = async (lineage: Lineage, tally: Tally): Promise<Case[]> => {
+  const urls = entryUrls(lineage.chain);
+  const entered = await Promise.all(urls.map((url) => enter(lineage, url)));
 
-  return [...programmatic, ...entered.flat()];
+  tally.urls += urls.length;
+  tally.noMatch += entered.filter(
+    (result) => result.outcome === 'no match',
+  ).length;
+  tally.notEntered += entered.filter(
+    (result) => result.outcome === 'not entered',
+  ).length;
+
+  return [
+    ...(await programmatic(lineage)),
+    ...entered.flatMap((result, index): Case[] =>
+      result.outcome === 'read'
+        ? [{ kind: 'url', lineage, url: urls[index], read: result.read }]
+        : [],
+    ),
+  ];
 };
 
 const HEADER = `// Generated by test/lineage-differential.ts from what core returns; \`pnpm generate:lineage-differential\` rewrites it.
-// \`tsc --noEmit\` is the assertion: every value core read back for an input \`ParamsOf\` takes, or for a url, fits \`ResolvedParamsOf\`.
+// \`tsc --noEmit\` is the assertion: \`ParamsOf\` takes every input core takes, and \`ResolvedParamsOf\` admits what core reads back, unless an allowlisted entry says why not.
 import type {
   ParamsOf,
   ResolvedParamsOf,
@@ -406,56 +670,86 @@ type Takes<N extends StateName, I> = [I] extends [ParamsOf<N>]
     : false
   : false;
 
-type Go<N extends StateName, I, O> =
-  Takes<N, I> extends true
-    ? [O] extends [ResolvedParamsOf<N>]
-      ? true
-      : false
-    : true;
-
-type Rejects<N extends StateName, I> = Takes<N, I> extends true ? false : true;
-
 type Reads<N extends StateName, O> = [O] extends [ResolvedParamsOf<N>]
   ? true
   : false;
 
+type Go<N extends StateName, I, O> =
+  Takes<N, I> extends true ? Reads<N, O> : 'not taken';
+
+type Rejects<N extends StateName, I> = Takes<N, I> extends true ? false : true;
+
 declare function accepts<T>(value: T): T;
 `;
 
-const stateSource = (code: Code, level: number, name: string): string => {
+const stateSource = (
+  lineage: Lineage,
+  level: number,
+  stateNames: readonly string[],
+): string => {
+  const code = lineage.chain[level];
   const { source } = declared(code);
+
+  const parent =
+    lineage.byParent && level > 0 ? `, parent: '${stateNames[level - 1]}'` : '';
+
   const params = source === undefined ? '' : `, params: { id: ${source} }`;
 
-  return `{ name: '${name}', url: '${urlOf(code, level)}'${params} }`;
+  return `{ name: '${stateNames[level]}'${parent}, url: '${urlOf(code)}'${params} }`;
 };
+
+const count = (assertions: readonly string[], pattern: string): number =>
+  assertions.filter((text) => text.includes(pattern)).length;
+
+const summary = (
+  states: number,
+  tally: Tally,
+  assertions: readonly string[],
+): string =>
+  [
+    `// ${LINEAGES.length} lineages, ${states} states; ${tally.urls} urls tried, ${tally.noMatch} unmatched, ${tally.notEntered} ending elsewhere or in an error.`,
+    `// ${assertions.length} assertions: ${count(assertions, 'accepts<Go<')} go, ${count(assertions, 'accepts<Reads<')} url, ${count(assertions, 'accepts<Rejects<')} rejections, ${count(assertions, 'accepts<Takes<')} over-strict inputs, ${count(assertions, '>(false); //') - count(assertions, 'accepts<Takes<')} allowlisted read-backs.`,
+    ...[...OVER_STRICT, ...DIVERGENCES].map(
+      (entry) =>
+        `//   ${entry.tag} (${count(assertions, `>(false); // ${entry.tag}`)}): ${entry.reason}`,
+    ),
+  ].join('\n');
 
 export async function generate(): Promise<string> {
   const states = new Map<string, string>();
 
-  for (const chain of LINEAGES) {
-    const stateNames = names(chain);
+  for (const lineage of LINEAGES) {
+    const stateNames = names(lineage);
 
-    chain.forEach((code, level) => {
-      states.set(
-        stateNames[level],
-        stateSource(code, level, stateNames[level]),
-      );
+    lineage.chain.forEach((_, level) => {
+      states.set(stateNames[level], stateSource(lineage, level, stateNames));
     });
   }
 
-  const cases = (await Promise.all(LINEAGES.map(casesOf))).flat();
+  const tally: Tally = { urls: 0, noMatch: 0, notEntered: 0 };
 
-  const unused = DIVERGENCES.filter(
-    (divergence) => !cases.some((testCase) => divergence.matches(testCase)),
+  const cases = (
+    await Promise.all(LINEAGES.map((lineage) => casesOf(lineage, tally)))
+  ).flat();
+
+  const unused = [...DIVERGENCES, ...OVER_STRICT].filter(
+    (entry) =>
+      !cases.some(
+        (testCase) =>
+          allowed(testCase) === entry || overStrict(testCase) === entry,
+      ),
   );
 
   if (unused.length > 0) {
     throw new Error(
-      `divergences that match no case: ${unused.map((divergence) => divergence.reason).join('; ')}`,
+      `allowlist entries that match no case: ${unused.map((entry) => entry.reason).join('; ')}`,
     );
   }
 
+  const assertions = [...new Set(cases.map(assertion))];
+
   const text = `${HEADER}
+${summary(states.size, tally, assertions)}
 const states = [
 ${[...states.values()].join(',\n')},
 ] as const;
@@ -464,7 +758,7 @@ declare module 'ui-router-registry' {
   interface RegisteredStates extends StatesOf<typeof states> {}
 }
 
-${[...new Set(cases.map(assertion))].join('\n\n')}
+${assertions.join('\n\n')}
 `;
 
   const { code, errors } = await format('probe.ts', text, OXFMT);

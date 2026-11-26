@@ -154,6 +154,36 @@ const lineageStates = [
   { name: 'b3p', url: '/b3p/:id', params: { id: { array: true } } },
   { name: 'b3p.m', url: '/m', params: { id: { type: 'int' } } },
   { name: 'b3p.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1q', url: '/r1q?id' },
+  { name: 'r1q.n', url: '/n/{id:int}' },
+  { name: 'r1q.n.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1t', url: '/r1t?id', params: { id: { array: true } } },
+  { name: 'r1t.n', url: '/n/{id:int}' },
+  { name: 'r1t.n.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1i', url: '/r1i?{id:int}' },
+  { name: 'r1i.s', url: '/s/:id' },
+  { name: 'r1i.s.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r1i.s.d', url: '/d', params: { id: 'd' } },
+  { name: 'r1i.s.m', url: '/m' },
+  { name: 'r1i.s.m.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r2b', url: '/r2b?{id:bool}' },
+  { name: 'r2b.b', url: '/b/{id:bool}' },
+  { name: 'r2q', url: '/r2q?id' },
+  { name: 'r2q.b', url: '/b/{id:bool}' },
+  { name: 'r2q.n', url: '/n/{id:int}' },
+  { name: 'r2q.bad', url: '/bad/{id:int}', params: { id: 'bad' } },
+  { name: 'r4q', url: '/r4q?{id:int}' },
+  { name: 'r4q.u', url: '/u', params: { id: { value: undefined } } },
+  { name: 'r4q.u.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r4p', url: '/r4p/{id:int}' },
+  { name: 'r4p.f', url: '/f', params: { id: { value: () => undefined } } },
+  { name: 'r4p.f.c', url: '/c', params: { id: { dynamic: true } } },
+  { name: 'r4s', url: '/r4s/:id' },
+  { name: 'r4s.u', url: '/u', params: { id: { value: undefined } } },
+  { name: 'r4s.u.d', url: '/d', params: { id: 'd' } },
+  { name: 'r4a', url: '/r4a?id', params: { id: { array: 'auto' } } },
+  { name: 'r4a.f', url: '/f', params: { id: { value: () => undefined } } },
+  { name: 'r4a.f.c', url: '/c', params: { id: { dynamic: true } } },
 ] as const;
 
 declare module '../index.js' {
@@ -483,7 +513,7 @@ accepts<
 >(true);
 
 accepts<
-  Same<ResolvedParamsOf<'passq.vn'>, { id: unknown; '#'?: string | null }>
+  Same<ResolvedParamsOf<'passq.vn'>, { id: string | null; '#'?: string | null }>
 >(true);
 
 accepts<
@@ -518,7 +548,7 @@ accepts<
 accepts<Same<ParamsOf<'passp.sh'>, { id?: string; '#'?: string | null }>>(true);
 
 accepts<
-  Same<ResolvedParamsOf<'passp.vn'>, { id: unknown; '#'?: string | null }>
+  Same<ResolvedParamsOf<'passp.vn'>, { id: string | null; '#'?: string | null }>
 >(true);
 
 accepts<Same<ParamsOf<'passp.vn'>, { id: string; '#'?: string | null }>>(true);
@@ -605,7 +635,7 @@ accepts<
 >(true);
 
 accepts<
-  Same<ResolvedParamsOf<'passi.vn'>, { id: unknown; '#'?: string | null }>
+  Same<ResolvedParamsOf<'passi.vn'>, { id: number | null; '#'?: string | null }>
 >(true);
 
 accepts<
@@ -644,7 +674,10 @@ accepts<
 >(true);
 
 accepts<
-  Same<ResolvedParamsOf<'passe.vn'>, { id: unknown; '#'?: string | null }>
+  Same<
+    ResolvedParamsOf<'passe.vn'>,
+    { id: string | string[] | null; '#'?: string | null }
+  >
 >(true);
 
 accepts<
@@ -778,14 +811,14 @@ accepts<Same<ResolvedParamsOf<'b2d.fn'>, { id?: string; '#'?: string | null }>>(
 accepts<
   Same<
     ResolvedParamsOf<'b3.m.c'>,
-    { id?: string | number | string[]; '#'?: string | null }
+    { id?: string | string[]; '#'?: string | null }
   >
 >(true);
 
 accepts<
   Same<
     ResolvedParamsOf<'b3p.m.c'>,
-    { id?: string | number | string[]; '#'?: string | null }
+    { id?: string | string[]; '#'?: string | null }
   >
 >(true);
 
@@ -807,3 +840,69 @@ accepts<
 >(true);
 
 void stateService.go('b2n.fn');
+
+// -- a url's query decoding overwrites a path one, and `go` takes what every declaration takes --
+
+accepts<
+  Same<ResolvedParamsOf<'r1q.n.c'>, { id?: string; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'r1t.n.c'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'r1i.s.c'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'r1i.s.d'>,
+    { id: string | number; '#'?: string | null }
+  >
+>(true);
+
+accepts<
+  Same<ResolvedParamsOf<'r1i.s.m.c'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<Same<ResolvedParamsOf<'r2b.b'>, { id?: boolean; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ResolvedParamsOf<'r2q.b'>, { id?: boolean; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ResolvedParamsOf<'r2q.n'>, { id: number; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ParamsOf<'r2q.bad'>, { id: never; '#'?: string | null }>>(true);
+
+// @ts-expect-error core throws: the `'bad'` default is not an `int`
+void stateService.go('r2q.bad', {});
+
+// -- an untyped middle state passes only what the declarations above it take --
+
+accepts<
+  Same<ResolvedParamsOf<'r4q.u.c'>, { id?: number; '#'?: string | null }>
+>(true);
+
+accepts<Same<ResolvedParamsOf<'r4p.f.c'>, { id: number; '#'?: string | null }>>(
+  true,
+);
+
+accepts<Same<ResolvedParamsOf<'r4s.u.d'>, { id: string; '#'?: string | null }>>(
+  true,
+);
+
+accepts<
+  Same<
+    ResolvedParamsOf<'r4a.f.c'>,
+    { id?: string | string[]; '#'?: string | null }
+  >
+>(true);
