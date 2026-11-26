@@ -51,11 +51,12 @@
     "docs:api": "rimraf ../../www/lit-ui-router.dev/reference/ui-router-registry && typedoc",
     "format:check:oxfmt": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "format:oxfmt": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "generate:lineage-differential": "node test/lineage-differential.ts",
     "lint:oxlint": "oxlint .",
     "test": "node --test --test-reporter=@tools/shared/test-reporter.ts \"test/**/*.test.ts\"",
     "typecheck:peer-floor": "floor-guard && floor-types-guard tsconfig.peer-floor.json && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
-    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-d/routed-components/tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+    "typecheck:tsc": "tsc -p tsconfig.json --noEmit && tsc -p test-d/tsconfig.json --noEmit && tsc -p test-d/routed-components/tsconfig.json --noEmit && tsc -p test-d/lineage-differential/tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
