@@ -1,5 +1,5 @@
 import { API_REFERENCES } from '../catalog/references.ts';
-import { PACKAGES, ROLES } from '../catalog/packages.ts';
+import { PACKAGES, packagePagePath, ROLES } from '../catalog/packages.ts';
 
 /** One section per role, each package linking its API reference, or its package page when it has none. */
 export function referenceIndex(): string {
@@ -8,7 +8,7 @@ export function referenceIndex(): string {
     '',
     ...PACKAGES.filter(({ role }) => role === id).map(({ name }) => {
       const reference = API_REFERENCES[name];
-      const page = `[package page](/packages/${name})`;
+      const page = `[package page](${packagePagePath(name)})`;
 
       return reference
         ? `- [${name}](${reference}) — ${page}`

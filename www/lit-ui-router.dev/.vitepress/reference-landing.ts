@@ -11,7 +11,11 @@ import {
   FEATURED_EXPORTS,
   type FeaturedExport,
 } from '../catalog/references.ts';
-import { PACKAGES, type PackageName } from '../catalog/packages.ts';
+import {
+  PACKAGES,
+  type PackageName,
+  packagePagePath,
+} from '../catalog/packages.ts';
 import { code } from './index-markdown.ts';
 
 type Token = ReturnType<MarkdownIt['parse']>[number];
@@ -176,7 +180,7 @@ export function packageLine(name: PackageName): string {
   const elements = elementReferences[name];
 
   return [
-    `The API reference of the [${code(name)} package](/packages/${name}), whose page covers installation and usage.`,
+    `The API reference of the [${code(name)} package](${packagePagePath(name)}), whose page covers installation and usage.`,
     ...(elements
       ? [
           `[Custom elements](${elements.link}) lists the elements it defines, as its manifest records them.`,
