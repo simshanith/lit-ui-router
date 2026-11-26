@@ -13,9 +13,14 @@ through three of them in order, starting with [Hello World](/tutorial/helloworld
 Each entry links the pages that embed it inline, or
 [Live examples](/examples/live) when no other page does.
 
+Every facet is read directly from the example's own files.
+
+<llm-exclude>
+
 Filter by adding facet rows from the dropdown, or click any facet pill on an
-entry to narrow the list. Every facet is read directly from the example's own
-files.
+entry to narrow the list.
+
+</llm-exclude>
 
 <!-- example-index -->
 
