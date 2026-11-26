@@ -167,8 +167,8 @@ const distTagChanges = (
     return outcomes;
   });
 
-/** Deliveries a publish run's claim waits for npm to serve its version and point a dist-tag at it. */
-export const PUBLISH_READS = 5;
+/** Deliveries a publish run's claim waits for npm to serve its version and point a dist-tag at it; the backoff spaces seven over 15¾ to 31½ minutes. */
+export const PUBLISH_READS = 7;
 
 /** A publish run's read that misses its version or every tag for it is `stale` until the reads run out; a dist-tags 404 proves nothing. */
 export function publishRead(
