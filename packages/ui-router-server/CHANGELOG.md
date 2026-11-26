@@ -2,6 +2,20 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-server/).
 
+## 0.11.3 (2026-11-26)
+
+<!-- notes-through: e211ca93457aca5140c1d4c678d64c633a786495 -->
+
+### Bug Fixes
+
+* **ui-router-server:** accept name[] params whose config sets array: false ([#2415](https://github.com/simshanith/lit-ui-router/issues/2415)) ([e211ca9](https://github.com/simshanith/lit-ui-router/commit/e211ca93457aca5140c1d4c678d64c633a786495))
+
+### Documentation
+
+* **ui-router-server:** document single-file bundles of matcher-only routers ([#2406](https://github.com/simshanith/lit-ui-router/issues/2406)) ([8f4a428](https://github.com/simshanith/lit-ui-router/commit/8f4a428fddc6a7248b1dd04fa2a3bca4526f7619))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-server/0.11.3/) · [Diff from 0.11.2](https://lit-ui-router.dev/releases/ui-router-server/diff/0.11.2...0.11.3/)
+
 ## 0.11.2 (2026-11-22)
 
 ### Bug Fixes
