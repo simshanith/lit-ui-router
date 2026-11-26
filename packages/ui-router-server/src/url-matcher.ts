@@ -14,7 +14,8 @@
  * case-insensitive modes, static defaults and squash policies, `exec`, and
  * `format` (the inverse: params in, url out, with core's squash/encode
  * semantics). Out of scope (compile errors, never silent divergence):
- * array params, `replace` configs, function (injected) defaults, and the
+ * array params (core's `array: true` mode, which a `name[]` id gets unless
+ * its config sets `array`), `replace` configs, function (injected) defaults, and the
  * `json`/`hash`/`any` types — erroring beats compiling `{x:json}` into the
  * literal regexp /json/, which is what an unregistered name means to the
  * parser. Search params parse but never affect path matching; `exec`
@@ -310,6 +311,9 @@ export interface CompiledParam {
   readonly defaultValue: unknown;
 }
 
+// Search params in core's 'auto' array mode; kept off the public CompiledParam shape.
+const autoArrayParams = new WeakSet<CompiledParam>();
+
 const compileParam = (
   id: string,
   urlType: ParamType | null,
@@ -320,7 +324,12 @@ const compileParam = (
   const declared = unwrapShorthand(config.params[id]);
   const where = `param '${id}' in pattern '${pattern}'`;
 
-  if (id.endsWith('[]') || (Object.hasOwn(declared, 'array') && declared.array))
+  // As core's getArrayMode: an own `array` key outranks the `[]` suffix.
+  const arrayMode = Object.hasOwn(declared, 'array')
+    ? declared.array
+    : id.endsWith('[]') || (isSearch && 'auto');
+
+  if (arrayMode === 'auto' ? !isSearch : arrayMode)
     throw new Error(
       `Array parameters are not supported by the standalone matcher (${where})`,
     );
@@ -343,7 +352,7 @@ const compileParam = (
     config.defaultSquashPolicy,
   );
 
-  return freeze<CompiledParam>({
+  const param = freeze<CompiledParam>({
     id,
     type: resolveType(declared.type, urlType, isSearch, id),
     isSearch,
@@ -352,6 +361,10 @@ const compileParam = (
     replace: freeze(getReplace(isOptional, squash)),
     defaultValue: declared.value,
   });
+
+  if (arrayMode === 'auto') autoArrayParams.add(param);
+
+  return param;
 };
 
 /** The typed value for a decoded input, or the static default when absent (core's Param.value). */
@@ -386,9 +399,12 @@ const paramIsDefault = (param: CompiledParam, input: unknown): boolean => {
   if (!param.isOptional) return false;
   const defaultValue = paramValue(param, undefined);
 
-  // Search params are auto-array-wrapped upstream, where an absent value
-  // compares as the empty array: equal only to another absent value.
-  if (param.isSearch && (defaultValue === undefined || input === undefined))
+  // Auto-array params compare an absent value as the empty array upstream:
+  // equal only to another absent value.
+  if (
+    autoArrayParams.has(param) &&
+    (defaultValue === undefined || input === undefined)
+  )
     return defaultValue === undefined && input === undefined;
 
   return typeEquals(param.type, defaultValue, input);
@@ -694,10 +710,10 @@ export function format(
     // Squashing only ever applies to a param sitting at its default.
     const squash = isDefaultValue ? param.squash : false;
 
-    // Auto-array wrapping again: an absent search value encodes to
-    // undefined (the empty array unwraps), skipping the scalar encoder.
+    // Auto-array wrapping again: an absent value encodes to undefined (the
+    // empty array unwraps), skipping the scalar encoder.
     const encoded =
-      param.isSearch && value === undefined
+      autoArrayParams.has(param) && value === undefined
         ? undefined
         : typeEncode(param.type, value);
 

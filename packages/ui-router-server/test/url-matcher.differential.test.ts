@@ -336,6 +336,92 @@ describe('differential: rejected by both implementations', () => {
   }
 });
 
+// Core's array-mode precedence: an own `array` key decides, then a `[]`
+// suffix, then the location default ('auto' for search, false for path).
+// Every param core leaves scalar or 'auto' must compile here and agree on
+// exec and format; core's true mode is the by-design rejection.
+// Core types `array` boolean, but its runtime takes 'auto' too.
+const arraySettings: { array?: boolean | 'auto' }[] = [
+  {},
+  { array: false },
+  { array: true },
+  { array: 'auto' },
+  { array: undefined },
+];
+
+const arrayBases: { value?: string; type?: string }[] = [
+  { value: 'd' },
+  { type: 'bool' },
+];
+
+describe('differential: array modes vs @uirouter/core', () => {
+  for (const name of ['one', 'one[]'])
+    for (const isSearch of [false, true])
+      for (const setting of arraySettings)
+        for (const base of arrayBases) {
+          const pattern = isSearch ? `/s?${name}` : `/s/{${name}}`;
+          const declaration = { ...base, ...setting };
+          const options = { params: { [name]: declaration } };
+          const label = `${pattern} ${JSON.stringify(declaration)}${Object.hasOwn(setting, 'array') && setting.array === undefined ? ' (array: undefined)' : ''}`;
+
+          it(label, () => {
+            let expectedMatcher: CoreUrlMatcher;
+
+            try {
+              expectedMatcher = coreCompile(pattern, options);
+            } catch {
+              assert.throws(() => compile(pattern, options));
+
+              return;
+            }
+
+            // SAFETY: core types Param.array boolean; auto-mode search params hold 'auto'.
+            const mode = expectedMatcher.parameter(name)?.array as
+              | boolean
+              | 'auto'
+              | undefined;
+
+            if (mode === true) {
+              assert.throws(
+                () => compile(pattern, options),
+                /Array parameters are not supported/,
+              );
+
+              return;
+            }
+
+            const actualMatcher = compile(pattern, options);
+            const urls = isSearch ? ['/s'] : ['/s/a', '/s/a-b', '/s/1', '/s/'];
+
+            for (const url of urls) {
+              assert.deepStrictEqual(
+                exec(actualMatcher, url),
+                expectedMatcher.exec(url),
+                `'${pattern}' × '${url}'`,
+              );
+            }
+
+            const values: RawParams[] = [
+              {},
+              { [name]: 'a' },
+              { [name]: 'd' },
+              { [name]: true },
+              { [name]: false },
+              // Repeated values: a scalar mode stringifies them, as core.
+              ...(mode ? [] : [{ [name]: ['a', 'b'] }]),
+            ];
+
+            for (const value of values) {
+              assert.deepStrictEqual(
+                format(actualMatcher, value),
+                expectedMatcher.format(value),
+                `'${pattern}'.format(${JSON.stringify(value)})`,
+              );
+            }
+          });
+        }
+});
+
 // Divergences by design: the standalone matcher fails at compile where core
 // supports features that are out of scope for pathname matching. Documented
 // here so a scope change shows up as a test change.
