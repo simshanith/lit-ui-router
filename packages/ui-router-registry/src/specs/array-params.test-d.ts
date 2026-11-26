@@ -176,16 +176,20 @@ void stateService.href('pages', { ids: [1, 2] as const });
 
 accepts<Equal<ResolvedParamsOf<'tags'>['tag'], string[] | undefined>>(true);
 
-// -- an explicit `array: 'auto'` stays scalar --------------------------------
+// -- an explicit `array: 'auto'` reads back one value or an array -----------
 
-accepts<Equal<ResolvedParamsOf<'auto'>['tag'], string | undefined>>(true);
-
-accepts<Equal<ResolvedParamsOf<'autosuffix'>['id[]'], string | undefined>>(
+accepts<Equal<ResolvedParamsOf<'auto'>['tag'], string | string[] | undefined>>(
   true,
 );
 
-// @ts-expect-error an explicit `array: 'auto'` beats the `[]` suffix
+// An explicit `array: 'auto'` beats the `[]` suffix: one value reads back unwrapped.
+accepts<
+  Equal<ResolvedParamsOf<'autosuffix'>['id[]'], string | string[] | undefined>
+>(true);
+
 void stateService.go('autosuffix', { 'id[]': ['a', 'b'] });
+
+void stateService.go('autosuffix', { 'id[]': 'a' });
 
 // -- an empty-string default reads back as is ---------------------------------
 
