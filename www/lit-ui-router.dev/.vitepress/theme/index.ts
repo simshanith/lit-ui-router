@@ -18,6 +18,7 @@ import HomeSeeItRun from './components/HomeSeeItRun.vue';
 import ReleaseDiffPicker from './components/ReleaseDiffPicker.vue';
 import VersionBanner from './components/VersionBanner.vue';
 import VersionMenu from './components/VersionMenu.vue';
+import { VERSION_MENU } from '../version-menu.ts';
 
 export default {
   extends: DefaultTheme,
@@ -40,6 +41,6 @@ export default {
     app.component('FrameworkSpectrum', FrameworkSpectrum);
     app.component('FrameworkCards', FrameworkCards);
     app.component('ReleaseDiffPicker', ReleaseDiffPicker);
-    app.component('VersionMenu', VersionMenu);
+    app.component(VERSION_MENU, VersionMenu);
   },
 } satisfies Theme;
