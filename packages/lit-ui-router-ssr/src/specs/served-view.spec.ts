@@ -139,7 +139,7 @@ describe('the served <ui-view>', () => {
       });
 
       // Taken as the fallback set: the authored <p> stands in the light DOM as
-      // itself, ahead of lit's marker, and the hold render adds nothing over it.
+      // itself, past the render's markers, and the hold render adds nothing over it.
       expect(uiView.render()).toBe(nothing);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
       expect(uiView.firstElementChild!.className).toBe('hold');
