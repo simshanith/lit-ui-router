@@ -343,9 +343,9 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
   describe('currententrychange', () => {
     let onChange: ReturnType<typeof vi.fn<EventListener>>;
 
-    function historyEntry(): NavigationHistoryEntry {
-      // SAFETY: the service compares history entries by identity only.
-      return {} as NavigationHistoryEntry;
+    function historyEntry(url = '/current'): NavigationHistoryEntry {
+      // SAFETY: the service reads only a history entry's identity and url.
+      return { url } as NavigationHistoryEntry;
     }
 
     function dispatch(
@@ -366,13 +366,28 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     });
 
     it.each(['push', 'replace', 'traverse'] as const)(
-      'notifies listeners of a %s to another entry',
+      'notifies listeners of a %s from another URL',
       (navigationType) => {
-        dispatch(navigationType, historyEntry());
+        dispatch(navigationType, historyEntry('/previous'));
 
         expect(onChange).toHaveBeenCalledOnce();
       },
     );
+
+    it.each(['push', 'replace', 'reload'] as const)(
+      'skips a %s that keeps the URL',
+      (navigationType) => {
+        dispatch(navigationType, historyEntry());
+
+        expect(onChange).not.toHaveBeenCalled();
+      },
+    );
+
+    it('notifies listeners of a traversal to another entry with the same URL', () => {
+      dispatch('traverse', historyEntry());
+
+      expect(onChange).toHaveBeenCalledOnce();
+    });
 
     it('skips a repeated traversal change from the entry it is already on', () => {
       dispatch('traverse', stub.currentEntry!);
