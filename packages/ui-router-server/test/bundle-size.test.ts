@@ -75,6 +75,56 @@ for (const bundler of bundlers) {
       assert.deepEqual(loop, [], 'ssr pulled in the prerender loop');
     });
 
+    it('keeps URLPattern code out of the entries that take a string table', async () => {
+      for (const label of [
+        'index',
+        'redirects',
+        'simulate',
+        'fetch',
+        'matcher',
+      ]) {
+        const entry = entries.find((candidate) => candidate.label === label);
+        assert.ok(entry, `expected a ${label} export`);
+
+        const { inputs } = await bundleEntry(entry.file, bundler, {
+          external: declared,
+        });
+
+        assert.deepEqual(
+          inputs.filter((input) => /[/\\]url-pattern[^/\\]*\.js$/.test(input)),
+          [],
+          `${label} pulled in URLPattern code`,
+        );
+      }
+    });
+
+    it('bundles the url-pattern declarations and client plugin without the server compiler', async () => {
+      const server =
+        /[/\\](url-pattern-server|url-matcher|redirects|regexp-slash)\.js$/;
+
+      for (const [label, own] of [
+        ['url-pattern', ['url-pattern.js']],
+        ['url-pattern/client', ['url-pattern-client.js', 'url-pattern.js']],
+      ] as const) {
+        const entry = entries.find((candidate) => candidate.label === label);
+        assert.ok(entry, `expected a ${label} export`);
+
+        const { inputs } = await bundleEntry(entry.file, bundler, {
+          external: declared,
+        });
+
+        assert.deepEqual(
+          inputs.filter((input) => server.test(input)),
+          [],
+          `${label} pulled in the server compiler`,
+        );
+        assert.deepEqual(
+          new Set(inputs.map((input) => input.split(/[/\\]/).pop())),
+          new Set(own),
+        );
+      }
+    });
+
     it('reports the remaining entry sizes (visibility, not a gate)', async (t) => {
       for (const { label, file } of reported) {
         const { entry } = await bundleEntry(file, bundler, {

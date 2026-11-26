@@ -2,8 +2,18 @@ import { servicesPlugin, UIRouter } from '@uirouter/core';
 import type { StateDeclaration } from '@uirouter/core';
 
 import { serverLocationPlugin } from './location.ts';
+import type { UrlPatternCompiler } from './redirects.ts';
 import { applyUrlConfig } from './url-config.ts';
 import type { RouterUrlConfig } from './url-config.ts';
+
+/** Options for {@link createHeadlessRouter}, beside the url config. */
+export interface HeadlessRouterOptions {
+  /**
+   * The compiler for {@link url-pattern!urlPattern | urlPattern} urls:
+   * {@link url-pattern/server!urlPatternCompiler | `urlPatternCompiler`}.
+   */
+  urlPattern?: Pick<UrlPatternCompiler, 'plugin'>;
+}
 
 /**
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
@@ -13,14 +23,21 @@ import type { RouterUrlConfig } from './url-config.ts';
  * concurrent routers. Inside a declaration's own functions (`redirectTo`,
  * resolves, hooks), `transition.to()` and `state.self` are the copy, not the
  * caller's object; compare states by `name`.
+ *
+ * States with {@link url-pattern!urlPattern | urlPattern} urls need
+ * `options.urlPattern`, whose plugin is applied before they register.
  */
 export function createHeadlessRouter(
   states: readonly StateDeclaration[],
   config?: RouterUrlConfig,
+  options: HeadlessRouterOptions = {},
 ): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
   router.plugin(serverLocationPlugin);
+
+  // Before applyUrlConfig, whose url decorator then wraps the plugin's matchers too.
+  if (options.urlPattern) router.plugin(options.urlPattern.plugin);
   applyUrlConfig(router, config);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});

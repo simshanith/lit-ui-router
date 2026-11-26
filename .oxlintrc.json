@@ -530,7 +530,10 @@
         "packages/ui-router-server/src/index.ts",
         "packages/ui-router-server/src/redirects.ts",
         "packages/ui-router-server/src/url-config.ts",
-        "packages/ui-router-server/src/url-matcher.ts"
+        "packages/ui-router-server/src/url-matcher.ts",
+        "packages/ui-router-server/src/url-pattern-client.ts",
+        "packages/ui-router-server/src/url-pattern-server.ts",
+        "packages/ui-router-server/src/url-pattern.ts"
       ],
       "rules": {
         "no-restricted-imports": [

@@ -113,17 +113,20 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                   | Needs `@uirouter/core` at runtime?    | Cost             | What it answers                                                                        |
-| ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
-| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
-| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
-| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
-| `ui-router-server/prerender`  | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
-| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
-| `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
+| Entry point                           | Needs `@uirouter/core` at runtime?    | Cost             | What it answers                                                                        |
+| ------------------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`            | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`          | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)             | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
+| `ui-router-server/simulate`           | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
+| `ui-router-server/location`           | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config`         | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/url-pattern`        | no                                    | ~1.2 KiB gzip    | a state url declared in URLPattern syntax, as plain data (experimental)                |
+| `ui-router-server/url-pattern/client` | no; it plugs into the router you pass | ~1.9 KiB gzip    | match those urls in a client router with the platform `URLPattern`                     |
+| `ui-router-server/url-pattern/server` | no                                    | ~4.5 KiB gzip    | match those urls in a mount, on either strategy                                        |
+| `ui-router-server/prerender`          | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
+| `ui-router-server/ssr`                | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
+| `ui-router-server/ssr/client`         | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -837,6 +840,104 @@ The policy needs `strict: false`, so both spellings match before it picks one;
 `createServerRouter`, `compileRedirects` and `applyUrlConfig` throw without it. On Cloudflare,
 match the static assets' `html_handling`: `force-trailing-slash` is `{ pages: 'always' }`,
 `drop-trailing-slash` is `{ pages: 'never' }`, and `none` is the default.
+
+## URLPattern urls
+
+::: warning Experimental
+The three `url-pattern` entries can change in a minor release.
+:::
+
+A state can declare its url in [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API)
+pathname syntax. The client router and both server strategies then match it with the platform's
+`URLPattern`, so one engine decides on both sides and a server verdict can't drift from what the
+client renders. The work is split over three entries, and a bundle carries only the ones it
+imports:
+
+| Entry point                           | For                 | What it holds                                                                                                                                                                                                                    |
+| ------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui-router-server/url-pattern`        | the shared states   | [`urlPattern(input, { query })`](/reference/ui-router-server/url-pattern/functions/urlPattern) declares a url as plain data; [`urlPatternOf(url)`](/reference/ui-router-server/url-pattern/functions/urlPatternOf) reads it back |
+| `ui-router-server/url-pattern/client` | the client router   | [`urlPatternPlugin`](/reference/ui-router-server/url-pattern/client/functions/urlPatternPlugin), a `@uirouter/core` plugin                                                                                                       |
+| `ui-router-server/url-pattern/server` | the server's mounts | [`urlPatternCompiler`](/reference/ui-router-server/url-pattern/server/variables/urlPatternCompiler), for a mount's `urlPattern` option                                                                                           |
+
+```ts check
+// states.ts: data only, shared by the client and the server
+import type { StateDeclaration } from '@uirouter/core';
+import { urlPattern } from 'ui-router-server/url-pattern';
+
+export const states = [
+  { name: 'users', url: urlPattern('/users', { query: ['sort'] }) },
+  {
+    name: 'users.detail',
+    url: urlPattern('/:id'),
+    params: { id: { type: 'int' } },
+  },
+  { name: 'codes', url: urlPattern('/codes/:code([a-z]{3})') },
+] satisfies StateDeclaration[];
+```
+
+```ts check
+// client: the plugin goes on before the states register
+import { UIRouter } from '@uirouter/core';
+import { urlPattern } from 'ui-router-server/url-pattern';
+import { urlPatternPlugin } from 'ui-router-server/url-pattern/client';
+
+const router = new UIRouter();
+router.plugin(urlPatternPlugin);
+router.stateRegistry.register({ name: 'user', url: urlPattern('/users/:id') });
+```
+
+```ts check
+// server: the mount names the compiler, on either strategy
+import { createServerRouter } from 'ui-router-server';
+import { urlPattern } from 'ui-router-server/url-pattern';
+import { urlPatternCompiler } from 'ui-router-server/url-pattern/server';
+
+const server = createServerRouter({
+  mounts: {
+    '/': {
+      routes: [{ name: 'user', url: urlPattern('/users/:id') }],
+      urlPattern: urlPatternCompiler,
+    },
+  },
+});
+```
+
+The compiler also goes to `compileRoutes(routes, config, { urlPattern })` and a `RedirectTable`.
+A mount that declares a `urlPattern()` url without it throws at construction, and a table of
+string urls loads no URLPattern code.
+
+The plugin imports only types from `@uirouter/core`, so it works with any framework built on it.
+Apply it before the first `urlPattern()` state registers, or core rejects that url. Applying it
+again to the same router returns the plugin already applied, so each module that registers such
+states can apply it.
+
+- **Subset:** what can also be formatted back into a url, since `URLPattern` only matches: literal
+  text, `:name` groups and `:name(regexp)` groups, in `pathname` only. `urlPattern()` throws for a
+  wildcard (`*`), an unnamed or `{}` group, a `?`, `*` or `+` modifier, a literal `.` or `..`
+  segment, and any other component.
+- **Canonical paths:** `URLPattern` rewrites a path before matching it: it resolves dot segments
+  and percent-encodes characters such as a space. A path it would rewrite doesn't match, as it
+  doesn't match a string url, so the scan, the trie and the client agree on `/users/../about`.
+- **Params:** a group's string goes through the state's declared param, so
+  `params: { id: { type: 'int' } }` matches `/users/42` as `42` and doesn't match `/users/abc`. A
+  group takes a regexp or a declared `type`, not both, and no default or array mode. Query params
+  are declared by name and keep core's types, defaults and squash.
+- **Nesting:** a child `urlPattern()` url joins its parent's pathname. A chain can't mix it with
+  string urls, in either direction; a table can hold both kinds side by side.
+- **Formatting:** `href()` and a redirect's target are built from the declared groups, then run
+  through the engine: they come out in the spelling it matches (`/café` as `/caf%C3%A9`), or
+  `null` for values the pattern rejects. Apply the
+  plugin before `applyUrlConfig`, so a [trailing-slash policy](#trailing-slashes) formats these
+  urls too.
+- **Compiled routes:** [`execRoute(route, path)`](/reference/ui-router-server/redirects/functions/execRoute)
+  and [`formatRoute(route, params)`](/reference/ui-router-server/redirects/functions/formatRoute)
+  match and format a compiled route of either kind.
+- **Route trie:** `routeTrie` expresses a URLPattern route unless a regexp group may match a `/`
+  or its literal text holds a character URLPattern percent-encodes.
+
+Node 24, Deno, workerd and current browsers ship `URLPattern`. Node 22 and older browsers need
+[`urlpattern-polyfill`](https://www.npmjs.com/package/urlpattern-polyfill) loaded first; without a
+global `URLPattern`, registering or compiling a URLPattern state throws an error naming it.
 
 ## Settling a server router
 
