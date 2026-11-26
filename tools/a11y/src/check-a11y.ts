@@ -20,6 +20,7 @@ import {
   type Audit,
   auditApp,
   auditDocs,
+  auditHomeListing,
   SCREENSHOT_DIR,
 } from './audit.ts';
 import { formatFinding } from './findings.ts';
@@ -125,6 +126,8 @@ const main = async (): Promise<void> => {
     const runs = await Promise.allSettled([
       auditDocs(browser, origin, docsPaths, 'light', audit),
       auditDocs(browser, origin, docsPaths, 'dark', audit),
+      auditHomeListing(browser, origin, 'light', audit),
+      auditHomeListing(browser, origin, 'dark', audit),
       ...APPS.map((app) => auditApp(browser, origin, app, audit)),
     ]);
 
@@ -147,7 +150,7 @@ const main = async (): Promise<void> => {
   if (output.kind !== 'stdout') {
     console.log(
       `axe-core ${audit.axeVersion}: ${audit.scans} scans over ${docsPaths.length} docs pages ` +
-        `(light, dark) and ${APPS.length} sample-app mounts`,
+        `(light, dark), the home listing's states and ${APPS.length} sample-app mounts`,
     );
 
     for (const finding of findings) {

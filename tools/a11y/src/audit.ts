@@ -249,6 +249,43 @@ export async function auditDocs(
   }
 }
 
+/**
+ * The home page's annotated listing in the states a page scan at rest never
+ * meets: a region chosen beside the code, which puts the wash under its
+ * tokens, and the tabs a narrow screen swaps the cards for.
+ */
+export async function auditHomeListing(
+  browser: Browser,
+  origin: string,
+  scheme: Scheme,
+  audit: Audit,
+): Promise<void> {
+  const context = await newContext(browser, scheme);
+  const page = await context.newPage();
+  const requests = track(page);
+  const listing = page.getByRole('region', { name: 'Read the code' });
+
+  try {
+    await goto(page, requests, `${origin}/`);
+    await listing.getByRole('button', { name: /Resolves$/ }).click();
+    await listing
+      .getByRole('button', { name: /Resolves$/, pressed: true })
+      .waitFor();
+    await scan(page, '/ listing, a region chosen', scheme, audit);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await listing.getByRole('tab', { name: /State links$/ }).click();
+    await listing
+      .getByRole('tab', { name: /State links$/, selected: true })
+      .waitFor();
+    await scan(page, '/ listing, narrow', scheme, audit);
+  } catch (error) {
+    throw new Error(`/ listing [${scheme}]`, { cause: error });
+  } finally {
+    await context.close();
+  }
+}
+
 /** A sample-app mount, and the query its first load carries (feature flags). */
 export interface AppMount {
   mount: string;

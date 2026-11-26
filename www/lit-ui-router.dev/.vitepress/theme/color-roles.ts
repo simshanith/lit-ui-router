@@ -24,6 +24,7 @@ export const GROUNDS = {
     property: '--site-color-diagram-wash',
     over: 'surface-soft',
   },
+  'code-wash': { property: '--site-color-code-wash', over: 'surface-alt' },
   code: { property: '--vp-code-bg', over: 'surface' },
   'callout-tip': { property: '--vp-custom-block-tip-bg', over: 'surface' },
   'callout-warning': {
@@ -110,8 +111,8 @@ export const ROLES = [
   {
     property: '--site-color-identity-ink',
     kind: 'text',
-    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state, the footer mark",
-    on: ['surface', 'surface-soft', 'diagram-wash'],
+    use: "the brand scale, this stack's marks on the spectrum, the home diagram's current state, the home listing's region numbers and chosen region, the footer mark",
+    on: ['surface', 'surface-soft', 'surface-alt', 'diagram-wash', 'code-wash'],
   },
   {
     property: '--site-color-surface',

@@ -8,6 +8,11 @@ import {
   type UserConfig,
 } from 'vitepress';
 import { analyticsHead } from './analytics.ts';
+import { annotatedCode } from './annotated-code.ts';
+import {
+  HOME_SAMPLE_NAME,
+  HOME_SAMPLE_REGIONS,
+} from '../catalog/home-sample.ts';
 import { NAV, SIDEBAR, type SidebarEntry } from '../catalog/navigation.ts';
 import type { PackageName } from '../catalog/packages.ts';
 import { API_REFERENCES, ELEMENT_REFERENCES } from '../catalog/references.ts';
@@ -253,6 +258,10 @@ const config = {
   // ignoreDeadLinks: true,
   markdown: {
     config: stripInlineSvgStyles,
+    // The home page's listing is highlighted through the same renderer as the pages' fences.
+    codeTransformers: [
+      annotatedCode({ [HOME_SAMPLE_NAME]: HOME_SAMPLE_REGIONS }),
+    ],
   },
   vite: {
     configFile: './.vitepress/vite.config.ts',
