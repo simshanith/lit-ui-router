@@ -587,8 +587,108 @@ type LineageParams<N, Optional extends 'input' | 'output'> = [
   DeclarationOf<N>,
 ] extends [never]
   ? unknown
-  : OwnParams<DeclarationOf<N>, Optional> &
-      LineageParams<ParentName<DeclarationOf<N>>, Optional>;
+  : WithAncestors<
+      DeclarationOf<N>,
+      LineageParams<ParentName<DeclarationOf<N>>, Optional>,
+      Extract<
+        OwnKeys<DeclarationOf<N>>,
+        LineageKeys<ParentName<DeclarationOf<N>>>
+      >,
+      Optional
+    >;
+
+type LineageKeys<N> = [DeclarationOf<N>] extends [never]
+  ? never
+  : OwnKeys<DeclarationOf<N>> | LineageKeys<ParentName<DeclarationOf<N>>>;
+
+// Core reads back the nearest declaration of a key but checks the value it takes against every one.
+type WithAncestors<D, Inherited, S, Optional extends 'input' | 'output'> = [
+  S,
+] extends [never]
+  ? OwnParams<D, Optional> & Inherited
+  : Without<Inherited, S> &
+      (Optional extends 'input'
+        ? Without<OwnParams<D, 'input'>, S> & RedeclaredInput<D, Inherited, S>
+        : Without<OwnParams<D, 'output'>, PassKeys<D, S>> &
+            PassedOutput<D, PassKeys<D, S>>);
+
+type Without<T, S> = { [K in keyof T as K extends S ? never : K]: T[K] };
+
+// The values of `C` that `A` also accepts, member by member.
+type Narrow<C, A> = C extends unknown
+  ? [C] extends [A]
+    ? C
+    : Extract<A, C>
+  : never;
+
+type RedeclaredValue<D, Inherited, K> = Narrow<
+  KeyType<D, K, 'input'>,
+  Exclude<Inherited[K & keyof Inherited], undefined>
+>;
+
+// A default of the nearest declaration fills the key in before core checks the ancestors'.
+type IsOptionalRedeclared<D, Inherited, K> =
+  IsOptionalInput<D, K> extends true
+    ? (
+        K extends keyof ParamsBlock<D> ? HasDefault<ParamsBlock<D>[K]> : false
+      ) extends true
+      ? true
+      : Record<never, never> extends Pick<Inherited, K & keyof Inherited>
+        ? true
+        : false
+    : false;
+
+type RedeclaredInput<D, Inherited, S> = {
+  [
+    K in S & string as IsOptionalRedeclared<D, Inherited, K> extends true
+      ? never
+      : K
+  ]: RedeclaredValue<D, Inherited, K>;
+} & {
+  [
+    K in S & string as IsOptionalRedeclared<D, Inherited, K> extends true
+      ? K
+      : never
+  ]?: RedeclaredValue<D, Inherited, K>;
+};
+
+// An untyped non-url param is core's `any`, so it keeps the value an ancestor's url decoded.
+type PassKeys<D, S> =
+  S extends UrlKeys<D>
+    ? never
+    : S extends keyof ParamsBlock<D>
+      ? ParamsBlock<D>[S] extends { type: unknown }
+        ? never
+        : S
+      : never;
+
+type PassedOutput<D, P> = [P] extends [never]
+  ? unknown
+  : {
+      [K in P & string]:
+        | KeyType<D, K, 'output'>
+        | Wrapped<
+            UrlRead<ParentName<D>, K>,
+            IsArray<ParamsBlock<D>[K & keyof ParamsBlock<D>], K>
+          >;
+    };
+
+type Wrapped<V, A> = A extends true
+  ? V extends readonly unknown[]
+    ? V
+    : V[]
+  : V;
+
+// The value the nearest url declaring `K` reads, through any `any` params between.
+type UrlRead<N, K> = [DeclarationOf<N>] extends [never]
+  ? never
+  : K extends OwnKeys<DeclarationOf<N>>
+    ? K extends UrlKeys<DeclarationOf<N>>
+      ? Exclude<KeyType<DeclarationOf<N>, K, 'output'>, undefined>
+      : [PassKeys<DeclarationOf<N>, K>] extends [never]
+        ? never
+        : UrlRead<ParentName<DeclarationOf<N>>, K>
+    : UrlRead<ParentName<DeclarationOf<N>>, K>;
 
 type Simplify<T> = { [K in keyof T]: T[K] };
 
@@ -596,13 +696,17 @@ type Simplify<T> = { [K in keyof T]: T[K] };
 // object non-empty, so an undeclared key is an excess property.
 type HashParam = { '#'?: string | null };
 
-/** The params a state accepts: its own and its ancestors', defaults optional. */
+/**
+ * The params a state accepts: its own and its ancestors', defaults optional.
+ * A redeclared key takes only what every declaration of it accepts.
+ */
 export type ParamsOf<N extends StateName> = IsRegistered extends true
   ? Simplify<LineageParams<N, 'input'> & HashParam>
   : RawParams;
 
 /**
- * The params a state reads back once active: defaults filled in. A query param
+ * The params a state reads back once active: defaults filled in, a redeclared
+ * key as its nearest declaration types it. A query param
  * reads back as one value unless it declares `array: 'auto'` or `array: true`,
  * or is a `name[]` id, though core also reads an unset `array` back as an array
  * of two or more.
