@@ -7,6 +7,7 @@ import { TargetState, Transition, TreeChanges } from '@uirouter/core';
 import {
   uiSrefActive,
   UiSrefActiveDirective,
+  UiSrefActiveParams,
   SrefStatus,
 } from '../ui-sref-active.js';
 import {
@@ -1030,6 +1031,56 @@ describe('uiSrefActive directive', () => {
       const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
       expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    const nullAriaCurrent: UiSrefActiveParams = {
+      activeClasses: ['active'],
+      // @ts-expect-error outside the type, but untyped callers can pass it
+      ariaCurrentValue: null,
+    };
+
+    it('should treat a null aria-current value as omitted on a link', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a ${uiSref('parent')} ${uiSrefActive(nullAriaCurrent)}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should treat a null aria-current value as omitted off a link', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li ${uiSrefActive(nullAriaCurrent)}>
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      expect(item.classList.contains('active')).toBe(true);
+      expect(item.hasAttribute('aria-current')).toBe(false);
     });
 
     it('should not default aria-current on for non-link elements', async () => {

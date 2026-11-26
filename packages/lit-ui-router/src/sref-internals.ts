@@ -53,7 +53,7 @@ export enum TransitionStateChange {
 /** Whether `value` is the per-state object form rather than a shorthand. */
 const isAriaCurrentValues = (
   value: UiSrefActiveParams['ariaCurrentValue'],
-): value is AriaCurrentValues => typeof value === 'object';
+): value is AriaCurrentValues => value !== null && typeof value === 'object';
 
 /**
  * Widens the shorthand forms to the per-state shape. A token, `false`, or
