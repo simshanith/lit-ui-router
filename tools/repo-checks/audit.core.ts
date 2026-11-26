@@ -36,7 +36,7 @@ export const AuditSchema = v.object({
 
 export type Advisory = v.InferOutput<typeof AdvisorySchema>;
 
-/** One installed peer-floor alias, as one importer declares it. */
+/** One installed floor alias, as one importer declares it. */
 export type FloorAlias = {
   importer: string;
   alias: string;
@@ -44,9 +44,14 @@ export type FloorAlias = {
   /** The real package and version the alias installs. */
   name: string;
   version: string;
-  /** The importer's published peer range for `name`. */
-  peerRange: string;
+  /** The importer's published peer or dependency range for `name`. */
+  range: string;
 };
+
+/** The published ranges in one importer's manifest. */
+export type PublishedRanges = Partial<
+  Record<'peerDependencies' | 'dependencies', Record<string, string>>
+>;
 
 /** A dependency edge in `pnpm list --json` output, keyed there by alias. */
 export type ListedDep = {
@@ -69,22 +74,38 @@ export type ListedProject = Partial<
 const catalogOf = (specifier: string) =>
   /^catalog:(.*)$/.exec(specifier)?.[1] || 'default';
 
+function rangeOf(
+  catalogs: Readonly<Record<string, Record<string, string>>>,
+  deps: Record<string, string> | undefined,
+  name: string,
+): string | undefined {
+  const spec = deps?.[name];
+
+  return spec?.startsWith('catalog:')
+    ? catalogs[catalogOf(spec)]?.[name]
+    : spec;
+}
+
 /**
- * Every importer's peerFloor* catalog alias, with the published peer range its
- * manifest declares for the real package. Throws when an importer declares no
- * peer range for its floor: there is nothing to judge the floor against.
+ * Every importer's floor alias, with the published range its manifest declares
+ * for the real package, as floor-guard reads them: a peerFloor* catalog alias
+ * floors a peer, and a `<dep>-floor` alias in any other catalog floors a
+ * dependency. Throws when a peerFloor* alias has no peer range: there is
+ * nothing to judge the floor against.
  */
 export function floorAliases(
   lock: Lock,
   catalogs: Readonly<Record<string, Record<string, string>>>,
-  peerDependencies: (importer: string) => Record<string, string> | undefined,
+  published: (importer: string) => PublishedRanges | undefined,
 ): FloorAlias[] {
   const floors: FloorAlias[] = [];
 
   for (const [catalog, entries] of Object.entries(lock.catalogs ?? {})) {
-    if (!catalog.startsWith('peerFloor')) continue;
+    const peer = catalog.startsWith('peerFloor');
 
     for (const [alias, { specifier }] of Object.entries(entries)) {
+      if (!peer && !alias.endsWith('-floor')) continue;
+
       const target = parsePackageKey(`${alias}@${specifier}`);
 
       if (!target) {
@@ -94,19 +115,22 @@ export function floorAliases(
       }
 
       for (const importer of importersOf(lock, alias, catalog)) {
-        const spec = peerDependencies(importer)?.[target.name];
+        const range = rangeOf(
+          catalogs,
+          published(importer)?.[peer ? 'peerDependencies' : 'dependencies'],
+          target.name,
+        );
 
-        const peerRange = spec?.startsWith('catalog:')
-          ? catalogs[catalogOf(spec)]?.[target.name]
-          : spec;
+        // a non-peer floor of no published dependency stays outside the floors
+        if (!range && !peer) continue;
 
-        if (!peerRange) {
+        if (!range) {
           throw new Error(
             `${importer}: ${alias} (catalogs.${catalog}) floors ${target.name}, but no peerDependencies range for ${target.name} resolves`,
           );
         }
 
-        floors.push({ importer, alias, catalog, ...target, peerRange });
+        floors.push({ importer, alias, catalog, ...target, range });
       }
     }
   }
@@ -257,7 +281,7 @@ export type Finding = {
 
 export type FloorFinding = Finding & { floors: string[] };
 
-/** A floor-copy advisory with no patched version inside a published peer range. */
+/** A floor-copy advisory with no patched version inside a published range. */
 export type UnfixedFinding = Finding & { floor: FloorAlias };
 
 export type Verdict = {
@@ -270,7 +294,7 @@ export type Verdict = {
  * Sort audit findings into the real tree and floor-only copies. A finding
  * neither walk reached counts as real. A floor-only finding on the floor
  * target itself is unfixed in range when its patched versions miss the
- * importer's published peer range; transitive floor-only findings are not,
+ * importer's published range; transitive floor-only findings are not,
  * since consumers resolve those dependencies fresh.
  */
 export function classify(
@@ -298,7 +322,7 @@ export function classify(
           target.name === advisory.module_name &&
           target.version === version &&
           (advisory.patched_versions === null ||
-            !semver.intersects(advisory.patched_versions, target.peerRange))
+            !semver.intersects(advisory.patched_versions, target.range))
         ) {
           verdict.unfixedInRange.push({ ...finding, floor: target });
         }
@@ -348,4 +372,4 @@ export const formatFinding = ({ id, advisory }: Finding) =>
   `${advisory.severity} ${id} ${advisory.github_advisory_id} ${advisory.title} (patched ${advisory.patched_versions ?? 'nowhere'})`;
 
 export const formatUnfixed = ({ floor, ...finding }: UnfixedFinding) =>
-  `${formatFinding(finding)}: no patched version in ${floor.importer}'s published ${floor.name} peer range ${floor.peerRange}`;
+  `${formatFinding(finding)}: no patched version in ${floor.importer}'s published ${floor.name} range ${floor.range}`;

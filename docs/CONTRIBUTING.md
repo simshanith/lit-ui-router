@@ -684,10 +684,12 @@ advisory.
 
 The check runs `pnpm audit` and splits its findings by what reaches them. The
 tree the workspace ships and tests must have no finding at or above `high`.
-Findings only a `peerFloor*` catalog alias reaches are accepted: a peer floor is
-a compatibility claim, and consumers choose their own versions in the range. A
-floor finding at or above `high` with no patched version in the package's
-published peer range fails, since keeping that floor is a support decision.
+Findings only a floor alias reaches are accepted: a `peerFloor*` catalog alias
+for a peer, or a `<dep>-floor` alias in any catalog for a published dependency,
+as `floor-guard` reads them. A floor is a compatibility claim, and consumers
+choose their own versions in the range. A floor finding at or above `high` with
+no patched version in the package's published range fails, since keeping that
+floor is a support decision.
 Accepted real-tree advisories go in the `audit:` section of
 `pnpm-workspace.yaml`.
 

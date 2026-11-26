@@ -1,8 +1,8 @@
-// `pnpm audit` over the tree the workspace ships and tests. The peerFloor*
-// catalog aliases install each published peer floor for check:bundle, and
+// `pnpm audit` over the tree the workspace ships and tests. The floor aliases
+// install each published peer or dependency floor for check:bundle, and
 // pnpm's ignore list is per advisory and lockfile-wide, so it can't accept a
 // finding on a floor copy without hiding it on the real one. Findings only a
-// floor alias reaches are accepted, unless the published peer range holds no
+// floor alias reaches are accepted, unless the published range holds no
 // patched version: that's a support decision.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -49,7 +49,7 @@ const main = async (): Promise<void> => {
   const floors = floorAliases(
     lock,
     await selectCatalogs(loadWorkspaceManifest(workspaceRoot)),
-    (importer) => readManifest(join(workspaceRoot, importer))?.peerDependencies,
+    (importer) => readManifest(join(workspaceRoot, importer)),
   );
 
   // SAFETY: pnpm list --json prints an array of projects in the ListedProject shape
@@ -97,8 +97,7 @@ const main = async (): Promise<void> => {
     ...verdict.real
       .filter(({ advisory }) => atOrAbove(advisory.severity, level))
       .map(
-        (finding) =>
-          `${formatFinding(finding)}: reached outside the peer floors`,
+        (finding) => `${formatFinding(finding)}: reached outside the floors`,
       ),
     ...verdict.unfixedInRange
       .filter(({ advisory }) => atOrAbove(advisory.severity, level))
@@ -121,7 +120,7 @@ const main = async (): Promise<void> => {
 
   if (failures.length > 0) {
     console.error(
-      `${CHECK}: ${failures.length} at or above ${level}; upgrade or override the real copy, and treat a peer range with no patched version as a decision to raise the floor`,
+      `${CHECK}: ${failures.length} at or above ${level}; upgrade or override the real copy, and treat a published range with no patched version as a decision to raise the floor`,
     );
     process.exitCode = 1;
 
@@ -129,7 +128,7 @@ const main = async (): Promise<void> => {
   }
 
   console.log(
-    `${CHECK}: no ${level}+ advisory outside the peer floors; ${verdict.floorOnly.length} floor-only finding(s) accepted, ${verdict.real.length} below ${level} on the real tree`,
+    `${CHECK}: no ${level}+ advisory outside the floors; ${verdict.floorOnly.length} floor-only finding(s) accepted, ${verdict.real.length} below ${level} on the real tree`,
   );
 };
 
