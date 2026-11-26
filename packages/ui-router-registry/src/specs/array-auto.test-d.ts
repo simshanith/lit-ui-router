@@ -240,7 +240,7 @@ void stateService.go('qmixed.child', {
 if (snapshot.includes('qmixed')) {
   accepts<string | string[] | undefined>(snapshot.params.auto);
 
-  // @ts-expect-error an unset `array` reads back scalar
+  // @ts-expect-error an explicit `array: 'auto'` can read back an array
   accepts<string | undefined>(snapshot.params.auto);
 }
 
