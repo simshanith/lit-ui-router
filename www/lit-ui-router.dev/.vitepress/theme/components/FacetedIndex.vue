@@ -323,6 +323,28 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
+      <details class="facet-glossary">
+        <summary>What each facet means</summary>
+        <dl class="glossary-list">
+          <div
+            v-for="facet in dataset.facets"
+            :key="facet.key"
+            class="glossary-item"
+          >
+            <dt>{{ facet.key }}</dt>
+            <dd>
+              <template
+                v-for="(seg, idx) in splitInlineCode(facet.description)"
+                :key="idx"
+              >
+                <code v-if="seg.code">{{ seg.text }}</code>
+                <template v-else>{{ seg.text }}</template>
+              </template>
+            </dd>
+          </div>
+        </dl>
+      </details>
+
       <p class="visually-hidden" role="status">{{ announcement }}</p>
     </section>
 
@@ -661,6 +683,42 @@ onBeforeUnmount(() => {
   min-block-size: 1.75rem;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.facet-glossary {
+  padding-block-start: var(--site-space-2);
+  border-block-start: var(--site-border-width) solid var(--site-color-line);
+  font-size: var(--site-text-xs);
+  color: var(--site-color-text-muted);
+}
+
+.facet-glossary summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--site-color-text-muted);
+}
+
+.glossary-list {
+  display: grid;
+  gap: var(--site-space-2) var(--site-space-5);
+  margin: var(--site-space-3) 0 0;
+}
+
+@media (min-width: 40rem) {
+  .glossary-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.glossary-item dt {
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  color: var(--site-color-text);
+}
+
+.glossary-item dd {
+  margin: var(--site-space-0-5) 0 0;
+  line-height: 1.5;
 }
 
 .group-section {

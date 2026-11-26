@@ -216,6 +216,10 @@ describe('catalog datasets and index-pages expansion', () => {
       assert.ok(entry, name);
       assert.ok((entry.entryPoints?.length ?? 0) >= 1, name);
     }
+
+    for (const facet of [...examples.facets, ...packages.facets]) {
+      assert.ok(facet.description.trim().length > 0, facet.key);
+    }
   });
 
   it('emits <FacetedIndex> for HTML and keeps Markdown in <llm-only> and expandIndexes', () => {

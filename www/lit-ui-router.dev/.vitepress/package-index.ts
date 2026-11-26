@@ -104,25 +104,33 @@ const PACKAGE_FACET_DEFINITIONS: readonly FacetDefinition[] = [
   {
     key: 'subject',
     hint: 'router / lit',
+    description:
+      '`router` for the router family; `lit` for Lit tooling with no router dependency. All published packages are `router` today.',
     values: SUBJECTS,
     defaultValue: 'router',
     showOnRow: false,
   },
   {
     key: 'layer',
-    hint: 'agnostic / lit',
+    hint: 'core-only vs Lit peers',
+    description:
+      '`agnostic` when the package peers on `@uirouter/core` and its runtime only; `lit` when it also peers on `lit` or `lit-ui-router` (`eslint-plugin-lit-ui-router` peers only on `eslint` and is `lit` by what it lints).',
     values: LAYERS,
     defaultValue: 'lit',
   },
   {
     key: 'role',
     hint: 'package category',
+    description:
+      'What job the package does in the family: `renderer`, `reactivity`, `location`, `server`, `dx`, or `observability`.',
     values: ROLES.map(({ id }) => id),
     showOnRow: false,
   },
   {
     key: 'runtime',
     hint: 'where code runs',
+    description:
+      'Where its code runs: `browser`, `server`, `build`, `type-check`, `editor`, or `ci`.',
     values: RUNTIMES,
     defaultValue: 'browser',
   },

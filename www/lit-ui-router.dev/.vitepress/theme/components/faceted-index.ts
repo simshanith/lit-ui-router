@@ -5,6 +5,8 @@ export interface FacetDefinition {
   key: string;
   /** Short description shown in the "+ Add facet" dropdown. */
   hint: string;
+  /** Full one-sentence definition of the facet and its values (supports inline backticks). */
+  description: string;
   /** Vocabulary values in display order. */
   values: readonly string[];
   /** Baseline value rendered muted on entry rows; other values are highlighted. */
