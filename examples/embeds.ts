@@ -25,7 +25,7 @@ export const EXAMPLES = {
   'helloworld-buildless': {
     title: 'Hello World (No Build)',
     summary:
-      'The same starter in plain JavaScript: an import map to a CDN, no TypeScript and no build step',
+      'The same starter in plain JavaScript: an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap) to a CDN, no TypeScript and no build step',
     height: '190px',
     file: 'public/main.js',
   },
@@ -54,42 +54,42 @@ export const EXAMPLES = {
   'hellosolarsystem-mobx': {
     title: 'Hello Solar System (MobX)',
     summary:
-      'The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour',
+      'The same tour rebuilt on `lit-ui-router-mobx`: a [MobX](https://mobx.js.org) observable router store, reactions, and a computed tour',
     height: '880px',
     file: 'src/main.ts',
   },
   'hellosolarsystem-signals': {
     title: 'Hello Solar System (Signals)',
     summary:
-      'The same tour with `lit-ui-router-signals` and `@lit/context`: a provided unit signal, the consumed router',
+      'The same tour with `lit-ui-router-signals` and [`@lit/context`](https://lit.dev/docs/data/context/): a provided unit signal, the consumed router',
     height: '810px',
     file: 'src/main.ts',
   },
   'hellosolarsystem-eleventy': {
     title: 'Hello Solar System (Eleventy SSR)',
     summary:
-      'The same tour prerendered by Eleventy and `lit-ui-router-ssr`: static pages, a 404 page and redirect rules, adopted on boot',
+      'The same tour prerendered by [Eleventy](https://www.11ty.dev) and `lit-ui-router-ssr`: static pages, a 404 page and redirect rules, adopted on boot',
     height: '800px',
     file: 'src/prerender.ts',
   },
   'hellosolarsystem-ssr': {
     title: 'Hello Solar System (Vite SSR)',
     summary:
-      'The same tour prerendered by `vite build` alone: `serverRouterPlugin` and one prerender script',
+      'The same tour prerendered by [`vite build`](https://vite.dev/guide/build) alone: `serverRouterPlugin` and one prerender script',
     height: '800px',
     file: 'src/prerender.ts',
   },
   hellogalaxy: {
     title: 'Hello Galaxy',
     summary:
-      'Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise',
+      'Milky Way explorer: nested states and views, resolve inheritance, and a 3D [`<model-viewer>`](https://modelviewer.dev/) surprise',
     height: '920px',
     file: 'src/main.ts',
   },
   'hellogalaxy-effect': {
     title: 'Hello Galaxy (Effect)',
     summary:
-      'The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads',
+      'The same explorer rebuilt on [Effect](https://effect.website): typed resolve inheritance, state-scoped fibers, and interruptible loads',
     // Tallest at the astronaut route, whose <model-viewer> mounts a frame
     // later than hellogalaxy's — re-measure over several runs, not one.
     height: '1120px',
@@ -98,21 +98,21 @@ export const EXAMPLES = {
   'hellogalaxy-signals': {
     title: 'Hello Galaxy (Signals)',
     summary:
-      'The same explorer with both Lit signal bindings: a star chart shared by nested views, route-driven crumbs',
+      'The same explorer with both [Lit signal](https://lit.dev/docs/data/signals/) bindings: a star chart shared by nested views, route-driven crumbs',
     height: '930px',
     file: 'src/main.ts',
   },
   'design-system-links': {
     title: 'Design System Links',
     summary:
-      "`uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`",
+      "`uiSref` driving a design-system link element ([`<sp-link>`](https://opensource.adobe.com/spectrum-web-components/components/link/)): `assignHref: true` vs `'auto'`",
     height: '540px',
     file: 'src/main.ts',
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
     summary:
-      '`eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page',
+      '`eslint-plugin-lit-ui-router` the [ESLint](https://eslint.org)-only way, with the lint report rendered in the page',
     // Capped: the open report outgrows the cap and scrolls inside the embed.
     height: '1200px',
     file: 'src/main.ts',
@@ -120,7 +120,7 @@ export const EXAMPLES = {
   'navigation-api': {
     title: 'Navigation API',
     summary:
-      '`ui-router-navigation-location-plugin` with an app `navigate` listener that holds a link leaving the app',
+      '`ui-router-navigation-location-plugin` with an app [`navigate`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate_event) listener that holds a link leaving the app',
     // check:embeds walks hash links only, so it measures the initial state; every other state keeps that height.
     height: '650px',
     file: 'src/main.ts',
