@@ -234,7 +234,8 @@ export class NavigationLocationService extends BaseLocationServices {
 
   // Keeps this service's own navigations same-document; another router's are not ours.
   private readonly _intercept = (event: NavigateEvent): void => {
-    if (!event.canIntercept) {
+    // intercept() throws on an event an earlier listener cancelled.
+    if (!event.canIntercept || event.defaultPrevented) {
       return;
     }
 
@@ -395,13 +396,19 @@ export class NavigationLocationService extends BaseLocationServices {
   ): void {
     const fullUrl = composeNavigateUrl(url, this._config.baseHref());
 
-    this._navigation().navigate(fullUrl, {
+    const { committed } = this._navigation().navigate(fullUrl, {
       state,
       info: {
         uiRouter: this._router,
         title,
       } satisfies UIRouterNavigateInfo,
       history: replace ? 'replace' : 'push',
+    });
+
+    // A navigation cancelled or superseded before it commits rejects committed with an AbortError, which nothing else awaits.
+    // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a rejection reason is untyped; only its name is read
+    void committed?.catch((error: unknown) => {
+      if (!(error instanceof Error && error.name === 'AbortError')) throw error;
     });
   }
 

@@ -109,6 +109,7 @@ interface FakeNavigateEvent {
   intercept: Mock<NavigateEvent['intercept']>;
   navigationType: NavigationType;
   signal: AbortSignal;
+  defaultPrevented: boolean;
 }
 
 function fakeNavigateEvent(
@@ -116,16 +117,18 @@ function fakeNavigateEvent(
   canIntercept = true,
   navigationType: NavigationType = 'push',
   signal = new AbortController().signal,
+  defaultPrevented = false,
 ): NavigateEvent & FakeNavigateEvent {
   const fake: FakeNavigateEvent = {
     canIntercept,
+    defaultPrevented,
     info,
     intercept: vi.fn<NavigateEvent['intercept']>(),
     navigationType,
     signal,
   };
 
-  // SAFETY: the service reads only canIntercept, info, intercept, navigationType and signal off a navigate event.
+  // SAFETY: the service reads only canIntercept, defaultPrevented, info, intercept, navigationType and signal off a navigate event.
   return fake as NavigateEvent & FakeNavigateEvent;
 }
 
@@ -300,6 +303,20 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
 
     it('leaves a navigation it cannot intercept alone', () => {
       const event = fakeNavigateEvent({ uiRouter: router }, false);
+
+      registeredInterceptor()(event);
+
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+
+    it('leaves a navigation an earlier listener cancelled alone', () => {
+      const event = fakeNavigateEvent(
+        { uiRouter: router },
+        true,
+        'push',
+        undefined,
+        true,
+      );
 
       registeredInterceptor()(event);
 
