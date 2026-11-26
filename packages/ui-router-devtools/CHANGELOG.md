@@ -2,6 +2,20 @@
 
 Prereleases and canaries are not listed here; see [all releases](https://lit-ui-router.dev/releases/ui-router-devtools/).
 
+## 0.2.0 (2026-11-26)
+
+<!-- notes-through: 035e74f540e28f6d24afbbd9f7393c8a3a9266e7 -->
+
+### Features
+
+* **ui-router-devtools:** add a lazy entry that records from startup and loads the panel on demand ([#2457](https://github.com/simshanith/lit-ui-router/issues/2457)) ([7d35686](https://github.com/simshanith/lit-ui-router/commit/7d356864aa50387fd8803798c7e873c0af56849e))
+
+### Documentation
+
+* add the README badge row to ui-router-devtools and ui-router-otel ([#2468](https://github.com/simshanith/lit-ui-router/issues/2468)) ([4caae75](https://github.com/simshanith/lit-ui-router/commit/4caae75a82078d3095c526ab53f999c68e063bbf))
+
+[Release page](https://lit-ui-router.dev/releases/ui-router-devtools/0.2.0/) · [Diff from 0.1.0](https://lit-ui-router.dev/releases/ui-router-devtools/diff/0.1.0...0.2.0/)
+
 ## 0.1.0 (2026-11-24)
 
 ### Features
