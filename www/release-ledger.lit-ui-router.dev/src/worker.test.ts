@@ -205,6 +205,18 @@ describe('wrangler.jsonc', () => {
     assert.ok(window > 3600, `${window}s outlasts a GitHub rate-limit reset`);
     assert.ok(window < 24 * 3600, `${window}s ends before the next sweep`);
   });
+
+  it('reads npm for at least 15 minutes after a publish, within the retries', () => {
+    const [claims] = config.queues.consumers;
+    let shortest = 0;
+
+    for (let attempt = 1; attempt < PUBLISH_READS; attempt += 1) {
+      shortest += queueCeiling(attempt) / 2;
+    }
+
+    assert.ok(shortest >= 15 * 60, `${shortest}s covers npm's publish lag`);
+    assert.ok(PUBLISH_READS <= (claims?.max_retries ?? 0) + 1);
+  });
 });
 
 describe('POST /claims in workerd', { timeout: 120_000 }, () => {
