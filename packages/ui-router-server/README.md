@@ -125,9 +125,10 @@ abstract state with a url, throws at the call. See
 `ui-router-server/router/matcher` exports the root entry's `createServerRouter`, types and helpers
 without the simulate tier. Nothing it imports reaches `@uirouter/core`, not even through a dynamic
 `import()`, so a bundler that emits one file, the usual shape of a Lambda or other function zip,
-bundles it without the optional peer. A mount with `strategy: 'simulate'` throws at construction;
-take `createServerRouter` from the root entry for one. Its routers work with every adapter and with
-`diagnoseMounts`.
+bundles it without the optional peer. Its declaration files still name core's types, so
+type-checking without the peer installed needs `skipLibCheck`. A mount with `strategy: 'simulate'`
+throws at construction; take `createServerRouter` from the root entry for one. Its routers work with
+every adapter and with `diagnoseMounts`.
 
 ```ts
 import {

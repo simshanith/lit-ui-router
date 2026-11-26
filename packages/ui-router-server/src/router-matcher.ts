@@ -3,9 +3,11 @@
  * `createServerRouter` for 'matcher' mounts only. Nothing this entry reaches
  * imports `@uirouter/core`, not even lazily, so a bundler that emits a single
  * file (esbuild without `--splitting`, a Lambda zip) never needs the optional
- * peer. A 'simulate' mount throws at construction; take `createServerRouter`
- * from the root entry for one. Routers from either entry work with every
- * adapter and with {@link diagnoseMounts}.
+ * peer. Its declaration files still name core's types, so type-checking
+ * without the peer needs `skipLibCheck`. A 'simulate' mount throws at
+ * construction; take `createServerRouter` from the root entry for one.
+ * Routers from either entry work with every adapter and with
+ * {@link diagnoseMounts}.
  *
  * @module router/matcher
  */
