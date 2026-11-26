@@ -98,7 +98,7 @@ export const EXAMPLES = {
   'hellogalaxy-signals': {
     title: 'Hello Galaxy (Signals)',
     summary:
-      'The same explorer with both [Lit signal](https://lit.dev/docs/data/signals/) bindings: a star chart shared by nested views, route-driven crumbs',
+      'The same explorer with both Lit bindings for [TC39 Signals](https://github.com/tc39/proposal-signals): a star chart shared by nested views, route-driven crumbs',
     height: '930px',
     file: 'src/main.ts',
   },
