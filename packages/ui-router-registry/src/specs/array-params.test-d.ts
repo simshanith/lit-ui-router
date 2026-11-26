@@ -22,6 +22,7 @@ const arrayStates = [
       tags: { array: true, value: 'all' },
       ids: { array: true, value: [1, 2] },
       none: { array: true, value: null },
+      nonefn: { array: true, value: () => null },
       'keys[]': { value: 'k' },
     },
   },
@@ -135,6 +136,8 @@ accepts<Equal<Untyped['tags'], string[] | 'all'>>(true);
 accepts<Equal<Untyped['ids'], number[]>>(true);
 
 accepts<Equal<Untyped['none'], unknown[] | null>>(true);
+
+accepts<Equal<Untyped['nonefn'], unknown[] | null>>(true);
 
 accepts<Equal<Untyped['keys[]'], string[] | 'k'>>(true);
 
