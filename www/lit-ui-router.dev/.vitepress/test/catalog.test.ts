@@ -10,6 +10,7 @@ import * as v from 'valibot';
 import type { DefaultTheme } from 'vitepress';
 
 import {
+  NAV,
   packageGroups,
   SIDEBAR,
   type SidebarEntry,
@@ -119,6 +120,23 @@ describe('the sidebar', () => {
     assert.deepEqual(
       overviews,
       overviews.map((entry) => ({ ...entry, docFooterText: entry.section })),
+    );
+  });
+
+  it("lists the top nav's sections in the nav's order", () => {
+    const nav = NAV.flatMap((entry) =>
+      'items' in entry ? entry.items.map(({ text }) => text) : [entry.text],
+    );
+
+    const sections = SIDEBAR.map(({ text }) => text);
+
+    assert.deepEqual(
+      sections.filter((text) => nav.includes(text)),
+      nav.filter((text) => sections.includes(text)),
+    );
+    assert.deepEqual(
+      nav.filter((text) => sections.includes(text)),
+      ['Guides', 'Packages', 'Releases', 'Examples', 'Sample App', 'API'],
     );
   });
 });

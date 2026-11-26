@@ -65,12 +65,10 @@ test.describe('docs site', () => {
     await page.evaluate(() => {
       window.hydrationProbe = true;
     });
-    // "Guides" lives in the "Docs" nav flyout, which opens on the button's
-    // mouse `pointerenter` since VitePress 2.0.0-alpha.20.
-    const nav = page.getByRole('navigation', { name: 'Main Navigation' });
-
-    await nav.getByRole('button', { name: 'Docs' }).hover();
-    await nav.getByRole('link', { name: 'Guides', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: 'Main Navigation' })
+      .getByRole('link', { name: 'Guides', exact: true })
+      .click();
     await expect(page).toHaveURL((url) => url.pathname === '/guides/');
     // A full reload drops the probe; surviving it proves the client router
     // took the navigation, so the page hydrated.

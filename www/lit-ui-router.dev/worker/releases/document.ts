@@ -18,7 +18,7 @@ export const STYLESHEET = '/release-pages.css';
 /** The script the docs build emits from `release-diff.ts` beside this module. */
 export const DIFF_SCRIPT = '/release-diff.js';
 
-// The logo links it, in place of the docs nav's home entry.
+// The logo links it.
 const HOME = '/';
 
 const RELEASES = `${RELEASES_MOUNT}/`;
@@ -29,7 +29,7 @@ const RELEASES = `${RELEASES_MOUNT}/`;
  */
 export const SITE_LINKS: readonly NavLink[] = [
   ...NAV.flatMap((entry) => {
-    if (!('items' in entry)) return entry.link === HOME ? [] : [entry];
+    if (!('items' in entry)) return [entry];
 
     return entry.items.some(({ link }) => link === RELEASES)
       ? entry.items
