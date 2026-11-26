@@ -47,8 +47,9 @@ const aboutState = {
   component: () =>
     html`<h3>About</h3>
       <p>
-        This page loads as written: npm packages served by nudeps, no build
-        step.
+        This page loads as written: npm packages served by
+        <a href="https://nudeps.dev" target="_blank" rel="noopener">nudeps</a>,
+        no build step.
       </p>`,
 };
 
