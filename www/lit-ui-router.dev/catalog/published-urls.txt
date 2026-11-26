@@ -15,7 +15,9 @@
 /gh/releases/lit-ui-router-mobx/latest lit-ui-router-mobx
 /gh/releases/lit-ui-router-ssr/latest lit-ui-router-ssr
 /gh/releases/lit-ui-router/latest lit-ui-router
+/gh/releases/ui-router-devtools/latest ui-router-devtools
 /gh/releases/ui-router-navigation-location-plugin/latest ui-router-navigation-location-plugin
+/gh/releases/ui-router-otel/latest ui-router-otel
 /gh/releases/ui-router-server/latest ui-router-server
 /guides/design-system-links eslint-plugin-lit-ui-router
 /guides/development-builds lit-ui-router,lit-ui-router-effect,lit-ui-router-mobx
