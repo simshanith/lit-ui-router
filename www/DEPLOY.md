@@ -276,11 +276,18 @@ reactivity hubs and the package and reference indexes, the site page and the rel
 was baked after it, as far as its own menu reads the manifest: the published `/v1/` snapshot
 predates package lines and lists the site-wide versions only, until it is rebuilt.
 
-The version menu is off by default. `WWW_VERSION_MENU=1` in the build's environment appends it to
-the top nav (`.vitepress/version-menu.ts`); the site's `build` and `docs` tasks declare the variable
-in `turbo.json`, and `docs:snapshot` passes it to the snapshot's build. The version banner is not
-behind the switch: it renders only on a build that is not the current version, where it names the
-version and links the same page in the current docs.
+A build that is not the current version, such as the `/v1/` snapshot, shows the version banner and
+has the version menu in its top nav. The banner names the version and links the same page in the
+current docs. Both follow one test, `bannerKind` in `.vitepress/versions.ts`: the build's base,
+looked up in the version manifest. The banner reads the live manifest once the page has loaded; the
+nav entry is fixed at build time, from the manifest bundled into the build. A Vite plugin sets the
+top nav (`versionMenuPlugin` in `.vitepress/version-menu.ts`) and not `config.ts`, because `--base`
+reaches the build only after that file is read.
+
+On the current version the menu is off by default, and `WWW_VERSION_MENU=1` in the build's
+environment appends it to the top nav; the site's `build` and `docs` tasks declare the variable in
+`turbo.json`. The switch governs the current version only: a snapshot's build has the menu whether
+the variable is unset, `0` or `1`. Any other value fails either build.
 
 To produce, publish or replace the snapshot (mise and git required; `cf` logged in to the account):
 

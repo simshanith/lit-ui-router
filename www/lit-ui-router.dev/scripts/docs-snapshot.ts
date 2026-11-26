@@ -36,8 +36,8 @@ const SITE = 'www/lit-ui-router.dev';
 
 const PACKAGE = join(import.meta.dirname, '..');
 
-/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner, and the menu when WWW_VERSION_MENU is on. */
-const VERSION_FILES = [
+/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner and the menu. */
+export const VERSION_FILES = [
   '.vitepress/versions.ts',
   '.vitepress/version-menu.ts',
   '.vitepress/lines.ts',
@@ -47,8 +47,8 @@ const VERSION_FILES = [
   'public/versions.json',
 ] as const;
 
-/** Text edits that register the copied components, each of which must match once. */
-const VERSION_EDITS: readonly (readonly [
+/** Text edits that register the copied components and the nav plugin, each of which must match once. */
+export const VERSION_EDITS: readonly (readonly [
   file: string,
   from: string,
   to: string,
@@ -70,13 +70,13 @@ const VERSION_EDITS: readonly (readonly [
   ],
   [
     '.vitepress/config.ts',
-    '    nav: NAV,\n',
-    '    nav: withVersionMenu(NAV, process.env),\n',
+    "    configFile: './.vitepress/vite.config.ts',\n",
+    "    configFile: './.vitepress/vite.config.ts',\n    plugins: [versionMenuPlugin(NAV, process.env)],\n",
   ],
   [
     '.vitepress/config.ts',
     "import { analyticsHead } from './analytics.ts';\n",
-    "import { analyticsHead } from './analytics.ts';\nimport { withVersionMenu } from './version-menu.ts';\n",
+    "import { analyticsHead } from './analytics.ts';\nimport { versionMenuPlugin } from './version-menu.ts';\n",
   ],
 ];
 

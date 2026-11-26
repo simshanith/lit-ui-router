@@ -394,6 +394,24 @@ describe(
       }
     });
 
+    it('lists the versions in the top nav, each at the same page', async () => {
+      await withPage(join(v1, 'guides/route-guards.html'), (doc) => {
+        const nav = getByRole(doc.body, 'navigation', {
+          name: 'Main Navigation',
+        });
+
+        assert.ok(getByRole(nav, 'button', { name: '1.x' }));
+        assert.equal(
+          getByRole(nav, 'link', { name: 'latest' }).getAttribute('href'),
+          `${SITE_ORIGIN}/guides/route-guards`,
+        );
+        assert.equal(
+          getByRole(nav, 'link', { name: '1.x' }).getAttribute('href'),
+          `${SITE_ORIGIN}/v1/guides/route-guards`,
+        );
+      });
+    });
+
     it('links the worker mounts at the root', async () => {
       let hrefs: string[] = [];
 
