@@ -1,7 +1,13 @@
 // Data only: .vitepress/config.ts hands it to VitePress as the sidebar and nav, attaching the generated API references.
 import { SAMPLE_APPS } from './examples.ts';
 import { PROJECT_LINKS } from './footer.ts';
-import { PACKAGES, ROLES, type PackageName, type Role } from './packages.ts';
+import {
+  PACKAGES,
+  packagePagePath,
+  ROLES,
+  type PackageName,
+  type Role,
+} from './packages.ts';
 import {
   API_REFERENCES,
   ELEMENT_REFERENCES,
@@ -103,7 +109,7 @@ export const guideGroups = GUIDE_TOPICS.map(({ id, label }) => ({
 /** A package's page, labelled by its npm name as its URL and API reference are. */
 const packagePage = (name: PackageName): SidebarEntry => ({
   text: name,
-  link: `/packages/${name}`,
+  link: packagePagePath(name),
 });
 
 // Keyed by role, so a new role fails typecheck until it has a group.

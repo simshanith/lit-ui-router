@@ -8,7 +8,12 @@ import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import * as v from 'valibot';
 import { LAYOUT } from '@www/release-diffs.lit-ui-router.dev/layout';
 
-import { PACKAGES, ROLES } from '../../catalog/packages.ts';
+import {
+  isPackageName,
+  packagePagePath,
+  PACKAGES,
+  ROLES,
+} from '../../catalog/packages.ts';
 import { API_REFERENCES } from '../../catalog/references.ts';
 import {
   adjacentIn,
@@ -229,8 +234,8 @@ const indexPage = (
   <h1>Releases</h1>
   <p>
     The ${RECENT_COUNT[DEFAULT_RECENT]} most recent stable releases, then the
-    latest stable release of each package, grouped by role. Each package page
-    lists every version, with notes for each stable release.
+    latest stable release of each package, grouped by role. Each package's
+    releases page lists every version, with notes for each stable release.
   </p>
   ${recent}
   ${byRole(packages).map(
@@ -545,6 +550,17 @@ const lineSection = (
     ${entryList(router, versions, rows, notes, tags)}
   </section>`;
 
+const npmPage = (pkg: string): TemplateResult =>
+  html`<a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>`;
+
+/** Where else the package lives: its docs page, for a package the catalog lists, and its npm page. */
+const elsewhere = (pkg: string): TemplateResult =>
+  isPackageName(pkg)
+    ? html`Its docs start at the
+        <a href=${packagePagePath(pkg)}>${pkg} package page</a>, and its npm
+        page is ${npmPage(pkg)}.`
+    : html`Its npm page is ${npmPage(pkg)}.`;
+
 const packagePage = (
   router: UIRouter,
   pkg: string,
@@ -562,10 +578,9 @@ const packagePage = (
     <p>
       Every version of <code>${pkg}</code> the release ledger records, newest
       first and grouped by minor, with the release notes of each stable release.
-      Prereleases, canaries among them, stay folded away until shown. Its npm
-      page is
-      <a href=${`https://www.npmjs.com/package/${pkg}`}>${pkg} on npm</a>.
+      Prereleases, canaries among them, stay folded away until shown.
     </p>
+    <p>${elsewhere(pkg)}</p>
     ${compareForm(router, pkg, versions)}
     ${prereleaseToggle(router, pkg, view, versions.length - stable.length)}
     ${outline(lines)}
@@ -729,18 +744,15 @@ const versionNotices = (
   }`;
 };
 
-const isCataloged = (name: string): name is keyof typeof API_REFERENCES =>
-  Object.hasOwn(API_REFERENCES, name);
-
 /** The package's docs page and API reference, for a package the catalog lists. */
 const docsFacts = (name: string): TemplateResult | typeof nothing => {
-  if (!isCataloged(name)) return nothing;
+  if (!isPackageName(name)) return nothing;
 
   const reference = API_REFERENCES[name];
 
   return html`<dt id="docs">Docs</dt>
     <dd>
-      <a href=${`/packages/${name}`}>Package page</a>${
+      <a href=${packagePagePath(name)}>Package page</a>${
         reference === null
           ? nothing
           : html`, <a href=${reference}>API reference</a>`
