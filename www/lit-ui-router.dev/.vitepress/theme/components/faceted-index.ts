@@ -270,7 +270,7 @@ export function initialVisibleFacets(
   return activeFacets[0] ? [activeFacets[0].key] : [];
 }
 
-/** Single-constraint drops for an empty result, with how many entries each drop recovers. */
+/** Single-constraint drops for an empty result that recover at least one entry. */
 export function relaxations(
   entries: readonly FacetEntry[],
   filter: FacetFilter,
@@ -285,7 +285,7 @@ export function relaxations(
       matchesFilter(entry, withoutKey(filter, key)),
     ).length;
 
-    return [{ key, value, count }];
+    return count > 0 ? [{ key, value, count }] : [];
   });
 }
 

@@ -42,15 +42,21 @@ const FACETED_COMPONENTS: Partial<Record<IndexMarker, FacetedIndexEntry>> = {
   '<!-- package-index -->': { index: 'packages', data: packageIndexData },
 };
 
-/** Replaces each marker line with its generated Markdown list (used by local search and tests). */
+/** Replaces each marker line with its generated Markdown list (and facet glossary for faceted indexes; used by local search and tests). */
 export function expandIndexes(markdown: string): string {
-  return markers.reduce(
-    (page, marker) =>
-      page.includes(marker)
-        ? page.replace(marker, () => INDEX_MARKERS[marker]())
-        : page,
-    markdown,
-  );
+  return markers.reduce((page, marker) => {
+    if (!page.includes(marker)) return page;
+
+    const faceted = FACETED_COMPONENTS[marker];
+
+    return page.replace(marker, () => {
+      const generated = INDEX_MARKERS[marker]();
+
+      if (!faceted) return generated;
+
+      return `${facetGlossaryMarkdown(faceted.data().facets)}\n\n${generated}`;
+    });
+  }, markdown);
 }
 
 /** Replaces each marker line for the VitePress build: faceted indexes render `<FacetedIndex />` in HTML and Markdown for LLMs. */

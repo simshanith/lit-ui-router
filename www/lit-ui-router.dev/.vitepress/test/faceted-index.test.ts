@@ -94,6 +94,18 @@ describe('faceted-index pure logic', () => {
       { key: 'bindings', value: 'signals', count: 2 },
       { key: 'render', value: 'prerender', count: 2 },
     ]);
+
+    // A third constraint whose drop still leaves 0 matches is omitted.
+    const threeWay = toFilter([
+      ['render', 'prerender'],
+      ['bindings', 'signals'],
+      ['lang', 'ts'],
+    ]);
+
+    assert.deepEqual(relaxations(examples.entries, threeWay, activeEx), [
+      { key: 'bindings', value: 'signals', count: 2 },
+      { key: 'render', value: 'prerender', count: 2 },
+    ]);
   });
 
   it('filters multi-valued runtime facets on packages', () => {
@@ -257,8 +269,12 @@ describe('catalog datasets and index-pages expansion', () => {
     assert.ok(pkgPage.includes('### lit-ui-router'));
 
     const searchMarkdown = expandIndexes('<!-- example-index -->');
+    const pkgSearchMarkdown = expandIndexes('<!-- package-index -->');
 
     assert.ok(!searchMarkdown.includes('<FacetedIndex'));
+    assert.ok(searchMarkdown.includes('- **location:** '));
     assert.ok(searchMarkdown.includes('### Hello World'));
+    assert.ok(pkgSearchMarkdown.includes('- **layer:** '));
+    assert.ok(pkgSearchMarkdown.includes('### lit-ui-router'));
   });
 });
