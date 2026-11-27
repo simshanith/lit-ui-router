@@ -200,9 +200,10 @@ const router = createServerRouter({
 });
 ```
 
-The package's bundle test bundles this entry with esbuild and rolldown and
-asserts one chunk with no `@uirouter/core` import, and lint keeps the simulate
-tier out of its imports.
+The package's bundle test bundles this entry, alone and with each of the
+fetch, Connect and Hono adapters, with esbuild and rolldown, and asserts one
+chunk with no `@uirouter/core` in it. Lint keeps the simulate tier out of
+every module they import.
 
 ## Installation
 
