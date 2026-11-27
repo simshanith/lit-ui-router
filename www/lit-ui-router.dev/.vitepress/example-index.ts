@@ -13,7 +13,7 @@ import {
   type ExampleFacets,
   type ExampleKind,
 } from '../catalog/examples.ts';
-import { code, selfLink } from './index-markdown.ts';
+import { code, markdownLink } from './index-markdown.ts';
 import { pageUrl } from './surfaces.ts';
 import {
   EXAMPLES,
@@ -21,6 +21,11 @@ import {
   stackblitzOpenSrc,
   staticSrc,
 } from './theme/components/examples.ts';
+import type {
+  FacetDefinition,
+  FacetIndexData,
+  FacetLink,
+} from './theme/components/faceted-index.ts';
 
 const SITE = join(import.meta.dirname, '..');
 
@@ -222,18 +227,21 @@ export function liveExamples(
 
 const pageLink = ({ title, url }: PageLink): string => `[${title}](${url})`;
 
+function exampleLinks(name: ExampleName): FacetLink[] {
+  return [
+    { text: 'Run it', href: staticSrc(name), self: true },
+    { text: 'StackBlitz', href: stackblitzOpenSrc(name), external: true },
+    { text: 'Source', href: githubTreeSrc(name), external: true },
+  ];
+}
+
 function exampleEntry(
   name: ExampleName,
   facets: ExampleFacets,
   pages: readonly PageLink[],
 ): string[] {
   const { title, summary } = EXAMPLES[name];
-
-  const links = [
-    selfLink('Run it', staticSrc(name)),
-    `[Open in StackBlitz](${stackblitzOpenSrc(name)})`,
-    `[Source](${githubTreeSrc(name)})`,
-  ];
+  const links = exampleLinks(name).map(markdownLink);
 
   return [
     `### ${title}`,
@@ -252,6 +260,116 @@ function exampleEntry(
     }`,
     '',
   ];
+}
+
+const EXAMPLE_FACET_DEFINITIONS: readonly FacetDefinition[] = [
+  {
+    key: 'kind',
+    hint: 'tutorial / example',
+    description:
+      '`tutorial` for a tutorial rung or a variant of one; `example` for an app that shows one feature.',
+    values: EXAMPLE_FACETS.kind,
+    showOnRow: false,
+  },
+  {
+    key: 'lang',
+    hint: 'ts / js',
+    description:
+      '`ts` (TypeScript) or `js` (plain JavaScript with no build step).',
+    values: EXAMPLE_FACETS.lang,
+    defaultValue: 'ts',
+  },
+  {
+    key: 'location',
+    hint: 'URL plugin',
+    description:
+      'The location plugin handed to the router: `navigation`, `pushState`, or `hash`. A hash URL keeps navigation inside an embed frame.',
+    values: EXAMPLE_FACETS.location,
+    defaultValue: 'hash',
+  },
+  {
+    key: 'bindings',
+    hint: 'reactivity adapter',
+    description:
+      'The reactivity bindings used for route state: `none`, `mobx`, `signals`, or `effect`.',
+    values: EXAMPLE_FACETS.bindings,
+    defaultValue: 'none',
+  },
+  {
+    key: 'render',
+    hint: 'client / prerender',
+    description:
+      '`client` when the browser renders every page; `prerender` when a build emits static HTML with `lit-ui-router-ssr`.',
+    values: EXAMPLE_FACETS.render,
+    defaultValue: 'client',
+  },
+  {
+    key: 'registry',
+    hint: 'typed routes',
+    description:
+      '`on` when the example types its state names and params with `ui-router-registry`.',
+    values: EXAMPLE_FACETS.registry,
+    defaultValue: 'off',
+  },
+  {
+    key: 'lint',
+    hint: 'own ESLint config',
+    description:
+      "`on` when the example's own project runs `eslint-plugin-lit-ui-router`, so a copy keeps the rules. The repository's lint runs the same rules over every example either way.",
+    values: EXAMPLE_FACETS.lint,
+    defaultValue: 'off',
+  },
+];
+
+const EXAMPLE_PICKER_ORDER = [
+  'bindings',
+  'render',
+  'location',
+  'kind',
+  'lang',
+  'registry',
+  'lint',
+] as const;
+
+/** Structured catalog data for the interactive /examples/ faceted index. */
+export function exampleIndexData(): FacetIndexData {
+  const pages = embeddingPages();
+
+  return {
+    itemSingular: 'example',
+    itemPlural: 'examples',
+    defaultFacet: 'bindings',
+    pickerOrder: EXAMPLE_PICKER_ORDER,
+    facets: EXAMPLE_FACET_DEFINITIONS,
+    groups: EXAMPLE_KINDS.map(({ id, label }) => ({ id, label })),
+    entries: EXAMPLE_NAMES.map((name) => {
+      const { title, summary } = EXAMPLES[name];
+      const facets = exampleFacets(name);
+      const embedded = pages.get(name) ?? [];
+      const slug = headingSlug(title);
+
+      return {
+        id: name,
+        slug,
+        title,
+        summary: `${summary}.`,
+        group: facets.kind ?? 'example',
+        facets: Object.fromEntries(
+          Object.entries(facets).flatMap(([k, v]) => (v ? [[k, [v]]] : [])),
+        ),
+        links: exampleLinks(name),
+        embeddedIn:
+          embedded.length > 0
+            ? embedded.map(({ title: text, url: href }) => ({ text, href }))
+            : [
+                {
+                  text: LIVE_EXAMPLES.title,
+                  href: `${LIVE_EXAMPLES.url}#${slug}`,
+                },
+              ],
+      };
+    }),
+  };
 }
 
 /** One section per kind, in vocabulary order. */

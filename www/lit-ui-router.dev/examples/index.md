@@ -2,32 +2,25 @@
 title: Examples
 description: Every lit-ui-router example app, with its language, location plugin, bindings, render mode, registry and lint facets, and links to run it, open it in StackBlitz and read its source
 type: index
+aside: false
 ---
 
 # Examples
 
-Every example app in the repository. Run it opens the built app this site serves; Open in
-StackBlitz boots an editable workspace installed from the published npm
-packages. The tutorial walks through three of them in order, starting with
-[Hello World](/tutorial/helloworld). Embedded in names the pages that run an
-example inline; [Live examples](/examples/live) runs the ones no other page
-embeds.
+Every example app in the repository. Run it opens the built app this site serves;
+StackBlitz boots an editable workspace installed from npm. The tutorial walks
+through three of them in order, starting with [Hello World](/tutorial/helloworld).
+Each entry links the pages that embed it inline, or
+[Live examples](/examples/live) when no other page does.
 
-Each entry lists its facets, read from the example's own files:
+Every facet is read directly from the example's own files.
 
-- **kind:** `tutorial` for a tutorial rung or a variant of one, `example` for
-  an app that shows one feature.
-- **lang:** `ts` or `js`.
-- **location:** the location plugin it hands the router: `navigation`,
-  `pushState` or `hash`. A hash URL keeps navigation inside an embed's frame.
-- **bindings:** the reactivity bindings it uses: `none`, `mobx`, `signals` or
-  `effect`.
-- **render:** `client` when the browser renders every page, `prerender` when
-  a build writes them with `lit-ui-router-ssr`.
-- **registry:** `on` when it types its state names with `ui-router-registry`.
-- **lint:** `on` when the example's own project runs
-  `eslint-plugin-lit-ui-router`, so a copy keeps the rules. The repository's
-  lint runs the same rules over every example either way.
+<llm-exclude>
+
+Filter by adding facet rows from the dropdown, or click any facet pill on an
+entry to narrow the list.
+
+</llm-exclude>
 
 <!-- example-index -->
 

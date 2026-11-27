@@ -6,6 +6,7 @@ import './tokens.css';
 import './custom.css';
 import StackBlitzEmbed from './components/StackBlitzEmbed.vue';
 import ExampleEmbed from './components/ExampleEmbed.vue';
+import FacetedIndex from './components/FacetedIndex.vue';
 import DiagramEmbed from './components/DiagramEmbed.vue';
 import ElementApiViewer from './components/ElementApiViewer.vue';
 import LiveExample from './components/LiveExample.vue';
@@ -34,6 +35,7 @@ export default {
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);
     app.component('ExampleEmbed', ExampleEmbed);
+    app.component('FacetedIndex', FacetedIndex);
     app.component('DiagramEmbed', DiagramEmbed);
     app.component('ElementApiViewer', ElementApiViewer);
     app.component('LiveExample', LiveExample);
