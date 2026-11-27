@@ -6,8 +6,6 @@ import { mountsUnder, normalizeBase as siteBase, pathOf } from './base-path.ts';
 import { registerDelegates } from './delegate-registry.ts';
 import { warnMountDiagnostics } from './dev-warn.ts';
 import { compileResolver } from './redirects.ts';
-import { createRouterPool, POOL_MAX_IDLE } from './router-pool.ts';
-import type { RouterPool } from './router-pool.ts';
 import type {
   CompiledResolver,
   RedirectRule,
@@ -333,6 +331,13 @@ export type DelegateVerdict = Extract<Verdict, { kind: 'delegate' }>;
 /** The response member of {@link Verdict}. */
 export type ResponseVerdict = Extract<Verdict, { kind: 'response' }>;
 
+/**
+ * Idle routers kept per simulate mount; a burst past it builds extras and drops them.
+ *
+ * @internal
+ */
+export const POOL_MAX_IDLE = 16;
+
 /** One compiled mount. */
 export interface Mount {
   base: string;
@@ -341,7 +346,6 @@ export interface Mount {
   compiled: CompiledResolver;
   delegates: Map<string, string>;
   responses: Set<string>;
-  pool: RouterPool;
   prewarm: number;
 }
 
@@ -610,7 +614,6 @@ const compileMount = ([base, config]: [string, MountConfig]): Mount => {
       },
       mountIndex(base, config),
     ),
-    pool: createRouterPool(),
   };
 };
 
@@ -851,18 +854,20 @@ export function createRouter(
   },
   simulate: SimulateTier | undefined,
 ): ServerRouter {
-  if (simulate === undefined) rejectSimulateMounts(config.mounts);
-
   const base =
     config.base === undefined
       ? undefined
       : siteBase(config.base, 'createServerRouter');
 
-  const declared = compileMounts(
+  // Keyed by the base-stripped path every mount check names.
+  const record =
     base === undefined
       ? config.mounts
-      : mountsUnder<MountConfig>(base, config.mounts, 'createServerRouter'),
-  );
+      : mountsUnder<MountConfig>(base, config.mounts, 'createServerRouter');
+
+  if (simulate === undefined) rejectSimulateMounts(record);
+
+  const declared = compileMounts(record);
 
   const mounts = byLongestBase(declared);
 

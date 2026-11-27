@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createRouterPool, POOL_MAX_IDLE } from '../src/router-pool.ts';
+import { createRouterPool } from '../src/router-pool.ts';
 import type { PooledRouter } from '../src/router-pool.ts';
+import { POOL_MAX_IDLE } from '../src/server-router.ts';
 import { createHeadlessRouter } from '../src/simulate.ts';
 
 const build = () =>

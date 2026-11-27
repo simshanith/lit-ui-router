@@ -3,7 +3,8 @@
 import type { RawParams, StateRule } from '@uirouter/core';
 
 import type { RedirectStatusCode } from './redirects.ts';
-import type { PooledRouter } from './router-pool.ts';
+import { createRouterPool } from './router-pool.ts';
+import type { PooledRouter, RouterPool } from './router-pool.ts';
 import {
   markedVerdict,
   notFoundVerdict,
@@ -59,10 +60,14 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
   return router;
 };
 
-const prewarmPools = (simulate: SimulateModule, mounts: Mount[]): void => {
+const prewarmPools = (
+  simulate: SimulateModule,
+  mounts: Mount[],
+  poolOf: (mount: Mount) => RouterPool,
+): void => {
   for (const mount of mounts) {
     try {
-      mount.pool.warm(
+      poolOf(mount).warm(
         () => buildHeadlessRouter(simulate, mount),
         mount.prewarm,
       );
@@ -163,13 +168,12 @@ const replayVerdict = async (
 
 const simulateVerdict = async (
   simulate: SimulateModule,
+  pool: RouterPool,
   mount: Mount,
   subpath: string,
 ): Promise<Verdict> => {
   try {
-    const pooled = mount.pool.checkOut(() =>
-      buildHeadlessRouter(simulate, mount),
-    );
+    const pooled = pool.checkOut(() => buildHeadlessRouter(simulate, mount));
 
     const verdict = await replayVerdict(pooled, mount, subpath);
 
@@ -191,13 +195,12 @@ const simulateVerdict = async (
 // Url matching only: the router is checked out, matched against and released without a transition.
 const simulateMarked = (
   simulate: SimulateModule,
+  pool: RouterPool,
   mount: Mount,
   subpath: string,
 ): DelegateVerdict | ResponseVerdict | null => {
   try {
-    const pooled = mount.pool.checkOut(() =>
-      buildHeadlessRouter(simulate, mount),
-    );
+    const pooled = pool.checkOut(() => buildHeadlessRouter(simulate, mount));
 
     const verdict = matchedVerdict(pooled.router, mount, subpath);
     pooled.release();
@@ -221,6 +224,17 @@ export const createSimulateTier = (): SimulateTier => {
   const load = (): Promise<SimulateModule> =>
     (loaded ??= import('./simulate.ts'));
 
+  // One pool per mount, made on its first use.
+  const pools = new WeakMap<Mount, RouterPool>();
+
+  const poolOf = (mount: Mount): RouterPool => {
+    let pool = pools.get(mount);
+
+    if (!pool) pools.set(mount, (pool = createRouterPool()));
+
+    return pool;
+  };
+
   return {
     // Paid at construction, not on the first request. Prewarm chains first,
     // so it fills the pools before any request's check-out. The stray
@@ -228,12 +242,12 @@ export const createSimulateTier = (): SimulateTier => {
     // rethrows.
     start(mounts) {
       void load()
-        .then((simulate) => prewarmPools(simulate, mounts))
+        .then((simulate) => prewarmPools(simulate, mounts, poolOf))
         .catch(() => {});
     },
     verdict: async (mount, subpath) =>
-      simulateVerdict(await load(), mount, subpath),
+      simulateVerdict(await load(), poolOf(mount), mount, subpath),
     marked: async (mount, subpath) =>
-      simulateMarked(await load(), mount, subpath),
+      simulateMarked(await load(), poolOf(mount), mount, subpath),
   };
 };
