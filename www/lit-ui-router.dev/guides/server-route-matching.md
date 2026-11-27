@@ -208,14 +208,15 @@ deliberately out of scope here, not at risk.
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
 
-| import                        | needs `@uirouter/core` at runtime?    | cost                                | what it answers                                                                        |
-| ----------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`    | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects`  | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)     | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
-| `ui-router-server/simulate`   | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
-| `ui-router-server/location`   | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
-| `ui-router-server/url-config` | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip        | one url config for the client router, the mounts, and a server render                  |
+| import                            | needs `@uirouter/core` at runtime?    | cost                                    | what it answers                                                                        |
+| --------------------------------- | ------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`        | no                                    | ~6.6 KiB min / ~2.9 KiB gzip            | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`      | no                                    | ~8.7 KiB min / ~3.6 KiB gzip            | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)         | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip           | mounts in, verdict out                                                                 |
+| `ui-router-server/router/matcher` | no; a `simulate` mount throws         | ~1.2 KiB min / ~0.4 KiB gzip under root | mounts in, verdict out, in one file with no `@uirouter/core`                           |
+| `ui-router-server/simulate`       | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy     | what would the real router do                                                          |
+| `ui-router-server/location`       | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip            | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config`     | no; it configures the router you pass | ~0.6 KiB min / ~0.4 KiB gzip            | one url config for the client router, the mounts, and a server render                  |
 
 <DiagramEmbed src="/diagrams/server-route-matching-package-tiers.svg">
 
@@ -232,7 +233,8 @@ and dropping the barrel imports sheds only empty re-export shims (~0.3 KiB).
 So the dependency-free tiers are a standalone _port_ of the matching subset
 (type-pinned to core's signatures, differential-tested against core's own
 output), while the simulate tier carries core whole — behind a dynamic import
-that bundles as a lazy chunk, so a matcher-only configuration never loads it.
+that bundles as a lazy chunk, so a matcher-only configuration never loads it,
+and `router/matcher` leaves that import out for a bundler that emits one file.
 That shape gives the matcher tier its contract: dependency-free, and held
 to a borrowed size discipline — AWS CloudFront Functions' 10,240-byte
 ceiling, the tightest edge-runtime budget around, which the package's
@@ -250,6 +252,10 @@ Picking a tier:
   over a route table, without mount bookkeeping.
 - **root** — the default. Mounts in, verdicts out; costs matcher-tier bytes
   until a mount opts into simulation.
+- **`/router/matcher`** — the root entry without the simulate tier, for a
+  bundle that must be one file without `@uirouter/core`, such as a Lambda
+  zip. A `simulate` mount throws at construction.
+  [Matcher-only routers](/packages/ui-router-server#matcher-only-routers).
 - **`/simulate`** (or `strategy: 'simulate'` on a mount) — replay the URL
   through a real headless router: redirect rules and the `otherwise`
   projection register as real `when()`/`otherwise()` rules and a transition

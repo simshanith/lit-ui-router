@@ -15,6 +15,7 @@ import { API_REFERENCES, ELEMENT_REFERENCES } from '../catalog/references.ts';
 import { identityHead, SOCIAL_CARD } from './identity.ts';
 import { withPackageLabels } from './package-label.ts';
 import { REDIRECTS } from '../catalog/redirects.ts';
+import { entrySidebar, flattenGroups } from './reference-sidebar.ts';
 import { readmeLinks } from './readme-links.ts';
 import { redirectLines, writeRedirects } from './redirects.ts';
 import { renderForSearch } from './search-render.ts';
@@ -48,17 +49,6 @@ import uiRouterSignalsSidebarItemsJson from '../reference/ui-router-signals/type
 // SAFETY: typedoc-vitepress-theme emits typedoc-sidebar.json as SidebarItem[]
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-
-// The companion references are small, and their kind categories (Classes,
-// Interfaces, …) are generic — unlike the flagship's semantic categories
-// (Core, Components, …). Flatten them into a single member list under the
-// package-name node; the grouped listing still lives on the reference's
-// index page and the kind-index pages stay reachable by URL.
-function flattenGroups(
-  items: DefaultTheme.SidebarItem[],
-): DefaultTheme.SidebarItem[] {
-  return items.flatMap((item) => (item.items ? item.items : [item]));
-}
 
 // Assert to the sidebar type on a typed binding first — like typedocSidebarItems
 // above, the generated JSON may be absent when lint type-checks this file, which
@@ -122,26 +112,6 @@ const uiRouterOtelSidebarItems = flattenGroups(uiRouterOtelSidebarItemsRaw);
 const uiRouterSignalsSidebarItems = flattenGroups(
   uiRouterSignalsSidebarItemsRaw,
 );
-
-// Multi-entry packages emit one typedoc module per subpath export, so the
-// module level is the import surface — keep it, retitle each module to its
-// import specifier, and flatten only the kind groups within.
-function entrySidebar(
-  pkg: string,
-  modules: DefaultTheme.SidebarItem[],
-): DefaultTheme.SidebarItem[] {
-  return (
-    modules
-      .map((module) => ({
-        ...module,
-        text: module.text === 'index' ? pkg : `${pkg}/${module.text}`,
-        collapsed: true,
-        items: module.items && flattenGroups(module.items),
-      }))
-      // root module first; stable sort keeps the subpaths in typedoc order
-      .sort((a, b) => Number(b.text === pkg) - Number(a.text === pkg))
-  );
-}
 
 // SAFETY: as for typedocSidebarItems
 const serverSidebarItemsRaw =

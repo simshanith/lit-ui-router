@@ -3,19 +3,14 @@
  * checked out by at most one request at a time, so concurrent requests never
  * share one; release restores a fresh router's globals before reuse.
  *
- * Type-only core imports: index.ts imports this statically, and matcher-only
- * configs must never load @uirouter/core.
+ * Type-only core imports: the root entry reaches this statically through
+ * simulate-tier.ts, and matcher-only configs must never load @uirouter/core.
  */
 
 import { resetRouter } from '@repo/router-reset';
 import type { UIRouter } from '@uirouter/core';
 
-/**
- * Idle routers kept per mount; a burst past it builds extras and drops them.
- *
- * @internal
- */
-export const POOL_MAX_IDLE = 16;
+import { POOL_MAX_IDLE } from './server-router.ts';
 
 /**
  * A checked-out router: one request owns it until {@link PooledRouter.release}.

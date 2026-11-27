@@ -3,6 +3,7 @@
   "entryPoints": [
     "src/index.ts",
     "src/url-matcher.ts",
+    "src/router-matcher.ts",
     "src/redirects.ts",
     "src/prerender.ts",
     "src/simulate.ts",

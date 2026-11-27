@@ -113,17 +113,18 @@ package tour.
 Capabilities are priced as separate entry points, measured min+gzip by the
 package's own esbuild probe:
 
-| Entry point                   | Needs `@uirouter/core` at runtime?    | Cost             | What it answers                                                                        |
-| ----------------------------- | ------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`    | no                                    | ~2.9 KiB gzip    | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects`  | no                                    | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)     | only for a `simulate` mount           | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
-| `ui-router-server/simulate`   | yes (optional peer)                   | +~27.4 KiB, lazy | what would the real router do                                                          |
-| `ui-router-server/location`   | yes (optional peer)                   | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
-| `ui-router-server/url-config` | no; it configures the router you pass | ~0.4 KiB gzip    | one url config for the client router, the mounts, and a server render                  |
-| `ui-router-server/prerender`  | only for a `simulate` mount           | ~6.3 KiB gzip    | which files and host rules does this mount table make, around your render              |
-| `ui-router-server/ssr`        | yes (optional peer)                   | ~1.1 KiB gzip    | when has a server router landed, and which of its resolves can the client adopt        |
-| `ui-router-server/ssr/client` | yes (optional peer)                   | ~0.7 KiB gzip    | let the client's boot transition adopt the resolves a server render drew               |
+| Entry point                       | Needs `@uirouter/core` at runtime?    | Cost                     | What it answers                                                                        |
+| --------------------------------- | ------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`        | no                                    | ~2.9 KiB gzip            | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects`      | no                                    | ~3.6 KiB gzip            | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)         | only for a `simulate` mount           | ~4.7 KiB gzip            | mounts in, verdicts out                                                                |
+| `ui-router-server/router/matcher` | no; a `simulate` mount throws         | ~0.4 KiB gzip under root | mounts in, verdicts out, in one file with no `@uirouter/core`                          |
+| `ui-router-server/simulate`       | yes (optional peer)                   | +~27.4 KiB, lazy         | what would the real router do                                                          |
+| `ui-router-server/location`       | yes (optional peer)                   | ~0.3 KiB gzip            | a path-shaped in-memory location for a server-side router                              |
+| `ui-router-server/url-config`     | no; it configures the router you pass | ~0.4 KiB gzip            | one url config for the client router, the mounts, and a server render                  |
+| `ui-router-server/prerender`      | only for a `simulate` mount           | ~6.3 KiB gzip            | which files and host rules does this mount table make, around your render              |
+| `ui-router-server/ssr`            | yes (optional peer)                   | ~1.1 KiB gzip            | when has a server router landed, and which of its resolves can the client adopt        |
+| `ui-router-server/ssr/client`     | yes (optional peer)                   | ~0.7 KiB gzip            | let the client's boot transition adopt the resolves a server render drew               |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -140,6 +141,9 @@ Picking one:
   over a route table (`compileRoutes`, `matchRoute`, `compileRedirects`,
   `evaluateRedirects`), without mount bookkeeping. Synchronous, dependency-free.
 - **root** — the default: `createServerRouter({ mounts })`, verdicts out.
+- **`/router/matcher`** — the root entry without the simulate tier, for a
+  bundle that must be one file without `@uirouter/core`.
+  [Matcher-only routers](#matcher-only-routers).
 - **`/simulate`** (or `strategy: 'simulate'` on a mount) — replay the URL
   through a real headless router, so redirect rules and `otherwise()` run as
   actual rules. Both strategies consume the same declaration data and produce
@@ -169,6 +173,38 @@ Picking one:
   redirect, and the 404 document.
   [`prerender(options)`](#emitting-a-static-site).
 
+### Matcher-only routers
+
+`ui-router-server/router/matcher` exports the root entry's
+`createServerRouter`, types and helpers without the simulate tier. Nothing it
+imports reaches `@uirouter/core`, not even through a dynamic `import()`, so a
+bundler that emits one file, the usual shape of a Lambda or other function
+zip, bundles it without the optional peer. Its declaration files still name
+core's types, so type-checking without the peer installed needs
+`skipLibCheck`. A mount with `strategy: 'simulate'` throws at construction;
+take `createServerRouter` from the root entry for one. Its routers work with
+every adapter and with `diagnoseMounts`.
+
+```ts
+import {
+  createServerRouter,
+  routesFromStates,
+} from 'ui-router-server/router/matcher';
+
+import { states } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': { routes: routesFromStates(states), otherwise: { state: 'notFound' } },
+  },
+});
+```
+
+The package's bundle test bundles this entry, alone and with each of the
+fetch, Connect and Hono adapters, with esbuild and rolldown, and asserts one
+chunk with no `@uirouter/core` in it. Lint keeps the simulate tier out of
+every module they import.
+
 ## Installation
 
 ```bash
@@ -186,30 +222,41 @@ installs it as a dev dependency or keeps `skipLibCheck` on.
 
 ### Single-file bundles
 
-A router whose mounts are all `'matcher'` never loads `@uirouter/core`,
-because the root entry reaches the simulate tier through a dynamic
-`import()`. A bundler that emits one file, the usual shape of a Lambda or
-other function zip, inlines that import and hoists the simulate tier's static
-`@uirouter/core` import to the top of the bundle. With `@uirouter/core`
-external and not installed, the bundle throws `ERR_MODULE_NOT_FOUND` when it
-loads; without it external, the build fails to resolve it. Either of these
-fixes it:
+A bundler that emits one file, the usual shape of a Lambda or other function
+zip, inlines every dynamic `import()`. The root entry reaches the simulate
+tier through one, so a single file built from it hoists the simulate tier's
+static `@uirouter/core` import to the top of the bundle, even when every mount
+is `'matcher'`. With `@uirouter/core` external and not installed, the bundle
+throws `ERR_MODULE_NOT_FOUND` when it loads; without it external, the build
+fails to resolve it.
 
-- Keep code splitting and mark `@uirouter/core` external. The simulate tier
-  stays in its own chunk, which a matcher-only router never imports, so ship
-  the output directory rather than one file:
+When no mount is `'simulate'`, take `createServerRouter` from
+`ui-router-server/router/matcher` instead. Nothing it or the adapters import
+reaches `@uirouter/core`, so one file bundles without the peer. See
+[matcher-only routers](#matcher-only-routers).
+
+A router with a `'simulate'` mount keeps the root entry and needs
+`@uirouter/core` installed, since that mount loads it. Either bundle it or
+keep it out of the entry chunk:
+
+- Leave `@uirouter/core` out of `external`. A single file then builds and
+  loads, with core inside it.
+
+- Keep code splitting, mark `@uirouter/core` external and install it where the
+  bundle runs. The simulate tier stays in its own chunk until a simulate mount
+  first answers, so ship the output directory rather than one file:
 
   ```bash
   esbuild handler.ts --bundle --splitting --format=esm --platform=node \
-    --external:@uirouter/core --outdir=dist
+    --conditions=production --external:@uirouter/core --outdir=dist
   ```
 
-  A Vite library build splits by default; list `@uirouter/core` in
-  `external` and leave `inlineDynamicImports` (Vite 7) or `codeSplitting`
-  (Vite 8) unset.
+  A Vite library build splits by default; list `@uirouter/core` in `external`
+  and leave `inlineDynamicImports` (Vite 7) or `codeSplitting` (Vite 8) unset.
 
-- Install `@uirouter/core`. A single file then builds and loads, carrying the
-  simulate tier and `@uirouter/core` unused.
+With `--platform=node`, esbuild matches the `node` export condition, which
+maps to the development build; pass `--conditions=production` to bundle the
+production one.
 
 ## Quick start
 

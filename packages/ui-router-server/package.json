@@ -113,6 +113,14 @@
       "node": "./dist/development/redirects.js",
       "default": "./dist/redirects.js"
     },
+    "./router/matcher": {
+      "types": "./dist/router-matcher.d.ts",
+      "development": "./dist/development/router-matcher.js",
+      "production": "./dist/router-matcher.js",
+      "deno": "./dist/router-matcher.js",
+      "node": "./dist/development/router-matcher.js",
+      "default": "./dist/router-matcher.js"
+    },
     "./simulate": {
       "types": "./dist/simulate.d.ts",
       "development": "./dist/development/simulate.js",
@@ -275,6 +283,11 @@
       ]
     },
     "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./router/matcher": {
       "free": [
         "@uirouter/core"
       ]

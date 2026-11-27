@@ -36,7 +36,7 @@ import type {
   ConnectRequest,
   ConnectResponse,
 } from './connect.ts';
-import type { ServerRouter, Verdict } from './index.ts';
+import type { ServerRouter, Verdict } from './server-router.ts';
 import type { FileWriter, PrerenderResult } from './prerender.ts';
 import type { PrerenderJob } from './prerender-thread.ts';
 import { fileFor, subpathIn } from './site-paths.ts';

@@ -12,6 +12,8 @@ import type { MountConfig } from '../src/index.ts';
 // under this node run it reads NODE_ENV.
 type Entry = typeof import('../src/index.ts');
 
+type MatcherEntry = typeof import('../src/router-matcher.ts');
+
 const load = async <T>(path: string): Promise<T> =>
   // SAFETY: each emit is compiled from the src module the caller names
   (await import(new URL(path, import.meta.url).href)) as T;
@@ -28,10 +30,13 @@ const builds = Object.fromEntries(
   await Promise.all(
     BUILDS.map(async (build) => [
       build,
-      { index: await load<Entry>(`${dir(build)}index.js`) },
+      {
+        index: await load<Entry>(`${dir(build)}index.js`),
+        matcher: await load<MatcherEntry>(`${dir(build)}router-matcher.js`),
+      },
     ]),
   ),
-) as Record<Build, { index: Entry }>;
+) as Record<Build, { index: Entry; matcher: MatcherEntry }>;
 
 const mounts = {
   '/app': { routes: [{ name: 'a', url: '/a' }] },
@@ -55,14 +60,18 @@ const withNodeEnv = (t: TestContext, value: string | undefined): void => {
   else process.env.NODE_ENV = value;
 };
 
-const warnings = (t: TestContext, build: Build) => {
+const warnings = (
+  t: TestContext,
+  build: Build,
+  entry: 'index' | 'matcher' = 'index',
+) => {
   const messages: string[] = [];
 
   const warn = t.mock.method(console, 'warn', (message: string) => {
     messages.push(message);
   });
 
-  builds[build].index.createServerRouter({ mounts });
+  builds[build][entry].createServerRouter({ mounts });
   warn.mock.restore();
 
   return messages;
@@ -95,8 +104,33 @@ describe('development and production builds', () => {
       silent.mock.restore();
 
       assert.deepEqual(warnings(t, 'development'), warns ? messages : []);
+      assert.deepEqual(
+        warnings(t, 'development', 'matcher'),
+        warns ? messages : [],
+      );
     });
   }
+
+  it('never warns at construction in the production router/matcher build', (t) => {
+    withNodeEnv(t, undefined);
+
+    assert.deepEqual(warnings(t, 'production', 'matcher'), []);
+  });
+
+  it('shares diagnoseMounts between router/matcher and the root entry in every build', (t) => {
+    t.mock.method(console, 'warn', () => {});
+
+    for (const build of BUILDS) {
+      const { index, matcher } = builds[build];
+      const router = matcher.createServerRouter({ mounts });
+
+      assert.deepEqual(
+        index.diagnoseMounts(router),
+        matcher.diagnoseMounts(index.createServerRouter({ mounts })),
+        build,
+      );
+    }
+  });
 
   it('returns the same diagnostics from every build, for its own routers only', (t) => {
     t.mock.method(console, 'warn', () => {});

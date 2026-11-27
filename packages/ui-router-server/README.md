@@ -29,26 +29,37 @@ Full docs:
 
 ## Single-file bundles
 
-A router whose mounts are all `'matcher'` never loads `@uirouter/core`, because the root entry
-reaches the simulate tier through a dynamic `import()`. A bundler that emits one file, the usual
-shape of a Lambda or other function zip, inlines that import and hoists the simulate tier's static
-`@uirouter/core` import to the top of the bundle. With `@uirouter/core` external and not installed,
-the bundle throws `ERR_MODULE_NOT_FOUND` when it loads; without it external, the build fails to
-resolve it. Either of these fixes it:
+A bundler that emits one file, the usual shape of a Lambda or other function zip, inlines every
+dynamic `import()`. The root entry reaches the simulate tier through one, so a single file built
+from it hoists the simulate tier's static `@uirouter/core` import to the top of the bundle, even
+when every mount is `'matcher'`. With `@uirouter/core` external and not installed, the bundle throws
+`ERR_MODULE_NOT_FOUND` when it loads; without it external, the build fails to resolve it.
 
-- Keep code splitting and mark `@uirouter/core` external. The simulate tier stays in its own chunk,
-  which a matcher-only router never imports, so ship the output directory rather than one file:
+When no mount is `'simulate'`, take `createServerRouter` from `ui-router-server/router/matcher`
+instead. Nothing it or the adapters import reaches `@uirouter/core`, so one file bundles without the
+peer. See
+[matcher-only routers](https://lit-ui-router.dev/packages/ui-router-server#matcher-only-routers).
+
+A router with a `'simulate'` mount keeps the root entry and needs `@uirouter/core` installed, since
+that mount loads it. Either bundle it or keep it out of the entry chunk:
+
+- Leave `@uirouter/core` out of `external`. A single file then builds and loads, with core inside
+  it.
+
+- Keep code splitting, mark `@uirouter/core` external and install it where the bundle runs. The
+  simulate tier stays in its own chunk until a simulate mount first answers, so ship the output
+  directory rather than one file:
 
   ```bash
   esbuild handler.ts --bundle --splitting --format=esm --platform=node \
-    --external:@uirouter/core --outdir=dist
+    --conditions=production --external:@uirouter/core --outdir=dist
   ```
 
   A Vite library build splits by default; list `@uirouter/core` in `external` and leave
   `inlineDynamicImports` (Vite 7) or `codeSplitting` (Vite 8) unset.
 
-- Install `@uirouter/core`. A single file then builds and loads, carrying the simulate tier and
-  `@uirouter/core` unused.
+With `--platform=node`, esbuild matches the `node` export condition, which maps to the development
+build; pass `--conditions=production` to bundle the production one.
 
 ## When to use it
 
@@ -119,6 +130,34 @@ const router = createServerRouter({
 Each route keeps only the fields a mount reads, and a function or `TargetState` `redirectTo`, or an
 abstract state with a url, throws at the call. See
 [sharing states with the client](https://lit-ui-router.dev/packages/ui-router-server#sharing-states-with-the-client).
+
+## Matcher-only routers
+
+`ui-router-server/router/matcher` exports the root entry's `createServerRouter`, types and helpers
+without the simulate tier. Nothing it imports reaches `@uirouter/core`, not even through a dynamic
+`import()`, so a bundler that emits one file, the usual shape of a Lambda or other function zip,
+bundles it without the optional peer. Its declaration files still name core's types, so
+type-checking without the peer installed needs `skipLibCheck`. A mount with `strategy: 'simulate'`
+throws at construction; take `createServerRouter` from the root entry for one. Its routers work with
+every adapter and with `diagnoseMounts`.
+
+```ts
+import {
+  createServerRouter,
+  routesFromStates,
+} from 'ui-router-server/router/matcher';
+
+import { states } from './src/states.ts';
+
+const router = createServerRouter({
+  mounts: {
+    '/': { routes: routesFromStates(states), otherwise: { state: 'notFound' } },
+  },
+});
+```
+
+See
+[matcher-only routers](https://lit-ui-router.dev/packages/ui-router-server#matcher-only-routers).
 
 ## After `vite build`
 
