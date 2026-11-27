@@ -60,6 +60,24 @@ const visibleKeys = ref<string[]>(
 // Empty until user interaction changes the result count (matching HomeSeeItRun.vue).
 const announcement = ref('');
 
+const panelRef = ref<HTMLElement | null>(null);
+
+const addFacetSelect = ref<HTMLSelectElement | null>(null);
+
+function restoreFocus(): void {
+  void nextTick(() => {
+    const select = addFacetSelect.value;
+
+    if (select && !select.disabled) {
+      select.focus();
+
+      return;
+    }
+
+    panelRef.value?.querySelector<HTMLButtonElement>('.chip')?.focus();
+  });
+}
+
 const visibleFacets = computed<FacetDefinition[]>(() =>
   visibleKeys.value.flatMap((key) => {
     const found = facetByKey.value.get(key);
@@ -153,10 +171,18 @@ function onRemoveFacet(key: string): void {
     syncUrl();
     announce();
   }
+
+  restoreFocus();
+}
+
+function onDropRelaxation(key: string): void {
+  setFilter(toggleFacetValue(filter.value, key, ''));
+  restoreFocus();
 }
 
 function onReset(): void {
   setFilter(new Map());
+  restoreFocus();
 }
 
 function countsFor(facet: FacetDefinition) {
@@ -222,7 +248,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="faceted-index">
-    <section class="facet-panel" :aria-label="`Filter ${dataset.itemPlural}`">
+    <section
+      ref="panelRef"
+      class="facet-panel"
+      :aria-label="`Filter ${dataset.itemPlural}`"
+    >
       <div v-if="visibleFacets.length > 0" class="facet-rows">
         <div
           v-for="facet in visibleFacets"
@@ -274,6 +304,7 @@ onBeforeUnmount(() => {
           </label>
           <select
             :id="`add-facet-${index}`"
+            ref="addFacetSelect"
             class="add-facet-select"
             :disabled="addableFacets.length === 0"
             @change="onAddFacet"
@@ -366,7 +397,7 @@ onBeforeUnmount(() => {
           :key="drop.key"
           type="button"
           class="site-button"
-          @click="onTogglePill(drop.key, '')"
+          @click="onDropRelaxation(drop.key)"
         >
           Drop <code>{{ drop.key }}={{ drop.value }}</code> · {{ drop.count }}
           {{ drop.count === 1 ? dataset.itemSingular : dataset.itemPlural }}

@@ -106,12 +106,15 @@ export function packageEntry(
   ];
 }
 
+const allRouterSubject = PACKAGES.every(({ subject }) => subject === 'router');
+
 const PACKAGE_FACET_DEFINITIONS: readonly FacetDefinition[] = [
   {
     key: 'subject',
     hint: 'router / lit',
-    description:
-      '`router` for the router family; `lit` for Lit tooling with no router dependency. All published packages are `router` today.',
+    description: allRouterSubject
+      ? '`router` for the router family; `lit` for Lit tooling with no router dependency. All published packages are `router` today.'
+      : '`router` for the router family; `lit` for Lit tooling with no router dependency.',
     values: SUBJECTS,
     defaultValue: 'router',
     showOnRow: false,

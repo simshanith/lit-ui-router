@@ -10,8 +10,9 @@ aside: false
 [`lit-ui-router`](/packages/lit-ui-router) renders the router's views as Lit
 components. The other packages layer optional integrations on it or on
 `@uirouter/core`; each is published and versioned independently and takes the
-router as a peer, so you add only the ones you need. All published packages carry
-`subject: router`.
+router as a peer, so you add only the ones you need. Each entry lists its entry
+points — the import specifiers its `package.json` `exports` map offers —
+alongside its facets.
 
 The Effect, MobX and Signals bindings each come as two packages: a
 framework-agnostic one for `@uirouter/core`, and a Lit one for `lit-ui-router`.
