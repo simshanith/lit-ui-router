@@ -13,6 +13,8 @@
         "!worker/dist/**",
         // the worker imports the package catalog from outside worker/
         "catalog/**",
+        // and the version manifest, which names the snapshot lines it serves
+        "public/versions.json",
         // types:worker output; esbuild bundles, it never typechecks, so
         // regenerating the d.ts must not bust this key
         "!worker/worker-configuration.d.ts",

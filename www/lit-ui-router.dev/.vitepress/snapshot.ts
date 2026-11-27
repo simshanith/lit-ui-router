@@ -1,11 +1,16 @@
 import { createHash } from 'node:crypto';
 import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
 import { readFile, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import type { RedirectLine } from 'ui-router-server/prerender';
 import * as v from 'valibot';
 
 import { SURFACES } from '../catalog/surfaces.ts';
+import {
+  isSnapshotRow,
+  type SnapshotLine,
+  WORKER_MOUNTS,
+} from '../worker/snapshot.ts';
 import {
   isDynamic,
   matchRedirect,
@@ -22,20 +27,9 @@ import {
 export const snapshotTag = (id: string): string | undefined =>
   BUNDLED_MANIFEST.others.find((other) => other.id === id)?.tag;
 
-/** The `www/` package that holds a snapshot's Worker config and, gitignored, its built assets. */
+/** The `www/` package whose gitignored `dist/` holds a baked snapshot before its upload. */
 export const snapshotPackage = (id: string): string =>
   `www/${id}.versions.lit-ui-router.dev`;
-
-/** A snapshot surface's row: a frozen version's whole prefix, handed to that version's Worker. */
-const isSnapshotRow = (id: string): boolean => id.startsWith('snapshot-');
-
-/** The worker's mounts: a snapshot serves none of them, so its links into them go to the main site's. */
-export const WORKER_MOUNTS: readonly string[] = SURFACES.flatMap(
-  ({ id, renderer, paths }) =>
-    renderer === 'worker' && !isSnapshotRow(id)
-      ? paths.filter((path) => !path.includes('*'))
-      : [],
-);
 
 /** Built files a snapshot drops: the root serves the live copies, and the worker serves the mounts. */
 export const PRUNED = [
@@ -244,7 +238,7 @@ export const snapshotHeaders = (text: string, base: string): string =>
     .replace(/^\/(\S*)$/gm, `${base}$1`)
     .replace(/<\/([^>]*)>/g, `<${base}$1>`);
 
-/** Writes the snapshot Worker's `_redirects` and `_headers` at its assets root, beside the `base` folder. */
+/** Writes the assets-only snapshot Worker's `_redirects` and `_headers` beside the `base` folder; the bucket route applies the same rules itself. */
 export async function writeSnapshotRules(
   root: string,
   base: string,
@@ -347,4 +341,71 @@ export async function indexProblems(
   }
 
   return problems;
+}
+
+/** The bucket key of a line's published-snapshot record, outside every line's roots so the worker never serves it. */
+export const markerKey = (id: string): string => `_manifests/${id}.json`;
+
+/** The record a publish stores beside a line's files: the manifest without its page list. */
+export const markerBody = ({
+  tag,
+  files,
+  bytes,
+  sha256,
+}: SnapshotManifest): string =>
+  `${JSON.stringify({ tag, files, bytes, sha256 })}\n`;
+
+/** A file's MD5, hex: R2's ETag for an object uploaded in one part. */
+export const md5Of = (file: string): string =>
+  createHash('md5').update(readFileSync(file)).digest('hex');
+
+/** Whether a bucket key is a line's: under one of its roots, or the page at a bare root. */
+export const ownsKey = (line: SnapshotLine, key: string): boolean =>
+  line.roots.some(
+    (prefix) =>
+      `/${key}`.startsWith(prefix) ||
+      `/${key}` === `${prefix.slice(0, -1)}.html`,
+  );
+
+/** The files under a built root that a line serves, as bucket keys. */
+export function lineFiles(root: string, line: SnapshotLine): string[] {
+  return globSync('**/*', { cwd: root })
+    .flatMap((file) => {
+      const key = file.split(sep).join('/');
+
+      return statSync(join(root, file)).isFile() && ownsKey(line, key)
+        ? [key]
+        : [];
+    })
+    .sort();
+}
+
+/** The list prefixes that cover a line's keys: each root without its slash, so the bare-root page is listed too; filter with `ownsKey`. */
+export const listPrefixes = (line: SnapshotLine): string[] => [
+  ...new Set(line.roots.map((prefix) => prefix.slice(1, -1))),
+];
+
+/** What a publish sends, and what it leaves. */
+export interface UploadPlan {
+  /** Keys whose bucket ETag differs from the local MD5, or that the bucket lacks. */
+  upload: string[];
+  unchanged: number;
+  /** Keys the bucket holds that the build lacks; a publish keeps them. */
+  stale: string[];
+}
+
+/** Compares a build's MD5s with the bucket's ETags. */
+export function uploadPlan(
+  local: ReadonlyMap<string, string>,
+  remote: ReadonlyMap<string, string>,
+): UploadPlan {
+  const upload = [...local.keys()].filter(
+    (key) => remote.get(key) !== local.get(key),
+  );
+
+  return {
+    upload,
+    unchanged: local.size - upload.length,
+    stale: [...remote.keys()].filter((key) => !local.has(key)),
+  };
 }

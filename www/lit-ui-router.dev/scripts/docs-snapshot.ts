@@ -27,7 +27,7 @@ import {
 import { BUNDLED_MANIFEST } from '../.vitepress/versions.ts';
 
 // Builds a frozen docs snapshot: the whole site at a release tag, under its version's base, into
-// the assets directory of that version's Worker package (www/<id>.versions.lit-ui-router.dev/dist/).
+// www/<id>.versions.lit-ui-router.dev/dist/, which docs-snapshot-publish.ts uploads to the bucket.
 // Usage: docs-snapshot.ts [version-id] [--bake-only], default v1. --bake-only skips the tag build
 // and redoes the last step on the snapshot already there: its canonical links, _redirects and
 // _headers. That step reads this checkout's built site, so build it first.
@@ -36,8 +36,8 @@ const SITE = 'www/lit-ui-router.dev';
 
 const PACKAGE = join(import.meta.dirname, '..');
 
-/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner, and the menu when WWW_VERSION_MENU is on. */
-const VERSION_FILES = [
+/** The version mechanism the tag predates, carried into its checkout so the snapshot renders the banner and the menu. */
+export const VERSION_FILES = [
   '.vitepress/versions.ts',
   '.vitepress/version-menu.ts',
   '.vitepress/lines.ts',
@@ -47,8 +47,8 @@ const VERSION_FILES = [
   'public/versions.json',
 ] as const;
 
-/** Text edits that register the copied components, each of which must match once. */
-const VERSION_EDITS: readonly (readonly [
+/** Text edits that register the copied components and the nav plugin, each of which must match once. */
+export const VERSION_EDITS: readonly (readonly [
   file: string,
   from: string,
   to: string,
@@ -70,13 +70,13 @@ const VERSION_EDITS: readonly (readonly [
   ],
   [
     '.vitepress/config.ts',
-    '    nav: NAV,\n',
-    '    nav: withVersionMenu(NAV, process.env),\n',
+    "    configFile: './.vitepress/vite.config.ts',\n",
+    "    configFile: './.vitepress/vite.config.ts',\n    plugins: [versionMenuPlugin(NAV, process.env)],\n",
   ],
   [
     '.vitepress/config.ts',
     "import { analyticsHead } from './analytics.ts';\n",
-    "import { analyticsHead } from './analytics.ts';\nimport { withVersionMenu } from './version-menu.ts';\n",
+    "import { analyticsHead } from './analytics.ts';\nimport { versionMenuPlugin } from './version-menu.ts';\n",
   ],
 ];
 

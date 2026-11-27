@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
-import { SECURITY_HEADERS } from '../../catalog/security-headers.ts';
+import {
+  ISOLATION_HEADERS,
+  SECURITY_HEADERS,
+} from '../../catalog/security-headers.ts';
 import { snapshotHeaders } from '../snapshot.ts';
 
 // https://developers.cloudflare.com/workers/static-assets/headers/
@@ -94,6 +97,19 @@ describe('public/_headers', () => {
       all?.lines.filter(({ name }) => NAMES.has(name)).length,
       NAMES.size,
     );
+  });
+
+  it('isolates every path with the headers the worker sends on the snapshot lines', () => {
+    const all = rules.find(({ path }) => path === '/*');
+
+    for (const [header, value] of Object.entries(ISOLATION_HEADERS)) {
+      const name = header.toLowerCase();
+
+      assert.deepEqual(
+        all?.lines.filter((line) => line.name === name),
+        [{ name, value }],
+      );
+    }
   });
 
   // A header set by two matching rules is sent with both values joined.

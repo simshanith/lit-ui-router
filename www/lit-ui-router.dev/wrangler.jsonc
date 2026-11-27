@@ -53,7 +53,7 @@
       "/releases/*",
       "/gh",
       "/gh/*",
-      // The frozen 1.x docs, handed whole to their own Worker.
+      // The docs lines in versions.json, served from the snapshot bucket; a test holds the two together.
       "/v1",
       "/v1/*",
       // The unreleased docs' alias, redirected to the root.
@@ -70,7 +70,12 @@
     },
     // The release-diffs worker's default entrypoint: each pair's npm diff, built once into R2.
     { "binding": "RELEASE_DIFFS", "service": "release-diffs" },
-    // The frozen 1.x docs: an assets-only Worker (www/v1.versions.lit-ui-router.dev), deployed by hand.
-    { "binding": "DOCS_V1", "service": "lit-ui-router-docs-v1" },
+  ],
+  // The docs lines' builds, keyed by URL path; docs:snapshot:publish uploads them. Previews read production's.
+  "r2_buckets": [
+    {
+      "binding": "DOCS_SNAPSHOTS",
+      "bucket_name": "lit-ui-router-docs-snapshots",
+    },
   ],
 }
