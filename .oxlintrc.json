@@ -548,10 +548,23 @@
       }
     },
     {
-      // Mirrors bundleProbe["./router/matcher"].free; a single-file bundle inlines even a lazy import() of the simulate tier.
+      // Mirrors bundleProbe["./router/matcher"].free; a single-file bundle inlines even a lazy import() of the simulate tier. Lists every module router/matcher or an adapter reaches; this later override replaces the matcher-tier one above for the files both list.
       "files": [
+        "packages/ui-router-server/src/base-path.ts",
+        "packages/ui-router-server/src/connect.ts",
+        "packages/ui-router-server/src/delegate-registry.ts",
+        "packages/ui-router-server/src/dev-gate.node.ts",
+        "packages/ui-router-server/src/dev-gate.ts",
+        "packages/ui-router-server/src/dev-warn.ts",
+        "packages/ui-router-server/src/fetch.ts",
+        "packages/ui-router-server/src/hono.ts",
+        "packages/ui-router-server/src/redirects.ts",
+        "packages/ui-router-server/src/route-trie.ts",
         "packages/ui-router-server/src/router-matcher.ts",
-        "packages/ui-router-server/src/server-router.ts"
+        "packages/ui-router-server/src/server-router.ts",
+        "packages/ui-router-server/src/state-routes.ts",
+        "packages/ui-router-server/src/trailing-slash.ts",
+        "packages/ui-router-server/src/url-matcher.ts"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -566,8 +579,18 @@
             ],
             "patterns": [
               {
-                "group": ["./simulate*", "./location*", "@uirouter/core/**"],
-                "message": "ui-router-server/router/matcher bundles into one file without @uirouter/core; the simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
+                "group": [
+                  "./simulate*",
+                  "./location*",
+                  "./index*",
+                  "./router-pool*",
+                  "./ssr*",
+                  "./dehydrate*",
+                  "./resolve-payload*",
+                  "./prerender*",
+                  "@uirouter/core/**"
+                ],
+                "message": "ui-router-server/router/matcher and its adapters bundle into one file without @uirouter/core; import from src/server-router.ts. The simulate tier enters through src/simulate-tier.ts, which only the root entry imports."
               }
             ]
           }

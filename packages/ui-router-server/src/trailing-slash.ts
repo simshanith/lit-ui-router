@@ -5,7 +5,7 @@
  * read it, so a server verdict and a client href agree.
  */
 
-import type { ServerRouter } from './index.ts';
+import type { ServerRouter } from './server-router.ts';
 
 /**
  * How one kind of state spells the trailing slash of its url: `'always'`

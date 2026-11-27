@@ -46,14 +46,14 @@ import {
 } from './base-path.ts';
 import { registeredDelegates, sharedWeakMap } from './delegate-registry.ts';
 import type { DelegateRegistration } from './delegate-registry.ts';
-import { mergeSearch } from './index.ts';
+import type { RouteDeclaration } from './redirects.ts';
+import { mergeSearch } from './server-router.ts';
 import type {
   ResponseState,
-  RouteDeclaration,
   ServerRouter,
   ServerRouterDeclarations,
   Verdict,
-} from './index.ts';
+} from './server-router.ts';
 
 /**
  * The WinterCG handler: a verdict answered, or `null` to pass to the host.

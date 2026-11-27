@@ -30,8 +30,8 @@ import {
   withBase,
 } from './base-path.ts';
 import { registeredDelegates } from './delegate-registry.ts';
-import { mergeSearch } from './index.ts';
-import type { ServerRouter, Verdict } from './index.ts';
+import { mergeSearch } from './server-router.ts';
+import type { ServerRouter, Verdict } from './server-router.ts';
 
 type ShellVerdict = Extract<Verdict, { kind: 'shell' }>;
 

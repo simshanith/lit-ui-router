@@ -1,6 +1,6 @@
 // What each createServerRouter router delegates, shared by index.ts and the adapters; no package entry exports it.
 
-import type { ServerRouter, Verdict } from './index.ts';
+import type { ServerRouter, Verdict } from './server-router.ts';
 
 /**
  * A WeakMap stored on `globalThis` under `Symbol.for(name)`, so duplicate

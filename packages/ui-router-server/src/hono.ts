@@ -35,7 +35,10 @@ import type {
   RequiredDelegates,
   RequiredServeResponse,
 } from './fetch.ts';
-import type { ServerRouter, ServerRouterDeclarations } from './index.ts';
+import type {
+  ServerRouter,
+  ServerRouterDeclarations,
+} from './server-router.ts';
 
 import type { Context, Env, ExecutionContext, MiddlewareHandler } from 'hono';
 

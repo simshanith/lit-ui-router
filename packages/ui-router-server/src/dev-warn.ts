@@ -2,7 +2,7 @@
 
 import { devGate } from '#dev-gate';
 
-import type { MountDiagnostic, ServerRouter } from './index.ts';
+import type { MountDiagnostic, ServerRouter } from './server-router.ts';
 
 /**
  * Passes each of a new router's mount diagnostics to `console.warn`, prefixed

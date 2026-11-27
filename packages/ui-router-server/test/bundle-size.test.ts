@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path, { basename } from 'node:path';
+import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
@@ -22,6 +25,47 @@ const { declared, entries } = readPackageProbe(
 const matcher = entries.find((entry) => entry.label === 'matcher');
 
 const reported = entries.filter((entry) => entry !== matcher);
+
+const router = entries.find((entry) => entry.label === 'router/matcher');
+
+assert.ok(router, 'expected a router/matcher export');
+
+const matcherOnly = [
+  { build: 'production', file: router.file },
+  {
+    build: 'development',
+    file: router.file.replace(
+      /router-matcher\.js$/,
+      'development/router-matcher.js',
+    ),
+  },
+];
+
+const ADAPTERS = ['fetch', 'connect', 'hono'] as const;
+
+const probeDir = mkdtempSync(path.join(tmpdir(), 'router-matcher-'));
+
+after(() => rmSync(probeDir, { recursive: true, force: true }));
+
+// One module importing both, as a handler does: no export of either may be shaken away.
+const combined = (file: string, adapter: (typeof ADAPTERS)[number]): string => {
+  const entry = path.join(
+    probeDir,
+    `${basename(path.dirname(file))}-${adapter}.ts`,
+  );
+
+  const imported = (target: string): string => JSON.stringify(target);
+
+  writeFileSync(
+    entry,
+    [
+      `export * from ${imported(file)};`,
+      `export * from ${imported(path.join(path.dirname(file), `${adapter}.js`))};`,
+    ].join('\n'),
+  );
+
+  return entry;
+};
 
 const gzipBytes = (code: string): number => gzipSync(code).byteLength;
 
@@ -75,24 +119,34 @@ for (const bundler of bundlers) {
       assert.deepEqual(loop, [], 'ssr pulled in the prerender loop');
     });
 
-    // A single-file bundler inlines every import(), so the entry must have none that reaches core.
-    it('bundles router/matcher into one chunk that never imports @uirouter/core', async () => {
-      const router = entries.find((entry) => entry.label === 'router/matcher');
-      assert.ok(router, 'expected a router/matcher export');
+    // A single-file bundler inlines every import(), so nothing router/matcher or an adapter reaches may import core.
+    for (const { build, file } of matcherOnly) {
+      for (const adapter of [undefined, ...ADAPTERS]) {
+        const probe = adapter
+          ? `router/matcher + ${adapter}`
+          : 'router/matcher';
 
-      const { chunks } = await bundleEntry(router.file, bundler, {
-        external: declared,
-        annotations: false,
-        define: DEVELOPMENT_DEFINE,
-      });
+        it(`bundles ${probe} (${build}) into one chunk without @uirouter/core`, async () => {
+          const entry = adapter ? combined(file, adapter) : file;
 
-      assert.deepEqual(
-        chunks.map((chunk) => chunk.name),
-        ['router-matcher.js'],
-      );
-      assert.deepEqual(chunks[0]?.externalImports, []);
-      assert.doesNotMatch(chunks[0]?.code ?? '', /@uirouter\/core/);
-    });
+          const { chunks, inputs } = await bundleEntry(entry, bundler, {
+            annotations: false,
+            define: DEVELOPMENT_DEFINE,
+          });
+
+          assert.deepEqual(
+            inputs.filter((input) => input.includes('@uirouter/core')),
+            [],
+          );
+
+          assert.deepEqual(
+            chunks.map((chunk) => chunk.name),
+            [basename(entry).replace(/\.ts$/, '.js')],
+          );
+          assert.doesNotMatch(chunks[0]?.code ?? '', /@uirouter\/core/);
+        });
+      }
+    }
 
     it('reports the remaining entry sizes (visibility, not a gate)', async (t) => {
       for (const { label, file } of reported) {
