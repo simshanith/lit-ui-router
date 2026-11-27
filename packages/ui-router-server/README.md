@@ -52,11 +52,14 @@ that mount loads it. Either bundle it or keep it out of the entry chunk:
 
   ```bash
   esbuild handler.ts --bundle --splitting --format=esm --platform=node \
-    --external:@uirouter/core --outdir=dist
+    --conditions=production --external:@uirouter/core --outdir=dist
   ```
 
   A Vite library build splits by default; list `@uirouter/core` in `external` and leave
   `inlineDynamicImports` (Vite 7) or `codeSplitting` (Vite 8) unset.
+
+With `--platform=node`, esbuild matches the `node` export condition, which maps to the development
+build; pass `--conditions=production` to bundle the production one.
 
 ## When to use it
 
