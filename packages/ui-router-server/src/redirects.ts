@@ -52,6 +52,12 @@ export interface RouteDeclaration {
   parent?: string;
   /** Url segment appended to the ancestors' segments; a url-less state is structural only (never matched, never a redirect target). */
   url?: string;
+  /**
+   * Marks an abstract state, as core's `StateDeclaration.abstract`: its url
+   * and params still prefix its descendants' patterns, and it is never
+   * matched and never a redirect or `otherwise` target itself.
+   */
+  abstract?: boolean;
   /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
   // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- published; a shorthand default is any value, as core's state.params
   params?: Record<string, unknown>;
@@ -193,7 +199,8 @@ const composeChain = (chain: RouteDeclaration[]) => {
  * Compiles the url-addressable routes of a declaration set: each state's url
  * appended to its ancestors' (a state's parent is its `parent`, else its
  * dotted prefix, as in ui-router), params merged rootward. Url-less states
- * contribute nothing and match nothing, as in ui-router.
+ * contribute nothing and match nothing, and an abstract state contributes
+ * its url and params to its descendants and matches nothing, as in ui-router.
  */
 export function compileRoutes(
   routes: readonly RouteDeclaration[],
@@ -256,7 +263,7 @@ export function compileRoutes(
   const compiled: CompiledRoute[] = [];
 
   for (const route of routes) {
-    if (route.url === undefined) continue;
+    if (route.url === undefined || route.abstract) continue;
     const { pattern, params } = composeChain(chainOf(route));
 
     compiled.push({
@@ -374,6 +381,10 @@ export function compileResolver(
   const byName = new Map(routes.map((route) => [route.name, route]));
   const { compile } = urlMatcherFactory(table.config);
 
+  const abstracts = new Set(
+    table.routes.filter((route) => route.abstract).map((route) => route.name),
+  );
+
   const slashes = new Map(
     table.routes.map((route) => [
       route.name,
@@ -389,6 +400,9 @@ export function compileResolver(
     where: string,
   ): RedirectTarget => {
     const target = toTarget(to);
+
+    if (abstracts.has(target.state))
+      throw new Error(`${where} redirects to abstract state '${target.state}'`);
 
     if (!byName.has(target.state))
       throw new Error(
@@ -493,7 +507,7 @@ export function compileResolver(
  * Compiles a redirect table into an evaluator: pathname in, redirected path
  * out — or null when the pathname does not redirect (no rule or redirecting
  * state matched, target params were invalid, or the redirect lands where it
- * started). Unknown or unaddressable targets and redirect cycles are
+ * started). Unknown, abstract or url-less targets and redirect cycles are
  * configuration errors and throw here, not at evaluation.
  */
 export function compileRedirects(

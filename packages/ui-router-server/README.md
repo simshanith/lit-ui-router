@@ -116,8 +116,8 @@ const router = createServerRouter({
 });
 ```
 
-Each route keeps only the fields a mount reads, and a function or `TargetState` `redirectTo`, or an
-abstract state with a url, throws at the call. See
+Each route keeps only the fields a mount reads, and a function or `TargetState` `redirectTo` throws
+at the call. An abstract state with a url prefixes its children and is never matched itself. See
 [sharing states with the client](https://lit-ui-router.dev/packages/ui-router-server#sharing-states-with-the-client).
 
 ## After `vite build`
