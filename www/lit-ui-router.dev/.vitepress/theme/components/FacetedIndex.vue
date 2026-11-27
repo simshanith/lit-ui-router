@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 
 import { data as bundles } from './faceted-index.data';
+import InlineText from './InlineText.vue';
 import {
   activeFacetsOf,
   addFacetRow,
@@ -17,12 +18,13 @@ import {
   relaxations,
   removeFacetRow,
   serializeQueryFilter,
-  splitInlineCode,
+  splitReferences,
   toggleFacetValue,
   type FacetDefinition,
   type FacetEntry,
   type FacetFilter,
   type FacetLink,
+  type SummaryPart,
 } from './faceted-index';
 
 const props = defineProps<{
@@ -208,6 +210,24 @@ function linkHref(link: FacetLink): string {
   return link.href.startsWith('/') ? withBase(link.href) : link.href;
 }
 
+function linkAttrs(link: FacetLink) {
+  return {
+    href: linkHref(link),
+    target: link.self ? '_self' : link.external ? '_blank' : undefined,
+    rel: link.external ? 'noopener' : undefined,
+  };
+}
+
+// Only an entry that carries summaryLinks writes `[label]` references.
+function summaryParts({
+  summary = '',
+  summaryLinks,
+}: FacetEntry): SummaryPart[] {
+  return summaryLinks
+    ? splitReferences(summary, summaryLinks)
+    : [{ text: summary }];
+}
+
 function revealHashTarget(): void {
   if (typeof window === 'undefined' || !window.location.hash) return;
 
@@ -363,15 +383,7 @@ onBeforeUnmount(() => {
             class="glossary-item"
           >
             <dt>{{ facet.key }}</dt>
-            <dd>
-              <template
-                v-for="(seg, idx) in splitInlineCode(facet.description)"
-                :key="idx"
-              >
-                <code v-if="seg.code">{{ seg.text }}</code>
-                <template v-else>{{ seg.text }}</template>
-              </template>
-            </dd>
+            <dd><InlineText :text="facet.description" /></dd>
           </div>
         </dl>
       </details>
@@ -439,11 +451,7 @@ onBeforeUnmount(() => {
               <a
                 v-for="link in entry.links"
                 :key="link.text"
-                :href="linkHref(link)"
-                :target="
-                  link.self ? '_self' : link.external ? '_blank' : undefined
-                "
-                :rel="link.external ? 'noopener' : undefined"
+                v-bind="linkAttrs(link)"
               >
                 {{ link.text }}
               </a>
@@ -451,14 +459,25 @@ onBeforeUnmount(() => {
           </div>
 
           <p v-if="entry.summary" class="entry-summary">
-            <template
-              v-for="(seg, idx) in splitInlineCode(entry.summary)"
-              :key="idx"
-            >
-              <code v-if="seg.code">{{ seg.text }}</code>
-              <template v-else>{{ seg.text }}</template>
+            <template v-for="(part, idx) in summaryParts(entry)" :key="idx">
+              <a v-if="part.link" v-bind="linkAttrs(part.link)"
+                ><InlineText :text="part.text"
+              /></a>
+              <InlineText v-else :text="part.text" />
             </template>
           </p>
+
+          <div
+            v-if="entry.summaryLinks && entry.summaryLinks.length > 0"
+            class="entry-side summary-links"
+          >
+            <span :id="`links-${index}-${entry.id}`">Links:</span>
+            <ul :aria-labelledby="`links-${index}-${entry.id}`">
+              <li v-for="link in entry.summaryLinks" :key="link.text">
+                <a v-bind="linkAttrs(link)"><InlineText :text="link.text" /></a>
+              </li>
+            </ul>
+          </div>
 
           <div class="entry-meta">
             <div class="row-facets" role="group" aria-label="Facets">
@@ -913,6 +932,27 @@ onBeforeUnmount(() => {
 .entry-side {
   font-size: var(--site-text-xs);
   color: var(--site-color-text-muted);
+}
+
+.summary-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--site-space-1) var(--site-space-2);
+}
+
+/* Overrides .vp-doc ul and li spacing for an inline row. */
+.summary-links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-1) var(--site-space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-links li {
+  margin: 0;
 }
 
 .entrypoints-details summary {

@@ -3,7 +3,10 @@ import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { getAllByRole, queryAllByRole } from '@testing-library/dom';
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 import { EXAMPLE_NAMES, EXAMPLES, RESERVED_NAMES } from 'examples/embeds';
+import { createMarkdownRenderer } from 'vitepress';
 
 import { EXAMPLE_FACETS } from '../../catalog/examples.ts';
 import {
@@ -12,15 +15,35 @@ import {
   embeddingPages,
   exampleFacets,
   exampleIndex,
+  exampleIndexData,
   headingSlug,
   kindOf,
+  linkedSummary,
   LIVE_EXAMPLES,
   liveExamples,
   locationOf,
+  summaryLinks,
   unembeddedExamples,
 } from '../example-index.ts';
+import { linkProblem, ORIGIN } from '../published-links.ts';
+import { splitReferences } from '../theme/components/faceted-index.ts';
 
 const site = join(import.meta.dirname, '../..');
+
+const md = await createMarkdownRenderer(site);
+
+/** Markdown the index writes, rendered as VitePress renders the examples index. */
+const render = async (markdown: string) =>
+  parseHtml(
+    await md.renderAsync(markdown, {
+      path: join(site, 'examples/index.md'),
+      relativePath: 'examples/index.md',
+      cleanUrls: true,
+    }),
+  ).body;
+
+const hrefs = (element: HTMLElement) =>
+  queryAllByRole(element, 'link').map((link) => link.getAttribute('href'));
 
 describe('the example facets', () => {
   it('take values from the vocabulary only', () => {
@@ -144,7 +167,104 @@ describe('the example index', () => {
   });
 });
 
+describe('the example links', () => {
+  const linked = EXAMPLE_NAMES.filter((name) => summaryLinks(name).length > 0);
+
+  it('link what each summary names once, in the order it names it', async () => {
+    for (const name of EXAMPLE_NAMES) {
+      const summary = await render(linkedSummary(name));
+
+      assert.deepEqual(
+        queryAllByRole(summary, 'link').map((link) => ({
+          text: link.textContent,
+          href: link.getAttribute('href'),
+          external: link.getAttribute('target') === '_blank',
+        })),
+        summaryLinks(name).map(({ text, href, external = false }) => ({
+          text: text.replaceAll('`', ''),
+          href,
+          external,
+        })),
+        name,
+      );
+    }
+  });
+
+  it('refuse a summary reference that names no link', () => {
+    assert.throws(() => splitReferences('on [Effect]', []), {
+      message: '[Effect] names no link in: on [Effect]',
+    });
+  });
+
+  it('are listed under "Links", with no label on an entry that has none', async () => {
+    const list = exampleIndex();
+
+    assert.ok(linked.length > 0 && linked.length < EXAMPLE_NAMES.length);
+
+    for (const name of EXAMPLE_NAMES) {
+      const entry =
+        list.split(`### ${EXAMPLES[name].title}\n`)[1]?.split(/\n#{2,3} /)[0] ??
+        '';
+
+      const rows = getAllByRole(await render(entry), 'listitem').filter(
+        ({ textContent }) => textContent.startsWith('Links:'),
+      );
+
+      assert.deepEqual(
+        rows.map(hrefs),
+        linked.includes(name)
+          ? [summaryLinks(name).map(({ href }) => href)]
+          : [],
+        name,
+      );
+    }
+  });
+
+  it('reach the faceted index as the links its summaries reference', () => {
+    const { entries } = exampleIndexData();
+
+    for (const name of EXAMPLE_NAMES) {
+      const entry = entries.find(({ id }) => id === name);
+
+      assert.deepEqual(entry?.summaryLinks, summaryLinks(name), name);
+      assert.deepEqual(
+        splitReferences(entry?.summary ?? '', entry?.summaryLinks).flatMap(
+          ({ link }) => (link ? [link] : []),
+        ),
+        summaryLinks(name),
+        name,
+      );
+    }
+  });
+
+  it('resolve on this site to a page, and to an anchor the page has', async () => {
+    const internal = linked
+      .flatMap(summaryLinks)
+      .filter(({ external }) => !external);
+
+    assert.ok(internal.some(({ href }) => href.includes('#')));
+    assert.ok(internal.some(({ href }) => href.startsWith('/packages/')));
+    assert.deepEqual(
+      (
+        await Promise.all(
+          internal.map(({ href }) => linkProblem(`${ORIGIN}${href}`)),
+        )
+      ).filter(Boolean),
+      [],
+    );
+  });
+});
+
 describe('the live examples page', () => {
+  it('links what each summary names', async () => {
+    const page = await render(liveExamples());
+
+    for (const name of unembeddedExamples()) {
+      for (const { href } of summaryLinks(name))
+        assert.ok(hrefs(page).includes(href), `${name}: ${href}`);
+    }
+  });
+
   it('has examples to embed', () => {
     assert.notDeepEqual(unembeddedExamples(), [], EMPTY_LIVE_EXAMPLES);
   });

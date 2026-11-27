@@ -22,6 +22,7 @@ import {
   removeFacetRow,
   serializeQueryFilter,
   splitInlineCode,
+  splitReferences,
   toggleFacetValue,
 } from '../theme/components/faceted-index.ts';
 
@@ -207,6 +208,19 @@ describe('faceted-index pure logic', () => {
       { text: ' with ', code: false },
       { text: '<sp-link>', code: true },
       { text: '.', code: false },
+    ]);
+  });
+
+  it('splits a summary at its link references, each resolved by link text', () => {
+    const nudeps = { text: '`nudeps`', href: 'https://nudeps.dev' };
+
+    assert.deepEqual(splitReferences('With [`nudeps`]: no CDN.', [nudeps]), [
+      { text: 'With ' },
+      { text: '`nudeps`', link: nudeps },
+      { text: ': no CDN.' },
+    ]);
+    assert.deepEqual(splitReferences('No references.'), [
+      { text: 'No references.' },
     ]);
   });
 

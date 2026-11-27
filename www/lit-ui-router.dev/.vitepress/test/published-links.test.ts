@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
+
+import { parseHtml } from '@tools/lit-test-env/parse-html.ts';
 
 import { REDIRECTS } from '../../catalog/redirects.ts';
 import {
+  COMPONENT_ANCHORS,
   entryProblems,
   linkProblem,
   ORIGIN,
@@ -50,6 +55,23 @@ describe('linkProblem', () => {
       ]),
       [],
     );
+  });
+
+  it('passes the id a home page component renders, which no heading carries', async () => {
+    assert.deepEqual(await problems([`${ORIGIN}/#see-it-run`]), []);
+    assert.deepEqual(COMPONENT_ANCHORS.get('index.md'), ['see-it-run']);
+
+    const section = parseHtml(
+      readFileSync(
+        join(import.meta.dirname, '../theme/components/HomeSeeItRun.vue'),
+        'utf8',
+      ),
+      // querySelector: a Vue template is no rendered page, and its bound id is an attribute named `:id`.
+    )
+      .querySelector('template')
+      ?.content.querySelector('section');
+
+    assert.equal(section?.getAttribute(':id'), 'TOUR_LANDMARK');
   });
 
   it('flags a missing page, a missing heading, a worker 404 and a redirect to nowhere', async () => {
