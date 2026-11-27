@@ -79,6 +79,17 @@ import {
   type RedirectTable,
   type RouteMatch,
 } from 'ui-router-server/redirects';
+import {
+  createServerRouter as createMatcherRouter,
+  diagnoseMounts as diagnoseMatcherMounts,
+  mergeSearch as matcherMergeSearch,
+  routesFromStates,
+  routeTrie,
+  type MountConfig as MatcherMountConfig,
+  type ServerRouter as MatcherServerRouter,
+  type StateRoutes,
+  type Verdict as MatcherVerdict,
+} from 'ui-router-server/router/matcher';
 import { createHeadlessRouter, onceSettled } from 'ui-router-server/simulate';
 import {
   dehydrate,
@@ -857,3 +868,55 @@ export const badgeSite = (): Promise<PrerenderResult> =>
     render: () => '',
     respond: (verdict, { file }) => new Response(`${verdict.state} ${file}`),
   });
+
+// router/matcher: the root entry's router and types, without the simulate tier.
+const matcherStates = [
+  { name: 'home', url: '/' },
+  { name: 'claims', url: '/claims/{id}', delegate: 'ledger' },
+] as const satisfies readonly StateDeclaration[];
+
+const matcherRoutes: StateRoutes<typeof matcherStates> =
+  routesFromStates(matcherStates);
+
+const docsRoutes = [{ name: 'page', url: '/{slug:path}' }] as const;
+
+const matcherOnlyRouter = createMatcherRouter({
+  base: '/site/',
+  mounts: {
+    '/site/': { routes: matcherRoutes },
+    '/site/docs': { routes: docsRoutes, routeIndex: routeTrie },
+  },
+});
+
+// A mount table typed for one entry fits the other's.
+export const sharedMount: MatcherMountConfig = mount;
+
+export const sameRouterType: [
+  AssignableTo<MatcherServerRouter, ServerRouter>,
+  AssignableTo<ServerRouter, MatcherServerRouter>,
+  AssignableTo<MatcherVerdict, Verdict>,
+  AssignableTo<MountConfig, MatcherMountConfig>,
+] = [true, true, true, true];
+
+export const matcherDiagnostics: MountDiagnostic[] = [
+  ...diagnoseMatcherMounts(matcherOnlyRouter),
+  ...diagnoseMounts(matcherOnlyRouter),
+];
+
+export const matcherHandler: FetchHandler = createFetchHandler(
+  matcherOnlyRouter,
+  {
+    serveShell: (_mountBase, request) =>
+      new Response(matcherMergeSearch(request.url, '?from=matcher')),
+    delegates: { ledger },
+  },
+);
+
+export const matcherMissingKey: FetchHandler = createFetchHandler(
+  matcherOnlyRouter,
+  {
+    serveShell: (_mountBase, request) => new Response(request.url),
+    // @ts-expect-error a typed router/matcher router requires every key it names
+    delegates: { feed: ledger },
+  },
+);
