@@ -167,7 +167,7 @@ describe('compileRoutes: parent', () => {
     );
   });
 
-  it('lets a descendant param declaration win over an ancestor one', () => {
+  it("keeps an ancestor url param's own declaration when a descendant redeclares it", () => {
     const appParams = Object.freeze({ lang: 'en' });
 
     const [, child] = compileRoutes([
@@ -175,8 +175,31 @@ describe('compileRoutes: parent', () => {
       { name: 'app.docs', url: '/docs', params: { lang: 'fr' } },
     ]);
 
-    assert.equal(format(child.matcher, {}), '/fr/docs');
+    assert.equal(format(child.matcher, {}), '/en/docs');
     assert.deepEqual(appParams, { lang: 'en' });
+  });
+
+  it('leaves an ancestor url param unconfigured when only a descendant declares it', () => {
+    const [, child] = compileRoutes([
+      { name: 'app', url: '/:lang' },
+      { name: 'app.docs', url: '/docs', params: { lang: 'fr' } },
+    ]);
+
+    assert.equal(format(child.matcher, {}), null);
+    assert.equal(format(child.matcher, { lang: 'de' }), '/de/docs');
+  });
+
+  it("configures a descendant url param from the descendant, not an ancestor's non-url param", () => {
+    const [, child] = compileRoutes([
+      { name: 'a', url: '/a', params: { x: '1' } },
+      { name: 'a.b', url: '/b/:x' },
+    ]);
+
+    assert.equal(format(child.matcher, {}), null);
+    assert.deepEqual(matchRoute([child], '/a/b/2'), {
+      state: 'a.b',
+      params: { x: '2' },
+    });
   });
 
   it('merges params across a parent: link', () => {

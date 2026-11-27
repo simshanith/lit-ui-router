@@ -169,38 +169,64 @@ const splitSearch = (url: string): [path: string, search: string] => {
   return index < 0 ? [url, ''] : [url.slice(0, index), url.slice(index + 1)];
 };
 
-// A leaf-first chain's full pattern and merged params. As core's
-// UrlMatcher.append: paths join in order, search parts all apply.
-const composeChain = (chain: RouteDeclaration[]) => {
-  let path = '';
-  const searches: string[] = [];
-  const params: NonNullable<RouteDeclaration['params']> = {};
+type RouteParams = NonNullable<RouteDeclaration['params']>;
 
-  for (let depth = chain.length - 1; depth >= 0; depth--) {
-    const ancestor = chain[depth];
+// Whether a state's `params` names a placeholder another state's url may
+// declare. A substring test: a false positive only costs the name lookup.
+const sharesParamName = (chain: RouteDeclaration[]): boolean =>
+  chain.some(
+    (state) =>
+      state.params !== undefined &&
+      Object.keys(state.params).some((key) =>
+        chain.some((other) => other !== state && other.url?.includes(key)),
+      ),
+  );
 
-    if (ancestor.url) {
-      const [own, search] = splitSearch(ancestor.url);
-      path += own;
+// Core compiles each state's url against that state's own `params`, so a
+// placeholder is configured by the state whose url declares it.
+const ownedParams = (
+  chain: RouteDeclaration[],
+  namesOf: (route: RouteDeclaration) => readonly string[],
+): RouteParams => {
+  const params: RouteParams = {};
 
-      if (search) searches.push(search);
+  // A name two urls declare never gets here to matter: the full pattern throws.
+  for (const state of chain) {
+    for (const name of namesOf(state)) {
+      if (state.params && Object.hasOwn(state.params, name))
+        params[name] = state.params[name];
     }
-
-    if (ancestor.params) Object.assign(params, ancestor.params);
   }
 
-  return {
-    pattern: searches.length ? `${path}?${searches.join('&')}` : path,
-    params,
-  };
+  return params;
+};
+
+// A leaf-first chain's full pattern. As core's UrlMatcher.append: paths join
+// in order, search parts all apply.
+const composePattern = (chain: RouteDeclaration[]): string => {
+  let path = '';
+  const searches: string[] = [];
+
+  for (let depth = chain.length - 1; depth >= 0; depth--) {
+    const { url } = chain[depth];
+
+    if (!url) continue;
+    const [own, search] = splitSearch(url);
+    path += own;
+
+    if (search) searches.push(search);
+  }
+
+  return searches.length ? `${path}?${searches.join('&')}` : path;
 };
 
 /**
  * Compiles the url-addressable routes of a declaration set: each state's url
  * appended to its ancestors' (a state's parent is its `parent`, else its
- * dotted prefix, as in ui-router), params merged rootward. Url-less states
- * contribute nothing and match nothing, and an abstract state contributes
- * its url and params to its descendants and matches nothing, as in ui-router.
+ * dotted prefix, as in ui-router), each url param configured by the `params`
+ * of the state whose url declares it. Url-less states contribute nothing and
+ * match nothing, and an abstract state contributes its url and params to its
+ * descendants and matches nothing, as in ui-router.
  */
 export function compileRoutes(
   routes: readonly RouteDeclaration[],
@@ -260,16 +286,45 @@ export function compileRoutes(
     return chain;
   };
 
+  const ownNames = new Map<RouteDeclaration, readonly string[]>();
+
+  // The placeholders a state's own url declares, read off a compile of it.
+  const namesOf = (state: RouteDeclaration): readonly string[] => {
+    let names = ownNames.get(state);
+
+    if (!names) {
+      const own = state.url ? compile(state.url) : null;
+
+      names = own
+        ? [...own.pathParams, ...own.searchParams].map((param) => param.id)
+        : [];
+      ownNames.set(state, names);
+    }
+
+    return names;
+  };
+
+  // The names are only needed where a declaration could reach another state's url.
+  const paramsOf = (chain: RouteDeclaration[]): RouteParams => {
+    if (sharesParamName(chain)) return ownedParams(chain, namesOf);
+    const params: RouteParams = {};
+
+    for (const state of chain) Object.assign(params, state.params);
+
+    return params;
+  };
+
   const compiled: CompiledRoute[] = [];
 
   for (const route of routes) {
     if (route.url === undefined || route.abstract) continue;
-    const { pattern, params } = composeChain(chainOf(route));
+    const chain = chainOf(route);
+    const pattern = composePattern(chain);
 
     compiled.push({
       name: route.name,
       pattern,
-      matcher: compile(pattern, { params }),
+      matcher: compile(pattern, { params: paramsOf(chain) }),
       redirectTo: route.redirectTo,
       redirectStatusCode: route.redirectStatusCode,
     });
