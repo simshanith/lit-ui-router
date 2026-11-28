@@ -436,8 +436,8 @@ type Widen<V> = V extends () => infer R
           ? unknown
           : V;
 
-// A `value: null` default is a legal value to pass and what an absent param reads back.
-type NullDefault<C> = null extends DefaultOf<C> ? null : never;
+// A default that is, or returns, `null` is a legal value to pass and what an absent param reads back.
+type NullDefault<C> = null extends Invoked<DefaultOf<C>> ? null : never;
 
 // Core's array mode: an explicit `array` wins, then a `name[]` id; `'auto'` stays scalar.
 type IsArray<C, K> = C extends { array: infer A }

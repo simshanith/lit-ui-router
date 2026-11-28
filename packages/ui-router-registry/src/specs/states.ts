@@ -31,6 +31,18 @@ export const states = [
     url: '/search?q&{page:int}&kv',
     params: { kv: { value: null, squash: true }, tab: { value: null } },
   },
+  {
+    name: 'lookup',
+    url: '/lookup?id&short&maybe&{n:int}&ids',
+    params: {
+      id: { value: () => null },
+      short: () => null,
+      maybe: { value: (): string | null => null },
+      n: { value: () => null },
+      ids: { array: true, value: () => null },
+      count: { type: 'int', value: () => null },
+    },
+  },
   // A future state's placeholder; the lazy module registers `admin.*` itself.
   { name: 'admin.**', url: '/admin' },
 ] as const;

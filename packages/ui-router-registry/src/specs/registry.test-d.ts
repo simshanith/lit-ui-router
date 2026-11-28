@@ -27,6 +27,8 @@ declare const snapshot: TypedRouteSnapshot;
 /** Assignability probe: the call typechecks iff the argument satisfies T. */
 declare function accepts<T>(value: T): T;
 
+type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+
 // -- names --------------------------------------------------------------------
 
 accepts<StateName>('contacts.contact.edit');
@@ -123,6 +125,30 @@ declare const tab: ResolvedParamsOf<'search'>['tab'];
 
 // @ts-expect-error an untyped non-url param reads as core's `any`, not its default's type
 accepts<string | null>(tab);
+
+// A default function that returns `null` reads back and takes `null`, as a literal one does.
+type Lookup = ResolvedParamsOf<'lookup'>;
+
+accepts<Equal<Lookup['id'], string | null>>(true);
+
+accepts<Equal<Lookup['short'], string | null>>(true);
+
+accepts<Equal<Lookup['maybe'], string | null>>(true);
+
+accepts<Equal<Lookup['n'], number | null>>(true);
+
+accepts<Equal<Lookup['ids'], string[] | null>>(true);
+
+accepts<Equal<Lookup['count'], number | null>>(true);
+
+void stateService.go('lookup', {
+  id: null,
+  short: null,
+  maybe: null,
+  n: null,
+  ids: null,
+  count: null,
+});
 
 // `parent:` inherits the parent's params, as a dotted name does.
 accepts<ResolvedParamsOf<'compose'>['sort']>('date');
