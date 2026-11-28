@@ -439,19 +439,30 @@ type Widen<V> = V extends () => infer R
 // A default that is, or returns, `null` is a legal value to pass and what an absent param reads back.
 type NullDefault<C> = null extends Invoked<DefaultOf<C>> ? null : never;
 
-// Core's array mode: an explicit `array` wins, then a `name[]` id; `'auto'` stays scalar.
-type IsArray<C, K> = C extends { array: infer A }
-  ? A
+// Core's array mode: an explicit `array` wins, then a `name[]` id, then `'auto'` for a query param.
+type IsArray<C, K, Q = false> = C extends { array: infer A }
+  ? QueryAuto<A, Q>
   : K extends `${string}[]`
     ? true
-    : false;
+    : Q extends true
+      ? 'query-default'
+      : false;
 
-// Core wraps a scalar passed to an array param, so input takes either.
+// Core throws on `'auto'` outside the query, so such a config stays scalar.
+type QueryAuto<A, Q> = A extends 'auto' ? (Q extends true ? A : false) : A;
+
+// Core wraps a scalar passed to an array param; an unset query `array` reads back scalar, an approximation.
 type ArrayOf<T, A, Mode> = A extends true
   ? Mode extends 'input'
     ? T | readonly T[]
     : T[]
-  : T;
+  : A extends 'auto' | 'query-default'
+    ? Mode extends 'input'
+      ? T | readonly T[]
+      : A extends 'auto'
+        ? T | T[]
+        : T
+    : T;
 
 // Only `go` (`inherit: true`) wraps a scalar default on an array param; `transitionTo` reads it back as is.
 type ScalarDefault<C, K> =
@@ -473,15 +484,15 @@ type DefaultElement<V> = [V] extends [never]
     : never;
 
 // An untyped non-url param is core's `any`, so only its default's type is known.
-type ConfigType<C, UrlType, K, Mode> = C extends {
+type ConfigType<C, UrlType, K, Mode, Q> = C extends {
   type: infer T extends string;
 }
-  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K>, Mode>, C, K>
+  ? WithDefaults<ArrayOf<BuiltInType<T>, IsArray<C, K, Q>, Mode>, C, K>
   : [UrlType] extends [never]
     ? IsArray<C, K> extends true
       ? WithDefaults<ArrayOf<DefaultElement<DefaultOf<C>>, true, Mode>, C, K>
       : Widen<DefaultOf<C>>
-    : WithDefaults<ArrayOf<UrlType, IsArray<C, K>, Mode>, C, K>;
+    : WithDefaults<ArrayOf<UrlType, IsArray<C, K, Q>, Mode>, C, K>;
 
 type WithDefaults<T, C, K> = T | NullDefault<C> | ScalarDefault<C, K>;
 
@@ -498,9 +509,10 @@ type DeclaredType<D, K, Mode> = K extends keyof ParamsBlock<D>
       ParamsBlock<D>[K],
       K extends UrlKeys<D> ? UrlType<D, K> : never,
       K,
-      Mode
+      Mode,
+      IsQuery<D, K>
     >
-  : ArrayOf<UrlType<D, K>, IsArray<unknown, K>, Mode>;
+  : ArrayOf<UrlType<D, K>, IsArray<unknown, K, IsQuery<D, K>>, Mode>;
 
 // The built-in types whose pattern matches an empty path segment; a regex or custom type stays as declared.
 type EmptyMatching = 'path' | 'string' | 'json' | 'any' | 'query' | 'hash';
@@ -589,7 +601,12 @@ export type ParamsOf<N extends StateName> = IsRegistered extends true
   ? Simplify<LineageParams<N, 'input'> & HashParam>
   : RawParams;
 
-/** The params a state reads back once active: defaults filled in. */
+/**
+ * The params a state reads back once active: defaults filled in. A query param
+ * reads back as one value unless it declares `array: 'auto'` or `array: true`,
+ * or is a `name[]` id, though core also reads an unset `array` back as an array
+ * of two or more.
+ */
 export type ResolvedParamsOf<N extends StateName> = IsRegistered extends true
   ? Simplify<LineageParams<N, 'output'> & HashParam>
   : RawParams;

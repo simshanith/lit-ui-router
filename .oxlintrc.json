@@ -461,6 +461,7 @@
         "tools/shared/**/*.test.ts",
         "tools/turbo-summary/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
+        "packages/ui-router-registry/test/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
         "apps/sample-app-lit-e2e/scripts/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",
