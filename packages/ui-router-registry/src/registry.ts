@@ -583,12 +583,280 @@ type OwnParams<D, Optional extends 'input' | 'output'> = {
   ]?: KeyType<D, K, Optional>;
 };
 
-type LineageParams<N, Optional extends 'input' | 'output'> = [
+type LineageParams<N, Optional extends 'input' | 'output'> =
+  Redeclares<N> extends true
+    ? Collect<N, Optional, never, unknown>
+    : Plain<N, Optional>;
+
+// Without a redeclared key, each level adds its own params, and siblings share the ancestors' type.
+type Plain<N, Optional extends 'input' | 'output'> = [
   DeclarationOf<N>,
 ] extends [never]
   ? unknown
   : OwnParams<DeclarationOf<N>, Optional> &
-      LineageParams<ParentName<DeclarationOf<N>>, Optional>;
+      Plain<ParentName<DeclarationOf<N>>, Optional>;
+
+type Redeclares<N> = [DeclarationOf<N>] extends [never]
+  ? false
+  : [
+        Extract<
+          OwnKeys<DeclarationOf<N>>,
+          LineageKeys<ParentName<DeclarationOf<N>>>
+        >,
+      ] extends [never]
+    ? Redeclares<ParentName<DeclarationOf<N>>>
+    : true;
+
+// Walks up from the target, so each level types only the keys no nearer declaration took.
+type Collect<N, Optional extends 'input' | 'output', Below, Acc> = [
+  DeclarationOf<N>,
+] extends [never]
+  ? Acc
+  : Collect<
+      ParentName<DeclarationOf<N>>,
+      Optional,
+      Below | OwnKeys<DeclarationOf<N>>,
+      Acc &
+        LevelParams<
+          DeclarationOf<N>,
+          Optional,
+          Extract<OwnKeys<DeclarationOf<N>>, Below>,
+          Extract<
+            Exclude<OwnKeys<DeclarationOf<N>>, Below>,
+            LineageKeys<ParentName<DeclarationOf<N>>>
+          >
+        >
+    >;
+
+type LineageKeys<N, Acc = never> = [DeclarationOf<N>] extends [never]
+  ? Acc
+  : LineageKeys<ParentName<DeclarationOf<N>>, Acc | OwnKeys<DeclarationOf<N>>>;
+
+// Core reads back the nearest declaration of a key but checks the value it takes against every one.
+type LevelParams<D, Optional extends 'input' | 'output', Hidden, S> = [
+  Hidden | S,
+] extends [never]
+  ? OwnParams<D, Optional>
+  : Optional extends 'input'
+    ? Without<OwnParams<D, 'input'>, Hidden | S> & RedeclaredInput<D, S>
+    : Without<
+        OwnParams<D, 'output'>,
+        Hidden | PassKeys<D, S> | AbsentPath<D, S>
+      > &
+        PassedOutput<D, PassKeys<D, S>> & {
+          [K in AbsentPath<D, S> & string]?: KeyType<D, K, 'output'>;
+        };
+
+type Without<T, S> = { [K in keyof T as K extends S ? never : K]: T[K] };
+
+// The values of `C` that `A` also accepts, member by member.
+type Narrow<C, A> = C extends unknown
+  ? [C] extends [A]
+    ? C
+    : Extract<A, C>
+  : never;
+
+// Root first, so each declaration narrows what the ones above it take.
+type Ancestry<N, Acc extends readonly unknown[] = []> = [
+  DeclarationOf<N>,
+] extends [never]
+  ? Acc
+  : Ancestry<ParentName<DeclarationOf<N>>, [DeclarationOf<N>, ...Acc]>;
+
+// The first declaration takes its own type; a later pass-through takes what the ones above it take.
+type Taking<L, K, Acc = never, First = true> = L extends readonly [
+  infer D,
+  ...infer R,
+]
+  ? K extends OwnKeys<D>
+    ? Taking<
+        R,
+        K,
+        First extends true
+          ? KeyType<D, K, 'input'>
+          : Narrow<DeclaredInput<D, K>, Exclude<Acc, undefined>>,
+        false
+      >
+    : Taking<R, K, Acc, First>
+  : Acc;
+
+// A pass-through is core's `any`, so it takes whatever its ancestors take.
+type DeclaredInput<D, K> = [PassKeys<D, K>] extends [never]
+  ? KeyType<D, K, 'input'>
+  : unknown;
+
+type RedeclaredValue<D, K> = Narrow<
+  DeclaredInput<D, K>,
+  Exclude<Taking<Ancestry<ParentName<D>>, K>, undefined>
+>;
+
+type FillsOwn<D, K> = K extends keyof ParamsBlock<D>
+  ? FillsDefault<ParamsBlock<D>[K]>
+  : false;
+
+type HasOwnDefault<D, K> = K extends keyof ParamsBlock<D>
+  ? HasDefault<ParamsBlock<D>[K]>
+  : false;
+
+type OwnDefault<D, K> = Invoked<
+  DefaultOf<ParamsBlock<D>[K & keyof ParamsBlock<D>]>
+>;
+
+// Only the nearest declaration's default fills the key, and core checks it against every declaration.
+type IsOptionalRedeclared<D, K> =
+  HasOwnDefault<D, K> extends true
+    ? LineageAccepts<OwnDefault<D, K>, D, K>
+    : LineageAccepts<undefined, D, K>;
+
+type LineageAccepts<V, D, K> = [D] extends [never]
+  ? true
+  : (K extends OwnKeys<D> ? Accepts<V, D, K> : true) extends true
+    ? LineageAccepts<V, DeclarationOf<ParentName<D>>, K>
+    : false;
+
+// `any` takes every value; an optional declaration also takes an absent or `null` one. Each member of `V` counts.
+type Accepts<V, D, K> = [PassKeys<D, K>] extends [never]
+  ? V extends null | undefined
+    ? IsOptionalInput<D, K>
+    : V extends KeyType<D, K, 'input'>
+      ? true
+      : false
+  : true;
+
+type RedeclaredInput<D, S> = {
+  [
+    K in S & string as IsOptionalRedeclared<D, K> extends true ? never : K
+  ]: RedeclaredValue<D, K>;
+} & {
+  [
+    K in S & string as IsOptionalRedeclared<D, K> extends true ? K : never
+  ]?: RedeclaredValue<D, K>;
+};
+
+// An untyped non-url param is core's `any`, so it keeps the value an ancestor's url decoded.
+type PassKeys<D, S> =
+  S extends UrlKeys<D>
+    ? never
+    : S extends keyof ParamsBlock<D>
+      ? ParamsBlock<D>[S] extends { type: unknown }
+        ? never
+        : S
+      : never;
+
+// Core validates an absent value as a `bool`, so a query ancestor's absent value reads back from a `bool` path param.
+type AbsentPath<D, S> = S extends PathEntries<D>[0]
+  ? (
+      S extends keyof ParamsBlock<D> ? ParamsBlock<D>[S] : unknown
+    ) extends infer C
+    ? PathTypeName<C, D, S> extends 'bool'
+      ? FillsOwn<D, S> extends true
+        ? never
+        : QueryAbove<ParentName<D>, S>
+      : never
+    : never
+  : never;
+
+type QueryAbove<N, K> = [DeclarationOf<N>] extends [never]
+  ? never
+  : IsQuery<DeclarationOf<N>, K> extends true
+    ? K
+    : QueryAbove<ParentName<DeclarationOf<N>>, K>;
+
+type PassedOutput<D, P> = [P] extends [never]
+  ? unknown
+  : {
+      [
+        K in P & string as MayBeAbsent<D, K> extends true ? never : K
+      ]: PassedValue<D, K>;
+    } & {
+      [
+        K in P & string as MayBeAbsent<D, K> extends true ? K : never
+      ]?: PassedValue<D, K>;
+    };
+
+type PassedValue<D, K> =
+  | DefaultRead<D, K>
+  | Wrapped<
+      Exclude<Held<ParentName<D>, K>, undefined>,
+      IsArray<ParamsBlock<D>[K & keyof ParamsBlock<D>], K>
+    >;
+
+// A default that may return `undefined` or `null` reads back what it returns otherwise, and that `null`.
+type DefaultRead<D, K> =
+  FillsOwn<D, K> extends true
+    ? null extends OwnDefault<D, K>
+      ? Defaulted<D, K>
+      : KeyType<D, K, 'output'>
+    : HasOwnDefault<D, K> extends true
+      ? Defaulted<D, K>
+      : never;
+
+type Defaulted<D, K> =
+  Widen<Exclude<OwnDefault<D, K>, null | undefined>> extends infer V
+    ? | V
+      | Wrapped<V, IsArray<ParamsBlock<D>[K & keyof ParamsBlock<D>], K>>
+      | Extract<OwnDefault<D, K>, null>
+    : never;
+
+// Without its own default, a pass-through reads `undefined` when every declaration lets the key go unset.
+type MayBeAbsent<D, K> =
+  FillsOwn<D, K> extends true
+    ? false
+    : LineageAccepts<undefined, D, K> extends true
+      ? true
+      : undefined extends Held<ParentName<D>, K>
+        ? true
+        : false;
+
+type Wrapped<V, A> = A extends true
+  ? V extends readonly unknown[]
+    ? V
+    : V[]
+  : V;
+
+// A url's nearest query decoding overwrites every path one; `go` passes what every declaration, and the root `any` one's default, takes.
+type Held<N, K, Go = unknown, Path = never, Root = unknown> = [
+  DeclarationOf<N>,
+] extends [never]
+  ? Path | Narrow<Go, Root>
+  : K extends OwnKeys<DeclarationOf<N>>
+    ? IsQuery<DeclarationOf<N>, K> extends true
+      ? | Taken<DeclarationOf<N>, K>
+        | (unknown extends Go
+            ? never
+            : Narrow<Go, Mutable<KeyType<DeclarationOf<N>, K, 'input'>>>)
+      : [PassKeys<DeclarationOf<N>, K>] extends [never]
+        ? Held<
+            ParentName<DeclarationOf<N>>,
+            K,
+            Narrow<Go, Taken<DeclarationOf<N>, K>>,
+            [Path] extends [never]
+              ? K extends UrlKeys<DeclarationOf<N>>
+                ? Taken<DeclarationOf<N>, K>
+                : never
+              : Path
+          >
+        : Held<
+            ParentName<DeclarationOf<N>>,
+            K,
+            Go,
+            Path,
+            Mutable<KeyType<DeclarationOf<N>, K, 'input'>>
+          >
+    : Held<ParentName<DeclarationOf<N>>, K, Go, Path, Root>;
+
+type Mutable<V> = V extends readonly (infer E)[] ? E[] : V;
+
+// An array param reads a scalar back unwrapped once an `any` param took it; an absent query value reads `undefined`.
+type Taken<D, K> =
+  | KeyType<D, K, 'output'>
+  | (IsArray<
+      K extends keyof ParamsBlock<D> ? ParamsBlock<D>[K] : unknown,
+      K
+    > extends true
+      ? Extract<KeyType<D, K, 'output'>, readonly unknown[]>[number]
+      : never)
+  | (IsQuery<D, K> extends true ? undefined : never);
 
 type Simplify<T> = { [K in keyof T]: T[K] };
 
@@ -596,13 +864,17 @@ type Simplify<T> = { [K in keyof T]: T[K] };
 // object non-empty, so an undeclared key is an excess property.
 type HashParam = { '#'?: string | null };
 
-/** The params a state accepts: its own and its ancestors', defaults optional. */
+/**
+ * The params a state accepts: its own and its ancestors', defaults optional.
+ * A redeclared key takes only what every declaration of it accepts.
+ */
 export type ParamsOf<N extends StateName> = IsRegistered extends true
   ? Simplify<LineageParams<N, 'input'> & HashParam>
   : RawParams;
 
 /**
- * The params a state reads back once active: defaults filled in. A query param
+ * The params a state reads back once active: defaults filled in, a redeclared
+ * key as its nearest declaration types it. A query param
  * reads back as one value unless it declares `array: 'auto'` or `array: true`,
  * or is a `name[]` id, though core also reads an unset `array` back as an array
  * of two or more.
