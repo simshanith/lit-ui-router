@@ -32,8 +32,10 @@ export interface FacetEntry {
   slug: string;
   title: string;
   monoTitle?: boolean;
-  /** Optional summary text with inline backtick code spans. */
+  /** Optional summary text with inline backtick code spans and `[label]` references to `summaryLinks`. */
   summary?: string;
+  /** What the summary names, by link text; listed again under "Links". */
+  summaryLinks?: readonly FacetLink[];
   group: string;
   facets: Readonly<Record<string, readonly string[]>>;
   links: readonly FacetLink[];
@@ -105,6 +107,38 @@ export function splitInlineCode(text: string): InlineSegment[] {
 
   if (cursor < text.length)
     parts.push({ text: text.slice(cursor), code: false });
+
+  return parts;
+}
+
+/** A run of summary text; linked when it is a `[label]` reference. */
+export interface SummaryPart {
+  text: string;
+  link?: FacetLink;
+}
+
+const REFERENCE = /\[([^\]]+)\]/g;
+
+/** Splits a summary at its `[label]` references, each resolved to the link of that text; a label with no link throws. */
+export function splitReferences(
+  text: string,
+  links: readonly FacetLink[] = [],
+): SummaryPart[] {
+  const parts: SummaryPart[] = [];
+  let cursor = 0;
+
+  for (const match of text.matchAll(REFERENCE)) {
+    const link = links.find((candidate) => candidate.text === match[1]);
+
+    if (!link) throw new Error(`${match[0]} names no link in: ${text}`);
+
+    if (match.index > cursor)
+      parts.push({ text: text.slice(cursor, match.index) });
+    parts.push({ text: match[1], link });
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor < text.length) parts.push({ text: text.slice(cursor) });
 
   return parts;
 }

@@ -17,6 +17,7 @@ import { REDIRECTS } from '../catalog/redirects.ts';
 import { mounts as releaseMounts } from '../worker/releases/routes.ts';
 import { matchRedirect, redirectLines } from './redirects.ts';
 import { surfaceOf } from './surfaces.ts';
+import { TOUR_LANDMARK } from './theme/components/features-tour-states.ts';
 import { SITE_ORIGIN } from './versions.ts';
 
 /** The origin package READMEs, manifests and doc comments link. */
@@ -160,11 +161,15 @@ const pageSource = (path: string): string | undefined => {
   return candidates.find(exactFile);
 };
 
+/** The ids a page's components render, which its Markdown source has no heading for. */
+export const COMPONENT_ANCHORS: ReadonlyMap<string, readonly string[]> =
+  new Map([['index.md', [TOUR_LANDMARK]]]);
+
 let renderer: Promise<MarkdownRenderer> | undefined;
 
 const anchorCache = new Map<string, Set<string>>();
 
-/** The heading ids VitePress gives a page source. */
+/** The heading ids VitePress gives a page source, and the ids its components render. */
 async function anchors(source: string): Promise<Set<string>> {
   const cached = anchorCache.get(source);
 
@@ -185,13 +190,14 @@ async function anchors(source: string): Promise<Set<string>> {
 
   const tokens = md.parse(env.src ?? '', {});
 
-  const ids = new Set(
-    tokens.flatMap((token) => {
+  const ids = new Set([
+    ...(COMPONENT_ANCHORS.get(source) ?? []),
+    ...tokens.flatMap((token) => {
       const id = token.type === 'heading_open' && token.attrGet('id');
 
       return id ? [id] : [];
     }),
-  );
+  ]);
 
   anchorCache.set(source, ids);
 
@@ -213,7 +219,7 @@ async function workerProblem(path: string): Promise<string | undefined> {
     : undefined;
 }
 
-/** Why a page path is no page: no source, or no heading for its fragment. */
+/** Why a page path is no page: no source, or no heading or component id for its fragment. */
 async function pageProblem(
   path: string,
   fragment: string,

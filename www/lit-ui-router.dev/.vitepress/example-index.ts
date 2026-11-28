@@ -13,6 +13,7 @@ import {
   type ExampleFacets,
   type ExampleKind,
 } from '../catalog/examples.ts';
+import { packagePagePath } from '../catalog/packages.ts';
 import { code, markdownLink } from './index-markdown.ts';
 import { pageUrl } from './surfaces.ts';
 import {
@@ -21,10 +22,11 @@ import {
   stackblitzOpenSrc,
   staticSrc,
 } from './theme/components/examples.ts';
-import type {
-  FacetDefinition,
-  FacetIndexData,
-  FacetLink,
+import {
+  type FacetDefinition,
+  type FacetIndexData,
+  type FacetLink,
+  splitReferences,
 } from './theme/components/faceted-index.ts';
 
 const SITE = join(import.meta.dirname, '..');
@@ -201,6 +203,33 @@ export const unembeddedExamples = (
 
 export const EMPTY_LIVE_EXAMPLES = `every example is embedded on a docs page, so ${LIVE_EXAMPLES.url} would be empty: delete examples/live.md, its sidebar link in catalog/navigation.ts and its path in catalog/surfaces.ts`;
 
+type SummaryLink = Extract<
+  (typeof EXAMPLES)[ExampleName],
+  { links: unknown }
+>['links'][number];
+
+/** What an example's summary names, as the site links it: a package to its page, a root path to the site, anything else to a new tab. */
+export function summaryLinks(name: ExampleName): FacetLink[] {
+  const entry = EXAMPLES[name];
+  const links: readonly SummaryLink[] = 'links' in entry ? entry.links : [];
+
+  return links.map((link) =>
+    'package' in link
+      ? { text: link.label, href: packagePagePath(link.package) }
+      : {
+          text: link.label,
+          href: link.href,
+          ...(!link.href.startsWith('/') && { external: true }),
+        },
+  );
+}
+
+/** An example's summary with each `[label]` written as a Markdown link. */
+export const linkedSummary = (name: ExampleName): string =>
+  splitReferences(EXAMPLES[name].summary, summaryLinks(name))
+    .map(({ text, link }) => (link ? markdownLink(link) : text))
+    .join('');
+
 /** One section per example no other page embeds, each under its examples-index heading. */
 export function liveExamples(
   pages: ReadonlyMap<string, readonly PageLink[]> = embeddingPages(),
@@ -211,12 +240,12 @@ export function liveExamples(
 
   return names
     .flatMap((name) => {
-      const { title, summary } = EXAMPLES[name];
+      const { title } = EXAMPLES[name];
 
       return [
         `## ${title}`,
         '',
-        `${summary}. [Facets and links](/examples/#${headingSlug(title)}).`,
+        `${linkedSummary(name)}. [Facets and links](/examples/#${headingSlug(title)}).`,
         '',
         `<LiveExample name="${name}" />`,
         '',
@@ -240,16 +269,18 @@ function exampleEntry(
   facets: ExampleFacets,
   pages: readonly PageLink[],
 ): string[] {
-  const { title, summary } = EXAMPLES[name];
+  const { title } = EXAMPLES[name];
   const links = exampleLinks(name).map(markdownLink);
+  const named = summaryLinks(name).map(markdownLink);
 
   return [
     `### ${title}`,
     '',
-    `${summary}.`,
+    `${linkedSummary(name)}.`,
     '',
     `- Facets: ${facetLine(facets)}`,
     `- ${links.join(' · ')}`,
+    ...(named.length > 0 ? [`- Links: ${named.join(' · ')}`] : []),
     `- Embedded in: ${
       pages.length > 0
         ? pages.map(pageLink).join(', ')
@@ -353,6 +384,7 @@ export function exampleIndexData(): FacetIndexData {
         slug,
         title,
         summary: `${summary}.`,
+        summaryLinks: summaryLinks(name),
         group: facets.kind ?? 'example',
         facets: Object.fromEntries(
           Object.entries(facets).flatMap(([k, v]) => (v ? [[k, [v]]] : [])),
